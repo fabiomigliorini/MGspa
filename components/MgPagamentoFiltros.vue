@@ -24,6 +24,7 @@ const ORIGENS = [
   { value: 'V', label: 'Venda' },
   { value: 'T', label: 'Títulos' },
   { value: 'X', label: 'Transferência' },
+  { value: 'I', label: 'Item do caixa' },
   { value: 'A', label: 'Avulso' },
 ]
 

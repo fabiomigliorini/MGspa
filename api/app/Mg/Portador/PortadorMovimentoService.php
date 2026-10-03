@@ -105,10 +105,9 @@ class PortadorMovimentoService
         $periodo = PortadorPeriodo::findOrFail($codportadorperiodo);
         if (PortadorPeriodoService::imutavel($periodo)) {
             $o = $periodo->Portador->ehGaveta() ? 'o caixa' : 'o período';
-            $estado = empty($periodo->conferencia) ? 'fechado' : 'conferido';
             abort(422, "O razão de {$periodo->Portador->portador} ("
                 . PortadorPeriodoService::descricao($periodo)
-                . ") já foi {$estado}: reabra {$o} antes de mudar este pagamento.");
+                . ") já foi fechado: reabra {$o} antes de mudar este pagamento.");
         }
     }
 

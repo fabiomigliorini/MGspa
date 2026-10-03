@@ -56,9 +56,13 @@ class TituloService
             'observacao'       => $dados['observacao'] ?? null,
         ]);
 
-        // se nao informou numero, usa data emissao + sufixo (1), (2)... se duplicado
+        // se nao informou numero, usa data emissao + sufixo (1), (2)... se duplicado;
+        // com `sufixo`, o numero informado tambem ganha o sufixo (repasse do
+        // item do caixa, M13 doc-3)
         if (empty($titulo->numero) && !empty($titulo->emissao)) {
             $titulo->numero = Carbon::parse($titulo->emissao)->format('Y-m-d');
+            self::aplicarSufixoNumero($titulo);
+        } elseif (!empty($dados['sufixo'])) {
             self::aplicarSufixoNumero($titulo);
         }
 

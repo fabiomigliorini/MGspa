@@ -1,10 +1,15 @@
 @php
-    // Bordero do caixa (M9 doc-3): a contagem do caixa e o que mais ele leva
-    // ao escritorio. Sem o dinheiro do sistema nem a diferenca (o gerente
-    // confere as cegas) e sem o valor dos cartoes (o gerente digita o
-    // bordero da maquineta as cegas).
+    // Bordero do caixa (M9; completo desde o M13 doc-3): contagem por cedula e
+    // moeda, itens do caixa, avulsos e ajustes. Cartoes so' em quantidade (o
+    // gerente fecha o lote da maquineta pelo bordero dela).
     $filial = $sessao->Portador->Filial;
     $contado = (float) $sessao->saldofinal;
+    $abertura = $sessao->contagemabertura ?? [];
+    $fechamento = $sessao->contagemfechamento ?? [];
+    $denominacoes = array_merge(\Mg\Caixa\CaixaService::CEDULAS, \Mg\Caixa\CaixaService::MOEDAS);
+    $itens = collect($painel['itens']);
+    $estoqueAbertura = $itens->where('modo', 'C')->sum('valorabertura');
+    $estoqueFechamento = $itens->where('modo', 'C')->sum('valorfechamento');
 @endphp
 <!DOCTYPE html>
 <html>
@@ -79,13 +84,22 @@
     </table>
 
     <div class="linha"></div>
-    <b>CONTAGEM DO DINHEIRO</b>
+    <b>CONTAGEM</b> <small>(quantidade)</small>
     <table>
         <tr>
             <td></td>
             <td class="r">Abertura</td>
             <td class="r">Fechamento</td>
         </tr>
+        @foreach ($denominacoes as $d)
+            @if (!empty($abertura[$d]) || !empty($fechamento[$d]))
+                <tr>
+                    <td>{{ formataNumero((float) $d) }}</td>
+                    <td class="r">{{ $abertura[$d] ?? '' }}</td>
+                    <td class="r">{{ $fechamento[$d] ?? '' }}</td>
+                </tr>
+            @endif
+        @endforeach
         <tr>
             <td>Moedas</td>
             <td class="r">{{ formataNumero($sessao->moedasabertura ?? 0) }}</td>
@@ -96,37 +110,119 @@
             <td class="r">{{ formataNumero($sessao->cedulasabertura ?? 0) }}</td>
             <td class="r">{{ formataNumero($sessao->cedulasfechamento ?? 0) }}</td>
         </tr>
+        @foreach ($itens->where('modo', 'C') as $i)
+            <tr>
+                <td>{{ $i['item'] }}</td>
+                <td class="r">{{ formataNumero($i['valorabertura'] ?? 0) }}</td>
+                <td class="r">{{ formataNumero($i['valorfechamento'] ?? 0) }}</td>
+            </tr>
+        @endforeach
         <tr>
             <td><b>Total</b></td>
-            <td class="r"><b>{{ formataNumero($sessao->saldoinicial ?? 0) }}</b></td>
+            <td class="r"><b>{{ formataNumero(($sessao->moedasabertura ?? 0) + ($sessao->cedulasabertura ?? 0) + $estoqueAbertura) }}</b></td>
             <td class="r grande">{{ formataNumero($contado) }}</td>
         </tr>
     </table>
 
     <div class="linha"></div>
-    <b>ENTREGO TAMBÉM</b> <small>(quantidade)</small>
+    <b>DINHEIRO</b>
     <table>
-        @foreach ($informativo['meios'] as $m)
-            @if (!in_array($m['meio'], [3, 4]))
-                <tr>
-                    <td>{{ $m['descricao'] }}</td>
-                    <td class="r">{{ $m['quantidade'] }}</td>
-                </tr>
-            @endif
-        @endforeach
-        @if ($informativo['prazo']['quantidade'] > 0)
+        <tr>
+            <td>Envelope anterior</td>
+            <td class="r">{{ formataNumero($sessao->saldoinicial ?? 0) }}</td>
+        </tr>
+        @if ($painel['ajusteabertura'] != 0)
             <tr>
-                <td>Duplicatas a prazo (assinadas)</td>
-                <td class="r">{{ $informativo['prazo']['quantidade'] }}</td>
+                <td>Ajuste na abertura</td>
+                <td class="r">{{ formataNumero($painel['ajusteabertura']) }}</td>
             </tr>
         @endif
-        @foreach ($informativo['maquinetas'] as $m)
-            <tr>
-                <td>Cartões na maquineta {{ $m['maquineta'] }}</td>
-                <td class="r">{{ $m['quantidade'] }}</td>
-            </tr>
-        @endforeach
+        <tr>
+            <td>Sistema</td>
+            <td class="r">{{ formataNumero($painel['dinheiro']['sistema'] - $painel['ajustefechamento']) }}</td>
+        </tr>
+        <tr>
+            <td>Contado</td>
+            <td class="r">{{ formataNumero($contado) }}</td>
+        </tr>
+        <tr>
+            <td><b>Ajuste no fechamento</b></td>
+            <td class="r"><b>{{ formataNumero($painel['ajustefechamento']) }}</b></td>
+        </tr>
     </table>
+
+    @if ($itens->isNotEmpty())
+        <div class="linha"></div>
+        <b>ITENS DO CAIXA</b> <small>(entrada / saída · repasse)</small>
+        <table>
+            @foreach ($itens as $i)
+                @if ($i['valorentrada'] || $i['valorsaida'] || $i['valorvendido'] || $i['liquido'])
+                    <tr>
+                        <td>
+                            {{ $i['item'] }}
+                            @if ($i['modo'] == 'M' && $i['valorvendido'] !== null)
+                                <br><small>vendido {{ formataNumero($i['valorvendido']) }}</small>
+                            @endif
+                        </td>
+                        <td class="r">
+                            {{ formataNumero($i['valorentrada']) }} / {{ formataNumero($i['valorsaida']) }}<br>
+                            <b>{{ formataNumero($i['liquido'] ?? 0) }}</b>
+                            @if ($i['titulo'])
+                                <small>{{ $i['titulo'] }}</small>
+                            @endif
+                        </td>
+                    </tr>
+                @endif
+            @endforeach
+        </table>
+    @endif
+
+    @if (!empty($painel['avulsos']))
+        <div class="linha"></div>
+        <b>LANÇAMENTOS AVULSOS</b>
+        <table>
+            @foreach ($painel['avulsos'] as $a)
+                <tr>
+                    <td @if ($a['estado'] == 'C') style="text-decoration: line-through" @endif>
+                        {{ $a['motivodescricao'] }} · {{ $a['observacoes'] }}
+                    </td>
+                    <td class="r" @if ($a['estado'] == 'C') style="text-decoration: line-through" @endif>
+                        {{ formataNumero($a['valor']) }}
+                    </td>
+                </tr>
+            @endforeach
+        </table>
+    @endif
+
+    @php
+        $outros = collect($informativo['meios'])->whereNotIn('meio', [3, 4]);
+    @endphp
+    @if ($outros->isNotEmpty() || $informativo['prazo']['quantidade'] > 0 || !empty($informativo['maquinetas']))
+        <div class="linha"></div>
+        <b>ENTREGO TAMBÉM</b> <small>(quantidade)</small>
+        <table>
+            @foreach ($informativo['meios'] as $m)
+                @if (!in_array($m['meio'], [3, 4]))
+                    <tr>
+                        <td>{{ $m['descricao'] }}</td>
+                        <td class="r">{{ $m['quantidade'] }}</td>
+                    </tr>
+                @endif
+            @endforeach
+            @if ($informativo['prazo']['quantidade'] > 0)
+                <tr>
+                    <td>Duplicatas a prazo (assinadas)</td>
+                    <td class="r">{{ $informativo['prazo']['quantidade'] }}</td>
+                </tr>
+            @endif
+            @foreach ($informativo['maquinetas'] as $m)
+                <tr>
+                    <td>Cartões na maquineta {{ $m['maquineta'] }}</td>
+                    <td class="r">{{ $m['quantidade'] }}</td>
+                </tr>
+            @endforeach
+        </table>
+    @endif
 
     @if ($sessao->observacoes)
         <div class="linha"></div>

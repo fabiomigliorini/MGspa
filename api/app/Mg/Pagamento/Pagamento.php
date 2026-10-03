@@ -3,6 +3,7 @@
 namespace Mg\Pagamento;
 
 use Mg\MgModel;
+use Mg\Caixa\CaixaItemLancamento;
 use Mg\Cheque\Cheque;
 use Mg\Filial\Filial;
 use Mg\Lio\LioPedido;
@@ -83,6 +84,7 @@ class Pagamento extends MgModel
         'codportadorperiodo',
         'conferencia',
         'codusuarioconferencia',
+        'codcaixaitemlancamento',
     ];
 
     protected $casts = [
@@ -97,6 +99,7 @@ class Pagamento extends MgModel
         'codmaquinetalote' => 'integer',
         'codmaquinetalotecancelamento' => 'integer',
         'codportadorperiodo' => 'integer',
+        'codcaixaitemlancamento' => 'integer',
         'codusuarioconferencia' => 'integer',
         'conferencia' => 'datetime',
         'indevido' => 'boolean',
@@ -170,6 +173,11 @@ class Pagamento extends MgModel
     public function Cheque()
     {
         return $this->hasOne(Cheque::class, 'codpagamento', 'codpagamento');
+    }
+
+    public function CaixaItemLancamento()
+    {
+        return $this->belongsTo(CaixaItemLancamento::class, 'codcaixaitemlancamento', 'codcaixaitemlancamento');
     }
 
     public function Filial()

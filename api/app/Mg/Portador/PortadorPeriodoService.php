@@ -60,9 +60,8 @@ class PortadorPeriodoService
         return $periodo ?? static::corrente($portador);
     }
 
-    // o razao nao mexe mais no periodo: gaveta depois que o gerente
-    // conferiu (antes disso a correcao do M9 ainda acerta o razao); os
-    // demais depois de fechados (M12)
+    // o razao nao mexe mais no periodo: gaveta fechada (fechar grava a
+    // conferencia desde o M13); os demais depois de fechados (M12)
     public static function imutavel(PortadorPeriodo $periodo): bool
     {
         if (!empty($periodo->conferencia)) {

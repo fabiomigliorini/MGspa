@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-02 20:54'
+updated_date: '2026-10-03 15:18'
 labels:
   - contas
   - negocios
@@ -230,4 +230,6 @@ M9 — backend pronto em dev (02/10/2026, na árvore, sem commit). DDL api/datab
 M9 — telas prontas em dev (02/10/2026, na árvore, sem commit; detalhe e roteiro Valida no doc-3, seção M9 'Como ficou no código'). contas: Movimento → Fechamentos (pendências da filial; Lote, Sessão e Venda com digitação às cegas, foto do borderô, correções, acerto, reabrir), Maquinetas → Lotes. negocios: /caixa (abrir/fechar com contagem, borderô na térmica), Dinheiro bloqueado no wizard com o motivo (PDV sem gaveta ou caixa fechado), confissão e anexos pelas rotas novas v1/negocio/... Conferido: php -l; eslint/prettier contas, negocios e @components; quasar build do contas e do negocios (nos containers); controllers e resources pelo tinker com rollback (pendências sem valor do sistema, lote aberto sem sistema e depois borderô × sistema por PDV, sessão às cegas e conferida 120 × 118, reabrir caixa, venda, status do PDV, anexos sem pdv e com pdv inválido = 403). Não testado: navegador (gerar token de teste foi bloqueado pela política de permissões da sessão), impressão na térmica, foto pela câmera do celular. Decidido sem o Fábio (a validar): borderô do caixa só com contagem e quantidades (às cegas); perdão sem título; crédito do cliente = 212; cheque/vale conferido no pagamento; itens do caixa no M13; item Caixa no MainLayout do negocios (arquivo com alterações de outra mão na árvore).
 
 ACs M9.1 a M9.6 movidos da TASK-39 (eram os #1 a #6, rotulados M10, da gaveta que o M9 absorveu), a pedido do Fábio em 02/10/2026 no planejamento do M10. O M9.5 (lançamento avulso) não foi feito pelo M9: fica para depois. O M9.3 restringe hoje abrir/fechar o caixa; receber em dinheiro só exige a sessão aberta (conferir na validação do M9).
+
+M9.5 (#37, lançamento avulso de entrada e saída no caixa aberto) feito no M13 da TASK-39 (03/10/2026, na árvore): tela do caixa → Lançamentos avulsos. No M13 a sessão da gaveta também deixou de ter conferência às cegas separada: fechar é a conferência (doc-3, seção M13). AC desmarcado até a validação.
 <!-- SECTION:NOTES:END -->

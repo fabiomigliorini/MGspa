@@ -16,12 +16,14 @@ class PagamentoListaService
     const ORIGEM_TITULO = 'T';
     const ORIGEM_TRANSFERENCIA = 'X';
     const ORIGEM_AVULSO = 'A';
+    const ORIGEM_ITEM = 'I';
 
     const ORIGENS = [
         self::ORIGEM_VENDA => 'Venda',
         self::ORIGEM_TITULO => 'Títulos',
         self::ORIGEM_TRANSFERENCIA => 'Transferência',
         self::ORIGEM_AVULSO => 'Avulso',
+        self::ORIGEM_ITEM => 'Item do caixa',
     ];
 
     const FILTROS = [
@@ -51,13 +53,19 @@ class PagamentoListaService
         'UsuarioCriacao:codusuario,usuario',
         'MovimentoTituloS:codmovimentotitulo,codpagamento,codtitulo,codtipomovimentotitulo,codmovimentotituloestorno',
         'MovimentoTituloS.Titulo:codtitulo,numero',
+        'CaixaItemLancamento:codcaixaitemlancamento,codcaixaitem',
+        'CaixaItemLancamento.CaixaItem:codcaixaitem,item',
     ];
 
-    // Venda, titulo, transferencia (os dois lados) ou avulso (o resto)
+    // Venda, item do caixa, titulo, transferencia (os dois lados) ou avulso
+    // (o resto)
     public static function origem(Pagamento $pag): string
     {
         if (!empty($pag->codnegocio)) {
             return static::ORIGEM_VENDA;
+        }
+        if (!empty($pag->codcaixaitemlancamento)) {
+            return static::ORIGEM_ITEM;
         }
         if ($pag->MovimentoTituloS->isNotEmpty() || !empty($pag->codperiodocolaboradoracerto)) {
             return static::ORIGEM_TITULO;
@@ -185,8 +193,12 @@ class PagamentoListaService
                                 ->whereNotNull('tblpagamento.codportadordestino')
                                 ->whereNotExists($temTitulo));
                             break;
+                        case static::ORIGEM_ITEM:
+                            $w->orWhereNotNull('tblpagamento.codcaixaitemlancamento');
+                            break;
                         case static::ORIGEM_AVULSO:
                             $w->orWhere(fn($t) => $t->whereNull('tblpagamento.codnegocio')
+                                ->whereNull('tblpagamento.codcaixaitemlancamento')
                                 ->whereNull('tblpagamento.codperiodocolaboradoracerto')
                                 ->where(fn($x) => $x->whereNull('tblpagamento.codportadororigem')
                                     ->orWhereNull('tblpagamento.codportadordestino'))

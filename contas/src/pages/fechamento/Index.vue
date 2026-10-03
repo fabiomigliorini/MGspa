@@ -13,7 +13,7 @@ const store = useConferenciaStore()
 confissaoStore().configurar({ fixos: {} })
 
 const GRUPOS = [
-  { tipo: 'sessao', label: 'Caixas', icone: 'point_of_sale', cor: 'green-7' },
+  { tipo: 'sessao', label: 'Caixas abertos', icone: 'point_of_sale', cor: 'green-7' },
   { tipo: 'lote', label: 'Maquinetas', icone: 'credit_card', cor: 'deep-orange-7' },
   { tipo: 'cheque', label: 'Cheques', icone: 'money', cor: 'teal-7' },
   { tipo: 'vale', label: 'Vales recebidos', icone: 'card_giftcard', cor: 'pink-6' },
@@ -31,7 +31,7 @@ const grupos = computed(() =>
 const destino = (p) => {
   switch (p.tipo) {
     case 'sessao':
-      return p.conferivel ? { name: 'fechamento-sessao', params: { id: p.id } } : undefined
+      return { name: 'fechamento-sessao', params: { id: p.id } }
     case 'lote':
       return { name: 'fechamento-lote', params: { id: p.id } }
     case 'venda':
@@ -117,9 +117,6 @@ onMounted(store.buscarPendencias)
             </q-item-section>
             <q-item-section v-else-if="p.tipo === 'duplicata'" side>
               <q-icon name="photo_camera" color="grey-7" />
-            </q-item-section>
-            <q-item-section v-else-if="p.tipo === 'sessao' && !p.conferivel" side>
-              <q-badge color="grey-6" label="Em andamento" />
             </q-item-section>
             <q-item-section v-else side>
               <q-icon name="chevron_right" color="grey-6" />

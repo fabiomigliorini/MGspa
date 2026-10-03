@@ -2,6 +2,7 @@
 
 namespace Mg\Portador;
 
+use Mg\Caixa\CaixaItemLancamento;
 use Mg\MgModel;
 use Mg\Pagamento\Pagamento;
 use Mg\Usuario\Usuario;
@@ -9,7 +10,7 @@ use Mg\Usuario\Usuario;
 /**
  * Periodo do portador (M9 doc-3; modelo do M10). Na gaveta e' a sessao do
  * caixa: abre e fecha com contagem no PDV (fim/fechamento + saldofinal =
- * contado pelo caixa) e o gerente confere (conferencia + valorconferido).
+ * contado; desde o M13 fechar grava tambem a conferencia e o razao trava).
  */
 class PortadorPeriodo extends MgModel
 {
@@ -33,6 +34,10 @@ class PortadorPeriodo extends MgModel
         'codusuarioconferencia',
         'valorconferido',
         'observacoes',
+        'codpagamentoabertura',
+        'codpagamentofechamento',
+        'contagemabertura',
+        'contagemfechamento',
     ];
 
     protected $casts = [
@@ -41,6 +46,10 @@ class PortadorPeriodo extends MgModel
         'cedulasfechamento' => 'float',
         'codportador' => 'integer',
         'codportadorperiodo' => 'integer',
+        'codpagamentoabertura' => 'integer',
+        'codpagamentofechamento' => 'integer',
+        'contagemabertura' => 'array',
+        'contagemfechamento' => 'array',
         'codusuarioabertura' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuarioconferencia' => 'integer',
@@ -84,6 +93,16 @@ class PortadorPeriodo extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuarioconferencia', 'codusuario');
     }
 
+    public function PagamentoAbertura()
+    {
+        return $this->belongsTo(Pagamento::class, 'codpagamentoabertura', 'codpagamento');
+    }
+
+    public function PagamentoFechamento()
+    {
+        return $this->belongsTo(Pagamento::class, 'codpagamentofechamento', 'codpagamento');
+    }
+
     public function UsuarioCriacao()
     {
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
@@ -95,6 +114,11 @@ class PortadorPeriodo extends MgModel
     }
 
     // Tabelas Filhas
+    public function CaixaItemLancamentoS()
+    {
+        return $this->hasMany(CaixaItemLancamento::class, 'codportadorperiodo', 'codportadorperiodo');
+    }
+
     public function PagamentoS()
     {
         return $this->hasMany(Pagamento::class, 'codportadorperiodo', 'codportadorperiodo');

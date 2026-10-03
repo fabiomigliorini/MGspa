@@ -71,7 +71,11 @@ class PagamentoCorrecaoService
             MaquinetaLoteService::exigirAberto($pag->MaquinetaLote);
         }
         if (!empty($pag->codportadorperiodo) && !empty($pag->PortadorPeriodo->conferencia)) {
-            abort(422, 'A sessão do caixa deste dinheiro já foi conferida: reabra a sessão antes.');
+            abort(422, 'O caixa deste dinheiro já foi fechado: reabra a sessão antes.');
+        }
+        // ajuste e item do caixa se mexem pela tela do caixa (M13)
+        if (!empty($pag->codcaixaitemlancamento) || CaixaService::ehAjuste($pag)) {
+            abort(422, 'Ajuste e item do caixa se corrigem pela tela do caixa.');
         }
         if (!empty($pag->conferencia)) {
             abort(422, 'Este pagamento já foi conferido: reabra a conferência antes.');
@@ -100,7 +104,7 @@ class PagamentoCorrecaoService
             abort(422, 'Não havia caixa aberto na gaveta do PDV quando o pagamento foi feito.');
         }
         if (!empty($sessao->conferencia)) {
-            abort(422, 'A sessão do caixa daquele momento já foi conferida: reabra a sessão antes.');
+            abort(422, 'O caixa daquele momento já foi fechado: reabra a sessão antes.');
         }
         return $sessao;
     }

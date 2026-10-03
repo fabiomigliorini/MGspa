@@ -138,6 +138,16 @@ const routes = [
         },
       },
       {
+        path: 'caixa-item',
+        name: 'caixa-item',
+        component: () => import('pages/caixaItem/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Itens do Caixa',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
         path: 'maquineta/:id(\\d+)/lotes',
         name: 'maquineta-lotes',
         component: () => import('pages/maquineta/Lotes.vue'),

@@ -5,7 +5,10 @@
 // M12, aba Períodos (Financeiro/Admin): o financeiro fecha cofre, troco, banco e adquirente pela
 // data de corte, reabre do mais novo para o mais antigo e faz lançamento avulso (taxa, tarifa,
 // rendimento, ajuste — o de implantação no primeiro período). Sessão de gaveta abre o Fechamentos.
+// M13, aba Itens: o que chips, ingressos e maquinetas de parceiros movimentaram por sessão, com
+// os totais e os títulos de repasse, para o acerto com o parceiro.
 import { ref, computed, onMounted } from 'vue'
+import { api } from 'src/services/api'
 import { useQuasar } from 'quasar'
 import { useCaixaStore } from 'src/stores/caixaStore'
 import { useAuth } from 'src/composables/useAuth'
@@ -26,8 +29,7 @@ const estadoSessao = (c) => {
   if (!c.ehGaveta) return null
   if (!c.sessao) return { label: 'Nunca aberto', cor: 'grey-6' }
   if (c.sessao.aberta) return { label: 'Aberto', cor: 'green-7' }
-  if (!c.sessao.conferencia) return { label: 'Fechado, a conferir', cor: 'amber-8' }
-  return { label: 'Fechado e conferido', cor: 'grey-7' }
+  return { label: 'Fechado', cor: 'grey-7' }
 }
 
 // ---- nova transferência ----
@@ -146,7 +148,17 @@ const salvarLancamento = async () => {
   if (ok) store.dialogLancamento = false
 }
 
-onMounted(() => store.atualizar(financeiro.value))
+// itens do caixa (M13): a lista do filtro
+const opcoesItem = ref([])
+onMounted(async () => {
+  store.atualizar(financeiro.value)
+  try {
+    const { data } = await api.get('v1/caixa-item')
+    opcoesItem.value = data.data.map((i) => ({ value: i.codcaixaitem, label: i.item }))
+  } catch {
+    opcoesItem.value = []
+  }
+})
 </script>
 
 <template>
@@ -166,6 +178,7 @@ onMounted(() => store.atualizar(financeiro.value))
           </q-badge>
         </q-tab>
         <q-tab v-if="financeiro" name="periodos" label="Períodos" icon="date_range" />
+        <q-tab name="itens" label="Itens" icon="inventory_2" />
       </q-tabs>
 
       <q-tab-panels v-model="store.aba" animated keep-alive>
@@ -377,6 +390,86 @@ onMounted(() => store.atualizar(financeiro.value))
           </q-card>
           <MgEmptyState v-else-if="!store.carregandoPeriodos" icon="date_range">
             Nenhum período no intervalo. O corrente nasce no primeiro lançamento do portador.
+          </MgEmptyState>
+        </q-tab-panel>
+        <!-- itens do caixa (M13): acerto com o parceiro -->
+        <q-tab-panel name="itens" class="q-pa-none">
+          <div class="row q-col-gutter-md q-mb-md">
+            <div class="col-12 col-sm-6">
+              <q-select
+                v-model="store.codcaixaitem"
+                :options="opcoesItem"
+                label="Item"
+                outlined
+                emit-value
+                map-options
+                clearable
+                @update:model-value="store.buscarItens()"
+              />
+            </div>
+          </div>
+          <q-card v-if="store.itens.totais.length" bordered flat class="q-mb-md">
+            <q-list separator>
+              <q-item v-for="t in store.itens.totais" :key="t.codcaixaitem">
+                <q-item-section>
+                  <q-item-label class="text-weight-medium">{{ t.item }}</q-item-label>
+                  <q-item-label caption>
+                    {{ t.sessoes }} sessão(ões) · entrada {{ formataNumero(t.valorentrada) }} ·
+                    saída {{ formataNumero(t.valorsaida) }}
+                    <template v-if="t.modo === 'M'">
+                      · vendido {{ formataNumero(t.valorvendido) }}
+                    </template>
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-item-label class="text-weight-bold">
+                    R$ {{ formataNumero(t.liquido) }}
+                  </q-item-label>
+                  <q-item-label caption>líquido</q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card>
+          <q-card v-if="store.itens.linhas.length" bordered flat>
+            <q-list separator>
+              <q-item
+                v-for="l in store.itens.linhas"
+                :key="l.codcaixaitemlancamento"
+                :to="{ name: 'fechamento-sessao', params: { id: l.codportadorperiodo } }"
+              >
+                <q-item-section>
+                  <q-item-label>{{ l.item }} · {{ l.portador }}</q-item-label>
+                  <q-item-label caption>
+                    {{ formataTimestamp(l.inicio, 2) }} · {{ l.filial }}
+                    <template v-if="!l.fim"> · aberto</template>
+                  </q-item-label>
+                  <q-item-label caption>
+                    <template v-if="l.modo === 'C'">
+                      abertura {{ formataNumero(l.valorabertura ?? 0) }} · fechamento
+                      {{ l.valorfechamento === null ? '—' : formataNumero(l.valorfechamento) }} ·
+                    </template>
+                    <template v-else-if="l.valorvendido !== null">
+                      vendido {{ formataNumero(l.valorvendido) }} ·
+                    </template>
+                    entrada {{ formataNumero(l.valorentrada) }} · saída
+                    {{ formataNumero(l.valorsaida) }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-item-label class="text-weight-bold">
+                    {{ l.liquido === null ? '—' : 'R$ ' + formataNumero(l.liquido) }}
+                  </q-item-label>
+                  <q-item-label v-if="l.titulo" caption>
+                    <a :href="`/titulo/${l.codtitulo}`" target="_blank" class="text-primary">{{
+                      l.titulo
+                    }}</a>
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card>
+          <MgEmptyState v-else-if="!store.carregandoItens" icon="inventory_2">
+            Nenhum movimento de item do caixa no período.
           </MgEmptyState>
         </q-tab-panel>
       </q-tab-panels>

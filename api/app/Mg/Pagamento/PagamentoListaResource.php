@@ -23,6 +23,8 @@ class PagamentoListaResource extends Resource
                 }
                 $texto = $numeros->take(2)->implode(', ');
                 return ($numeros->count() > 2) ? $texto . ' +' . ($numeros->count() - 2) : $texto;
+            case PagamentoListaService::ORIGEM_ITEM:
+                return optional(optional($pag->CaixaItemLancamento)->CaixaItem)->item;
             case PagamentoListaService::ORIGEM_TRANSFERENCIA:
                 return optional($pag->PortadorOrigem)->portador . ' → ' . optional($pag->PortadorDestino)->portador;
         }

@@ -94,6 +94,12 @@ const menuGroups = [
         to: { name: 'maquineta' },
       },
       {
+        label: 'Itens do Caixa',
+        icon: 'inventory_2',
+        color: 'amber-9',
+        to: { name: 'caixa-item' },
+      },
+      {
         label: 'Formas de Pagamento',
         icon: 'payments',
         color: 'green-8',

@@ -53,7 +53,11 @@ valida depois, junto com M11 e M12; decisões e "Como ficou no código" na seç�
 (transferências) commitado em 02/10/2026 sem validação**, na mesma conversa que o M12 (TASK-39):
 o Fábio valida M10, M11 e M12 juntos. **M12 (períodos no contas) commitado em 03/10/2026 sem
 validação, a pedido do Fábio** (TASK-39): ele valida M10, M11 e M12 juntos pelo roteiro único
-(seção M12, "Valida M10 + M11 + M12"); detalhe na seção M12.
+(seção M12, "Valida M10 + M11 + M12"); detalhe na seção M12. **M13 (itens do caixa, repasse,
+ajuste e avulso da gaveta) executado em dev em 03/10/2026, na árvore, sem commit** (TASK-39):
+redesenhado com o Fábio em **uma tela só do caixa**, a mesma no PDV e no contas, com contagem por
+cédula e moeda; **fechar passou a ser a conferência** (a etapa às cegas do M9 saiu). Detalhe na
+seção M13.
 TASK-193 (nova, High): tipo de título só obrigatório quando a natureza gera financeiro.
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
@@ -74,7 +78,7 @@ uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha s
 `pagamento.sql` (a tabela já virou view). `pagamento_liquidacao.sql` leva ~45 s em dev (175 mil
 liquidações, 437 mil movimentos) e precisa do `pagamento.sql` antes. O `.env` de produção do negocios
 pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). `conferencia.sql` (M9) e depois `razao.sql`
-(M10) rodam antes do `tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
+(M10) e `caixa_item.sql` (M13), nessa ordem, rodam antes do `tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
 script** (renumera os tipos de título; os anteriores usam os códigos antigos), e o
 `NfeTerceiroController.php` do MGsis sobe junto (grava Duplicata a Pagar, código novo 200).
 
@@ -107,16 +111,21 @@ script** (renumera os tipos de título; os anteriores usam os códigos antigos),
   fecha com contagem). **Corte** = a data que fecha um período corrente de cofre/banco. **Fatura** =
   período de cartão da empresa, com vencimento.
 - **Envelope**: o que sobra na gaveta ao fechar = `saldofinal` da sessão = `saldoinicial` da próxima.
+  Desde o M13 o dinheiro sobe ao escritório; a sangria leva o excesso ao cofre e a contagem do
+  fechamento é o que fica (o envelope). Diferença na abertura ou no fechamento = ajuste (decisão 21).
 - **Item do caixa**: mercadoria de parceiro fora do fiscal (chips, ingressos, maquinetas de
-  terceiros) que passa pela gaveta e vira título de repasse ao parceiro (Duplicata a Pagar, 200)
-  no fechamento.
+  terceiros) que passa pela gaveta e vira título de repasse ao parceiro (Duplicata a Pagar, 200;
+  Duplicata a Receber, 100, se o líquido for negativo) no fechamento. Modo **C** contagem (o estoque
+  a valor de face fica na gaveta e entra na contagem) e **M** maquineta/terceiro (vendido, entrada,
+  saída).
 - **Maquineta** (`tblmaquineta`): cadastro único dos terminais de cartão, integrados ou não (um por
   POS PagarMe, um por pinpad Saurus, manuais e acessos de site). A adquirente é dado dela.
   **Compartilhada** = aparece no PDV de todas as filiais (acesso de site feito numa filial só).
 - **Lote** (`tblmaquinetalote`, M9): o borderô da maquineta. Sempre um aberto por maquineta; o
   cartão cai nele; o gerente fecha digitando crédito e débito do borderô, com a foto.
 - **Conferência** (M9): o "conferi" do gerente sobre o que o caixa movimentou — sessão da gaveta,
-  lote, cheque, vale recebido, duplicata (confissão), venda desbalanceada. **Pendência** = conferência
+  lote, cheque, vale recebido, duplicata (confissão), venda desbalanceada. Na sessão da gaveta,
+  desde o M13, **fechar é a conferência** (sem etapa às cegas; quem fecha é o caixa ou o gerente). **Pendência** = conferência
   ainda não confirmada; a tela Fechamentos do contas lista as da filial.
 - **Baixa de título**: o nome novo para o que era "liquidação". A palavra liquidação só aparece
   neste doc para a tabela antiga (`tblliquidacaotitulo`) e as telas que existem até o M6.
@@ -282,7 +291,8 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
     conta contábil; no fechamento da sessão o líquido vira título de repasse (Duplicata a Pagar, 200,
     com pessoa e conta do item; sem tipo próprio desde a limpeza dos tipos do M8.1),
     número `AAAA-MM-DD-P{id do período}`, um por sessão por item; o financeiro agrupa e paga. Reabrir
-    sessão estorna esses títulos (422 se já movimentados).
+    sessão estorna esses títulos (422 se já movimentados). (M13: líquido negativo gera Duplicata a
+    Receber, 100; item sem pessoa só informa; detalhe na seção M13.)
 28. **Vale colaborador / adiantamento**: título com `movimentaportador` cuja implantação já vem com o
     pagamento (dinheiro na gaveta pelo PDV; transferência ou cartão da empresa pelo contas). Um título
     por forma.
@@ -376,9 +386,11 @@ codusuario, audit`, única por maquineta e dia.
 `codportadorperiodo PK, codportador NN, inicio NN, fim (nulo = corrente), fechamento (nulo = aberto),
 codusuarioabertura, codusuariofechamento, saldoinicial NN default 0, saldofinal, moedasabertura,
 cedulasabertura, moedasfechamento, cedulasfechamento, conferencia, codusuarioconferencia,
-valorconferido, observacoes, audit`. Único corrente por portador (`fim IS NULL`). Ainda não
-existem: `vencimento` (fatura, M14) e `codpagamentoabertura`/`codpagamentofechamento` (ajuste de
-caixa, quando ele vier). Cofre, banco e adquirente ganham o corrente sozinhos no primeiro
+valorconferido, observacoes, audit`; o M13 (`caixa_item.sql`) acrescentou
+`codpagamentoabertura`/`codpagamentofechamento` (ajuste de caixa da sessão) e
+`contagemabertura`/`contagemfechamento` (jsonb `{"200": 3, "0.05": 12}`, quantidade de cada cédula
+e moeda; `moedas*`/`cedulas*` continuam gravados, calculados). Único corrente por portador (`fim IS
+NULL`). Ainda não existe: `vencimento` (fatura, M14). Cofre, banco e adquirente ganham o corrente sozinhos no primeiro
 lançamento do razão (M10).
 
 ### `tblportadormovimento` (M10; recriada, a atual está vazia)
@@ -389,11 +401,14 @@ sinal: positivo entrou), transacao timestamp NN (quando cai naquele portador), p
 pagamento (`api/database/razao.sql`). `tblextratobancarioportadormovimento` (existe) continua
 sendo a amarração com o extrato para o M14.
 
-### Itens do caixa (M13)
+### Itens do caixa (M13, `api/database/caixa_item.sql`)
 
-`tblcaixaitem` (`item, modo C|M, codfilial nulo = todas, codpessoa, codcontacontabil, ordem, inativo`)
-e `tblcaixaitemlancamento` (`codportadorperiodo, codcaixaitem, valorabertura, valorfechamento,
-valorvendido, valorentrada, valorsaida, observacoes, codpagamento, codtitulo`, único por período+item).
+`tblcaixaitem` (`item varchar(50), modo C|M, codfilial nulo = todas, codpessoa, codcontacontabil,
+ordem, inativo`, CHECK pessoa ⇒ conta; 6 seeds sem pessoa) e `tblcaixaitemlancamento`
+(`codportadorperiodo, codcaixaitem, valorabertura, valorfechamento, valorvendido, valorentrada,
+valorsaida (NN default 0), observacoes, codpagamento, codtitulo`, único por período+item, valores ≥
+0). `tblpagamento.codcaixaitemlancamento` (o pagamento aponta para o documento, decisão 3;
+`codpagamento` do lançamento é o atalho para o mesmo registro).
 
 ### O que some
 
@@ -503,6 +518,16 @@ para leitura de histórico não convertido.
   - Períodos e saldo: `Mg/Portador/PortadorPeriodoService::{corrente, imutavel, descricao,
     saldo}`. Gaveta = sessão do M9 (`CaixaService`); os demais portadores ganham o corrente
     sozinhos. Imutável: gaveta conferida; demais, fechados.
+- **Caixa depois do M13** (detalhe na seção M13):
+  - Uma tela só: `@components/MgCaixaSessao.vue` + `stores/caixaSessaoStore.js` (subpeças em
+    `@components/caixa/`), usada pelo negocios `/caixa` (gaveta do PDV) e pelo contas Fechamentos →
+    caixa. Rotas `v1/caixa/...` (usuário: Caixa/Gerente da filial, Financeiro, Admin); o PDV só
+    pergunta a gaveta em `v1/pdv/caixa`. Transferências da gaveta pelas rotas do contas
+    (`v1/pagamento/transferencia`) nos dois apps.
+  - `CaixaService::fechar` grava também `conferencia`: o razão trava no fechamento; corrigir
+    pagamento da sessão é reabrindo. `CaixaService::pagamentoNaGaveta` mantém o pagamento de
+    ajuste e de item (sempre o mesmo registro; zero cancela, voltar reativa).
+  - Listagem única: origem **I** "Item do caixa".
 - **Transferências e períodos depois do M11/M12** (detalhe nas seções):
   - Transferência = pagamento com os dois lados e sem venda (`PagamentoService::ehTransferencia`);
     nasce no `PagamentoService::transferir`, confirma no `confirmar`, cancela no
@@ -1247,6 +1272,10 @@ Mais os 5 inativos de histórico da parte 2 (130, 131, 132, 133, 230), abaixo.
 
 ## M9 — Conferências e fechamento do caixa (Receber no balcão; absorve a gaveta do M10)
 
+> **Mudou no M13 (03/10/2026, com o Fábio):** a sessão da gaveta deixou de ter conferência às
+> cegas separada. Fechar (no PDV pelo caixa ou no contas pelo gerente, na mesma tela) é a
+> conferência; o borderô traz tudo. Lote, cheque, vale, duplicata e venda continuam como abaixo.
+
 **Por quê** (redesenho com o Fábio, 02/10/2026): o M9 era uma tela de conferência de maquineta por
 dia. Discutindo a dinâmica, ficou claro que o fechamento é em dois tempos e que o gerente precisa
 **consertar** o que a loja fez errado, não só comparar números. Levantamento em dev (2025–26): 33
@@ -1779,22 +1808,148 @@ pm join tblportador p using(codportador) where pm.inativo is null group by 1,2 o
 
 ## M13 — Itens do caixa e repasse ao parceiro (TASK-39)
 
-- **DDL** (seção 2 de `caixa.sql`): `tblcaixaitem` com seeds (Chips de celular C, Ingressos impressos
-  C, Bilhete Agora M, BlackTicket M, Redeflex recarga M, Bradesco Expresso M), `tblcaixaitemlancamento`,
-  `tblpagamento.codcaixaitemlancamento`.
-- **Backend**: `CaixaItem` CRUD (`v1/caixa-item`, Administrador/Financeiro); `CaixaService::abrir`
-  cria os lançamentos dos itens ativos (C com `valorabertura`) e soma no contado;
-  `salvarItemLancamento` (pagamento `entrada − saida`, destino/origem = gaveta, doc = item); `fechar`
-  pede `valorfechamento` dos C, soma no contado e, por item com líquido ≠ 0 (C: `abertura + entrada −
-  saida − fechamento`; M: `entrada − saida`), cria título de repasse, Duplicata a Pagar 200 (pessoa e conta do item,
-  filial da gaveta, número `AAAA-MM-DD-P{id}` + sufixo, vencimento = corte) e grava `codtitulo`;
-  `reabrir` estorna (422 se movimentados); `GET v1/caixa/item-lancamento` para o acerto.
-- **Frontend**: contas → Cadastros → Itens do Caixa; negocios → Caixa: contagem por item C na
-  abertura/fechamento, `CaixaItens.vue` na sessão aberta, PDF completo; contas → Caixas → aba Itens.
-- **Valida**: abrir com chips 100; vender 1 chip (nada lança); bloco de ingressos entrada 500;
-  Bilhete Agora vendido 120 / entrada 120 → +120; fechar contando chips 85 e ingressos 380 → títulos
-  de repasse (Duplicata a Pagar) de 15, 120 e 120 em contas a pagar; agrupar e pagar; reabrir com título já
-  agrupado → 422.
+**Por quê** (03/10/2026, com o Fábio, antes de codar): além dos itens dos parceiros, o M13 levou a
+pendência da gaveta que ficou do M10 — ajuste de caixa na abertura e no fechamento, e o lançamento
+avulso no PDV (TASK-188 M9.5, #37). Revendo o plano, apareceu a incoerência entre "o envelope fica na
+gaveta" (glossário) e "o caixa sobe ao escritório com tudo" (M9). O Fábio descreveu a operação
+real: o caixa sobe com tudo, às vezes nem fecha no PDV; o gerente faz a sangria ali, reconta o que
+sobrou para o troco de amanhã e fecha. Pediu KISS: **uma tela polivalente**, um ajuste só, sem
+etapas e controles paralelos.
+
+**Decisões (M13.x, não reabrir)**
+
+1. **Uma tela do caixa** (`@components/MgCaixaSessao.vue`), a mesma no PDV (negocios `/caixa`) e
+   no contas (Fechamentos → caixa): abrir, itens, avulsos, transferências, dinheiro, fechar,
+   reabrir, borderô.
+2. **Fechar é a conferência.** Fecha quem estiver com o dinheiro: o caixa no PDV ou o gerente no
+   contas. A conferência às cegas do M9 (gerente digita depois do caixa) saiu; o razão trava no
+   fechamento (`conferencia` gravada junto). Corrigir pagamento da sessão: reabrir.
+3. **Contagem por quantidade** de cédulas (200, 100, 50, 20, 10, 5, 2) e moedas (1; 0,50; 0,25;
+   0,10; 0,05; 0,01), em jsonb na sessão (abertura e fechamento), mais o estoque dos itens C.
+4. **Saldo inicial = envelope** (`saldofinal` da sessão anterior; 0 na primeira). Contado ≠ envelope
+   na abertura → pagamento de ajuste (motivo A). No fechamento, contado (o que fica depois da
+   sangria) ≠ sistema → **um** ajuste; depois dele, sistema = contado (decisão 21). Sempre o mesmo
+   registro: reabrir cancela, fechar de novo reativa.
+5. **Go-live:** a gaveta abre com 0 e recebe o troco por suprimento do cofre; o saldo de
+   implantação vai só no cofre/caixa da filial (avulso de Ajuste do M12).
+6. **Modo C dentro do dinheiro da gaveta:** entrada/saída de estoque (bloco de ingressos) gera
+   pagamento na gaveta e o estoque contado soma na contagem; o saldo da gaveta inclui chips e
+   ingressos a valor de face. Venda de chip não lança nada (dinheiro entra, chip sai).
+7. **Item:** um pagamento `entrada − saída` por item na sessão, alterado no mesmo registro (zero
+   cancela; voltando, reativa o mesmo). Vendido (modo M) é só informação.
+8. **Repasse no fechamento:** por item com pessoa e líquido ≠ 0 (C: abertura + entrada − saída −
+   fechamento; M: entrada − saída), título com pessoa e conta do item, filial da gaveta, número
+   `AAAA-MM-DD-P{sessão}` + sufixo, transação/emissão/vencimento = dia do fechamento. Líquido > 0 =
+   **200 Duplicata a Pagar**; < 0 = **100 Duplicata a Receber** (o parceiro nos deve). Item sem
+   pessoa: só informativo. No cadastro, **pessoa obriga conta contábil** (o título exige conta).
+9. **Reabrir** (Gerente da filial, Financeiro, Admin; só a última sessão): estorna os títulos de
+   repasse (422 se já agrupados ou pagos) e cancela o ajuste de fechamento.
+10. **Avulso na gaveta:** entrada ou saída, motivo T/F/R/A e histórico, com o caixa aberto;
+    excluir = cancelar, só quem lançou, com o caixa aberto. Ajuste e item não se excluem nem se
+    corrigem pela correção do gerente (422): mexem-se pela tela do caixa.
+11. **Listagem única:** pagamento de item tem origem nova **I "Item do caixa"** (documento = o
+    item); ajuste e avulso continuam origem Avulso com o motivo.
+12. **Aba Itens** (contas → Caixas): qualquer usuário consulta.
+13. **Borderô com tudo:** contagem por cédula/moeda e itens C (abertura × fechamento), envelope,
+    ajustes, sistema × contado, itens com líquido e título, avulsos.
+
+**DDL `api/database/caixa_item.sql`** (padrão `conferencia.sql`; roda depois do `razao.sql` e
+antes do `tipo_titulo_limpeza.sql`): `tblcaixaitem` com os 6 seeds (Chips de celular C, Ingressos
+impressos C, Bilhete Agora M, BlackTicket M, Redeflex recarga M, Bradesco Expresso M; pessoa e conta
+nulas), `tblcaixaitemlancamento`, `tblpagamento.codcaixaitemlancamento`,
+`tblportadorperiodo.codpagamentoabertura/codpagamentofechamento/contagemabertura/contagemfechamento`
+e as FKs.
+
+**Como ficou no código** (03/10/2026, executado em dev, na árvore, sem commit):
+
+- **DDL** rodado 2x em dev (a segunda não faz nada). Uma consulta `count(*)` sobre a view
+  `tblliquidacaotitulo` estava presa havia 16 h no psql de dev segurando lock de `tblpagamento`:
+  foi cancelada (`pg_cancel_backend`) para o `ALTER` passar.
+- **Backend `Mg/Caixa`**: `CaixaItem`, `CaixaItemLancamento` (`liquido()`), CRUD
+  (`CaixaItemController`/`Service`/`Request`/`Resource`, `v1/caixa-item`, Admin/Financeiro;
+  listagem livre), `CaixaItemLancamentoService` (aba Itens, SQL cru, totais por item).
+  `CaixaService`: `contagem`, `envelope`, `lancamentos` (cria os de item ativo cadastrado depois da
+  abertura), `pagamentoNaGaveta`, `abrir(gaveta, contagem, itens)`, `salvarItem`, `lancarAvulso`,
+  `cancelarAvulso`, `ehAjuste`, `fechar(sessao, contagem, itens)` (trava contra transferência
+  chegando, ajuste, títulos, grava `conferencia`), `reabrir` (estorna títulos, cancela ajuste),
+  `dinheiro` com documentos **I** (item) e **J** (ajuste), `painel` (dinheiro, informativo,
+  ajustes, itens, avulsos); `conferir`/`desconferir` saíram. `SessaoResource` mudou para
+  `Mg/Caixa` e é sempre completo (painel, transferências, `podeOperar`, `podeReabrir`).
+  `CaixaController` reescrito: `v1/pdv/caixa` (só a gaveta do PDV e se está aberta) e
+  `v1/caixa/gaveta/{codportador}` (+ `/abrir`), `v1/caixa/sessao/{id}` (+ `/fechar`, `/reabrir`,
+  `/item/{codcaixaitem}`, `/avulso`, `/bordero`, `/bordero/{impressora}`),
+  `v1/caixa/avulso/{id}/cancelar`, `v1/caixa/item-lancamento`. Saíram as rotas
+  `v1/pdv/caixa/{abrir,fechar,transferencia...}` e `v1/conferencia/sessao/...`.
+  `TituloService::criar` aceita `sufixo` (sufixa o número informado). Pendências do Fechamentos:
+  caixas **abertos**. Correção do gerente: mensagens "caixa fechado"; ajuste e item = 422. Razão:
+  "já foi fechado". `PagamentoListaService` origem I. Borderô (`bordero-termica`) completo.
+- **Frontend**: `@components/MgCaixaSessao.vue`, `caixa/{ContagemCaixa, ItemCaixaDialog,
+  AvulsoCaixaDialog, TransferirCaixaDialog}.vue`, `stores/caixaSessaoStore.js`;
+  `pagamentoListaStore.transferencia` usa a rota do contas nos dois apps; `MgPagamentoFiltros` com a
+  origem "Item do caixa". negocios: `CaixaPage` só embrulha a tela única; `stores/caixa.js` só
+  com a gaveta e o bloqueio do Dinheiro; `components/caixa/DialogTransferir.vue` apagado. contas:
+  `fechamento/Sessao.vue` embrulha a tela única (Fechamentos → "Caixas abertos"),
+  `conferenciaStore` sem a sessão, Cadastros → **Itens do Caixa** (`pages/caixaItem`,
+  `stores/caixaItemStore.js`), Caixas → aba **Itens** (`caixaStore.buscarItens`).
+- **Dev**: Chips de celular e Bilhete Agora com o parceiro Tim Celular (1042), Ingressos impressos
+  com Vivo (11498), conta 10 Outras Entradas; os outros três sem parceiro. Workers reiniciados
+  (`queue:restart`).
+- **Conferido** (tinker com rollback, PDV 508, gaveta 202062): abrir com 2×100 + 1×50 + chips 100
+  sobre envelope 250 → ajuste +100, sistema 350; abrir de novo 422; ingressos entrada 500; Bilhete
+  Agora 130 → 120 (mesmo pagamento), zerado (cancela) e de volta (o mesmo reativado); avulso de
+  saída 17,99; outro usuário excluindo = 403, quem lançou exclui; ajuste não se exclui; sangria
+  400 ao Caixa Financeiro; correção de item = 422; fechar com 3×100 + chips 85 + ingressos 380 →
+  contado 765, ajuste 212,99, sistema = contado, razão da sessão + envelope = contado; títulos 200
+  de 15 (Chips, `…-P40`), 120 (Ingressos) e 120 (Bilhete Agora, `…-P40 (1)`); borderô PDF;
+  listagem origem I; reabrir com título movimentado = 422; reabrir estorna e cancela o ajuste;
+  fechar de novo reusa o mesmo ajuste; item com caixa fechado = 422; abertura seguinte igual ao
+  envelope sem ajuste. Pela camada HTTP: CRUD do item (pessoa sem conta = 422), gaveta, abrir,
+  itens, avulso (motivo inválido 422), transferência, sessão, fechar, item-lancamento, listagem,
+  borderô, pendências, reabrir, `v1/pdv/caixa`. php -l, eslint (contas, negocios e cópia de
+  `@components`), templates compilados (`@vue/compiler-sfc`). **Não aberto no navegador.**
+
+**Valida (M13)** (PDV 508 em dev, gaveta "Gaveta Dev Fabio"; envelope atual R$ 250):
+
+1. contas → Cadastros → **Itens do Caixa**: os 6 itens; editar um com parceiro sem conta → recusa;
+   inativar/reativar.
+2. negocios → **Caixa**: abrir contando cédulas/moedas (ex.: 2×100 e 1×50) e chips 100 → ajuste
+   de abertura no quadro Dinheiro (contado − envelope).
+3. Vender 1 chip em dinheiro → só a venda aparece (o chip não lança nada).
+4. Itens: Ingressos impressos "estoque recebido" 500; Bilhete Agora vendido 120, entrou 120 → no
+   Dinheiro, "Itens do caixa" +620. Mudar o Bilhete para 130 e voltar para 120: na listagem de
+   pagamentos (origem Item do caixa) continua um pagamento só.
+5. Lançamento avulso: saída 17,99 "Ajuste de caixa" com histórico; outro de teste e excluir;
+   logado com outro usuário, o botão de excluir não aparece.
+6. Transferência (sangria) da gaveta para o cofre.
+7. Fechar contando o que fica (cédulas) + chips 85 + ingressos 380 → ajuste de fechamento se
+   divergir; borderô impresso/visto com contagem, itens, avulsos e ajustes. contas → Títulos:
+   Duplicata a Pagar de 15 (Tim), 120 (Vivo) e 120 (Tim, número com sufixo), vencendo hoje.
+8. contas → Caixas → aba **Itens**: as linhas da sessão e os totais por item.
+9. Agrupar um dos títulos no contas → Fechamentos/Caixas → abrir a sessão → Reabrir caixa = 422;
+   desfazer o agrupamento → reabrir: títulos estornados, ajuste de fechamento desfeito.
+10. **Gerente fechando no contas**: abrir o caixa no PDV e não fechar; contas → Fechamentos →
+    "Caixas abertos" → mesma tela: sangria, contar, Fechar.
+11. Lote, cheque, vale, duplicata e venda no Fechamentos continuam iguais (M9).
+
+Consultas: `select * from tblcaixaitemlancamento order by codcaixaitemlancamento desc limit 10`;
+`select codportadorperiodo, saldoinicial, saldofinal, codpagamentoabertura, codpagamentofechamento,
+contagemabertura, contagemfechamento from tblportadorperiodo where codportador = 202062 order by
+inicio desc limit 3`; razão da sessão: `select sum(valor) from tblportadormovimento where
+codportadorperiodo = :id and inativo is null` (+ saldo inicial = saldo final).
+
+**Dúvidas para o Fábio (M13)**, decididas assim até ele dizer:
+
+1. **Contagem C da abertura não se edita** depois de aberto (o ajuste de abertura dependeria
+   dela): errou a contagem, a diferença aparece no fechamento.
+2. **Item novo cadastrado com o caixa aberto** entra na sessão com abertura 0.
+3. **Número do título** `AAAA-MM-DD-P{sessão}` + sufixo cabe nos 20 caracteres até a sessão
+   99.999; depois disso precisa encurtar.
+4. **Título nasce vencendo no dia do fechamento** (decisão do plano): aparece como vencido no dia
+   seguinte até o financeiro agrupar.
+5. **Avulso no PDV aceita os quatro motivos** (taxa, tarifa e rendimento também), como no plano.
+6. **Fechar no contas** usa a mesma permissão de operar a gaveta (Caixa/Gerente da filial,
+   Financeiro, Admin); **reabrir**: Gerente da filial, Financeiro, Admin.
+7. A tela do caixa **mostra o sistema** o tempo todo (sem "às cegas"), para o caixa e o gerente.
 
 ## M14 — Cartões no razão e conciliação (TASK-195; a definir quando chegar)
 

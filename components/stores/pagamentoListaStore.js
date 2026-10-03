@@ -140,10 +140,9 @@ export const pagamentoListaStore = defineStore('pagamentoLista', {
     },
 
     // transferência a confirmar (M11): confirma o dono do destino; cancela qualquer dos dois.
-    // Rotas próprias: v1/pdv/caixa/transferencia no PDV, v1/pagamento/transferencia no contas.
+    // Uma rota só nos dois apps desde o M13 (quem pode, o servidor decide pelo usuário).
     async transferencia(id, acao, payload = {}) {
-      const base = this.travadoPdv ? 'v1/pdv/caixa/transferencia' : 'v1/pagamento/transferencia'
-      const { data } = await api.post(`${base}/${id}/${acao}`, { ...this.fixos, ...payload })
+      const { data } = await api.post(`v1/pagamento/transferencia/${id}/${acao}`, payload)
       this.pagamento = data.data
       this.atualizarLinha(data.data)
       return this.pagamento

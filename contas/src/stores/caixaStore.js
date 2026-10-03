@@ -9,6 +9,8 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 // v1/pagamento/transferencia. Quem opera cada lado decide o servidor (decisão 23).
 // M12: os períodos dos portadores (fechar com corte, reabrir, lançamento avulso), rotas
 // v1/portador-periodo, Financeiro/Admin.
+// M13: o que os itens do caixa (chips, ingressos, Bilhete Agora...) movimentaram, para o acerto
+// com o parceiro (v1/caixa/item-lancamento, qualquer um consulta).
 
 const iso = (d) =>
   [
@@ -105,6 +107,7 @@ export const useCaixaStore = defineStore(
       buscarCaixas()
       buscarTransferencias()
       if (comPeriodos) buscarPeriodos()
+      buscarItens()
     }
 
     async function transferir(dados) {
@@ -207,7 +210,35 @@ export const useCaixaStore = defineStore(
       return !!ret
     }
 
+    // ---- itens do caixa (M13) ----
+    const codcaixaitem = ref(null)
+    const itens = ref({ linhas: [], totais: [] })
+    const carregandoItens = ref(false)
+
+    async function buscarItens() {
+      carregandoItens.value = true
+      try {
+        const { data } = await api.get('v1/caixa/item-lancamento', {
+          params: {
+            codcaixaitem: codcaixaitem.value || undefined,
+            codfilial: filtros.value.codfilial || undefined,
+            transacao_de: filtros.value.transacao_de || undefined,
+            transacao_ate: filtros.value.transacao_ate || undefined,
+          },
+        })
+        itens.value = data.data
+      } catch (e) {
+        notifyError(e, 'Erro ao buscar os itens do caixa')
+      } finally {
+        carregandoItens.value = false
+      }
+    }
+
     return {
+      codcaixaitem,
+      itens,
+      carregandoItens,
+      buscarItens,
       periodos,
       carregandoPeriodos,
       periodo,
@@ -237,6 +268,6 @@ export const useCaixaStore = defineStore(
     }
   },
   {
-    persist: { pick: ['filtros', 'aba'] },
+    persist: { pick: ['filtros', 'aba', 'codcaixaitem'] },
   },
 )
