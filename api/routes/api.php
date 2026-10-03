@@ -1297,7 +1297,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Portador
     Route::get('portador', '\Mg\Portador\PortadorController@index');
     Route::get('portador/intervalo-saldos', '\Mg\Portador\PortadorController@getIntervaloSaldos');
-    Route::get('portador/lista-saldos', '\Mg\Portador\PortadorController@listaSaldos');
+    // painel e tela do portador e do periodo (doc-4)
+    Route::get('portador/painel', '\Mg\Portador\PortadorController@painel');
+    Route::get('portador/{codportador}/periodo/{codportadorperiodo?}', '\Mg\Portador\PortadorPeriodoController@tela')->whereNumber(['codportador', 'codportadorperiodo']);
     Route::post('portador', '\Mg\Portador\PortadorController@store');
     Route::put('portador/{codportador}', '\Mg\Portador\PortadorController@update');
     Route::delete('portador/{codportador}', '\Mg\Portador\PortadorController@destroy');
@@ -1309,7 +1311,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('portador-periodo/{id}/fechar', '\Mg\Portador\PortadorPeriodoController@fechar')->whereNumber('id');
     Route::post('portador-periodo/{id}/reabrir', '\Mg\Portador\PortadorPeriodoController@reabrir')->whereNumber('id');
     Route::post('portador-periodo/lancamento', '\Mg\Portador\PortadorPeriodoController@lancamento');
-    Route::get('portador/caixas', '\Mg\Caixa\CaixasController@caixas');
+    Route::post('portador-periodo/lancamento/{codpagamento}/cancelar', '\Mg\Portador\PortadorPeriodoController@cancelarLancamento')->whereNumber('codpagamento');
     // tela do caixa, a mesma no PDV e no contas (M13 doc-3)
     Route::get('caixa/gaveta/{codportador}', '\Mg\Caixa\CaixaController@gaveta')->whereNumber('codportador');
     Route::post('caixa/gaveta/{codportador}/abrir', '\Mg\Caixa\CaixaController@abrir')->whereNumber('codportador');
@@ -1330,7 +1332,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@destroy')->whereNumber('id');
     Route::post('caixa-item/{id}/inativo', '\Mg\Caixa\CaixaItemController@inativar')->whereNumber('id');
     Route::delete('caixa-item/{id}/inativo', '\Mg\Caixa\CaixaItemController@ativar')->whereNumber('id');
-    Route::get('portador/{id}/saldo', '\Mg\Caixa\CaixasController@saldo')->whereNumber('id');
     Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
     Route::get('portador/{codportador}/info', '\Mg\Portador\PortadorController@info');
     Route::get('portador/{codportador}/extratos', '\Mg\Portador\PortadorController@listaExtratos');

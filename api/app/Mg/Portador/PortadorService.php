@@ -6,6 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\DB;
 use Mg\Banco\Banco;
+use Mg\Conferencia\ConferenciaAutorizador;
 use OfxParser\Parser;
 use RuntimeException;
 
@@ -53,6 +54,74 @@ class PortadorService
         $q->orderBy('portador');
 
         return $q->paginate(25);
+    }
+
+    // painel /portador (doc-4): os portadores por filial com o saldo gravado
+    // (so' da especie nesta fase, R3), a situacao da gaveta e as
+    // transferencias a confirmar. Gerente ve as filiais dele; Financeiro e
+    // Admin, todas (R15). `bloqueio`: a gaveta nao aceita transferencia agora
+    public static function painel(?int $codfilial, bool $inativos): array
+    {
+        $filiais = ConferenciaAutorizador::filiais();
+        $portadores = Portador::with('Filial:codfilial,filial')
+            ->when(!$inativos, fn ($q) => $q->whereNull('inativo'))
+            ->when($codfilial, fn ($q) => $q->where('codfilial', $codfilial))
+            ->when($filiais !== null, fn ($q) => $q->whereIn('codfilial', $filiais ?: [0]))
+            ->orderBy('codfilial')
+            ->orderByRaw("position(tipo in 'EBACO')")
+            ->orderBy('portador')
+            ->get();
+        $gavetas = DB::table('tblpdv')->whereNotNull('codportador')->distinct()->pluck('codportador')
+            ->map(fn ($c) => (int) $c)->all();
+        $sessoes = PortadorPeriodo::whereIn('codportador', $gavetas)
+            ->whereRaw('codportadorperiodo in (
+                select distinct on (codportador) codportadorperiodo
+                from tblportadorperiodo
+                order by codportador, inicio desc, codportadorperiodo desc
+            )')
+            ->with(['UsuarioAbertura:codusuario,usuario', 'UsuarioFechamento:codusuario,usuario'])
+            ->get()
+            ->keyBy('codportador');
+        $pendentes = DB::select("
+            select codportadororigem, codportadordestino, total
+            from tblpagamento
+            where estado = 'P'
+            and codnegocio is null
+            and codportadororigem is not null
+            and codportadordestino is not null
+        ");
+        $somar = function ($coluna, $codportador) use ($pendentes) {
+            $doPortador = array_filter($pendentes, fn ($p) => $p->$coluna == $codportador);
+            return [
+                'quantidade' => count($doPortador),
+                'valor' => round(array_sum(array_map(fn ($p) => (float) $p->total, $doPortador)), 2),
+            ];
+        };
+        return $portadores->map(function (Portador $p) use ($gavetas, $sessoes, $somar) {
+            $gaveta = $p->tipo == Portador::TIPO_ESPECIE && in_array($p->codportador, $gavetas);
+            $sessao = $gaveta ? $sessoes->get($p->codportador) : null;
+            return [
+                'codportador' => $p->codportador,
+                'portador' => $p->portador,
+                'tipo' => $p->tipo,
+                'codfilial' => $p->codfilial,
+                'filial' => optional($p->Filial)->filial,
+                'inativo' => $p->inativo,
+                'ehGaveta' => $gaveta,
+                'saldo' => $p->tipo == Portador::TIPO_ESPECIE ? (float) $p->saldo : null,
+                'sessao' => $sessao ? [
+                    'codportadorperiodo' => $sessao->codportadorperiodo,
+                    'aberta' => $sessao->aberto(),
+                    'inicio' => $sessao->inicio,
+                    'fim' => $sessao->fim,
+                    'usuarioabertura' => optional($sessao->UsuarioAbertura)->usuario,
+                    'usuariofechamento' => optional($sessao->UsuarioFechamento)->usuario,
+                ] : null,
+                'bloqueio' => $gaveta && !($sessao && $sessao->aberto()) ? 'Gaveta não aberta' : null,
+                'chegando' => $somar('codportadordestino', $p->codportador),
+                'saindo' => $somar('codportadororigem', $p->codportador),
+            ];
+        })->values()->all();
     }
 
     public static function criar(array $dados): Portador
@@ -240,130 +309,6 @@ class PortadorService
         }
 
         //dd($saldos);
-    }
-
-    public static function listaSaldos($dia)
-    {
-        $sql = "
-            select
-                p.codfilial,
-                f.filial,
-                b.codbanco,
-                b.banco,
-                p.codportador,
-                p.portador,
-                s.saldobancario
-            from tblportador p
-                 inner join tblbanco b on (b.codbanco = p.codbanco)
-                 left join tblfilial f on (f.codfilial = p.codfilial)
-                 left join tblportadorsaldo s on (s.codportadorsaldo =
-                      (
-                          select us.codportadorsaldo
-                          from tblportadorsaldo us
-                          where us.codportador = p.codportador
-                            and us.dia <= :dia
-                          order by us.dia desc
-                          limit 1
-                      )
-                )
-            where coalesce(p.inativo, now()) >= :dia
-            order by p.codfilial, p.codbanco, p.codportador
-        ";
-
-        $data = DB::select($sql, [
-            'dia' => $dia
-        ]);
-
-        //dd($data);
-
-        return self::montaEstruturaSaldo($data);
-        //return $data;
-    }
-
-    private static function montaEstruturaSaldo(array $linhas): array
-    {
-        // monta os portadores de um banco
-        $montarPortadores = function($itensBanco): array {
-            return collect($itensBanco)
-                ->map(function($registro) {
-                    return [
-                        'codportador' => (int)   $registro->codportador,
-                        'portador'    =>         $registro->portador,
-                        'saldobancario'       => (float) $registro->saldobancario,
-                    ];
-                })
-                ->values()
-                ->all();
-        };
-
-        // soma os saldos de um único banco
-        $somarBanco = function($itensBanco) use ($montarPortadores): float {
-            $portadores = $montarPortadores($itensBanco);
-            return array_sum(array_column($portadores, 'saldobancario'));
-        };
-
-        // monta a lista de bancos de uma filial
-        $montarBancos = function($itensFilial) use ($montarPortadores, $somarBanco): array {
-            return collect($itensFilial)
-                ->groupBy('codbanco')
-                ->map(function($itensBanco) use ($montarPortadores, $somarBanco) {
-                    return [
-                        'codbanco'   => (int)   $itensBanco->first()->codbanco,
-                        'nome'       =>         $itensBanco->first()->banco,
-                        'portadores' =>         $montarPortadores($itensBanco),
-                        'totalBanco' => (float) $somarBanco($itensBanco),
-                    ];
-                })
-                ->values()
-                ->all();
-        };
-
-        // soma todos os totais de banco para dar o total da filial
-        $somarFilial = function($itensFilial) use ($montarBancos): float {
-            $bancos = $montarBancos($itensFilial);
-            return array_sum(array_column($bancos, 'totalBanco'));
-        };
-
-
-        // monta todas as filiais
-        $filiais = collect($linhas)
-            ->groupBy('codfilial')
-            ->map(function($itensFilial) use ($montarBancos, $somarFilial) {
-                //dd($itensFilial);
-                return [
-                    'codfilial'   => (int)   $itensFilial->first()->codfilial,
-                    'nome'        =>         $itensFilial->first()->filial,
-                    'totalFilial' => (float) $somarFilial($itensFilial),
-                    'bancos'      =>         $montarBancos($itensFilial),
-                ];
-            })
-            ->values()
-            ->all();
-
-        // total por banco em todo o conjunto
-        $totalPorBanco = collect($linhas)
-            ->groupBy('codbanco')
-            ->map(function($itensBanco) use ($montarPortadores) {
-                $saldo = array_sum(array_column(
-                    $montarPortadores($itensBanco),
-                    'saldobancario'
-                ));
-                return [
-                    'codbanco' => (int)   $itensBanco->first()->codbanco,
-                    'valor'    => (float) $saldo,
-                ];
-            })
-            ->values()
-            ->all();
-
-        // total geral
-        $totalGeral = array_sum(array_column($totalPorBanco, 'valor'));
-
-        return [
-            'filiais'       => $filiais,
-            'totalPorBanco' => $totalPorBanco,
-            'totalGeral'    => (float) $totalGeral,
-        ];
     }
 
     public static function listaMovimentacoes($codportador, $dataInicial, $dataFinal){

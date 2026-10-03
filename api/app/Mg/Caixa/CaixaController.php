@@ -11,6 +11,8 @@ use Mg\Pdv\PdvRequest;
 use Mg\Pdv\PdvService;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorPeriodo;
+use Mg\Portador\PortadorPeriodoResource;
+use Mg\Portador\PortadorPeriodoService;
 
 /**
  * Tela do caixa (M9; numa tela so' desde o M13 doc-3): a mesma no PDV e no
@@ -41,6 +43,14 @@ class CaixaController extends Controller
         $sessao = PortadorPeriodo::with('Portador')->findOrFail($id);
         CaixaService::autorizarOperar($sessao->Portador->codfilial);
         return $sessao;
+    }
+
+    // a sessao e os periodos que o movimento mexeu (R14 doc-4): a propria
+    // sessao e as seguintes
+    private function resposta(PortadorPeriodo $sessao)
+    {
+        return (new SessaoResource($sessao))
+            ->additional(['periodos' => PortadorPeriodoResource::lista(PortadorPeriodoService::desde($sessao))]);
     }
 
     private function contagem(Request $request): array
@@ -87,7 +97,7 @@ class CaixaController extends Controller
             $dados['observacoes'] ?? null,
             $dados['codpdv'] ?? null
         ));
-        return new SessaoResource($sessao);
+        return $this->resposta($sessao);
     }
 
     public function show(int $id)
@@ -110,14 +120,14 @@ class CaixaController extends Controller
         if (!empty($request->impressora)) {
             CaixaBorderoService::imprimir($sessao, $request->impressora);
         }
-        return new SessaoResource($sessao->fresh('Portador'));
+        return $this->resposta($sessao->fresh('Portador'));
     }
 
     public function reabrir(int $id)
     {
         $sessao = PortadorPeriodo::with('Portador')->findOrFail($id);
         $sessao = DB::transaction(fn () => CaixaService::reabrir($sessao));
-        return new SessaoResource($sessao);
+        return $this->resposta($sessao);
     }
 
     public function salvarItem(Request $request, int $id, int $codcaixaitem)
@@ -132,7 +142,7 @@ class CaixaController extends Controller
         $sessao = $this->sessao($id);
         $item = CaixaItem::findOrFail($codcaixaitem);
         DB::transaction(fn () => CaixaService::salvarItem($sessao, $item, $dados, $dados['codpdv'] ?? null));
-        return new SessaoResource($sessao->fresh('Portador'));
+        return $this->resposta($sessao->fresh('Portador'));
     }
 
     public function avulso(Request $request, int $id)
@@ -153,7 +163,7 @@ class CaixaController extends Controller
             $dados['observacoes'],
             $dados['codpdv'] ?? null
         ));
-        return new SessaoResource($sessao->fresh('Portador'));
+        return $this->resposta($sessao->fresh('Portador'));
     }
 
     public function cancelarAvulso(int $codpagamento)
@@ -161,7 +171,7 @@ class CaixaController extends Controller
         $pag = Pagamento::findOrFail($codpagamento);
         $sessao = $this->sessao((int) $pag->codportadorperiodo);
         DB::transaction(fn () => CaixaService::cancelarAvulso($pag));
-        return new SessaoResource($sessao->fresh('Portador'));
+        return $this->resposta($sessao->fresh('Portador'));
     }
 
     // ==== bordero ====

@@ -60,6 +60,13 @@ redesenhado com o Fábio em **uma tela só do caixa**, a mesma no PDV e no conta
 cédula e moeda; **fechar passou a ser a conferência** (a etapa às cegas do M9 saiu). Detalhe na
 seção M13.
 TASK-193 (nova, High): tipo de título só obrigatório quando a natureza gera financeiro.
+**Refatoração das telas (03/10/2026)**: as telas de M6.1 a M13 foram feitas antes de existir onde
+ver o razão e serão redesenhadas do core para as beiradas, uma por vez. O desenho das telas está no
+**doc-4** (`backlog/docs/doc-4 - Refatoração-das-telas-do-dinheiro-portador-e-período.md`), que
+manda nas telas; este doc continua mandando no modelo e nas regras. **Painel /portador e tela do
+portador e do período (doc-4) commitados em 03/10/2026 sem validação, a pedido do Fábio**: saldo
+gravado no período e em `tblportador.saldo` (`portador_saldo.sql`), o Fábio valida pelo Valida do
+doc-4.
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
 validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e código de todos os
@@ -79,7 +86,7 @@ uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha s
 `pagamento.sql` (a tabela já virou view). `pagamento_liquidacao.sql` leva ~45 s em dev (175 mil
 liquidações, 437 mil movimentos) e precisa do `pagamento.sql` antes. O `.env` de produção do negocios
 pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). `conferencia.sql` (M9) e depois `razao.sql`
-(M10) e `caixa_item.sql` (M13), nessa ordem, rodam antes do `tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
+(M10), `caixa_item.sql` (M13) e `portador_saldo.sql` (doc-4, saldo gravado), nessa ordem, rodam antes do `tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
 script** (renumera os tipos de título; os anteriores usam os códigos antigos), e o
 `NfeTerceiroController.php` do MGsis sobe junto (grava Duplicata a Pagar, código novo 200).
 

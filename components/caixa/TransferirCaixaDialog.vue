@@ -1,14 +1,14 @@
 <script setup>
-// Transferência da gaveta (M11 doc-3, decisão 22): enviar (sangria, envio ao financeiro,
-// depósito) ou receber (suprimento do cofre). Nasce efetivada quando quem registra opera o
-// destino; senão fica a confirmar. Gavetas fechadas aparecem desabilitadas com o motivo.
+// Transferência de qualquer portador (M11 doc-3, decisão 22; genérico desde o doc-4): enviar
+// (sangria, envio ao financeiro, depósito) ou receber (suprimento). Nasce efetivada quando quem
+// registra opera o destino; senão fica a confirmar. Gavetas fechadas aparecem desabilitadas.
 import { ref, watch } from 'vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
-import { caixaSessaoStore } from '@components/stores/caixaSessaoStore'
+import { periodoStore } from '@components/stores/periodoStore'
 
-const store = caixaSessaoStore()
+const store = periodoStore()
 const vazio = () => ({ sentido: 'E', codportador: null, valor: null, observacoes: '' })
 const form = ref(vazio())
 
@@ -38,17 +38,13 @@ async function salvar() {
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <q-btn-toggle
+              <q-option-group
                 v-model="form.sentido"
-                spread
-                no-caps
-                unelevated
-                toggle-color="primary"
-                color="grey-3"
-                text-color="grey-9"
+                type="radio"
+                inline
                 :options="[
-                  { label: `Enviar de ${store.gaveta?.portador}`, value: 'E' },
-                  { label: `Receber em ${store.gaveta?.portador}`, value: 'R' },
+                  { label: `Enviar de ${store.portador?.portador}`, value: 'E' },
+                  { label: `Receber em ${store.portador?.portador}`, value: 'R' },
                 ]"
               />
             </div>
@@ -58,8 +54,8 @@ async function salvar() {
                 :label="form.sentido === 'E' ? 'Para' : 'De'"
                 :tipos="['E', 'B']"
                 agrupar
-                :codfilial="store.gaveta?.codfilial"
-                :excluir="[store.gaveta?.codportador]"
+                :codfilial="store.portador?.codfilial"
+                :excluir="[store.portador?.codportador]"
                 :bloqueios="store.bloqueios"
                 autofocus
                 :rules="[(v) => !!v]"
@@ -81,7 +77,7 @@ async function salvar() {
           </div>
         </q-card-section>
         <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup />
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat label="Transferir" color="primary" type="submit" :loading="store.salvando" />
         </q-card-actions>
       </q-form>

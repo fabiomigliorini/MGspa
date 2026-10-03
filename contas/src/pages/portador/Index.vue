@@ -1,424 +1,143 @@
 <script setup>
-import MgInput from '@components/MgInput.vue'
-import MgInputValor from '@components/MgInputValor.vue'
-import { ref, onMounted } from 'vue'
-import { useQuasar } from 'quasar'
-import { api } from 'src/services/api'
+// Painel dos portadores (doc-4): todos os portadores por filial, o saldo da espécie (banco,
+// adquirente e cartão sem saldo até a conciliação), a situação de cada gaveta e as transferências
+// a confirmar. A linha abre o portador e o período. Cadastro e OFX: Financeiro e Admin.
+import { onMounted } from 'vue'
+import { storeToRefs } from 'pinia'
+import MgEmptyState from '@components/MgEmptyState.vue'
+import { formataNumero, formataTimestamp } from '@components/formatters'
+import PortadorDialog from 'components/portador/PortadorDialog.vue'
+import OfxDialog from 'components/portador/OfxDialog.vue'
 import { usePortadorStore } from 'src/stores/portadorStore'
-import { notifySuccess, notifyError } from 'src/utils/notify'
-import MgSelectBanco from '@components/MgSelectBanco.vue'
-import MgSelectFilial from '@components/MgSelectFilial.vue'
-import {
-  PORTADOR_TIPO_OPTIONS,
-  portadorTipoLabel,
-  portadorTipoColor,
-} from 'src/constants/portadorTipo'
+import { useAuth } from 'src/composables/useAuth'
+import { portadorTipoColor } from 'src/constants/portadorTipo'
 
-const $q = useQuasar()
 const store = usePortadorStore()
+const { filiais, carregando } = storeToRefs(store)
+const financeiro = useAuth().temPermissao('Financeiro')
 
-const dialog = ref(false)
-const isNovo = ref(true)
-const saving = ref(false)
-
-const emptyModel = () => ({
-  codportador: null,
-  portador: '',
-  tipo: null,
-  codbanco: null,
-  codfilial: null,
-  agencia: null,
-  agenciadigito: null,
-  conta: null,
-  contadigito: null,
-  convenio: null,
-  carteira: null,
-  carteiravariacao: null,
-  pixdict: '',
-  emiteboleto: false,
-})
-
-const model = ref(emptyModel())
-
-const columns = [
-  {
-    name: 'codportador',
-    label: '#',
-    field: 'codportador',
-    align: 'left',
-    format: (v) => '#' + String(v).padStart(8, '0'),
-  },
-  { name: 'portador', label: 'Portador', field: 'portador', align: 'left' },
-  { name: 'tipo', label: 'Tipo', field: 'tipo', align: 'left' },
-  { name: 'banco', label: 'Banco', field: 'banco', align: 'left' },
-  { name: 'filial', label: 'Filial', field: 'filial', align: 'left' },
-  { name: 'conta', label: 'Conta', field: 'conta', align: 'left' },
-  { name: 'emiteboleto', label: 'Boleto', field: 'emiteboleto', align: 'center' },
-  { name: 'inativo', label: 'Status', field: 'inativo', align: 'center' },
-  { name: 'acoes', label: '', field: 'acoes', align: 'right' },
-]
-
-const formatarConta = (row) => {
-  if (!row.conta && !row.agencia) return '—'
-  const ag = row.agencia ? `${row.agencia}${row.agenciadigito ? '-' + row.agenciadigito : ''}` : ''
-  const ct = row.conta ? `${row.conta}${row.contadigito ? '-' + row.contadigito : ''}` : ''
-  return [ag, ct].filter(Boolean).join(' / ')
+const ICONE = {
+  E: 'savings',
+  B: 'account_balance',
+  A: 'contactless',
+  C: 'credit_card',
+  O: 'wallet',
 }
 
-const abrirNovo = () => {
-  isNovo.value = true
-  model.value = emptyModel()
-  dialog.value = true
+const aberta = (p) => p.ehGaveta && !!p.sessao?.aberta
+
+const situacao = (p) => {
+  if (!p.ehGaveta) return null
+  const s = p.sessao
+  if (!s) return 'Gaveta · caixa nunca aberto'
+  return s.aberta
+    ? `Gaveta · desde ${formataTimestamp(s.inicio, 0)} por ${s.usuarioabertura}`
+    : `Gaveta · fechado em ${formataTimestamp(s.fim, 0)} por ${s.usuariofechamento}`
 }
 
-const abrirEditar = (row) => {
-  isNovo.value = false
-  model.value = {
-    codportador: row.codportador,
-    portador: row.portador,
-    tipo: row.tipo,
-    codbanco: row.codbanco,
-    codfilial: row.codfilial,
-    agencia: row.agencia,
-    agenciadigito: row.agenciadigito,
-    conta: row.conta,
-    contadigito: row.contadigito,
-    convenio: row.convenio,
-    carteira: row.carteira,
-    carteiravariacao: row.carteiravariacao,
-    pixdict: row.pixdict || '',
-    emiteboleto: !!row.emiteboleto,
-  }
-  dialog.value = true
-}
-
-const payload = () => ({
-  portador: model.value.portador,
-  tipo: model.value.tipo,
-  codbanco: model.value.codbanco,
-  codfilial: model.value.codfilial,
-  agencia: model.value.agencia,
-  agenciadigito: model.value.agenciadigito,
-  conta: model.value.conta,
-  contadigito: model.value.contadigito,
-  convenio: model.value.convenio,
-  carteira: model.value.carteira,
-  carteiravariacao: model.value.carteiravariacao,
-  pixdict: model.value.pixdict || null,
-  emiteboleto: model.value.emiteboleto,
-})
-
-const submit = () => (isNovo.value ? criar() : atualizar())
-
-const criar = async () => {
-  saving.value = true
-  try {
-    const { data } = await api.post('v1/portador', payload())
-    store.upsertLocal(data.data)
-    notifySuccess('Portador criado')
-    dialog.value = false
-  } catch (e) {
-    notifyError(e, 'Erro ao criar portador')
-  } finally {
-    saving.value = false
-  }
-}
-
-const atualizar = async () => {
-  saving.value = true
-  try {
-    const { data } = await api.put(`v1/portador/${model.value.codportador}`, payload())
-    store.upsertLocal(data.data)
-    notifySuccess('Portador atualizado')
-    dialog.value = false
-  } catch (e) {
-    notifyError(e, 'Erro ao atualizar portador')
-  } finally {
-    saving.value = false
-  }
-}
-
-const toggleInativo = async (row) => {
-  try {
-    const { data } = row.inativo
-      ? await api.delete(`v1/portador/${row.codportador}/inativo`)
-      : await api.post(`v1/portador/${row.codportador}/inativo`)
-    store.upsertLocal(data.data)
-    notifySuccess(data.data.inativo ? 'Portador inativado' : 'Portador reativado')
-  } catch (e) {
-    notifyError(e, 'Erro ao alterar status')
-  }
-}
-
-const excluir = (row) => {
-  $q.dialog({
-    title: 'Excluir',
-    message: `Confirma excluir o portador "${row.portador}"?`,
-    ok: { label: 'Excluir', color: 'red-5', flat: true },
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-  }).onOk(async () => {
-    try {
-      await api.delete(`v1/portador/${row.codportador}`)
-      store.removeLocal(row.codportador)
-      notifySuccess('Portador excluído')
-    } catch (e) {
-      notifyError(e, 'Erro ao excluir')
-    }
-  })
-}
-
-const carregarMais = async (index, done) => {
-  await store.fetchItems(false)
-  done(!store.hasMore)
-}
-
-onMounted(() => {
-  store.fetchItems(true)
-})
+onMounted(() => store.buscarPainel())
 </script>
 
 <template>
   <q-page>
-    <q-infinite-scroll @load="carregarMais" :offset="250">
-      <div class="q-pa-md" style="margin: auto; max-width: 1086px">
-        <q-table
-          :rows="store.items"
-          :columns="columns"
-          row-key="codportador"
+    <div class="q-pa-md" style="max-width: 1086px; margin: auto">
+      <div v-if="financeiro" class="row justify-end q-mb-sm">
+        <q-btn
           flat
-          bordered
-          :loading="store.loading"
-          hide-pagination
-          :rows-per-page-options="[0]"
-          :pagination="{ rowsPerPage: 0 }"
-          no-data-label="Nenhum portador encontrado"
+          no-caps
+          color="primary"
+          icon="upload_file"
+          label="Importar OFX"
+          @click="store.dialogOfx = true"
         >
-          <template #body-cell-codportador="props">
-            <q-td :props="props" class="text-grey-7">{{ props.value }}</q-td>
-          </template>
-
-          <template #body-cell-portador="props">
-            <q-td
-              :props="props"
-              class="text-weight-medium text-primary cursor-pointer"
-              @click="abrirEditar(props.row)"
-              style="white-space: normal; word-break: break-word; max-width: 10vw"
-            >
-              {{ props.value }}
-            </q-td>
-          </template>
-
-          <template #body-cell-tipo="props">
-            <q-td :props="props">
-              <q-badge :color="portadorTipoColor(props.row.tipo)">
-                {{ portadorTipoLabel(props.row.tipo) }}
-              </q-badge>
-              <q-badge v-if="props.row.gaveta" color="teal-7" class="q-ml-xs">Gaveta</q-badge>
-            </q-td>
-          </template>
-
-          <template #body-cell-banco="props">
-            <q-td :props="props" class="text-grey-8">
-              {{ props.row.banco || '—' }}
-            </q-td>
-          </template>
-
-          <template #body-cell-filial="props">
-            <q-td :props="props" class="text-grey-8">
-              {{ props.row.filial || '—' }}
-            </q-td>
-          </template>
-
-          <template #body-cell-conta="props">
-            <q-td
-              :props="props"
-              class="text-grey-8"
-              style="white-space: normal; word-break: break-word; max-width: 10vw"
-            >
-              {{ formatarConta(props.row) }}
-            </q-td>
-          </template>
-
-          <template #body-cell-emiteboleto="props">
-            <q-td :props="props">
-              <q-icon v-if="props.row.emiteboleto" name="check_circle" color="green-6" size="sm" />
-              <q-icon v-else name="remove" color="grey-5" size="sm" />
-            </q-td>
-          </template>
-
-          <template #body-cell-inativo="props">
-            <q-td :props="props">
-              <q-badge v-if="props.row.inativo" color="orange-7">Inativo</q-badge>
-              <q-badge v-else color="green-6">Ativo</q-badge>
-            </q-td>
-          </template>
-
-          <template #body-cell-acoes="props">
-            <q-td :props="props">
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                color="grey-7"
-                icon="edit"
-                @click="abrirEditar(props.row)"
-              >
-                <q-tooltip>Editar</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                color="grey-7"
-                :icon="props.row.inativo ? 'play_arrow' : 'pause'"
-                @click="toggleInativo(props.row)"
-              >
-                <q-tooltip>{{ props.row.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                dense
-                round
-                size="sm"
-                color="grey-7"
-                icon="delete"
-                @click="excluir(props.row)"
-              >
-                <q-tooltip>Excluir</q-tooltip>
-              </q-btn>
-            </q-td>
-          </template>
-        </q-table>
+          <q-tooltip>Extrato do banco (arquivo OFX)</q-tooltip>
+        </q-btn>
       </div>
 
-      <template #loading>
-        <div class="row justify-center q-my-md">
-          <q-spinner-dots color="primary" size="32px" />
-        </div>
-      </template>
-    </q-infinite-scroll>
+      <q-card v-for="f in filiais" :key="f.codfilial ?? 0" flat bordered class="q-mb-md">
+        <q-item>
+          <q-item-section>
+            <q-item-label class="text-subtitle1 text-weight-medium">{{ f.filial }}</q-item-label>
+          </q-item-section>
+          <q-item-section side>
+            <q-item-label caption>espécie</q-item-label>
+            <q-item-label class="text-weight-bold" :class="f.total < 0 ? 'text-red-8' : ''">
+              R$ {{ formataNumero(f.total) }}
+            </q-item-label>
+          </q-item-section>
+        </q-item>
+        <q-list v-for="t in f.tipos" :key="t.tipo" separator>
+          <q-separator />
+          <q-item-label
+            header
+            class="q-py-sm text-weight-medium"
+            :class="`text-${portadorTipoColor(t.tipo)}`"
+          >
+            {{ t.label }}
+          </q-item-label>
+          <q-item
+            v-for="p in t.portadores"
+            :key="p.codportador"
+            clickable
+            :to="{ name: 'portador-detalhe', params: { codportador: p.codportador } }"
+          >
+            <q-item-section avatar>
+              <q-icon
+                :name="p.ehGaveta ? 'point_of_sale' : ICONE[p.tipo]"
+                :color="portadorTipoColor(p.tipo)"
+              />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label :class="p.inativo ? 'text-strike text-grey-6' : ''">
+                {{ p.portador }}
+                <q-badge v-if="aberta(p)" color="green-7" class="q-ml-sm" label="Aberto" />
+              </q-item-label>
+              <q-item-label v-if="situacao(p)" caption>{{ situacao(p) }}</q-item-label>
+              <q-item-label v-if="p.chegando.quantidade || p.saindo.quantidade" caption>
+                <q-badge
+                  v-if="p.chegando.quantidade"
+                  color="amber-8"
+                  class="q-mr-xs"
+                  :label="`${p.chegando.quantidade} chegando a confirmar · R$ ${formataNumero(p.chegando.valor)}`"
+                />
+                <q-badge
+                  v-if="p.saindo.quantidade"
+                  color="amber-8"
+                  :label="`${p.saindo.quantidade} saindo a confirmar · R$ ${formataNumero(p.saindo.valor)}`"
+                />
+              </q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-item-label
+                v-if="p.saldo !== null"
+                class="text-weight-bold"
+                :class="p.saldo < 0 ? 'text-red-8' : 'text-grey-9'"
+              >
+                R$ {{ formataNumero(p.saldo) }}
+              </q-item-label>
+              <q-item-label v-else class="text-grey-5">—</q-item-label>
+            </q-item-section>
+            <q-item-section side>
+              <q-icon name="chevron_right" color="grey-5" />
+            </q-item-section>
+          </q-item>
+        </q-list>
+      </q-card>
 
-    <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="add" color="primary" @click="abrirNovo">
-        <q-tooltip anchor="center left" self="center right">Novo Portador</q-tooltip>
+      <MgEmptyState v-if="!carregando && !filiais.length" icon="account_balance_wallet">
+        Nenhum portador nesta filial.
+      </MgEmptyState>
+    </div>
+
+    <q-inner-loading :showing="carregando" color="primary" />
+
+    <q-page-sticky v-if="financeiro" position="bottom-right" :offset="[18, 18]">
+      <q-btn fab icon="add" color="primary" @click="store.novo()">
+        <q-tooltip anchor="center left" self="center right">Novo portador</q-tooltip>
       </q-btn>
     </q-page-sticky>
 
-    <q-dialog v-model="dialog">
-      <q-card bordered flat style="width: 600px; max-width: 90vw">
-        <q-card-section class="text-grey-9 text-overline">
-          {{ isNovo ? 'NOVO PORTADOR' : 'EDITAR PORTADOR' }}
-        </q-card-section>
-        <q-form @submit.prevent="submit">
-          <q-separator inset />
-          <q-card-section>
-            <div class="row q-col-gutter-md">
-              <div class="col-12 col-sm-8">
-                <MgInput
-                  v-model="model.portador"
-                  outlined
-                  label="Portador"
-                  maxlength="50"
-                  autofocus
-                  :rules="[(v) => !!v || 'Obrigatório']"
-                />
-              </div>
-
-              <div class="col-12 col-sm-4">
-                <q-select
-                  v-model="model.tipo"
-                  :options="PORTADOR_TIPO_OPTIONS"
-                  emit-value
-                  map-options
-                  outlined
-                  label="Tipo"
-                  lazy-rules
-                  :rules="[(v) => !!v]"
-                />
-              </div>
-
-              <div class="col-12 col-sm-6">
-                <MgSelectBanco v-model="model.codbanco" outlined clearable label="Banco" />
-              </div>
-
-              <div class="col-12 col-sm-6">
-                <MgSelectFilial v-model="model.codfilial" outlined clearable label="Filial" />
-              </div>
-
-              <div class="col-4">
-                <MgInputValor
-                  v-model="model.agencia"
-                  :decimals="0"
-                  :grouping="false"
-                  label="Agência"
-                />
-              </div>
-              <div class="col-2">
-                <MgInputValor
-                  v-model="model.agenciadigito"
-                  :decimals="0"
-                  :grouping="false"
-                  label="Dígito"
-                />
-              </div>
-
-              <div class="col-4">
-                <MgInputValor v-model="model.conta" :decimals="0" :grouping="false" label="Conta" />
-              </div>
-              <div class="col-2">
-                <MgInputValor
-                  v-model="model.contadigito"
-                  :decimals="0"
-                  :grouping="false"
-                  label="Dígito"
-                />
-              </div>
-
-              <div class="col-12">
-                <MgInput v-model="model.pixdict" outlined label="Chave Pix" maxlength="77" />
-              </div>
-
-              <div class="col-12">
-                <q-checkbox v-model="model.emiteboleto" label="Emite Boleto" />
-              </div>
-
-              <template v-if="model.emiteboleto">
-                <div class="col-6 col-sm-4">
-                  <MgInputValor
-                    v-model="model.convenio"
-                    :decimals="0"
-                    :grouping="false"
-                    label="Convênio"
-                  />
-                </div>
-                <div class="col-6 col-sm-4">
-                  <MgInputValor
-                    v-model="model.carteira"
-                    :decimals="0"
-                    :grouping="false"
-                    label="Carteira"
-                  />
-                </div>
-                <div class="col-6 col-sm-4">
-                  <MgInputValor
-                    v-model="model.carteiravariacao"
-                    :decimals="0"
-                    :grouping="false"
-                    label="Variação"
-                  />
-                </div>
-              </template>
-            </div>
-          </q-card-section>
-          <q-separator inset />
-          <q-card-actions align="right" class="text-primary">
-            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-            <q-btn flat label="Salvar" type="submit" :loading="saving" />
-          </q-card-actions>
-        </q-form>
-      </q-card>
-    </q-dialog>
+    <PortadorDialog />
+    <OfxDialog />
   </q-page>
 </template>

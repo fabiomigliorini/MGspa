@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-03 15:24'
+updated_date: '2026-10-03 18:39'
 labels:
   - negocios
   - contas
@@ -13,7 +13,7 @@ labels:
 dependencies:
   - TASK-186
 documentation:
-  - backlog/docs/doc-3 - Plano-do-fechamento-de-caixa-por-milestones.md
+  - backlog/docs/doc-4 - Refatoração-das-telas-do-dinheiro-portador-e-período.md
 priority: high
 type: feature
 ordinal: 59000
@@ -43,6 +43,11 @@ Consolida: TASK-33 (codportador na manutenção de PDV), TASK-34 (não movimenta
 - [ ] #8 M10.3 O detalhe do pagamento, no contas e no PDV, mostra os lancamentos do razao, com a sessao do caixa ou o periodo em que cairam, e os desfeitos riscados
 - [ ] #9 M10.4 O saldo de cada caixa, cofre e banco e o saldo inicial do periodo mais o que caiu ate hoje
 - [ ] #10 M10.5 Pagamento, cheque, extrato bancario e bonificacao guardam a data e hora em que o fato aconteceu, separada de quando foi digitado (o PIX de ontem lancado hoje fica com a data de ontem)
+- [ ] #11 R1 - Uma tela Portadores no contas mostra todos os portadores por filial, com o saldo da especie e a situacao de cada caixa, e substitui Saldos e Cadastros > Portadores (criar, editar, inativar e importar OFX nela)
+- [ ] #12 R2 - Ao abrir um portador, os periodos aparecem em abas Ano > Mes > Periodo, e o endereco da pagina leva direto ao periodo escolhido
+- [ ] #13 R3 - O periodo mostra saldo inicial, entradas e saidas por origem (vendas, titulos, transferencias, avulsos, itens) e saldo final, com a lista de lancamentos e o saldo corrente linha a linha
+- [ ] #14 R4 - Transferir, lancar avulso, item do caixa, abrir, fechar e reabrir o caixa ou o periodo feitos na propria tela do periodo, que se atualiza na hora
+- [ ] #15 R5 - Venda em dinheiro, sangria, confirmacao, cancelamento, recebimento no banco e fechamento com corte conferidos na tela do periodo (roteiro Valida do doc-4)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -69,4 +74,8 @@ M13 em andamento (03/10/2026): itens do caixa e repasse ao parceiro (decisões 2
 M13 executado em dev (03/10/2026, na árvore, sem commit). Redesenhado com o Fábio antes de codar: uma tela só do caixa (@components/MgCaixaSessao) no PDV e no contas, contagem por quantidade de cédula/moeda (jsonb), saldo inicial = envelope, um ajuste na abertura e um no fechamento (sempre o mesmo registro), fechar = conferência (a etapa às cegas do M9 saiu; o caixa ou o gerente fecha), sangria pela própria tela. DDL api/database/caixa_item.sql rodado 2x (tblcaixaitem com 6 seeds, tblcaixaitemlancamento, tblpagamento.codcaixaitemlancamento, tblportadorperiodo ajuste/contagem). Itens: pagamento entrada − saída na gaveta (mesmo registro), títulos de repasse no fechamento (200 a pagar, 100 se negativo; pessoa obriga conta), reabrir estorna (422 se agrupado). Avulso T/F/R/A na gaveta (exclui só quem lançou, caixa aberto) — cobre o M9.5 da TASK-188 (#37). Cadastros → Itens do Caixa e Caixas → aba Itens no contas; origem 'Item do caixa' na listagem. Conferido no tinker e pela camada HTTP com rollback; não aberto no navegador. Detalhe, roteiro 'Valida (M13)' e 'Dúvidas para o Fábio (M13)' no doc-3, seção M13. AC #5 desmarcado até a validação.
 
 M13 commitado sem validação a pedido do Fábio (03/10/2026, e8ab52048): ele valida pelo roteiro 'Valida (M13)' do doc-3. AC #5 (e o M9.5 da TASK-188) seguem desmarcados até a validação.
+
+Refatoração portador e período (doc-4) executada em dev em 03/10/2026, na árvore, sem commit: DDL portador_saldo.sql (2x), saldo gravado no período e no portador (PortadorPeriodoService::recalcular via sincronizar), painel /portador e tela /portador/{cod}/{codperiodo} no contas, periodoStore em @components com os dialogs genéricos, rotas de movimento devolvendo os períodos afetados, v1/portador/caixas e /saldo removidos (tela Caixas quebra até o redesenho), cancelar avulso fora da gaveta, mensagem única 'Gaveta não aberta'. Decisões da execução e 'Como ficou' no doc-4. ACs R1–R5 desmarcados até a validação pelo roteiro Valida do doc-4.
+
+Ajustes de tela na mesma conversa (cabeçalho por tipo no painel, badge Aberto, primeiro período sem F5, avulso com data preenchida/radio/combo, lançamentos em q-timeline com link para o outro lado da transferência). Commitado em 03/10/2026 sem validação, a pedido do Fábio: ele valida pelo roteiro Valida do doc-4; ACs R1–R5 seguem desmarcados. Em aberto: Abrir caixa com contagem em cofre/troco/Caixa Financeiro (só implantação ou diário).
 <!-- SECTION:NOTES:END -->

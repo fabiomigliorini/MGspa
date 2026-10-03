@@ -5,42 +5,31 @@ namespace Mg\Caixa;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Mg\Conferencia\ConferenciaAutorizador;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoDetalheResource;
 use Mg\Pagamento\PagamentoListaService;
 use Mg\Pagamento\PagamentoService;
 use Mg\Pagamento\TransferenciaResource;
 use Mg\Portador\Portador;
+use Mg\Portador\PortadorPeriodoResource;
+use Mg\Portador\PortadorPeriodoService;
 use Mg\Usuario\Autorizador;
 
 /**
- * Pagina Caixas do contas (M11 doc-3): portadores em especie com saldo e
- * sessao, transferencias (registrar, confirmar, cancelar). Quem opera cada
- * lado: TransferenciaAutorizador (decisao 23).
+ * Transferencias entre portadores (M11 doc-3): registrar, confirmar,
+ * cancelar e a listagem. Quem opera cada lado: TransferenciaAutorizador
+ * (decisao 23). Os portadores com saldo e sessao foram para o painel
+ * /portador (doc-4).
  */
 class CaixasController extends Controller
 {
     private const GRUPOS = ['Financeiro', 'Gerente', 'Caixa'];
 
-    public function caixas(Request $request)
+    // o pagamento e os periodos que ele mexeu, dos dois lados (R14 doc-4)
+    private function pagamento(Pagamento $pag)
     {
-        Autorizador::autoriza(self::GRUPOS);
-        $request->validate(['codfilial' => 'nullable|integer']);
-        return ['data' => CaixasService::caixas($request->codfilial ? (int) $request->codfilial : null)];
-    }
-
-    public function saldo(int $id)
-    {
-        $portador = Portador::findOrFail($id);
-        if (!$portador->ehGaveta() && !ConferenciaAutorizador::pode($portador->codfilial)) {
-            abort(403, 'Saldo do portador: só Financeiro, Administrador ou Gerente da filial!');
-        }
-        $ultima = $portador->ehGaveta() ? CaixaService::ultimaSessao($portador->codportador) : null;
-        if (!CaixasService::saldoVisivel($portador, $ultima)) {
-            abort(403, 'O saldo do caixa só aparece depois da conferência do gerente (às cegas).');
-        }
-        return ['data' => CaixasService::saldo($portador)];
+        return (new PagamentoDetalheResource(PagamentoListaService::carregar($pag->codpagamento)))
+            ->additional(['periodos' => PortadorPeriodoResource::lista(PortadorPeriodoService::afetados($pag->codpagamento))]);
     }
 
     public function transferencias(Request $request)
@@ -66,19 +55,19 @@ class CaixasController extends Controller
             (float) $dados['valor'],
             $dados['observacoes'] ?? null
         ));
-        return new PagamentoDetalheResource(PagamentoListaService::carregar($pag->codpagamento));
+        return $this->pagamento($pag);
     }
 
     public function confirmar(int $id)
     {
         $pag = DB::transaction(fn () => PagamentoService::confirmar(Pagamento::findOrFail($id)));
-        return new PagamentoDetalheResource(PagamentoListaService::carregar($pag->codpagamento));
+        return $this->pagamento($pag);
     }
 
     public function cancelar(Request $request, int $id)
     {
         $request->validate(['justificativa' => 'required|string|min:5|max:300']);
         $pag = DB::transaction(fn () => PagamentoService::cancelarTransferencia(Pagamento::findOrFail($id), $request->justificativa));
-        return new PagamentoDetalheResource(PagamentoListaService::carregar($pag->codpagamento));
+        return $this->pagamento($pag);
     }
 }

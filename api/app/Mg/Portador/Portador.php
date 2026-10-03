@@ -87,14 +87,18 @@ class Portador extends MgModel
         'convenio' => 'float',
         'criacao' => 'datetime',
         'emiteboleto' => 'boolean',
-        'inativo' => 'datetime'
+        'inativo' => 'datetime',
+        'saldo' => 'float'
     ];
 
 
-    // Gaveta = portador em especie com PDV apontando
+    // Gaveta = portador em especie com PDV apontando (lembrado na instancia:
+    // as listas do periodo perguntam linha a linha)
+    private ?bool $gaveta = null;
+
     public function ehGaveta(): bool
     {
-        return $this->tipo === self::TIPO_ESPECIE && $this->PdvS()->exists();
+        return $this->gaveta ??= $this->tipo === self::TIPO_ESPECIE && $this->PdvS()->exists();
     }
 
     // Chaves Estrangeiras

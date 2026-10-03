@@ -12,6 +12,7 @@ use Mg\Pdv\Pdv;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorMovimentoService;
 use Mg\Portador\PortadorPeriodo;
+use Mg\Portador\PortadorPeriodoService;
 use Mg\Titulo\TituloService;
 use Mg\Usuario\Autorizador;
 
@@ -34,6 +35,21 @@ class CaixaService
     public static function sessaoAberta(int $codportador): ?PortadorPeriodo
     {
         return PortadorPeriodo::where('codportador', $codportador)->whereNull('fim')->first();
+    }
+
+    // R12 (doc-4): uma regra so' para movimentar a gaveta sem caixa aberto
+    public static function naoAberta(Portador $gaveta): void
+    {
+        abort(422, "Gaveta não aberta ({$gaveta->portador}): abra o caixa antes de movimentar.");
+    }
+
+    public static function exigirAberta(Portador $gaveta): PortadorPeriodo
+    {
+        $sessao = static::sessaoAberta($gaveta->codportador);
+        if (!$sessao) {
+            static::naoAberta($gaveta);
+        }
+        return $sessao;
     }
 
     public static function ultimaSessao(int $codportador): ?PortadorPeriodo
@@ -96,11 +112,7 @@ class CaixaService
         if (!empty($pag->codportadorperiodo) && !$pag->isDirty(['codportadordestino', 'codportadororigem', 'meio'])) {
             return;
         }
-        $sessao = static::sessaoAberta($portador->codportador);
-        if (!$sessao) {
-            abort(422, "Caixa {$portador->portador} fechado: abra o caixa no PDV antes de movimentar dinheiro.");
-        }
-        $pag->codportadorperiodo = $sessao->codportadorperiodo;
+        $pag->codportadorperiodo = static::exigirAberta($portador)->codportadorperiodo;
     }
 
     // gaveta que recebe o dinheiro do PDV agora: sem gaveta ou com o caixa
@@ -108,9 +120,7 @@ class CaixaService
     public static function gavetaAberta(Pdv $pdv): Portador
     {
         $gaveta = static::gaveta($pdv);
-        if (!static::sessaoAberta($gaveta->codportador)) {
-            abort(422, "Caixa {$gaveta->portador} fechado: abra o caixa no PDV antes de receber em dinheiro.");
-        }
+        static::exigirAberta($gaveta);
         return $gaveta;
     }
 
@@ -285,6 +295,7 @@ class CaixaService
             'moedasabertura' => $moedas,
             'cedulasabertura' => $cedulas,
             'saldoinicial' => $envelope,
+            'saldofinal' => $envelope,
             'observacoes' => empty(trim($observacoes ?? '')) ? null : trim($observacoes),
         ]);
         $estoque = [];
@@ -302,6 +313,7 @@ class CaixaService
         }
         $contado = round($moedas + $cedulas + array_sum($estoque), 2);
         static::ajustar($sessao, 'codpagamentoabertura', $contado - $envelope, $agora, $codpdv);
+        PortadorPeriodoService::recalcular($sessao);
         return $sessao->fresh();
     }
 
@@ -309,7 +321,7 @@ class CaixaService
     public static function salvarItem(PortadorPeriodo $sessao, CaixaItem $item, array $dados, ?int $codpdv = null): CaixaItemLancamento
     {
         if (!$sessao->aberto()) {
-            abort(422, 'Caixa fechado: reabra a sessão para mexer nos itens.');
+            static::naoAberta($sessao->Portador);
         }
         $lanc = CaixaItemLancamento::firstOrNew([
             'codportadorperiodo' => $sessao->codportadorperiodo,
@@ -342,7 +354,7 @@ class CaixaService
     public static function lancarAvulso(PortadorPeriodo $sessao, string $sentido, string $motivo, float $valor, string $observacoes, ?int $codpdv = null): Pagamento
     {
         if (!$sessao->aberto()) {
-            abort(422, 'Caixa fechado: abra o caixa antes de lançar.');
+            static::naoAberta($sessao->Portador);
         }
         return static::pagamentoNaGaveta($sessao, null, $sentido == 'E' ? $valor : -$valor, [
             'motivo' => $motivo,
@@ -369,7 +381,7 @@ class CaixaService
             abort(403, 'Só quem lançou exclui o lançamento avulso.');
         }
         if (!$sessao->aberto()) {
-            abort(422, 'Caixa fechado: o lançamento só se exclui com o caixa aberto.');
+            static::naoAberta($sessao->Portador);
         }
         return PagamentoService::cancelar($pag, 'Lançamento avulso excluído pelo caixa');
     }
@@ -624,16 +636,20 @@ class CaixaService
 
     // tudo que a tela do caixa mostra da sessao (M13): dinheiro do sistema,
     // contagens, itens, ajustes, avulsos, transferencias e o informativo
-    public static function painel(PortadorPeriodo $sessao): array
+    // ajuste de caixa da sessao com sinal (positivo entrou); 0 sem ajuste
+    public static function ajuste(?int $codpagamento): float
     {
-        $ajuste = function ($cod) {
-            $pag = $cod ? Pagamento::find($cod) : null;
-            if (!$pag || $pag->estado != PagamentoService::ESTADO_EFETIVADO) {
-                return 0.0;
-            }
-            return round(empty($pag->codportadordestino) ? -$pag->total : $pag->total, 2);
-        };
-        $itens = static::lancamentos($sessao)->map(fn (CaixaItemLancamento $l) => [
+        $pag = $codpagamento ? Pagamento::find($codpagamento) : null;
+        if (!$pag || $pag->estado != PagamentoService::ESTADO_EFETIVADO) {
+            return 0.0;
+        }
+        return round(empty($pag->codportadordestino) ? -$pag->total : $pag->total, 2);
+    }
+
+    // os itens da sessao como a tela do caixa e o periodo mostram
+    public static function itens(PortadorPeriodo $sessao): array
+    {
+        return static::lancamentos($sessao)->map(fn (CaixaItemLancamento $l) => [
             'codcaixaitemlancamento' => $l->codcaixaitemlancamento,
             'codcaixaitem' => $l->codcaixaitem,
             'item' => $l->CaixaItem->item,
@@ -650,6 +666,10 @@ class CaixaService
             'codtitulo' => $l->codtitulo,
             'titulo' => optional($l->Titulo)->numero,
         ])->all();
+    }
+
+    public static function painel(PortadorPeriodo $sessao): array
+    {
         $avulsos = Pagamento::where('codportadorperiodo', $sessao->codportadorperiodo)
             ->whereNotNull('motivo')
             ->whereNull('codcaixaitemlancamento')
@@ -674,9 +694,9 @@ class CaixaService
         return [
             'dinheiro' => static::dinheiro($sessao),
             'informativo' => static::informativo($sessao),
-            'ajusteabertura' => $ajuste($sessao->codpagamentoabertura),
-            'ajustefechamento' => $sessao->aberto() ? 0.0 : $ajuste($sessao->codpagamentofechamento),
-            'itens' => $itens,
+            'ajusteabertura' => static::ajuste($sessao->codpagamentoabertura),
+            'ajustefechamento' => $sessao->aberto() ? 0.0 : static::ajuste($sessao->codpagamentofechamento),
+            'itens' => static::itens($sessao),
             'avulsos' => $avulsos,
         ];
     }

@@ -94,7 +94,7 @@ onMounted(async () => {
             icon="arrow_back"
             color="grey-7"
             class="q-mr-sm"
-            :to="{ name: 'portador-saldos' }"
+            :to="{ name: 'portador-detalhe', params: { codportador: store.portador.codportador } }"
           />
           <div class="col">
             <div class="text-subtitle1 text-weight-bold">{{ store.portador.portador }}</div>

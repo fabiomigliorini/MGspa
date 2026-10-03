@@ -1,7 +1,8 @@
 // Tela do caixa (MgCaixaSessao, M13 do plano doc-3): a mesma no PDV e no contas. Abre e fecha
 // a sessão da gaveta contando cédulas, moedas e o estoque dos itens (chips, ingressos), mantém os
 // itens dos parceiros, os avulsos e as transferências. Fechar é a conferência: um ajuste se o
-// contado difere do sistema e os títulos de repasse dos itens.
+// contado difere do sistema e os títulos de repasse dos itens. Os dialogs de movimento
+// (transferir, avulso, item) são do periodoStore (doc-4), que serve qualquer portador.
 //   negocios: carregarGaveta(codportador da gaveta do PDV), contexto { codpdv, impressora }
 //   contas:   carregarSessao(codportadorperiodo) (Fechamentos)
 import { defineStore } from 'pinia'
@@ -55,12 +56,6 @@ export const caixaSessaoStore = defineStore('caixaSessao', {
     carregando: false,
     salvando: false,
     contexto: { codpdv: null, impressora: null },
-    // { codportador: motivo } das gavetas que não aceitam transferência agora
-    bloqueios: {},
-    dialogItem: false,
-    item: null,
-    dialogAvulso: false,
-    dialogTransferir: false,
   }),
 
   getters: {
@@ -152,28 +147,6 @@ export const caixaSessaoStore = defineStore('caixaSessao', {
       )
     },
 
-    salvarItem(codcaixaitem, payload) {
-      return this.executar(
-        () =>
-          api.post(`v1/caixa/sessao/${this.sessao.codportadorperiodo}/item/${codcaixaitem}`, {
-            ...payload,
-            codpdv: this.contexto.codpdv,
-          }),
-        'Item salvo',
-      )
-    },
-
-    lancarAvulso(payload) {
-      return this.executar(
-        () =>
-          api.post(`v1/caixa/sessao/${this.sessao.codportadorperiodo}/avulso`, {
-            ...payload,
-            codpdv: this.contexto.codpdv,
-          }),
-        'Lançamento registrado',
-      )
-    },
-
     cancelarAvulso(codpagamento) {
       return this.executar(
         () => api.post(`v1/caixa/avulso/${codpagamento}/cancelar`),
@@ -181,45 +154,8 @@ export const caixaSessaoStore = defineStore('caixaSessao', {
       )
     },
 
-    // ==== transferências da gaveta (M11): as rotas do contas, as mesmas no PDV ====
-
-    async buscarBloqueios() {
-      try {
-        const { data } = await api.get('v1/portador/caixas')
-        this.bloqueios = Object.fromEntries(
-          data.data.filter((c) => c.bloqueio).map((c) => [c.codportador, c.bloqueio]),
-        )
-      } catch {
-        this.bloqueios = {}
-      }
-    },
-
-    // sentido E = sai da gaveta, R = chega nela
-    async transferir({ sentido, codportador, valor, observacoes }) {
-      const gaveta = this.gaveta.codportador
-      this.salvando = true
-      try {
-        const { data } = await api.post('v1/pagamento/transferencia', {
-          codportadororigem: sentido === 'E' ? gaveta : codportador,
-          codportadordestino: sentido === 'E' ? codportador : gaveta,
-          valor,
-          observacoes,
-        })
-        avisar(
-          true,
-          data.data.estado === 'E'
-            ? 'Transferência registrada'
-            : `Transferência registrada: a confirmar por quem opera ${data.data.portadordestino}`,
-        )
-        await this.recarregar()
-        return true
-      } catch (error) {
-        avisar(false, erro(error))
-        return false
-      } finally {
-        this.salvando = false
-      }
-    },
+    // ==== transferências da gaveta (M11): confirmar e cancelar pela lista da sessão; registrar é
+    // o TransferirCaixaDialog (periodoStore) ====
 
     async acaoTransferencia(codpagamento, acao, payload = {}) {
       try {

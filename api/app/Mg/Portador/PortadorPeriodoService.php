@@ -3,6 +3,7 @@
 namespace Mg\Portador;
 
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Mg\Conferencia\ConferenciaService;
@@ -40,10 +41,12 @@ class PortadorPeriodoService
         if ($ultimo && $ultimo->fim->gt($inicio)) {
             $inicio = $ultimo->fim->copy()->addSecond();
         }
+        $saldo = round((float) ($ultimo->saldofinal ?? 0), 2);
         return PortadorPeriodo::create([
             'codportador' => $portador->codportador,
             'inicio' => $inicio,
-            'saldoinicial' => round((float) ($ultimo->saldofinal ?? 0), 2),
+            'saldoinicial' => $saldo,
+            'saldofinal' => $saldo,
         ]);
     }
 
@@ -80,29 +83,6 @@ class PortadorPeriodoService
             : 'período de ' . $periodo->inicio->format('d/m/Y') . ' a ' . $periodo->fim->format('d/m/Y');
     }
 
-    // decisao 19: saldoinicial do aberto mais antigo + linhas ativas dos
-    // abertos ate' o fim do dia; sem aberto, o saldofinal do ultimo fechado
-    public static function saldo(Portador $portador, ?Carbon $ate = null): float
-    {
-        $ate = ($ate ?? Carbon::today())->copy()->endOfDay();
-        $abertos = PortadorPeriodo::where('codportador', $portador->codportador)
-            ->whereNull('fechamento')
-            ->orderBy('inicio')
-            ->get();
-        if ($abertos->isEmpty()) {
-            $ultimo = PortadorPeriodo::where('codportador', $portador->codportador)
-                ->orderBy('inicio', 'desc')
-                ->first();
-            return round((float) ($ultimo->saldofinal ?? 0), 2);
-        }
-        $soma = DB::table('tblportadormovimento')
-            ->whereIn('codportadorperiodo', $abertos->pluck('codportadorperiodo'))
-            ->whereNull('inativo')
-            ->where('transacao', '<=', $ate->format('Y-m-d H:i:s'))
-            ->sum('valor');
-        return round((float) $abertos->first()->saldoinicial + (float) $soma, 2);
-    }
-
     // ==== M12: o financeiro fecha e reabre (nao-gaveta) ====
 
     private static function exigirNaoGaveta(PortadorPeriodo $periodo): void
@@ -122,6 +102,71 @@ class PortadorPeriodoService
             $q->where('transacao', '<=', $ate->format('Y-m-d H:i:s'));
         }
         return round((float) $q->sum('valor'), 2);
+    }
+
+    // R13 (doc-4): o saldofinal fica sempre gravado (inicial + linhas ativas),
+    // aberto ou fechado; fechar so' congela. Recalcula do periodo em diante
+    // (o seguinte comeca com o final do anterior) e grava o do ultimo em
+    // tblportador.saldo. Trava o portador: o lancamento concorrente soma
+    // depois deste. Devolve os periodos do portador do informado em diante.
+    public static function recalcular(PortadorPeriodo $periodo): Collection
+    {
+        DB::table('tblportador')->where('codportador', $periodo->codportador)->lockForUpdate()->first();
+        $periodos = static::desde($periodo);
+        $anterior = null;
+        foreach ($periodos as $p) {
+            if ($anterior) {
+                // os fechados sao um prefixo: depois de um aberto nao ha' fechado
+                if (!empty($p->fechamento)) {
+                    break;
+                }
+                $p->saldoinicial = $anterior->saldofinal;
+            }
+            if (empty($p->fechamento)) {
+                $p->saldofinal = round((float) $p->saldoinicial + static::movimento($p), 2);
+            }
+            if ($p->isDirty(['saldoinicial', 'saldofinal'])) {
+                $p->save();
+            }
+            $anterior = $p;
+        }
+        $ultimo = PortadorPeriodo::where('codportador', $periodo->codportador)
+            ->orderBy('inicio', 'desc')
+            ->orderBy('codportadorperiodo', 'desc')
+            ->first();
+        DB::table('tblportador')
+            ->where('codportador', $periodo->codportador)
+            ->update(['saldo' => round((float) ($ultimo->saldofinal ?? 0), 2)]);
+        return $periodos;
+    }
+
+    // o periodo e os seguintes do mesmo portador (os que o saldo arrasta)
+    public static function desde(PortadorPeriodo $periodo): Collection
+    {
+        return PortadorPeriodo::where('codportador', $periodo->codportador)
+            ->where(fn ($q) => $q->where('inicio', '>', $periodo->inicio)
+                ->orWhere('codportadorperiodo', $periodo->codportadorperiodo))
+            ->orderBy('inicio')
+            ->orderBy('codportadorperiodo')
+            ->get();
+    }
+
+    // R14 (doc-4): os periodos que um pagamento mexe (o de cada linha do
+    // razao, ativa ou nao) e os seguintes de cada portador, atualizados
+    public static function afetados(int $codpagamento): Collection
+    {
+        $periodos = PortadorPeriodo::whereIn('codportadorperiodo', PortadorMovimento::where('codpagamento', $codpagamento)
+            ->select('codportadorperiodo'))
+            ->get();
+        return static::comSeguintes($periodos);
+    }
+
+    public static function comSeguintes(Collection $periodos): Collection
+    {
+        return $periodos
+            ->groupBy('codportador')
+            ->flatMap(fn ($doPortador) => static::desde($doPortador->sortBy('inicio')->first()))
+            ->values();
     }
 
     // fecha do mais antigo para o mais novo. O corrente fecha no fim do dia
@@ -174,14 +219,11 @@ class PortadorPeriodoService
         if (!$seguinte && $depois->isNotEmpty()) {
             $seguinte = static::corrente($portador);
         }
-        if ($seguinte) {
-            $seguinte->saldoinicial = $periodo->saldofinal;
-            $seguinte->save();
-        }
         foreach ($depois as $mov) {
             $mov->codportadorperiodo = $seguinte->codportadorperiodo;
             $mov->save();
         }
+        static::recalcular($periodo);
         return $periodo;
     }
 
@@ -205,8 +247,8 @@ class PortadorPeriodoService
         }
         $periodo->fechamento = null;
         $periodo->codusuariofechamento = null;
-        $periodo->saldofinal = null;
         $periodo->save();
+        static::recalcular($periodo);
         return $periodo;
     }
 
@@ -242,5 +284,28 @@ class PortadorPeriodoService
             'codfilial' => $portador->codfilial,
             'observacoes' => $observacoes,
         ]);
+    }
+
+    // cancela o lancamento avulso de nao-gaveta (o da gaveta e' pelo caixa);
+    // periodo fechado = 422 pelo razao
+    public static function cancelarLancamento(Pagamento $pag, string $justificativa): Pagamento
+    {
+        $portador = $pag->PortadorDestino ?? $pag->PortadorOrigem;
+        if (empty($pag->motivo)
+            || !empty($pag->codnegocio)
+            || !empty($pag->codcaixaitemlancamento)
+            || PagamentoService::ehTransferencia($pag)
+            || $pag->MovimentoTituloS()->exists()
+            || !$portador
+        ) {
+            abort(422, 'Só lançamento avulso (taxa, tarifa, rendimento, ajuste) se cancela por aqui.');
+        }
+        if ($portador->ehGaveta()) {
+            abort(422, 'Lançamento avulso da gaveta se cancela pelo caixa.');
+        }
+        if ($pag->estado == PagamentoService::ESTADO_CANCELADO) {
+            abort(422, 'Lançamento já cancelado.');
+        }
+        return PagamentoService::cancelar($pag, $justificativa);
     }
 }

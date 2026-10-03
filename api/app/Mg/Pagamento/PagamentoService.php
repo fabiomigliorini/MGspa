@@ -289,8 +289,8 @@ class PagamentoService
     private static function exigirGavetasAbertas(Portador ...$portadores): void
     {
         foreach ($portadores as $portador) {
-            if ($portador->ehGaveta() && !CaixaService::sessaoAberta($portador->codportador)) {
-                abort(422, "Caixa {$portador->portador} fechado: abra o caixa no PDV antes de transferir.");
+            if ($portador->ehGaveta()) {
+                CaixaService::exigirAberta($portador);
             }
         }
     }

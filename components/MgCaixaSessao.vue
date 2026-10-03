@@ -15,6 +15,7 @@ import ItemCaixaDialog from '@components/caixa/ItemCaixaDialog.vue'
 import AvulsoCaixaDialog from '@components/caixa/AvulsoCaixaDialog.vue'
 import TransferirCaixaDialog from '@components/caixa/TransferirCaixaDialog.vue'
 import { caixaSessaoStore, DOCUMENTOS } from '@components/stores/caixaSessaoStore'
+import { periodoStore } from '@components/stores/periodoStore'
 
 const props = defineProps({
   // PDV: a gaveta (mostra a sessão aberta, ou abre uma nova)
@@ -27,6 +28,21 @@ const props = defineProps({
 
 const $q = useQuasar()
 const store = caixaSessaoStore()
+// os dialogs de movimento (transferir, avulso, item) servem qualquer portador: recebem a gaveta e a
+// sessão daqui e, depois de salvar, a tela recarrega a sessão
+const sPeriodo = periodoStore()
+watch(
+  () => store.sessao,
+  (s) => {
+    if (!store.gaveta) return
+    sPeriodo.contexto = store.contexto
+    sPeriodo.usar(
+      store.gaveta,
+      s ? { codportadorperiodo: s.codportadorperiodo, aberto: s.aberta, itens: s.itens } : null,
+      () => store.recarregar(),
+    )
+  },
+)
 
 const sessao = computed(() => store.sessao)
 const aberta = computed(() => !!sessao.value?.aberta)
@@ -95,8 +111,7 @@ function reabrir() {
 
 function editarItem(i) {
   if (!aberta.value || !podeOperar.value) return
-  store.item = i
-  store.dialogItem = true
+  sPeriodo.abrirItem(i.codcaixaitem)
 }
 
 function excluirAvulso(a) {
@@ -264,7 +279,7 @@ watch(() => [props.codportador, props.codportadorperiodo], carregar)
             size="sm"
             color="primary"
             icon="add"
-            @click="store.dialogAvulso = true"
+            @click="sPeriodo.dialogAvulso = true"
           >
             <q-tooltip>Lançamento avulso (entrada ou saída)</q-tooltip>
           </q-btn>
@@ -311,7 +326,7 @@ watch(() => [props.codportador, props.codportadorperiodo], carregar)
             size="sm"
             color="primary"
             icon="add"
-            @click="store.dialogTransferir = true"
+            @click="sPeriodo.dialogTransferir = true"
           >
             <q-tooltip>Transferir (sangria, suprimento)</q-tooltip>
           </q-btn>

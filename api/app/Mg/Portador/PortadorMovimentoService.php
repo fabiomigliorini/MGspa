@@ -137,14 +137,26 @@ class PortadorMovimentoService
             }
             $sobram[] = $mov;
         }
+        $mudou = [];
         foreach ($sobram as $mov) {
             static::exigirMutavel($mov->codportadorperiodo);
             $mov->inativo = Carbon::now();
             $mov->save();
+            $mudou[] = $mov->codportadorperiodo;
         }
         foreach ($desejadas as $l) {
             static::exigirMutavel($l['codportadorperiodo']);
             PortadorMovimento::create($l + ['codpagamento' => $pag->codpagamento]);
+            $mudou[] = $l['codportadorperiodo'];
         }
+        // R13 (doc-4): saldo do periodo e do portador gravados; do periodo
+        // mais antigo mexido de cada portador em diante, na ordem do
+        // portador (a transferencia trava os dois lados nessa ordem)
+        PortadorPeriodo::whereIn('codportadorperiodo', array_unique($mudou))
+            ->orderBy('codportador')
+            ->orderBy('inicio')
+            ->get()
+            ->unique('codportador')
+            ->each(fn ($p) => PortadorPeriodoService::recalcular($p));
     }
 }
