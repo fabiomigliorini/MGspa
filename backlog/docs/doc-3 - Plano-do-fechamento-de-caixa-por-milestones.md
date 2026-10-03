@@ -215,7 +215,8 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 16. **Uma data no razão**: o dia em que cai naquele portador. A data do ato fica no pagamento. Saldo
     de hoje soma até hoje; data futura aparece como "a cair". Débito cai pela adquirente em D+1;
     crédito em D+30 (parcelado 30/60/90); PIX, TED e depósito no mesmo dia; transferência bancária
-    no mesmo dia.
+    no mesmo dia. Desde o M10 a coluna é `tblportadormovimento.transacao` (timestamp), e a data do
+    ato no pagamento é `tblpagamento.transacao` (era `lancamento`).
 17. **Pagamento tem as mesmas colunas de valor do movimento de título**: `principal`, `juros`,
     `multa`, `desconto` e `total` (não existe coluna `valor`). `total` = o que andou de dinheiro por
     aquele meio = principal + juros + multa − desconto; `valortroco` à parte (a NF-e precisa do
@@ -392,7 +393,7 @@ valorvendido, valorentrada, valorsaida, observacoes, codpagamento, codtitulo`, �
 
 ### O que some
 
-`tblnegocioformapagamento` (vira view temporária), `tblliquidacaotitulo` (idem), `tblportadortransferencia`,
+`tblnegocioformapagamento` (vira view temporária), `tblliquidacaotitulo` (idem), `tblportadortransferencia` (caiu no M10, `razao.sql`),
 `vwnegocioformapagamento` (`vwnegocioformapagamentototais` ficou no M4, redefinida sobre pagamento
 e parcela, porque `vwnegocio`/`vwnegocio_listagem` dependem dela). `tblformapagamento` fica
 congelada, só para a view e a forma padrão do cliente (`tblpessoa.codformapagamento`); a tela sai
@@ -483,6 +484,21 @@ para leitura de histórico não convertido.
     Wizard com uma forma só permitida entra direto nela.
   - Maquinetas no cartão (ajuste do M6.1): lista as de todas as filiais, as de outra filial num
     grupo próprio (`MaquinetaService::paraPdv` devolve `outrafilial`), sem bloquear.
+- **Razão e `transacao` depois do M10** (detalhe na seção M10):
+  - `transacao` = data e hora do **fato gerador**; `criacao` = quando foi digitado. Vale para
+    pagamento, cheque, extrato bancário, bonificação, razão, título e movimento de título. O
+    negócio ainda usa `lancamento` (TASK-194): ao ler data, conferir de qual tabela ela é.
+    Filtro de período da listagem de pagamentos: `transacao_de` / `transacao_ate`.
+  - Razão = `Mg/Portador/PortadorMovimentoService::sincronizar(Pagamento)`, **chamado
+    explicitamente** por quem grava pagamento efetivado ou muda um (`PagamentoService::{criar,
+    contrario, efetivar, cancelar}`, `PagamentoTituloService::{pagamentoDaForma, daBaixa,
+    atualizar}`, `PagamentoCorrecaoService::{corrigir, incluir}`). Caminho novo que grave
+    pagamento precisa chamá-lo. Idempotente: inativa as linhas que sobram e cria as que faltam.
+    Lança hoje dinheiro, boleto, depósito, PIX e transferência efetivados com `transacao` a partir
+    do `CONFERENCIA_INICIO`.
+  - Períodos e saldo: `Mg/Portador/PortadorPeriodoService::{corrente, imutavel, descricao,
+    saldo}`. Gaveta = sessão do M9 (`CaixaService`); os demais portadores ganham o corrente
+    sozinhos. Imutável: gaveta conferida; demais, fechados.
 
 ---
 
@@ -1564,6 +1580,16 @@ sem `lancamento` de pagamento, cheque, extrato e bonificação.
   `pendentes(portador)`; rotas `v1/pdv/caixa/transferencia` (POST, confirmar, cancelar) e
   `v1/pagamento/transferencia` (contas); `GET v1/portador/caixas?codfilial=` (portadores `E` da
   filial com saldo, sessão, pendentes, `ehGaveta`); `GET v1/portador/{id}/saldo`.
+- **Base deixada pelo M10** (reusar, não recriar): a transferência é um pagamento com origem e
+  destino, e o `PortadorMovimentoService::sincronizar` já lança as duas linhas (−total na origem,
+  +total no destino), cada uma no período do seu portador. Hoje só lança efetivado: a
+  transferência **pendente "a confirmar"** (decisões 13 e 22) precisa que o `desejadas` aceite o
+  estado P quando o pagamento tem os dois portadores. O saldo vem de
+  `PortadorPeriodoService::saldo`. **Sessão de cada lado**: o `CaixaService::vincular` do M9
+  valida e grava uma sessão só (`destino ?? origem`); gaveta → gaveta precisa validar as duas
+  (422 se uma estiver fechada). O razão já acha a sessão do outro lado por
+  `CaixaService::sessaoDe`. Meio da transferência entre espécies = dinheiro (1); para banco,
+  depósito (16) ou transferência (18).
 - **Frontend**: negocios `DialogTransferir.vue` (`MgSelectPortador agrupar`, gavetas fechadas
   desabilitadas com motivo), lista com cores por estado, Confirmar/Cancelar; contas → página
   **Caixas** (`pages/caixa/Index.vue`, `caixaStore`, drawer filial/de/até): abas Portadores e
@@ -1576,6 +1602,14 @@ sem `lancamento` de pagamento, cheque, extrato e bonificação.
   com sessão já fechada → 422.
 
 ## M12 — Períodos no contas (TASK-39)
+
+- **Base deixada pelo M10** (reusar, não recriar): `PortadorPeriodoService::corrente` (cria o
+  corrente no primeiro lançamento, com início no go-live ou logo depois do último `fim`),
+  `imutavel` (fechado = `fechamento` preenchido nos não-gaveta) e `saldo` (decisão 19). O razão
+  já recusa com 422 mudar linha de período imutável. Fechar com corte = gravar `fim` = corte,
+  `fechamento`, `saldofinal` = saldo até o corte, e **reapontar para o corrente novo as linhas
+  ativas com `transacao` depois do corte** (`codportadorperiodo`). O saldo de implantação é o
+  `saldoinicial` do primeiro período (hoje 0, início no `CONFERENCIA_INICIO`).
 
 - **Backend** `PortadorPeriodoController` (`v1/portador-periodo`: index, show, fechar com `corte`,
   reabrir, lançamento avulso em período de não-gaveta — Financeiro); `CaixaController` lado contas
