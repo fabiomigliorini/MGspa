@@ -1796,7 +1796,7 @@ pm join tblportador p using(codportador) where pm.inativo is null group by 1,2 o
   de repasse (Duplicata a Pagar) de 15, 120 e 120 em contas a pagar; agrupar e pagar; reabrir com título já
   agrupado → 422.
 
-## M14 — Cartões no razão e conciliação (futura; a definir quando chegar)
+## M14 — Cartões no razão e conciliação (TASK-195; a definir quando chegar)
 
 Prazos e taxas por adquirente/maquineta; lançamentos do cartão na adquirente por parcela (D+1 débito,
 D+30… crédito); repasse adquirente → banco como transferência; taxas e débitos da adquirente como
@@ -1805,7 +1805,7 @@ parceladas em faturas futuras; conciliação razão ↔ extrato (`tblextratobanc
 importação de extrato de adquirente e de fatura. Ligar `PortadorMovimentoService::lancar` para meios
 crédito/débito.
 
-## M15 — Pagamento por API de banco e integrações de cancelamento (futura)
+## M15 — Pagamento por API de banco e integrações de cancelamento (TASK-196)
 
 Ordem de pagamento (PIX por chave/dados/QR, boleto, TED) como pagamento de saída em estado pendente
 até o banco confirmar; lote + item, chave própria sequencial, "aguardando liberação", devolução como
@@ -1842,6 +1842,6 @@ TED, PIX), Sicredi sem API pública de pagamento. Conferir campos e estados ao i
   da TASK-188; quando for criada, ela fica só com M8 e M9.
 - **TASK-39**: `--dep` na task de balcão; ACs M10 a M13 (já lançados; ajustar os que citam
   liquidação/transferência para pagamento).
-- **Futuras** (M14, M15): só anotadas aqui; nascem com OK explícito quando chegar a vez.
+- **Futuras**: M14 = TASK-195, M15 = TASK-196 (criadas em 03/10/2026, prioridade Medium).
 - Cada milestone: marcar os ACs, commit `[UPD] TASK-nn Mx …` só depois da validação e do OK, com os
   `.md` do backlog no mesmo commit.
