@@ -65,7 +65,7 @@ class PdvNegocioChequeService
                 'vencimento' => $nfp->chequevencimento,
                 'valor' => $nfp->total,
                 'indstatus' => 1, // à repassar
-                'lancamento' => Carbon::now(),
+                'transacao' => $nfp->transacao ?? Carbon::now(),
                 'codpagamento' => $nfp->codpagamento,
                 'emitentes' => $emitentes,
             ]);

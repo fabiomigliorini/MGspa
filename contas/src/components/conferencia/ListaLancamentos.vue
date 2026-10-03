@@ -28,7 +28,7 @@ const valor = (l) => {
 const legenda = (l) =>
   [
     l.pdv || 'Escritório',
-    formataTimestamp(l.lancamento, 2),
+    formataTimestamp(l.transacao, 2),
     l.maquineta,
     l.bandeiradescricao,
     l.parcelas > 1 ? `${l.parcelas}x` : null,

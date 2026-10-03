@@ -16,6 +16,7 @@ use Mg\Pessoa\Pessoa;
 use Mg\Pix\Pix;
 use Mg\Pix\PixCob;
 use Mg\Portador\Portador;
+use Mg\Portador\PortadorMovimento;
 use Mg\Portador\PortadorPeriodo;
 use Mg\Rh\PeriodoColaboradorAcerto;
 use Mg\Saurus\SaurusPedido;
@@ -47,7 +48,7 @@ class Pagamento extends MgModel
         'total',
         'valortroco',
         'parcelas',
-        'lancamento',
+        'transacao',
         'efetivacao',
         'codusuarioefetivacao',
         'cancelamento',
@@ -121,7 +122,7 @@ class Pagamento extends MgModel
         'desconto' => 'float',
         'efetivacao' => 'datetime',
         'juros' => 'float',
-        'lancamento' => 'datetime',
+        'transacao' => 'datetime',
         'meio' => 'integer',
         'multa' => 'float',
         'parcelas' => 'integer',
@@ -300,5 +301,11 @@ class Pagamento extends MgModel
     public function PagamentoCorrecaoS()
     {
         return $this->hasMany(PagamentoCorrecao::class, 'codpagamento', 'codpagamento');
+    }
+
+    // razao (M10 doc-3): o que este pagamento lancou em cada portador
+    public function PortadorMovimentoS()
+    {
+        return $this->hasMany(PortadorMovimento::class, 'codpagamento', 'codpagamento');
     }
 }

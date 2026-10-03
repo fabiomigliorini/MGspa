@@ -55,7 +55,7 @@
     $resumo = array_filter($resumo, fn($r) => $r['total'] > 0);
     $totalPago = collect($resumo)->sum('total');
 
-    $dt = $pag->lancamento ?? now();
+    $dt = $pag->transacao ?? now();
     $dataExtenso = $cidadeEstado . ', ' . formataDataPorExtenso($dt) . '.';
     $valorExtenso = formataValorPorExtenso($totalPago, true);
 

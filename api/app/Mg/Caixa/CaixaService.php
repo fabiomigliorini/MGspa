@@ -80,7 +80,7 @@ class CaixaService
     }
 
     // gaveta que recebe o dinheiro do PDV agora: sem gaveta ou com o caixa
-    // fechado o Dinheiro fica bloqueado (TASK-39 AC #2)
+    // fechado o Dinheiro fica bloqueado (TASK-188 AC #34)
     public static function gavetaAberta(Pdv $pdv): Portador
     {
         $gaveta = static::gaveta($pdv);
@@ -247,7 +247,7 @@ class CaixaService
             from tblpagamento p
             inner join tblpdv pdv on (pdv.codpdv = p.codpdv)
             where pdv.codportador = :portador
-            and p.lancamento between :inicio and :fim
+            and p.transacao between :inicio and :fim
             and p.estado = 'E'
             and p.meio <> 1
             group by p.meio
@@ -282,7 +282,7 @@ class CaixaService
             inner join tblpdv pdv on (pdv.codpdv = p.codpdv)
             inner join tblmaquineta m on (m.codmaquineta = p.codmaquineta)
             where pdv.codportador = :portador
-            and p.lancamento between :inicio and :fim
+            and p.transacao between :inicio and :fim
             and p.estado = 'E'
             and p.meio in (3, 4)
             group by m.apelido

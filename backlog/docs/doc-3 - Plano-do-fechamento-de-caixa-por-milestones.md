@@ -45,10 +45,11 @@ empresa). No M8.1 entram também a **limpeza dos tipos de título** (02/10/2026,
 38 apagados) e o **PDV pagando com qualquer título de crédito**; detalhe na seção M8. **M8.1
 commitado em 02/10/2026 sem validação, a pedido do Fábio** (MGspa + `../MGsis` + `../MGdb`): ele
 valida depois.
-**M8.1 commitado em 02/10/2026** (`43a95c90e`). **M9 em andamento (02/10/2026), redesenhado**:
-conferências independentes de tudo que o caixa movimenta, fechadas pelo gerente no contas, com
-correção dos lançamentos; absorve a gaveta do M10 (ver seção M9). **M10 (só o razão) em
-paralelo**, outra conversa — ver "Coordenação M9 × M10" na seção M10.
+**M8.1 commitado em 02/10/2026** (`43a95c90e`). **M9 commitado em 02/10/2026** (`cf9777580`,
+redesenhado): conferências independentes de tudo que o caixa movimenta, fechadas pelo gerente no
+contas, com correção dos lançamentos; absorveu a gaveta do M10 (ver seção M9). **M10 (o razão +
+o campo `transacao`) commitado em 02/10/2026 sem validação, a pedido do Fábio** (TASK-39): ele
+valida depois, junto com M11 e M12; decisões e "Como ficou no código" na seção M10.
 TASK-193 (nova, High): tipo de título só obrigatório quando a natureza gera financeiro.
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
@@ -68,8 +69,8 @@ as views temporárias. `pagamento.sql` leva ~7 min em dev (5,3 milhões de forma
 uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha se rodar depois do
 `pagamento.sql` (a tabela já virou view). `pagamento_liquidacao.sql` leva ~45 s em dev (175 mil
 liquidações, 437 mil movimentos) e precisa do `pagamento.sql` antes. O `.env` de produção do negocios
-pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). `conferencia.sql` (M9) roda antes do
-`tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
+pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). `conferencia.sql` (M9) e depois `razao.sql`
+(M10) rodam antes do `tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
 script** (renumera os tipos de título; os anteriores usam os códigos antigos), e o
 `NfeTerceiroController.php` do MGsis sobe junto (grava Duplicata a Pagar, código novo 200).
 
@@ -92,7 +93,11 @@ script** (renumera os tipos de título; os anteriores usam os códigos antigos),
 - **Movimento de título** (`tblmovimentotitulo`): o que mudou no título. Uma linha por título em cada
   pagamento, com principal, juros, multa, desconto e total — as mesmas colunas de valor do pagamento.
 - **Razão** (`tblportadormovimento`): o que cai em cada portador e quando. Toda linha nasce de um
-  pagamento. Data = dia em que aparece no extrato daquela conta.
+  pagamento. `transacao` = quando o dinheiro aparece naquela conta (M10).
+- **Transação** (`transacao`, padrão desde o M10): data e hora do **fato gerador** — o PIX de ontem
+  lançado hoje tem transação de ontem; a hora em que foi digitado é a `criacao`. Pagamento,
+  cheque, extrato bancário, bonificação, razão e movimento de título usam este nome; o negócio
+  (`tblnegocio.lancamento`) ainda não (task própria).
 - **Período** (`tblportadorperiodo`): faixa `[inicio, fim]` de um portador com saldo inicial e final.
   **Corrente** = `fim` nulo. **Aberto** = `fechamento` nulo. **Sessão** = período de gaveta (abre e
   fecha com contagem). **Corte** = a data que fecha um período corrente de cofre/banco. **Fatura** =
@@ -143,7 +148,7 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 | M7 | (absorvido pelo M6.1) | — | — | — |
 | M8 | Vale colaborador e adiantamentos, no PDV e no contas | Receber no balcão | negocios e contas → Pagamentos → Vale / Adiantamento | Baixo |
 | M9 | Conferências e fechamento do caixa: sessão da gaveta, lote da maquineta, documentos, correção de lançamentos, vendas desbalanceadas (redesenhado em 02/10/2026) | Receber no balcão | negocios → Caixa; contas → Fechamentos, Maquinetas → lotes | **Alto** |
-| M10 | Razão do dinheiro (`tblportadormovimento`) e saldo do portador; a sessão da gaveta foi para o M9 | TASK-39 | contas → detalhe do pagamento (lançamentos do razão) | Médio |
+| M10 | Razão do dinheiro (`tblportadormovimento`) e saldo do portador; `transacao` = fato gerador em pagamento, cheque, extrato e bonificação; a sessão da gaveta foi para o M9 | TASK-39 | contas e PDV → detalhe do pagamento (card Razão); listagens com o filtro de período | Médio |
 | M11 | Transferências (sangria, suprimento, depósito, envio ao financeiro) | TASK-39 | negocios → Caixa; contas → Caixas | Médio |
 | M12 | Períodos no contas (financeiro fecha o mês) | TASK-39 | contas → Caixas → Períodos | Baixo |
 | M13 | Itens do caixa e repasse ao parceiro | TASK-39 | negocios → Caixa; contas a pagar | Médio |
@@ -300,7 +305,7 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 | valortroco | numeric(14,2) | dinheiro; fora do `total` |
 | codtitulo | bigint FK | vale consumido como pagamento (meio 12), antes de virar movimento (M4) |
 | parcelas | smallint | cartão de crédito |
-| lancamento | timestamp NN | data do ato |
+| transacao | timestamp NN | data e hora do fato gerador (era `lancamento`; renomeada no M10) |
 | efetivacao, codusuarioefetivacao | timestamp, bigint | quando/quem confirmou |
 | cancelamento, codusuariocancelamento, justificativa | timestamp, bigint, varchar(300) | |
 | codpessoa | bigint FK | contraparte quando não vem do documento (colaborador, fornecedor, cliente) |
@@ -312,14 +317,14 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 | codpixcob, codpix, codpagarmepedido, codsauruspedido, codliopedido | FK | integrações |
 | codcheque, cmc7, chequevencimento, chequecnpj, chequeemitente | | cheque (dados antes de o cheque existir) |
 | codliquidacaotituloantigo | bigint | só histórico (M6) |
-| codportadorperiodo | bigint FK | ajuste de contagem (M10) |
+| codportadorperiodo | bigint FK | sessão da gaveta do dinheiro (M9, `CaixaService::vincular`) |
 | codcaixaitemlancamento | bigint FK | item do caixa (M13) |
 | codperiodocolaboradoracerto | bigint FK | acerto de RH (M6) |
 | observacoes | varchar(300) | |
 | criacao, codusuariocriacao, alteracao, codusuarioalteracao | | audit |
 
-Índices: `codnegocio`, `(estado, lancamento)`, `codportadororigem`, `codportadordestino`,
-`(codmaquineta, lancamento)`, `codpagamentoorigem`, `uuid` único.
+Índices: `codnegocio`, `(estado, transacao)`, `codportadororigem`, `codportadordestino`,
+`(codmaquineta, transacao)`, `codpagamentoorigem`, `uuid` único.
 
 ### `tblnegocioparcela` (M4)
 
@@ -364,15 +369,19 @@ codusuario, audit`, única por maquineta e dia.
 ### `tblportadorperiodo` (criada no M9, `conferencia.sql`; colunas de conferência na seção M9)
 
 `codportadorperiodo PK, codportador NN, inicio NN, fim (nulo = corrente), fechamento (nulo = aberto),
-codusuarioabertura, codusuariofechamento, saldoinicial NN default 0, saldofinal, vencimento (fatura,
-M14), moedasabertura, cedulasabertura, moedasfechamento, cedulasfechamento, codpagamentoabertura,
-codpagamentofechamento (ajustes), observacoes, audit`. Único corrente por portador (`fim IS NULL`).
+codusuarioabertura, codusuariofechamento, saldoinicial NN default 0, saldofinal, moedasabertura,
+cedulasabertura, moedasfechamento, cedulasfechamento, conferencia, codusuarioconferencia,
+valorconferido, observacoes, audit`. Único corrente por portador (`fim IS NULL`). Ainda não
+existem: `vencimento` (fatura, M14) e `codpagamentoabertura`/`codpagamentofechamento` (ajuste de
+caixa, quando ele vier). Cofre, banco e adquirente ganham o corrente sozinhos no primeiro
+lançamento do razão (M10).
 
 ### `tblportadormovimento` (M10; recriada, a atual está vazia)
 
 `codportadormovimento PK, codportador NN, codportadorperiodo NN, codpagamento NN, valor NN (com
-sinal), data date NN (quando cai), parcela smallint, conciliado bool NN default false, inativo,
-audit`. Toda linha nasce de um pagamento. `tblextratobancarioportadormovimento` (existe) continua
+sinal: positivo entrou), transacao timestamp NN (quando cai naquele portador), parcela smallint
+(cartão, M14), conciliado bool NN default false, inativo, audit`. Toda linha nasce de um
+pagamento (`api/database/razao.sql`). `tblextratobancarioportadormovimento` (existe) continua
 sendo a amarração com o extrato para o M14.
 
 ### Itens do caixa (M13)
@@ -1303,9 +1312,6 @@ no M9").
 - O protótipo `negocios /conferencia` (`ConferenciaPage`, `PdvService::conferencia`) sai quando a
   tela Fechamentos cobrir.
 
-**Em paralelo com o M10** (02/10/2026): a divisão de escopo e de arquivos está no topo da seção
-M10 ("Coordenação M9 × M10").
-
 **Como ficou no código** (02/10/2026, na árvore, sem commit):
 
 - **DDL** `api/database/conferencia.sql` (rodado 2x em dev). O lote "corrente" é o mais novo da
@@ -1396,79 +1402,159 @@ Confissão de Dívida e anexos da venda continuam funcionando (rotas novas).
   trechos (`git add -p`) para um commit não levar o trabalho do outro; no doc-3 e na TASK-188,
   escrever só na seção/notas do M9.
 
-## M10 — Razão do dinheiro (TASK-39; o resto da gaveta foi para o M9)
+## M10 — Razão do dinheiro e `transacao` = fato gerador (TASK-39)
 
-> **Redesenho de 02/10/2026 — leia antes de executar.** O M9 ficou com a **sessão da gaveta**
-> inteira: `tblportadorperiodo` (criada no `api/database/conferencia.sql` do M9), abrir e fechar
-> com contagem no PDV, Dinheiro bloqueado sem sessão aberta, borderô do caixa, conferência e
-> reabertura pelo gerente no contas, e o vínculo do dinheiro com a sessão
-> (`tblpagamento.codportadorperiodo`, preenchido por `Mg/Conferencia/ConferenciaService::vincular`
-> no `saving` do `Pagamento`). **O M10 é o M9 rodando em paralelo (02/10/2026, o M9 ainda sem
-> commit): ver "Coordenação M9 × M10" abaixo.**
->
-> **Escopo do M10 agora**:
-> - DDL `api/database/razao.sql` (não `caixa.sql`): recria `tblportadormovimento` (modelo acima,
->   com `codportadorperiodo` apontando para a `tblportadorperiodo` do M9). **Não** cria
->   `tblportadorperiodo` nem `tblpagamento.codportadorperiodo` (já existem no dev pelo M9).
-> - `Mg/Portador/PortadorMovimentoService::lancar(Pagamento)` (dinheiro, PIX, depósito,
->   transferência: uma linha por lado com portador, data = hoje; cartão só no M14; outros nada) e
->   `inativar`; chamado de `PagamentoService::efetivar`/`cancelar` (ou de um `saved` próprio do
->   `Pagamento`) — **não** dentro do `ConferenciaService::vincular` do M9. Na gaveta, a linha usa
->   o `codportadorperiodo` que o pagamento já tem.
-> - Períodos dos portadores que não são gaveta (cofre, banco, adquirente): o corrente nasce sozinho
->   no primeiro lançamento (decisão 18); fechar com corte e reabrir em cadeia ficam no M12.
-> - Saldo do portador pela decisão 19 (`PortadorPeriodoService::saldo`), sem tela própria (o M11
->   e o M12 usam).
-> - `MgPagamentoDetalhe` ganha os lançamentos do razão.
-> - **Fora do M10** (estão no M9): `CaixaService`/`CaixaController` (`v1/pdv/caixa`), tela
->   `negocios /caixa`, borderô do caixa, bloqueio do Dinheiro no `MgCobrancaDialog`, o dinheiro da
->   venda indo para a gaveta no `PdvNegocioService::fechar`, a conferência da sessão.
-> - Lançamento avulso e ajuste de caixa (motivo A) no PDV: ficam para depois do M9 commitado
->   (precisam da tela do caixa do M9).
->
-> **Coordenação M9 × M10** (os dois na mesma árvore, sem commit): cada um commita só os próprios
-> arquivos (`git add -p` onde dividirem). Arquivos do M9 — o M10 **não edita**: `api/database/
-> conferencia.sql`, `api/app/Mg/Conferencia/*`, `api/app/Mg/Caixa/*`, `api/app/Mg/Maquineta/*`,
-> `api/app/Mg/Portador/PortadorPeriodo.php`, `api/app/Mg/Pagamento/{Pagamento,PagamentoCorrecao,
-> PagamentoListaService}.php`, `api/app/Mg/Negocio/{NegocioAnexoService,NegocioAnexoController,
-> NegocioAcerto,Negocio}.php`, `api/app/Mg/Pdv/{PdvNegocioService,RomaneioService}.php`,
-> `api/config/mg.php`, `components/{MgSlim,MgConfissaoScanner,MgCobrancaDialog}.vue`,
-> `components/stores/{confissaoStore,cobrancaStore}.js`, `components/anexo/`, `contas/src/` (telas
-> Fechamentos e Maquinetas), `negocios/src/` (Caixa, Confissão, anexos). Compartilhados com regra:
-> `api/routes/api.php` (cada um no seu bloco), `Portador.php` (relações novas no fim), doc-3 (cada
-> um na sua seção) e TASK-188/TASK-39 (cada um nas suas notas). Se o M10 precisar mudar algo de um
-> arquivo do M9, relata ao Fábio em vez de editar.
->
-> O texto abaixo é o plano original do M10, mantido para referência (a parte de sessão está no M9).
+**Por quê** (planejado com o Fábio em 02/10/2026, depois do redesenho do M9): o M9 ficou com a
+sessão da gaveta inteira (`tblportadorperiodo`, abrir e fechar no PDV, conferência e correção pelo
+gerente, `tblpagamento.codportadorperiodo`). Sobra para o M10 o **razão** (decisão 1): o que cai em
+cada portador e quando, o saldo do portador (decisão 19) e os lançamentos no detalhe do pagamento.
+Na mesma conversa o Fábio padronizou o nome da data do fato: **`transacao` = data e hora do fato
+gerador**, `criacao` = quando foi digitado ("vou lançar hoje um PIX feito ontem: a transação é
+ontem, a criação é agora").
 
-- **DDL `api/database/caixa.sql`** (seção 1): `tblportadorperiodo`; recria `tblportadormovimento`;
-  `tblpagamento.codportadorperiodo`.
-- **Backend** `Mg/Portador/PortadorPeriodoService` (`corrente`, `abertos`, `periodoPara(portador,
-  data, acao)` — gaveta sem sessão → 422 "Caixa fechado…", período fechado → 422, demais cria o
-  corrente —, `saldo`, `fechar(periodo, corte)` com reaponte do que ficou depois do corte, `reabrir`
-  em cadeia, `listar`); `PortadorMovimentoService::lancar(Pagamento)` gera as linhas do razão pelo
-  meio e pelos portadores do pagamento (dinheiro/PIX/transferência: uma linha por lado, data = hoje;
-  cartão: uma por parcela com D+1/D+30…, só quando o M14 ligar; outros: nada) e `inativar`;
-  `PagamentoService::efetivar` passa a chamar `lancar`; `Mg/Caixa/CaixaAutorizador` (decisão 23) e
-  `CaixaService` (`portadorDoPdv`, `abrir` com contagem e ajuste, `fechar` com contagem, ajuste e
-  422 se há pendente chegando, `reabrir`, `resumo`, `lancamentos`, `lancamentoAvulso` = pagamento com
-  motivo, hooks `validarDinheiroNegocio`/efetivação no `fechar` do negócio e cancelamento em período
-  fechado → 422); `CaixaController` (`v1/pdv/caixa`: status, abrir, fechar, reabrir, lancamento,
-  pdf); `CaixaRelatorioService` + blade "Movimento do Caixa" (Entrada × Saída, Total, Diferença,
-  informativo de cartão/PIX/vale/prazo, lançamentos, assinaturas). Resumo: razão do período
-  classificado pelo pagamento (venda, cancelamento, título recebido/pago, transferência, item, ajuste,
-  avulso) + informativo por meio dos negócios dos PDVs da gaveta na janela.
-- **Frontend negocios**: `stores/caixa.js`; `/caixa` (`CaixaLayout`, `CaixaPage`: sem portador,
-  fechado → abertura inline, aberto → cabeçalho, `CaixaResumo`, informativos, lançamentos, botões
-  Lançamento e Fechar com diferença ao vivo → PDF; última sessão com Reabrir); o
-  `MgCobrancaDialog` desabilita Dinheiro com motivo (informado pelo `contexto` do PDV, na venda e
-  no Receber título); menu "Caixa". O dinheiro de título no PDV passa por
-  `PagamentoTituloService::baixar` (gaveta do PDV): o hook de caixa fechado vale ali também. O
-  `MgPagamentoDetalhe` ganha os lançamentos do razão.
-- **Valida**: abrir com 50 + 200 → ajuste +250; venda R$10 em dinheiro → +10 na sessão; fechar →
-  Dinheiro desabilitado; cancelar venda com sessão aberta → estorno; com sessão fechada → 422;
-  notinha e vale do M6.1/M8 aparecendo; fechar com contagem → PDF; reabrir (Gerente); sessão de ontem
-  reaberta exige fechar antes de hoje.
+**Decisões (M10.x, não reabrir)**
+
+1. **O que lança agora**: os meios imediatos, em qualquer portador — dinheiro (1), PIX (17),
+   depósito (16), transferência (18) e boleto (15) —, **uma linha por lado que tem portador**
+   (destino `+total`, origem `−total`). Cartão (3, 4, inclusive o da empresa) e Mercos Pay (99)
+   ficam para o M14. Cheque, vale, compensação, folha, permuta, perda e outros: nada.
+2. **Quem gera**: `Mg/Portador/PortadorMovimentoService::sincronizar(Pagamento)`, **chamado
+   explicitamente** (sem observer): compara as linhas ativas do pagamento com as que ele deveria
+   ter e inativa as que sobram e cria as que faltam (idempotente). Chamado em
+   `PagamentoService::{criar, contrario, efetivar, cancelar}` (cobre baixa de título, compensação,
+   acerto de RH, PIX, Lio, PagarMe, Saurus, o `fechar` e o `cancelar` da venda e o estorno do
+   título), em `PagamentoTituloService::{pagamentoDaForma}` (amarração da cobrança integrada),
+   `daBaixa` (boleto BB) e `atualizar` (edição do contas), e em
+   `Conferencia/PagamentoCorrecaoService::{corrigir, incluir}` (gravam direto). Caminho novo que
+   grave pagamento efetivado precisa chamar o `sincronizar`.
+3. **Só do go-live em diante**: mesmo corte das conferências (`config('mg.conferencia_inicio')`,
+   `CONFERENCIA_INICIO` no `.env`). Pagamento com `transacao` anterior nunca gera razão, nem
+   quando editado ou cancelado depois. O `razao.sql` não copia histórico; o saldo de implantação
+   de banco e cofre fica no M12.
+4. **Período de quem não é gaveta** (cofre, troco, Caixa Financeiro, banco, adquirente): o
+   corrente nasce sozinho no primeiro lançamento, com `inicio` = 00:00 do `CONFERENCIA_INICIO` e
+   `saldoinicial` 0 (com `lockForUpdate` no portador, como o `CaixaService::abrir`). Como nada
+   anterior gera razão, todo lançamento cabe nele. Fechar com corte e reabrir em cadeia: M12.
+   **Gaveta**: a linha usa o `codportadorperiodo` que o M9 já gravou no pagamento (sessão).
+5. **`transacao` no razão** (no lugar de `data`): `timestamp` = quando o dinheiro aparece naquele
+   portador. Nos meios imediatos é a `transacao` do pagamento; no cartão (M14) será a transação do
+   pagamento + o prazo de cada parcela (D+1 débito, D+30/60/90 crédito), uma linha por parcela
+   (coluna `parcela` já nasce). Saldo (decisão 19) = `saldoinicial` do aberto mais antigo + Σ
+   linhas ativas dos abertos com `transacao` ≤ fim de hoje; depois de hoje = "a cair".
+6. **`transacao` = fato gerador em todo o dinheiro**: o M10 renomeia `lancamento` → `transacao`
+   em `tblpagamento`, `tblcheque`, `tblextratobancario` e `tblbonificacaoevento` (banco, código,
+   resources, filtros `transacao_de/ate`, blades, telas). **O negócio fica fora**
+   (`tblnegocio.lancamento`: API, views, MGsis, MG Lara, Dexie): **TASK-194**, junto com o
+   levantamento do estoque e do resto do sistema, a `transacao` do pagamento da venda (hoje = hora
+   do sync) e a data do fato no Receber título do PDV (hoje só o contas tem o campo).
+7. **Gaveta trava na conferência**: para o razão, a sessão só é imutável **depois de conferida pelo
+   gerente** (`conferencia` preenchida). Entre o caixa fechar e o gerente conferir, a correção do
+   M9 (valor, dinheiro ↔ cartão, incluir) acerta o razão da sessão. Cancelar venda em dinheiro com
+   o caixa fechado continua 422 (regra do M9, `CaixaService::vincular`). Demais portadores:
+   imutável = `fechamento` preenchido (só existe a partir do M12). Linha nova ou inativada em
+   período imutável → 422 "reabra". O **saldo** continua por `fechamento` (sessão fechada pelo
+   caixa = `saldofinal` contado), como na decisão 19.
+8. **Detalhe do pagamento**: card **Razão** no `@components/MgPagamentoDetalhe.vue` (contas e PDV),
+   só quando há linha: portador, transação, valor com sinal (entrou verde, saiu vermelho), onde
+   caiu ("Caixa 508 · sessão de 02/10 08:00" ou "período corrente") e as inativadas riscadas, com
+   quando saíram. `PagamentoDetalheResource` devolve `razao[]`.
+9. Critérios da gaveta (#1 a #6 da TASK-39, que diziam M10) foram para a **TASK-188 como M9.1 a
+   M9.6** (#33 a #38); a TASK-39 fica com M10.x a M13. O comentário `TASK-39 AC #2` do
+   `CaixaService` passa a `TASK-188 AC #34`.
+10. `tblportadortransferencia` (vazia) cai no `razao.sql` (decisão 2), com o model
+    `PortadorTransferencia` e as relações dela no `Portador`; as relações `PortadorMovimentoS` de
+    `Pix` e `MovimentoTitulo` saem (as colunas somem com a tabela antiga).
+
+**DDL `api/database/razao.sql`** (padrão `conferencia.sql`: `\set ON_ERROR_STOP on`, `BEGIN`,
+`lock_timeout`/`statement_timeout`, idempotente, FKs guardadas por `pg_constraint`, `COMMIT`;
+roda depois do `conferencia.sql` e antes do `tipo_titulo_limpeza.sql`):
+
+1. `lancamento` → `transacao` em `tblpagamento`, `tblcheque`, `tblextratobancario` e
+   `tblbonificacaoevento` (só se `lancamento` existir), e os índices com `lancamento` no nome. A
+   view `tblliquidacaotitulo` (Totais de Caixa do MG Lara) acompanha sozinha; ela já expõe
+   `transacao`.
+2. Recria `tblportadormovimento` só se ainda estiver no formato antigo (coluna `lancamento`) **e
+   vazia** (senão aborta): derruba a FK de `tblextratobancarioportadormovimento`, a tabela antiga,
+   cria a nova e recria a FK. Colunas: `codportadormovimento bigserial PK`, `codportador NN`,
+   `codportadorperiodo NN`, `codpagamento NN`, `valor numeric(14,2) NN`, `transacao timestamp(0)
+   NN`, `parcela smallint`, `conciliado bool NN default false`, `inativo`, audit. Índices:
+   `codpagamento`; `(codportador, transacao) WHERE inativo IS NULL`; `codportadorperiodo`; único
+   `(codpagamento, codportador, coalesce(parcela, 0)) WHERE inativo IS NULL`. FKs para portador,
+   período, pagamento e usuários.
+3. `DROP TABLE tblportadortransferencia` se existir e estiver vazia.
+
+**Backend**
+
+- `Mg/Portador/PortadorMovimento.php` reescrito à mão (fora do gerador), com `Portador`,
+  `PortadorPeriodo`, `Pagamento`; `Pagamento::PortadorMovimentoS`.
+- `PortadorMovimentoService`: `MEIOS` (1, 15, 16, 17, 18), `desejadas(Pagamento)` (vazio se não
+  efetivado, meio fora da lista ou `transacao` antes do início; senão uma por lado com portador:
+  período da gaveta = `codportadorperiodo` do pagamento, demais = `PortadorPeriodoService::corrente`),
+  `sincronizar(Pagamento)` (compara por portador, valor, transação e período; inativa as que
+  sobram e cria as que faltam; 422 "reabra" em período imutável).
+- `Mg/Portador/PortadorPeriodoService`: `corrente(Portador)` (cria com início no go-live),
+  `imutavel(PortadorPeriodo)` (gaveta: conferida; demais: fechada), `saldo(Portador, ?Carbon)`.
+  Sem rota nem tela: o M11 e o M12 usam.
+- Chamadas da decisão 2. Rename da decisão 6 nos models (fillable, casts), services, resources,
+  `PagamentoListaService` (`transacao_de/ate`), `PdvPagamentoService`, Conferência, Caixa, lote da
+  maquineta, Cheque, Extrato BB, Meta/Bonificação e blades (`pagamento/*`,
+  `vale-modelo/emitidos-relatorio` e onde mais a data lida for do pagamento). **Nunca** o
+  `lancamento` do negócio.
+- `PagamentoDetalheResource` com `razao[]` (portador, valor, transação, período: sessão ou
+  corrente, inativo).
+
+**Frontend**: `MgPagamentoDetalhe` com o card Razão; rename em `MgPagamentoLista`,
+`MgPagamentoFiltros`, `stores/pagamentoListaStore`, `cobranca/FormaEstorno`; contas
+(`pages/pagamento`, `pages/fechamento`, `components/conferencia`, extrato e cheque); pessoas (metas
+e RH, bonificação); negocios só onde a data lida é do pagamento.
+
+**Valida (M10)**: (1) `razao.sql` 2x em dev (a segunda não faz nada); Totais de Caixa na view. (2)
+PDV 508: abrir o caixa, venda de R$ 10 em dinheiro → detalhe do pagamento mostra +10 na sessão;
+venda no cartão e no cheque → sem card Razão. (3) contas: receber título por transferência com
+data de ontem → linha no banco com transação de ontem e período corrente criado; editar data e
+portador → a antiga riscada, nova criada; estornar → riscada; pagar fornecedor com dinheiro do
+cofre → −valor no cofre. (4) Boleto BB reprocessado → linha no banco. (5) Fechamentos: corrigir o
+valor do dinheiro antes de conferir → razão acompanha; depois de conferir → 422; cancelar venda em
+dinheiro com o caixa fechado → 422. (6) Saldo pelo tinker: caixa aberto, caixa fechado, banco. (7)
+Pagamento anterior ao `CONFERENCIA_INICIO` editado → sem razão. (8) Rename: filtro de período das
+listagens (contas e PDV), importação do extrato BB, cheques, metas/bonificação no pessoas; `grep`
+sem `lancamento` de pagamento, cheque, extrato e bonificação.
+
+**Riscos e bordas**
+
+- Caminho novo que grave pagamento efetivado sem passar pelo `PagamentoService` fica sem razão:
+  chamar o `sincronizar` (decisão 2).
+- **M11**: o `CaixaService::vincular` grava uma sessão só (`destino ?? origem`); transferência
+  gaveta → gaveta vai precisar do período de cada lado (o razão já guarda período por linha).
+- Portador em espécie com corrente automático (cofre) que passa a ser gaveta: o índice único de
+  corrente impede abrir o caixa. Fechar o corrente (M12) antes de vincular o PDV.
+- `tblcheque.lancamento` também é lido pelas telas antigas de cheque do MGsis e do MG Lara
+  (abandonadas); no MGdb só o modelo ER cita a coluna.
+
+**Como ficou no código** (02/10/2026, executado em dev, na árvore, sem commit):
+
+- `api/database/razao.sql` rodado 2x em dev (a segunda não faz nada). Além do plano: os dois
+  índices do pagamento com `lancamento` no nome foram renomeados e o razão ganhou
+  `CHECK (valor <> 0)`.
+- `PagamentoService::efetivar` também sincroniza quando o pagamento **já está efetivado** (a
+  integração reprocessada pode ter regravado valores; sem isso o `efetivar` voltava cedo).
+- `PortadorPeriodoService::corrente`: se já existe período fechado depois do go-live (M12), o
+  novo corrente começa logo depois do último `fim`.
+- O cheque gerado pelo pagamento grava `transacao` = a do pagamento (era a hora da gravação).
+- `PortadorTransferencia.php` apagado; relações antigas removidas de `Portador`, `Pix` e
+  `MovimentoTitulo`; `IndiceModels.json` sem as duas tabelas (models mantidos à mão, como o
+  cartão Bee). `PortadorResource.movimentoconciliar` conta só linhas ativas.
+- Conferido com rollback pelo tinker: transferência com data retroativa (corrente criado com
+  início no go-live), edição de data e portador (antiga riscada, nova criada), sincronizar
+  repetido sem efeito, estorno, dinheiro do cofre saindo, cheque e PIX anterior ao go-live sem
+  razão; na gaveta: pendente sem linha → efetivado na sessão, correção do gerente com o caixa
+  aberto e fechado (sem conferir), 422 depois de conferida, registro indevido, cancelar com o
+  caixa fechado = 422 do M9; saldo aberta (inicial + linhas) e fechada (`saldofinal`); listagem
+  com `transacao_de/ate`, relatório, recibo térmico, extrato, bonificação. Templates compilados
+  com o `@vue/compiler-sfc`; o card não foi aberto no navegador.
+- **Dev**: os pagamentos feitos antes do M10 (inclusive os da validação do M9, sessões 4 e 5,
+  já conferidas) não têm razão; só os novos. Workers da fila reiniciados (`queue:restart`), senão
+  continuam com o código antigo na memória.
 
 ## M11 — Transferências (TASK-39)
 

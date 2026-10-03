@@ -108,7 +108,7 @@ class MaquinetaLoteService
                 $q->where('codmaquinetalote', $codmaquinetalote)
                     ->orWhere('codmaquinetalotecancelamento', $codmaquinetalote);
             })
-            ->orderBy('lancamento')
+            ->orderBy('transacao')
             ->orderBy('codpagamento')
             ->get();
     }

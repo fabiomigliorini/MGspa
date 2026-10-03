@@ -7,7 +7,6 @@
 namespace Mg\Titulo;
 
 use Mg\MgModel;
-use Mg\Portador\PortadorMovimento;
 use Mg\Boleto\BoletoRetorno;
 use Mg\Cobranca\Cobranca;
 use Mg\Portador\Portador;
@@ -153,11 +152,6 @@ class MovimentoTitulo extends MgModel
     public function MovimentoTituloEstornoS()
     {
         return $this->hasMany(MovimentoTitulo::class, 'codmovimentotituloestorno', 'codmovimentotitulo');
-    }
-
-    public function PortadorMovimentoS()
-    {
-        return $this->hasMany(PortadorMovimento::class, 'codmovimentotitulo', 'codmovimentotitulo');
     }
 
 }

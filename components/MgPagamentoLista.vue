@@ -106,7 +106,7 @@ const clicar = (l) => {
           <q-item-label class="text-weight-bold" :class="COR_TOTAL[l.operacao]">
             R$ {{ formataNumero(l.total) }}
           </q-item-label>
-          <q-item-label caption>{{ formataData(l.lancamento) }}</q-item-label>
+          <q-item-label caption>{{ formataData(l.transacao) }}</q-item-label>
           <q-item-label caption>
             <q-badge :color="COR_ESTADO[l.estado]" :label="l.estadodescricao" />
           </q-item-label>

@@ -230,7 +230,7 @@
                                     <br><span class="rh">Acerto RH #{{ $l->codperiodocolaboradoracerto }}</span>
                                 @endif
                             </td>
-                            <td class="tran">{{ $fmtData($l->lancamento) }}</td>
+                            <td class="tran">{{ $fmtData($l->transacao) }}</td>
                             <td class="port">{{ $portador }}</td>
                             <td class="num"></td>
                             <td class="mov-pess"></td>
@@ -269,7 +269,7 @@
                                             <br><span class="rh">Acerto RH #{{ $l->codperiodocolaboradoracerto }}</span>
                                         @endif
                                     </td>
-                                    <td class="tran">{{ $fmtData($l->lancamento) }}</td>
+                                    <td class="tran">{{ $fmtData($l->transacao) }}</td>
                                     <td class="port">{{ $portador }}</td>
                                 @else
                                     <td></td>

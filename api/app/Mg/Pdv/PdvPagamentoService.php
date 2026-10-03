@@ -27,12 +27,12 @@ class PdvPagamentoService
             ->whereIn('meio', [PagamentoService::MEIO_CREDITO, PagamentoService::MEIO_DEBITO, PagamentoService::MEIO_PIX])
             ->where('estado', PagamentoService::ESTADO_EFETIVADO)
             ->whereNull('codpagamentoorigem')
-            ->where('lancamento', '>=', now()->subYear())
+            ->where('transacao', '>=', now()->subYear())
             ->where(function ($w) use ($codpessoa) {
                 $w->where('codpessoa', $codpessoa)
                     ->orWhereIn('codnegocio', fn($n) => $n->select('codnegocio')->from('tblnegocio')->where('codpessoa', $codpessoa));
             })
-            ->orderBy('lancamento', 'desc')
+            ->orderBy('transacao', 'desc')
             ->limit(30)
             ->get();
         return $pags->map(function (Pagamento $p) {
@@ -41,7 +41,7 @@ class PdvPagamentoService
                 'codpagamento' => (int) $p->codpagamento,
                 'meio' => $p->meio,
                 'meiodescricao' => PagamentoService::descricao($p),
-                'lancamento' => $p->lancamento,
+                'transacao' => $p->transacao,
                 'codnegocio' => $p->codnegocio,
                 'maquineta' => optional($p->Maquineta)->apelido,
                 'bandeira' => $p->bandeira,

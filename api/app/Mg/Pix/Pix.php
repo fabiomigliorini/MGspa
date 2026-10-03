@@ -8,7 +8,6 @@ namespace Mg\Pix;
 
 use Mg\MgModel;
 use Mg\Pix\PixDevolucao;
-use Mg\Portador\PortadorMovimento;
 use Mg\Pix\PixCob;
 use Mg\Portador\Portador;
 use Mg\Usuario\Usuario;
@@ -82,11 +81,6 @@ class Pix extends MgModel
     public function PixDevolucaoS()
     {
         return $this->hasMany(PixDevolucao::class, 'codpix', 'codpix');
-    }
-
-    public function PortadorMovimentoS()
-    {
-        return $this->hasMany(PortadorMovimento::class, 'codpix', 'codpix');
     }
 
 }

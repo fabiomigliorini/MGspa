@@ -82,7 +82,7 @@ class VendaConferenciaService
             'valortotal' => (float) $negocio->valortotal,
             'diferenca' => static::diferenca($negocio),
             'pagamentos' => ConferenciaPagamentoResource::collection(
-                $negocio->PagamentoS()->orderBy('lancamento')->orderBy('codpagamento')->get()
+                $negocio->PagamentoS()->orderBy('transacao')->orderBy('codpagamento')->get()
             ),
             'parcelas' => $negocio->NegocioParcelaS->map(fn ($np) => [
                 'codnegocioparcela' => $np->codnegocioparcela,

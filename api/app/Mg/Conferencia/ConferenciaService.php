@@ -34,8 +34,8 @@ class ConferenciaService
     // saving do Pagamento: cartao no lote, dinheiro na sessao da gaveta
     public static function vincular(Pagamento $pag): void
     {
-        $lancamento = $pag->lancamento ? Carbon::parse($pag->lancamento) : Carbon::now();
-        if ($lancamento->lt(static::inicio())) {
+        $transacao = $pag->transacao ? Carbon::parse($pag->transacao) : Carbon::now();
+        if ($transacao->lt(static::inicio())) {
             return;
         }
         MaquinetaLoteService::vincular($pag);
@@ -148,7 +148,7 @@ class ConferenciaService
         $params = ['inicio' => $inicio];
         $where = static::whereFilial('p.codfilial', $filiais, $params);
         foreach (DB::select("
-            select p.codpagamento, p.meio, p.total, p.lancamento, p.codfilial, f.filial, p.codnegocio,
+            select p.codpagamento, p.meio, p.total, p.transacao, p.codfilial, f.filial, p.codnegocio,
                 coalesce(pn.fantasia, pe.fantasia) as fantasia, pdv.apelido as pdv
             from tblpagamento p
             left join tblfilial f on (f.codfilial = p.codfilial)
@@ -161,16 +161,16 @@ class ConferenciaService
             and p.codpdv is not null
             and p.codpagamentoorigem is null
             and p.conferencia is null
-            and p.lancamento >= :inicio
+            and p.transacao >= :inicio
             {$where}
-            order by p.lancamento
+            order by p.transacao
         ", $params) as $r) {
             $ret[] = [
                 'tipo' => $r->meio == PagamentoService::MEIO_CHEQUE ? static::TIPO_CHEQUE : static::TIPO_VALE,
                 'id' => $r->codpagamento,
                 'titulo' => ($r->meio == PagamentoService::MEIO_CHEQUE ? 'Cheque' : 'Vale') . ' de ' . ($r->fantasia ?? '—'),
-                'subtitulo' => 'R$ ' . number_format($r->total, 2, ',', '.') . ' · ' . ($r->pdv ?? '') . ' · ' . Carbon::parse($r->lancamento)->format('d/m H:i'),
-                'data' => $r->lancamento,
+                'subtitulo' => 'R$ ' . number_format($r->total, 2, ',', '.') . ' · ' . ($r->pdv ?? '') . ' · ' . Carbon::parse($r->transacao)->format('d/m H:i'),
+                'data' => $r->transacao,
                 'codfilial' => $r->codfilial,
                 'filial' => $r->filial,
                 'conferivel' => true,

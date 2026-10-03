@@ -50,7 +50,7 @@
     }
     unset($d);
 
-    $dt = $pag->lancamento ?? now();
+    $dt = $pag->transacao ?? now();
     $dataExtenso = $cidadeEstado . ', ' . formataDataPorExtenso($dt) . '.';
 
     // Paginacao feita aqui, e nao pelo Dompdf: ele nao quebra tabela aninhada dentro

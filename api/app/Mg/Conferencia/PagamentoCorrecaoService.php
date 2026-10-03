@@ -11,6 +11,7 @@ use Mg\Negocio\Negocio;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoCorrecao;
 use Mg\Pagamento\PagamentoService;
+use Mg\Portador\PortadorMovimentoService;
 use Mg\Portador\PortadorPeriodo;
 
 /**
@@ -94,7 +95,7 @@ class PagamentoCorrecaoService
         if (!$pdv || empty($pdv->codportador)) {
             abort(422, 'Dinheiro só em pagamento feito num PDV com gaveta.');
         }
-        $sessao = CaixaService::sessaoDe($pdv->codportador, $pag->lancamento);
+        $sessao = CaixaService::sessaoDe($pdv->codportador, $pag->transacao);
         if (!$sessao) {
             abort(422, 'Não havia caixa aberto na gaveta do PDV quando o pagamento foi feito.');
         }
@@ -170,6 +171,7 @@ class PagamentoCorrecaoService
         }
         PagamentoService::validar($pag);
         $pag->save();
+        PortadorMovimentoService::sincronizar($pag);
         static::registrar($pag, $antes, $justificativa);
         return $pag->fresh();
     }
@@ -206,7 +208,7 @@ class PagamentoCorrecaoService
         $pag = new Pagamento();
         $pag->codnegocio = $negocio->codnegocio;
         $pag->codpdv = $negocio->codpdv;
-        $pag->lancamento = $negocio->lancamento;
+        $pag->transacao = $negocio->lancamento;
         if ($meio == PagamentoService::MEIO_DINHEIRO) {
             $sessao = static::sessaoDoDinheiro($pag);
             $dados['codportadordestino'] = $sessao->codportador;
@@ -221,7 +223,7 @@ class PagamentoCorrecaoService
             'meio' => $meio,
             'estado' => PagamentoService::ESTADO_EFETIVADO,
             'efetivacao' => Carbon::now(),
-            'lancamento' => $negocio->lancamento,
+            'transacao' => $negocio->lancamento,
             'principal' => $dados['principal'] ?? 0,
             'codmaquineta' => $dados['codmaquineta'] ?? null,
             'bandeira' => $dados['bandeira'] ?? null,
@@ -232,6 +234,7 @@ class PagamentoCorrecaoService
             'observacoes' => mb_substr("Incluído na conferência: {$justificativa}", 0, 300),
         ]);
         $pag->save();
+        PortadorMovimentoService::sincronizar($pag);
         if (!empty($pag->codmaquinetalote)) {
             MaquinetaLoteService::exigirAberto($pag->MaquinetaLote);
         }

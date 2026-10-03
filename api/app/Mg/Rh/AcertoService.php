@@ -348,7 +348,7 @@ class AcertoService
             'meio' => ($total > 0) ? static::MEIO_DA_FORMA[$acerto->forma] : PagamentoService::MEIO_COMPENSACAO,
             'estado' => PagamentoService::ESTADO_EFETIVADO,
             'principal' => $total,
-            'lancamento' => Carbon::parse($acerto->data),
+            'transacao' => Carbon::parse($acerto->data),
             'efetivacao' => Carbon::now(),
             'codusuarioefetivacao' => auth()->user()->codusuario ?? null,
             'codpessoa' => $codpessoa ?? $pc->Colaborador->codpessoa ?? null,

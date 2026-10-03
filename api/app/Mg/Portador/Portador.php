@@ -17,7 +17,6 @@ use Mg\Pix\Pix;
 use Mg\Pix\PixCob;
 use Mg\Portador\PortadorMovimento;
 use Mg\Portador\PortadorSaldo;
-use Mg\Portador\PortadorTransferencia;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloBoleto;
 use Mg\Usuario\Usuario;
@@ -177,16 +176,6 @@ class Portador extends MgModel
     public function PortadorSaldoS()
     {
         return $this->hasMany(PortadorSaldo::class, 'codportador', 'codportador');
-    }
-
-    public function PortadorTransferenciaDestinoS()
-    {
-        return $this->hasMany(PortadorTransferencia::class, 'codportadordestino', 'codportador');
-    }
-
-    public function PortadorTransferenciaOrigemS()
-    {
-        return $this->hasMany(PortadorTransferencia::class, 'codportadororigem', 'codportador');
     }
 
     public function TituloS()
