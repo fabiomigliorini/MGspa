@@ -148,6 +148,19 @@ const routes = [
         },
       },
       {
+        path: 'caixa',
+        name: 'caixa',
+        component: () => import('pages/caixa/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Caixas',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/CaixaFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
         path: 'fechamento',
         name: 'fechamento',
         component: () => import('pages/fechamento/Index.vue'),

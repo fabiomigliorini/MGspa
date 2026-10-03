@@ -49,7 +49,9 @@ valida depois.
 redesenhado): conferências independentes de tudo que o caixa movimenta, fechadas pelo gerente no
 contas, com correção dos lançamentos; absorveu a gaveta do M10 (ver seção M9). **M10 (o razão +
 o campo `transacao`) commitado em 02/10/2026 sem validação, a pedido do Fábio** (TASK-39): ele
-valida depois, junto com M11 e M12; decisões e "Como ficou no código" na seção M10.
+valida depois, junto com M11 e M12; decisões e "Como ficou no código" na seção M10. **M11
+(transferências) commitado em 02/10/2026 sem validação**, na mesma conversa que o M12 (TASK-39):
+o Fábio valida M10, M11 e M12 juntos.
 TASK-193 (nova, High): tipo de título só obrigatório quando a natureza gera financeiro.
 
 **Go-live: tudo junto, no final.** Os milestones são commitados no master um a um, depois de
@@ -1600,6 +1602,72 @@ sem `lancamento` de pagamento, cheque, extrato e bonificação.
   efetivada); cancelar com justificativa; gaveta → gaveta com destino fechado → 422; fechar gaveta
   com pendente chegando → 422; gaveta → Caixa Financeiro (Financeiro confirma no contas); cancelar
   com sessão já fechada → 422.
+
+**Como ficou no código** (02/10/2026, executado em dev; sem DDL):
+
+- **Backend** `PagamentoService`: `ehTransferencia` (os dois lados e sem venda), `meioTransferencia`
+  (espécie → espécie = dinheiro; espécie → banco = depósito; o resto = transferência),
+  `transferir(origem, destino, total, obs, ?codpdv)` (trava os dois portadores contra o fechar do
+  caixa; gaveta sem sessão aberta = 422; nasce **efetivada** se quem registra opera o destino,
+  senão **pendente**; `codfilial` = filial da origem), `confirmar` (só o dono do destino),
+  `cancelarTransferencia` (qualquer dos dois donos; o `cancelar` genérico passou a exigir, em
+  transferência, as sessões de gaveta onde ela caiu abertas — 422 "reabra"; período fechado de
+  não-gaveta o razão já recusa) e `pendentes(portador)`. Donos: `Pagamento/TransferenciaAutorizador`
+  (decisão 23; `Portador::CAIXA_FINANCEIRO` = 100). Razão: `desejadas` aceita a transferência
+  **pendente** ("a confirmar" = o estado do pagamento, sem coluna própria no razão).
+- **Sessão da gaveta e transferência**: `CaixaService::gavetaDoPagamento` escolhe o lado gaveta
+  (destino primeiro, depois origem; antes era `destino ?? origem` e gaveta → cofre ficava sem
+  sessão) e vale também para meio ≠ dinheiro quando os dois lados existem (depósito da gaveta no
+  banco). Gaveta → gaveta grava a sessão do destino; a da origem o razão acha por `sessaoDe`.
+  `CaixaService::dinheiro` passou a somar também os pagamentos com linha do razão na sessão
+  (documento novo **X**, transferências), contando a transferência desde o registro, ainda a
+  confirmar. `CaixaService::fechar` recusa (422) com transferência **chegando** a confirmar.
+- **Rotas**: PDV `v1/pdv/caixa/transferencia` (GET as da sessão aberta ou da última e as a
+  confirmar; POST com `sentido` E sai da gaveta / R chega nela; `{id}/confirmar`, `{id}/cancelar`)
+  no `CaixaController`; contas `v1/pagamento/transferencia` (GET com `codfilial` de qualquer dos
+  lados, `estado`, período; POST `codportadororigem/destino`; confirmar, cancelar),
+  `v1/portador/caixas?codfilial=` e `v1/portador/{id}/saldo` no `Caixa/CaixasController` +
+  `CaixasService` (saldo da decisão 19 e "a cair"). `TransferenciaResource` = linha da listagem
+  + os dois lados + `podeConfirmar`/`podeCancelar`; o `PagamentoDetalheResource` ganhou os
+  mesmos flags e `transferencia`. Detalhe do PDV mostra transferência que chega na gaveta dele;
+  `podeVer` do contas aceita a filial de qualquer dos lados.
+- **Saldo de gaveta às cegas**: `v1/portador/caixas` e `/saldo` só mostram saldo de gaveta com a
+  última sessão fechada **e conferida** (antes disso o gerente confere às cegas, M9); dos demais,
+  para quem confere a filial (`ConferenciaAutorizador`). O PDV usa `v1/portador/caixas` só para
+  saber as gavetas fechadas (`bloqueio`).
+- **Frontend**: `@components/MgSelectPortador` — `agrupar` agora segue a decisão 22 ("Desta
+  filial" = os `E` da filial; o resto em "Mais opções"), props novas `excluir` e `bloqueios`
+  (desabilitado com o motivo); `MgPagamentoDetalhe` com Confirmar/Cancelar e "a confirmar" no
+  razão (`pagamentoListaStore.transferencia`). negocios: `components/caixa/DialogTransferir.vue`
+  (Enviar de / Receber em a gaveta; destinos `E` e `B`) e card Transferências na tela do Caixa
+  (cor por estado, Confirmar/Cancelar). contas: Movimento → **Caixas** (`pages/caixa/Index.vue`,
+  `stores/caixaStore.js`, `drawers/CaixaFiltrosDrawer.vue`): abas Portadores e Transferências (a
+  confirmar e histórico do período), FAB Nova transferência de → para; a linha abre o detalhe do
+  pagamento. Sessão do Fechamentos mostra "Transferências" no dinheiro.
+- **Conferido** (tinker com rollback, gavetas de teste na filial 102 com as usuárias reais de
+  Caixa, Gerente e Financeiro): gaveta → cofre 200 pendente com os dois lançamentos (−200 na
+  sessão, +200 no corrente do cofre), caixa não confirma (403), gerente confirma sem mexer no
+  razão; gerente registra "recebi 250" efetivada; suprimento cofre → gaveta pelo caixa efetivado;
+  cancelar sem justificativa 422, com justificativa inativa os dois; gaveta fechada de origem ou
+  destino 422; gaveta → gaveta com cada linha na sessão do seu lado e o dinheiro das duas sessões
+  certo; fechar com pendente chegando 422, com pendente saindo fecha; cancelar com a sessão de
+  origem fechada 422; saldo do cofre = Σ lançamentos; quem não opera nenhum lado 403; pela camada
+  HTTP: PDV → Caixa Financeiro pendente, listagem única com origem X, Financeiro confirma no
+  contas, cofre → gaveta fechada 422, cancelamento pelo contas. Lint e templates compilados; não
+  aberto no navegador.
+
+**Dúvidas para o Fábio (M11)**, decididas assim até ele dizer:
+
+1. **Saque** (banco → espécie): meio transferência (18); o plano só falava de espécie → espécie e
+   espécie → banco.
+2. **Destinos**: espécie e banco, nos dois apps. Adquirente e cartão da empresa ficam fora (o
+   repasse é do M14).
+3. **Suprimento pelo caixa** (cofre → gaveta registrado pelo caixa) nasce efetivado sem o gerente
+   confirmar a saída do cofre: é a regra da decisão 22 ao pé da letra (o dono do destino registrou).
+4. **Financeiro não opera cofre e troco da loja** (decisão 23 literal): Financeiro sem ser Gerente
+   não registra nem confirma transferência só entre cofre/troco/gaveta.
+5. **Saldo de gaveta** só depois da conferência (às cegas), na página Caixas e no `/saldo`.
+6. O dinheiro da sessão desconta a sangria ainda a confirmar (o dinheiro já saiu da gaveta).
 
 ## M12 — Períodos no contas (TASK-39)
 

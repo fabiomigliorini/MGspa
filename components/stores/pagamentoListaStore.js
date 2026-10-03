@@ -139,6 +139,16 @@ export const pagamentoListaStore = defineStore('pagamentoLista', {
       return this.pagamento
     },
 
+    // transferência a confirmar (M11): confirma o dono do destino; cancela qualquer dos dois.
+    // Rotas próprias: v1/pdv/caixa/transferencia no PDV, v1/pagamento/transferencia no contas.
+    async transferencia(id, acao, payload = {}) {
+      const base = this.travadoPdv ? 'v1/pdv/caixa/transferencia' : 'v1/pagamento/transferencia'
+      const { data } = await api.post(`${base}/${id}/${acao}`, { ...this.fixos, ...payload })
+      this.pagamento = data.data
+      this.atualizarLinha(data.data)
+      return this.pagamento
+    },
+
     // correção de pessoa, portador, meio, data e observação (só o contas)
     async atualizar(id, payload) {
       const { data } = await api.put(`${this.endpoint}/${id}`, payload)

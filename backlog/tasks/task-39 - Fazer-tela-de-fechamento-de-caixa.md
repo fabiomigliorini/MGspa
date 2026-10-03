@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-03 00:32'
+updated_date: '2026-10-03 00:47'
 labels:
   - negocios
   - contas
@@ -53,4 +53,8 @@ Planejamento do M10 (02/10/2026, com o Fábio; detalhe no doc-3, seção M10): o
 M10 executado em dev em 02/10/2026, na árvore, sem commit (ACs M10.x desmarcados até a validação). DDL api/database/razao.sql rodado 2x (idempotente): lancamento → transacao em pagamento, cheque, extrato e bonificação; tblportadormovimento recriada; tblportadortransferencia apagada. Backend: PortadorMovimentoService::sincronizar (chamado em PagamentoService criar/contrario/efetivar/cancelar, PagamentoTituloService pagamentoDaForma/daBaixa/atualizar, PagamentoCorrecaoService corrigir/incluir), PortadorPeriodoService (corrente, imutavel, saldo), razao[] no detalhe; rename em toda a API, @components, contas e pessoas. Frontend: card Razão no MgPagamentoDetalhe. Conferido com rollback no tinker (detalhe no doc-3, seção M10 'Como ficou no código'). Não aberto no navegador.
 
 M10 commitado sem validação a pedido do Fábio (02/10/2026): ele valida amanhã, junto com M11 e M12. ACs M10.x seguem desmarcados até a validação.
+
+M11 em andamento (02/10/2026): transferências entre portadores (decisões 13, 22 e 23), executado na mesma conversa que o M12.
+
+M11 executado em dev (02/10/2026; sem DDL): PagamentoService::{transferir, confirmar, cancelarTransferencia, pendentes} com TransferenciaAutorizador (decisões 22 e 23), razão lançando a transferência a confirmar, sessão da gaveta pegando o lado gaveta e somando as transferências (documento X), fechar o caixa recusa com transferência chegando; rotas v1/pdv/caixa/transferencia, v1/pagamento/transferencia, v1/portador/caixas, v1/portador/{id}/saldo; negocios DialogTransferir + card na tela do Caixa; contas Movimento → Caixas (Portadores, Transferências); Confirmar/Cancelar no MgPagamentoDetalhe. Conferido no tinker com rollback (serviço e controllers). Detalhe e 'Dúvidas para o Fábio (M11)' no doc-3, seção M11. ACs M11 desmarcados até a validação.
 <!-- SECTION:NOTES:END -->

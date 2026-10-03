@@ -3,7 +3,11 @@
 namespace Mg\Pagamento;
 
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Mg\Caixa\CaixaService;
+use Mg\Portador\Portador;
+use Mg\Portador\PortadorMovimento;
 use Mg\Portador\PortadorMovimentoService;
 
 /**
@@ -212,6 +216,9 @@ class PagamentoService
         if (empty($justificativa)) {
             abort(422, 'Informe a justificativa do cancelamento do pagamento!');
         }
+        if (static::ehTransferencia($pag)) {
+            static::exigirSessoesDoRazaoAbertas($pag);
+        }
         $pag->estado = static::ESTADO_CANCELADO;
         $pag->cancelamento = Carbon::now();
         $pag->codusuariocancelamento = Auth::user()->codusuario ?? null;
@@ -252,5 +259,139 @@ class PagamentoService
         $pag->save();
         PortadorMovimentoService::sincronizar($pag);
         return $pag;
+    }
+
+    // ==== Transferencia (M11 doc-3, decisoes 13, 22 e 23) ====
+
+    // os dois lados preenchidos e nenhum documento: sangria, suprimento,
+    // deposito, envio ao financeiro
+    public static function ehTransferencia(Pagamento $pag): bool
+    {
+        return !empty($pag->codportadororigem)
+            && !empty($pag->codportadordestino)
+            && empty($pag->codnegocio);
+    }
+
+    // entre especies anda dinheiro; da especie para o banco e' deposito; o
+    // resto, transferencia
+    public static function meioTransferencia(Portador $origem, Portador $destino): int
+    {
+        if ($origem->tipo == Portador::TIPO_ESPECIE && $destino->tipo == Portador::TIPO_ESPECIE) {
+            return static::MEIO_DINHEIRO;
+        }
+        if ($origem->tipo == Portador::TIPO_ESPECIE && $destino->tipo == Portador::TIPO_BANCO) {
+            return static::MEIO_DEPOSITO;
+        }
+        return static::MEIO_TRANSFERENCIA;
+    }
+
+    // gaveta de origem ou destino precisa de sessao aberta
+    private static function exigirGavetasAbertas(Portador ...$portadores): void
+    {
+        foreach ($portadores as $portador) {
+            if ($portador->ehGaveta() && !CaixaService::sessaoAberta($portador->codportador)) {
+                abort(422, "Caixa {$portador->portador} fechado: abra o caixa no PDV antes de transferir.");
+            }
+        }
+    }
+
+    // cancelar transferencia: as sessoes de gaveta onde ela caiu precisam
+    // estar abertas (os demais periodos o razao confere: fechado = 422)
+    private static function exigirSessoesDoRazaoAbertas(Pagamento $pag): void
+    {
+        $linhas = PortadorMovimento::where('codpagamento', $pag->codpagamento)
+            ->whereNull('inativo')
+            ->with('PortadorPeriodo.Portador')
+            ->get();
+        foreach ($linhas as $l) {
+            $periodo = $l->PortadorPeriodo;
+            if ($periodo->Portador->ehGaveta() && !$periodo->aberto()) {
+                abort(422, "O caixa {$periodo->Portador->portador} da sessão de {$periodo->inicio->format('d/m/Y H:i')} já foi fechado: o gerente precisa reabrir a sessão antes de cancelar a transferência.");
+            }
+        }
+    }
+
+    // registra quem opera um dos lados; nasce efetivada se quem registrou
+    // opera o destino (inclusive dono dos dois lados), senao pendente "a
+    // confirmar" pelo dono do destino. Os dois lancamentos do razao nascem
+    // ja' no registro.
+    public static function transferir(Portador $origem, Portador $destino, float $total, ?string $observacoes = null, ?int $codpdv = null): Pagamento
+    {
+        if ($origem->codportador == $destino->codportador) {
+            abort(422, 'Origem e destino da transferência são o mesmo portador!');
+        }
+        $total = round($total, 2);
+        if ($total <= 0) {
+            abort(422, 'O valor da transferência precisa ser maior que zero!');
+        }
+        TransferenciaAutorizador::autorizarRegistro($origem, $destino);
+        // trava os dois portadores (na ordem, contra o fechar do caixa)
+        $cods = [$origem->codportador, $destino->codportador];
+        sort($cods);
+        Portador::whereIn('codportador', $cods)->orderBy('codportador')->lockForUpdate()->get();
+        static::exigirGavetasAbertas($origem, $destino);
+        $efetivada = TransferenciaAutorizador::podeOperar($destino);
+        $agora = Carbon::now();
+        return static::criar([
+            'codportadororigem' => $origem->codportador,
+            'codportadordestino' => $destino->codportador,
+            'meio' => static::meioTransferencia($origem, $destino),
+            'principal' => $total,
+            'estado' => $efetivada ? static::ESTADO_EFETIVADO : static::ESTADO_PENDENTE,
+            'efetivacao' => $efetivada ? $agora : null,
+            'codusuarioefetivacao' => $efetivada ? (Auth::user()->codusuario ?? null) : null,
+            'transacao' => $agora,
+            'codfilial' => $origem->codfilial ?? $destino->codfilial,
+            'codpdv' => $codpdv,
+            'observacoes' => empty(trim($observacoes ?? '')) ? null : mb_substr(trim($observacoes), 0, 300),
+        ]);
+    }
+
+    // o dono do destino confirma que recebeu
+    public static function confirmar(Pagamento $pag): Pagamento
+    {
+        if (!static::ehTransferencia($pag)) {
+            abort(422, "Pagamento {$pag->codpagamento} não é transferência!");
+        }
+        if ($pag->estado != static::ESTADO_PENDENTE) {
+            abort(422, "Transferência {$pag->codpagamento} não está a confirmar ({$pag->estado}).");
+        }
+        if (!TransferenciaAutorizador::podeConfirmar($pag)) {
+            abort(403, "Só quem opera {$pag->PortadorDestino->portador} ("
+                . TransferenciaAutorizador::quemOpera($pag->PortadorDestino) . ') confirma a transferência.');
+        }
+        return static::efetivar($pag);
+    }
+
+    // qualquer dos dois donos, com justificativa; inativa os dois
+    // lancamentos (periodos abertos). Divergencia de valor = cancela e
+    // registra outra.
+    public static function cancelarTransferencia(Pagamento $pag, string $justificativa): Pagamento
+    {
+        if (!static::ehTransferencia($pag)) {
+            abort(422, "Pagamento {$pag->codpagamento} não é transferência!");
+        }
+        if ($pag->estado == static::ESTADO_CANCELADO) {
+            abort(422, "Transferência {$pag->codpagamento} já cancelada.");
+        }
+        if (!TransferenciaAutorizador::podeCancelar($pag)) {
+            abort(403, 'Só quem opera a origem ou o destino cancela a transferência.');
+        }
+        return static::cancelar($pag, $justificativa);
+    }
+
+    // transferencias a confirmar que saem do portador ou chegam nele
+    public static function pendentes(Portador $portador): Collection
+    {
+        return Pagamento::where('estado', static::ESTADO_PENDENTE)
+            ->whereNull('codnegocio')
+            ->whereNotNull('codportadororigem')
+            ->whereNotNull('codportadordestino')
+            ->where(function ($q) use ($portador) {
+                $q->where('codportadororigem', $portador->codportador)
+                    ->orWhere('codportadordestino', $portador->codportador);
+            })
+            ->orderBy('transacao')
+            ->get();
     }
 }

@@ -28,6 +28,9 @@ class Portador extends MgModel
 {
     const CARTEIRA = 999;
 
+    // especie do escritorio: quem opera e' o Financeiro (decisao 23)
+    const CAIXA_FINANCEIRO = 100;
+
     const TIPO_ESPECIE = 'E';
     const TIPO_BANCO = 'B';
     const TIPO_ADQUIRENTE = 'A';

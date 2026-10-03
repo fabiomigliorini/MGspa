@@ -24,6 +24,11 @@ export const caixaStore = defineStore('caixa', {
     ultima: null,
     carregando: false,
     salvando: false,
+    // transferências da gaveta (M11): as da sessão e as a confirmar
+    transferencias: [],
+    dialogTransferir: false,
+    // { codportador: motivo } das gavetas que não aceitam transferência agora
+    bloqueios: {},
   }),
 
   actions: {
@@ -113,6 +118,68 @@ export const caixaStore = defineStore('caixa', {
           pdv: this.pdv(),
         })
         avisar(true, 'Borderô enviado para a impressora')
+      } catch (error) {
+        avisar(false, erro(error))
+      }
+    },
+
+    // ==== transferências (M11 doc-3) ====
+
+    async buscarTransferencias() {
+      try {
+        const { data } = await api.get('/v1/pdv/caixa/transferencia', {
+          params: { pdv: this.pdv() },
+        })
+        this.transferencias = data.data
+      } catch (error) {
+        avisar(false, erro(error))
+      }
+    },
+
+    // gavetas fechadas aparecem desabilitadas no destino, com o motivo
+    async buscarBloqueios() {
+      try {
+        const { data } = await api.get('/v1/portador/caixas')
+        this.bloqueios = Object.fromEntries(
+          data.data.filter((c) => c.bloqueio).map((c) => [c.codportador, c.bloqueio]),
+        )
+      } catch {
+        this.bloqueios = {}
+      }
+    },
+
+    // sentido E = sai da gaveta, R = chega nela
+    async transferir(dados) {
+      this.salvando = true
+      try {
+        const { data } = await api.post('/v1/pdv/caixa/transferencia', {
+          pdv: this.pdv(),
+          ...dados,
+        })
+        avisar(
+          true,
+          data.data.estado === 'E'
+            ? 'Transferência registrada'
+            : `Transferência registrada: a confirmar por quem opera ${data.data.portadordestino}`,
+        )
+        await this.buscarTransferencias()
+        return true
+      } catch (error) {
+        avisar(false, erro(error))
+        return false
+      } finally {
+        this.salvando = false
+      }
+    },
+
+    async acaoTransferencia(codpagamento, acao, payload = {}) {
+      try {
+        await api.post(`/v1/pdv/caixa/transferencia/${codpagamento}/${acao}`, {
+          pdv: this.pdv(),
+          ...payload,
+        })
+        avisar(true, acao === 'confirmar' ? 'Transferência confirmada' : 'Transferência cancelada')
+        await this.buscarTransferencias()
       } catch (error) {
         avisar(false, erro(error))
       }

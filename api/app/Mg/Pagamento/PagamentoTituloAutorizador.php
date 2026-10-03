@@ -44,11 +44,15 @@ class PagamentoTituloAutorizador
         if (self::temAcessoIrrestrito($codusuario)) {
             return true;
         }
-        $codfilial = self::filial($pag);
-        if (!$codfilial) {
+        // transferencia (M11): a filial de qualquer dos dois lados
+        $filiais = array_filter([
+            self::filial($pag),
+            optional($pag->PortadorOrigem)->codfilial,
+        ]);
+        if (empty($filiais)) {
             return false;
         }
-        return in_array((int)$codfilial, self::filiaisRestritas($codusuario), true);
+        return !empty(array_intersect(array_map('intval', $filiais), self::filiaisRestritas($codusuario)));
     }
 
     // encontro de contas sem dinheiro (sem portador) so' para irrestritos

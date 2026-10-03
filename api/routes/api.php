@@ -937,6 +937,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('caixa/abrir', '\Mg\Caixa\CaixaController@abrir');
         Route::post('caixa/fechar', '\Mg\Caixa\CaixaController@fechar');
         Route::post('caixa/{id}/bordero/{impressora}', '\Mg\Caixa\CaixaController@imprimirBordero')->whereNumber('id');
+        // transferencias da gaveta (M11 doc-3)
+        Route::get('caixa/transferencia', '\Mg\Caixa\CaixaController@transferencias');
+        Route::post('caixa/transferencia', '\Mg\Caixa\CaixaController@transferir');
+        Route::post('caixa/transferencia/{id}/confirmar', '\Mg\Caixa\CaixaController@confirmarTransferencia')->whereNumber('id');
+        Route::post('caixa/transferencia/{id}/cancelar', '\Mg\Caixa\CaixaController@cancelarTransferencia')->whereNumber('id');
         // Saurus
         Route::post('saurus/pedido', '\Mg\Pdv\PdvController@criarSaurusPedido');
         Route::post('saurus/pedido/{codsauruspedido}/consultar', '\Mg\Pdv\PdvController@consultarSaurusPedido');
@@ -1261,6 +1266,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Pagamentos: listagem unica e baixa de titulos (M6/M6.1 doc-3; era liquidacao-titulo)
     Route::get('pagamento', '\Mg\Pagamento\PagamentoController@index');
     Route::get('pagamento/relatorio', '\Mg\Pagamento\PagamentoController@relatorio');
+    // transferencias entre portadores (M11 doc-3): pagina Caixas do contas
+    Route::get('pagamento/transferencia', '\Mg\Caixa\CaixasController@transferencias');
+    Route::post('pagamento/transferencia', '\Mg\Caixa\CaixasController@transferir');
+    Route::post('pagamento/transferencia/{id}/confirmar', '\Mg\Caixa\CaixasController@confirmar')->whereNumber('id');
+    Route::post('pagamento/transferencia/{id}/cancelar', '\Mg\Caixa\CaixasController@cancelar')->whereNumber('id');
     Route::get('pagamento/{id}', '\Mg\Pagamento\PagamentoController@show')->where('id', '[0-9]+');
     Route::post('pagamento', '\Mg\Pagamento\PagamentoController@store');
     Route::put('pagamento/{id}', '\Mg\Pagamento\PagamentoController@update')->where('id', '[0-9]+');
@@ -1300,6 +1310,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('portador/{codportador}', '\Mg\Portador\PortadorController@destroy');
     Route::post('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@inativar');
     Route::delete('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@ativar');
+    Route::get('portador/caixas', '\Mg\Caixa\CaixasController@caixas');
+    Route::get('portador/{id}/saldo', '\Mg\Caixa\CaixasController@saldo')->whereNumber('id');
     Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
     Route::get('portador/{codportador}/info', '\Mg\Portador\PortadorController@info');
     Route::get('portador/{codportador}/extratos', '\Mg\Portador\PortadorController@listaExtratos');

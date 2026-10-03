@@ -130,6 +130,11 @@ class PagamentoDetalheResource extends Resource
             'estornavel'                => $temTitulo && $this->estado != PagamentoService::ESTADO_CANCELADO
                 && empty($this->codnegocio) && empty($this->codperiodocolaboradoracerto) && !$baixabanco,
             'baixabanco'                => $baixabanco,
+            // transferencia (M11): confirma o dono do destino; cancela
+            // qualquer dos dois donos
+            'transferencia'             => PagamentoService::ehTransferencia($this->resource),
+            'podeConfirmar'             => TransferenciaAutorizador::podeConfirmar($this->resource),
+            'podeCancelar'              => TransferenciaAutorizador::podeCancelar($this->resource),
             'recebimento'               => PagamentoTituloService::temRecebimento($this->resource),
             'pagamento'                 => PagamentoTituloService::temPagamento($this->resource),
             'movimentos'                => $movimentos,

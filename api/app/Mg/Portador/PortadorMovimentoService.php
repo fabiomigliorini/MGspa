@@ -28,10 +28,13 @@ class PortadorMovimentoService
     ];
 
     // as linhas que o pagamento deveria ter agora: uma por lado com
-    // portador (destino +total, origem -total)
+    // portador (destino +total, origem -total). A transferencia (M11) lanca
+    // ja' no registro, ainda pendente "a confirmar" (decisoes 13 e 22)
     public static function desejadas(Pagamento $pag): array
     {
-        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
+        $aConfirmar = $pag->estado == PagamentoService::ESTADO_PENDENTE
+            && PagamentoService::ehTransferencia($pag);
+        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO && !$aConfirmar) {
             return [];
         }
         if (!in_array((int) $pag->meio, static::MEIOS)) {

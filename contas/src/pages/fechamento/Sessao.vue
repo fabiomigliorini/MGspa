@@ -19,7 +19,12 @@ const id = computed(() => Number(route.params.id))
 const sessao = computed(() => store.sessao)
 const conferida = computed(() => !!sessao.value?.conferencia)
 
-const DOCUMENTOS = { V: 'Vendas', T: 'Títulos (notinhas, vales, adiantamentos)', A: 'Avulsos' }
+const DOCUMENTOS = {
+  V: 'Vendas',
+  T: 'Títulos (notinhas, vales, adiantamentos)',
+  X: 'Transferências (sangria, suprimento)',
+  A: 'Avulsos',
+}
 
 const form = ref({ valorconferido: null, observacoes: '' })
 

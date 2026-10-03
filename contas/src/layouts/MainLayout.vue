@@ -21,6 +21,7 @@ const menuGroups = [
         color: 'green-8',
         to: { name: 'fechamento' },
       },
+      { label: 'Caixas', icon: 'savings', color: 'amber-9', to: { name: 'caixa' } },
       { label: 'Pix Recebidos', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
       {
         label: 'Pagamentos',

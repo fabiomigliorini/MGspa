@@ -40,15 +40,35 @@ class CaixaService
             ->first();
     }
 
+    // a gaveta do pagamento: o destino se for gaveta, senao a origem. Conta
+    // o dinheiro e, desde o M11, a transferencia (os dois lados preenchidos,
+    // inclusive deposito da gaveta no banco)
+    public static function gavetaDoPagamento(Pagamento $pag): ?Portador
+    {
+        $transferencia = !empty($pag->codportadororigem) && !empty($pag->codportadordestino);
+        if ($pag->meio != PagamentoService::MEIO_DINHEIRO && !$transferencia) {
+            return null;
+        }
+        foreach ([$pag->codportadordestino, $pag->codportadororigem] as $codportador) {
+            if (empty($codportador)) {
+                continue;
+            }
+            $portador = Portador::find($codportador);
+            if ($portador && $portador->ehGaveta()) {
+                return $portador;
+            }
+        }
+        return null;
+    }
+
     // chamado no saving do Pagamento (via ConferenciaService::vincular):
-    // dinheiro de gaveta cai na sessao aberta; sem sessao, 422
+    // dinheiro de gaveta cai na sessao aberta; sem sessao, 422. Na
+    // transferencia gaveta -> gaveta fica a sessao do destino; a da origem o
+    // razao acha pela data (sessaoDe)
     public static function vincular(Pagamento $pag): void
     {
-        $codportador = $pag->codportadordestino ?? $pag->codportadororigem;
-        $portador = ($pag->meio == PagamentoService::MEIO_DINHEIRO && !empty($codportador))
-            ? Portador::find($codportador)
-            : null;
-        if (!$portador || !$portador->ehGaveta()) {
+        $portador = static::gavetaDoPagamento($pag);
+        if (!$portador) {
             $pag->codportadorperiodo = null;
             return;
         }
@@ -128,6 +148,12 @@ class CaixaService
         if (!$sessao) {
             abort(422, "O caixa {$gaveta->portador} não está aberto.");
         }
+        // decisao 22: transferencia chegando a confirmar trava; saindo, nao
+        $chegando = PagamentoService::pendentes($gaveta)
+            ->where('codportadordestino', $gaveta->codportador);
+        if ($chegando->isNotEmpty()) {
+            abort(422, "Há {$chegando->count()} transferência(s) chegando ao caixa {$gaveta->portador} a confirmar: confirme ou cancele antes de fechar.");
+        }
         $agora = Carbon::now();
         $sessao->fill([
             'fim' => $agora,
@@ -195,7 +221,9 @@ class CaixaService
     }
 
     // dinheiro do sistema na sessao: saldo inicial + entradas - saidas,
-    // por documento (venda, titulo, avulso)
+    // por documento (venda, titulo, transferencia, avulso). Transferencia
+    // (M11) entra pelo razao, que tem a sessao de cada lado, e conta desde
+    // o registro, ainda a confirmar (decisao 13)
     public static function dinheiro(PortadorPeriodo $sessao): array
     {
         $regs = DB::select("
@@ -203,19 +231,28 @@ class CaixaService
                 case
                     when p.codnegocio is not null then 'V'
                     when exists (select 1 from tblmovimentotitulo mt where mt.codpagamento = p.codpagamento) then 'T'
+                    when p.codportadororigem is not null and p.codportadordestino is not null then 'X'
                     else 'A'
                 end as documento,
                 sum(case when p.codportadordestino = :portador1 then p.total else 0 end) as entrada,
                 sum(case when p.codportadororigem = :portador2 then p.total else 0 end) as saida,
                 count(*) as quantidade
             from tblpagamento p
-            where p.codportadorperiodo = :sessao
-            and p.estado = 'E'
+            where (
+                (p.codportadorperiodo = :sessao1 and p.estado = 'E')
+                or exists (
+                    select 1 from tblportadormovimento pm
+                    where pm.codpagamento = p.codpagamento
+                    and pm.codportadorperiodo = :sessao2
+                    and pm.inativo is null
+                )
+            )
             group by 1
         ", [
             'portador1' => $sessao->codportador,
             'portador2' => $sessao->codportador,
-            'sessao' => $sessao->codportadorperiodo,
+            'sessao1' => $sessao->codportadorperiodo,
+            'sessao2' => $sessao->codportadorperiodo,
         ]);
         $ret = [
             'saldoinicial' => (float) $sessao->saldoinicial,
