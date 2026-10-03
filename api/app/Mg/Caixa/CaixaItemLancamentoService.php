@@ -32,7 +32,7 @@ class CaixaItemLancamentoService
         }
         $regs = DB::select("
             select l.codcaixaitemlancamento, l.codcaixaitem, i.item, i.modo,
-                pp.codportadorperiodo, pp.inicio, pp.fim, po.portador, f.filial,
+                pp.codportadorperiodo, pp.codportador, pp.inicio, pp.fim, po.portador, f.filial,
                 l.valorabertura, l.valorentrada, l.valorsaida, l.valorvendido, l.valorfechamento,
                 case when i.modo = 'C'
                     then coalesce(l.valorabertura, 0) + l.valorentrada - l.valorsaida - coalesce(l.valorfechamento, 0)
@@ -61,6 +61,7 @@ class CaixaItemLancamentoService
                 'item' => $r->item,
                 'modo' => $r->modo,
                 'codportadorperiodo' => (int) $r->codportadorperiodo,
+                'codportador' => (int) $r->codportador,
                 'inicio' => $r->inicio,
                 'fim' => $r->fim,
                 'portador' => $r->portador,

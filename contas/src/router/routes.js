@@ -162,7 +162,7 @@ const routes = [
         component: () => import('pages/caixa/Index.vue'),
         meta: {
           auth: true,
-          title: 'Caixas',
+          title: 'Movimento dos Itens do Caixa',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
           leftDrawer: defineAsyncComponent(
             () => import('components/drawers/CaixaFiltrosDrawer.vue'),

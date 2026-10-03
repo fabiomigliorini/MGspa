@@ -6,85 +6,41 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Mg\Caixa\CaixaService;
-use Mg\Conferencia\ConferenciaAutorizador;
+use Mg\Caixa\CaixaBorderoService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoDetalheResource;
 use Mg\Pagamento\PagamentoListaService;
 use Mg\Pagamento\PagamentoService;
-use Mg\Pagamento\TransferenciaAutorizador;
 use Mg\Usuario\Autorizador;
 
 /**
- * Periodos do portador no contas (M12 doc-3): o financeiro fecha cofre,
- * troco, banco, adquirente e cartao pela data de corte, reabre do mais novo
- * para o mais antigo e faz lancamento avulso (taxa, tarifa, rendimento,
- * ajuste/implantacao). Sessao de gaveta so' aparece (abre e fecha no PDV,
- * confere em Fechamentos). Rotas v1/portador-periodo; Financeiro/Admin.
- * Tela do portador e do periodo (doc-4): v1/portador/{cod}/periodo, para
- * quem confere a filial; o que muda movimento devolve os periodos (R14).
+ * O portador e o periodo no contas (doc-4, redefinicao do dinheiro): a tela
+ * /portador/{cod}/{codperiodo} e o que muda o periodo (especie: abrir,
+ * contar, fechar, reabrir, datas, dividir, unificar; banco: fechar com corte,
+ * reabrir, taxa/tarifa/rendimento). Quem pode: o papel no portador
+ * (PortadorAutorizador). O que muda devolve os periodos afetados (R14).
  */
 class PortadorPeriodoController extends Controller
 {
-    private function autorizar(): void
+    private function periodo(int $id): PortadorPeriodo
     {
-        Autorizador::autoriza(['Financeiro']);
+        return PortadorPeriodo::with('Portador')->findOrFail($id);
     }
 
-    public function index(Request $request)
+    // o periodo e os periodos dele em diante
+    private function resposta(PortadorPeriodo $periodo)
     {
-        $this->autorizar();
-        $request->validate([
-            'codportador' => 'nullable|integer',
-            'codfilial' => 'nullable|integer',
-            'estado' => 'nullable|in:aberto,fechado',
-            'transacao_de' => 'nullable|date',
-            'transacao_ate' => 'nullable|date',
-            'gaveta' => 'nullable|boolean',
-        ]);
-        $q = PortadorPeriodo::query()
-            ->with(['Portador.Filial:codfilial,filial', 'UsuarioFechamento:codusuario,usuario'])
-            ->join('tblportador as p', 'p.codportador', '=', 'tblportadorperiodo.codportador')
-            ->select('tblportadorperiodo.*');
-        if ($request->codportador) {
-            $q->where('tblportadorperiodo.codportador', $request->codportador);
-        }
-        if ($request->codfilial) {
-            $q->where('p.codfilial', $request->codfilial);
-        }
-        if ($request->estado == 'aberto') {
-            $q->whereNull('tblportadorperiodo.fechamento');
-        } elseif ($request->estado == 'fechado') {
-            $q->whereNotNull('tblportadorperiodo.fechamento');
-        }
-        // periodos que encostam no intervalo
-        if ($request->transacao_ate) {
-            $q->where('tblportadorperiodo.inicio', '<=', Carbon::parse($request->transacao_ate)->endOfDay());
-        }
-        if ($request->transacao_de) {
-            $de = Carbon::parse($request->transacao_de)->startOfDay();
-            $q->where(fn ($w) => $w->whereNull('tblportadorperiodo.fim')->orWhere('tblportadorperiodo.fim', '>=', $de));
-        }
-        if ($request->has('gaveta') && !$request->boolean('gaveta')) {
-            $q->whereNotExists(fn ($e) => $e->selectRaw('1')->from('tblpdv as d')->whereColumn('d.codportador', 'p.codportador'));
-        }
-        $q->orderBy('p.portador')->orderBy('tblportadorperiodo.inicio', 'desc');
-        return PortadorPeriodoResource::collection($q->paginate(50));
+        return (new PortadorPeriodoResource($periodo->fresh()))->comLancamentos()
+            ->additional(['periodos' => PortadorPeriodoResource::lista(PortadorPeriodoService::desde($periodo))]);
     }
 
-    public function show(int $id)
-    {
-        $this->autorizar();
-        return (new PortadorPeriodoResource(PortadorPeriodo::findOrFail($id)))->comLancamentos();
-    }
-
-    // tela /portador/{cod}/{codperiodo} (doc-4): o portador, as abas (todos
-    // os periodos, sem lancamentos) e o periodo escolhido (sem ele, o
-    // ultimo). Gerente ve as filiais dele; Financeiro e Admin, todas (R15)
+    // tela /portador/{cod}/{codperiodo}: o portador, as abas (todos os
+    // periodos, sem lancamentos) e o periodo escolhido (sem ele, o ultimo).
+    // So' operador ou gestor do portador
     public function tela(int $codportador, ?int $codportadorperiodo = null)
     {
         $portador = Portador::with(['Banco', 'Filial'])->findOrFail($codportador);
-        ConferenciaAutorizador::autorizar($portador->codfilial);
+        PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Ver');
         $periodos = PortadorPeriodo::where('codportador', $codportador)
             ->with(['UsuarioAbertura:codusuario,usuario', 'UsuarioFechamento:codusuario,usuario'])
             ->orderBy('inicio')
@@ -95,69 +51,143 @@ class PortadorPeriodoController extends Controller
         if ($codportadorperiodo && !$periodo) {
             abort(404, 'Período não é deste portador.');
         }
-        $caixa = $portador->ehCaixa();
-        $operar = $caixa && CaixaService::podeOperar($portador);
-        $financeiro = Autorizador::pode(['Financeiro']);
+        $gestor = PortadorAutorizador::pode($codportador, PortadorUsuario::PAPEL_GESTOR);
         return ['data' => [
             'portador' => new PortadorResource($portador),
+            'papel' => PortadorAutorizador::papel($codportador),
             'pode' => [
-                'cadastro' => $financeiro,
-                'transferir' => TransferenciaAutorizador::podeOperar($portador),
-                'avulso' => $caixa ? $operar : $financeiro,
-                'caixa' => $operar,
-                'reabrirCaixa' => $caixa && ConferenciaAutorizador::pode($portador->codfilial),
-                'periodo' => !$caixa && $financeiro,
+                'cadastro' => Autorizador::pode(['Financeiro']),
+                'operar' => true,
+                'gestor' => $gestor,
+                'usuarios' => $gestor,
             ],
             'periodos' => PortadorPeriodoResource::collection($periodos),
             'periodo' => $periodo ? (new PortadorPeriodoResource($periodo))->comLancamentos() : null,
         ]];
     }
 
+    // ==== especie ====
+
+    private function contagem(Request $request): array
+    {
+        return $request->validate([
+            'contagem' => 'nullable|array',
+            'contagem.*' => 'nullable|integer|min:0',
+            'observacoes' => 'nullable|string|max:500',
+        ]);
+    }
+
+    // sem inicio, o servidor decide: o segundo seguinte ao fim do anterior
+    // (sem periodo, o comeco de hoje)
+    public function abrir(Request $request, int $codportador)
+    {
+        $dados = $this->contagem($request);
+        $request->validate(['inicio' => 'nullable|date']);
+        $portador = Portador::findOrFail($codportador);
+        $periodo = DB::transaction(fn () => PortadorPeriodoService::abrir(
+            $portador,
+            $request->inicio ? Carbon::parse($request->inicio) : PortadorPeriodoService::inicioDoNovo($portador),
+            $request->has('contagem') ? ($dados['contagem'] ?? []) : null,
+            [],
+            $dados['observacoes'] ?? null
+        ));
+        return $this->resposta($periodo);
+    }
+
+    public function contar(Request $request, int $id)
+    {
+        $dados = $this->contagem($request);
+        $request->validate(['momento' => 'required|in:inicial,final']);
+        $periodo = DB::transaction(fn () => PortadorPeriodoService::contar(
+            $this->periodo($id),
+            $request->momento,
+            $dados['contagem'] ?? null
+        ));
+        return $this->resposta($periodo);
+    }
+
+    // fecha (especie, com a contagem final) ou fecha com corte (banco)
     public function fechar(Request $request, int $id)
     {
-        $this->autorizar();
-        $request->validate(['corte' => 'nullable|date']);
-        $periodo = DB::transaction(fn () => PortadorPeriodoService::fechar(
-            PortadorPeriodo::findOrFail($id),
-            $request->corte ? Carbon::parse($request->corte) : null
+        $periodo = $this->periodo($id);
+        if (!$periodo->Portador->ehCaixa()) {
+            $request->validate(['corte' => 'nullable|date']);
+            $periodo = DB::transaction(fn () => PortadorPeriodoService::fechar(
+                $periodo,
+                $request->corte ? Carbon::parse($request->corte) : null
+            ));
+            return $this->resposta($periodo);
+        }
+        $dados = $this->contagem($request);
+        $request->validate(['fim' => 'nullable|date']);
+        $periodo = DB::transaction(fn () => PortadorPeriodoService::fecharCaixa(
+            $periodo,
+            $request->has('contagem') ? ($dados['contagem'] ?? []) : null,
+            [],
+            $dados['observacoes'] ?? null,
+            $request->fim ? Carbon::parse($request->fim) : null
         ));
-        return (new PortadorPeriodoResource($periodo->fresh()))->comLancamentos()
-            ->additional(['periodos' => PortadorPeriodoResource::lista(PortadorPeriodoService::desde($periodo))]);
+        return $this->resposta($periodo);
     }
 
     public function reabrir(int $id)
     {
-        $this->autorizar();
-        $periodo = DB::transaction(fn () => PortadorPeriodoService::reabrir(PortadorPeriodo::findOrFail($id)));
-        return (new PortadorPeriodoResource($periodo->fresh()))->comLancamentos()
+        $periodo = $this->periodo($id);
+        $periodo = DB::transaction(fn () => $periodo->Portador->ehCaixa()
+            ? PortadorPeriodoService::reabrirCaixa($periodo)
+            : PortadorPeriodoService::reabrir($periodo));
+        return $this->resposta($periodo);
+    }
+
+    public function datas(Request $request, int $id)
+    {
+        $dados = $request->validate([
+            'inicio' => 'required|date',
+            'fim' => 'nullable|date',
+            'observacoes' => 'nullable|string|max:500',
+        ]);
+        $periodo = DB::transaction(fn () => PortadorPeriodoService::editarDatas(
+            $this->periodo($id),
+            Carbon::parse($dados['inicio']),
+            !empty($dados['fim']) ? Carbon::parse($dados['fim']) : null,
+            $dados['observacoes'] ?? null
+        ));
+        return $this->resposta($periodo);
+    }
+
+    // devolve a segunda parte (a tela vai para ela)
+    public function dividir(Request $request, int $id)
+    {
+        $request->validate(['corte' => 'required|date']);
+        $periodo = $this->periodo($id);
+        $segunda = DB::transaction(fn () => PortadorPeriodoService::dividir($periodo, Carbon::parse($request->corte)));
+        return (new PortadorPeriodoResource($segunda))->comLancamentos()
             ->additional(['periodos' => PortadorPeriodoResource::lista(PortadorPeriodoService::desde($periodo))]);
     }
 
-    // contagem do caixa (especie) inicial ou final da sessao
-    public function contagem(Request $request, int $id)
+    // junta ao anterior; devolve o anterior (a tela vai para ele) e a lista
+    // completa (o periodo unido some)
+    public function unificar(int $id)
     {
-        $dados = $request->validate([
-            'momento' => 'required|in:inicial,final',
-            'contagem' => 'nullable|array',
-            'contagem.*' => 'nullable|integer|min:0',
-            'itens' => 'nullable|array',
-            'itens.*' => 'nullable|numeric|min:0',
-        ]);
-        $periodo = PortadorPeriodo::with('Portador')->findOrFail($id);
-        CaixaService::autorizarOperar($periodo->Portador);
-        $periodo = DB::transaction(fn () => PortadorPeriodoService::contar(
-            $periodo,
-            $dados['momento'],
-            $dados['contagem'] ?? [],
-            $dados['itens'] ?? []
-        ));
-        return (new PortadorPeriodoResource($periodo->fresh()))->comLancamentos()
-            ->additional(['periodos' => PortadorPeriodoResource::lista(collect([$periodo]))]);
+        $anterior = DB::transaction(fn () => PortadorPeriodoService::unificar($this->periodo($id)));
+        return (new PortadorPeriodoResource($anterior))->comLancamentos()
+            ->additional(['periodos' => PortadorPeriodoResource::lista(PortadorPeriodoService::desde($anterior)), 'removido' => $id]);
     }
+
+    public function bordero(int $id)
+    {
+        $periodo = $this->periodo($id);
+        PortadorAutorizador::autorizar($periodo->Portador, PortadorUsuario::PAPEL_OPERADOR, 'Ver');
+        return response()->make(CaixaBorderoService::pdf($periodo), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Bordero' . $periodo->codportadorperiodo . '.pdf"',
+        ]);
+    }
+
+    // ==== banco: taxa, tarifa, rendimento ====
 
     public function lancamento(Request $request)
     {
-        $this->autorizar();
         $dados = $request->validate([
             'codportador' => 'required|integer|exists:tblportador,codportador',
             'motivo' => 'required|in:' . implode(',', array_keys(PagamentoService::MOTIVOS)),
@@ -177,7 +207,6 @@ class PortadorPeriodoController extends Controller
 
     public function cancelarLancamento(Request $request, int $codpagamento)
     {
-        $this->autorizar();
         $request->validate(['justificativa' => 'required|string|min:5|max:300']);
         $pag = DB::transaction(fn () => PortadorPeriodoService::cancelarLancamento(
             Pagamento::findOrFail($codpagamento),

@@ -1,8 +1,9 @@
 <script setup>
-// O portador e o período (doc-4): o cabeçalho do portador (cadastro, extrato do banco) e o razão
-// em abas Ano → Mês → Período, só com o que existe; cada período mostra situação, resumo por
-// origem e os lançamentos com o saldo corrente. O FAB cria movimento: transferir, avulso e, na
-// gaveta, item do caixa. A URL leva direto ao período.
+// O portador e o período (doc-4): o cabeçalho do portador (cadastro, usuários, extrato do banco)
+// e o movimento em abas Ano → Mês → Período, só com o que existe; cada período mostra situação
+// (aberto, pendente, fechado), resumo por origem e os lançamentos com o saldo corrente (com os
+// botões de ajuste e transferência no cabeçalho). A URL leva direto ao período.
+// Só abre para operador ou gestor do portador.
 import { computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -11,12 +12,12 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import TransferirCaixaDialog from '@components/caixa/TransferirCaixaDialog.vue'
 import AvulsoCaixaDialog from '@components/caixa/AvulsoCaixaDialog.vue'
-import ItemCaixaDialog from '@components/caixa/ItemCaixaDialog.vue'
-import { formataNumero, formataData, formataTimestamp } from '@components/formatters'
+import { formataNumero, formataDataAbreviada } from '@components/formatters'
 import { periodoStore } from '@components/stores/periodoStore'
 import PortadorDialog from 'components/portador/PortadorDialog.vue'
 import PeriodoCabecalho from 'components/portador/PeriodoCabecalho.vue'
 import PeriodoLancamentos from 'components/portador/PeriodoLancamentos.vue'
+import PortadorUsuariosDialog from 'components/portador/PortadorUsuariosDialog.vue'
 import { usePortadorStore } from 'src/stores/portadorStore'
 import { portadorTipoLabel, portadorTipoColor } from 'src/constants/portadorTipo'
 
@@ -48,8 +49,9 @@ const destino = (lista) =>
       lista[lista.length - 1],
   )
 
+// anos, meses e períodos do mais novo para o mais antigo
 const anos = computed(() =>
-  [...new Set(periodos.value.map(ano))].map((a) => ({
+  [...new Set(periodos.value.map(ano))].reverse().map((a) => ({
     ano: a,
     to: destino(periodos.value.filter((p) => ano(p) === a)),
   })),
@@ -58,23 +60,21 @@ const doAno = computed(() =>
   periodo.value ? periodos.value.filter((p) => ano(p) === ano(periodo.value)) : [],
 )
 const meses = computed(() =>
-  [...new Set(doAno.value.map(mes))].map((m) => ({
+  [...new Set(doAno.value.map(mes))].reverse().map((m) => ({
     mes: m,
     to: destino(doAno.value.filter((p) => mes(p) === m)),
   })),
 )
 const doMes = computed(() =>
-  periodo.value ? doAno.value.filter((p) => mes(p) === mes(periodo.value)) : [],
+  periodo.value ? doAno.value.filter((p) => mes(p) === mes(periodo.value)).reverse() : [],
 )
 
-const rotulo = (p) => {
-  if (portador.value?.ehCaixa) return formataTimestamp(p.inicio, 0)
-  return formataData(p.inicio, 0) + (p.fim ? ` a ${formataData(p.fim, 0)}` : ' →')
-}
-const situacaoCurta = (p) => (p.aberto ? (p.fim ? 'Reaberto' : 'Aberto') : 'fechado')
-// caixa (espécie) com a sessão aberta (badge no cabeçalho)
+// a aba mostra só a data final (15/jul/2026); sem fim, "aberto"
+const rotulo = (p) => (p.fim ? formataDataAbreviada(p.fim, 4) : 'aberto')
+const BADGE = { aberto: ['green-7', 'Aberto'], pendente: ['amber-8', 'Pendente'] }
+// espécie com período aberto (badge no cabeçalho)
 const caixaAberto = computed(
-  () => !!portador.value?.ehCaixa && periodos.value.some((p) => p.aberto && !p.fim),
+  () => !!portador.value?.ehCaixa && periodos.value.some((p) => p.situacao === 'aberto'),
 )
 
 // ---- carregar: sem período na URL, o servidor manda o último (o watch abaixo leva a URL) ----
@@ -121,8 +121,23 @@ function excluir() {
   })
 }
 
-// ---- FAB: no caixa (espécie) só na sessão não fechada ----
-const podeMovimentar = computed(() => !portador.value?.ehCaixa || !!periodo.value?.aberto)
+// ---- abrir novo período (espécie; só um aberto por portador): só confirma; o início quem decide
+// é o servidor ----
+const podeAbrir = computed(
+  () => !!portador.value?.ehCaixa && !periodos.value.some((p) => p.situacao === 'aberto'),
+)
+
+function abrirPeriodo() {
+  $q.dialog({
+    title: 'Abrir novo período',
+    message: `Abrir um novo período em ${portador.value.portador}?`,
+    cancel: { label: 'Não', color: 'grey-8', flat: true },
+    ok: { label: 'Sim', color: 'primary', flat: true },
+  }).onOk(async () => {
+    const cod = await store.abrir()
+    if (cod) router.push(para({ codportadorperiodo: cod }))
+  })
+}
 </script>
 
 <template>
@@ -181,6 +196,17 @@ const podeMovimentar = computed(() => !portador.value?.ehCaixa || !!periodo.valu
                 label="Extrato do banco"
                 :to="extrato"
               />
+              <q-btn
+                v-if="pode.usuarios"
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="admin_panel_settings"
+                @click="store.dialogUsuarios = true"
+              >
+                <q-tooltip>Usuários e papéis</q-tooltip>
+              </q-btn>
               <template v-if="pode.cadastro">
                 <MgInfoCriacao :registro="portador" />
                 <q-btn
@@ -246,15 +272,49 @@ const podeMovimentar = computed(() => !portador.value?.ehCaixa || !!periodo.valu
               indicator-color="primary"
               class="text-grey-8"
             >
+              <!-- sem período aberto, o novo vem antes de todos, no formato de uma aba -->
+              <div
+                v-if="podeAbrir"
+                v-ripple
+                role="button"
+                tabindex="0"
+                class="q-tab q-tab--no-caps relative-position self-stretch flex flex-center text-center cursor-pointer text-primary"
+                @click="abrirPeriodo"
+                @keyup.enter="abrirPeriodo"
+              >
+                <div class="column items-center q-py-xs">
+                  <q-icon name="add" size="20px" />
+                  <div class="text-weight-medium">Novo período</div>
+                  <div class="text-caption text-grey-6">abrir</div>
+                </div>
+              </div>
               <q-route-tab v-for="p in doMes" :key="p.codportadorperiodo" :to="para(p)" exact>
                 <div class="column items-center q-py-xs">
                   <div class="text-weight-medium">{{ rotulo(p) }}</div>
                   <div class="text-caption">R$ {{ formataNumero(p.saldofinal) }}</div>
-                  <q-badge v-if="p.aberto" color="green-7" :label="situacaoCurta(p)" />
-                  <div v-else class="text-caption text-grey-6">{{ situacaoCurta(p) }}</div>
+                  <q-badge
+                    v-if="BADGE[p.situacao]"
+                    :color="BADGE[p.situacao][0]"
+                    :label="BADGE[p.situacao][1]"
+                  />
+                  <div v-else class="text-caption text-grey-6">fechado</div>
                 </div>
               </q-route-tab>
             </q-tabs>
+          </template>
+          <!-- espécie ainda sem período -->
+          <template v-else-if="podeAbrir">
+            <q-separator />
+            <div class="row justify-end q-pa-sm">
+              <q-btn
+                flat
+                no-caps
+                color="primary"
+                icon="add"
+                label="Abrir novo período"
+                @click="abrirPeriodo"
+              />
+            </div>
           </template>
         </q-card>
 
@@ -275,47 +335,9 @@ const podeMovimentar = computed(() => !portador.value?.ehCaixa || !!periodo.valu
 
     <q-inner-loading :showing="carregando" color="primary" />
 
-    <q-page-sticky
-      v-if="portador && podeMovimentar && (pode.transferir || pode.avulso)"
-      position="bottom-right"
-      :offset="[18, 18]"
-    >
-      <div class="row q-gutter-sm items-end">
-        <q-btn
-          v-if="portador.ehGaveta && pode.caixa && periodo?.itens?.length"
-          fab-mini
-          color="grey-8"
-          icon="inventory_2"
-          @click="store.abrirItem()"
-        >
-          <q-tooltip anchor="top middle" self="bottom middle">Item do caixa</q-tooltip>
-        </q-btn>
-        <q-btn
-          v-if="pode.avulso"
-          fab-mini
-          color="grey-8"
-          icon="edit_note"
-          @click="store.dialogAvulso = true"
-        >
-          <q-tooltip anchor="top middle" self="bottom middle">Lançamento avulso</q-tooltip>
-        </q-btn>
-        <q-btn
-          v-if="pode.transferir"
-          fab
-          color="primary"
-          icon="swap_horiz"
-          @click="store.dialogTransferir = true"
-        >
-          <q-tooltip anchor="top middle" self="bottom middle">
-            {{ portador.ehCaixa ? 'Reforço / Sangria' : 'Transferir' }}
-          </q-tooltip>
-        </q-btn>
-      </div>
-    </q-page-sticky>
-
     <TransferirCaixaDialog />
     <AvulsoCaixaDialog />
-    <ItemCaixaDialog />
+    <PortadorUsuariosDialog />
     <PortadorDialog />
   </q-page>
 </template>

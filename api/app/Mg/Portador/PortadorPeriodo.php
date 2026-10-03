@@ -8,10 +8,11 @@ use Mg\Pagamento\Pagamento;
 use Mg\Usuario\Usuario;
 
 /**
- * Periodo do portador (M9 doc-3; modelo do M10). No caixa (especie) e' a
- * sessao: o intervalo (inicio/fim; fim nulo = aberta, recebe movimento), o
- * fechamento (quando e quem; fechado, o razao trava) e a contagem inicial e
- * final ({face: quantidade}) ao lado dos saldos.
+ * Periodo do portador (doc-4, redefinicao do dinheiro). Tres estados: aberto
+ * (sem fim, recebe o movimento do dia a dia), pendente (com fim, sem
+ * fechamento: so' correcao) e fechado (o razao trava). Na especie, o saldo
+ * inicial e' a contagem final do anterior; a contagem inicial so' confere e a
+ * final da' a diferenca (contagem final - saldo final).
  */
 class PortadorPeriodo extends MgModel
 {
@@ -30,6 +31,7 @@ class PortadorPeriodo extends MgModel
         'observacoes',
         'contageminicial',
         'contagemfinal',
+        'diferenca',
     ];
 
     protected $casts = [
@@ -48,11 +50,22 @@ class PortadorPeriodo extends MgModel
         'inicio' => 'datetime',
         'saldofinal' => 'float',
         'saldoinicial' => 'float',
+        'diferenca' => 'float',
     ];
 
     public function aberto(): bool
     {
         return empty($this->fim);
+    }
+
+    public function fechado(): bool
+    {
+        return !empty($this->fechamento);
+    }
+
+    public function pendente(): bool
+    {
+        return !empty($this->fim) && empty($this->fechamento);
     }
 
     // Chaves Estrangeiras

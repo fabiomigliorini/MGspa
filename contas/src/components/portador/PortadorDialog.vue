@@ -43,46 +43,57 @@ const { form, dialog, salvando, isNovo } = storeToRefs(store)
                 :rules="[(v) => !!v || 'Obrigatório']"
               />
             </div>
-            <div class="col-12 col-sm-6">
+            <!-- espécie não tem banco, conta, Pix nem boleto -->
+            <div v-if="form.tipo !== 'E'" class="col-12 col-sm-6">
               <MgSelectBanco v-model="form.codbanco" outlined clearable label="Banco" />
             </div>
             <div class="col-12 col-sm-6">
               <MgSelectFilial v-model="form.codfilial" outlined clearable label="Filial" />
             </div>
-            <div class="col-4">
+            <template v-if="form.tipo !== 'E'">
+              <div class="col-4">
+                <MgInputValor
+                  v-model="form.agencia"
+                  :decimals="0"
+                  :grouping="false"
+                  label="Agência"
+                />
+              </div>
+              <div class="col-2">
+                <MgInputValor
+                  v-model="form.agenciadigito"
+                  :decimals="0"
+                  :grouping="false"
+                  label="Dígito"
+                />
+              </div>
+              <div class="col-4">
+                <MgInputValor v-model="form.conta" :decimals="0" :grouping="false" label="Conta" />
+              </div>
+              <div class="col-2">
+                <MgInputValor
+                  v-model="form.contadigito"
+                  :decimals="0"
+                  :grouping="false"
+                  label="Dígito"
+                />
+              </div>
+              <div class="col-12">
+                <MgInput v-model="form.pixdict" label="Chave Pix" maxlength="77" />
+              </div>
+            </template>
+            <div v-if="form.tipo === 'E'" class="col-12 col-sm-6">
               <MgInputValor
-                v-model="form.agencia"
-                :decimals="0"
-                :grouping="false"
-                label="Agência"
+                v-model="form.tolerancia"
+                label="Tolerância da contagem"
+                :min="0"
+                hint="Diferença que ainda fecha o período"
               />
             </div>
-            <div class="col-2">
-              <MgInputValor
-                v-model="form.agenciadigito"
-                :decimals="0"
-                :grouping="false"
-                label="Dígito"
-              />
-            </div>
-            <div class="col-4">
-              <MgInputValor v-model="form.conta" :decimals="0" :grouping="false" label="Conta" />
-            </div>
-            <div class="col-2">
-              <MgInputValor
-                v-model="form.contadigito"
-                :decimals="0"
-                :grouping="false"
-                label="Dígito"
-              />
-            </div>
-            <div class="col-12">
-              <MgInput v-model="form.pixdict" label="Chave Pix" maxlength="77" />
-            </div>
-            <div class="col-12">
+            <div v-if="form.tipo !== 'E'" class="col-12">
               <q-checkbox v-model="form.emiteboleto" label="Emite Boleto" />
             </div>
-            <template v-if="form.emiteboleto">
+            <template v-if="form.tipo !== 'E' && form.emiteboleto">
               <div class="col-6 col-sm-4">
                 <MgInputValor
                   v-model="form.convenio"

@@ -6,7 +6,7 @@
 // se o contado difere do sistema e os títulos de repasse dos itens. Reabrir: gerente.
 import { ref, computed, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
-import { formataNumero, formataTimestamp, formataCodigo } from '@components/formatters'
+import { formataNumero, formataTimestamp } from '@components/formatters'
 import MgInput from '@components/MgInput.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
@@ -120,7 +120,7 @@ function excluirAvulso(a) {
     message: `Excluir "${a.observacoes}" de R$ ${formataNumero(a.valor)}?`,
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Excluir', color: 'negative', flat: true },
-  }).onOk(() => store.cancelarAvulso(a.codpagamento))
+  }).onOk(() => store.cancelarAvulso(a.codportadormovimento))
 }
 
 const COR_ESTADO = { P: 'amber-8', E: 'green-7', C: 'red-7' }
@@ -138,7 +138,9 @@ function cancelarTransferencia(t) {
     },
     cancel: { label: 'Voltar', color: 'grey-8', flat: true },
     ok: { label: 'Cancelar transferência', color: 'negative', flat: true },
-  }).onOk((justificativa) => store.acaoTransferencia(t.codpagamento, 'cancelar', { justificativa }))
+  }).onOk((justificativa) =>
+    store.acaoTransferencia(t.codportadormovimento, 'cancelar', { justificativa }),
+  )
 }
 
 const corValor = (v) => (v < 0 ? 'text-red-8' : v > 0 ? 'text-green-8' : 'text-grey-7')
@@ -285,13 +287,13 @@ watch(() => [props.codportador, props.codportadorperiodo], carregar)
           </q-btn>
         </q-card-section>
         <q-list v-if="sessao.avulsos.length" separator>
-          <q-item v-for="a in sessao.avulsos" :key="a.codpagamento">
+          <q-item v-for="a in sessao.avulsos" :key="a.codportadormovimento">
             <q-item-section>
               <q-item-label :class="a.estado === 'C' ? 'text-strike text-grey-6' : ''">
                 {{ a.motivodescricao }} · {{ a.observacoes }}
               </q-item-label>
               <q-item-label caption>
-                {{ formataCodigo(a.codpagamento) }} · {{ formataTimestamp(a.transacao, 2) }} ·
+                {{ formataTimestamp(a.transacao, 2) }} ·
                 {{ a.usuariocriacao }}
               </q-item-label>
             </q-item-section>
@@ -332,7 +334,7 @@ watch(() => [props.codportador, props.codportadorperiodo], carregar)
           </q-btn>
         </q-card-section>
         <q-list v-if="sessao.transferencias.length" separator>
-          <q-item v-for="t in sessao.transferencias" :key="t.codpagamento">
+          <q-item v-for="t in sessao.transferencias" :key="t.codportadormovimento">
             <q-item-section avatar>
               <q-icon
                 :name="t.codportadordestino === sessao.codportador ? 'south_west' : 'north_east'"
@@ -344,7 +346,7 @@ watch(() => [props.codportador, props.codportadorperiodo], carregar)
                 {{ t.portadororigem }} → {{ t.portadordestino }}
               </q-item-label>
               <q-item-label caption>
-                {{ formataCodigo(t.codpagamento) }} · {{ formataTimestamp(t.transacao, 2) }} ·
+                {{ formataTimestamp(t.transacao, 2) }} ·
                 {{ t.usuariocriacao }}
               </q-item-label>
               <q-item-label v-if="t.observacoes" caption>{{ t.observacoes }}</q-item-label>
@@ -370,7 +372,7 @@ watch(() => [props.codportador, props.codportadorperiodo], carregar)
                   size="sm"
                   color="grey-7"
                   icon="done"
-                  @click="store.acaoTransferencia(t.codpagamento, 'confirmar')"
+                  @click="store.acaoTransferencia(t.codportadormovimento, 'confirmar')"
                 >
                   <q-tooltip>Confirmar o recebimento</q-tooltip>
                 </q-btn>

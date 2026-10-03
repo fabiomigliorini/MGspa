@@ -1,10 +1,9 @@
 <script setup>
-// Resumo do período (doc-4, R9), dentro do card do PeriodoCabecalho: o formulário "Movimento do
-// Caixa" de papel. Saldo inicial, entradas e saídas por origem e saldo final, todos gravados pelo
-// servidor. No caixa (espécie), o botão ao lado do saldo inicial e do final abre a contagem (fechado,
-// só para ver), e
-// embaixo do saldo aparece o contado e a diferença (o ajuste é um lançamento; fechar só batendo).
-// Clicar numa origem filtra a lista.
+// Resumo do período (doc-4), dentro do card do PeriodoCabecalho: o formulário "Movimento do
+// Caixa" de papel. Saldo inicial, entradas e saídas por origem (vendas, títulos e vales, itens,
+// transferências, ajustes) e saldo final, gravados pelo servidor. Na espécie, o botão ao lado do
+// saldo inicial e do final abre a contagem (fechado, só para ver): a inicial só confere; a final
+// dá a diferença, verde dentro da tolerância do portador. Clicar numa origem filtra a lista.
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { formataNumero } from '@components/formatters'
@@ -15,16 +14,13 @@ const emit = defineEmits(['contar'])
 const store = periodoStore()
 const { periodo, filtroOrigem } = storeToRefs(store)
 
-// a contagem existe no caixa (espécie); fechado ou sem permissão, o dialog só mostra
 const podeContar = computed(() => !!periodo.value?.contagem)
-// a contagem do momento, se houve
 const contado = (momento) => {
   const c = periodo.value?.contagem?.[momento]
   return c?.contado != null ? c : null
 }
-const conferencia = (c) =>
-  `contado ${formataNumero(c.contado)} · ` +
-  (c.diferenca ? `diferença ${c.diferenca > 0 ? '+' : ''}${formataNumero(c.diferenca)}` : 'confere')
+const sinal = (v) => (v > 0 ? '+' : '') + formataNumero(v)
+const naTolerancia = (d) => Math.abs(d ?? 0) <= (periodo.value?.tolerancia ?? 0)
 const cor = (v) => (v < 0 ? 'text-red-8' : v > 0 ? 'text-green-8' : 'text-grey-7')
 const filtrar = (origem) => (filtroOrigem.value = filtroOrigem.value === origem ? null : origem)
 </script>
@@ -54,14 +50,19 @@ const filtrar = (origem) => (filtroOrigem.value = filtroOrigem.value === origem 
               class="q-ml-xs"
               @click="emit('contar', 'inicial')"
             >
-              <q-tooltip>Contagem inicial</q-tooltip>
+              <q-tooltip>Contagem inicial (só confere)</q-tooltip>
             </q-btn>
             <div
               v-if="contado('inicial')"
               class="text-caption"
               :class="contado('inicial').diferenca ? 'text-red-8' : 'text-green-8'"
             >
-              {{ conferencia(contado('inicial')) }}
+              contado {{ formataNumero(contado('inicial').contado) }} ·
+              {{
+                contado('inicial').diferenca
+                  ? `não confere (${sinal(contado('inicial').diferenca)})`
+                  : 'confere'
+              }}
             </div>
           </td>
           <!-- positivo é entrada, negativo é saída -->
@@ -106,18 +107,32 @@ const filtrar = (origem) => (filtroOrigem.value = filtroOrigem.value === origem 
             >
               <q-tooltip>Contagem final</q-tooltip>
             </q-btn>
-            <div
-              v-if="contado('final')"
-              class="text-caption text-weight-regular"
-              :class="contado('final').diferenca ? 'text-red-8' : 'text-green-8'"
-            >
-              {{ conferencia(contado('final')) }}
-            </div>
           </td>
           <td colspan="2" class="text-right" :class="periodo.saldofinal < 0 ? 'text-red-8' : ''">
             {{ formataNumero(periodo.saldofinal) }}
           </td>
         </tr>
+        <template v-if="contado('final')">
+          <tr>
+            <td>Contagem final</td>
+            <td colspan="2" class="text-right">{{ formataNumero(contado('final').contado) }}</td>
+          </tr>
+          <tr>
+            <td>
+              Diferença
+              <div class="text-caption text-grey-7">
+                tolerância {{ formataNumero(periodo.tolerancia) }}
+              </div>
+            </td>
+            <td
+              colspan="2"
+              class="text-right text-weight-bold"
+              :class="naTolerancia(contado('final').diferenca) ? 'text-green-8' : 'text-amber-10'"
+            >
+              {{ sinal(contado('final').diferenca) }}
+            </td>
+          </tr>
+        </template>
       </tbody>
     </q-markup-table>
   </template>

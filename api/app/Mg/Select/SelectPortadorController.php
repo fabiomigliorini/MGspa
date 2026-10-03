@@ -4,7 +4,10 @@ namespace Mg\Select;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Mg\Portador\PortadorAutorizador;
+use Mg\Portador\PortadorUsuario;
 
 class SelectPortadorController extends Controller
 {
@@ -19,6 +22,8 @@ class SelectPortadorController extends Controller
                 p.conta, p.contadigito,
                 p.pixdict, p.inativo,
                 exists (select 1 from tblpdv d where d.codportador = p.codportador) as gaveta,
+                (select pu.papel from tblportadorusuario pu
+                 where pu.codportador = p.codportador and pu.codusuario = ' . (int) (Auth::user()->codusuario ?? 0) . ') as papel,
                 p.codportador as value, p.portador as label
             from tblportador p
             left join tblfilial f on (f.codfilial = p.codfilial)
@@ -49,7 +54,14 @@ class SelectPortadorController extends Controller
         }
         $sql .= ' ORDER BY p.portador, p.codportador LIMIT 250';
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
-        return response()->json(DB::select($sql, ['busca' => "%{$busca}%"]), 200);
+        $rows = DB::select($sql, ['busca' => "%{$busca}%"]);
+        // papel do usuario em cada um (doc-4): o Administrador e' gestor em todos
+        if (PortadorAutorizador::admin()) {
+            foreach ($rows as $r) {
+                $r->papel = PortadorUsuario::PAPEL_GESTOR;
+            }
+        }
+        return response()->json($rows, 200);
     }
 
     public static function show($id)

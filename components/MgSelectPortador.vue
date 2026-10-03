@@ -22,6 +22,9 @@ const props = defineProps({
   excluir: { type: Array, default: null },
   // { codportador: motivo }: aparecem desabilitados, com o motivo (gaveta fechada)
   bloqueios: { type: Object, default: null },
+  // só os portadores em que o usuário tem pelo menos este papel (D depositante, O operador, G
+  // gestor): destino da transferência = D, origem = O (doc-4)
+  papel: { type: String, default: null },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
   // Modo multiplo: v-model e Array, onde [] = sem filtro (todos). Espelha o backend,
@@ -29,6 +32,8 @@ const props = defineProps({
   multiple: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'select'])
+
+const NIVEL = { D: 1, O: 2, G: 3 }
 
 const cache = useSelectCacheStore()
 const ENTITY = 'portador'
@@ -44,6 +49,10 @@ const permitidos = computed(() => {
   }
   if (props.semGaveta) {
     todos = todos.filter((v) => !v.gaveta)
+  }
+  if (props.papel) {
+    const minimo = NIVEL[props.papel]
+    todos = todos.filter((v) => (NIVEL[v.papel] ?? 0) >= minimo)
   }
   if (props.excluir?.length) {
     const fora = new Set(props.excluir.map((c) => Number(c)))

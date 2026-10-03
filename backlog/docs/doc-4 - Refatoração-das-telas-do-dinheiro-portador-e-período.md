@@ -345,3 +345,36 @@ refatoração dele.
 7. Telas do contas.
 8. Borderô.
 9. Dividir e unificar período (por último: é funcionalidade nova).
+
+### Como ficou no código (03/10/2026, na árvore, sem commit)
+
+- **DDL** `api/database/portador_movimento_tipo.sql` (rodado 2x no dev, idempotente):
+  `tblportadormovimento` com tipo P/A/T, estado, observação, par, confirmação, cancelamento e
+  justificativa (`codpagamento` opcional; check amarra tipo × pagamento × estado);
+  `tblportadorusuario` (papel D/O/G) preenchida pela regra de hoje (1.500 linhas no dev; o Gerente
+  ganhou depositante também nos bancos, para o depósito); `tblportador.tolerancia` (2,00);
+  `tblportadorperiodo.diferenca`. Os 11 ajustes (`motivo` A) e as 6 transferências viraram linhas
+  do movimento e os pagamentos foram apagados; `motivo` aceita só T/F/R. Saldos iguais antes e depois.
+- **Backend**: `PortadorAutorizador` (papel do usuário; Administrador = gestor),
+  `PortadorLancamentoService` (ajuste, transferência, confirmar, cancelar),
+  `PortadorPeriodoService` (abrir, contar, fecharCaixa com tolerância/pendente, reabrirCaixa,
+  editarDatas, dividir, unificar, recalcular pela contagem; banco: fechar com corte, reabrir,
+  taxa/tarifa/rendimento), `PortadorUsuarioController`, `PortadorLancamentoController`. O
+  `CaixaService` ficou só com o PDV (gaveta, vincular, itens, bordero). Saíram
+  `TransferenciaAutorizador`, `TransferenciaResource`, `CaixasController/Service`, a transferência
+  do `PagamentoService` e a origem X da listagem de pagamentos. Painel, tela e select de portador
+  filtrados pelo papel.
+- **Rotas**: `v1/portador/{cod}/usuario`, `v1/portador/{cod}/periodo/abrir`,
+  `v1/portador-periodo/{id}/{fechar,reabrir,contagem,datas,dividir,unificar,ajuste,bordero}`,
+  `v1/portador-movimento/{transferencia,{id}/confirmar,{id}/cancelar}`. O PDV continua em
+  `v1/caixa/*` (com o `codpdv` da gaveta não valida papel).
+- **Decisões tomadas na execução** (conferir): reabrir o último período o devolve a **aberto**
+  (os anteriores ficam pendentes); período com itens do caixa movimentados não se divide nem se
+  une. Dividir deixa a primeira parte **pendente**, sem contagem final (corrigido com o Fábio: não
+  há contagem, então não fecha); a segunda fica com o fim, a contagem final e o estado de antes.
+- **Contas**: cabeçalho com aberto/pendente/fechado e as ações por papel, resumo com contagem
+  final e diferença, lançamentos por tipo, dialog de ajuste (no banco também taxa/tarifa/
+  rendimento), transferência com select por papel, cadeado de usuários, tolerância no cadastro.
+  A página Caixas virou só "Movimento dos Itens".
+- **PDV** (`MgCaixaSessao`): só adaptado para não quebrar (ajuste e transferência pelas rotas
+  novas); não testado no navegador.

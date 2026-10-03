@@ -1,8 +1,8 @@
 <script setup>
-// Lançamento avulso (M13 doc-3; TASK-188 M9.5; genérico desde o doc-4): entrada ou saída sem
-// documento, com o motivo e o histórico. No caixa (espécie) cai na sessão da tela, com a data
-// dentro dela (do início ao fim; aberta, até agora) e cancela só quem lançou; nos demais
-// portadores, no período da data (M12).
+// Ajuste (doc-4, redefinição do dinheiro): acerto do saldo do portador, sem contraparte; é
+// movimento do portador, não pagamento. Cai no período da tela, com a data dentro dele (do início
+// ao fim; aberto, até agora), e só se cancela, com justificativa. No banco o mesmo dialog lança
+// taxa, tarifa e rendimento (pagamento sem pessoa, fora do escopo do dinheiro).
 import { ref, computed, watch } from 'vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -17,27 +17,33 @@ const SENTIDOS = [
 ]
 
 const store = periodoStore()
-// caixa: a data fica entre o início e o fim da sessão (aberta, agora)
-const sessao = computed(() => (store.portador?.ehCaixa ? store.periodo : null))
-const limite = () => (sessao.value?.fim ? new Date(sessao.value.fim) : new Date())
+// taxa, tarifa e rendimento só no banco (não espécie)
+const TIPOS = computed(() =>
+  store.portador?.ehCaixa ? [] : [{ value: 'A', label: 'Ajuste' }, ...MOTIVOS],
+)
+const periodo = computed(() => store.periodo)
+const limite = () =>
+  periodo.value?.fim && new Date(periodo.value.fim) < new Date()
+    ? new Date(periodo.value.fim)
+    : new Date()
 // lê o valor do form (ISO), não o texto que o MgInputData passa às rules; vazio fica com o !!v
-const naSessao = () => {
-  if (!sessao.value || !form.value.transacao) return true
+const noPeriodo = () => {
+  if (!periodo.value || !form.value.transacao || form.value.tipo !== 'A') return true
   const d = new Date(form.value.transacao)
   return (
-    (d >= new Date(sessao.value.inicio) && d <= limite()) ||
-    `Fora da sessão (de ${formataTimestamp(sessao.value.inicio, 0)} a ${formataTimestamp(limite(), 0)})`
+    (d >= new Date(periodo.value.inicio) && d <= limite()) ||
+    `Fora do período (de ${formataTimestamp(periodo.value.inicio, 0)} a ${formataTimestamp(limite(), 0)})`
   )
 }
-// a data já vem com agora (na sessão reaberta, com o fim dela)
 const vazio = () => ({
+  tipo: 'A',
   sentido: 'E',
-  motivo: 'A',
   valor: null,
   observacoes: '',
-  transacao: formataTimestampIso(sessao.value ? limite() : new Date()),
+  transacao: formataTimestampIso(limite()),
 })
 const form = ref(vazio())
+const ajuste = computed(() => form.value.tipo === 'A')
 
 watch(
   () => store.dialogAvulso,
@@ -46,35 +52,45 @@ watch(
   },
 )
 
-// foco no Tipo ao abrir (o grupo de radios não tem autofocus): o radio marcado
-const refTipo = ref(null)
-const focarTipo = () => refTipo.value?.querySelector('[role="radio"][aria-checked="true"]')?.focus()
-
 async function salvar() {
-  const ok = await store.lancarAvulso({ ...form.value })
+  const f = form.value
+  const valor = f.sentido === 'E' ? f.valor : -f.valor
+  const ok = ajuste.value
+    ? await store.ajustar({ valor, observacoes: f.observacoes, transacao: f.transacao })
+    : await store.lancarTaxa({
+        motivo: f.tipo,
+        valor,
+        observacoes: f.observacoes || null,
+        transacao: f.transacao,
+      })
   if (ok) store.dialogAvulso = false
 }
 </script>
 
 <template>
-  <q-dialog v-model="store.dialogAvulso" @show="focarTipo">
-    <q-card flat style="width: 300px; max-width: 90vw">
+  <q-dialog v-model="store.dialogAvulso">
+    <q-card flat style="width: 400px; max-width: 90vw">
       <q-form @submit.prevent="salvar">
-        <q-card-section class="text-h6">Lançamento avulso</q-card-section>
+        <q-card-section class="text-h6">
+          {{ TIPOS.length ? 'Lançamento' : 'Ajuste' }}
+          <div v-if="ajuste" class="text-caption text-grey-7">
+            Acerto do saldo, sem contraparte. Pagamento, vale e venda não são ajuste.
+          </div>
+        </q-card-section>
         <q-card-section>
           <div class="row q-col-gutter-md">
+            <div v-if="TIPOS.length" class="col-12">
+              <q-option-group v-model="form.tipo" type="radio" inline :options="TIPOS" />
+            </div>
             <div class="col-12">
               <MgInputData
                 v-model="form.transacao"
                 type="timestamp"
                 default-time="now"
                 label="Data"
-                :rules="[(v) => !!v, naSessao]"
+                :autofocus="!TIPOS.length"
+                :rules="[(v) => !!v, noPeriodo]"
               />
-            </div>
-            <div ref="refTipo" class="col-12">
-              <div class="text-caption text-grey-7">Tipo</div>
-              <q-option-group v-model="form.motivo" type="radio" inline :options="MOTIVOS" />
             </div>
             <div class="col-5">
               <q-select
@@ -92,11 +108,11 @@ async function salvar() {
             <div class="col-12">
               <MgInput
                 v-model="form.observacoes"
-                label="Histórico"
+                :label="ajuste ? 'Motivo do ajuste' : 'Observação'"
                 type="textarea"
                 autogrow
                 maxlength="300"
-                :rules="[(v) => (v || '').trim().length >= 3]"
+                :rules="[(v) => !ajuste || (v || '').trim().length >= 3]"
                 lazy-rules
               />
             </div>

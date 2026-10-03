@@ -25,6 +25,8 @@ const vazio = () => ({
   carteiravariacao: null,
   pixdict: '',
   emiteboleto: false,
+  // diferença de contagem que fecha o período (espécie)
+  tolerancia: 2,
 })
 
 // Financeiro e Admin veem todas as filiais; os demais começam pela sua

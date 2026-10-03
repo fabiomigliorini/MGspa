@@ -24,8 +24,8 @@ const erro = (error) => error?.response?.data?.message ?? error?.message ?? Stri
 export const CEDULAS = ['200', '100', '50', '20', '10', '5', '2']
 export const MOEDAS = ['1', '0.50', '0.25', '0.10', '0.05', '0.01']
 
+// taxa, tarifa e rendimento: só banco (pagamento sem pessoa); o ajuste é movimento do portador
 export const MOTIVOS = [
-  { value: 'A', label: 'Ajuste de caixa' },
   { value: 'T', label: 'Taxa' },
   { value: 'F', label: 'Tarifa' },
   { value: 'R', label: 'Rendimento' },
@@ -36,8 +36,8 @@ export const DOCUMENTOS = {
   I: 'Itens do caixa',
   J: 'Ajustes de caixa',
   T: 'Títulos (notinhas, vales, adiantamentos)',
-  X: 'Transferências (sangria, suprimento)',
-  A: 'Avulsos',
+  X: 'Transferências (sangria, reforço)',
+  A: 'Taxas e tarifas',
 }
 
 export const caixaSessaoStore = defineStore('caixaSessao', {
@@ -76,7 +76,9 @@ export const caixaSessaoStore = defineStore('caixaSessao', {
     async carregarGaveta(codportador) {
       this.carregando = true
       try {
-        const { data } = await api.get(`v1/caixa/gaveta/${codportador}`)
+        const { data } = await api.get(`v1/caixa/gaveta/${codportador}`, {
+          params: { codpdv: this.contexto.codpdv || undefined },
+        })
         this.gaveta = data.data.gaveta
         this.sessao = data.data.sessao
         this.envelope = data.data.envelope
@@ -92,7 +94,9 @@ export const caixaSessaoStore = defineStore('caixaSessao', {
       this.carregando = true
       this.sessao = null
       try {
-        const { data } = await api.get(`v1/caixa/sessao/${id}`)
+        const { data } = await api.get(`v1/caixa/sessao/${id}`, {
+          params: { codpdv: this.contexto.codpdv || undefined },
+        })
         this.sessao = data.data
         this.gaveta = {
           codportador: data.data.codportador,
@@ -142,19 +146,26 @@ export const caixaSessaoStore = defineStore('caixaSessao', {
       )
     },
 
-    cancelarAvulso(codpagamento) {
+    // o ajuste (movimento do portador) se cancela, não se apaga
+    cancelarAvulso(codportadormovimento) {
       return this.executar(
-        () => api.post(`v1/caixa/avulso/${codpagamento}/cancelar`),
-        'Lançamento excluído',
+        () =>
+          api.post(`v1/caixa/avulso/${codportadormovimento}/cancelar`, {
+            codpdv: this.contexto.codpdv,
+          }),
+        'Ajuste cancelado',
       )
     },
 
     // ==== transferências da gaveta (M11): confirmar e cancelar pela lista da sessão; registrar é
     // o TransferirCaixaDialog (periodoStore) ====
 
-    async acaoTransferencia(codpagamento, acao, payload = {}) {
+    async acaoTransferencia(codportadormovimento, acao, payload = {}) {
       try {
-        await api.post(`v1/pagamento/transferencia/${codpagamento}/${acao}`, payload)
+        await api.post(`v1/portador-movimento/${codportadormovimento}/${acao}`, {
+          ...payload,
+          codpdv: this.contexto.codpdv,
+        })
         avisar(true, acao === 'confirmar' ? 'Transferência confirmada' : 'Transferência cancelada')
         await this.recarregar()
       } catch (error) {

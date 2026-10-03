@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-03 21:51'
+updated_date: '2026-10-03 22:28'
 labels:
   - negocios
   - contas
@@ -90,4 +90,6 @@ R6 (03/10/2026, na árvore, sem commit; processo único do caixa): Portador::ehC
 Contagem (03/10/2026, na árvore): ContagemCaixa em duas colunas (cédulas | moedas), o valor de cada campo no hint, total por coluna, total dos itens e total geral; vale para o dialog do período e para a tela do caixa (MgCaixaSessao). totalContagem do caixaSessaoStore saiu (só o componente usava).
 
 Commitado em 03/10/2026 a pedido do Fábio, sem validação (57513c029): o R6 que estava na árvore, construído sobre as definições antigas, e a redefinição do domínio do dinheiro no doc-4 (seção 'Redefinição do domínio do dinheiro'). Roles do portador (depositante, operador, gestor) definidas em seguida. Próximo: etapa 1 do plano (DDL no dev e migração), só com o OK do Fábio.
+
+Redefinição do dinheiro executada em dev em 03/10/2026, na árvore, sem commit (doc-4, seção 'Redefinição do domínio do dinheiro' → 'Como ficou no código'): DDL portador_movimento_tipo.sql rodado, ajuste e transferência como movimento do portador, papéis por portador, período em espécie com contagem, tolerância e pendente, dividir e unificar. Conferido no tinker e pelas rotas HTTP com rollback; tela do portador e painel abertos no navegador (só visualização). ACs R7.x desmarcados até a validação do Fábio.
 <!-- SECTION:NOTES:END -->

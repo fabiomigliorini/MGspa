@@ -142,6 +142,18 @@ na mesma tela: critério de aceite, sem perguntar nada.
 O arquivo `.md` da task entra no mesmo commit do código — e o commit só acontece depois da
 autorização, conforme a seção **Commits** acima.
 
+## Cada botão faz uma coisa só — filosofia Unix
+
+**Cada botão, rota e ação faz uma coisa só, e bem feita.** Fechar fecha; contar conta; abrir
+abre. Nada de botão que conta e fecha, de fechar que lança ajuste, de abrir que copia a contagem
+do dia anterior. Se falta um pré-requisito, a ação **recusa** com a mensagem dizendo o que falta
+— não faz o pré-requisito sozinha nem abre outro formulário no caminho.
+
+**Automação de evento só a pedido.** Uma ação disparar outra por conta própria (gerar lançamento,
+fechar o que ficou para trás, criar registro "de apoio") só existe quando quem prioriza pede.
+Não inventar; na dúvida, perguntar. Exemplo do que não fazer: o ajuste automático na abertura e no
+fechamento do caixa (TASK-39), inventado e depois removido.
+
 ## Campos de formulário — os componentes da casa, nunca o Quasar cru
 
 **Campo de texto é `@components/MgInput.vue`, não `<q-input>`.** É o mesmo q-input, com as

@@ -1,10 +1,10 @@
 <script setup>
 // Lançamentos do período (doc-4, R10) como extrato: agrupados por dia, uma linha do tempo à
 // esquerda (hora e o ícone da origem) e, à direita, o valor e o saldo corrente sempre na mesma
-// coluna (no celular, o saldo embaixo do valor). Transferência a confirmar em amarelo; cancelado
-// riscado e fora do saldo. A linha abre o pagamento; a transferência leva ao outro portador, no
-// período onde o valor caiu; as ações do lançamento (confirmar/cancelar transferência, cancelar
-// avulso) ficam nele.
+// coluna (no celular, o saldo embaixo do valor). Pagamento (venda, título, vale, item) abre o
+// pagamento; ajuste e transferência são movimento do portador (a transferência leva ao outro
+// portador, no período onde o valor caiu). A confirmar em amarelo; cancelado riscado e fora do
+// saldo, com a justificativa. Confirmar e cancelar ficam na linha.
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
@@ -19,18 +19,23 @@ import { periodoStore } from '@components/stores/periodoStore'
 
 const $q = useQuasar()
 const store = periodoStore()
-const { portador, periodo, filtroOrigem } = storeToRefs(store)
+const { portador, pode, periodo, filtroOrigem } = storeToRefs(store)
+
+// ajuste e transferência no período da tela, não fechado
+const podeMovimentar = computed(
+  () => !!pode.value.operar && !!periodo.value && periodo.value.situacao !== 'fechado',
+)
 
 // os cancelados (riscados) só aparecem no toggle
 const mostrarCancelados = ref(false)
 const cancelados = computed(
-  () => (periodo.value?.lancamentos ?? []).filter((l) => l.inativo).length,
+  () => (periodo.value?.lancamentos ?? []).filter((l) => l.cancelado).length,
 )
 const lista = computed(() =>
   (periodo.value?.lancamentos ?? []).filter(
     (l) =>
       (!filtroOrigem.value || l.origem === filtroOrigem.value) &&
-      (mostrarCancelados.value || !l.inativo),
+      (mostrarCancelados.value || !l.cancelado),
   ),
 )
 const filtro = computed(
@@ -51,19 +56,24 @@ const dias = computed(() => {
   return ret
 })
 
-// a origem do lançamento (V venda, T títulos, X transferência, A avulso, I item do caixa)
+// a origem do lançamento (V venda, T títulos e vales, I item do caixa, X transferência, J ajuste,
+// A taxa/tarifa/rendimento)
 const ICONE = {
   V: 'shopping_cart',
   T: 'request_quote',
-  X: 'swap_horiz',
-  A: 'edit_note',
   I: 'inventory_2',
+  X: 'swap_horiz',
+  J: 'tune',
+  A: 'account_balance',
 }
 
 const temSaldoColuna = computed(() => $q.screen.gt.xs)
 
-const cancelado = (l) => !!l.inativo
+const cancelado = (l) => l.cancelado
 const pendente = (l) => !cancelado(l) && l.estado === 'P'
+// só o pagamento abre (ajuste e transferência não são pagamento)
+const link = (l) =>
+  l.codpagamento ? { name: 'pagamento-detalhe', params: { id: l.codpagamento } } : null
 const corAvatar = (l) =>
   cancelado(l) ? 'grey-2' : pendente(l) ? 'amber-2' : l.valor < 0 ? 'red-1' : 'green-1'
 const corIcone = (l) =>
@@ -88,25 +98,14 @@ const justificar = (title, ok, fn) =>
     })
     .onOk(fn)
 
-function cancelarTransferencia(l) {
-  justificar('Cancelar transferência', 'Cancelar transferência', (j) =>
-    store.cancelarTransferencia(l.codpagamento, j),
+// ajuste e transferência pelo movimento; taxa/tarifa/rendimento pelo pagamento
+function cancelar(l) {
+  const titulo = l.tipo === 'T' ? 'Cancelar transferência' : 'Cancelar lançamento'
+  justificar(titulo, titulo, (j) =>
+    l.tipo === 'P'
+      ? store.cancelarTaxa(l.codpagamento, j)
+      : store.cancelarMovimento(l.codportadormovimento, j),
   )
-}
-
-function cancelarAvulso(l) {
-  if (!portador.value.ehCaixa) {
-    justificar('Cancelar lançamento', 'Cancelar lançamento', (j) =>
-      store.cancelarAvulso(l.codpagamento, j),
-    )
-    return
-  }
-  $q.dialog({
-    title: 'Cancelar lançamento',
-    message: `Cancelar "${l.texto}" de R$ ${formataNumero(l.valor)}?`,
-    cancel: { label: 'Voltar', color: 'grey-8', flat: true },
-    ok: { label: 'Cancelar lançamento', color: 'negative', flat: true },
-  }).onOk(() => store.cancelarAvulso(l.codpagamento))
 }
 </script>
 
@@ -129,6 +128,23 @@ function cancelarAvulso(l) {
         :label="`Mostrar cancelados (${cancelados})`"
         color="primary"
       />
+      <template v-if="podeMovimentar">
+        <q-btn flat round size="sm" color="primary" icon="add" @click="store.dialogAvulso = true">
+          <q-tooltip>{{
+            portador.ehCaixa ? 'Ajuste' : 'Ajuste, taxa, tarifa, rendimento'
+          }}</q-tooltip>
+        </q-btn>
+        <q-btn
+          flat
+          round
+          size="sm"
+          color="grey-7"
+          icon="swap_horiz"
+          @click="store.dialogTransferir = true"
+        >
+          <q-tooltip>{{ portador.ehCaixa ? 'Reforço / Sangria' : 'Transferir' }}</q-tooltip>
+        </q-btn>
+      </template>
     </q-card-section>
 
     <q-card-section v-if="lista.length" class="q-pt-none">
@@ -173,8 +189,8 @@ function cancelarAvulso(l) {
 
           <!-- o lançamento -->
           <q-item
-            clickable
-            :to="{ name: 'pagamento-detalhe', params: { id: l.codpagamento } }"
+            :clickable="!!link(l)"
+            :to="link(l)"
             class="col rounded-borders q-px-sm q-ml-sm q-mb-xs"
             :class="pendente(l) ? 'bg-amber-1' : ''"
             style="min-height: 56px"
@@ -184,7 +200,7 @@ function cancelarAvulso(l) {
                 {{ l.texto }}
               </q-item-label>
               <q-item-label caption class="row items-center q-gutter-x-xs">
-                <span>{{ l.meiodescricao }}</span>
+                <span v-if="l.detalhe">{{ l.detalhe }}</span>
                 <q-badge v-if="pendente(l)" color="amber-8" label="a confirmar" />
                 <q-badge v-if="cancelado(l)" color="grey-5" label="cancelado" />
                 <q-btn
@@ -212,7 +228,7 @@ function cancelarAvulso(l) {
                   size="sm"
                   color="grey-7"
                   icon="done"
-                  @click.stop.prevent="store.confirmarTransferencia(l.codpagamento)"
+                  @click.stop.prevent="store.confirmarTransferencia(l.codportadormovimento)"
                 >
                   <q-tooltip>Confirmar o recebimento</q-tooltip>
                 </q-btn>
@@ -223,21 +239,14 @@ function cancelarAvulso(l) {
                   size="sm"
                   color="grey-7"
                   icon="block"
-                  @click.stop.prevent="cancelarTransferencia(l)"
+                  @click.stop.prevent="cancelar(l)"
                 >
-                  <q-tooltip>Cancelar a transferência</q-tooltip>
+                  <q-tooltip>Cancelar</q-tooltip>
                 </q-btn>
-                <q-btn
-                  v-if="l.podeCancelarAvulso"
-                  flat
-                  round
-                  size="sm"
-                  color="grey-7"
-                  icon="delete"
-                  @click.stop.prevent="cancelarAvulso(l)"
-                >
-                  <q-tooltip>Cancelar o lançamento</q-tooltip>
-                </q-btn>
+              </q-item-label>
+              <q-item-label v-if="cancelado(l) && l.justificativa" caption class="text-grey-7">
+                {{ l.justificativa }}
+                <template v-if="l.usuariocancelamento"> · {{ l.usuariocancelamento }}</template>
               </q-item-label>
             </q-item-section>
 

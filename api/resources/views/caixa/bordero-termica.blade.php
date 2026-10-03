@@ -1,14 +1,14 @@
 @php
-    // Bordero do caixa (M9; completo desde o M13 doc-3): contagem por cedula e
-    // moeda, itens do caixa, avulsos e ajustes. Cartoes so' em quantidade (o
-    // gerente fecha o lote da maquineta pelo bordero dela).
+    // Bordero do periodo em especie (doc-4, redefinicao do dinheiro): contagem
+    // por cedula e moeda (so' o dinheiro), o resumo com a contagem final e a
+    // diferenca, ajustes e, na gaveta, os itens do caixa (controle a parte).
+    // Cartoes so' em quantidade (o gerente fecha o lote pelo bordero dele).
     $filial = $sessao->Portador->Filial;
     $abertura = $sessao->contageminicial ?? [];
     $fechamento = $sessao->contagemfinal ?? [];
     $denominacoes = array_merge(\Mg\Caixa\CaixaService::CEDULAS, \Mg\Caixa\CaixaService::MOEDAS);
     $itens = collect($painel['itens']);
-    $estoqueAbertura = $itens->where('modo', 'C')->sum('valorabertura');
-    $estoqueFechamento = $itens->where('modo', 'C')->sum('valorfechamento');
+    $final = $periodo['contagem']['final'] ?? null;
 @endphp
 <!DOCTYPE html>
 <html>
@@ -123,19 +123,11 @@
                 </tr>
             @endif
         @endforeach
-        @foreach ($itens->where('modo', 'C') as $i)
-            <tr>
-                <td colspan="4">{{ $i['item'] }}</td>
-                <td class="r">{{ formataNumero($i['valorabertura'] ?? 0) }}</td>
-                <td colspan="4" class="lado">{{ $i['item'] }}</td>
-                <td class="r">{{ formataNumero($i['valorfechamento'] ?? 0) }}</td>
-            </tr>
-        @endforeach
         <tr class="total">
             <td colspan="4"><b>Total</b></td>
-            <td class="r"><b>{{ formataNumero(\Mg\Caixa\CaixaService::totalContagem($abertura) + $estoqueAbertura) }}</b></td>
+            <td class="r"><b>{{ formataNumero(\Mg\Caixa\CaixaService::totalContagem($abertura)) }}</b></td>
             <td colspan="4" class="lado"><b>Total</b></td>
-            <td class="r"><b>{{ formataNumero(\Mg\Caixa\CaixaService::totalContagem($fechamento) + $estoqueFechamento) }}</b></td>
+            <td class="r"><b>{{ formataNumero(\Mg\Caixa\CaixaService::totalContagem($fechamento)) }}</b></td>
         </tr>
     </table>
 
@@ -163,6 +155,16 @@
             <td><b>Saldo final</b></td>
             <td colspan="2" class="r grande">{{ formataNumero($periodo['saldofinal']) }}</td>
         </tr>
+        @if ($final && $final['contado'] !== null)
+            <tr>
+                <td>Contagem final</td>
+                <td colspan="2" class="r">{{ formataNumero($final['contado']) }}</td>
+            </tr>
+            <tr>
+                <td><b>Diferença</b> <small>(tolerância {{ formataNumero($periodo['tolerancia']) }})</small></td>
+                <td colspan="2" class="r"><b>{{ formataNumero($final['diferenca']) }}</b></td>
+            </tr>
+        @endif
     </table>
 
     @if ($itens->isNotEmpty())
@@ -193,7 +195,7 @@
 
     @if (!empty($painel['avulsos']))
         <div class="linha"></div>
-        <b>LANÇAMENTOS AVULSOS</b>
+        <b>AJUSTES</b>
         <table>
             @foreach ($painel['avulsos'] as $a)
                 <tr>

@@ -4,9 +4,9 @@ namespace Mg\Portador;
 
 use Carbon\Carbon;
 use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Mg\Banco\Banco;
-use Mg\Conferencia\ConferenciaAutorizador;
 use OfxParser\Parser;
 use RuntimeException;
 
@@ -56,17 +56,17 @@ class PortadorService
         return $q->paginate(25);
     }
 
-    // painel /portador (doc-4): os portadores por filial com o saldo gravado
-    // (so' da especie nesta fase, R3), a situacao do caixa (toda especie) e
-    // as transferencias a confirmar. Gerente ve as filiais dele; Financeiro
-    // e Admin, todas (R15). `bloqueio`: o caixa nao aceita transferencia agora
+    // painel /portador (doc-4): os portadores em que o usuario e' operador
+    // ou gestor (Administrador, todos), por filial, com o saldo gravado (so'
+    // da especie nesta fase, R3), a situacao do periodo (especie) e as
+    // transferencias a confirmar
     public static function painel(?int $codfilial, bool $inativos): array
     {
-        $filiais = ConferenciaAutorizador::filiais();
+        $meus = PortadorAutorizador::codportadores(PortadorUsuario::PAPEL_OPERADOR);
         $portadores = Portador::with('Filial:codfilial,filial')
             ->when(!$inativos, fn ($q) => $q->whereNull('inativo'))
             ->when($codfilial, fn ($q) => $q->where('codfilial', $codfilial))
-            ->when($filiais !== null, fn ($q) => $q->whereIn('codfilial', $filiais ?: [0]))
+            ->when($meus !== null, fn ($q) => $q->whereIn('codportador', $meus ?: [0]))
             ->orderBy('codfilial')
             ->orderByRaw("position(tipo in 'EBACO')")
             ->orderBy('portador')
@@ -74,7 +74,7 @@ class PortadorService
         $gavetas = DB::table('tblpdv')->whereNotNull('codportador')->distinct()->pluck('codportador')
             ->map(fn ($c) => (int) $c)->all();
         $caixas = $portadores->filter(fn ($p) => $p->ehCaixa())->pluck('codportador')->all();
-        $sessoes = PortadorPeriodo::whereIn('codportador', $caixas ?: [0])
+        $periodos = PortadorPeriodo::whereIn('codportador', $caixas ?: [0])
             ->whereRaw('codportadorperiodo in (
                 select distinct on (codportador) codportadorperiodo
                 from tblportadorperiodo
@@ -83,24 +83,29 @@ class PortadorService
             ->with(['UsuarioAbertura:codusuario,usuario', 'UsuarioFechamento:codusuario,usuario'])
             ->get()
             ->keyBy('codportador');
-        $pendentes = DB::select("
-            select codportadororigem, codportadordestino, total
-            from tblpagamento
-            where estado = 'P'
-            and codnegocio is null
-            and codportadororigem is not null
-            and codportadordestino is not null
+        // pendentes: os periodos com diferenca a resolver
+        $pendentes = PortadorPeriodo::whereIn('codportador', $caixas ?: [0])
+            ->whereNotNull('fim')
+            ->whereNull('fechamento')
+            ->selectRaw('codportador, count(*) as quantidade')
+            ->groupBy('codportador')
+            ->pluck('quantidade', 'codportador');
+        $aConfirmar = DB::select("
+            select codportador, sign(valor) as sinal, count(*) as quantidade, sum(abs(valor)) as valor
+            from tblportadormovimento
+            where tipo = 'T' and estado = 'P'
+            group by 1, 2
         ");
-        $somar = function ($coluna, $codportador) use ($pendentes) {
-            $doPortador = array_filter($pendentes, fn ($p) => $p->$coluna == $codportador);
-            return [
-                'quantidade' => count($doPortador),
-                'valor' => round(array_sum(array_map(fn ($p) => (float) $p->total, $doPortador)), 2),
-            ];
+        $somar = function ($codportador, $sinal) use ($aConfirmar) {
+            foreach ($aConfirmar as $r) {
+                if ($r->codportador == $codportador && (int) $r->sinal == $sinal) {
+                    return ['quantidade' => (int) $r->quantidade, 'valor' => round((float) $r->valor, 2)];
+                }
+            }
+            return ['quantidade' => 0, 'valor' => 0.0];
         };
-        return $portadores->map(function (Portador $p) use ($gavetas, $sessoes, $somar) {
-            $gaveta = $p->ehCaixa() && in_array($p->codportador, $gavetas);
-            $sessao = $p->ehCaixa() ? $sessoes->get($p->codportador) : null;
+        return $portadores->map(function (Portador $p) use ($gavetas, $periodos, $pendentes, $somar) {
+            $periodo = $p->ehCaixa() ? $periodos->get($p->codportador) : null;
             return [
                 'codportador' => $p->codportador,
                 'portador' => $p->portador,
@@ -108,33 +113,46 @@ class PortadorService
                 'codfilial' => $p->codfilial,
                 'filial' => optional($p->Filial)->filial,
                 'inativo' => $p->inativo,
-                'ehGaveta' => $gaveta,
+                'ehGaveta' => $p->ehCaixa() && in_array($p->codportador, $gavetas),
                 'ehCaixa' => $p->ehCaixa(),
+                'papel' => PortadorAutorizador::papel($p->codportador),
                 'saldo' => $p->tipo == Portador::TIPO_ESPECIE ? (float) $p->saldo : null,
-                'sessao' => $sessao ? [
-                    'codportadorperiodo' => $sessao->codportadorperiodo,
-                    'aberta' => $sessao->aberto(),
-                    'inicio' => $sessao->inicio,
-                    'fim' => $sessao->fim,
-                    'usuarioabertura' => optional($sessao->UsuarioAbertura)->usuario,
-                    'usuariofechamento' => optional($sessao->UsuarioFechamento)->usuario,
+                'sessao' => $periodo ? [
+                    'codportadorperiodo' => $periodo->codportadorperiodo,
+                    'aberta' => $periodo->aberto(),
+                    'situacao' => PortadorPeriodoResource::situacao($periodo),
+                    'inicio' => $periodo->inicio,
+                    'fim' => $periodo->fim,
+                    'usuarioabertura' => optional($periodo->UsuarioAbertura)->usuario,
+                    'usuariofechamento' => optional($periodo->UsuarioFechamento)->usuario,
                 ] : null,
-                'bloqueio' => $p->ehCaixa() && !($sessao && $sessao->aberto()) ? 'Caixa não aberto' : null,
-                'chegando' => $somar('codportadordestino', $p->codportador),
-                'saindo' => $somar('codportadororigem', $p->codportador),
+                'pendentes' => (int) ($pendentes[$p->codportador] ?? 0),
+                'chegando' => $somar($p->codportador, 1),
+                'saindo' => $somar($p->codportador, -1),
             ];
         })->values()->all();
     }
 
     public static function criar(array $dados): Portador
     {
+        if (array_key_exists('tolerancia', $dados) && $dados['tolerancia'] === null) {
+            unset($dados['tolerancia']);
+        }
         $portador = Portador::create($dados);
+        // quem cria e' gestor (senao nem ve o portador)
+        PortadorUsuario::firstOrCreate(
+            ['codportador' => $portador->codportador, 'codusuario' => Auth::user()->codusuario],
+            ['papel' => PortadorUsuario::PAPEL_GESTOR]
+        );
         $portador->load(['Banco', 'Filial']);
         return $portador;
     }
 
     public static function atualizar(Portador $portador, array $dados): Portador
     {
+        if (array_key_exists('tolerancia', $dados) && $dados['tolerancia'] === null) {
+            unset($dados['tolerancia']);
+        }
         $portador->fill($dados);
         $portador->save();
         $portador->refresh();

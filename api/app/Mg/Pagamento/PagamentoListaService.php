@@ -5,8 +5,9 @@ namespace Mg\Pagamento;
 use Carbon\Carbon;
 
 /**
- * Listagem unica de pagamentos (M6.1 doc-3): venda, titulo, transferencia e
- * avulso, em qualquer estado. A mesma consulta serve o contas (v1/pagamento,
+ * Listagem unica de pagamentos (M6.1 doc-3): venda, titulo, item do caixa e
+ * avulso (taxa, tarifa, rendimento), em qualquer estado. Ajuste e
+ * transferencia nao sao pagamento (movimento do portador). A mesma consulta serve o contas (v1/pagamento,
  * filiais do usuario) e o PDV (v1/pdv/pagamento, travada no PDV).
  */
 class PagamentoListaService
@@ -14,14 +15,12 @@ class PagamentoListaService
     // origem do pagamento: o documento que ele quitou
     const ORIGEM_VENDA = 'V';
     const ORIGEM_TITULO = 'T';
-    const ORIGEM_TRANSFERENCIA = 'X';
     const ORIGEM_AVULSO = 'A';
     const ORIGEM_ITEM = 'I';
 
     const ORIGENS = [
         self::ORIGEM_VENDA => 'Venda',
         self::ORIGEM_TITULO => 'Títulos',
-        self::ORIGEM_TRANSFERENCIA => 'Transferência',
         self::ORIGEM_AVULSO => 'Avulso',
         self::ORIGEM_ITEM => 'Item do caixa',
     ];
@@ -57,7 +56,7 @@ class PagamentoListaService
         'CaixaItemLancamento.CaixaItem:codcaixaitem,item',
     ];
 
-    // Venda, item do caixa, titulo, transferencia (os dois lados) ou avulso
+    // Venda, item do caixa, titulo ou avulso
     // (o resto)
     public static function origem(Pagamento $pag): string
     {
@@ -69,9 +68,6 @@ class PagamentoListaService
         }
         if ($pag->MovimentoTituloS->isNotEmpty() || !empty($pag->codperiodocolaboradoracerto)) {
             return static::ORIGEM_TITULO;
-        }
-        if (!empty($pag->codportadororigem) && !empty($pag->codportadordestino)) {
-            return static::ORIGEM_TRANSFERENCIA;
         }
         return static::ORIGEM_AVULSO;
     }
@@ -187,12 +183,6 @@ class PagamentoListaService
                                 ->where(fn($x) => $x->whereExists($temTitulo)
                                     ->orWhereNotNull('tblpagamento.codperiodocolaboradoracerto')));
                             break;
-                        case static::ORIGEM_TRANSFERENCIA:
-                            $w->orWhere(fn($t) => $t->whereNull('tblpagamento.codnegocio')
-                                ->whereNotNull('tblpagamento.codportadororigem')
-                                ->whereNotNull('tblpagamento.codportadordestino')
-                                ->whereNotExists($temTitulo));
-                            break;
                         case static::ORIGEM_ITEM:
                             $w->orWhereNotNull('tblpagamento.codcaixaitemlancamento');
                             break;
@@ -200,8 +190,6 @@ class PagamentoListaService
                             $w->orWhere(fn($t) => $t->whereNull('tblpagamento.codnegocio')
                                 ->whereNull('tblpagamento.codcaixaitemlancamento')
                                 ->whereNull('tblpagamento.codperiodocolaboradoracerto')
-                                ->where(fn($x) => $x->whereNull('tblpagamento.codportadororigem')
-                                    ->orWhereNull('tblpagamento.codportadordestino'))
                                 ->whereNotExists($temTitulo));
                             break;
                     }

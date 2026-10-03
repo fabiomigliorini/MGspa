@@ -67,7 +67,8 @@ class Portador extends MgModel
         'inativo',
         'pixdict',
         'portador',
-        'tipo'
+        'tipo',
+        'tolerancia'
     ];
 
     protected $casts = [
@@ -88,7 +89,8 @@ class Portador extends MgModel
         'criacao' => 'datetime',
         'emiteboleto' => 'boolean',
         'inativo' => 'datetime',
-        'saldo' => 'float'
+        'saldo' => 'float',
+        'tolerancia' => 'float'
     ];
 
 
@@ -186,6 +188,11 @@ class Portador extends MgModel
     public function PortadorMovimentoS()
     {
         return $this->hasMany(PortadorMovimento::class, 'codportador', 'codportador');
+    }
+
+    public function PortadorUsuarioS()
+    {
+        return $this->hasMany(PortadorUsuario::class, 'codportador', 'codportador');
     }
 
     public function PortadorSaldoS()

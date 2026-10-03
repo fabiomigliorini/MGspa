@@ -26,9 +26,9 @@ class PortadorController extends MgController
         return PortadorResource::collection($portadores);
     }
 
+    // so' os portadores em que o usuario e' operador ou gestor
     public function painel(Request $request)
     {
-        Autorizador::autoriza(['Financeiro', 'Gerente', 'Caixa']);
         $request->validate([
             'codfilial' => 'nullable|integer',
             'inativos' => 'nullable|boolean',

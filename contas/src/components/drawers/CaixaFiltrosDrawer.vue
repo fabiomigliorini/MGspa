@@ -28,7 +28,7 @@ const ativos = computed(
         label="Filial"
       />
     </FilterGroup>
-    <FilterGroup title="Período (transferências e períodos)">
+    <FilterGroup title="Período">
       <MgInputData
         v-model="store.filtros.transacao_de"
         label="De"

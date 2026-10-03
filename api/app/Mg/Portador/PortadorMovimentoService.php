@@ -10,7 +10,7 @@ use Mg\Pagamento\PagamentoService;
 
 /**
  * Razao do dinheiro (M10 doc-3): as linhas de tblportadormovimento de cada
- * pagamento. Chamado explicitamente por quem grava pagamento efetivado ou
+ * pagamento (tipo P). Chamado explicitamente por quem grava pagamento efetivado ou
  * muda um (PagamentoService, PagamentoTituloService, correcao da
  * conferencia): caminho novo que grave pagamento precisa chamar o
  * sincronizar.
@@ -28,13 +28,11 @@ class PortadorMovimentoService
     ];
 
     // as linhas que o pagamento deveria ter agora: uma por lado com
-    // portador (destino +total, origem -total). A transferencia (M11) lanca
-    // ja' no registro, ainda pendente "a confirmar" (decisoes 13 e 22)
+    // portador (destino +total, origem -total). Ajuste e transferencia nao
+    // sao pagamento (PortadorLancamentoService)
     public static function desejadas(Pagamento $pag): array
     {
-        $aConfirmar = $pag->estado == PagamentoService::ESTADO_PENDENTE
-            && PagamentoService::ehTransferencia($pag);
-        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO && !$aConfirmar) {
+        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
             return [];
         }
         if (!in_array((int) $pag->meio, static::MEIOS)) {
@@ -85,7 +83,7 @@ class PortadorMovimentoService
         }
         $sessao = $sessao ?? CaixaService::sessaoDe($portador->codportador, $transacao);
         if (!$sessao) {
-            abort(422, "Não há sessão do caixa {$portador->portador} em {$transacao->format('d/m/Y H:i')} para o pagamento {$pag->codpagamento}.");
+            abort(422, "Não há período de {$portador->portador} em {$transacao->format('d/m/Y H:i')} para o pagamento {$pag->codpagamento}.");
         }
         return $sessao;
     }
@@ -105,10 +103,9 @@ class PortadorMovimentoService
     {
         $periodo = PortadorPeriodo::findOrFail($codportadorperiodo);
         if (PortadorPeriodoService::imutavel($periodo)) {
-            $o = $periodo->Portador->ehCaixa() ? 'o caixa' : 'o período';
             abort(422, "O razão de {$periodo->Portador->portador} ("
                 . PortadorPeriodoService::descricao($periodo)
-                . ") já foi fechado: reabra {$o} antes de mudar este pagamento.");
+                . ') já foi fechado: reabra o período antes de mudar este pagamento.');
         }
     }
 
@@ -121,6 +118,7 @@ class PortadorMovimentoService
             $desejadas[static::chave($l)] = $l;
         }
         $ativas = PortadorMovimento::where('codpagamento', $pag->codpagamento)
+            ->where('tipo', PortadorMovimento::TIPO_PAGAMENTO)
             ->whereNull('inativo')
             ->get();
         $sobram = [];
@@ -147,7 +145,7 @@ class PortadorMovimentoService
         }
         foreach ($desejadas as $l) {
             static::exigirMutavel($l['codportadorperiodo']);
-            PortadorMovimento::create($l + ['codpagamento' => $pag->codpagamento]);
+            PortadorMovimento::create($l + ['codpagamento' => $pag->codpagamento, 'tipo' => PortadorMovimento::TIPO_PAGAMENTO]);
             $mudou[] = $l['codportadorperiodo'];
         }
         // R13 (doc-4): saldo do periodo e do portador gravados; do periodo

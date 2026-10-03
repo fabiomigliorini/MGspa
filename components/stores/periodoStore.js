@@ -1,14 +1,15 @@
-// Período do portador (doc-4): o que entrou e saiu de um portador num período e quanto sobrou.
-// Domínio da tela /portador/{cod}/{codperiodo} do contas e dos dialogs de movimento
-// (@components/caixa: Transferir, Avulso, Item), que servem qualquer portador: gaveta, cofre,
-// banco. Toda rota de movimento devolve os períodos que mexeu (R14); o store troca os que tem pelo
-// que veio, sem calcular saldo.
+// Período do portador (doc-4, redefinição do dinheiro): o que entrou e saiu de um portador num
+// período e quanto sobrou. Domínio da tela /portador/{cod}/{codperiodo} do contas e dos dialogs de
+// movimento (@components/caixa: Transferir, Ajuste, Item), que servem qualquer portador. Ajuste e
+// transferência são movimento do portador (v1/portador-movimento), não pagamento. Toda rota que
+// muda devolve os períodos afetados (R14); o store troca os que tem pelo que veio.
 //   contas:   carregar(codportador, codportadorperiodo) (tela do período)
-//   caixa:    usar(portador, periodo, aoMudar) (MgCaixaSessao: a tela do caixa recarrega a sessão)
+//   caixa:    usar(portador, periodo, aoMudar) (MgCaixaSessao do PDV: recarrega a sessão)
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
+import { formataNumero } from '@components/formatters'
 
 const avisar = (ok, message) =>
   Notify.create({
@@ -20,31 +21,43 @@ const avisar = (ok, message) =>
 
 const erro = (error) => error?.response?.data?.message ?? error?.message ?? String(error)
 
+export const PAPEIS = [
+  { value: 'D', label: 'Depositante', descricao: 'só manda dinheiro para ele' },
+  { value: 'O', label: 'Operador', descricao: 'vê e movimenta' },
+  { value: 'G', label: 'Gestor', descricao: 'também confirma, reabre e cuida da lista' },
+]
+
 export const periodoStore = defineStore('periodo', {
   state: () => ({
     // { codportador, portador, codfilial, tipo, ehCaixa (espécie), ehGaveta (com PDV), saldo, ... }
     portador: null,
-    // o que o usuário pode fazer neste portador (cadastro, transferir, avulso, caixa...)
+    // o papel do usuário no portador (D, O, G) e o que ele pode
+    papel: null,
     pode: {},
     // todos os períodos do portador, sem lançamentos (as abas)
     periodos: [],
-    // o período da tela, com lançamentos, resumo e (gaveta) contado × sistema e itens
+    // o período da tela, com lançamentos, resumo e (espécie) as contagens
     periodo: null,
-    // origem escolhida no resumo (V, T, X, A, I): filtra a lista de lançamentos
+    // origem escolhida no resumo (V, T, I, X, J, A): filtra a lista de lançamentos
     filtroOrigem: null,
     carregando: false,
     salvando: false,
     contexto: { codpdv: null, impressora: null },
-    // chamado depois de cada movimento (a tela do caixa recarrega a sessão dela)
+    // chamado depois de cada movimento (a tela do caixa do PDV recarrega a sessão dela)
     aoMudar: null,
-    // { codportador: motivo } das gavetas que não aceitam transferência agora
-    bloqueios: {},
     dialogTransferir: false,
     dialogAvulso: false,
     dialogItem: false,
+    dialogUsuarios: false,
     // codcaixaitem já escolhido ao abrir o dialog do item
     item: null,
+    // a lista de usuários do portador (cadeado)
+    usuarios: [],
   }),
+
+  getters: {
+    gestor: (state) => state.papel === 'G',
+  },
 
   actions: {
     async carregar(codportador, codportadorperiodo = null) {
@@ -59,19 +72,22 @@ export const periodoStore = defineStore('periodo', {
           ehGaveta: data.data.portador.gaveta,
           ehCaixa: data.data.portador.caixa,
         }
+        this.papel = data.data.papel
         this.pode = data.data.pode
         this.periodos = data.data.periodos
         this.periodo = data.data.periodo
         this.filtroOrigem = null
         this.aoMudar = null
+        this.contexto = { codpdv: null, impressora: null }
       } catch (error) {
+        this.portador = null
         avisar(false, erro(error))
       } finally {
         this.carregando = false
       }
     },
 
-    // a tela do caixa (MgCaixaSessao) entrega a gaveta e a sessão para os dialogs
+    // a tela do caixa do PDV (MgCaixaSessao) entrega a gaveta e a sessão para os dialogs
     usar(portador, periodo, aoMudar) {
       this.portador = { ...portador, ehGaveta: true, ehCaixa: true }
       this.periodo = periodo
@@ -79,8 +95,12 @@ export const periodoStore = defineStore('periodo', {
       this.aoMudar = aoMudar
     },
 
-    // troca os períodos que vieram da rota (R14); o da tela também
-    aplicar(periodos) {
+    // troca os períodos que vieram da rota (R14); o da tela também. `removido`: o período que
+    // sumiu (unificado)
+    aplicar(periodos, removido = null) {
+      if (removido) {
+        this.periodos = this.periodos.filter((p) => p.codportadorperiodo !== removido)
+      }
       ;(periodos || []).forEach((p) => {
         if (p.codportador !== this.portador?.codportador) return
         const i = this.periodos.findIndex((x) => x.codportadorperiodo === p.codportadorperiodo)
@@ -88,7 +108,13 @@ export const periodoStore = defineStore('periodo', {
         else this.periodos.push(p)
         if (p.codportadorperiodo === this.periodo?.codportadorperiodo) this.periodo = p
       })
-      this.periodos.sort((a, b) => (a.inicio < b.inicio ? -1 : a.inicio > b.inicio ? 1 : 0))
+      this.periodos.sort((a, b) =>
+        a.inicio < b.inicio
+          ? -1
+          : a.inicio > b.inicio
+            ? 1
+            : a.codportadorperiodo - b.codportadorperiodo,
+      )
       const ultimo = this.periodos[this.periodos.length - 1]
       // portador sem período: o primeiro movimento cria um, e a tela passa a mostrá-lo
       if (!this.periodo && ultimo?.lancamentos) this.periodo = ultimo
@@ -99,7 +125,7 @@ export const periodoStore = defineStore('periodo', {
       this.salvando = true
       try {
         const { data } = await fn()
-        this.aplicar(data.periodos)
+        this.aplicar(data.periodos, data.removido)
         if (ok) avisar(true, typeof ok === 'function' ? ok(data.data) : ok)
         if (this.aoMudar) await this.aoMudar()
         return data
@@ -111,74 +137,70 @@ export const periodoStore = defineStore('periodo', {
       }
     },
 
-    // ==== transferências (M11): sentido E sai do portador, R chega nele ====
-
-    async buscarBloqueios() {
-      try {
-        const { data } = await api.get('v1/portador/painel')
-        this.bloqueios = Object.fromEntries(
-          data.data.filter((p) => p.bloqueio).map((p) => [p.codportador, p.bloqueio]),
-        )
-      } catch {
-        this.bloqueios = {}
-      }
-    },
+    // ==== transferência: sentido E sai deste portador, R chega nele ====
 
     transferir({ sentido, codportador, valor, observacoes, transacao }) {
       const meu = this.portador.codportador
       return this.executar(
         () =>
-          api.post('v1/pagamento/transferencia', {
+          api.post('v1/portador-movimento/transferencia', {
             codportadororigem: sentido === 'E' ? meu : codportador,
             codportadordestino: sentido === 'E' ? codportador : meu,
             valor,
             observacoes,
             transacao: transacao || null,
+            codportadorperiodo: this.periodo?.codportadorperiodo ?? null,
+            codpdv: this.contexto.codpdv,
           }),
-        (pag) =>
-          pag.estado === 'E'
+        (mov) =>
+          mov.estado === 'E'
             ? 'Transferência registrada'
-            : `Transferência registrada: a confirmar por quem opera ${pag.portadordestino}`,
+            : 'Transferência registrada: a confirmar pelo gestor do destino',
       )
     },
 
-    confirmarTransferencia(codpagamento) {
+    confirmarTransferencia(codportadormovimento) {
       return this.executar(
-        () => api.post(`v1/pagamento/transferencia/${codpagamento}/confirmar`),
+        () => api.post(`v1/portador-movimento/${codportadormovimento}/confirmar`),
         'Transferência confirmada',
       )
     },
 
-    cancelarTransferencia(codpagamento, justificativa) {
+    // ajuste ou transferência: só se cancela, com justificativa
+    cancelarMovimento(codportadormovimento, justificativa) {
       return this.executar(
-        () => api.post(`v1/pagamento/transferencia/${codpagamento}/cancelar`, { justificativa }),
-        'Transferência cancelada',
+        () =>
+          api.post(`v1/portador-movimento/${codportadormovimento}/cancelar`, {
+            justificativa,
+            codpdv: this.contexto.codpdv,
+          }),
+        'Lançamento cancelado',
       )
     },
 
-    // ==== avulso: no caixa (espécie) pela sessão; nos demais pelo período da data (M12) ====
+    // ==== ajuste (qualquer portador) e taxa/tarifa/rendimento (banco) ====
 
-    lancarAvulso({ sentido, motivo, valor, observacoes, transacao }) {
-      if (this.portador.ehCaixa) {
-        return this.executar(
-          () =>
-            api.post(`v1/caixa/sessao/${this.periodo.codportadorperiodo}/avulso`, {
-              sentido,
-              motivo,
-              valor,
-              observacoes,
-              transacao: transacao || null,
-              codpdv: this.contexto.codpdv,
-            }),
-          'Lançamento registrado',
-        )
-      }
+    // valor com sinal: positivo entrou; no período da tela
+    ajustar({ valor, observacoes, transacao }) {
+      return this.executar(
+        () =>
+          api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/ajuste`, {
+            valor,
+            observacoes,
+            transacao: transacao || null,
+            codpdv: this.contexto.codpdv,
+          }),
+        'Ajuste lançado',
+      )
+    },
+
+    lancarTaxa({ motivo, valor, observacoes, transacao }) {
       return this.executar(
         () =>
           api.post('v1/portador-periodo/lancamento', {
             codportador: this.portador.codportador,
             motivo,
-            valor: sentido === 'E' ? valor : -valor,
+            valor,
             transacao: transacao || null,
             observacoes,
           }),
@@ -186,19 +208,15 @@ export const periodoStore = defineStore('periodo', {
       )
     },
 
-    cancelarAvulso(codpagamento, justificativa) {
+    cancelarTaxa(codpagamento, justificativa) {
       return this.executar(
         () =>
-          this.portador.ehCaixa
-            ? api.post(`v1/caixa/avulso/${codpagamento}/cancelar`)
-            : api.post(`v1/portador-periodo/lancamento/${codpagamento}/cancelar`, {
-                justificativa,
-              }),
+          api.post(`v1/portador-periodo/lancamento/${codpagamento}/cancelar`, { justificativa }),
         'Lançamento cancelado',
       )
     },
 
-    // ==== caixa (espécie): abrir, fechar e reabrir; itens só na gaveta (M13) ====
+    // ==== itens do caixa (controle à parte; só a tela do caixa do PDV) ====
 
     abrirItem(codcaixaitem = null) {
       this.item = codcaixaitem
@@ -216,74 +234,51 @@ export const periodoStore = defineStore('periodo', {
       )
     },
 
-    // a gaveta antes de abrir: o envelope e os itens ativos da filial (para a contagem)
-    async gaveta() {
-      try {
-        const { data } = await api.get(`v1/caixa/gaveta/${this.portador.codportador}`)
-        return data.data
-      } catch (error) {
-        avisar(false, erro(error))
-        return null
-      }
-    },
+    // ==== período em espécie: abrir, contar, fechar, reabrir, datas, dividir, unificar ====
 
-    // devolve o período novo (a tela vai para ele)
-    async abrirCaixa(payload) {
+    // só abre; a contagem inicial é outro botão. Devolve o período novo (a tela vai para ele)
+    // o início o servidor decide (o segundo seguinte ao fim do anterior; sem período, hoje 00:00)
+    async abrir() {
       const data = await this.executar(
-        () =>
-          api.post(`v1/caixa/gaveta/${this.portador.codportador}/abrir`, {
-            ...payload,
-            codpdv: this.contexto.codpdv,
-          }),
-        'Caixa aberto',
+        () => api.post(`v1/portador/${this.portador.codportador}/periodo/abrir`),
+        'Período aberto',
       )
       return data?.data?.codportadorperiodo ?? null
     },
 
-    fecharCaixa(payload) {
+    contar(momento, contagem) {
       return this.executar(
         () =>
-          api.post(`v1/caixa/sessao/${this.periodo.codportadorperiodo}/fechar`, {
-            ...payload,
-            codpdv: this.contexto.codpdv,
-            impressora: this.contexto.impressora || null,
+          api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/contagem`, {
+            momento,
+            contagem,
           }),
-        'Caixa fechado',
+        'Contagem salva',
       )
     },
 
-    // corrige o início e o fim da sessão não fechada
-    editarDatas({ inicio, fim, observacoes }) {
-      return this.executar(
-        () =>
-          api.post(`v1/caixa/sessao/${this.periodo.codportadorperiodo}/datas`, {
-            inicio,
-            fim,
-            observacoes,
-          }),
-        'Salvo',
+    // espécie: com a contagem final; dentro da tolerância fecha, acima fica pendente
+    // só fecha, com a contagem final já informada. Acima da tolerância o servidor deixa pendente:
+    // é erro para quem fechou
+    async fechar() {
+      const data = await this.executar(() =>
+        api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/fechar`),
       )
+      if (!data) return null
+      const p = data.data
+      if (p.situacao === 'fechado') {
+        avisar(true, 'Período fechado')
+      } else {
+        avisar(
+          false,
+          `Diferença de R$ ${formataNumero(p.diferenca)} acima da tolerância (R$ ${formataNumero(p.tolerancia)}): o período ficou pendente até a correção`,
+        )
+      }
+      return data
     },
 
-    reabrirCaixa() {
-      return this.executar(
-        () => api.post(`v1/caixa/sessao/${this.periodo.codportadorperiodo}/reabrir`),
-        'Caixa reaberto',
-      )
-    },
-
-    abrirBordero() {
-      return abrirPdf(
-        api,
-        `v1/caixa/sessao/${this.periodo.codportadorperiodo}/bordero`,
-        {},
-        { title: 'Borderô do Caixa', size: 'cupom' },
-      )
-    },
-
-    // ==== demais portadores: fechar com corte e reabrir (M12) ====
-
-    fecharPeriodo(corte) {
+    // banco: fechar com corte
+    fecharCorte(corte) {
       return this.executar(
         () =>
           api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/fechar`, {
@@ -293,24 +288,95 @@ export const periodoStore = defineStore('periodo', {
       )
     },
 
-    // contagem do caixa na abertura ou no fechamento (só registra; a diferença aparece)
-    contar(momento, { contagem, itens }) {
-      return this.executar(
-        () =>
-          api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/contagem`, {
-            momento,
-            contagem,
-            itens,
-          }),
-        'Contagem salva',
-      )
-    },
-
-    reabrirPeriodo() {
+    reabrir() {
       return this.executar(
         () => api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/reabrir`),
         'Período reaberto',
       )
+    },
+
+    editarDatas({ inicio, fim, observacoes }) {
+      return this.executar(
+        () =>
+          api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/datas`, {
+            inicio,
+            fim,
+            observacoes,
+          }),
+        'Salvo',
+      )
+    },
+
+    // devolve a segunda parte
+    async dividir(corte) {
+      const data = await this.executar(
+        () => api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/dividir`, { corte }),
+        'Período dividido',
+      )
+      return data?.data?.codportadorperiodo ?? null
+    },
+
+    // devolve o anterior, que ficou com tudo
+    async unificar() {
+      const data = await this.executar(
+        () => api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/unificar`),
+        'Períodos unificados',
+      )
+      return data?.data?.codportadorperiodo ?? null
+    },
+
+    abrirBordero() {
+      return abrirPdf(
+        api,
+        `v1/portador-periodo/${this.periodo.codportadorperiodo}/bordero`,
+        {},
+        { title: 'Borderô', size: 'cupom' },
+      )
+    },
+
+    // ==== usuários do portador e o papel de cada um (gestor) ====
+
+    async buscarUsuarios() {
+      try {
+        const { data } = await api.get(`v1/portador/${this.portador.codportador}/usuario`)
+        this.usuarios = data.data
+      } catch (error) {
+        this.usuarios = []
+        avisar(false, erro(error))
+      }
+    },
+
+    async salvarUsuario(codusuario, papel) {
+      this.salvando = true
+      try {
+        const { data } = await api.post(`v1/portador/${this.portador.codportador}/usuario`, {
+          codusuario,
+          papel,
+        })
+        this.usuarios = data.data
+        return true
+      } catch (error) {
+        avisar(false, erro(error))
+        return false
+      } finally {
+        this.salvando = false
+      }
+    },
+
+    async excluirUsuario(codportadorusuario) {
+      this.salvando = true
+      try {
+        const { data } = await api.delete(
+          `v1/portador/${this.portador.codportador}/usuario/${codportadorusuario}`,
+        )
+        this.usuarios = data.data
+        return true
+      } catch (error) {
+        avisar(false, erro(error))
+        return false
+      } finally {
+        this.salvando = false
+      }
     },
   },
 })

@@ -1259,11 +1259,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Pagamentos: listagem unica e baixa de titulos (M6/M6.1 doc-3; era liquidacao-titulo)
     Route::get('pagamento', '\Mg\Pagamento\PagamentoController@index');
     Route::get('pagamento/relatorio', '\Mg\Pagamento\PagamentoController@relatorio');
-    // transferencias entre portadores (M11 doc-3): pagina Caixas do contas
-    Route::get('pagamento/transferencia', '\Mg\Caixa\CaixasController@transferencias');
-    Route::post('pagamento/transferencia', '\Mg\Caixa\CaixasController@transferir');
-    Route::post('pagamento/transferencia/{id}/confirmar', '\Mg\Caixa\CaixasController@confirmar')->whereNumber('id');
-    Route::post('pagamento/transferencia/{id}/cancelar', '\Mg\Caixa\CaixasController@cancelar')->whereNumber('id');
     Route::get('pagamento/{id}', '\Mg\Pagamento\PagamentoController@show')->where('id', '[0-9]+');
     Route::post('pagamento', '\Mg\Pagamento\PagamentoController@store');
     Route::put('pagamento/{id}', '\Mg\Pagamento\PagamentoController@update')->where('id', '[0-9]+');
@@ -1305,15 +1300,29 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('portador/{codportador}', '\Mg\Portador\PortadorController@destroy');
     Route::post('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@inativar');
     Route::delete('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@ativar');
-    // periodos do portador (M12 doc-3): o financeiro fecha com corte e reabre
-    Route::get('portador-periodo', '\Mg\Portador\PortadorPeriodoController@index');
-    Route::get('portador-periodo/{id}', '\Mg\Portador\PortadorPeriodoController@show')->whereNumber('id');
+    // usuarios do portador e o papel de cada um (doc-4, redefinicao do dinheiro)
+    Route::get('portador/{codportador}/usuario', '\Mg\Portador\PortadorUsuarioController@index')->whereNumber('codportador');
+    Route::post('portador/{codportador}/usuario', '\Mg\Portador\PortadorUsuarioController@store')->whereNumber('codportador');
+    Route::delete('portador/{codportador}/usuario/{codportadorusuario}', '\Mg\Portador\PortadorUsuarioController@destroy')->whereNumber(['codportador', 'codportadorusuario']);
+    // periodo do portador (doc-4): especie abre, conta, fecha (tolerancia ou
+    // pendente), reabre, datas, divide, unifica; banco fecha com corte
+    Route::post('portador/{codportador}/periodo/abrir', '\Mg\Portador\PortadorPeriodoController@abrir')->whereNumber('codportador');
     Route::post('portador-periodo/{id}/fechar', '\Mg\Portador\PortadorPeriodoController@fechar')->whereNumber('id');
     Route::post('portador-periodo/{id}/reabrir', '\Mg\Portador\PortadorPeriodoController@reabrir')->whereNumber('id');
-    Route::post('portador-periodo/{id}/contagem', '\Mg\Portador\PortadorPeriodoController@contagem')->whereNumber('id');
+    Route::post('portador-periodo/{id}/contagem', '\Mg\Portador\PortadorPeriodoController@contar')->whereNumber('id');
+    Route::post('portador-periodo/{id}/datas', '\Mg\Portador\PortadorPeriodoController@datas')->whereNumber('id');
+    Route::post('portador-periodo/{id}/dividir', '\Mg\Portador\PortadorPeriodoController@dividir')->whereNumber('id');
+    Route::post('portador-periodo/{id}/unificar', '\Mg\Portador\PortadorPeriodoController@unificar')->whereNumber('id');
+    Route::get('portador-periodo/{id}/bordero', '\Mg\Portador\PortadorPeriodoController@bordero')->whereNumber('id');
+    // taxa, tarifa e rendimento do banco (pagamento sem pessoa)
     Route::post('portador-periodo/lancamento', '\Mg\Portador\PortadorPeriodoController@lancamento');
     Route::post('portador-periodo/lancamento/{codpagamento}/cancelar', '\Mg\Portador\PortadorPeriodoController@cancelarLancamento')->whereNumber('codpagamento');
-    // tela do caixa, a mesma no PDV e no contas (M13 doc-3)
+    // ajuste e transferencia: movimento do portador, nao pagamento
+    Route::post('portador-periodo/{id}/ajuste', '\Mg\Portador\PortadorLancamentoController@ajuste')->whereNumber('id');
+    Route::post('portador-movimento/transferencia', '\Mg\Portador\PortadorLancamentoController@transferir');
+    Route::post('portador-movimento/{id}/confirmar', '\Mg\Portador\PortadorLancamentoController@confirmar')->whereNumber('id');
+    Route::post('portador-movimento/{id}/cancelar', '\Mg\Portador\PortadorLancamentoController@cancelar')->whereNumber('id');
+    // tela do caixa do PDV (MgCaixaSessao; sera' refatorada)
     Route::get('caixa/gaveta/{codportador}', '\Mg\Caixa\CaixaController@gaveta')->whereNumber('codportador');
     Route::post('caixa/gaveta/{codportador}/abrir', '\Mg\Caixa\CaixaController@abrir')->whereNumber('codportador');
     Route::get('caixa/sessao/{id}', '\Mg\Caixa\CaixaController@show')->whereNumber('id');
@@ -1322,7 +1331,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('caixa/sessao/{id}/reabrir', '\Mg\Caixa\CaixaController@reabrir')->whereNumber('id');
     Route::post('caixa/sessao/{id}/item/{codcaixaitem}', '\Mg\Caixa\CaixaController@salvarItem')->whereNumber(['id', 'codcaixaitem']);
     Route::post('caixa/sessao/{id}/avulso', '\Mg\Caixa\CaixaController@avulso')->whereNumber('id');
-    Route::post('caixa/avulso/{codpagamento}/cancelar', '\Mg\Caixa\CaixaController@cancelarAvulso')->whereNumber('codpagamento');
+    Route::post('caixa/avulso/{codportadormovimento}/cancelar', '\Mg\Caixa\CaixaController@cancelarAvulso')->whereNumber('codportadormovimento');
     Route::get('caixa/sessao/{id}/bordero', '\Mg\Caixa\CaixaController@borderoTela')->whereNumber('id');
     Route::post('caixa/sessao/{id}/bordero/{impressora}', '\Mg\Caixa\CaixaController@imprimirBordero')->whereNumber('id');
     Route::get('caixa/item-lancamento', '\Mg\Caixa\CaixaController@itemLancamentos');

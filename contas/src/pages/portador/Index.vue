@@ -1,7 +1,8 @@
 <script setup>
-// Painel dos portadores (doc-4): todos os portadores por filial, o saldo da espécie (banco,
-// adquirente e cartão sem saldo até a conciliação), a situação de cada gaveta e as transferências
-// a confirmar. A linha abre o portador e o período. Cadastro e OFX: Financeiro e Admin.
+// Painel dos portadores (doc-4): os portadores em que o usuário é operador ou gestor, por filial,
+// o saldo da espécie (banco, adquirente e cartão sem saldo até a conciliação), a situação do
+// período da espécie, os pendentes e as transferências a confirmar. A linha abre o portador e o
+// período. Cadastro e OFX: Financeiro e Admin.
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
@@ -29,11 +30,18 @@ const aberta = (p) => p.ehCaixa && !!p.sessao?.aberta
 const situacao = (p) => {
   if (!p.ehCaixa) return null
   const s = p.sessao
-  if (!s) return 'Caixa nunca aberto'
-  return s.aberta
-    ? `Aberto desde ${formataTimestamp(s.inicio, 0)}` +
-        (s.usuarioabertura ? ` por ${s.usuarioabertura}` : '')
-    : `Fechado em ${formataTimestamp(s.fim, 0)} por ${s.usuariofechamento}`
+  if (!s) return 'Nunca aberto'
+  if (s.situacao === 'aberto') {
+    return (
+      `Aberto desde ${formataTimestamp(s.inicio, 0)}` +
+      (s.usuarioabertura ? ` por ${s.usuarioabertura}` : '')
+    )
+  }
+  if (s.situacao === 'pendente') return `Pendente desde ${formataTimestamp(s.fim, 0)}`
+  return (
+    `Fechado em ${formataTimestamp(s.fim, 0)}` +
+    (s.usuariofechamento ? ` por ${s.usuariofechamento}` : '')
+  )
 }
 
 onMounted(() => store.buscarPainel())
@@ -94,7 +102,16 @@ onMounted(() => store.buscarPainel())
                 <q-badge v-if="aberta(p)" color="green-7" class="q-ml-sm" label="Aberto" />
               </q-item-label>
               <q-item-label v-if="situacao(p)" caption>{{ situacao(p) }}</q-item-label>
-              <q-item-label v-if="p.chegando.quantidade || p.saindo.quantidade" caption>
+              <q-item-label
+                v-if="p.pendentes || p.chegando.quantidade || p.saindo.quantidade"
+                caption
+              >
+                <q-badge
+                  v-if="p.pendentes"
+                  color="amber-10"
+                  class="q-mr-xs"
+                  :label="`${p.pendentes} período(s) pendente(s)`"
+                />
                 <q-badge
                   v-if="p.chegando.quantidade"
                   color="amber-8"

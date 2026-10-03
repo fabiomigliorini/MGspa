@@ -24,7 +24,7 @@ defineProps({
   },
 })
 
-const emit = defineEmits(['estornado', 'transferencia'])
+const emit = defineEmits(['estornado'])
 
 const $q = useQuasar()
 const store = pagamentoListaStore()
@@ -50,40 +50,6 @@ const erro = (e, padrao) =>
     color: 'red-5',
     icon: 'error',
   })
-
-// transferência (M11): quem opera o destino confirma; qualquer dos dois donos cancela
-const confirmar = async () => {
-  try {
-    await store.transferencia(pag.value.codpagamento, 'confirmar')
-    $q.notify({ type: 'positive', message: 'Confirmada', color: 'green-5', icon: 'done' })
-    emit('transferencia', store.pagamento)
-  } catch (e) {
-    erro(e, 'Erro ao confirmar')
-  }
-}
-
-const cancelarTransferencia = () => {
-  $q.dialog({
-    title: 'Cancelar transferência',
-    message: 'Desfaz os dois lançamentos. Valor diferente? Cancele e registre outra. Motivo:',
-    prompt: {
-      model: '',
-      type: 'text',
-      outlined: true,
-      isValid: (v) => (v || '').trim().length >= 5,
-    },
-    ok: { label: 'Cancelar transferência', color: 'negative', flat: true },
-    cancel: { label: 'Voltar', color: 'grey-8', flat: true },
-  }).onOk(async (justificativa) => {
-    try {
-      await store.transferencia(pag.value.codpagamento, 'cancelar', { justificativa })
-      $q.notify({ type: 'positive', message: 'Cancelada', color: 'green-5', icon: 'done' })
-      emit('transferencia', store.pagamento)
-    } catch (e) {
-      erro(e, 'Erro ao cancelar')
-    }
-  })
-}
 
 const estornar = () => {
   $q.dialog({
@@ -126,9 +92,6 @@ const estornar = () => {
         </div>
         <div v-if="pag.codliquidacaotituloantigo" class="text-grey-7">
           Liquidação {{ formataCodigo(pag.codliquidacaotituloantigo) }} (histórico)
-        </div>
-        <div v-if="pag.transferencia && pag.estado === 'P'" class="text-amber-9">
-          A confirmar por quem opera {{ pag.portadordestino }}
         </div>
         <div v-if="pag.estado === 'C'" class="text-negative">
           Cancelado em {{ formataData(pag.cancelamento) }} · {{ pag.justificativa }}
@@ -190,28 +153,6 @@ const estornar = () => {
             DETALHES
             <q-space />
             <slot name="acoes" :pagamento="pag" />
-            <q-btn
-              v-if="pag.podeConfirmar"
-              flat
-              round
-              size="sm"
-              icon="done"
-              color="grey-7"
-              @click="confirmar"
-            >
-              <q-tooltip>Confirmar o recebimento</q-tooltip>
-            </q-btn>
-            <q-btn
-              v-if="pag.podeCancelar"
-              flat
-              round
-              size="sm"
-              icon="block"
-              color="grey-7"
-              @click="cancelarTransferencia"
-            >
-              <q-tooltip>Cancelar a transferência</q-tooltip>
-            </q-btn>
             <q-btn
               v-if="podeEstornar && pag.estornavel"
               flat
@@ -404,13 +345,6 @@ const estornar = () => {
                   {{ r.portador }}
                 </q-item-label>
                 <q-item-label caption>{{ r.periodo }}</q-item-label>
-                <q-item-label
-                  caption
-                  v-if="!r.inativo && pag.transferencia && pag.estado === 'P'"
-                  class="text-amber-9"
-                >
-                  a confirmar
-                </q-item-label>
                 <q-item-label caption v-if="r.inativo" class="text-grey-6">
                   desfeito em {{ formataTimestamp(r.inativo) }}
                 </q-item-label>

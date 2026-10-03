@@ -25,8 +25,6 @@ class PagamentoListaResource extends Resource
                 return ($numeros->count() > 2) ? $texto . ' +' . ($numeros->count() - 2) : $texto;
             case PagamentoListaService::ORIGEM_ITEM:
                 return optional(optional($pag->CaixaItemLancamento)->CaixaItem)->item;
-            case PagamentoListaService::ORIGEM_TRANSFERENCIA:
-                return optional($pag->PortadorOrigem)->portador . ' → ' . optional($pag->PortadorDestino)->portador;
         }
         return PagamentoService::MOTIVOS[$pag->motivo] ?? 'Sem documento';
     }

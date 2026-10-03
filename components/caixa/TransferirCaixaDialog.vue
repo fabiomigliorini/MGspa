@@ -1,9 +1,9 @@
 <script setup>
-// Transferência de qualquer portador (M11 doc-3, decisão 22; genérico desde o doc-4): enviar
-// (sangria, envio ao financeiro, depósito) ou receber (reforço). No caixa (espécie) chama-se
-// Reforço / Sangria e a data fica dentro do período da tela (do início ao fim; aberto, até agora). Nasce efetivada
-// quando quem registra opera o destino; senão fica a confirmar. Caixas fechados aparecem
-// desabilitados.
+// Transferência (doc-4, redefinição do dinheiro): não é pagamento; o saldo sai de um portador e
+// entra no outro. Enviar (sangria, envio ao financeiro, depósito) ou receber (reforço). Cai no
+// período da tela, com a data dentro dele (do início ao fim; aberto, até agora); o outro lado,
+// pela data. O select só mostra os portadores do usuário: destino = depositante, origem =
+// operador. Nasce feita quando quem registra é gestor do destino; senão fica a confirmar.
 import { ref, computed, watch } from 'vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -26,16 +26,19 @@ const SENTIDOS = computed(() =>
         { label: `Receber em ${nome.value}`, value: 'R' },
       ],
 )
-// caixa: a data fica dentro do período da tela (do início ao fim; aberto, até agora)
-const sessao = computed(() => (caixa.value ? store.periodo : null))
-const limite = () => (sessao.value?.fim ? new Date(sessao.value.fim) : new Date())
+// a data fica dentro do período da tela (do início ao fim; aberto, até agora)
+const sessao = computed(() => store.periodo)
+const limite = () =>
+  sessao.value?.fim && new Date(sessao.value.fim) < new Date()
+    ? new Date(sessao.value.fim)
+    : new Date()
 // lê o valor do form (ISO), não o texto que o MgInputData passa às rules; vazio fica com o !!v
 const naSessao = () => {
   if (!form.value.transacao) return true
   const d = new Date(form.value.transacao)
   if (d > new Date()) return 'Não pode ser no futuro'
   if (sessao.value && (d < new Date(sessao.value.inicio) || d > limite())) {
-    return `Fora da sessão (de ${formataTimestamp(sessao.value.inicio, 0)} a ${formataTimestamp(limite(), 0)})`
+    return `Fora do período (de ${formataTimestamp(sessao.value.inicio, 0)} a ${formataTimestamp(limite(), 0)})`
   }
   return true
 }
@@ -44,7 +47,7 @@ const vazio = () => ({
   codportador: null,
   valor: null,
   observacoes: '',
-  transacao: formataTimestampIso(sessao.value ? limite() : new Date()),
+  transacao: formataTimestampIso(limite()),
 })
 const form = ref(vazio())
 
@@ -53,7 +56,6 @@ watch(
   (aberto) => {
     if (!aberto) return
     form.value = vazio()
-    store.buscarBloqueios()
   },
 )
 
@@ -86,7 +88,7 @@ async function salvar() {
                 agrupar
                 :codfilial="store.portador?.codfilial"
                 :excluir="[store.portador?.codportador]"
-                :bloqueios="store.bloqueios"
+                :papel="form.sentido === 'E' ? 'D' : 'O'"
                 autofocus
                 :rules="[(v) => !!v]"
                 lazy-rules

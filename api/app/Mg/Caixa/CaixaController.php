@@ -6,20 +6,21 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Mg\Pagamento\Pagamento;
-use Mg\Pagamento\PagamentoService;
+use Mg\Pdv\Pdv;
 use Mg\Pdv\PdvRequest;
 use Mg\Pdv\PdvService;
 use Mg\Portador\Portador;
+use Mg\Portador\PortadorLancamentoService;
+use Mg\Portador\PortadorMovimento;
 use Mg\Portador\PortadorPeriodo;
 use Mg\Portador\PortadorPeriodoResource;
 use Mg\Portador\PortadorPeriodoService;
 
 /**
- * Tela do caixa (M9; numa tela so' desde o M13 doc-3): a mesma no PDV e no
- * contas. Rotas v1/caixa (o usuario autoriza: Caixa ou Gerente da filial,
- * Financeiro, Administrador). O PDV so' pergunta qual e' a gaveta dele
- * (v1/pdv/caixa) e imprime o bordero.
+ * Tela do caixa do PDV (MgCaixaSessao; sera' refatorada). Rotas v1/caixa
+ * sobre o periodo do portador (PortadorPeriodoService). Com o codpdv da
+ * gaveta, o PDV nao valida o papel nela (quem esta' na gaveta trabalha
+ * nela); sem, operador do portador. O contas usa v1/portador-periodo.
  */
 class CaixaController extends Controller
 {
@@ -39,10 +40,23 @@ class CaixaController extends Controller
         ]];
     }
 
+    // a gaveta do PDV que pede (livre de papel); null fora do PDV
+    private function livre(Request $request, int $codportador): ?int
+    {
+        $codpdv = $request->input('codpdv');
+        if (!$codpdv) {
+            return null;
+        }
+        $pdv = Pdv::find($codpdv);
+        return $pdv && $pdv->codportador == $codportador ? $codportador : null;
+    }
+
     private function sessao(int $id): PortadorPeriodo
     {
         $sessao = PortadorPeriodo::with('Portador')->findOrFail($id);
-        CaixaService::autorizarOperar($sessao->Portador);
+        if (!$this->livre(request(), $sessao->codportador)) {
+            CaixaService::autorizarOperar($sessao->Portador);
+        }
         return $sessao;
     }
 
@@ -71,7 +85,9 @@ class CaixaController extends Controller
     public function gaveta(int $codportador)
     {
         $gaveta = Portador::findOrFail($codportador);
-        CaixaService::autorizarOperar($gaveta);
+        if (!$this->livre(request(), $codportador)) {
+            CaixaService::autorizarOperar($gaveta);
+        }
         $aberta = CaixaService::sessaoAberta($codportador);
         $sessao = $aberta ?? CaixaService::ultimaSessao($codportador);
         return ['data' => [
@@ -93,13 +109,13 @@ class CaixaController extends Controller
         $request->validate(['inicio' => 'nullable|date']);
         $gaveta = Portador::findOrFail($codportador);
         // contagem so' quando vem (o PDV conta junto; o contas conta depois)
-        $sessao = DB::transaction(fn () => CaixaService::abrir(
+        $sessao = DB::transaction(fn () => PortadorPeriodoService::abrir(
             $gaveta,
+            $request->inicio ? Carbon::parse($request->inicio) : null,
             $dados['contagem'] ?? null,
             $dados['itens'] ?? [],
             $dados['observacoes'] ?? null,
-            $dados['codpdv'] ?? null,
-            $request->inicio ? Carbon::parse($request->inicio) : null
+            $this->livre($request, $gaveta->codportador)
         ));
         return $this->resposta($sessao);
     }
@@ -112,7 +128,7 @@ class CaixaController extends Controller
             'fim' => 'nullable|date',
             'observacoes' => 'nullable|string|max:500',
         ]);
-        $sessao = DB::transaction(fn () => CaixaService::editarDatas(
+        $sessao = DB::transaction(fn () => PortadorPeriodoService::editarDatas(
             $this->sessao($id),
             Carbon::parse($dados['inicio']),
             !empty($dados['fim']) ? Carbon::parse($dados['fim']) : null,
@@ -131,13 +147,13 @@ class CaixaController extends Controller
         $dados = $this->contagem($request);
         $request->validate(['impressora' => 'nullable|string', 'fim' => 'nullable|date']);
         $sessao = $this->sessao($id);
-        $sessao = DB::transaction(fn () => CaixaService::fechar(
+        $sessao = DB::transaction(fn () => PortadorPeriodoService::fecharCaixa(
             $sessao,
             $dados['contagem'] ?? null,
             $dados['itens'] ?? [],
             $dados['observacoes'] ?? null,
-            $dados['codpdv'] ?? null,
-            $request->fim ? Carbon::parse($request->fim) : null
+            $request->fim ? Carbon::parse($request->fim) : null,
+            $this->livre($request, $sessao->codportador)
         ));
         if (!empty($request->impressora)) {
             CaixaBorderoService::imprimir($sessao, $request->impressora);
@@ -148,7 +164,7 @@ class CaixaController extends Controller
     public function reabrir(int $id)
     {
         $sessao = PortadorPeriodo::with('Portador')->findOrFail($id);
-        $sessao = DB::transaction(fn () => CaixaService::reabrir($sessao));
+        $sessao = DB::transaction(fn () => PortadorPeriodoService::reabrirCaixa($sessao));
         return $this->resposta($sessao);
     }
 
@@ -167,34 +183,36 @@ class CaixaController extends Controller
         return $this->resposta($sessao->fresh('Portador'));
     }
 
+    // o avulso do PDV e' ajuste (o motivo nao conta mais)
     public function avulso(Request $request, int $id)
     {
         $dados = $request->validate([
             'sentido' => 'required|in:E,S',
-            'motivo' => 'required|in:' . implode(',', array_keys(PagamentoService::MOTIVOS)),
             'valor' => 'required|numeric|min:0.01',
             'observacoes' => 'required|string|min:3|max:300',
             'codpdv' => 'nullable|integer|exists:tblpdv,codpdv',
             'transacao' => 'nullable|date',
         ]);
         $sessao = $this->sessao($id);
-        DB::transaction(fn () => CaixaService::lancarAvulso(
+        DB::transaction(fn () => PortadorLancamentoService::ajustar(
             $sessao,
-            $dados['sentido'],
-            $dados['motivo'],
-            (float) $dados['valor'],
+            $dados['sentido'] == 'E' ? (float) $dados['valor'] : -(float) $dados['valor'],
             $dados['observacoes'],
-            $dados['codpdv'] ?? null,
-            !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null
+            !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null,
+            $this->livre($request, $sessao->codportador)
         ));
         return $this->resposta($sessao->fresh('Portador'));
     }
 
-    public function cancelarAvulso(int $codpagamento)
+    public function cancelarAvulso(Request $request, int $codportadormovimento)
     {
-        $pag = Pagamento::findOrFail($codpagamento);
-        $sessao = $this->sessao((int) optional(CaixaService::sessaoDoPagamento($pag))->codportadorperiodo);
-        DB::transaction(fn () => CaixaService::cancelarAvulso($pag));
+        $mov = PortadorMovimento::findOrFail($codportadormovimento);
+        $sessao = $this->sessao($mov->codportadorperiodo);
+        DB::transaction(fn () => PortadorLancamentoService::cancelarAjuste(
+            $mov,
+            $request->input('justificativa') ?: 'Ajuste excluído no caixa',
+            $this->livre($request, $sessao->codportador)
+        ));
         return $this->resposta($sessao->fresh('Portador'));
     }
 

@@ -4,28 +4,30 @@ namespace Mg\Portador;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Auth;
 use Mg\Caixa\CaixaService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoListaResource;
 use Mg\Pagamento\PagamentoListaService;
 use Mg\Pagamento\PagamentoService;
-use Mg\Pagamento\TransferenciaAutorizador;
-use Mg\Usuario\Autorizador;
 
-// Periodo do portador (M12 doc-3; tela /portador/{cod}/{codperiodo} do doc-4).
-// Saldos gravados (R13), sempre visiveis (R16). Com `lancamentos`: as linhas
-// do razao como extrato (texto da origem, saldo corrente), o resumo por
-// origem e, na gaveta, o contado x sistema e os itens da sessao.
+// Periodo do portador (tela /portador/{cod}/{codperiodo}; doc-4, redefinicao
+// do dinheiro). Situacao aberto/pendente/fechado; com `lancamentos`: as linhas
+// do movimento como extrato (pagamento, ajuste, transferencia), o resumo por
+// origem e, na especie, as contagens e a diferenca.
 class PortadorPeriodoResource extends Resource
 {
-    // R9: as origens do resumo, na ordem do formulario de papel
+    // origem da linha: as do pagamento (V, T, I, A) e as do movimento
+    const ORIGEM_AJUSTE = 'J';
+    const ORIGEM_TRANSFERENCIA = 'X';
+
+    // o resumo, na ordem do formulario de papel
     const RESUMO = [
         PagamentoListaService::ORIGEM_VENDA => 'Vendas',
-        PagamentoListaService::ORIGEM_TITULO => 'Títulos',
-        PagamentoListaService::ORIGEM_TRANSFERENCIA => 'Transferências',
-        PagamentoListaService::ORIGEM_AVULSO => 'Avulsos e ajustes',
+        PagamentoListaService::ORIGEM_TITULO => 'Títulos e vales',
         PagamentoListaService::ORIGEM_ITEM => 'Itens do caixa',
+        self::ORIGEM_TRANSFERENCIA => 'Transferências',
+        self::ORIGEM_AJUSTE => 'Ajustes',
+        PagamentoListaService::ORIGEM_AVULSO => 'Taxas, tarifas e rendimentos',
     ];
 
     public bool $comLancamentos = false;
@@ -42,9 +44,13 @@ class PortadorPeriodoResource extends Resource
         return $periodos->map(fn ($p) => (new static($p->fresh()))->comLancamentos()->resolve())->all();
     }
 
+    public static function situacao(PortadorPeriodo $p): string
+    {
+        return $p->fechado() ? 'fechado' : ($p->aberto() ? 'aberto' : 'pendente');
+    }
+
     public function toArray($request)
     {
-        $gaveta = $this->Portador->ehGaveta();
         $caixa = $this->Portador->ehCaixa();
         $ret = [
             'codportadorperiodo' => $this->codportadorperiodo,
@@ -53,19 +59,23 @@ class PortadorPeriodoResource extends Resource
             'tipo' => $this->Portador->tipo,
             'codfilial' => $this->Portador->codfilial,
             'filial' => optional($this->Portador->Filial)->filial,
-            'ehGaveta' => $gaveta,
+            'ehGaveta' => $this->Portador->ehGaveta(),
             'ehCaixa' => $caixa,
             'descricao' => PortadorPeriodoService::descricao($this->resource),
+            'situacao' => static::situacao($this->resource),
             'inicio' => $this->inicio,
             'fim' => $this->fim,
             'corrente' => empty($this->fim),
-            'aberto' => empty($this->fechamento),
+            // nao fechado: aceita lancamento
+            'aberto' => !$this->fechado(),
             'fechamento' => $this->fechamento,
             'usuarioabertura' => optional($this->UsuarioAbertura)->usuario,
             'usuariofechamento' => optional($this->UsuarioFechamento)->usuario,
             'saldoinicial' => (float) $this->saldoinicial,
             'movimento' => round((float) $this->saldofinal - (float) $this->saldoinicial, 2),
             'saldofinal' => (float) $this->saldofinal,
+            'diferenca' => $this->diferenca,
+            'tolerancia' => (float) $this->Portador->tolerancia,
             'observacoes' => $this->observacoes,
             'criacao' => $this->criacao,
             'codusuariocriacao' => $this->codusuariocriacao,
@@ -77,19 +87,17 @@ class PortadorPeriodoResource extends Resource
         if (!$this->comLancamentos) {
             return $ret;
         }
-        $ret['lancamentos'] = $this->lancamentos($caixa);
+        $ret['lancamentos'] = $this->lancamentos();
         $ret['resumo'] = $this->resumo($ret['lancamentos']);
         if ($caixa) {
             $ret['contagem'] = $this->contagem();
-        }
-        if ($gaveta) {
-            $ret['itens'] = CaixaService::itens($this->resource);
+            $ret['pendentes'] = PortadorLancamentoService::pendentes($this->resource);
         }
         return $ret;
     }
 
-    // o dinheiro contado na abertura e no fechamento e a diferenca para o
-    // saldo inicial e final (so' aparece; o ajuste e' lancamento)
+    // o dinheiro contado (cedulas e moedas) no inicio e no fim e a diferenca
+    // para o saldo inicial e final (a inicial so' confere)
     private function contagem(): array
     {
         $ret = [];
@@ -98,7 +106,7 @@ class PortadorPeriodoResource extends Resource
             $ret[$momento] = [
                 'contagem' => static::objeto($this->{"contagem{$momento}"}),
                 'contado' => $contado,
-                'diferenca' => $contado === null ? 0.0 : round($contado - (float) $this->$saldo, 2),
+                'diferenca' => $contado === null ? null : round($contado - (float) $this->$saldo, 2),
             ];
         }
         return $ret;
@@ -111,81 +119,109 @@ class PortadorPeriodoResource extends Resource
         return $contagem === null ? null : (object) $contagem;
     }
 
-    // as linhas do razao do periodo como extrato: o fato, a origem em texto,
-    // o meio, o valor e o saldo corrente (sem as inativas)
-    private function lancamentos(bool $caixa): array
+    // as linhas do periodo como extrato: o fato, a origem em texto, o detalhe,
+    // o valor e o saldo corrente (das que valem)
+    private function lancamentos(): array
     {
         $linhas = PortadorMovimento::where('codportadorperiodo', $this->codportadorperiodo)
-            ->with(['Pagamento' => fn ($q) => $q->with(array_merge(PagamentoListaService::RELACOES, [
-                'PortadorMovimentoS:codportadormovimento,codpagamento,codportador,codportadorperiodo,inativo',
-            ]))])
+            ->with([
+                'Pagamento' => fn ($q) => $q->with(PagamentoListaService::RELACOES),
+                'Par.Portador:codportador,portador,tipo',
+                'UsuarioCriacao:codusuario,usuario',
+                'UsuarioCancelamento:codusuario,usuario',
+            ])
             ->orderBy('transacao')
             ->orderBy('codportadormovimento')
             ->get();
+        $portador = $this->Portador;
         $saldo = (float) $this->saldoinicial;
-        $codusuario = Auth::user()->codusuario ?? null;
-        $financeiro = Autorizador::pode(['Financeiro']);
-        $mutavel = !PortadorPeriodoService::imutavel($this->resource);
-        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $caixa, $codusuario, $financeiro, $mutavel) {
-            $pag = $l->Pagamento;
-            $origem = PagamentoListaService::origem($pag);
-            $ativa = empty($l->inativo);
-            if ($ativa) {
+        $mutavel = !$this->fechado();
+        $operador = PortadorAutorizador::pode($portador->codportador, PortadorUsuario::PAPEL_OPERADOR);
+        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $portador, $mutavel, $operador) {
+            $l->setRelation('Portador', $portador);
+            $valendo = $l->valendo();
+            if ($valendo) {
                 $saldo = round($saldo + (float) $l->valor, 2);
             }
-            $transferencia = $ativa && $origem == PagamentoListaService::ORIGEM_TRANSFERENCIA;
-            $avulso = $ativa
-                && $origem == PagamentoListaService::ORIGEM_AVULSO
-                && !empty($pag->motivo)
-                && $pag->estado != PagamentoService::ESTADO_CANCELADO;
-            return [
+            $ret = [
                 'codportadormovimento' => $l->codportadormovimento,
+                'tipo' => $l->tipo,
                 'codpagamento' => $l->codpagamento,
                 'valor' => (float) $l->valor,
                 'transacao' => $l->transacao,
-                'inativo' => $l->inativo,
-                'saldo' => $ativa ? $saldo : null,
-                'estado' => $pag->estado,
-                'origem' => $origem,
-                'texto' => static::texto($pag, $origem, (float) $l->valor),
-                'meiodescricao' => PagamentoService::descricao($pag),
-                'origemdescricao' => PagamentoListaService::ORIGENS[$origem],
-                'documento' => PagamentoListaResource::documento($pag, $origem),
-                'contraparte' => $origem == PagamentoListaService::ORIGEM_TRANSFERENCIA
-                    ? static::contraparte($pag, $l)
-                    : null,
-                'podeConfirmar' => $transferencia && TransferenciaAutorizador::podeConfirmar($pag),
-                'podeCancelar' => $transferencia && TransferenciaAutorizador::podeCancelar($pag),
-                // caixa: so' quem lancou, com o caixa nao fechado; demais: Financeiro
-                'podeCancelarAvulso' => $avulso && $mutavel && ($caixa
-                    ? $pag->codusuariocriacao == $codusuario
-                    : $financeiro),
+                'cancelado' => !$valendo,
+                'saldo' => $valendo ? $saldo : null,
+                'estado' => $l->estado,
+                'observacoes' => $l->observacoes,
+                'justificativa' => $l->justificativa,
+                'usuariocriacao' => optional($l->UsuarioCriacao)->usuario,
+                'usuariocancelamento' => optional($l->UsuarioCancelamento)->usuario,
+                'contraparte' => null,
+                'podeConfirmar' => false,
+                'podeCancelar' => false,
             ];
+            switch ($l->tipo) {
+                case PortadorMovimento::TIPO_AJUSTE:
+                    return array_merge($ret, [
+                        'origem' => static::ORIGEM_AJUSTE,
+                        'texto' => 'Ajuste',
+                        'detalhe' => $l->observacoes,
+                        'podeCancelar' => $valendo && $mutavel && $operador,
+                    ]);
+                case PortadorMovimento::TIPO_TRANSFERENCIA:
+                    return array_merge($ret, [
+                        'origem' => static::ORIGEM_TRANSFERENCIA,
+                        'texto' => static::textoTransferencia($l),
+                        'detalhe' => $l->observacoes,
+                        'contraparte' => $l->Par ? [
+                            'codportador' => $l->Par->codportador,
+                            'portador' => optional($l->Par->Portador)->portador,
+                            'codportadorperiodo' => $l->Par->codportadorperiodo,
+                        ] : null,
+                        'podeConfirmar' => PortadorLancamentoService::podeConfirmar($l),
+                        'podeCancelar' => $valendo && PortadorLancamentoService::podeCancelar($l),
+                    ]);
+            }
+            $pag = $l->Pagamento;
+            $origem = PagamentoListaService::origem($pag);
+            return array_merge($ret, [
+                'origem' => $origem,
+                'estado' => $pag->estado,
+                'texto' => static::texto($pag, $origem),
+                'detalhe' => PagamentoService::descricao($pag),
+                'documento' => PagamentoListaResource::documento($pag, $origem),
+                // taxa, tarifa, rendimento (banco)
+                'podeCancelar' => $valendo && $mutavel && $operador
+                    && $origem == PagamentoListaService::ORIGEM_AVULSO
+                    && !empty($pag->motivo),
+            ]);
         })->all();
     }
 
-    // o outro lado da transferencia: o portador e o periodo onde o valor caiu
-    // (a linha ativa; cancelada, a ultima)
-    private static function contraparte(Pagamento $pag, PortadorMovimento $linha): ?array
+    // "Sangria → Cofre Centro", "Reforço ← Cofre", "Depósito → BB",
+    // "Transferência ← Caixa Atacado"
+    public static function textoTransferencia(PortadorMovimento $l): string
     {
-        $outra = $pag->PortadorMovimentoS
-            ->where('codportador', '!=', $linha->codportador)
-            ->sortBy(fn ($m) => [empty($m->inativo) ? 0 : 1, -$m->codportadormovimento])
-            ->first();
-        if (!$outra) {
-            return null;
+        $saida = $l->valor < 0;
+        $outro = optional($l->Par)->Portador;
+        $origem = $saida ? $l->Portador : $outro;
+        $destino = $saida ? $outro : $l->Portador;
+        if ($origem && $destino && $origem->tipo == Portador::TIPO_ESPECIE && $destino->tipo == Portador::TIPO_BANCO) {
+            $tipo = 'Depósito';
+        } elseif ($origem && $origem->ehGaveta()) {
+            $tipo = 'Sangria';
+        } elseif ($destino && $destino->ehGaveta()) {
+            $tipo = 'Reforço';
+        } else {
+            $tipo = 'Transferência';
         }
-        $portador = $outra->codportador == $pag->codportadordestino ? $pag->PortadorDestino : $pag->PortadorOrigem;
-        return [
-            'codportador' => $outra->codportador,
-            'portador' => optional($portador)->portador,
-            'codportadorperiodo' => $outra->codportadorperiodo,
-        ];
+        $nome = optional($outro)->portador;
+        return $saida ? "{$tipo} → {$nome}" : "{$tipo} ← {$nome}";
     }
 
-    // R10: "Venda 123456 · João", "Sangria → Cofre Centro", "Baixa de 3
-    // titulos · José", "Ajuste de caixa", "Item: Chips de celular"
-    public static function texto(Pagamento $pag, string $origem, float $valor): string
+    // "Venda 123456 · João", "Baixa de 3 titulos · José", "Item: Chips",
+    // "Tarifa · manutencao"
+    public static function texto(Pagamento $pag, string $origem): string
     {
         $pessoa = optional(PagamentoListaService::pessoa($pag))->fantasia;
         $comPessoa = fn ($t) => $pessoa ? "{$t} · {$pessoa}" : $t;
@@ -203,19 +239,6 @@ class PortadorPeriodoResource extends Resource
                 return $comPessoa($numeros->count() == 1
                     ? 'Título ' . $numeros->first()
                     : 'Baixa de ' . $numeros->count() . ' títulos');
-            case PagamentoListaService::ORIGEM_TRANSFERENCIA:
-                if ($pag->meio == PagamentoService::MEIO_DEPOSITO) {
-                    $tipo = 'Depósito';
-                } elseif ($pag->PortadorOrigem->ehGaveta()) {
-                    $tipo = 'Sangria';
-                } elseif ($pag->PortadorDestino->ehGaveta()) {
-                    $tipo = 'Suprimento';
-                } else {
-                    $tipo = 'Transferência';
-                }
-                return $valor < 0
-                    ? "{$tipo} → {$pag->PortadorDestino->portador}"
-                    : "{$tipo} ← {$pag->PortadorOrigem->portador}";
             case PagamentoListaService::ORIGEM_ITEM:
                 return 'Item: ' . optional(optional($pag->CaixaItemLancamento)->CaixaItem)->item;
         }
@@ -223,12 +246,12 @@ class PortadorPeriodoResource extends Resource
         return $pag->observacoes ? "{$motivo} · {$pag->observacoes}" : $motivo;
     }
 
-    // R9: entradas e saidas das linhas ativas por origem
+    // entradas e saidas das linhas que valem, por origem
     private function resumo(array $lancamentos): array
     {
         $ret = [];
         foreach (static::RESUMO as $origem => $descricao) {
-            $linhas = array_filter($lancamentos, fn ($l) => $l['origem'] == $origem && empty($l['inativo']));
+            $linhas = array_filter($lancamentos, fn ($l) => $l['origem'] == $origem && !$l['cancelado']);
             if (empty($linhas)) {
                 continue;
             }
