@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-24 21:44'
-updated_date: '2026-09-24 21:45'
+updated_date: '2026-10-05 21:53'
 labels:
   - negocios
   - components
@@ -39,7 +39,7 @@ Decisoes de tela (agrupar, e como escolher a embalagem depois) a combinar antes 
 <!-- AC:BEGIN -->
 - [ ] #1 Pesquisando um produto com varias embalagens/variacoes, a grade mostra UM card do produto em vez de um card por codigo de barras; a embalagem/variacao e escolhida depois, sem sair da pesquisa
 - [ ] #2 Codigos de barras diferentes da mesma embalagem nao geram dois cards iguais
-- [ ] #3 A pesquisa do PDV (negocios/offline) e a das telas online navegam igual: mesmas teclas para pesquisar, andar pelos cards, escolher e fechar; mesmo comportamento de foco e destaque
+- [x] #3 A pesquisa do PDV (negocios/offline) e a das telas online navegam igual: mesmas teclas para pesquisar, andar pelos cards, escolher e fechar; mesmo comportamento de foco e destaque
 - [ ] #4 O que hoje so existe numa das duas (ordem por Relevancia e infinite scroll de um lado, leitor de camera do outro) fica disponivel nas duas ou tem motivo registrado para nao ficar
 - [ ] #5 A grade de pesquisa serve de prancheta digital: da para achar pelo nome e pela foto o produto que nao tem codigo de barras para bipar, aposentando as pranchetas impressas do balcao (era a TASK-49)
 <!-- AC:END -->
