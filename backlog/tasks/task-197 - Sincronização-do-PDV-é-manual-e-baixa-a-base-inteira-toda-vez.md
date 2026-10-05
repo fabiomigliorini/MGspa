@@ -4,7 +4,7 @@ title: Sincronização do PDV é manual e baixa a base inteira toda vez
 status: To Do
 assignee: []
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-05 15:56'
+updated_date: '2026-10-05 16:04'
 labels:
   - negocios
 dependencies: []
@@ -36,6 +36,7 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [ ] #3 Sincronização incremental traz só o que mudou desde a última, inclusive cadastro recém-feito de pessoa (ex-TASK-36), produto e preço
 - [ ] #4 Full semanal recarrega a base inteira e corrige o que o incremental não pegou (exclusões, divergências)
 - [ ] #5 Sincronização não fica esperando a localização: hoje o Chrome no Linux às vezes não devolve a posição (mesmo com permissão) e a sincronização recusa depois de 10 s; localização continua obrigatória
+- [ ] #6 Quiosque sem resposta do backend (offline, rede caída, PDV não autorizado) não mostra o saldo do cache como estoque atual: avisa que é estoque não confirmado e de quando é; sem cache, mostra estoque indisponível (não zero) (ex-TASK-154)
 <!-- AC:END -->
 
 ## Implementation Notes

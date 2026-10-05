@@ -1,10 +1,10 @@
 ---
 id: TASK-154
 title: Quiosque mostra estoque velho como se fosse atual depois de deslogar
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-23 15:48'
-updated_date: '2026-10-05 15:53'
+updated_date: '2026-10-05 16:04'
 labels:
   - negocios
 dependencies: []
@@ -45,4 +45,6 @@ Achado no teste: a sincronização ficava parada em 0% sem fazer requisição po
 Correção (Fábio): a localização é obrigatória para sincronizar. Sem ela (negada ou sem resposta em 10 s), a sincronização recusa com aviso fixo e não segue.
 
 A janela de sincronização fechava como se tivesse terminado mesmo com erro: cada etapa engolia o próprio erro e o fim sempre fechava a janela. Agora qualquer etapa que falha marca importacao.erro e a janela fica aberta junto dos avisos (se o usuário cancelou, segue fechada).
+
+Fechada em 05/10/2026: o sintoma do título (estoque velho depois de deslogar) foi resolvido pelo AC #1, porque a consulta agora vai ao backend sem login. O caso do backend não responder (offline, rede, PDV não autorizado), em que o cache ainda aparece como estoque atual, foi para a TASK-197 como critério de aceite.
 <!-- SECTION:NOTES:END -->
