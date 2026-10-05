@@ -669,7 +669,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // PDV (público)
     Route::group(['prefix' => 'pdv'], function () {
-        Route::put('dispositivo', '\Mg\Pdv\PdvController@putDispositivo');
+        // registro do dispositivo: primeiro passo da sincronizacao, sem usuario logado
+        Route::put('dispositivo', '\Mg\Pdv\PdvController@putDispositivo')
+            ->withoutMiddleware('auth:api');
         Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio')
             ->name('pdv.negocio.romaneio')
             ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
@@ -874,22 +876,26 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // PDV
     // ============================================================
     Route::group(['prefix' => 'pdv'], function () {
-        Route::get('produto-count', '\Mg\Pdv\PdvController@produtoCount');
-        Route::get('produto', '\Mg\Pdv\PdvController@produto');
-        Route::get('produto/{barras}', '\Mg\Pdv\PdvController@produtoBarras');
-        Route::get('produto/{barras}/detalhe', '\Mg\Pdv\PdvController@produtoDetalhe');
-        Route::get('pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
+        // consulta de precos do quiosque e sincronizacao: sem usuario logado,
+        // o controller autoriza pelo uuid do dispositivo (PdvService::autoriza)
+        Route::withoutMiddleware('auth:api')->group(function () {
+            Route::get('produto-count', '\Mg\Pdv\PdvController@produtoCount');
+            Route::get('produto', '\Mg\Pdv\PdvController@produto');
+            Route::get('produto/{barras}', '\Mg\Pdv\PdvController@produtoBarras');
+            Route::get('produto/{barras}/detalhe', '\Mg\Pdv\PdvController@produtoDetalhe');
+            Route::get('pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
+            Route::get('pessoa', '\Mg\Pdv\PdvController@pessoa');
+            Route::get('natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
+            Route::get('estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
+            Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
+            // catalogo de modelos de vale compras para o cache offline do PDV
+            Route::get('vale-modelo', '\Mg\Pdv\PdvController@valeModelo');
+            Route::get('prancheta', '\Mg\Pdv\PdvController@getPrancheta');
+            Route::get('impressora', '\Mg\Pdv\PdvController@impressora');
+        });
         Route::get('pessoa/cnpj/{cnpj}', '\Mg\Pdv\PdvController@pessoaPeloCnpj');
-        Route::get('pessoa', '\Mg\Pdv\PdvController@pessoa');
         Route::post('pessoa', '\Mg\Pdv\PdvController@postPessoa');
-        Route::get('natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
-        Route::get('estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
-        Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
-        // catalogo de modelos de vale compras para o cache offline do PDV
-        Route::get('vale-modelo', '\Mg\Pdv\PdvController@valeModelo');
-        Route::get('prancheta', '\Mg\Pdv\PdvController@getPrancheta');
         Route::put('prancheta', '\Mg\Pdv\PdvController@putPrancheta');
-        Route::get('impressora', '\Mg\Pdv\PdvController@impressora');
         Route::put('negocio', '\Mg\Pdv\PdvController@putNegocio');
         Route::get('negocio', '\Mg\Pdv\PdvController@getNegocios');
         Route::get('negocio/conferencia', '\Mg\Pdv\PdvController@conferencia');

@@ -4,9 +4,6 @@ import { db } from 'boot/db'
 import { uid } from 'quasar'
 import { Platform } from 'quasar'
 import { Notify } from 'quasar'
-import { useAuthStore } from './auth'
-
-const sAuth = useAuthStore()
 
 export const sincronizacaoStore = defineStore('sincronizacao', {
   persist: {
@@ -59,6 +56,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       totalSincronizados: null,
       progresso: 0,
       rodando: false,
+      erro: false,
       dialog: false,
       requisicoes: null,
       tempoTotal: null,
@@ -75,20 +73,26 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
       try {
         const pos = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject)
+          // sem timeout o Chrome pode nunca responder, mesmo com a permissao concedida
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            timeout: 10000,
+            maximumAge: 10 * 60 * 1000,
+          })
         })
         this.pdv.latitude = pos.coords.latitude
         this.pdv.longitude = pos.coords.longitude
         this.pdv.precisao = pos.coords.accuracy
       } catch (error) {
+        // localizacao e obrigatoria: sem ela o dispositivo nao sincroniza
         Notify.create({
           type: 'negative',
-          message: error.message,
-          timeout: 3000, // 3 segundos
+          message: 'Sem a localização do dispositivo não é possível sincronizar: ' + error.message,
+          timeout: 0,
           actions: [{ icon: 'close', color: 'white' }],
         })
         let audio = new Audio('/erro.mp3')
         audio.play()
+        throw error
       }
 
       const plat = Platform.is
@@ -122,9 +126,20 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     },
 
     async sincronizar() {
+      // desabilita o botao ja no clique, antes do dispositivo() responder
+      this.importacao.rodando = true
+      this.importacao.erro = false
+
       // verifica se PDV pode acessar API
-      await this.dispositivo()
+      try {
+        await this.dispositivo()
+      } catch (error) {
+        console.log(error)
+        this.importacao.rodando = false
+        return
+      }
       if (!this.pdv.autorizado) {
+        this.importacao.rodando = false
         Notify.create({
           type: 'negative',
           message: 'Solicite autorização para o dispositivo UUID: ' + this.pdv.uuid,
@@ -135,23 +150,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         audio.play()
         return
       }
-
-      // verifica se Está logado
-      await sAuth.carregarUsuario()
-      if (!sAuth.token.access_token) {
-        Notify.create({
-          type: 'negative',
-          message: 'Antes de sincronizar você deve fazer Login!',
-          timeout: 3000, // 3 segundos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-        let audio = new Audio('/erro.mp3')
-        audio.play()
-        return
-      }
-
-      // mostra janela de progresso
-      this.importacao.rodando = true
 
       // roda as importacoes
       try {
@@ -175,10 +173,16 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         }
       } catch (error) {
         console.log(error)
+        this.importacao.erro = true
       }
 
-      // esconde janela de progresso
+      // esconde janela de progresso; com erro ela fica aberta, junto dos avisos
+      // (cancelada pelo usuario, rodando ja e false e a janela segue fechada)
+      const manterAberta = this.importacao.erro && this.importacao.rodando
       this.inicializaVars()
+      if (manterAberta) {
+        this.importacao.dialog = true
+      }
     },
 
     async inicializaVars() {
@@ -238,6 +242,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       } catch (error) {
         console.log(error)
         console.log('Impossível sincronizar Impressoras')
+        this.importacao.erro = true
         Notify.create({
           type: 'negative',
           message: error.response.data.message,
@@ -274,6 +279,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       } catch (error) {
         console.log(error)
         console.log('Impossível sincronizar Formas de Pagamento')
+        this.importacao.erro = true
         Notify.create({
           type: 'negative',
           message: error.response.data.message,
@@ -310,6 +316,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       } catch (error) {
         console.log(error)
         console.log('Impossível sincronizar Locais de Estoque')
+        this.importacao.erro = true
         Notify.create({
           type: 'negative',
           message: error.response.data.message,
@@ -372,6 +379,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       } catch (error) {
         console.log(error)
         console.log('Impossível sincronizar Natureza Operacao')
+        this.importacao.erro = true
         Notify.create({
           type: 'negative',
           message: error.response.data.message,
@@ -423,6 +431,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       } catch (error) {
         console.log(error)
         console.log('Impossível sincronizar Modelos de Vale')
+        this.importacao.erro = true
         Notify.create({
           type: 'negative',
           message: error?.response?.data?.message ?? error?.message,
@@ -450,6 +459,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       } catch (error) {
         console.log(error)
         console.log('Impossível acessar API')
+        this.importacao.erro = true
         Notify.create({
           type: 'negative',
           message: error.response.data.message,
@@ -533,6 +543,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       } catch (error) {
         console.log(error)
         console.log('Impossível acessar API')
+        this.importacao.erro = true
         Notify.create({
           type: 'negative',
           message: error.response.data.message,
@@ -625,6 +636,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       } catch (error) {
         console.log(error)
         console.log('Impossível sincronizar Prancheta')
+        this.importacao.erro = true
         Notify.create({
           type: 'negative',
           message: error.response.data.message,
