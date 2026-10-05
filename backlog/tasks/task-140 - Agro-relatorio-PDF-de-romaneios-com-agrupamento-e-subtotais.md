@@ -1,18 +1,18 @@
 ---
 id: TASK-140
 title: 'Agro: relatorio PDF de romaneios com agrupamento e subtotais'
-status: To Do
+status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-22 12:24'
-updated_date: '2026-09-28 21:00'
+updated_date: '2026-10-02 13:34'
 labels:
   - agro
 dependencies:
   - TASK-136
 priority: medium
 type: feature
-ordinal: 150000
+ordinal: 3000
 ---
 
 ## Description

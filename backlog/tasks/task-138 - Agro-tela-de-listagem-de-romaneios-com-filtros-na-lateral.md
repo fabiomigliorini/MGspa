@@ -1,18 +1,18 @@
 ---
 id: TASK-138
 title: 'Agro: tela de listagem de romaneios com filtros na lateral'
-status: To Do
+status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-22 12:23'
-updated_date: '2026-09-28 21:00'
+updated_date: '2026-10-02 13:34'
 labels:
   - agro
 dependencies:
   - TASK-137
 priority: medium
 type: feature
-ordinal: 148000
+ordinal: 2000
 ---
 
 ## Description

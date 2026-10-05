@@ -1,16 +1,16 @@
 ---
 id: TASK-73
 title: 'PlantioDetailPage: listar as cargas do talhao'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-09-12 15:54'
-updated_date: '2026-09-12 17:14'
+updated_date: '2026-10-02 13:33'
 labels:
   - agro
 dependencies: []
 priority: low
 type: feature
-ordinal: 76000
+ordinal: 1000
 ---
 
 ## Description
