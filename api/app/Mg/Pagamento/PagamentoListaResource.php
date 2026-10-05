@@ -37,7 +37,7 @@ class PagamentoListaResource extends Resource
         return [
             'codpagamento'              => (int) $this->codpagamento,
             'codliquidacaotituloantigo' => $this->codliquidacaotituloantigo,
-            'lancamento'                => $this->lancamento,
+            'transacao'                 => $this->transacao,
             'criacao'                   => $this->criacao,
             'estado'                    => $this->estado,
             'estadodescricao'           => PagamentoService::ESTADOS[$this->estado] ?? null,

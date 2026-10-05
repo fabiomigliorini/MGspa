@@ -3,7 +3,7 @@ import { ref } from 'vue'
 import { negocioStore } from 'stores/negocio'
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
-import MgSlim from '../../utils/pqina/slim/MgSlim.vue'
+import MgSlim from '@components/MgSlim.vue'
 import MgAnexoImagem from './MgAnexoImagem.vue'
 import { api } from 'boot/axios'
 import { abrirPdf } from '@components/abrirPdf'
@@ -19,10 +19,17 @@ const dialogPdf = ref(false)
 const abrirAnexoPdf = async (anexo) => {
   await abrirPdf(
     api,
-    `/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/anexo/pdf/${anexo}`,
+    `/v1/negocio/${sNegocio.negocio.codnegocio}/anexo/pdf/${anexo}`,
     {},
     { title: 'PDF', size: 'a4' },
   )
+}
+
+const anexarImagem = async (pasta, ratio, base64) => {
+  if (await sNegocio.uploadAnexo(pasta, ratio, base64)) {
+    dialogConfissao.value = false
+    dialogImagem.value = false
+  }
 }
 
 const excluirAnexo = (pasta, anexo) => {
@@ -97,7 +104,10 @@ defineExpose({ anexar })
           map-options
           emit-value
         />
-        <mg-slim :ratio="confissaoRatio" pasta="confissao" @upload="dialogConfissao = false" />
+        <mg-slim
+          :ratio="confissaoRatio"
+          @imagem="(b64) => anexarImagem('confissao', confissaoRatio, b64)"
+        />
       </q-card-section>
 
       <q-card-actions align="right">
@@ -113,7 +123,7 @@ defineExpose({ anexar })
       </q-card-section>
 
       <q-card-section class="q-pt-none">
-        <mg-slim ratio="free" pasta="imagem" @upload="dialogImagem = false" />
+        <mg-slim ratio="free" @imagem="(b64) => anexarImagem('imagem', 'free', b64)" />
       </q-card-section>
 
       <q-card-actions align="right">

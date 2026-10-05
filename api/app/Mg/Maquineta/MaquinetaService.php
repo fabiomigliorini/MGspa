@@ -9,7 +9,7 @@ use Mg\Pagamento\Pagamento;
 use Mg\PagarMe\PagarMePos;
 use Mg\Saurus\SaurusPdv;
 use Mg\Saurus\SaurusPinPad;
-use Mg\Usuario\Autorizador;
+use Mg\Conferencia\ConferenciaAutorizador;
 
 class MaquinetaService
 {
@@ -18,10 +18,7 @@ class MaquinetaService
     // Admin e Financeiro em qualquer filial; Gerente só na própria
     public static function podeGerenciar(?int $codfilial): bool
     {
-        if (Autorizador::pode(['Financeiro'])) {
-            return true;
-        }
-        return !empty($codfilial) && Autorizador::pode(['Gerente'], $codfilial);
+        return ConferenciaAutorizador::pode($codfilial);
     }
 
     public static function autorizar(?int $codfilial): void

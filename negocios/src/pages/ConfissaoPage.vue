@@ -1,16 +1,10 @@
 <script setup>
-import { ref } from 'vue'
-import MgSlimBatch from 'src/utils/pqina/slim/MgSlimBatch.vue'
-import { confissaoStore } from 'src/stores/confissao'
-import MgInputValor from '@components/MgInputValor.vue'
+import MgConfissaoScanner from '@components/MgConfissaoScanner.vue'
+import { confissaoStore } from '@components/stores/confissaoStore'
+import { sincronizacaoStore } from 'src/stores/sincronizacao'
 
-const sConfissao = confissaoStore()
-
-const ratioOptions = ref([
-  { value: '1:2', label: 'Confissão Impressora Térmica' },
-  { value: 'free', label: 'Livre' },
-])
-const confissaoRatio = ref('1:2')
+const sSinc = sincronizacaoStore()
+confissaoStore().configurar({ fixos: { pdv: sSinc.pdv.uuid } })
 </script>
 <template>
   <q-page class="bg-grey-2">
@@ -18,55 +12,10 @@ const confissaoRatio = ref('1:2')
       <div style="width: 500px; max-width: 90vw; margin: auto">
         <q-card flat bordered>
           <q-card-section>
-            <q-select
-              outlined
-              class="q-mb-md"
-              :options="ratioOptions"
-              v-model="confissaoRatio"
-              label="Tamanho"
-              map-options
-              emit-value
-            />
-            <mg-slim-batch
-              :ratio="confissaoRatio"
-              pasta="confissao"
-              @upload="dialogConfissao = false"
-            />
-            <MgInputValor
-              class="q-mt-md"
-              :decimals="0"
-              :min="0"
-              :grouping="false"
-              v-model="sConfissao.codnegocio"
-              :disable="sConfissao.encontrados == 1"
-            />
-            <MgInputValor
-              :min="0"
-              class="q-my-md"
-              v-model="sConfissao.valor"
-              :readonly="sConfissao.encontrados == 1"
-            />
+            <MgConfissaoScanner />
           </q-card-section>
         </q-card>
       </div>
     </div>
-    <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn
-        fab
-        icon="upload"
-        color="secondary"
-        :disable="sConfissao.encontrados < 1"
-        @click="sConfissao.upload()"
-        v-if="sConfissao.encontrados == 1"
-      />
-      <q-btn
-        fab
-        icon="find_in_page"
-        color="accent"
-        :disable="sConfissao.imagem == null"
-        @click="sConfissao.procurar()"
-        v-if="sConfissao.encontrados != 1 && sConfissao.imagem != null"
-      />
-    </q-page-sticky>
   </q-page>
 </template>

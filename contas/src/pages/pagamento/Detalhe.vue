@@ -74,7 +74,7 @@ function abrirDialogEditar() {
     codpessoa: pag.value.codpessoa,
     codportador: pag.value.codportador,
     meio: pag.value.meio,
-    transacao: String(pag.value.lancamento).slice(0, 10),
+    transacao: String(pag.value.transacao).slice(0, 10),
     observacao: pag.value.observacoes ?? '',
   }
   dialogEditar.value = true

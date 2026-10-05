@@ -12,6 +12,7 @@ class TituloService
     // codigos dos tipos de titulo (renumerados no M8.1 do doc-3: 1xx a
     // receber, 2xx a pagar; ver api/database/tipo_titulo_limpeza.sql)
     const TIPO_DUPLICATA_RECEBER = 100;
+    const TIPO_VALE_COLABORADOR = 120;
     const TIPO_DUPLICATA_PAGAR = 200;
     const TIPO_VALE = 210;
     const TIPO_CREDITO_CLIENTE = 212;

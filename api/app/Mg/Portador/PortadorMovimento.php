@@ -1,65 +1,53 @@
 <?php
-/**
- * Created by php artisan gerador:model.
- * Date: 27/May/2026 11:35:13
- */
 
 namespace Mg\Portador;
 
 use Mg\MgModel;
-use Mg\Portador\ExtratoBancarioPortadorMovimento;
-use Mg\Titulo\MovimentoTitulo;
-use Mg\Pix\Pix;
-use Mg\Portador\Portador;
-use Mg\Portador\PortadorTransferencia;
+use Mg\Pagamento\Pagamento;
+use Mg\Usuario\Usuario;
 
+/**
+ * Razao do dinheiro (M10 doc-3): o que cai em cada portador e quando. Toda
+ * linha nasce de um pagamento (PortadorMovimentoService::sincronizar).
+ * valor com sinal (positivo entrou); transacao = quando aparece no portador.
+ * Mantido a mao (fora do gerador de models).
+ */
 class PortadorMovimento extends MgModel
 {
     protected $table = 'tblportadormovimento';
     protected $primaryKey = 'codportadormovimento';
 
-
     protected $fillable = [
-        'codmovimentotitulo',
-        'codpix',
         'codportador',
-        'codportadortransferencia',
+        'codportadorperiodo',
+        'codpagamento',
+        'valor',
+        'transacao',
+        'parcela',
         'conciliado',
         'inativo',
-        'lancamento',
-        'manual',
-        'observacoes',
-        'valor'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'codmovimentotitulo' => 'integer',
-        'codpix' => 'integer',
+        'codpagamento' => 'integer',
         'codportador' => 'integer',
         'codportadormovimento' => 'integer',
-        'codportadortransferencia' => 'integer',
+        'codportadorperiodo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'conciliado' => 'boolean',
         'criacao' => 'datetime',
         'inativo' => 'datetime',
-        'lancamento' => 'datetime',
-        'manual' => 'boolean',
-        'valor' => 'float'
+        'parcela' => 'integer',
+        'transacao' => 'datetime',
+        'valor' => 'float',
     ];
 
-
     // Chaves Estrangeiras
-    public function MovimentoTitulo()
+    public function Pagamento()
     {
-        return $this->belongsTo(MovimentoTitulo::class, 'codmovimentotitulo', 'codmovimentotitulo');
-    }
-
-
-    public function Pix()
-    {
-        return $this->belongsTo(Pix::class, 'codpix', 'codpix');
+        return $this->belongsTo(Pagamento::class, 'codpagamento', 'codpagamento');
     }
 
     public function Portador()
@@ -67,16 +55,24 @@ class PortadorMovimento extends MgModel
         return $this->belongsTo(Portador::class, 'codportador', 'codportador');
     }
 
-    public function PortadorTransferencia()
+    public function PortadorPeriodo()
     {
-        return $this->belongsTo(PortadorTransferencia::class, 'codportadortransferencia', 'codportadortransferencia');
+        return $this->belongsTo(PortadorPeriodo::class, 'codportadorperiodo', 'codportadorperiodo');
     }
 
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
 
     // Tabelas Filhas
     public function ExtratoBancarioPortadorMovimentoS()
     {
         return $this->hasMany(ExtratoBancarioPortadorMovimento::class, 'codportadormovimento', 'codportadormovimento');
     }
-
 }

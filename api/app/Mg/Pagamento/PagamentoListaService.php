@@ -26,8 +26,8 @@ class PagamentoListaService
 
     const FILTROS = [
         'codpagamento',
-        'lancamento_de',
-        'lancamento_ate',
+        'transacao_de',
+        'transacao_ate',
         'codfilial',
         'codpdv',
         'codportador',
@@ -129,16 +129,16 @@ class PagamentoListaService
                     ->orWhere('tblpagamento.codliquidacaotituloantigo', $cod);
             });
         }
-        // o indice (estado, lancamento) atende o periodo: sem filtro de
+        // o indice (estado, transacao) atende o periodo: sem filtro de
         // estado, todos os tres
         $estados = array_values(array_filter((array) ($filtros['estado'] ?? [])));
         $q->whereIn('tblpagamento.estado', empty($estados) ? array_keys(PagamentoService::ESTADOS) : $estados);
         foreach ([
-            'lancamento_de' => ['>=', 'startOfDay'],
-            'lancamento_ate' => ['<=', 'endOfDay'],
+            'transacao_de' => ['>=', 'startOfDay'],
+            'transacao_ate' => ['<=', 'endOfDay'],
         ] as $key => [$op, $bound]) {
             if (!empty($filtros[$key])) {
-                $q->where('tblpagamento.lancamento', $op, Carbon::parse($filtros[$key])->{$bound}()->format('Y-m-d H:i:s'));
+                $q->where('tblpagamento.transacao', $op, Carbon::parse($filtros[$key])->{$bound}()->format('Y-m-d H:i:s'));
             }
         }
         foreach (['codfilial', 'codpdv', 'codmaquineta', 'codusuariocriacao'] as $col) {
@@ -219,7 +219,7 @@ class PagamentoListaService
             ->select('tblpagamento.*')
             ->with(static::RELACOES);
         static::filtrar($q, $filtros);
-        $q->orderBy('tblpagamento.lancamento', 'desc')
+        $q->orderBy('tblpagamento.transacao', 'desc')
             ->orderBy('tblpagamento.codpagamento', 'desc');
         return $q->paginate($porPagina);
     }
@@ -235,8 +235,8 @@ class PagamentoListaService
             'Maquineta:codmaquineta,apelido,serial',
             'Pdv:codpdv,apelido',
             'Filial:codfilial,filial',
-            'PagamentoOrigem:codpagamento,meio,total,lancamento,codnegocio',
-            'PagamentoContrarioS:codpagamento,codpagamentoorigem,meio,estado,total,lancamento',
+            'PagamentoOrigem:codpagamento,meio,total,transacao,codnegocio',
+            'PagamentoContrarioS:codpagamento,codpagamentoorigem,meio,estado,total,transacao',
             'UsuarioCriacao:codusuario,usuario',
             'UsuarioAlteracao:codusuario,usuario',
             'MovimentoTituloS' => function ($q) {

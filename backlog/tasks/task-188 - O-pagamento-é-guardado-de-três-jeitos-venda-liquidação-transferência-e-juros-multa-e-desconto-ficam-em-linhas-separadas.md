@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-02 16:02'
+updated_date: '2026-10-02 20:54'
 labels:
   - contas
   - negocios
@@ -80,6 +80,12 @@ Milestones:
 - [ ] #30 M6.1.7 Cheque com só o nome do emitente, sem CPF/CNPJ, é aceito na venda e no recebimento de título
 - [ ] #31 M8.1.1 Tipos de título enxutos: 14 tipos renumerados (1xx a receber, 2xx a pagar), o crédito da devolução separado do vale compras e aceito no PDV, e o Vale / Adiantamento só com Vale Colaborador e os dois adiantamentos
 - [ ] #32 M8.1.2 No PDV, qualquer título com saldo de crédito (vale compras, crédito ou adiantamento do cliente, duplicata a pagar) paga uma compra
+- [ ] #33 M9.1 Caixa abre e fecha no PDV com contagem de moedas e cedulas, mostra a diferenca e gera o PDF Movimento do Caixa
+- [ ] #34 M9.2 Venda em dinheiro entra no caixa do PDV; sem caixa aberto ou PDV sem portador o Dinheiro fica bloqueado com o motivo
+- [ ] #35 M9.3 So Caixa da filial, Gerente ou Administrador recebe em dinheiro
+- [ ] #36 M9.4 Cancelar venda em dinheiro tira do caixa; com o caixa daquele dia fechado, so reabrindo
+- [ ] #37 M9.5 Lancamento avulso de entrada e saida no caixa aberto
+- [ ] #38 M9.6 Notinha recebida, vale de cliente pago, vale de colaborador e adiantamento em dinheiro aparecem no caixa
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -216,4 +222,12 @@ Limpeza dos tipos de título (M8.1), decidida com o Fábio e executada em dev em
 Limpeza dos tipos, parte 2 (02/10/2026, decidida um a um com o Fábio, executada em dev, na árvore): os 23 tipos que a TASK-186 tinha inativado. Títulos para 200 Duplicata a Pagar (936 Provisão com PROVISAO na observação; 933/934/942 pacotes e 944 troca com portador Barter 202007, reativado; 932 Permuta com o portador novo Permuta 202063 em dev; 929 DDA; 943 CONSIGNACAO; 941 RETORNO CONSERTO; 5 OUTRAS ENTRADAS; 130 CREDITO FORNECEDOR; 949 EMPRESTIMO; 6 COMODATO), para 122 Débito Fornecedor (947 DEVOLUCAO CONSIGNACAO, 8 REMESSA CONSERTO, 948 GARANTIA) e para 100 Duplicata a Receber (940 DESCONTO CONVENIO, 939 ALUGUEL); tipos apagados. Ficam inativos, só de histórico, 130 Transferência Saída (era 922), 131 Uso e Consumo (926), 132 Perda (925), 133 Doação, Brinde (924), 230 Transferência Entrada (923). Em dev 875 títulos e 19 naturezas, 8 s; cópia em mgdb-mgdb-1:/tmp/tl2_antes_*. PDV: buscarVale aceita qualquer título com saldo de crédito (decisão do Fábio), tPag 12 para todos; contra vale para qualquer título usado. SQLs avulsos do MGdb atualizados (5 arquivos, repositório ../MGdb, na árvore). Criada a TASK-193 (a pedido, High): tipo de título só obrigatório quando a natureza gera financeiro. doc-3 atualizado para o M9 começar em paralelo (seção M9: base conferida e coordenação com o M8.1, que segue sem commit).
 
 M8.1 (dialog compartilhado + limpeza dos tipos de título + PDV pagando com qualquer crédito) commitado sem validação a pedido do Fábio (02/10/2026): ele valida depois. ACs M8.1.x seguem desmarcados até a validação. MGsis e MGdb commitados nos repositórios deles.
+
+M9 em andamento (02/10/2026), redesenhado com o Fábio: em vez da tela de conferência de maquineta por dia, conferências independentes de tudo que o caixa movimentou (sessão da gaveta, lote da maquineta = borderô, cheques, vales, duplicatas pela confissão, PIX manual), fechadas pelo gerente no contas (celular, às cegas, foto do borderô), com correção dos lançamentos e vendas desbalanceadas como pendência. Desenho no doc-3, seção M9.
+
+M9 — backend pronto em dev (02/10/2026, na árvore, sem commit). DDL api/database/conferencia.sql (rodado 2x): tblportadorperiodo (sessão da gaveta + conferência), tblmaquinetalote, tblpagamentocorrecao, tblnegocioacerto, colunas em tblpagamento (codmaquinetalote, codmaquinetalotecancelamento, indevido, codportadorperiodo, conferencia). Pagamento::booted (creating/updating; o saving do MgModel devolve true e corta os outros ouvintes) chama ConferenciaService::vincular: cartão no lote corrente da maquineta, cancelamento no lote do momento, dinheiro de gaveta na sessão aberta (422 com caixa fechado; cancelar dinheiro de sessão fechada = 422). Serviços: Mg/Conferencia/{ConferenciaService (pendências), PagamentoCorrecaoService (corrigir/indevido/incluir), VendaConferenciaService (diferença, acerto P/C/D/R com título 120/100/212, desfazer), ConferenciaAutorizador}, Mg/Caixa/{CaixaService, CaixaController (v1/pdv/caixa), CaixaBorderoService + blade caixa/bordero-termica (sem valor do sistema: às cegas)}, Mg/Maquineta/MaquinetaLoteService (sistema, fechar às cegas, reabrir, foto do borderô). PdvNegocioService::fechar manda o dinheiro para a gaveta do PDV. Anexos: Mg/Negocio/NegocioAnexo{Service,Controller}, rotas v1/negocio/... (pdv opcional); @components MgSlim, MgConfissaoScanner, stores/confissaoStore; negocios usando. Conferido: php -l; cenário com rollback (26 verificações: caixa fechado bloqueia dinheiro, sessão soma 250+10−3, lote com contrário e cancelamento, maquineta errada corrigida, lote fechado bloqueia correção, mover para lote reaberto, registro indevido → venda desbalanceada → acerto vale colaborador e desfeito, fechar caixa, borderô PDF). Falta: telas (contas Fechamentos e lotes na Maquineta; negocios Caixa; Dinheiro bloqueado no wizard).
+
+M9 — telas prontas em dev (02/10/2026, na árvore, sem commit; detalhe e roteiro Valida no doc-3, seção M9 'Como ficou no código'). contas: Movimento → Fechamentos (pendências da filial; Lote, Sessão e Venda com digitação às cegas, foto do borderô, correções, acerto, reabrir), Maquinetas → Lotes. negocios: /caixa (abrir/fechar com contagem, borderô na térmica), Dinheiro bloqueado no wizard com o motivo (PDV sem gaveta ou caixa fechado), confissão e anexos pelas rotas novas v1/negocio/... Conferido: php -l; eslint/prettier contas, negocios e @components; quasar build do contas e do negocios (nos containers); controllers e resources pelo tinker com rollback (pendências sem valor do sistema, lote aberto sem sistema e depois borderô × sistema por PDV, sessão às cegas e conferida 120 × 118, reabrir caixa, venda, status do PDV, anexos sem pdv e com pdv inválido = 403). Não testado: navegador (gerar token de teste foi bloqueado pela política de permissões da sessão), impressão na térmica, foto pela câmera do celular. Decidido sem o Fábio (a validar): borderô do caixa só com contagem e quantidades (às cegas); perdão sem título; crédito do cliente = 212; cheque/vale conferido no pagamento; itens do caixa no M13; item Caixa no MainLayout do negocios (arquivo com alterações de outra mão na árvore).
+
+ACs M9.1 a M9.6 movidos da TASK-39 (eram os #1 a #6, rotulados M10, da gaveta que o M9 absorveu), a pedido do Fábio em 02/10/2026 no planejamento do M10. O M9.5 (lançamento avulso) não foi feito pelo M9: fica para depois. O M9.3 restringe hoje abrir/fechar o caixa; receber em dinheiro só exige a sessão aberta (conferir na validação do M9).
 <!-- SECTION:NOTES:END -->

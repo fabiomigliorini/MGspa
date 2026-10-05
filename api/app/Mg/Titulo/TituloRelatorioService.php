@@ -6,7 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Dompdf\Dompdf;
 use Mg\Negocio\Negocio;
 use Mg\Pessoa\Pessoa;
-use Mg\Pdv\PdvAnexoService;
+use Mg\Negocio\NegocioAnexoService;
 
 class TituloRelatorioService
 {
@@ -51,7 +51,7 @@ class TituloRelatorioService
             ]);
             $p->negocios = Negocio::hydrate($regs);
             foreach ($p->negocios as $n) {
-                $n->anexos = PdvAnexoService::base64($n->codnegocio);
+                $n->anexos = NegocioAnexoService::base64($n->codnegocio);
             }
 
             $regs = DB::select('

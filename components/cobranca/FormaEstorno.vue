@@ -39,7 +39,7 @@ const opcoes = computed(() =>
     valor: o.codpagamento,
     label: `${o.meiodescricao} · R$ ${formataNumero(o.total)}`,
     caption: [
-      formataData(o.lancamento),
+      formataData(o.transacao),
       o.codnegocio ? `venda ${o.codnegocio}` : null,
       o.maquineta,
       o.autorizacao ? `aut. ${o.autorizacao}` : null,

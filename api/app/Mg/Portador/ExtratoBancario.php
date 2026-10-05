@@ -30,7 +30,7 @@ class ExtratoBancario extends MgModel
         'indicadorsinallancamento',
         'indicadortipolancamento',
         'indicadortipopessoacontrapartida',
-        'lancamento',
+        'transacao',
         'movimento',
         'numero',
         'numerocontacontrapartida',
@@ -52,7 +52,7 @@ class ExtratoBancario extends MgModel
         'codusuariocriacao' => 'integer',
         'conciliado' => 'boolean',
         'criacao' => 'datetime',
-        'lancamento' => 'datetime',
+        'transacao' => 'datetime',
         'movimento' => 'datetime',
         'valor' => 'float'
     ];

@@ -259,4 +259,8 @@ class Negocio extends MgModel
         return $this->hasMany(WooPedidoNegocio::class, 'codnegocio', 'codnegocio');
     }
 
+    public function NegocioAcertoS()
+    {
+        return $this->hasMany(NegocioAcerto::class, 'codnegocio', 'codnegocio');
+    }
 }

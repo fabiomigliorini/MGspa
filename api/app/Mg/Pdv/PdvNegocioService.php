@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 use Mg\NaturezaOperacao\NaturezaOperacao;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioParcelaService;
+use Mg\Caixa\CaixaService;
 use Mg\Pagamento\PagamentoService;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioService;
@@ -449,8 +450,12 @@ class PdvNegocioService
 
         // gera titulos do financeiro
         if ($negocio->NaturezaOperacao->financeiro) {
-            // os pagamentos pendentes se efetivam com a venda
+            // os pagamentos pendentes se efetivam com a venda; o dinheiro vai
+            // para a gaveta do PDV, na sessao aberta (M9 doc-3)
             foreach ($negocio->PagamentoS()->where('estado', PagamentoService::ESTADO_PENDENTE)->get() as $pag) {
+                if ($pag->meio == PagamentoService::MEIO_DINHEIRO && empty($pag->codportadordestino)) {
+                    $pag->codportadordestino = CaixaService::gavetaAberta($pdv)->codportador;
+                }
                 PagamentoService::efetivar($pag, $negocio->lancamento);
             }
             $prazo = NegocioParcelaService::gerarTitulos($negocio);

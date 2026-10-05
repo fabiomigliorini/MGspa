@@ -1,15 +1,14 @@
 <?php
 
-namespace Mg\Pdv;
+namespace Mg\Negocio;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
 
-use Mg\Negocio\Negocio;
 
-class PdvAnexoService
+class NegocioAnexoService
 {
 
     public static function diretorio(int $codnegocio)
@@ -65,6 +64,16 @@ class PdvAnexoService
 
     public static function uploadImagem(int $codnegocio, string $pasta, string $ratio, string $anexoBase64)
     {
+        $anexo = static::nomeNovoArquivo($codnegocio, $pasta);
+        Storage::disk('negocio-anexo')->put($anexo, static::jpeg($anexoBase64));
+        return $anexo;
+    }
+
+    // Foto (data URL base64) em JPEG, reduzida para caber em
+    // $maxLargura x $maxAltura. Serve ao anexo do negocio e a' foto do
+    // bordero da maquineta (M9 doc-3).
+    public static function jpeg(string $anexoBase64, int $maxLargura = 1920, int $maxAltura = 1080): string
+    {
         // tira o anexo da string
         $data = explode(',', $anexoBase64);
         $jpeg = base64_decode($data[1]);
@@ -74,8 +83,6 @@ class PdvAnexoService
         list($largura, $altura) = getimagesize($anexoBase64);
         $novaLargura = $largura;
         $novaAltura = $altura;
-        $maxLargura = 1920;
-        $maxAltura = 1080;
         do {
             if ($novaLargura > $maxLargura) {
                 $prop = $maxLargura / $novaLargura;
@@ -97,11 +104,7 @@ class PdvAnexoService
         imagejpeg($anexoRedimensionada);
         $data = ob_get_contents();
         ob_end_clean();
-
-        // salva
-        $anexo = static::nomeNovoArquivo($codnegocio, $pasta);
-        Storage::disk('negocio-anexo')->put($anexo, $data);
-        return $anexo;
+        return $data;
     }
 
     public static function uploadConfissao(int $codnegocio, string $pasta, string $ratio, string $anexoBase64)

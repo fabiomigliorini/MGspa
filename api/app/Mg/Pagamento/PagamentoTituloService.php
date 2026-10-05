@@ -9,6 +9,7 @@ use Mg\Cheque\Cmc7\Cmc7;
 use Mg\Maquineta\Maquineta;
 use Mg\Pdv\Pdv;
 use Mg\Portador\Portador;
+use Mg\Portador\PortadorMovimentoService;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloHelper;
 use Mg\Titulo\MovimentoTituloService;
@@ -307,6 +308,7 @@ class PagamentoTituloService
             }
             PagamentoService::preencher($pag, $comum + $valores);
             $pag->save();
+            PortadorMovimentoService::sincronizar($pag);
             return $pag;
         }
 
@@ -314,7 +316,7 @@ class PagamentoTituloService
         $base = $comum + $valores + [
             'meio' => $meio,
             'estado' => PagamentoService::ESTADO_EFETIVADO,
-            'lancamento' => $transacao,
+            'transacao' => $transacao,
             'efetivacao' => Carbon::now(),
             'codusuarioefetivacao' => auth()->user()->codusuario ?? null,
             'codpdv' => $pdv->codpdv ?? null,
@@ -473,7 +475,7 @@ class PagamentoTituloService
             'vencimento' => $pag->chequevencimento,
             'valor' => $pag->total,
             'indstatus' => 1, // à repassar
-            'lancamento' => Carbon::now(),
+            'transacao' => $pag->transacao ?? Carbon::now(),
             'codpagamento' => $pag->codpagamento,
             'emitentes' => $emitentes,
         ]);
@@ -483,7 +485,7 @@ class PagamentoTituloService
     // de boleto): um por linha de movimento, com as colunas dela; o
     // reprocessamento regrava o mesmo. Sentido pelo total do movimento
     // (negativo = entrou dinheiro no portador).
-    public static function daBaixa(MovimentoTitulo $mov, int $meio, ?int $codportador, $lancamento): ?Pagamento
+    public static function daBaixa(MovimentoTitulo $mov, int $meio, ?int $codportador, $transacao): ?Pagamento
     {
         $total = abs((float) $mov->total);
         $principal = abs((float) $mov->principal);
@@ -502,12 +504,13 @@ class PagamentoTituloService
             'juros' => (float) $mov->juros,
             'multa' => (float) $mov->multa,
             'desconto' => (float) $mov->desconto,
-            'lancamento' => Carbon::parse($lancamento ?? $mov->transacao),
+            'transacao' => Carbon::parse($transacao ?? $mov->transacao),
             'efetivacao' => $pag->efetivacao ?? Carbon::now(),
             'codpessoa' => $titulo->codpessoa,
             'codfilial' => $titulo->codfilial,
         ]);
         $pag->save();
+        PortadorMovimentoService::sincronizar($pag);
         if ($mov->codpagamento != $pag->codpagamento) {
             $mov->codpagamento = $pag->codpagamento;
             $mov->save();
@@ -539,7 +542,7 @@ class PagamentoTituloService
             }
         }
         $transacao = Carbon::parse($dados['transacao'])->startOfDay();
-        $mudouData = $pag->lancamento->format('Y-m-d') != $transacao->format('Y-m-d');
+        $mudouData = $pag->transacao->format('Y-m-d') != $transacao->format('Y-m-d');
 
         // compensacao (sem dinheiro) continua sem portador
         $codportador = null;
@@ -571,10 +574,11 @@ class PagamentoTituloService
             $pag->codfilial = $portador->codfilial ?? $pag->codfilial;
         }
         $pag->codpessoa = (int) $dados['codpessoa'];
-        $pag->lancamento = $transacao;
+        $pag->transacao = $transacao;
         $pag->observacoes = $dados['observacao'] ?? null;
         PagamentoService::validar($pag);
         $pag->save();
+        PortadorMovimentoService::sincronizar($pag);
 
         foreach ($pag->MovimentoTituloS as $mov) {
             $mov->codportador = $codportador;

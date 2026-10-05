@@ -28,21 +28,21 @@ const menuGroups = [
     label: 'Ponto de Venda',
     items: [
       { label: 'PDV', icon: 'point_of_sale', color: 'secondary', to: '/' },
+      { label: 'Caixa', icon: 'savings', color: 'green-8', to: '/caixa' },
+      { label: 'Pagamentos', icon: 'payments', color: 'indigo', to: '/pagamento' },
       { label: 'Consulta de Preços', icon: 'price_check', color: 'teal', to: '/quiosque' },
       { label: 'Confissão de Dívida', icon: 'photo_camera', color: 'negative', to: '/confissao' },
-      { label: 'Comandas', icon: 'mdi-barcode', color: 'indigo', to: '/comanda-vendedor' },
-      { label: 'Conferência', icon: 'check', color: 'orange', to: '/conferencia' },
-      { label: 'Pagamentos', icon: 'payments', color: 'indigo', to: '/pagamento' },
-      { label: 'WOO', icon: 'mdi-list-box-outline', color: 'purple', to: '/woo/painel' },
     ],
   },
   {
-    label: 'Cadastros',
-    items: [{ label: 'Modelos de Vale', icon: 'card_giftcard', color: 'pink', to: '/vale-modelo' }],
-  },
-  {
-    label: 'Configurações',
-    items: [{ label: 'Config', icon: 'settings', color: 'grey-8', to: '/config/padrao' }],
+    label: 'Administração',
+    items: [
+      { label: 'Modelos de Vale', icon: 'card_giftcard', color: 'pink', to: '/vale-modelo' },
+      { label: 'Comandas', icon: 'mdi-barcode', color: 'indigo', to: '/comanda-vendedor' },
+      { label: 'Conferência', icon: 'check', color: 'orange', to: '/conferencia' },
+      { label: 'WOO', icon: 'mdi-list-box-outline', color: 'purple', to: '/woo/painel' },
+      { label: 'Configuração', icon: 'settings', color: 'grey-8', to: '/config/padrao' },
+    ],
   },
 ]
 

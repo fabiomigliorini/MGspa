@@ -8,7 +8,6 @@ use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixCobResource;
 use Mg\Titulo\TituloResource;
 use Mg\Pagamento\PagamentoResource;
-use Mg\Pdv\PdvAnexoService;
 use Mg\Pdv\PdvNegocioPagamentoService;
 use Mg\Saurus\SaurusPedidoResource;
 use Mg\Woo\WooPedidoResource;
@@ -92,7 +91,7 @@ class NegocioResource extends Resource
                 ->orderBy('codnotafiscal')
                 ->get()
         );
-        $ret['anexos'] = PdvAnexoService::listagem($this->codnegocio);
+        $ret['anexos'] = NegocioAnexoService::listagem($this->codnegocio);
         $ret['MercosPedidoS'] = [];
         foreach ($this->MercosPedidoS as $mp) {
             $ret['MercosPedidoS'][] = $mp->only([

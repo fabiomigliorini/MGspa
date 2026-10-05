@@ -33,10 +33,10 @@ const OPCOES_MEIO = Object.entries(MEIOS).map(([value, label]) => ({ value: Numb
 <template>
   <div class="row q-col-gutter-md">
     <div class="col-6">
-      <MgInputData v-model="store.filtros.lancamento_de" label="De" :bottom-slots="false" />
+      <MgInputData v-model="store.filtros.transacao_de" label="De" :bottom-slots="false" />
     </div>
     <div class="col-6">
-      <MgInputData v-model="store.filtros.lancamento_ate" label="Até" :bottom-slots="false" />
+      <MgInputData v-model="store.filtros.transacao_ate" label="Até" :bottom-slots="false" />
     </div>
     <div class="col-12">
       <q-select

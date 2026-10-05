@@ -15,6 +15,12 @@ const menuGroups = [
   {
     label: 'Movimento',
     items: [
+      {
+        label: 'Fechamentos',
+        icon: 'fact_check',
+        color: 'green-8',
+        to: { name: 'fechamento' },
+      },
       { label: 'Pix Recebidos', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
       {
         label: 'Pagamentos',

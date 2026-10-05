@@ -17,8 +17,8 @@ const filtrosVazios = () => {
   const hoje = new Date()
   return {
     codpagamento: null,
-    lancamento_de: iso(new Date(hoje.getFullYear(), hoje.getMonth(), 1)),
-    lancamento_ate: iso(hoje),
+    transacao_de: iso(new Date(hoje.getFullYear(), hoje.getMonth(), 1)),
+    transacao_ate: iso(hoje),
     codfilial: null,
     codpdv: null,
     codportador: null,

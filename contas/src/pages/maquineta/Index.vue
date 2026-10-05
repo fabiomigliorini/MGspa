@@ -131,6 +131,16 @@ onMounted(() => {
                 <q-tooltip>Editar</q-tooltip>
               </q-btn>
               <q-btn
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="receipt_long"
+                :to="{ name: 'maquineta-lotes', params: { id: props.row.codmaquineta } }"
+              >
+                <q-tooltip>Lotes (borderôs)</q-tooltip>
+              </q-btn>
+              <q-btn
                 v-if="props.row.integracao === 'S' && !props.row.inativo"
                 flat
                 round

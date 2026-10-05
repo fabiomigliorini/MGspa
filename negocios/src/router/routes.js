@@ -139,6 +139,11 @@ const routes = [
     children: [{ path: '', component: () => import('pages/PagamentoPage.vue') }],
   },
   {
+    path: '/caixa',
+    component: () => import('layouts/CaixaLayout.vue'),
+    children: [{ path: '', component: () => import('pages/CaixaPage.vue') }],
+  },
+  {
     path: '/pagamento/receber',
     component: () => import('layouts/PagamentoReceberLayout.vue'),
     children: [{ path: '', component: () => import('pages/PagamentoReceberPage.vue') }],

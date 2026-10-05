@@ -35,6 +35,20 @@ export const MEIOS = {
   99: 'Outros',
 }
 
+// bandeira do cartão (código da NF-e, o mesmo do PagamentoService)
+export const BANDEIRAS = {
+  1: 'Visa',
+  2: 'Mastercard',
+  3: 'American Express',
+  4: 'Sorocred',
+  5: 'Diners Club',
+  6: 'Elo',
+  7: 'Hipercard',
+  8: 'Aura',
+  9: 'Cabal',
+  99: 'Outros',
+}
+
 // mesmas letras do NegocioParcelaService
 export const CONDICAO = {
   FECHAMENTO: 'F',

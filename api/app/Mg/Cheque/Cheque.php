@@ -35,7 +35,7 @@ class Cheque extends MgModel
         'emissao',
         'emitente',
         'indstatus',
-        'lancamento',
+        'transacao',
         'motivodevolucao',
         'numero',
         'observacao',
@@ -58,7 +58,7 @@ class Cheque extends MgModel
         'devolucao' => 'date',
         'emissao' => 'date',
         'indstatus' => 'integer',
-        'lancamento' => 'datetime',
+        'transacao' => 'datetime',
         'repasse' => 'date',
         'valor' => 'float',
         'vencimento' => 'date'

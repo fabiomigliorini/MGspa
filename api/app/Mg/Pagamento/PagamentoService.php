@@ -4,6 +4,7 @@ namespace Mg\Pagamento;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Mg\Portador\PortadorMovimentoService;
 
 /**
  * Regras do pagamento (M4 do plano doc-3): criar, efetivar, cancelar e o
@@ -147,8 +148,8 @@ class PagamentoService
         if (empty($pag->estado)) {
             $pag->estado = static::ESTADO_PENDENTE;
         }
-        if (empty($pag->lancamento)) {
-            $pag->lancamento = Carbon::now();
+        if (empty($pag->transacao)) {
+            $pag->transacao = Carbon::now();
         }
         static::validar($pag);
         return $pag;
@@ -180,12 +181,15 @@ class PagamentoService
     {
         $pag = static::preencher(new Pagamento(), $dados);
         $pag->save();
+        PortadorMovimentoService::sincronizar($pag);
         return $pag;
     }
 
     public static function efetivar(Pagamento $pag, ?Carbon $quando = null): Pagamento
     {
         if ($pag->estado == static::ESTADO_EFETIVADO) {
+            // reprocessamento de integracao pode ter regravado valores
+            PortadorMovimentoService::sincronizar($pag);
             return $pag;
         }
         if ($pag->estado == static::ESTADO_CANCELADO) {
@@ -195,6 +199,7 @@ class PagamentoService
         $pag->efetivacao = $quando ?? Carbon::now();
         $pag->codusuarioefetivacao = Auth::user()->codusuario ?? null;
         $pag->save();
+        PortadorMovimentoService::sincronizar($pag);
         return $pag;
     }
 
@@ -212,6 +217,7 @@ class PagamentoService
         $pag->codusuariocancelamento = Auth::user()->codusuario ?? null;
         $pag->justificativa = mb_substr($justificativa, 0, 300);
         $pag->save();
+        PortadorMovimentoService::sincronizar($pag);
         return $pag;
     }
 
@@ -244,6 +250,7 @@ class PagamentoService
             abort(422, 'O valor devolvido é maior que o que resta do pagamento original!');
         }
         $pag->save();
+        PortadorMovimentoService::sincronizar($pag);
         return $pag;
     }
 }

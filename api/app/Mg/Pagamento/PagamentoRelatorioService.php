@@ -58,7 +58,7 @@ class PagamentoRelatorioService
         if ((clone $q)->count() > static::LIMITE) {
             abort(422, 'Mais de ' . static::LIMITE . ' pagamentos: refine os filtros do relatório.');
         }
-        $q->orderBy('tblpagamento.lancamento', 'desc')
+        $q->orderBy('tblpagamento.transacao', 'desc')
             ->orderBy('tblpagamento.codpagamento', 'desc');
 
         $pags = $q->get();

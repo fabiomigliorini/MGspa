@@ -86,7 +86,7 @@
         <b style="font-size: 12pt">{{ $filial->filial ?? '' }}</b><br>
         {{ $filial->Pessoa->telefone1 ?? '' }}<br>
         <b>{{ $lancados ? mb_strtoupper(implode(' / ', array_keys($lancados))) : ($entrada ? 'RECIBO DE RECEBIMENTO' : 'RECIBO DE PAGAMENTO') }}</b><br>
-        {{ $primeiro->lancamento->format('d/m/Y H:i:s') }}
+        {{ $primeiro->transacao->format('d/m/Y H:i:s') }}
     </div>
 
     <p>

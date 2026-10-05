@@ -6,7 +6,7 @@
 import { computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { pagamentoListaStore } from '@components/stores/pagamentoListaStore'
-import { formataNumero, formataData, formataCodigo } from '@components/formatters'
+import { formataNumero, formataData, formataTimestamp, formataCodigo } from '@components/formatters'
 import { visualPagamento } from '@components/cobranca/pagamento.js'
 import LogoPagamento from '@components/cobranca/LogoPagamento.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
@@ -116,7 +116,7 @@ const estornar = () => {
       <div class="col-xs-6 col-sm-2">
         <q-card bordered flat class="q-py-sm text-center">
           <div class="text-caption text-grey-7">Data</div>
-          <div class="text-h6 text-grey-9">{{ formataData(pag.lancamento) }}</div>
+          <div class="text-h6 text-grey-9">{{ formataData(pag.transacao) }}</div>
         </q-card>
       </div>
       <div class="col-xs-6 col-sm-3">
@@ -221,7 +221,7 @@ const estornar = () => {
                   {{ formataCodigo(pag.pagamentoorigem.codpagamento) }} ·
                   {{ pag.pagamentoorigem.meiodescricao }} · R$
                   {{ formataNumero(pag.pagamentoorigem.total) }} de
-                  {{ formataData(pag.pagamentoorigem.lancamento) }}
+                  {{ formataData(pag.pagamentoorigem.transacao) }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -230,7 +230,7 @@ const estornar = () => {
                 <q-item-label caption>Devolvido</q-item-label>
                 <q-item-label :class="c.estado === 'C' ? 'text-strike text-grey-6' : ''">
                   {{ formataCodigo(c.codpagamento) }} · R$ {{ formataNumero(c.total) }} em
-                  {{ formataData(c.lancamento) }}
+                  {{ formataData(c.transacao) }}
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -272,9 +272,9 @@ const estornar = () => {
         </q-card>
       </div>
 
-      <!-- títulos movimentados -->
-      <div class="col-xs-12 col-sm-5" v-if="pag.movimentos?.length">
-        <q-card bordered flat>
+      <div class="col-xs-12 col-sm-5" v-if="pag.movimentos?.length || pag.razao?.length">
+        <!-- títulos movimentados -->
+        <q-card bordered flat v-if="pag.movimentos?.length" class="q-mb-md">
           <q-card-section class="text-grey-9 text-overline">
             TÍTULOS ({{ pag.movimentos.length }})
           </q-card-section>
@@ -322,6 +322,39 @@ const estornar = () => {
                 </template>
                 <q-item-label caption>{{ m.tipomovimentotitulo }}</q-item-label>
                 <q-item-label caption>vence {{ formataData(m.titulo?.vencimento) }}</q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card>
+
+        <!-- razão (M10): o que caiu em cada portador; riscado = desfeito -->
+        <q-card bordered flat v-if="pag.razao?.length" class="q-mb-md">
+          <q-card-section class="text-grey-9 text-overline">RAZÃO</q-card-section>
+          <q-list separator>
+            <q-item v-for="r in pag.razao" :key="r.codportadormovimento">
+              <q-item-section>
+                <q-item-label :class="r.inativo ? 'text-strike text-grey-6' : ''">
+                  {{ r.portador }}
+                </q-item-label>
+                <q-item-label caption>{{ r.periodo }}</q-item-label>
+                <q-item-label caption v-if="r.inativo" class="text-grey-6">
+                  desfeito em {{ formataTimestamp(r.inativo) }}
+                </q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-item-label
+                  class="text-weight-bold"
+                  :class="
+                    r.inativo
+                      ? 'text-strike text-grey-6'
+                      : r.valor > 0
+                        ? 'text-green-8'
+                        : 'text-red-8'
+                  "
+                >
+                  {{ r.valor > 0 ? '+' : '' }}{{ formataNumero(r.valor) }}
+                </q-item-label>
+                <q-item-label caption>{{ formataTimestamp(r.transacao) }}</q-item-label>
               </q-item-section>
             </q-item>
           </q-list>

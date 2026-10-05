@@ -3,6 +3,7 @@
 namespace Mg\Pagamento;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
+use Mg\Portador\PortadorPeriodoService;
 
 // Detalhe de um pagamento (M6.1 doc-3): documento (venda, titulos com as
 // linhas de movimento, transferencia, avulso), meio, maquineta, portadores,
@@ -91,7 +92,7 @@ class PagamentoDetalheResource extends Resource
             'motivodescricao'           => PagamentoService::MOTIVOS[$this->motivo] ?? null,
             'estado'                    => $this->estado,
             'estadodescricao'           => PagamentoService::ESTADOS[$this->estado] ?? null,
-            'lancamento'                => $this->lancamento,
+            'transacao'                 => $this->transacao,
             'efetivacao'                => $this->efetivacao,
             'criacao'                   => $this->criacao,
             'alteracao'                 => $this->alteracao,
@@ -114,14 +115,14 @@ class PagamentoDetalheResource extends Resource
                 'codpagamento' => (int) $this->PagamentoOrigem->codpagamento,
                 'meiodescricao' => PagamentoService::MEIOS[$this->PagamentoOrigem->meio] ?? null,
                 'total' => (float) $this->PagamentoOrigem->total,
-                'lancamento' => $this->PagamentoOrigem->lancamento,
+                'transacao' => $this->PagamentoOrigem->transacao,
                 'codnegocio' => $this->PagamentoOrigem->codnegocio,
             ] : null,
             'contrarios'                => collect($this->PagamentoContrarioS)->map(fn($c) => [
                 'codpagamento' => (int) $c->codpagamento,
                 'estado' => $c->estado,
                 'total' => (float) $c->total,
-                'lancamento' => $c->lancamento,
+                'transacao' => $c->transacao,
             ])->values()->all(),
             // o que a tela pode fazer: estornar e editar so' baixa de titulo
             // feita a mao (venda pelo negocio, acerto pelo acerto, boleto
@@ -132,6 +133,23 @@ class PagamentoDetalheResource extends Resource
             'recebimento'               => PagamentoTituloService::temRecebimento($this->resource),
             'pagamento'                 => PagamentoTituloService::temPagamento($this->resource),
             'movimentos'                => $movimentos,
+            // razao (M10 doc-3): o que caiu em cada portador; inativas =
+            // desfeitas por estorno, cancelamento ou correcao
+            'razao'                     => collect($this->PortadorMovimentoS)
+                ->sortBy('codportadormovimento')
+                ->values()
+                ->map(fn($r) => [
+                    'codportadormovimento' => (int) $r->codportadormovimento,
+                    'codportador'          => (int) $r->codportador,
+                    'portador'             => optional($r->Portador)->portador,
+                    'valor'                => (float) $r->valor,
+                    'transacao'            => $r->transacao,
+                    'parcela'              => $r->parcela,
+                    'codportadorperiodo'   => (int) $r->codportadorperiodo,
+                    'periodo'              => $r->PortadorPeriodo ? PortadorPeriodoService::descricao($r->PortadorPeriodo) : null,
+                    'inativo'              => $r->inativo,
+                ])
+                ->all(),
         ];
     }
 }

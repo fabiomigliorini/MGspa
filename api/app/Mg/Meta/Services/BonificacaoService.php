@@ -102,7 +102,7 @@ class BonificacaoService
                 'codpessoa' => $eventoPositivo->codpessoa,
                 'tipo' => $eventoPositivo->tipo,
                 'valor' => static::arredondarValor(-$eventoPositivo->valor),
-                'lancamento' => $negocio->lancamento,
+                'transacao' => $negocio->lancamento,
                 'manual' => false,
             ]);
 
@@ -184,7 +184,7 @@ class BonificacaoService
                     $eventoExistente->update([
                         'codunidadenegocio' => $unidade->codunidadenegocio,
                         'valor' => $eventoEsperado['valor'],
-                        'lancamento' => $eventoEsperado['lancamento'],
+                        'transacao' => $eventoEsperado['transacao'],
                     ]);
 
                     Log::info('BonificacaoService - Evento atualizado', [
@@ -207,7 +207,7 @@ class BonificacaoService
                 'codpessoa' => $eventoEsperado['codpessoa'],
                 'tipo' => $eventoEsperado['tipo'],
                 'valor' => $eventoEsperado['valor'],
-                'lancamento' => $eventoEsperado['lancamento'],
+                'transacao' => $eventoEsperado['transacao'],
                 'manual' => false,
             ]);
 
@@ -351,7 +351,7 @@ class BonificacaoService
         return array_values($eventos);
     }
 
-    private static function adicionarEventoEsperado(array &$eventos, string $tipo, int $codpessoa, float $valor, $lancamento): void
+    private static function adicionarEventoEsperado(array &$eventos, string $tipo, int $codpessoa, float $valor, $transacao): void
     {
         $chave = static::montarChaveEvento($tipo, $codpessoa);
 
@@ -360,7 +360,7 @@ class BonificacaoService
                 'tipo' => $tipo,
                 'codpessoa' => $codpessoa,
                 'valor' => static::arredondarValor($valor),
-                'lancamento' => $lancamento,
+                'transacao' => $transacao,
             ];
             return;
         }
