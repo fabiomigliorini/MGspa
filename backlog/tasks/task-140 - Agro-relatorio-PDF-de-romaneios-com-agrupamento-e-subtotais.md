@@ -1,18 +1,18 @@
 ---
 id: TASK-140
 title: 'Agro: relatorio PDF de romaneios com agrupamento e subtotais'
-status: To Do
+status: In Progress
 assignee:
-  - '@fabio'
+  - '@eduardo'
 created_date: '2026-09-22 12:24'
-updated_date: '2026-09-28 21:00'
+updated_date: '2026-10-06 18:34'
 labels:
   - agro
 dependencies:
   - TASK-136
 priority: medium
 type: feature
-ordinal: 150000
+ordinal: 3000
 ---
 
 ## Description
@@ -76,4 +76,6 @@ Verificado no dev:
 - TOTAL GERAL do PDF = 84.306 kg, IGUAL ao totais() da tela; soma dos subtotais tambem bate.
 - PDF gerado: 33KB, %PDF valido, A4 paisagem (841.89 x 595.28 pts), 1 pagina.
 - Renderizado em PNG e conferido a olho: nenhuma coluna estourou a margem direita; cabecalho, legenda, grupo, subtotal, total geral e rodape {PAGENO} de {nbpg} todos no lugar.
+
+06/10/2026, a pedido do usuário: removida a exigência de período/safra/romaneio para gerar o PDF (abort 422 "Informe ao menos o período ou a safra..." em CargaRelatorioService::html). O relatório imprime qualquer recorte da tela; continua o teto de 5000 romaneios (LIMITE_LINHAS). Conferido: PDF sem período nem safra gerado em dev (93 KB, %PDF válido); a legenda só omite a linha de período.
 <!-- SECTION:NOTES:END -->

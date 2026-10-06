@@ -104,6 +104,12 @@ onMounted(() => carregar(route.params.codcarga))
       </q-card>
 
       <template v-else>
+        <!-- Voltar fora do card, na linha de botões do topo — mesmo lugar do
+             "Imprimir lista" da listagem (padrão das telas do negocios). -->
+        <div class="row justify-end q-mb-sm">
+          <q-btn flat color="grey-7" icon="arrow_back" round :to="{ name: 'cargas' }" />
+        </div>
+
         <q-banner v-if="carga.inativo" rounded class="bg-red-1 text-red-10 q-mb-md">
           <template #avatar><q-icon name="block" color="negative" /></template>
           Romaneio cancelado em {{ formataTimestamp(carga.inativo) }}. Os pesos não entram no
@@ -140,6 +146,10 @@ onMounted(() => carregar(route.params.codcarga))
           </q-card-section>
           <q-card-section class="q-pt-none">
             <CargaEtapaProgresso :carga="carga" labels />
+
+            <div class="q-mt-sm text-right">
+              <MgInfoCriacao :registro="carga" />
+            </div>
           </q-card-section>
         </q-card>
 
@@ -311,23 +321,14 @@ onMounted(() => carregar(route.params.codcarga))
               </q-card-section>
             </q-card>
           </div>
-
-          <div class="col-12">
-            <MgInfoCriacao :registro="carga" />
-          </div>
         </div>
       </template>
     </div>
 
     <q-page-sticky v-if="carga" position="bottom-right" :offset="[18, 18]">
-      <div class="column q-gutter-sm items-end">
-        <q-btn fab-mini icon="arrow_back" color="grey-7" :to="{ name: 'cargas' }">
-          <q-tooltip>Voltar para a listagem</q-tooltip>
-        </q-btn>
-        <q-btn fab icon="print" color="primary" @click="imprimir">
-          <q-tooltip>Imprimir romaneio</q-tooltip>
-        </q-btn>
-      </div>
+      <q-btn fab icon="print" color="primary" @click="imprimir">
+        <q-tooltip>Imprimir romaneio</q-tooltip>
+      </q-btn>
     </q-page-sticky>
   </q-page>
 </template>

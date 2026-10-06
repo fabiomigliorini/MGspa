@@ -184,26 +184,59 @@ class CargaService extends MgService
      * load e sem ordem. E o que a barra de totais da listagem mostra: quem
      * filtrou "setembro" quer o liquido de setembro, nao o das 50 primeiras.
      *
-     * `sacas` fica de fora: depende do pesosaca da cultura, que varia por safra;
-     * somar sacas de soja com milho nao significa nada. O front soma por linha
-     * quando o recorte tem uma cultura so.
+     * `sacas` e calculada carga a carga — liquido / pesosaca da cultura da
+     * safra DAQUELA carga (60 quando vazio ou zero, como o front) — e so depois
+     * somada: assim o total fecha com a soma da coluna Sacas da listagem mesmo
+     * com culturas misturadas.
+     *
+     * `sentidos` separa recebido, expedido e transferido SEMPRE sem as
+     * canceladas, mesmo com "Cancelados"/"Todos" no filtro: somar kg de
+     * romaneio cancelado no total do que entrou mentiria o estoque. O `qtd` do
+     * topo continua contando o recorte inteiro (a guarda de linhas do
+     * CargaRelatorioService depende dele).
      */
     public static function totais(?array $filter = null): array
     {
-        $qry = static::qryFiltros(Carga::query(), $filter);
+        // Subquery correlacionada, nao join: qryFiltros usa whereHas e um join
+        // aqui deixaria ambigua a coluna codsafra.
+        $pesosaca = '(select nullif(c.pesosaca, 0) from tblsafra s'
+            . ' join tblcultura c on c.codcultura = s.codcultura'
+            . ' where s.codsafra = tblcarga.codsafra)';
 
-        $row = $qry->selectRaw(
-            'count(*) as qtd'
+        $soma = 'count(*) as qtd'
             . ', coalesce(sum(bruto), 0) as bruto'
             . ', coalesce(sum(desconto), 0) as desconto'
             . ', coalesce(sum(liquido), 0) as liquido'
-        )->first();
+            . ", coalesce(sum(liquido / coalesce({$pesosaca}, 60)), 0) as sacas";
+
+        $row = static::qryFiltros(Carga::query(), $filter)->selectRaw($soma)->first();
+
+        $ativas = array_merge($filter ?? [], ['inativo' => 1]);
+        $porSentido = static::qryFiltros(Carga::query(), $ativas)
+            ->selectRaw('sentido, ' . $soma)
+            ->groupBy('sentido')
+            ->get()
+            ->keyBy('sentido');
+
+        $sentidos = [];
+        foreach (static::SENTIDOS as $sentido) {
+            $s = $porSentido->get($sentido);
+            $sentidos[$sentido] = [
+                'qtd' => (int) ($s->qtd ?? 0),
+                'bruto' => (float) ($s->bruto ?? 0),
+                'desconto' => (float) ($s->desconto ?? 0),
+                'liquido' => (float) ($s->liquido ?? 0),
+                'sacas' => (float) ($s->sacas ?? 0),
+            ];
+        }
 
         return [
             'qtd' => (int) ($row->qtd ?? 0),
             'bruto' => (float) ($row->bruto ?? 0),
             'desconto' => (float) ($row->desconto ?? 0),
             'liquido' => (float) ($row->liquido ?? 0),
+            'sacas' => (float) ($row->sacas ?? 0),
+            'sentidos' => $sentidos,
         ];
     }
 

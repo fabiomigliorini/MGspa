@@ -12,6 +12,7 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
 import PlantioWizardDialog from 'components/PlantioWizardDialog.vue'
+import PlantioCargas from 'components/PlantioCargas.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -30,6 +31,12 @@ const variedades = ref([])
 const talhoesBase = ref([])
 const codcultura = computed(
   () => plantio.value?.Safra?.codcultura ?? plantio.value?.Safra?.Cultura?.codcultura,
+)
+// `cultura` minúsculo: relação aninhada sai em snake_case do Eloquent.
+const pesosaca = computed(
+  () =>
+    Number(plantio.value?.Safra?.cultura?.pesosaca ?? plantio.value?.Safra?.Cultura?.pesosaca) ||
+    60,
 )
 const variedadesDaCultura = computed(() =>
   variedades.value.filter((v) => v.codcultura === codcultura.value && !v.inativo),
@@ -336,25 +343,8 @@ onMounted(async () => {
           </q-card-section>
         </q-card>
 
-        <!-- Cargas (placeholder — a implementar após a tela de Cargas) -->
-        <!-- TODO: listar via GET v1/movimento-grao?codplantio={codplantio} quando a tela de Cargas existir -->
-        <q-card bordered flat class="q-mb-md">
-          <q-item>
-            <q-item-section avatar>
-              <q-avatar color="blue-grey-1" text-color="blue-grey-8" icon="local_shipping" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-subtitle1">Cargas deste plantio</q-item-label>
-              <q-item-label caption>As cargas que compõem a colheita deste talhão</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator />
-          <q-card-section>
-            <MgEmptyState plain icon="local_shipping">
-              Em breve — aqui vão as cargas que compõem este plantio. Depende da tela de Cargas.
-            </MgEmptyState>
-          </q-card-section>
-        </q-card>
+        <!-- Cargas: o extrato do talhão, embutido no show do plantio -->
+        <PlantioCargas :movimentos="plantio.MovimentoGraoS || []" :pesosaca="pesosaca" />
       </template>
 
       <q-inner-loading v-else showing />

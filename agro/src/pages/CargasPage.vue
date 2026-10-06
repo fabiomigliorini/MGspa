@@ -1,33 +1,67 @@
 <script setup>
 // Listagem do HISTÓRICO de romaneios (consulta). A operação continua no pátio
-// (/carga/:uuid) — aqui nada é editado; a linha abre a ficha só-leitura.
+// (/carga/:uuid) — aqui nada é editado; o olho abre a ficha só-leitura.
 //
-// Estrutura espelhada da NotasPage (app notas): página inteira sem card nem
-// max-width, q-item denso e um grid de colunas `col-md-*` em text-caption. NÃO
-// reusar o CargaListItem aqui — aquele é item de drawer de 300px e, esticado
-// numa página larga, vira um bloco solto sem colunas.
-import { onMounted } from 'vue'
+// Layout, UI e UX espelhados da ValeModeloPage (negocios /vale-modelo): página
+// cinza centralizada, botões no topo, q-table num card e ações em ícone na
+// última coluna. As colunas são as escolhidas na validação (TASK-138), e as
+// células do #body seguem a MESMA ordem do array `colunas` — o q-td não se
+// reposiciona sozinho: célula fora de ordem desalinha do cabeçalho.
+import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { formataTimestamp } from '@components/formatters'
+import { formataData } from '@components/formatters'
+import MgEmptyState from '@components/MgEmptyState.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import { useCargaListagemStore } from 'src/stores/cargaListagem'
-import {
-  fmtNumero,
-  iconeCarga,
-  corIconeCarga,
-  rotulosDoPapel,
-  sentidoMeta,
-  ETAPA_META,
-  ETAPA_FINAL,
-} from 'src/utils/carga'
+import { fmtNumero, rotulosDoPapel, sentidoMeta, ETAPA_META } from 'src/utils/carga'
 
 const store = useCargaListagemStore()
-const { cargas, totais, paginacao, carregadoUmaVez, sacasTotais, culturaUnica } = storeToRefs(store)
+const { cargas, totais, paginacao, carregando, carregadoUmaVez } = storeToRefs(store)
 
-// Abreviado: "Transferência" por extenso empurra a coluna e quebra o grid.
-const SENTIDO_CURTO = { ENTRADA: 'Receb.', SAIDA: 'Exped.', TRANSFERENCIA: 'Transf.' }
+const colunas = [
+  { name: 'sentido', label: 'Tipo', field: 'sentido', align: 'left' },
+  { name: 'data', label: 'Data', field: 'data', align: 'left' },
 
-function rota(carga) {
-  return { name: 'carga-detalhe', params: { codcarga: carga.codcarga } }
+  { name: 'etapa', label: 'Etapa', field: 'etapa', align: 'left' },
+  { name: 'safra', label: 'Safra', field: 'codsafra', align: 'left' },
+
+  { name: 'placa', label: 'Placa', field: 'placa', align: 'left' },
+
+  { name: 'motorista', label: 'Motorista', field: 'motorista', align: 'left' },
+  { name: 'origem', label: 'Origem', field: 'codcarga', align: 'left' },
+  { name: 'destino', label: 'Destino', field: 'codcarga', align: 'left' },
+  { name: 'bruto', label: 'Bruto', field: 'bruto', align: 'right' },
+  { name: 'tara', label: 'Tara', field: 'tara', align: 'right' },
+  { name: 'desconto', label: 'Desconto', field: 'desconto', align: 'right' },
+  { name: 'liquido', label: 'Líquido', field: 'liquido', align: 'right' },
+  { name: 'sacas', label: 'Sacas', field: 'liquido', align: 'right' },
+
+  { name: 'acoes', label: '', field: 'acoes', align: 'right' },
+]
+
+// A linha de totais junta numa célula só as colunas antes do Bruto e põe cada
+// soma embaixo da sua coluna; continua alinhada se a ordem mudar.
+const COLSPAN_ROTULO_TOTAL = colunas.findIndex((c) => c.name === 'bruto')
+const colunasTotais = colunas.slice(COLSPAN_ROTULO_TOTAL)
+const CAMPOS_TOTAL = { bruto: 0, desconto: 0, liquido: 0, sacas: 1 }
+
+// Totais do RECORTE INTEIRO (não da página carregada), um por tipo e sempre
+// sem as canceladas — mesmo com "Cancelados"/"Todos" no filtro.
+const TOTAL_ROTULOS = {
+  ENTRADA: 'Recebido',
+  SAIDA: 'Expedido',
+  TRANSFERENCIA: 'Transferido',
+}
+
+const linhasTotais = () =>
+  Object.entries(TOTAL_ROTULOS)
+    .map(([sentido, rotulo]) => ({ sentido, rotulo, ...(totais.value.sentidos?.[sentido] ?? {}) }))
+    .filter((t) => t.qtd)
+
+// Casas decimais de cada total. As sacas vêm somadas do servidor carga a
+// carga, cada uma com o peso de saca da sua cultura: fecha com a coluna.
+function valorTotal(t, coluna) {
+  return coluna in CAMPOS_TOTAL ? fmtNumero(t[coluna], CAMPOS_TOTAL[coluna]) : ''
 }
 
 // pesosaca da própria safra da carga: uma listagem sem filtro mistura culturas,
@@ -39,167 +73,234 @@ function sacasDa(carga) {
   return Number(carga.liquido) / (Number(carga.Safra?.cultura?.pesosaca) || 60)
 }
 
-function percurso(carga) {
-  const origem = rotulosDoPapel(carga, 'ORIGEM')
-  const destino = rotulosDoPapel(carga, 'DESTINO')
-  if (origem && destino) return `${origem} → ${destino}`
-  return origem || destino || 'Sem origem/destino'
-}
+// A linha inteira abre o romaneio, e por <a> de verdade: Ctrl+clique, botão do
+// meio e "Abrir em nova guia" funcionam. Um link por célula (td não pode ficar
+// dentro de <a>); só o da 1ª célula entra no Tab, senão seriam 13 paradas por
+// linha.
+const linkAbrir = (carga) => ({ name: 'carga-detalhe', params: { codcarga: carga.codcarga } })
 
-async function onLoad(index, done) {
-  await store.buscar()
-  done(!paginacao.value.hasMore)
-}
+// Quem carrega é o q-infinite-scroll, inclusive a primeira página.
+store.reiniciar()
+const scrollRef = ref(null)
 
-onMounted(() => {
-  if (!carregadoUmaVez.value) store.buscar(true)
-})
+const carregarMais = async (indice, done) => done(!(await store.carregarMais()))
+
+// Filtro novo recarrega da página 1: se o scroll já tinha parado no fim da
+// lista anterior, ele volta a funcionar.
+watch(
+  () => paginacao.value.hasMore,
+  (temMais) => {
+    if (temMais) scrollRef.value?.resume()
+  },
+)
 </script>
 
 <template>
-  <q-page>
-    <!-- Totais do RECORTE INTEIRO, não da página carregada. Mesmo grid das
-         linhas, pra cada número cair em cima da sua coluna. -->
-    <q-item v-if="carregadoUmaVez && totais.qtd" class="bg-grey-2">
-      <q-item-section avatar style="min-width: 32px" />
-      <q-item-section>
-        <!-- As larguras repetem as da linha (2+2+3 = 7, depois 2, 1, 2) pra
-             cada total cair exatamente em cima da sua coluna. -->
-        <div class="row items-center">
-          <div class="q-px-sm col-6 col-md-7 text-caption text-weight-medium">
-            {{ fmtNumero(totais.qtd) }} {{ totais.qtd === 1 ? 'romaneio' : 'romaneios' }}
-          </div>
-          <div class="q-px-sm col-6 col-md-2 text-caption text-grey-7">
-            Bruto {{ fmtNumero(totais.bruto) }} kg
-          </div>
-          <div class="q-px-sm col-6 col-md-1 text-caption text-orange-9 text-right">
-            − {{ fmtNumero(totais.desconto) }}
-          </div>
-          <div class="q-px-sm col-6 col-md-2 text-caption text-right">
-            <span class="text-weight-bold text-green-9">{{ fmtNumero(totais.liquido) }} kg</span>
-            <!-- Só some quando o recorte tem mais de uma cultura: somar saca de
-                 soja com saca de milho não significaria nada. -->
-            <span v-if="sacasTotais !== null" class="text-grey-7">
-              · {{ fmtNumero(sacasTotais, 1) }} sc
-              <q-tooltip>
-                Sacas de {{ culturaUnica?.cultura }} ({{ culturaUnica?.pesosaca }} kg)
-              </q-tooltip>
-            </span>
-          </div>
+  <q-page class="bg-grey-2">
+    <q-infinite-scroll ref="scrollRef" @load="carregarMais" :offset="250">
+      <div class="q-pa-md" style="max-width: 1200px; margin: auto">
+        <div class="row justify-end q-mb-sm">
+          <q-btn
+            flat
+            color="primary"
+            icon="print"
+            label="Gerar Relatório"
+            :disable="!cargas.length"
+            @click="store.imprimirRelatorio()"
+          />
         </div>
-      </q-item-section>
-    </q-item>
-    <q-separator v-if="carregadoUmaVez && totais.qtd" />
 
-    <!-- Loading inicial -->
-    <div v-if="paginacao.loading && cargas.length === 0" class="row justify-center q-py-xl">
-      <q-spinner color="primary" size="3em" />
-    </div>
+        <MgEmptyState v-if="carregadoUmaVez && !carregando && !cargas.length" icon="local_shipping">
+          Nenhum romaneio com esses filtros.
+        </MgEmptyState>
 
-    <!-- Empty State -->
-    <q-card v-else-if="cargas.length === 0" flat bordered class="q-pa-xl text-center q-ma-sm">
-      <q-icon name="local_shipping" size="4em" color="grey-5" />
-      <div class="text-h6 text-grey-7 q-mt-md">Nenhum romaneio encontrado</div>
-      <div class="text-caption text-grey-7 q-mt-sm">
-        <template v-if="store.contagemFiltros">Tente ajustar os filtros</template>
-        <template v-else>Os romaneios aparecem aqui assim que forem registrados no pátio</template>
-      </div>
-    </q-card>
+        <q-table
+          v-else
+          :rows="cargas"
+          :columns="colunas"
+          row-key="codcarga"
+          class="tabela-cargas"
+          flat
+          bordered
+          wrap-cells
+          :loading="carregando"
+          hide-pagination
+          :rows-per-page-options="[0]"
+          :pagination="{ rowsPerPage: 0 }"
+        >
+          <template #body="props">
+            <q-tr :props="props">
+              <q-td key="sentido" :props="props" class="text-no-wrap">
+                <router-link :to="linkAbrir(props.row)" class="link-linha">
+                  {{ sentidoMeta(props.row.sentido).label }}
+                </router-link>
+              </q-td>
 
-    <!-- Lista de Romaneios -->
-    <q-infinite-scroll v-else :offset="250" @load="onLoad">
-      <q-list separator>
-        <q-item v-for="carga in cargas" :key="carga.codcarga" hoverable clickable :to="rota(carga)">
-          <q-item-section avatar style="min-width: 32px" class="items-center">
-            <q-icon :name="iconeCarga(carga)" :color="corIconeCarga(carga)">
-              <q-tooltip>{{ sentidoMeta(carga.sentido).label }}</q-tooltip>
-            </q-icon>
-            <q-icon v-if="carga.inativo" name="block" color="negative" size="xs">
-              <q-tooltip>Romaneio cancelado</q-tooltip>
-            </q-icon>
-          </q-item-section>
+              <q-td key="data" :props="props" class="text-no-wrap">
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  {{ formataData(props.row.data) }}
+                </router-link>
+              </q-td>
 
-          <q-item-section>
-            <div class="row items-center">
-              <!-- Romaneio -->
-              <div class="q-px-sm col-6 col-md-2 text-weight-medium text-caption">
-                #{{ carga.codcarga }}
-                <span class="text-grey-7">{{ SENTIDO_CURTO[carga.sentido] }}</span>
-              </div>
-
-              <!-- Placa / carreta -->
-              <div class="q-px-sm col-6 col-md-2 text-caption text-grey-8">
-                {{ carga.placa || 'Sem placa' }}
-                <span v-if="carga.placacarreta" class="text-grey-6">
-                  / {{ carga.placacarreta }}
-                </span>
-              </div>
-
-              <!-- Origem → Destino -->
-              <div
-                class="q-px-sm col-12 col-md-3 text-weight-bold text-caption text-primary ellipsis"
+              <!-- Sem a coluna Situação, o cancelado aparece no lugar da etapa -->
+              <q-td
+                key="etapa"
+                :props="props"
+                :class="props.row.inativo ? '' : `text-${ETAPA_META[props.row.etapa]?.color}`"
               >
-                {{ percurso(carga) }}
-              </div>
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  <q-badge v-if="props.row.inativo" color="orange-7">Cancelado</q-badge>
+                  <template v-else>
+                    {{ ETAPA_META[props.row.etapa]?.label ?? props.row.etapa }}
+                  </template>
+                </router-link>
+              </q-td>
 
-              <!-- Chegada -->
-              <div class="q-px-sm col-6 col-md-2 text-caption text-grey-7 ellipsis">
-                {{ formataTimestamp(carga.data, 2) }}
-              </div>
+              <q-td key="safra" :props="props" class="ellipsis celula-ellipsis">
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  <span v-if="props.row.Safra?.safra">{{ props.row.Safra.safra }}</span>
+                  <span v-else class="text-grey-6">—</span>
+                </router-link>
+              </q-td>
 
-              <!-- Desconto -->
-              <div class="q-px-sm col-6 col-md-1 text-caption text-orange-9 text-right">
-                <template v-if="carga.desconto">− {{ fmtNumero(carga.desconto) }}</template>
-              </div>
+              <q-td key="placa" :props="props">
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  <span v-if="props.row.placa">{{ props.row.placa }}</span>
+                  <span v-else class="text-grey-6">—</span>
+                </router-link>
+              </q-td>
 
-              <!-- Líquido — col-6 no estreito pra dividir a linha com o
-                   desconto; em col-12 uma carga sem pesar deixava uma linha
-                   inteira vazia só com o travessão. -->
-              <div class="q-px-sm col-6 col-md-2 text-caption text-right">
-                <template v-if="carga.liquido != null">
-                  <span class="text-weight-bold text-green-9">
-                    {{ fmtNumero(carga.liquido) }} kg
-                  </span>
-                  <span class="text-grey-7"> · {{ fmtNumero(sacasDa(carga), 1) }} sc</span>
-                </template>
-                <span v-else class="text-grey-6">—</span>
-              </div>
+              <q-td key="motorista" :props="props">
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  <div v-if="props.row.motorista" class="ellipsis celula-ellipsis">
+                    {{ props.row.motorista }}
+                    <q-tooltip>{{ props.row.motorista }}</q-tooltip>
+                  </div>
+                  <span v-else class="text-grey-6">—</span>
+                </router-link>
+              </q-td>
 
-              <!-- Etapa pendente, motorista e safra -->
-              <div class="q-px-sm col-12 text-caption text-grey-7 ellipsis">
-                <span
-                  v-if="carga.etapa !== ETAPA_FINAL"
-                  :class="`text-${ETAPA_META[carga.etapa]?.color}`"
-                >
-                  {{ ETAPA_META[carga.etapa]?.acao }} ·
+              <q-td key="origem" :props="props">
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  <div
+                    v-if="rotulosDoPapel(props.row, 'ORIGEM')"
+                    class="ellipsis celula-ellipsis celula-ponto"
+                  >
+                    {{ rotulosDoPapel(props.row, 'ORIGEM') }}
+                    <q-tooltip>{{ rotulosDoPapel(props.row, 'ORIGEM') }}</q-tooltip>
+                  </div>
+                  <span v-else class="text-grey-6">—</span>
+                </router-link>
+              </q-td>
+
+              <q-td key="destino" :props="props">
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  <div
+                    v-if="rotulosDoPapel(props.row, 'DESTINO')"
+                    class="ellipsis celula-ellipsis celula-ponto"
+                  >
+                    {{ rotulosDoPapel(props.row, 'DESTINO') }}
+                  </div>
+                  <span v-else class="text-grey-6">—</span>
+                </router-link>
+              </q-td>
+
+              <q-td key="bruto" :props="props">
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  {{ fmtNumero(props.row.bruto) }}
+                </router-link>
+              </q-td>
+
+              <q-td key="tara" :props="props">
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  {{ fmtNumero(props.row.tara) }}
+                </router-link>
+              </q-td>
+
+              <q-td key="desconto" :props="props">
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  {{ fmtNumero(props.row.desconto) }}
+                </router-link>
+              </q-td>
+
+              <q-td key="liquido" :props="props" class="text-weight-medium">
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  {{ fmtNumero(props.row.liquido) }}
+                </router-link>
+              </q-td>
+
+              <q-td key="sacas" :props="props">
+                <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
+                  {{ fmtNumero(sacasDa(props.row), 1) }}
+                </router-link>
+              </q-td>
+
+              <q-td key="acoes" :props="props" class="text-no-wrap">
+                <MgInfoCriacao :registro="props.row" />
+              </q-td>
+            </q-tr>
+          </template>
+
+          <!-- Uma linha por tipo, com cada soma embaixo da sua coluna -->
+          <template #bottom-row>
+            <q-tr v-for="t in linhasTotais()" :key="t.sentido" class="bg-grey-1 text-weight-medium">
+              <q-td :colspan="COLSPAN_ROTULO_TOTAL">
+                {{ t.rotulo }}
+                <span class="text-grey-7 text-weight-regular">
+                  · {{ fmtNumero(t.qtd) }} {{ t.qtd === 1 ? 'romaneio' : 'romaneios' }}
                 </span>
-                {{ carga.motorista || 'Sem motorista' }}
-                <template v-if="carga.Safra?.safra"> · {{ carga.Safra.safra }}</template>
-              </div>
-            </div>
-          </q-item-section>
-        </q-item>
-      </q-list>
+              </q-td>
+              <q-td v-for="col in colunasTotais" :key="col.name" class="text-right">
+                {{ valorTotal(t, col.name) }}
+              </q-td>
+            </q-tr>
+          </template>
+        </q-table>
+      </div>
 
       <template #loading>
         <div class="row justify-center q-my-md">
-          <q-spinner-dots color="primary" size="40px" />
+          <q-spinner-dots color="primary" size="32px" />
         </div>
       </template>
     </q-infinite-scroll>
-
-    <div
-      v-if="carregadoUmaVez && cargas.length && !paginacao.hasMore"
-      class="text-center text-caption text-grey-6 q-pa-md"
-    >
-      {{ cargas.length }} de {{ fmtNumero(paginacao.total) }} romaneios
-    </div>
-
-    <!-- FABs -->
-    <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn fab-mini icon="print" color="grey-7" @click="store.imprimirRelatorio()">
-        <q-tooltip>Imprimir Relatório</q-tooltip>
-      </q-btn>
-    </q-page-sticky>
   </q-page>
 </template>
+
+<style scoped>
+/* Respiro lateral de 9px (o padrão do q-table é 16px): é o maior que deixa as
+   14 colunas em 1200px sem rolagem lateral — cada px a mais de cada lado custa
+   28px na tabela (com 15px ela passava 145px). */
+.tabela-cargas :deep(th),
+.tabela-cargas :deep(td) {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+/* Motorista, origem e destino numa linha só, cortados com reticências; o
+   texto inteiro fica no tooltip. Acima da camada do link (z-index), senão o
+   tooltip não recebe o mouse — o clique continua no link, que é o pai. */
+.celula-ellipsis {
+  position: relative;
+  z-index: 1;
+  max-width: 105px;
+}
+
+/* Origem e destino mais estreitos que o motorista: o rótulo do ponto é longo
+   ("05A — AgTech 20A38 VIP3") e o começo já identifica o talhão ou silo. */
+.celula-ponto {
+  max-width: 65px;
+}
+
+/* O link da célula cobre a célula inteira (o td do q-table já é
+   position: relative), e não só o texto: clicar no respiro também abre. */
+.link-linha {
+  color: inherit;
+  text-decoration: none;
+}
+.link-linha::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+}
+</style>

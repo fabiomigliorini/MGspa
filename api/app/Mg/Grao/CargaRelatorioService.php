@@ -98,16 +98,8 @@ class CargaRelatorioService
             $agrupar = 'nenhum';
         }
 
-        // Sem recorte isso varre a tblcarga inteira e o relatorio nao diz nada.
-        if (
-            empty($filtros['data_inicio'])
-            && empty($filtros['data_fim'])
-            && empty($filtros['codsafra'])
-            && empty($filtros['codcarga'])
-        ) {
-            abort(422, 'Informe ao menos o período ou a safra para gerar o relatório.');
-        }
-
+        // Sem exigencia de periodo/safra: imprime o recorte que a tela mostra,
+        // qualquer que seja. Quem segura um PDF gigante e o teto de linhas.
         $qtd = CargaService::totais($filtros)['qtd'];
         if ($qtd > static::LIMITE_LINHAS) {
             abort(422, "Resultado com {$qtd} romaneios — refine o período ou os filtros (máximo "
