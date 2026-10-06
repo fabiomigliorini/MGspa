@@ -1,37 +1,40 @@
 <script setup>
-// Filtros da listagem de romaneios. Sem botão "Aplicar": o v-model aponta
-// direto pra store e um watch debounced refaz a busca — mesmo padrão do
-// NotasFiltrosDrawer do app notas.
+// Filtros da listagem de romaneios, no molde do ValeModeloLeftDrawer (negocios):
+// FilterDrawerShell + FilterGroup, sem botão "Aplicar" — o v-model aponta
+// direto pra store e uma espera só para o filtro inteiro refaz a busca.
 //
 // Os selects daqui NÃO são os SelectUnidade/SelectContrato/SelectTalhao do
 // pátio: aqueles leem o Dexie, que só é populado ao abrir /carga. Quem cai
 // direto em /cargas teria selects vazios e sem erro nenhum na tela.
-import { onMounted, watch } from 'vue'
-import { useDebounceFn } from '@vueuse/core'
+import { onMounted, onUnmounted, watch } from 'vue'
 import { storeToRefs } from 'pinia'
+import FilterDrawerShell from 'components/FilterDrawerShell.vue'
+import FilterGroup from 'components/FilterGroup.vue'
+import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import { useCargaListagemStore } from 'src/stores/cargaListagem'
 import { SENTIDOS, ETAPA_META } from 'src/utils/carga'
-import MgInput from '@components/MgInput.vue'
-import MgInputValor from '@components/MgInputValor.vue'
 
 const store = useCargaListagemStore()
 const { filtros, safras, culturas, unidades, contratos, plantios, carregandoPlantios } =
   storeToRefs(store)
 
-const SENTIDO_OPCOES = SENTIDOS.map((s) => ({ value: s.value, label: s.label, icon: s.icon }))
+const SENTIDO_OPCOES = SENTIDOS.map((s) => ({ value: s.value, label: s.label }))
 
-const ETAPA_OPCOES = Object.entries(ETAPA_META).map(([value, m]) => ({
-  value,
-  label: m.label,
-  icon: m.icon,
-}))
+const ETAPA_OPCOES = Object.entries(ETAPA_META).map(([value, m]) => ({ value, label: m.label }))
 
-const PAPEL_OPCOES = [
-  { value: null, label: 'Qualquer lado' },
-  { value: 'ORIGEM', label: 'Só como origem' },
-  { value: 'DESTINO', label: 'Só como destino' },
+const LADO_OPCOES = [
+  { label: 'Ambos', value: null },
+  { label: 'Origem', value: 'ORIGEM' },
+  { label: 'Destino', value: 'DESTINO' },
+]
+
+const SITUACAO_OPCOES = [
+  { label: 'Ativos', value: 1 },
+  { label: 'Cancelados', value: 2 },
+  { label: 'Todos', value: 9 },
 ]
 
 // Espelha CargaRelatorioService::AGRUPAMENTOS — mudou lá, muda aqui.
@@ -71,8 +74,19 @@ function rotuloPlantio(p) {
   return variedade ? `${nome} — ${variedade}` : nome
 }
 
-const buscarDebounced = useDebounceFn(() => store.buscar(true), 800)
-watch(filtros, () => buscarDebounced(), { deep: true })
+// Uma espera só para o filtro inteiro: o campo de texto emite a cada tecla, e
+// sem isso seria uma requisição por letra. O `agrupar` mora fora de `filtros`:
+// trocar o agrupamento do PDF não refaz a busca da tela.
+let timer = null
+watch(
+  filtros,
+  () => {
+    clearTimeout(timer)
+    timer = setTimeout(() => store.buscar(true), 500)
+  },
+  { deep: true },
+)
+onUnmounted(() => clearTimeout(timer))
 
 // Talhão depende da safra: trocar a safra invalida a escolha anterior.
 watch(
@@ -90,169 +104,179 @@ onMounted(() => {
 </script>
 
 <template>
-  <div class="q-pa-md">
-    <div class="row items-center no-wrap">
-      <div class="text-subtitle1 text-grey-8">
-        Filtros
-        <q-badge v-if="store.contagemFiltros" color="primary" class="q-ml-xs">
-          {{ store.contagemFiltros }}
-        </q-badge>
+  <FilterDrawerShell :active-count="store.contagemFiltros" @clear="store.limparFiltros()">
+    <FilterGroup title="Período" first>
+      <div class="row q-col-gutter-sm">
+        <div class="col-6">
+          <MgInputData v-model="filtros.data_inicio" type="date" label="De" :bottom-slots="false" />
+        </div>
+        <div class="col-6">
+          <MgInputData v-model="filtros.data_fim" type="date" label="Até" :bottom-slots="false" />
+        </div>
       </div>
-      <q-space />
-      <q-btn
-        v-if="store.contagemFiltros"
+    </FilterGroup>
+
+    <FilterGroup title="Safra e cultura">
+      <div class="column q-gutter-y-sm">
+        <q-select
+          v-model="filtros.codsafra"
+          :options="safras"
+          option-value="codsafra"
+          option-label="safra"
+          emit-value
+          map-options
+          outlined
+          clearable
+          :bottom-slots="false"
+          label="Safra"
+        />
+        <q-select
+          v-model="filtros.codcultura"
+          :options="culturas"
+          option-value="codcultura"
+          option-label="cultura"
+          emit-value
+          map-options
+          outlined
+          clearable
+          :bottom-slots="false"
+          label="Cultura"
+        />
+      </div>
+    </FilterGroup>
+
+    <FilterGroup title="Tipo e etapa">
+      <div class="column q-gutter-y-sm">
+        <q-select
+          v-model="filtros.sentido"
+          :options="SENTIDO_OPCOES"
+          emit-value
+          map-options
+          outlined
+          clearable
+          :bottom-slots="false"
+          label="Tipo de romaneio"
+        />
+        <q-select
+          v-model="filtros.etapa"
+          :options="ETAPA_OPCOES"
+          emit-value
+          map-options
+          outlined
+          clearable
+          :bottom-slots="false"
+          label="Etapa"
+        />
+      </div>
+    </FilterGroup>
+
+    <FilterGroup title="Origem e destino">
+      <div class="column q-gutter-y-sm">
+        <q-select
+          v-model="filtros.codunidadearmazenadora"
+          :options="unidades"
+          :option-label="rotuloUnidade"
+          option-value="codunidadearmazenadora"
+          emit-value
+          map-options
+          outlined
+          clearable
+          :bottom-slots="false"
+          label="Unidade armazenadora"
+        />
+        <q-select
+          v-model="filtros.codplantio"
+          :options="plantios"
+          :option-label="rotuloPlantio"
+          option-value="codplantio"
+          :disable="!filtros.codsafra"
+          :loading="carregandoPlantios"
+          :hint="filtros.codsafra ? undefined : 'Escolha a safra primeiro'"
+          emit-value
+          map-options
+          outlined
+          clearable
+          label="Talhão"
+        />
+        <q-select
+          v-model="filtros.codcontrato"
+          :options="contratos"
+          :option-label="rotuloContrato"
+          option-value="codcontrato"
+          emit-value
+          map-options
+          outlined
+          clearable
+          :bottom-slots="false"
+          label="Contrato"
+        />
+        <MgSelectPessoa
+          v-model="filtros.codpessoacontrato"
+          label="Cliente / fornecedor"
+          clearable
+          :bottom-slots="false"
+        />
+        <q-btn-toggle
+          v-model="filtros.papel"
+          spread
+          no-caps
+          flat
+          toggle-color="primary"
+          :options="LADO_OPCOES"
+        />
+      </div>
+    </FilterGroup>
+
+    <FilterGroup title="Caminhão">
+      <div class="column q-gutter-y-sm">
+        <MgInput v-model="filtros.placa" outlined clearable :bottom-slots="false" label="Placa" />
+        <MgInput
+          v-model="filtros.placacarreta"
+          outlined
+          clearable
+          :bottom-slots="false"
+          label="Carreta"
+        />
+        <MgInput
+          v-model="filtros.motorista"
+          outlined
+          clearable
+          :bottom-slots="false"
+          label="Motorista"
+        />
+        <MgInputValor
+          v-model="filtros.codcarga"
+          :decimals="0"
+          :grouping="false"
+          align="left"
+          clearable
+          :bottom-slots="false"
+          label="Nº do romaneio"
+        />
+      </div>
+    </FilterGroup>
+
+    <FilterGroup title="Situação">
+      <q-btn-toggle
+        v-model="filtros.inativo"
+        spread
+        no-caps
         flat
-        round
-        icon="close"
-        color="grey-7"
-        @click="store.limparFiltros()"
-      >
-        <q-tooltip>Limpar filtros</q-tooltip>
-      </q-btn>
-    </div>
-  </div>
+        toggle-color="primary"
+        :options="SITUACAO_OPCOES"
+      />
+    </FilterGroup>
 
-  <q-separator />
-
-  <div class="q-pa-md q-gutter-y-md">
-    <div class="text-caption text-grey-7">Período e safra</div>
-    <MgInputData v-model="filtros.data_inicio" type="date" label="De" />
-    <MgInputData v-model="filtros.data_fim" type="date" label="Até" />
-    <q-select
-      v-model="filtros.codsafra"
-      :options="safras"
-      option-value="codsafra"
-      option-label="safra"
-      emit-value
-      map-options
-      outlined
-      clearable
-      label="Safra"
-    />
-    <q-select
-      v-model="filtros.codcultura"
-      :options="culturas"
-      option-value="codcultura"
-      option-label="cultura"
-      emit-value
-      map-options
-      outlined
-      clearable
-      label="Cultura"
-    />
-  </div>
-
-  <q-separator />
-
-  <div class="q-pa-md q-gutter-y-md">
-    <div class="text-caption text-grey-7">Tipo e situação</div>
-    <q-select
-      v-model="filtros.sentido"
-      :options="SENTIDO_OPCOES"
-      emit-value
-      map-options
-      outlined
-      clearable
-      label="Tipo de romaneio"
-    />
-    <q-select
-      v-model="filtros.etapa"
-      :options="ETAPA_OPCOES"
-      emit-value
-      map-options
-      outlined
-      clearable
-      label="Etapa"
-    />
-    <q-toggle v-model="filtros.canceladas" label="Incluir canceladas" />
-  </div>
-
-  <q-separator />
-
-  <div class="q-pa-md q-gutter-y-md">
-    <div class="text-caption text-grey-7">Origem e destino</div>
-    <q-select
-      v-model="filtros.codunidadearmazenadora"
-      :options="unidades"
-      :option-label="rotuloUnidade"
-      option-value="codunidadearmazenadora"
-      emit-value
-      map-options
-      outlined
-      clearable
-      label="Unidade armazenadora"
-    />
-    <q-select
-      v-model="filtros.codplantio"
-      :options="plantios"
-      :option-label="rotuloPlantio"
-      option-value="codplantio"
-      :disable="!filtros.codsafra"
-      :loading="carregandoPlantios"
-      :hint="filtros.codsafra ? '' : 'Escolha a safra primeiro'"
-      emit-value
-      map-options
-      outlined
-      clearable
-      label="Talhão"
-    />
-    <q-select
-      v-model="filtros.codcontrato"
-      :options="contratos"
-      :option-label="rotuloContrato"
-      option-value="codcontrato"
-      emit-value
-      map-options
-      outlined
-      clearable
-      label="Contrato"
-    />
-    <MgSelectPessoa
-      v-model="filtros.codpessoacontrato"
-      label="Cliente / fornecedor"
-      clearable
-      :bottom-slots="false"
-    />
-    <q-select
-      v-model="filtros.papel"
-      :options="PAPEL_OPCOES"
-      emit-value
-      map-options
-      outlined
-      label="Lado"
-      hint="Aplica-se aos campos acima"
-    />
-  </div>
-
-  <q-separator />
-
-  <div class="q-pa-md q-gutter-y-md">
-    <div class="text-caption text-grey-7">Caminhão</div>
-    <MgInput v-model="filtros.placa" outlined clearable label="Placa" />
-    <MgInput v-model="filtros.placacarreta" outlined clearable label="Carreta" />
-    <MgInput v-model="filtros.motorista" outlined clearable label="Motorista" />
-    <MgInputValor
-      v-model="filtros.codcarga"
-      :decimals="0"
-      :grouping="false"
-      align="left"
-      clearable
-      label="Nº do romaneio"
-    />
-  </div>
-
-  <q-separator />
-
-  <div class="q-pa-md q-gutter-y-md">
-    <div class="text-caption text-grey-7">Relatório</div>
-    <q-select
-      v-model="store.agrupar"
-      :options="AGRUPAMENTOS"
-      emit-value
-      map-options
-      outlined
-      label="Agrupar por"
-      hint="Vale só para o PDF"
-    />
-  </div>
+    <FilterGroup title="Relatório">
+      <q-select
+        v-model="store.agrupar"
+        :options="AGRUPAMENTOS"
+        emit-value
+        map-options
+        outlined
+        hint="Agrupamento do PDF de Imprimir lista"
+        label="Agrupar por"
+      />
+    </FilterGroup>
+  </FilterDrawerShell>
 </template>

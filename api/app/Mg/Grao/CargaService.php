@@ -187,23 +187,46 @@ class CargaService extends MgService
      * `sacas` fica de fora: depende do pesosaca da cultura, que varia por safra;
      * somar sacas de soja com milho nao significa nada. O front soma por linha
      * quando o recorte tem uma cultura so.
+     *
+     * `sentidos` separa recebido, expedido e transferido SEMPRE sem as
+     * canceladas, mesmo com "Cancelados"/"Todos" no filtro: somar kg de
+     * romaneio cancelado no total do que entrou mentiria o estoque. O `qtd` do
+     * topo continua contando o recorte inteiro (a guarda de linhas do
+     * CargaRelatorioService depende dele).
      */
     public static function totais(?array $filter = null): array
     {
-        $qry = static::qryFiltros(Carga::query(), $filter);
-
-        $row = $qry->selectRaw(
-            'count(*) as qtd'
+        $soma = 'count(*) as qtd'
             . ', coalesce(sum(bruto), 0) as bruto'
             . ', coalesce(sum(desconto), 0) as desconto'
-            . ', coalesce(sum(liquido), 0) as liquido'
-        )->first();
+            . ', coalesce(sum(liquido), 0) as liquido';
+
+        $row = static::qryFiltros(Carga::query(), $filter)->selectRaw($soma)->first();
+
+        $ativas = array_merge($filter ?? [], ['inativo' => 1]);
+        $porSentido = static::qryFiltros(Carga::query(), $ativas)
+            ->selectRaw('sentido, ' . $soma)
+            ->groupBy('sentido')
+            ->get()
+            ->keyBy('sentido');
+
+        $sentidos = [];
+        foreach (static::SENTIDOS as $sentido) {
+            $s = $porSentido->get($sentido);
+            $sentidos[$sentido] = [
+                'qtd' => (int) ($s->qtd ?? 0),
+                'bruto' => (float) ($s->bruto ?? 0),
+                'desconto' => (float) ($s->desconto ?? 0),
+                'liquido' => (float) ($s->liquido ?? 0),
+            ];
+        }
 
         return [
             'qtd' => (int) ($row->qtd ?? 0),
             'bruto' => (float) ($row->bruto ?? 0),
             'desconto' => (float) ($row->desconto ?? 0),
             'liquido' => (float) ($row->liquido ?? 0),
+            'sentidos' => $sentidos,
         ];
     }
 
