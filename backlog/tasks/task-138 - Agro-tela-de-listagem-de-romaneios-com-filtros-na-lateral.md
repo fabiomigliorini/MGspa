@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-22 12:23'
-updated_date: '2026-10-05 19:54'
+updated_date: '2026-10-06 13:44'
 labels:
   - agro
 dependencies:
@@ -52,4 +52,10 @@ Arquivos:
 Conferido: php -l; totais em dev com inativo=9: soma dos sentidos = 315 romaneios e 8.413.825,824 kg, igual ao recorte só de ativas (39 canceladas fora); com inativo=2 os sentidos não mudam. eslint e prettier limpos; os 5 módulos compilam pelo Vite do dev. Screenshot headless (template real + Quasar do node_modules + 30 romaneios reais do endpoint) em 1600px, 2700px e 430px: cabeçalho do drawer, card, botão no topo, badges e ícones como na vale; totais alinhados embaixo das colunas. Com 19 colunas a tabela rola de lado dentro do card em 1200px.
 
 FALTA VALIDAÇÃO do usuário em https://sistema-dev.mgpapelaria.com.br:8088/#/cargas, e a escolha das colunas que ficam.
+
+06/10/2026 — colunas escolhidas pelo usuário (Tipo, Data, Etapa, Safra, Placa, Motorista, Origem, Destino, Bruto, Tara, Desconto, Líquido, Sacas, ações). Saíram Romaneio, Cultura, Carreta, PBT e Situação. As células do #body estavam na ordem antiga e desalinhavam do cabeçalho: agora seguem a ordem do array `colunas`. Linha de totais gerada a partir das colunas depois do Bruto (continua alinhada se a ordem mudar). Para caber sem rolagem lateral: padding lateral 8px, wrap-cells, Tipo só com o ícone (nome no tooltip), Data em 2 linhas (data/hora), largura mínima de 130px em Motorista/Origem/Destino. Sem a coluna Situação, o romaneio cancelado aparece com o selo Cancelado no lugar da etapa. Medido no mock (template real + Quasar + dados reais): sem rolagem em 1200px e em 1366px com o drawer aberto; em 1280px com drawer sobram 64px de rolagem.
+
+06/10/2026 (2º ajuste, pedido do usuário): Motorista e Destino numa linha com reticências (max-width 110px, texto inteiro no tooltip); Data só DD/MM/AAAA; Tipo só com o nome, sem ícone. A largura mínima de 130px ficou só na Origem, que continua quebrando linha. Medido no mock: sem rolagem lateral em 1200px; com o drawer aberto em 1366px sobram 115px de rolagem (o nome do tipo e o ano com 4 dígitos ocupam o que o ícone e a data em 2 linhas liberavam).
+
+06/10/2026 (3º ajuste, pedido do usuário): a linha inteira abre o romaneio por link de verdade (router-link em cada célula, com ::after cobrindo a célula; o td do q-table já é position: relative), então Ctrl+clique, botão do meio e "Abrir em nova guia" funcionam. Só o link da 1ª célula entra no Tab. Saiu o botão do olho; a coluna de ações ficou só com a info de criação (fora do link). Origem também com reticências (max-width 105px nas três, texto inteiro no tooltip, que fica acima da camada do link). Linha de totais sem ícone. Medido no mock: sem rolagem lateral em 1200px; elementFromPoint no canto da célula Tipo = <a href="#/cargas/…">, no meio do motorista = div dentro do <a>, nas ações = ícone fora do <a>.
 <!-- SECTION:NOTES:END -->
