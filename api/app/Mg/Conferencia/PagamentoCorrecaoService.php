@@ -73,10 +73,6 @@ class PagamentoCorrecaoService
         if (!empty($pag->codportadorperiodo) && !empty($pag->PortadorPeriodo->fechamento)) {
             abort(422, 'O caixa deste dinheiro já foi fechado: reabra a sessão antes.');
         }
-        // item do caixa se mexe pela tela do caixa (M13)
-        if (!empty($pag->codcaixaitemlancamento)) {
-            abort(422, 'Item do caixa se corrige pela tela do caixa.');
-        }
         if (!empty($pag->conferencia)) {
             abort(422, 'Este pagamento já foi conferido: reabra a conferência antes.');
         }

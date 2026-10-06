@@ -1,10 +1,11 @@
 <script setup>
 // Lançamentos do período (doc-4, R10) como extrato: agrupados por dia, uma linha do tempo à
 // esquerda (hora e o ícone da origem) e, à direita, o valor e o saldo corrente sempre na mesma
-// coluna (no celular, o saldo embaixo do valor). Pagamento (venda, título, vale, item) abre o
-// pagamento; ajuste e transferência são movimento do portador (a transferência leva ao outro
-// portador, no período onde o valor caiu). A confirmar em amarelo; cancelado riscado e fora do
-// saldo, com a justificativa. Confirmar e cancelar ficam na linha.
+// coluna (no celular, o saldo embaixo do valor). Pagamento (venda, título, vale) abre o
+// pagamento; ajuste, transferência e item (entrada ou saída de item do caixa, em espécie) são
+// movimento do portador (a transferência leva ao outro portador, no período onde o valor caiu). A
+// confirmar em amarelo; cancelado riscado e fora do saldo, com a justificativa. Confirmar e
+// cancelar ficam na linha.
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
@@ -24,6 +25,10 @@ const { portador, pode, periodo, filtroOrigem } = storeToRefs(store)
 // ajuste e transferência no período da tela, não fechado
 const podeMovimentar = computed(
   () => !!pode.value.operar && !!periodo.value && periodo.value.situacao !== 'fechado',
+)
+// entrada de item: portador em espécie com item ativo
+const temItens = computed(
+  () => !!portador.value?.ehCaixa && (periodo.value?.itens ?? []).some((i) => !i.inativo),
 )
 
 // os cancelados (riscados) só aparecem no toggle
@@ -98,7 +103,7 @@ const justificar = (title, ok, fn) =>
     })
     .onOk(fn)
 
-// ajuste e transferência pelo movimento; taxa/tarifa/rendimento pelo pagamento
+// ajuste, item e transferência pelo movimento; taxa/tarifa/rendimento pelo pagamento
 function cancelar(l) {
   const titulo = l.tipo === 'T' ? 'Cancelar transferência' : 'Cancelar lançamento'
   justificar(titulo, titulo, (j) =>
@@ -133,6 +138,17 @@ function cancelar(l) {
           <q-tooltip>{{
             portador.ehCaixa ? 'Ajuste' : 'Ajuste, taxa, tarifa, rendimento'
           }}</q-tooltip>
+        </q-btn>
+        <q-btn
+          v-if="temItens"
+          flat
+          round
+          size="sm"
+          color="grey-7"
+          icon="style"
+          @click="store.abrirItem()"
+        >
+          <q-tooltip>Entrada de item</q-tooltip>
         </q-btn>
         <q-btn
           flat

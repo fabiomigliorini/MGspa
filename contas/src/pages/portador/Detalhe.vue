@@ -12,6 +12,7 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import TransferirCaixaDialog from '@components/caixa/TransferirCaixaDialog.vue'
 import AvulsoCaixaDialog from '@components/caixa/AvulsoCaixaDialog.vue'
+import ItemCaixaDialog from '@components/caixa/ItemCaixaDialog.vue'
 import { formataNumero, formataDataAbreviada } from '@components/formatters'
 import { periodoStore } from '@components/stores/periodoStore'
 import PortadorDialog from 'components/portador/PortadorDialog.vue'
@@ -143,59 +144,58 @@ function abrirPeriodo() {
 <template>
   <q-page>
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
-      <q-btn
-        flat
-        round
-        icon="arrow_back"
-        :to="{ name: 'portador' }"
-        aria-label="Voltar"
-        class="q-mb-sm"
-      />
-
       <template v-if="portador">
-        <!-- portador -->
-        <q-card flat bordered class="q-mb-md">
-          <q-card-section class="row items-center q-col-gutter-sm">
-            <div class="col-12 col-sm">
-              <div class="text-h6" :class="portador.inativo ? 'text-strike text-grey-6' : ''">
-                {{ portador.portador }}
-                <q-badge
-                  v-if="caixaAberto"
-                  color="green-7"
-                  class="q-ml-sm text-body2"
-                  label="Aberto"
-                />
-              </div>
-              <div class="text-caption text-grey-7">
-                <q-badge
-                  :color="portadorTipoColor(portador.tipo)"
-                  :label="portador.ehGaveta ? 'Gaveta' : portadorTipoLabel(portador.tipo)"
-                  class="q-mr-xs"
-                />
-                {{ portador.filial ?? 'Sem filial' }}
-                <template v-if="portador.banco"> · {{ portador.banco }}</template>
-                <template v-if="portador.conta">
-                  · ag {{ portador.agencia }} cc {{ portador.conta }}-{{ portador.contadigito }}
-                </template>
-                <template v-if="portador.inativo"> · inativo</template>
-              </div>
+        <!-- portador: voltar, nome e ações, como nas outras telas de detalhe; no celular o saldo e
+             as ações descem para a linha de baixo -->
+        <div class="row items-center q-col-gutter-x-sm q-mb-sm">
+          <div class="col-auto">
+            <q-btn flat round icon="arrow_back" color="grey-7" :to="{ name: 'portador' }" />
+          </div>
+          <div class="col" style="min-width: 0">
+            <div
+              class="text-h5 ellipsis"
+              :class="portador.inativo ? 'text-strike text-grey-6' : 'text-grey-9'"
+            >
+              {{ portador.portador }}
+              <q-badge
+                v-if="caixaAberto"
+                color="green-7"
+                class="q-ml-sm text-body2"
+                label="Aberto"
+              />
             </div>
-            <div class="col-12 col-sm-auto text-right">
-              <div v-if="portador.tipo === 'E'" class="text-h6">
+            <div class="text-caption text-grey-7">
+              <q-badge
+                :color="portadorTipoColor(portador.tipo)"
+                :label="portador.ehGaveta ? 'Gaveta' : portadorTipoLabel(portador.tipo)"
+                class="q-mr-xs"
+              />
+              {{ portador.filial ?? 'Sem filial' }}
+              <template v-if="portador.banco"> · {{ portador.banco }}</template>
+              <template v-if="portador.conta">
+                · ag {{ portador.agencia }} cc {{ portador.conta }}-{{ portador.contadigito }}
+              </template>
+              <template v-if="portador.inativo"> · inativo</template>
+            </div>
+          </div>
+          <div class="col-12 col-sm-auto">
+            <div class="row items-center no-wrap">
+              <div v-if="portador.tipo === 'E'" class="text-h6 text-grey-9 q-mr-sm">
                 R$ {{ formataNumero(portador.saldo) }}
               </div>
-              <div v-else class="text-caption text-grey-6">saldo após a conciliação</div>
-            </div>
-            <div class="col-12 col-sm-auto row items-center no-wrap justify-end">
+              <div v-else class="text-caption text-grey-6 q-mr-sm">saldo após a conciliação</div>
+              <q-space />
               <q-btn
                 v-if="portador.tipo === 'B'"
                 flat
                 no-caps
                 color="primary"
                 icon="receipt_long"
-                label="Extrato do banco"
+                :label="$q.screen.gt.xs ? 'Extrato do banco' : undefined"
                 :to="extrato"
-              />
+              >
+                <q-tooltip v-if="$q.screen.xs">Extrato do banco</q-tooltip>
+              </q-btn>
               <q-btn
                 v-if="pode.usuarios"
                 flat
@@ -234,11 +234,12 @@ function abrirPeriodo() {
                 </q-btn>
               </template>
             </div>
-          </q-card-section>
+          </div>
+        </div>
 
+        <q-card v-if="(periodos.length && periodo) || podeAbrir" flat bordered class="q-mb-md">
           <!-- abas: ano → mês → período -->
           <template v-if="periodos.length && periodo">
-            <q-separator />
             <q-tabs
               align="left"
               outside-arrows
@@ -303,8 +304,7 @@ function abrirPeriodo() {
             </q-tabs>
           </template>
           <!-- espécie ainda sem período -->
-          <template v-else-if="podeAbrir">
-            <q-separator />
+          <template v-else>
             <div class="row justify-end q-pa-sm">
               <q-btn
                 flat
@@ -337,6 +337,7 @@ function abrirPeriodo() {
 
     <TransferirCaixaDialog />
     <AvulsoCaixaDialog />
+    <ItemCaixaDialog />
     <PortadorUsuariosDialog />
     <PortadorDialog />
   </q-page>

@@ -1,46 +1,99 @@
 <script setup>
-// Item do caixa na sessão aberta (M13 doc-3; seletor do item desde o doc-4). Maquineta/terceiro
-// (Bilhete Agora, Redeflex): vendido (o relatório do parceiro, só informação), entrada e saída de
-// dinheiro. Contagem (chips, ingressos): entrada e saída de estoque (bloco que chegou, devolução).
-// Entrada − saída vira um pagamento na gaveta, sempre o mesmo.
+// Entrada de item (doc-4, "Itens do caixa"): o item conta como cédula, então o saldo do
+// portador só muda quando ele entra (+) ou sai sem venda (−: devolveu, perdeu). Vender não lança
+// nada. Linhas novas de descrição (typeahead com as já usadas no item), preço e quantidade; cai no
+// período da tela, com a data dentro dele, e só se cancela, com justificativa. Qualquer portador
+// em espécie.
 import { ref, computed, watch } from 'vue'
+import { api } from 'src/services/api'
 import MgInput from '@components/MgInput.vue'
+import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import { periodoStore } from '@components/stores/periodoStore'
+import { formataNumero, formataTimestamp, formataTimestampIso } from '@components/formatters'
+import { periodoStore, linhasParaSalvar, totalLinhas } from '@components/stores/periodoStore'
+
+const SENTIDOS = [
+  { label: 'Entrada', value: 1 },
+  { label: 'Saída', value: -1 },
+]
 
 const store = periodoStore()
-const codcaixaitem = ref(null)
-const form = ref({})
+const periodo = computed(() => store.periodo)
+const itens = computed(() => (periodo.value?.itens || []).filter((i) => !i.inativo))
+const item = computed(() => itens.value.find((i) => i.codcaixaitem === form.value.codcaixaitem))
 
-const itens = computed(() => store.periodo?.itens ?? [])
-const item = computed(() => itens.value.find((i) => i.codcaixaitem === codcaixaitem.value))
+const limite = () =>
+  periodo.value?.fim && new Date(periodo.value.fim) < new Date()
+    ? new Date(periodo.value.fim)
+    : new Date()
+// lê o valor do form (ISO), não o texto que o MgInputData passa às rules; vazio fica com o !!v
+const noPeriodo = () => {
+  if (!periodo.value || !form.value.transacao) return true
+  const d = new Date(form.value.transacao)
+  return (
+    (d >= new Date(periodo.value.inicio) && d <= limite()) ||
+    `Fora do período (de ${formataTimestamp(periodo.value.inicio, 0)} a ${formataTimestamp(limite(), 0)})`
+  )
+}
 
-const preencher = () => {
-  const i = item.value
-  form.value = {
-    valorvendido: i?.valorvendido ?? null,
-    valorentrada: i?.valorentrada || null,
-    valorsaida: i?.valorsaida || null,
-    observacoes: i?.observacoes || '',
-  }
+const linhaVazia = () => ({ descricao: null, preco: null, quantidade: null })
+// mesma regra do servidor (CaixaItemService::validarEntrada): linha toda vazia é ignorada; com
+// qualquer campo preenchido, exige descrição, preço >= 0,01 e quantidade >= 1
+const preenchida = (l) => !!l.descricao?.trim() || l.preco != null || l.quantidade != null
+const regraDescricao = (l) => () => !preenchida(l) || !!l.descricao?.trim() || 'Obrigatório'
+const regraPreco = (l) => (v) => !preenchida(l) || Number(v) >= 0.01 || 'Mínimo 0,01'
+const regraQuantidade = (l) => (v) => !preenchida(l) || Number(v) >= 1 || 'Mínimo 1'
+const vazio = () => ({
+  codcaixaitem: store.item ?? itens.value[0]?.codcaixaitem ?? null,
+  sinal: 1,
+  linhas: [linhaVazia()],
+  observacoes: '',
+  transacao: formataTimestampIso(limite()),
+})
+const form = ref(vazio())
+const total = computed(() => totalLinhas(form.value.linhas))
+const valorLinha = (l) =>
+  Number(l.quantidade) > 0 && Number(l.preco) > 0
+    ? formataNumero(Number(l.quantidade) * Number(l.preco))
+    : undefined
+
+function incluirLinha() {
+  form.value.linhas = [...form.value.linhas, linhaVazia()]
+}
+
+function excluirLinha(i) {
+  form.value.linhas = form.value.linhas.filter((_, j) => j !== i)
+}
+
+// typeahead da descrição: as já usadas no item (entradas e contagens)
+const sugestoes = ref([])
+function buscarDescricao(busca, update) {
+  api
+    .get(`v1/caixa-item/${form.value.codcaixaitem}/descricao`, { params: { busca } })
+    .then(({ data }) => update(() => (sugestoes.value = data.data)))
+    .catch(() => update(() => (sugestoes.value = [])))
 }
 
 watch(
   () => store.dialogItem,
   (aberto) => {
-    if (!aberto) return
-    codcaixaitem.value = store.item
-    preencher()
+    if (aberto) form.value = vazio()
   },
 )
-watch(codcaixaitem, preencher)
+// trocou o item: linhas novas
+watch(
+  () => form.value.codcaixaitem,
+  () => (form.value.linhas = [linhaVazia()]),
+)
 
 async function salvar() {
-  const ok = await store.salvarItem(codcaixaitem.value, {
-    valorvendido: item.value.modo === 'M' ? form.value.valorvendido : null,
-    valorentrada: form.value.valorentrada || 0,
-    valorsaida: form.value.valorsaida || 0,
-    observacoes: form.value.observacoes || null,
+  const f = form.value
+  const ok = await store.lancarItem({
+    codcaixaitem: f.codcaixaitem,
+    sinal: f.sinal,
+    linhas: linhasParaSalvar(f.linhas),
+    observacoes: f.observacoes,
+    transacao: f.transacao,
   })
   if (ok) store.dialogItem = false
 }
@@ -48,62 +101,119 @@ async function salvar() {
 
 <template>
   <q-dialog v-model="store.dialogItem">
-    <q-card flat style="width: 400px; max-width: 90vw">
+    <q-card flat style="width: 600px; max-width: 95vw">
       <q-form @submit.prevent="salvar">
-        <q-card-section class="text-h6">Item do caixa</q-card-section>
+        <q-card-section class="text-grey-9 text-overline text-uppercase">
+          {{ form.sinal > 0 ? 'Entrada' : 'Saída' }} de {{ item?.item ?? 'item' }}
+        </q-card-section>
+        <q-separator inset />
+        <q-card-section class="text-caption text-grey-7 q-pb-none">
+          O item conta como cédula: vender não lança nada. Aqui só o que chegou ou saiu sem venda
+          (devolvido, perdido).
+        </q-card-section>
         <q-card-section>
           <div class="row q-col-gutter-md">
-            <div class="col-12">
-              <q-select
-                v-model="codcaixaitem"
-                :options="itens"
-                option-value="codcaixaitem"
-                option-label="item"
-                emit-value
-                map-options
-                outlined
-                label="Item"
-                :autofocus="!codcaixaitem"
-                :rules="[(v) => !!v]"
-                lazy-rules
+            <div v-if="itens.length > 1" class="col-12">
+              <q-option-group
+                v-model="form.codcaixaitem"
+                type="radio"
+                inline
+                :options="itens.map((i) => ({ value: i.codcaixaitem, label: i.item }))"
               />
             </div>
-            <template v-if="item">
-              <div v-if="item.modo === 'M'" class="col-12">
-                <MgInputValor
-                  v-model="form.valorvendido"
-                  label="Vendido (relatório do parceiro)"
-                  autofocus
-                />
+            <div class="col-12">
+              <q-option-group v-model="form.sinal" type="radio" inline :options="SENTIDOS" />
+            </div>
+            <div class="col-12">
+              <MgInputData
+                v-model="form.transacao"
+                type="timestamp"
+                default-time="now"
+                label="Data"
+                :rules="[(v) => !!v, noPeriodo]"
+              />
+            </div>
+            <div class="col-12">
+              <div v-for="(l, i) in form.linhas" :key="i" class="row q-col-gutter-sm items-start">
+                <div class="col-12 col-sm-6">
+                  <q-select
+                    :model-value="l.descricao"
+                    :options="sugestoes"
+                    use-input
+                    fill-input
+                    hide-selected
+                    input-debounce="300"
+                    outlined
+                    label="Descrição"
+                    maxlength="50"
+                    :autofocus="i === 0"
+                    :rules="[regraDescricao(l)]"
+                    @filter="buscarDescricao"
+                    @input-value="(v) => (l.descricao = v || null)"
+                    @update:model-value="(v) => (l.descricao = v || null)"
+                  />
+                </div>
+                <div class="col-6 col-sm-3">
+                  <MgInputValor v-model="l.preco" label="Preço" :rules="[regraPreco(l)]" />
+                </div>
+                <div class="col-6 col-sm-3">
+                  <MgInputValor
+                    v-model="l.quantidade"
+                    label="Quantidade"
+                    :decimals="0"
+                    :min="0"
+                    :rules="[regraQuantidade(l)]"
+                    bottom-slots
+                  >
+                    <template #hint>
+                      <div class="text-right">{{ valorLinha(l) }}</div>
+                    </template>
+                    <template v-if="form.linhas.length > 1" #append>
+                      <q-icon
+                        name="close"
+                        tabindex="-1"
+                        class="cursor-pointer"
+                        @click.stop="excluirLinha(i)"
+                      />
+                    </template>
+                  </MgInputValor>
+                </div>
               </div>
-              <div class="col-6">
-                <MgInputValor
-                  v-model="form.valorentrada"
-                  :label="item.modo === 'M' ? 'Entrou na gaveta' : 'Estoque recebido'"
-                  :autofocus="item.modo === 'C'"
-                />
-              </div>
-              <div class="col-6">
-                <MgInputValor
-                  v-model="form.valorsaida"
-                  :label="item.modo === 'M' ? 'Saiu da gaveta' : 'Estoque devolvido'"
-                />
-              </div>
-              <div class="col-12">
-                <MgInput
-                  v-model="form.observacoes"
-                  label="Observação"
-                  type="textarea"
-                  autogrow
-                  maxlength="300"
-                />
-              </div>
-            </template>
+              <q-btn
+                flat
+                size="sm"
+                color="primary"
+                icon="add"
+                label="Linha"
+                @click="incluirLinha"
+              />
+            </div>
+            <div class="col-12 row items-center">
+              <div class="col text-subtitle2">Total</div>
+              <div class="text-h6">R$ {{ formataNumero(total) }}</div>
+            </div>
+            <div class="col-12">
+              <MgInput
+                v-model="form.observacoes"
+                label="Observação"
+                type="textarea"
+                autogrow
+                maxlength="300"
+              />
+            </div>
           </div>
         </q-card-section>
+        <q-separator inset />
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-          <q-btn flat label="Salvar" color="primary" type="submit" :loading="store.salvando" />
+          <q-btn
+            flat
+            label="Lançar"
+            color="primary"
+            type="submit"
+            :disable="!form.codcaixaitem || total <= 0"
+            :loading="store.salvando"
+          />
         </q-card-actions>
       </q-form>
     </q-card>

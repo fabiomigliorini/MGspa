@@ -1,16 +1,20 @@
 <script setup>
 // Contagem do caixa (M13 doc-3): quantidade de cada cédula e moeda, em duas colunas com o valor de
-// cada campo no hint e o total da coluna, e o estoque dos itens de contagem (chips, ingressos) a
-// valor de face. v-model = { contagem: { '200': 3, ... }, itens: { codcaixaitem: valor } }; o total
-// geral soma tudo, que é o que fica no caixa.
+// cada campo no hint e o total da coluna, e os itens (chips, ingressos), que contam como cédula
+// (doc-4, "Itens do caixa"): um bloco por item que está no caixa, só um campo de quantidade por
+// preço (como cédula); preço novo só entra pela entrada do item.
+// v-model = { contagem: { '200': 3 }, itens: { codcaixaitem: [{ preco, descricao, quantidade }] } };
+// o total geral soma tudo, que é o que fica no caixa.
 import { computed } from 'vue'
 import MgInputValor from '@components/MgInputValor.vue'
+import LinhasItemCaixa from '@components/caixa/LinhasItemCaixa.vue'
 import { formataNumero } from '@components/formatters'
 import { CEDULAS, MOEDAS } from '@components/stores/caixaSessaoStore'
+import { totalLinhas } from '@components/stores/periodoStore'
 
 const model = defineModel({ type: Object, required: true })
 const props = defineProps({
-  // itens de contagem (modo C): [{ codcaixaitem, item }]
+  // os itens do caixa, para o nome: [{ codcaixaitem, item }]; vazio = sem bloco de itens (PDV)
   itens: { type: Array, default: () => [] },
   autofocus: { type: Boolean, default: false },
   // só consulta (caixa fechado ou sem permissão)
@@ -32,9 +36,14 @@ const colunas = computed(() => [
   { titulo: 'Cédulas', faces: CEDULAS, total: soma(CEDULAS) },
   { titulo: 'Moedas', faces: MOEDAS, total: soma(MOEDAS) },
 ])
+// os itens na contagem (os blocos)
+const blocos = computed(() => model.value.itens || {})
+const nome = (cod) =>
+  props.itens.find((i) => String(i.codcaixaitem) === String(cod))?.item ?? 'Item'
 const estoque = computed(() =>
-  props.itens.reduce((s, i) => s + (Number(model.value.itens?.[i.codcaixaitem]) || 0), 0),
+  Object.values(blocos.value).reduce((s, linhas) => s + totalLinhas(linhas), 0),
 )
+
 const total = computed(() => Math.round((soma(CEDULAS) + soma(MOEDAS) + estoque.value) * 100) / 100)
 
 defineExpose({ total })
@@ -71,11 +80,9 @@ defineExpose({ total })
     </div>
     <template v-if="itens.length">
       <q-separator class="q-my-md" />
-      <div class="text-caption text-grey-7 q-mb-sm">Itens (valor de face)</div>
-      <div class="row q-col-gutter-md">
-        <div v-for="i in itens" :key="i.codcaixaitem" class="col-6 col-sm-4">
-          <MgInputValor v-model="model.itens[i.codcaixaitem]" :label="i.item" :disable="disable" />
-        </div>
+      <div v-for="cod in Object.keys(blocos)" :key="cod" class="q-mb-sm">
+        <div class="text-caption text-grey-7 q-mb-sm">{{ nome(cod) }} (quantidade)</div>
+        <LinhasItemCaixa v-model="model.itens[cod]" :disable="disable" />
       </div>
       <div class="row items-center q-mt-md">
         <div class="col text-caption text-grey-7">Total itens</div>

@@ -68,13 +68,26 @@ class PortadorPeriodoController extends Controller
 
     // ==== especie ====
 
+    // cedulas e moedas {face: quantidade} e os itens do caixa
+    // {codcaixaitem: [{preco, quantidade, descricao}]}
     private function contagem(Request $request): array
     {
         return $request->validate([
             'contagem' => 'nullable|array',
             'contagem.*' => 'nullable|integer|min:0',
+            'itens' => 'nullable|array',
+            'itens.*' => 'nullable|array',
+            'itens.*.*.preco' => 'nullable|numeric|min:0',
+            'itens.*.*.quantidade' => 'nullable|integer|min:0',
+            'itens.*.*.descricao' => 'nullable|string|max:50',
             'observacoes' => 'nullable|string|max:500',
         ]);
+    }
+
+    // itens nao enviados = mantem os de antes
+    private function itens(Request $request, array $dados): ?array
+    {
+        return $request->has('itens') ? ($dados['itens'] ?? []) : null;
     }
 
     // sem inicio, o servidor decide: o segundo seguinte ao fim do anterior
@@ -88,7 +101,7 @@ class PortadorPeriodoController extends Controller
             $portador,
             $request->inicio ? Carbon::parse($request->inicio) : PortadorPeriodoService::inicioDoNovo($portador),
             $request->has('contagem') ? ($dados['contagem'] ?? []) : null,
-            [],
+            $this->itens($request, $dados),
             $dados['observacoes'] ?? null
         ));
         return $this->resposta($periodo);
@@ -101,7 +114,8 @@ class PortadorPeriodoController extends Controller
         $periodo = DB::transaction(fn () => PortadorPeriodoService::contar(
             $this->periodo($id),
             $request->momento,
-            $dados['contagem'] ?? null
+            $dados['contagem'] ?? null,
+            $this->itens($request, $dados)
         ));
         return $this->resposta($periodo);
     }
@@ -123,7 +137,7 @@ class PortadorPeriodoController extends Controller
         $periodo = DB::transaction(fn () => PortadorPeriodoService::fecharCaixa(
             $periodo,
             $request->has('contagem') ? ($dados['contagem'] ?? []) : null,
-            [],
+            $this->itens($request, $dados),
             $dados['observacoes'] ?? null,
             $request->fim ? Carbon::parse($request->fim) : null
         ));

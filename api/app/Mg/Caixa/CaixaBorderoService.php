@@ -8,7 +8,7 @@ use Mg\Portador\PortadorPeriodoResource;
 
 /**
  * Bordero do caixa (M9; completo desde o M13 doc-3): a contagem por cedula
- * e moeda, os itens do caixa, avulsos, ajustes e, como informacao, o que os
+ * e moeda e os itens do caixa, ajustes e, como informacao, o que os
  * PDVs da gaveta movimentaram fora o dinheiro. Bobina 80mm, como o recibo.
  */
 class CaixaBorderoService

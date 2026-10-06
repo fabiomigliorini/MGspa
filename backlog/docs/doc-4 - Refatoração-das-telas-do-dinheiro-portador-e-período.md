@@ -246,8 +246,8 @@ agrupados por período.
 
 - **Taxa, tarifa, rendimento**: fora do escopo do dinheiro; continuam pagamento sem pessoa
   (`tblpagamento.motivo` T/F/R), lançados só no banco.
-- **Item do caixa** (chips, ingressos, recargas): controle à parte, será refatorado (cadastro
-  dinâmico de parceiros, controle por caixa com início e fim). Fora destas definições.
+- **Item do caixa**: redefinido na seção "Itens do caixa" (item que conta como cédula, que
+  conta como cédula; tipo I no movimento).
 - **Cancelar**: ajuste e transferência só se cancelam, com justificativa, e continuam visíveis em
   "Mostrar cancelados". Com o período não fechado (nos dois lados, na transferência).
 - **Em qual período cai**: no contas, no período da tela, com a data dentro do início/fim dele; o
@@ -320,7 +320,7 @@ Cada portador (qualquer tipo) tem uma **lista de usuários com papel** (`tblport
   com o saldo da primeira.
 - **Unificar** (gestor): junta o período ao anterior, os dois não fechados e o anterior sem
   diferença (para nenhuma sumir).
-- Período com itens do caixa movimentados não se divide nem se une (controle à parte).
+- A linha do item divide e unifica como qualquer linha (seção "Itens do caixa").
 
 ### A tela do portador
 
@@ -365,3 +365,102 @@ o ajuste automático de abertura/fechamento.
   `v1/portador-movimento/{transferencia,{id}/confirmar,{id}/cancelar}`. O PDV continua em
   `v1/caixa/*` (com o `codpdv` da gaveta não valida papel; abrir sem início usa agora).
 - **PDV** (`MgCaixaSessao`): só adaptado às rotas novas; não testado no navegador.
+
+## Itens do caixa (03–06/10/2026, com o Fábio)
+
+Os itens do M13 (doc-3, decisão 27) eram fixos: 6 cadastros semeados, colunas fixas por período
+da gaveta, modos C/M, pagamento em dinheiro na gaveta e título de repasse criado sozinho no
+fechamento. Esta seção **manda** sobre aquilo. Vale para todo item que **conta como cédula**
+(chips de celular, ingressos impressos): mercadoria com preço de face que fica no caixa, sem
+parceiro, acerto nem título por enquanto. Começou-se pelos chips; os outros tipos de item (sem
+estoque, com acerto) vêm um por um, adaptando a estrutura.
+
+### Definições
+
+1. **Cadastro de um nível**: cada linha é o que se controla ("Chips de celular", "Ingressos
+   Brígida"). Mínimo: o nome (e inativo); sem filial. Pessoa, conta, modo voltam quando o item
+   que precisar chegar.
+2. **O item conta como cédula**: no início e no fim do dia o caixa informa cédulas + moedas +
+   itens. O **saldo do portador inclui os itens** (a valor de face) e a **diferença é uma só**,
+   com a tolerância do portador. O saldo inicial (contagem final do anterior) já vem com os
+   itens.
+3. **Vender não lança nada**: o item vira dinheiro, o saldo não muda.
+4. **Entrada de item** (botão `style` no cabeçalho dos lançamentos), com sinal: + chegou; − saiu
+   sem venda (devolveu, perdeu). É o **único lançamento** do item: **tipo I** no movimento do
+   portador, sem `tblpagamento`. Cancela-se com justificativa, como o ajuste (operador, período
+   não fechado). As linhas são sempre novas: **descrição** (typeahead com as já usadas no item),
+   **preço** e **quantidade**; "+ Linha" acrescenta, o X exclui.
+5. **Contagem**: um bloco por item que está no portador, **um campo de quantidade por preço**
+   (como cédula), rotulado com o preço e a descrição. Preço novo só entra pela entrada.
+6. **Qualquer portador em espécie** (gaveta, cofre, troco, Caixa Financeiro). Não há vínculo a
+   cadastrar: a entrada oferece todos os itens ativos, e o item entra na contagem do portador na
+   primeira entrada ali e **vai de um dia para o outro até zerar** (contou zero, some da contagem
+   seguinte).
+7. **Só na tela do período do contas** por enquanto. O PDV (`MgCaixaSessao`) perdeu o item antigo
+   e ganha o item na refatoração dele. Até lá, a contagem feita pelo PDV não mexe nos itens já
+   contados (mantém os de antes); gaveta com itens no saldo fechada pelo PDV sem contá-los mostra
+   a diferença deles.
+8. **Tela do item** (contas → Itens do Caixa → o item): os registros que apontam para ele, com o
+   que cada portador tem e os períodos em que o item mexeu (abertura, entradas, fechamento,
+   diferença e o total dos fechados); editar, inativar e excluir no cabeçalho (a lista só
+   navega).
+
+### Anotado para os próximos itens (não fazer agora)
+
+- **Item sem estoque** (Bilhete Agora, Redeflex, Bradesco Expresso): o caixa lança por item o
+  **total do dia** do borderô do parceiro, um valor com sinal (tipo I). **Foto do borderô
+  opcional, com aviso** "sem borderô".
+- **Acerto com o parceiro à parte do caixa**: financeiro ou gerente, a qualquer hora (inclusive
+  com o caixa aberto); cada fechamento do movimento do parceiro vira um título a pagar. Falta
+  definir: o que o fechamento abrange, se o título nasce do fechamento ou por botão, e como fica o
+  estoque no corte.
+- **Ingressos com variações** (masculino/feminino, preços diferentes), que nascem na entrada.
+
+### Como ficou no código (04–06/10/2026; não validado)
+
+- **DDL** `api/database/caixa_item_dinamico.sql` (idempotente; roda no go-live depois do
+  `portador_movimento_tipo.sql`): tipo I no check do `tblportadormovimento` (exige
+  `codcaixaitem` e `itens` jsonb, estado E/C); `tblportadorperiodo.contagemitensinicial/final`
+  (jsonb `{codcaixaitem: [{preco, quantidade, descricao}]}`, ao lado das cédulas); apaga
+  `tblcaixaitemlancamento` (recusa se tiver item movimentado) e
+  `tblpagamento.codcaixaitemlancamento`; `tblcaixaitem` só com item e inativo (saem modo,
+  codfilial, codpessoa, codcontacontabil, ordem) e, dos 6 itens iniciais, só o chip. No dev o
+  Fábio já apagou à mão (05–06/10); o script completo foi conferido no dev com rollback, também
+  na ordem do go-live (`caixa_item.sql` e depois este).
+- **Backend**: `PortadorLancamentoService::lancarItem/cancelarItem`, rota
+  `POST v1/portador-periodo/{id}/item`, cancelar em `v1/portador-movimento/{id}/cancelar`;
+  `PortadorPeriodoService` (contado = cédulas + itens; gravarContagem, mesmaContagem, abrir,
+  contar, fechar, dividir, unificar levam os itens); `CaixaItemService` (linhas, totais,
+  descrições, períodos e total dos fechados);
+  `PortadorPeriodoResource` (linha I, `contagem.*.itens`, `itens` ativos com os preços conhecidos
+  e `contar` quando está no portador); `GET v1/caixa-item/{id}/descricao` (typeahead) e as rotas
+  da tela do item; borderô com os itens na contagem. Saíram `CaixaItemLancamento(Service)`,
+  `CaixaService::lancamentos/salvarItem/pagamentoNaGaveta/titulosRepasse/estornarRepasse/itens`,
+  `exigirSemItens`, a origem I dos pagamentos e as rotas `v1/caixa/sessao/{id}/item` e
+  `v1/caixa/item-lancamento`.
+- **Front**: `@components/caixa/ItemCaixaDialog` (entrada/saída, linhas novas com typeahead) e
+  `LinhasItemCaixa` (um campo por preço), `ContagemCaixa` com os itens, `periodoStore.lancarItem`;
+  contas: botão nos lançamentos de todo portador em espécie, itens no diálogo da contagem,
+  cadastro só com o nome, tela do item (`caixaItem/Detalhe` e `CaixaItemFechamentosDialog`),
+  "Movimento dos Itens" removido.
+
+### Valida (itens do caixa)
+
+1. contas → Cadastros → Itens do Caixa: criar e editar pedem só o nome; clicar no item abre a
+   tela dele.
+2. contas → Portadores → um portador em espécie (gaveta, cofre, troco) → período aberto: botão
+   `style` (Entrada de item) nos lançamentos → escolher o item → descrição (digitar "Cl" sugere
+   "Claro"), preço 10,00, quantidade 10 → Lançar. Saldo final sobe R$ 100,00; linha "Entrada:
+   Chips de celular" na linha do tempo; resumo "Itens do caixa".
+3. Saída de 1 × R$ 10,00 (sem venda): saldo desce R$ 10,00.
+4. Contagem final (botão ao lado do saldo final): cédulas + o bloco do item com o campo
+   "R$ 10,00" já listado; contar o que sobrou. Total geral = cédulas + itens; diferença uma só.
+5. Venda em dinheiro de um item: nada lançado; contar um a menos e R$ 10,00 a mais → mesma
+   diferença.
+6. Cancelar a entrada (na linha): saldo volta; aparece em "Mostrar cancelados".
+7. Fechar e abrir o seguinte: contagem inicial já vem com os itens.
+8. Contar zero, fechar e abrir o seguinte: o item some da contagem. Borderô do período mostra os
+   itens na contagem.
+9. PDV `/caixa`: sem o bloco de itens; abre e fecha como antes.
+10. Tela do item: os períodos de cada portador e a linha "Total dos fechados" (abertura do mais
+    antigo + entradas + diferença = fechamento do mais novo).

@@ -147,6 +147,16 @@ const routes = [
         },
       },
       {
+        path: 'caixa-item/:codcaixaitem(\\d+)',
+        name: 'caixa-item-detalhe',
+        component: () => import('pages/caixaItem/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Item do Caixa',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
         path: 'maquineta/:id(\\d+)/lotes',
         name: 'maquineta-lotes',
         component: () => import('pages/maquineta/Lotes.vue'),
@@ -154,19 +164,6 @@ const routes = [
           auth: true,
           title: 'Lotes da Maquineta',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
-        },
-      },
-      {
-        path: 'caixa',
-        name: 'caixa',
-        component: () => import('pages/caixa/Index.vue'),
-        meta: {
-          auth: true,
-          title: 'Movimento dos Itens do Caixa',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
-          leftDrawer: defineAsyncComponent(
-            () => import('components/drawers/CaixaFiltrosDrawer.vue'),
-          ),
         },
       },
       {

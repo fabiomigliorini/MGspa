@@ -2,6 +2,7 @@
 
 namespace Mg\Portador;
 
+use Mg\Caixa\CaixaItem;
 use Mg\MgModel;
 use Mg\Pagamento\Pagamento;
 use Mg\Usuario\Usuario;
@@ -11,7 +12,9 @@ use Mg\Usuario\Usuario;
  * principal do saldo. Tipo P pagamento (nasce do pagamento,
  * PortadorMovimentoService::sincronizar; `inativo` = linha trocada), A ajuste
  * e T transferencia (PortadorLancamentoService; a transferencia sao duas
- * linhas ligadas pelo par, com o mesmo estado). valor com sinal (positivo
+ * linhas ligadas pelo par, com o mesmo estado), I item do caixa (a entrada ou
+ * saida do item no portador em especie: codcaixaitem e as linhas em `itens`; o
+ * item conta como cedula, vender nao lanca nada). valor com sinal (positivo
  * entrou); transacao = quando aparece no portador. Mantido a mao.
  */
 class PortadorMovimento extends MgModel
@@ -22,8 +25,9 @@ class PortadorMovimento extends MgModel
     const TIPO_PAGAMENTO = 'P';
     const TIPO_AJUSTE = 'A';
     const TIPO_TRANSFERENCIA = 'T';
+    const TIPO_ITEM = 'I';
 
-    // so' ajuste e transferencia
+    // so' ajuste, transferencia e item
     const ESTADO_PENDENTE = 'P';
     const ESTADO_EFETIVADO = 'E';
     const ESTADO_CANCELADO = 'C';
@@ -46,6 +50,8 @@ class PortadorMovimento extends MgModel
         'cancelamento',
         'codusuariocancelamento',
         'justificativa',
+        'codcaixaitem',
+        'itens',
     ];
 
     protected $casts = [
@@ -67,6 +73,8 @@ class PortadorMovimento extends MgModel
         'codusuarioconfirmacao' => 'integer',
         'cancelamento' => 'datetime',
         'codusuariocancelamento' => 'integer',
+        'codcaixaitem' => 'integer',
+        'itens' => 'array',
     ];
 
     // conta no saldo: a linha do pagamento nao trocada; ajuste e
@@ -77,6 +85,11 @@ class PortadorMovimento extends MgModel
     }
 
     // Chaves Estrangeiras
+    public function CaixaItem()
+    {
+        return $this->belongsTo(CaixaItem::class, 'codcaixaitem', 'codcaixaitem');
+    }
+
     public function Pagamento()
     {
         return $this->belongsTo(Pagamento::class, 'codpagamento', 'codpagamento');

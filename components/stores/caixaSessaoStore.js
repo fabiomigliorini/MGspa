@@ -1,8 +1,7 @@
 // Tela do caixa (MgCaixaSessao, M13 do plano doc-3): a mesma no PDV e no contas. Abre e fecha
-// a sessão da gaveta contando cédulas, moedas e o estoque dos itens (chips, ingressos), mantém os
-// itens dos parceiros, os avulsos e as transferências. Fechar é a conferência: um ajuste se o
-// contado difere do sistema e os títulos de repasse dos itens. Os dialogs de movimento
-// (transferir, avulso, item) são do periodoStore (doc-4), que serve qualquer portador.
+// a sessão da gaveta contando cédulas e moedas, mantém os avulsos e as transferências. Os itens
+// do caixa (doc-4, "Itens do caixa") por enquanto só na tela do período do contas. Os dialogs de
+// movimento (transferir, avulso, item) são do periodoStore (doc-4), que serve qualquer portador.
 //   negocios: carregarGaveta(codportador da gaveta do PDV), contexto { codpdv, impressora }
 //   contas:   carregarSessao(codportadorperiodo) (Fechamentos)
 import { defineStore } from 'pinia'
@@ -46,8 +45,6 @@ export const caixaSessaoStore = defineStore('caixaSessao', {
     gaveta: null,
     sessao: null,
     envelope: 0,
-    // itens ativos da filial, para a contagem da abertura
-    itensAtivos: [],
     carregando: false,
     salvando: false,
     contexto: { codpdv: null, impressora: null },
@@ -82,7 +79,6 @@ export const caixaSessaoStore = defineStore('caixaSessao', {
         this.gaveta = data.data.gaveta
         this.sessao = data.data.sessao
         this.envelope = data.data.envelope
-        this.itensAtivos = data.data.itens
       } catch (error) {
         avisar(false, erro(error))
       } finally {

@@ -15,7 +15,7 @@ import MgInputData from '@components/MgInputData.vue'
 import ContagemCaixa from '@components/caixa/ContagemCaixa.vue'
 import PeriodoResumo from 'components/portador/PeriodoResumo.vue'
 import { formataNumero, formataTimestamp, formataTimestampIso } from '@components/formatters'
-import { periodoStore } from '@components/stores/periodoStore'
+import { periodoStore, linhasDoItem, linhasParaSalvar } from '@components/stores/periodoStore'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -84,21 +84,36 @@ function fecharPeriodo() {
   store.fechar()
 }
 
-// ---- contagem inicial ou final pelo resumo (fechado: só para ver) ----
+// ---- contagem inicial ou final pelo resumo (fechado: só para ver), com os itens do caixa: abre com
+// os que estão no portador (vêm de um dia para o outro até zerar), um campo por preço; preço novo
+// só entra pela entrada do item ----
 const dialogContagem = ref(false)
 const momento = ref('inicial')
 const contagem = ref({ contagem: {}, itens: {} })
 const soConsulta = computed(() => !naoFechado.value)
+const itensAtivos = computed(() => (periodo.value?.itens || []).filter((i) => !i.inativo))
 
 function prepararContar(m) {
   momento.value = m
-  contagem.value = { contagem: { ...(periodo.value.contagem?.[m]?.contagem || {}) }, itens: {} }
+  const c = periodo.value.contagem?.[m]
+  contagem.value = {
+    contagem: { ...(c?.contagem || {}) },
+    itens: Object.fromEntries(
+      (periodo.value?.itens || [])
+        .filter((i) => i.contar)
+        .map((i) => [i.codcaixaitem, linhasDoItem(i, c?.itens?.[i.codcaixaitem])]),
+    ),
+  }
   dialogContagem.value = true
 }
 
+// só as linhas com quantidade: { codcaixaitem: [{ preco, descricao, quantidade }] }
 async function salvarContagem() {
   if (soConsulta.value) return
-  if (await store.contar(momento.value, limpa(contagem.value.contagem))) {
+  const itens = Object.fromEntries(
+    Object.entries(contagem.value.itens).map(([cod, linhas]) => [cod, linhasParaSalvar(linhas)]),
+  )
+  if (await store.contar(momento.value, limpa(contagem.value.contagem), itens)) {
     dialogContagem.value = false
   }
 }
@@ -343,16 +358,18 @@ async function fecharCorte() {
   <q-dialog v-model="dialogContagem">
     <q-card flat style="width: 600px; max-width: 95vw">
       <q-form @submit.prevent="salvarContagem">
-        <q-card-section class="text-h6">
+        <q-card-section class="text-grey-9 text-overline text-uppercase">
           Contagem {{ momento }}
-          <div class="text-caption text-grey-7">
-            Saldo {{ momento }} no sistema
-            {{ reais(momento === 'inicial' ? periodo.saldoinicial : periodo.saldofinal) }}
-          </div>
+        </q-card-section>
+        <q-separator inset />
+        <q-card-section class="text-caption text-grey-7 q-pb-none">
+          Saldo {{ momento }} no sistema
+          {{ reais(momento === 'inicial' ? periodo.saldoinicial : periodo.saldofinal) }}
         </q-card-section>
         <q-card-section>
-          <ContagemCaixa v-model="contagem" :disable="soConsulta" autofocus />
+          <ContagemCaixa v-model="contagem" :itens="itensAtivos" :disable="soConsulta" autofocus />
         </q-card-section>
+        <q-separator inset />
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
@@ -372,11 +389,10 @@ async function fecharCorte() {
   <q-dialog v-model="dialogDatas">
     <q-card flat style="width: 400px; max-width: 90vw">
       <q-form @submit.prevent="salvarDatas">
-        <q-card-section class="text-h6">
-          Início e fim
-          <div class="text-caption text-grey-7">
-            Sem invadir os períodos vizinhos nem deixar lançamento de fora.
-          </div>
+        <q-card-section class="text-grey-9 text-overline">INÍCIO E FIM</q-card-section>
+        <q-separator inset />
+        <q-card-section class="text-caption text-grey-7 q-pb-none">
+          Sem invadir os períodos vizinhos nem deixar lançamento de fora.
         </q-card-section>
         <q-card-section>
           <div class="row q-col-gutter-md">
@@ -404,6 +420,7 @@ async function fecharCorte() {
             </div>
           </div>
         </q-card-section>
+        <q-separator inset />
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat color="primary" type="submit" label="Salvar" :loading="salvando" />
@@ -416,12 +433,11 @@ async function fecharCorte() {
   <q-dialog v-model="dialogDividir">
     <q-card flat style="width: 600px; max-width: 95vw">
       <q-form @submit.prevent="salvarDividir">
-        <q-card-section class="text-h6">
-          Dividir
-          <div class="text-caption text-grey-7">
-            A primeira parte termina no corte e fica pendente, sem contagem final; a segunda fica
-            com o fim e a contagem final de agora e começa com o saldo da primeira.
-          </div>
+        <q-card-section class="text-grey-9 text-overline">DIVIDIR</q-card-section>
+        <q-separator inset />
+        <q-card-section class="text-caption text-grey-7 q-pb-none">
+          A primeira parte termina no corte e fica pendente, sem contagem final; a segunda fica com
+          o fim e a contagem final de agora e começa com o saldo da primeira.
         </q-card-section>
         <q-card-section>
           <q-slider
@@ -467,6 +483,7 @@ async function fecharCorte() {
             :rules="[(v) => !!v, naRegua]"
           />
         </q-card-section>
+        <q-separator inset />
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat color="primary" type="submit" label="Dividir" :loading="salvando" />
@@ -479,13 +496,15 @@ async function fecharCorte() {
   <q-dialog v-model="dialogCorte">
     <q-card flat style="width: 400px; max-width: 90vw">
       <q-form @submit.prevent="fecharCorte">
-        <q-card-section class="text-h6">Fechar com corte</q-card-section>
+        <q-card-section class="text-grey-9 text-overline">FECHAR COM CORTE</q-card-section>
+        <q-separator inset />
         <q-card-section>
           <div class="text-caption text-grey-7 q-mb-sm">
             O que caiu depois do corte vai para o período seguinte.
           </div>
           <MgInputData v-model="corte" label="Corte" autofocus :rules="[(v) => !!v]" />
         </q-card-section>
+        <q-separator inset />
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat label="Fechar" color="primary" type="submit" :loading="salvando" />

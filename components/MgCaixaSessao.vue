@@ -11,7 +11,6 @@ import MgInput from '@components/MgInput.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import ContagemCaixa from '@components/caixa/ContagemCaixa.vue'
-import ItemCaixaDialog from '@components/caixa/ItemCaixaDialog.vue'
 import AvulsoCaixaDialog from '@components/caixa/AvulsoCaixaDialog.vue'
 import TransferirCaixaDialog from '@components/caixa/TransferirCaixaDialog.vue'
 import { caixaSessaoStore, DOCUMENTOS } from '@components/stores/caixaSessaoStore'
@@ -28,7 +27,7 @@ const props = defineProps({
 
 const $q = useQuasar()
 const store = caixaSessaoStore()
-// os dialogs de movimento (transferir, avulso, item) servem qualquer portador: recebem a gaveta e a
+// os dialogs de movimento (transferir, avulso) servem qualquer portador: recebem a gaveta e a
 // sessão daqui e, depois de salvar, a tela recarrega a sessão
 const sPeriodo = periodoStore()
 watch(
@@ -38,7 +37,7 @@ watch(
     sPeriodo.contexto = store.contexto
     sPeriodo.usar(
       store.gaveta,
-      s ? { codportadorperiodo: s.codportadorperiodo, aberto: s.aberta, itens: s.itens } : null,
+      s ? { codportadorperiodo: s.codportadorperiodo, aberto: s.aberta } : null,
       () => store.recarregar(),
     )
   },
@@ -49,23 +48,15 @@ const aberta = computed(() => !!sessao.value?.aberta)
 const podeOperar = computed(() => sessao.value?.podeOperar ?? true)
 const podeAbrir = computed(() => !!props.codportador && !aberta.value && !store.carregando)
 
-const itensC = (itens) => (itens || []).filter((i) => i.modo === 'C')
-
-// contagem: abrir (itens ativos da filial) ou fechar (itens da sessão, com o rascunho de quem já
-// contou e reabriu)
+// contagem: abrir ou fechar (com o rascunho de quem já contou e reabriu). Os itens do caixa
+// (doc-4, "Itens do caixa") ainda não estão aqui: entram na refatoração desta tela
 const contagem = ref({ contagem: {}, itens: {} })
 const observacoes = ref('')
 
 const prepararContagem = () => {
-  if (aberta.value) {
-    contagem.value = {
-      contagem: { ...(sessao.value.contagemfechamento || {}) },
-      itens: Object.fromEntries(
-        itensC(sessao.value.itens).map((i) => [i.codcaixaitem, i.valorfechamento]),
-      ),
-    }
-  } else {
-    contagem.value = { contagem: {}, itens: {} }
+  contagem.value = {
+    contagem: aberta.value ? { ...(sessao.value.contagemfechamento || {}) } : {},
+    itens: {},
   }
   observacoes.value = ''
 }
@@ -73,9 +64,6 @@ const prepararContagem = () => {
 const payload = () => ({
   contagem: Object.fromEntries(
     Object.entries(contagem.value.contagem).filter(([, q]) => Number(q) > 0),
-  ),
-  itens: Object.fromEntries(
-    Object.entries(contagem.value.itens).map(([cod, v]) => [cod, Number(v) || 0]),
   ),
   observacoes: observacoes.value || null,
 })
@@ -100,18 +88,12 @@ function fechar() {
 function reabrir() {
   $q.dialog({
     title: 'Reabrir o caixa',
-    message:
-      'O caixa volta a ficar aberto: o ajuste do fechamento é desfeito e os títulos de repasse dos itens são estornados. Continuar?',
+    message: 'O caixa volta a ficar aberto: o ajuste do fechamento é desfeito. Continuar?',
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Reabrir', color: 'primary', flat: true },
   }).onOk(async () => {
     if (await store.reabrir()) prepararContagem()
   })
-}
-
-function editarItem(i) {
-  if (!aberta.value || !podeOperar.value) return
-  sPeriodo.abrirItem(i.codcaixaitem)
 }
 
 function excluirAvulso(a) {
@@ -189,7 +171,7 @@ watch(() => [props.codportador, props.codportadorperiodo], carregar)
               · envelope R$ {{ formataNumero(store.envelope) }}
             </span>
           </div>
-          <ContagemCaixa v-model="contagem" :itens="itensC(store.itensAtivos)" autofocus />
+          <ContagemCaixa v-model="contagem" autofocus />
           <MgInput
             v-model="observacoes"
             label="Observação"
@@ -220,55 +202,6 @@ watch(() => [props.codportador, props.codportadorperiodo], carregar)
       <div v-if="!aberta && podeAbrir" class="text-subtitle2 text-grey-7 q-mb-sm">
         Último fechamento
       </div>
-
-      <!-- itens do caixa -->
-      <q-card v-if="sessao.itens.length" flat bordered class="q-mb-md">
-        <q-card-section class="text-subtitle2 q-pb-sm">Itens do caixa</q-card-section>
-        <q-list separator>
-          <q-item
-            v-for="i in sessao.itens"
-            :key="i.codcaixaitem"
-            :clickable="aberta && podeOperar"
-            @click="editarItem(i)"
-          >
-            <q-item-section>
-              <q-item-label>{{ i.item }}</q-item-label>
-              <q-item-label caption>
-                <template v-if="i.modo === 'C'">
-                  abertura {{ formataNumero(i.valorabertura ?? 0) }}
-                  <template v-if="i.valorentrada">
-                    · recebido {{ formataNumero(i.valorentrada) }}</template
-                  >
-                  <template v-if="i.valorsaida">
-                    · devolvido {{ formataNumero(i.valorsaida) }}</template
-                  >
-                  <template v-if="i.valorfechamento !== null">
-                    · fechamento {{ formataNumero(i.valorfechamento) }}</template
-                  >
-                </template>
-                <template v-else>
-                  <template v-if="i.valorvendido !== null">
-                    vendido {{ formataNumero(i.valorvendido) }} ·
-                  </template>
-                  entrou {{ formataNumero(i.valorentrada) }}
-                  <template v-if="i.valorsaida"> · saiu {{ formataNumero(i.valorsaida) }}</template>
-                </template>
-              </q-item-label>
-              <q-item-label v-if="i.observacoes" caption>{{ i.observacoes }}</q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-item-label v-if="i.liquido !== null" class="text-weight-bold">
-                R$ {{ formataNumero(i.liquido) }}
-              </q-item-label>
-              <q-item-label caption>
-                <template v-if="i.titulo">título {{ i.titulo }}</template>
-                <template v-else-if="!i.parceiro">sem parceiro</template>
-                <template v-else-if="i.liquido !== null">a repassar</template>
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-card>
 
       <!-- avulsos -->
       <q-card flat bordered class="q-mb-md">
@@ -455,7 +388,7 @@ watch(() => [props.codportador, props.codportadorperiodo], carregar)
                 >· o que fica na gaveta, depois da sangria</span
               >
             </div>
-            <ContagemCaixa ref="refContagem" v-model="contagem" :itens="itensC(sessao.itens)" />
+            <ContagemCaixa ref="refContagem" v-model="contagem" />
             <MgInput
               v-model="observacoes"
               label="Observação"
@@ -509,7 +442,6 @@ watch(() => [props.codportador, props.codportadorperiodo], carregar)
       <MgInfoCriacao :registro="sessao" />
     </template>
 
-    <ItemCaixaDialog />
     <AvulsoCaixaDialog />
     <TransferirCaixaDialog />
   </div>

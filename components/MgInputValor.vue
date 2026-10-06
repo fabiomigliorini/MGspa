@@ -277,5 +277,6 @@ function onKeydown(e) {
         @click.stop="emitFromNumber(null)"
       />
     </template>
+    <template v-else-if="$slots.append" #append><slot name="append" /></template>
   </q-input>
 </template>

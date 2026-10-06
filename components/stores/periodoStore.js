@@ -1,7 +1,7 @@
 // Período do portador (doc-4, redefinição do dinheiro): o que entrou e saiu de um portador num
 // período e quanto sobrou. Domínio da tela /portador/{cod}/{codperiodo} do contas e dos dialogs de
-// movimento (@components/caixa: Transferir, Ajuste, Item), que servem qualquer portador. Ajuste e
-// transferência são movimento do portador (v1/portador-movimento), não pagamento. Toda rota que
+// movimento (@components/caixa: Transferir, Ajuste, Item), que servem qualquer portador (o item,
+// só em espécie). Ajuste, transferência e item são movimento do portador, não pagamento. Toda rota que
 // muda devolve os períodos afetados (R14); o store troca os que tem pelo que veio.
 //   contas:   carregar(codportador, codportadorperiodo) (tela do período)
 //   caixa:    usar(portador, periodo, aoMudar) (MgCaixaSessao do PDV: recarrega a sessão)
@@ -20,6 +20,32 @@ const avisar = (ok, message) =>
   })
 
 const erro = (error) => error?.response?.data?.message ?? error?.message ?? String(error)
+
+// as linhas de um item do caixa (o item conta como cédula: preço × quantidade)
+export const totalLinhas = (linhas) =>
+  Math.round(
+    (linhas || []).reduce((s, l) => s + (Number(l.quantidade) || 0) * (Number(l.preco) || 0), 0) *
+      100,
+  ) / 100
+
+// as linhas para editar: as que já passaram pela gaveta (preço fixo), com a quantidade contada
+export const linhasDoItem = (item, contadas) =>
+  (item?.linhas || []).map((l) => ({
+    preco: l.preco,
+    descricao: l.descricao,
+    quantidade:
+      (contadas || []).find(
+        (c) =>
+          Number(c.preco) === Number(l.preco) && (c.descricao || null) === (l.descricao || null),
+      )?.quantidade ?? null,
+    nova: false,
+  }))
+
+// o que vai para a API: só as linhas com quantidade
+export const linhasParaSalvar = (linhas) =>
+  (linhas || [])
+    .filter((l) => Number(l.quantidade) > 0)
+    .map((l) => ({ preco: l.preco, descricao: l.descricao || null, quantidade: l.quantidade }))
 
 export const PAPEIS = [
   { value: 'D', label: 'Depositante', descricao: 'só manda dinheiro para ele' },
@@ -49,7 +75,7 @@ export const periodoStore = defineStore('periodo', {
     dialogAvulso: false,
     dialogItem: false,
     dialogUsuarios: false,
-    // codcaixaitem já escolhido ao abrir o dialog do item
+    // codcaixaitem já escolhido ao abrir o dialog da entrada do item
     item: null,
     // a lista de usuários do portador (cadeado)
     usuarios: [],
@@ -216,21 +242,25 @@ export const periodoStore = defineStore('periodo', {
       )
     },
 
-    // ==== itens do caixa (controle à parte; só a tela do caixa do PDV) ====
+    // ==== item do caixa (em espécie): entrada (+) ou saída (−); vender não lança ====
 
     abrirItem(codcaixaitem = null) {
       this.item = codcaixaitem
       this.dialogItem = true
     },
 
-    salvarItem(codcaixaitem, payload) {
+    lancarItem({ codcaixaitem, sinal, linhas, observacoes, transacao }) {
       return this.executar(
         () =>
-          api.post(`v1/caixa/sessao/${this.periodo.codportadorperiodo}/item/${codcaixaitem}`, {
-            ...payload,
+          api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/item`, {
+            codcaixaitem,
+            sinal,
+            linhas,
+            observacoes: observacoes || null,
+            transacao: transacao || null,
             codpdv: this.contexto.codpdv,
           }),
-        'Item salvo',
+        sinal > 0 ? 'Entrada lançada' : 'Saída lançada',
       )
     },
 
@@ -246,12 +276,14 @@ export const periodoStore = defineStore('periodo', {
       return data?.data?.codportadorperiodo ?? null
     },
 
-    contar(momento, contagem) {
+    // cédulas e moedas e os itens { codcaixaitem: [{ preco, descricao, quantidade }] }
+    contar(momento, contagem, itens = null) {
       return this.executar(
         () =>
           api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/contagem`, {
             momento,
             contagem,
+            ...(itens ? { itens } : {}),
           }),
         'Contagem salva',
       )

@@ -27,12 +27,6 @@ const menuGroups = [
         color: 'amber-8',
         to: { name: 'portador' },
       },
-      {
-        label: 'Movimento dos Itens',
-        icon: 'inventory_2',
-        color: 'amber-9',
-        to: { name: 'caixa' },
-      },
       { label: 'Pix Recebidos', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
       {
         label: 'Pagamentos',

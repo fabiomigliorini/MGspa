@@ -50,6 +50,9 @@ const vazio = () => ({
   transacao: formataTimestampIso(limite()),
 })
 const form = ref(vazio())
+// o q-option-group não tem autofocus: ao abrir, o foco vai no rádio marcado
+const grupo = ref(null)
+const focarSentido = () => grupo.value?.$el.querySelector('[aria-checked="true"]')?.focus()
 
 watch(
   () => store.dialogTransferir,
@@ -69,32 +72,16 @@ async function salvar() {
 </script>
 
 <template>
-  <q-dialog v-model="store.dialogTransferir">
+  <q-dialog v-model="store.dialogTransferir" @show="focarSentido">
     <q-card flat style="width: 500px; max-width: 90vw">
       <q-form @submit.prevent="salvar">
-        <q-card-section class="text-h6">
-          {{ caixa ? 'Reforço / Sangria' : 'Transferir' }}
+        <q-card-section class="text-grey-9 text-overline">
+          {{ caixa ? 'REFORÇO / SANGRIA' : 'TRANSFERIR' }}
         </q-card-section>
+        <q-separator inset />
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <q-option-group v-model="form.sentido" type="radio" inline :options="SENTIDOS" />
-            </div>
-            <div class="col-12">
-              <MgSelectPortador
-                v-model="form.codportador"
-                :label="form.sentido === 'E' ? 'Para' : 'De'"
-                :tipos="['E', 'B']"
-                agrupar
-                :codfilial="store.portador?.codfilial"
-                :excluir="[store.portador?.codportador]"
-                :papel="form.sentido === 'E' ? 'D' : 'O'"
-                autofocus
-                :rules="[(v) => !!v]"
-                lazy-rules
-              />
-            </div>
-            <div class="col-12 col-sm-6">
               <MgInputData
                 v-model="form.transacao"
                 type="timestamp"
@@ -102,7 +89,29 @@ async function salvar() {
                 :rules="[(v) => !!v, naSessao]"
               />
             </div>
-            <div class="col-12 col-sm-6">
+            <div class="col-12">
+              <q-option-group
+                ref="grupo"
+                v-model="form.sentido"
+                type="radio"
+                inline
+                :options="SENTIDOS"
+              />
+            </div>
+            <div class="col-12">
+              <MgSelectPortador
+                v-model="form.codportador"
+                :label="form.sentido === 'E' ? 'Dinheiro Vai Para' : 'Dinheiro Veio De'"
+                :tipos="['E', 'B']"
+                agrupar
+                :codfilial="store.portador?.codfilial"
+                :excluir="[store.portador?.codportador]"
+                :papel="form.sentido === 'E' ? 'D' : 'O'"
+                :rules="[(v) => !!v]"
+                lazy-rules
+              />
+            </div>
+            <div class="col-12">
               <MgInputValor v-model="form.valor" label="Valor" :rules="[(v) => v > 0]" lazy-rules />
             </div>
             <div class="col-12">
@@ -116,6 +125,7 @@ async function salvar() {
             </div>
           </div>
         </q-card-section>
+        <q-separator inset />
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn

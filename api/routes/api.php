@@ -1325,6 +1325,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('portador-periodo/lancamento/{codpagamento}/cancelar', '\Mg\Portador\PortadorPeriodoController@cancelarLancamento')->whereNumber('codpagamento');
     // ajuste e transferencia: movimento do portador, nao pagamento
     Route::post('portador-periodo/{id}/ajuste', '\Mg\Portador\PortadorLancamentoController@ajuste')->whereNumber('id');
+    Route::post('portador-periodo/{id}/item', '\Mg\Portador\PortadorLancamentoController@item')->whereNumber('id');
     Route::post('portador-movimento/transferencia', '\Mg\Portador\PortadorLancamentoController@transferir');
     Route::post('portador-movimento/{id}/confirmar', '\Mg\Portador\PortadorLancamentoController@confirmar')->whereNumber('id');
     Route::post('portador-movimento/{id}/cancelar', '\Mg\Portador\PortadorLancamentoController@cancelar')->whereNumber('id');
@@ -1335,15 +1336,18 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('caixa/sessao/{id}/fechar', '\Mg\Caixa\CaixaController@fechar')->whereNumber('id');
     Route::post('caixa/sessao/{id}/datas', '\Mg\Caixa\CaixaController@datas')->whereNumber('id');
     Route::post('caixa/sessao/{id}/reabrir', '\Mg\Caixa\CaixaController@reabrir')->whereNumber('id');
-    Route::post('caixa/sessao/{id}/item/{codcaixaitem}', '\Mg\Caixa\CaixaController@salvarItem')->whereNumber(['id', 'codcaixaitem']);
     Route::post('caixa/sessao/{id}/avulso', '\Mg\Caixa\CaixaController@avulso')->whereNumber('id');
     Route::post('caixa/avulso/{codportadormovimento}/cancelar', '\Mg\Caixa\CaixaController@cancelarAvulso')->whereNumber('codportadormovimento');
     Route::get('caixa/sessao/{id}/bordero', '\Mg\Caixa\CaixaController@borderoTela')->whereNumber('id');
     Route::post('caixa/sessao/{id}/bordero/{impressora}', '\Mg\Caixa\CaixaController@imprimirBordero')->whereNumber('id');
-    Route::get('caixa/item-lancamento', '\Mg\Caixa\CaixaController@itemLancamentos');
-    // itens do caixa (M13 doc-3)
+    // itens do caixa (doc-4, "Itens do caixa")
     Route::get('caixa-item', '\Mg\Caixa\CaixaItemController@index');
     Route::get('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@show')->whereNumber('id');
+    Route::get('caixa-item/{id}/saldo', '\Mg\Caixa\CaixaItemController@saldos')->whereNumber('id');
+    Route::get('caixa-item/{id}/descricao', '\Mg\Caixa\CaixaItemController@descricoes')->whereNumber('id');
+    Route::get('caixa-item/{id}/tipo', '\Mg\Caixa\CaixaItemController@tipos')->whereNumber('id');
+    Route::put('caixa-item/{id}/tipo', '\Mg\Caixa\CaixaItemController@renomearTipo')->whereNumber('id');
+    Route::get('caixa-item/{id}/saldo/{codportador}', '\Mg\Caixa\CaixaItemController@fechamentos')->whereNumber(['id', 'codportador']);
     Route::post('caixa-item', '\Mg\Caixa\CaixaItemController@store');
     Route::put('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@update')->whereNumber('id');
     Route::delete('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@destroy')->whereNumber('id');

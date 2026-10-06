@@ -42,13 +42,14 @@ function excluir(u) {
 <template>
   <q-dialog v-model="store.dialogUsuarios">
     <q-card flat style="width: 600px; max-width: 95vw">
-      <q-card-section class="text-h6">
+      <q-card-section class="text-grey-9 text-overline text-uppercase">
         Usuários de {{ store.portador?.portador }}
-        <div class="text-caption text-grey-7">
-          <div v-for="p in PAPEIS" :key="p.value">
-            <span class="text-weight-medium">{{ p.label }}</span
-            >: {{ p.descricao }}
-          </div>
+      </q-card-section>
+      <q-separator inset />
+      <q-card-section class="text-caption text-grey-7 q-pb-none">
+        <div v-for="p in PAPEIS" :key="p.value">
+          <span class="text-weight-medium">{{ p.label }}</span
+          >: {{ p.descricao }}
         </div>
       </q-card-section>
 
@@ -113,6 +114,7 @@ function excluir(u) {
         </q-item>
       </q-list>
 
+      <q-separator inset />
       <q-card-actions align="right">
         <q-btn flat label="Fechar" color="grey-8" v-close-popup />
       </q-card-actions>

@@ -86,7 +86,7 @@ uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha s
 `pagamento.sql` (a tabela já virou view). `pagamento_liquidacao.sql` leva ~45 s em dev (175 mil
 liquidações, 437 mil movimentos) e precisa do `pagamento.sql` antes. O `.env` de produção do negocios
 pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). `conferencia.sql` (M9) e depois `razao.sql`
-(M10), `caixa_item.sql` (M13) e `portador_saldo.sql` (doc-4, saldo gravado), nessa ordem, rodam antes do `tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
+(M10), `caixa_item.sql` (M13), `portador_saldo.sql` (doc-4, saldo gravado), `portador_movimento_tipo.sql` (doc-4, redefinição do dinheiro) e `caixa_item_dinamico.sql` (doc-4, chips), nessa ordem, rodam antes do `tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
 script** (renumera os tipos de título; os anteriores usam os códigos antigos), e o
 `NfeTerceiroController.php` do MGsis sobe junto (grava Duplicata a Pagar, código novo 200).
 

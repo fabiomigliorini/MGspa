@@ -2,7 +2,6 @@
 
 namespace Mg\Portador;
 
-use Mg\Caixa\CaixaItemLancamento;
 use Mg\MgModel;
 use Mg\Pagamento\Pagamento;
 use Mg\Usuario\Usuario;
@@ -12,7 +11,8 @@ use Mg\Usuario\Usuario;
  * (sem fim, recebe o movimento do dia a dia), pendente (com fim, sem
  * fechamento: so' correcao) e fechado (o razao trava). Na especie, o saldo
  * inicial e' a contagem final do anterior; a contagem inicial so' confere e a
- * final da' a diferenca (contagem final - saldo final).
+ * final da' a diferenca (contagem final - saldo final). A contagem tem tambem
+ * os itens do caixa (contagemitens*), que contam como cedula.
  */
 class PortadorPeriodo extends MgModel
 {
@@ -31,6 +31,8 @@ class PortadorPeriodo extends MgModel
         'observacoes',
         'contageminicial',
         'contagemfinal',
+        'contagemitensinicial',
+        'contagemitensfinal',
         'diferenca',
     ];
 
@@ -40,6 +42,8 @@ class PortadorPeriodo extends MgModel
         'codportadorperiodo' => 'integer',
         'contageminicial' => 'array',
         'contagemfinal' => 'array',
+        'contagemitensinicial' => 'array',
+        'contagemitensfinal' => 'array',
         'codusuarioabertura' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
@@ -95,11 +99,6 @@ class PortadorPeriodo extends MgModel
     }
 
     // Tabelas Filhas
-    public function CaixaItemLancamentoS()
-    {
-        return $this->hasMany(CaixaItemLancamento::class, 'codportadorperiodo', 'codportadorperiodo');
-    }
-
     public function PagamentoS()
     {
         return $this->hasMany(Pagamento::class, 'codportadorperiodo', 'codportadorperiodo');

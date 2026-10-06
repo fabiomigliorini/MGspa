@@ -41,10 +41,10 @@ class MaquinetaLoteResource extends Resource
             'fotos' => MaquinetaLoteService::fotos($this->resource),
             'criacao' => $this->criacao,
             'codusuariocriacao' => $this->codusuariocriacao,
-            'usuariocriacao' => optional($this->UsuarioCriacao)->usuario,
+            'usuariocriacao' => $this->usuariocriacao,
             'alteracao' => $this->alteracao,
             'codusuarioalteracao' => $this->codusuarioalteracao,
-            'usuarioalteracao' => optional($this->UsuarioAlteracao)->usuario,
+            'usuarioalteracao' => $this->usuarioalteracao,
         ];
         if (!$aberto) {
             $ret['sistema'] = MaquinetaLoteService::sistema($this->codmaquinetalote);

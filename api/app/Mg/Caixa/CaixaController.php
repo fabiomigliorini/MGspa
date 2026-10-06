@@ -73,15 +73,12 @@ class CaixaController extends Controller
         return $request->validate([
             'contagem' => 'nullable|array',
             'contagem.*' => 'integer|min:0',
-            'itens' => 'nullable|array',
-            'itens.*' => 'numeric|min:0',
             'observacoes' => 'nullable|string|max:500',
             'codpdv' => 'nullable|integer|exists:tblpdv,codpdv',
         ]);
     }
 
-    // a gaveta: a sessao aberta ou a ultima, os itens para abrir e o
-    // envelope
+    // a gaveta: a sessao aberta ou a ultima e o envelope
     public function gaveta(int $codportador)
     {
         $gaveta = Portador::findOrFail($codportador);
@@ -99,7 +96,6 @@ class CaixaController extends Controller
             'aberta' => !empty($aberta),
             'sessao' => $sessao ? new SessaoResource($sessao) : null,
             'envelope' => CaixaService::envelope($codportador),
-            'itens' => $gaveta->ehGaveta() ? CaixaItemResource::collection(CaixaItemService::ativosDaFilial($gaveta->codfilial)) : [],
         ]];
     }
 
@@ -113,7 +109,7 @@ class CaixaController extends Controller
             $gaveta,
             $request->inicio ? Carbon::parse($request->inicio) : null,
             $dados['contagem'] ?? null,
-            $dados['itens'] ?? [],
+            null,
             $dados['observacoes'] ?? null,
             $this->livre($request, $gaveta->codportador)
         ));
@@ -150,7 +146,7 @@ class CaixaController extends Controller
         $sessao = DB::transaction(fn () => PortadorPeriodoService::fecharCaixa(
             $sessao,
             $dados['contagem'] ?? null,
-            $dados['itens'] ?? [],
+            null,
             $dados['observacoes'] ?? null,
             $request->fim ? Carbon::parse($request->fim) : null,
             $this->livre($request, $sessao->codportador)
@@ -166,21 +162,6 @@ class CaixaController extends Controller
         $sessao = PortadorPeriodo::with('Portador')->findOrFail($id);
         $sessao = DB::transaction(fn () => PortadorPeriodoService::reabrirCaixa($sessao));
         return $this->resposta($sessao);
-    }
-
-    public function salvarItem(Request $request, int $id, int $codcaixaitem)
-    {
-        $dados = $request->validate([
-            'valorentrada' => 'nullable|numeric|min:0',
-            'valorsaida' => 'nullable|numeric|min:0',
-            'valorvendido' => 'nullable|numeric|min:0',
-            'observacoes' => 'nullable|string|max:300',
-            'codpdv' => 'nullable|integer|exists:tblpdv,codpdv',
-        ]);
-        $sessao = $this->sessao($id);
-        $item = CaixaItem::findOrFail($codcaixaitem);
-        DB::transaction(fn () => CaixaService::salvarItem($sessao, $item, $dados, $dados['codpdv'] ?? null));
-        return $this->resposta($sessao->fresh('Portador'));
     }
 
     // o avulso do PDV e' ajuste (o motivo nao conta mais)
@@ -238,18 +219,5 @@ class CaixaController extends Controller
     {
         $this->sessao($id);
         return $this->bordero($id);
-    }
-
-    // ==== aba Itens do contas: o que cada item movimentou, para o acerto ====
-
-    public function itemLancamentos(Request $request)
-    {
-        $filtros = $request->validate([
-            'codcaixaitem' => 'nullable|integer',
-            'codfilial' => 'nullable|integer',
-            'transacao_de' => 'nullable|date',
-            'transacao_ate' => 'nullable|date',
-        ]);
-        return ['data' => CaixaItemLancamentoService::listar($filtros)];
     }
 }

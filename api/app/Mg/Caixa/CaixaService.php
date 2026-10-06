@@ -3,7 +3,6 @@
 namespace Mg\Caixa;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
@@ -11,19 +10,17 @@ use Mg\Pdv\Pdv;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorAutorizador;
 use Mg\Portador\PortadorMovimento;
-use Mg\Portador\PortadorMovimentoService;
 use Mg\Portador\PortadorPeriodo;
 use Mg\Portador\PortadorPeriodoService;
 use Mg\Portador\PortadorUsuario;
-use Mg\Titulo\TituloService;
 
 /**
  * O caixa do PDV (gaveta) sobre o periodo do portador em especie (doc-4,
  * redefinicao do dinheiro: abrir, contar, fechar, reabrir, ajuste e
  * transferencia sao do PortadorPeriodoService e do PortadorLancamentoService).
  * Aqui fica o que e' do PDV: a gaveta do dispositivo, o periodo em que cai o
- * dinheiro do pagamento (tblpagamento.codportadorperiodo), os itens do caixa
- * (controle a parte) e o que a tela do caixa e o bordero mostram.
+ * dinheiro do pagamento (tblpagamento.codportadorperiodo) e o que a tela do
+ * caixa e o bordero mostram.
  */
 class CaixaService
 {
@@ -224,147 +221,6 @@ class CaixaService
         return $ultima ? PortadorPeriodoService::saldoInicialSeguinte($ultima) : 0.0;
     }
 
-    // lancamentos dos itens da sessao, criando os que faltam (item ativo
-    // da filial cadastrado depois da abertura)
-    public static function lancamentos(PortadorPeriodo $sessao)
-    {
-        if ($sessao->aberto() && $sessao->Portador->ehGaveta()) {
-            $tem = CaixaItemLancamento::where('codportadorperiodo', $sessao->codportadorperiodo)->pluck('codcaixaitem')->all();
-            foreach (CaixaItemService::ativosDaFilial($sessao->Portador->codfilial) as $item) {
-                if (!in_array($item->codcaixaitem, $tem)) {
-                    CaixaItemLancamento::create([
-                        'codportadorperiodo' => $sessao->codportadorperiodo,
-                        'codcaixaitem' => $item->codcaixaitem,
-                        'valorabertura' => $item->ehContagem() ? 0 : null,
-                    ]);
-                }
-            }
-        }
-        return CaixaItemLancamento::where('codportadorperiodo', $sessao->codportadorperiodo)
-            ->with(['CaixaItem', 'Titulo:codtitulo,numero,valor,saldo,codtipotitulo'])
-            ->get()
-            ->sortBy(fn ($l) => [$l->CaixaItem->ordem, $l->CaixaItem->item])
-            ->values();
-    }
-
-    // o pagamento em dinheiro da sessao que a gaveta mantem (ajuste e item):
-    // valor com sinal (positivo entrou); zero cancela; sempre o mesmo
-    // registro (cancelado volta a valer)
-    public static function pagamentoNaGaveta(PortadorPeriodo $sessao, ?Pagamento $pag, float $valor, array $dados): ?Pagamento
-    {
-        $valor = round($valor, 2);
-        if ($valor == 0) {
-            if ($pag && $pag->estado != PagamentoService::ESTADO_CANCELADO) {
-                PagamentoService::cancelar($pag, $dados['justificativa'] ?? 'Zerado no caixa');
-            }
-            return $pag;
-        }
-        unset($dados['justificativa']);
-        $pag = $pag ?? new Pagamento();
-        $agora = Carbon::now();
-        if ($pag->estado == PagamentoService::ESTADO_CANCELADO) {
-            $pag->cancelamento = null;
-            $pag->codusuariocancelamento = null;
-            $pag->justificativa = null;
-        }
-        PagamentoService::preencher($pag, array_merge([
-            'codportadordestino' => $valor > 0 ? $sessao->codportador : null,
-            'codportadororigem' => $valor < 0 ? $sessao->codportador : null,
-            'meio' => PagamentoService::MEIO_DINHEIRO,
-            'principal' => abs($valor),
-            'estado' => PagamentoService::ESTADO_EFETIVADO,
-            'efetivacao' => $pag->efetivacao ?? $agora,
-            'codusuarioefetivacao' => $pag->codusuarioefetivacao ?? (Auth::user()->codusuario ?? null),
-            'codportadorperiodo' => $sessao->codportadorperiodo,
-            'codfilial' => $sessao->Portador->codfilial,
-        ], $dados));
-        $pag->save();
-        PortadorMovimentoService::sincronizar($pag);
-        return $pag;
-    }
-
-    // salva o item na sessao aberta e mantem o pagamento entrada - saida
-    public static function salvarItem(PortadorPeriodo $sessao, CaixaItem $item, array $dados, ?int $codpdv = null): CaixaItemLancamento
-    {
-        if ($sessao->fechado()) {
-            static::naoAberta($sessao->Portador);
-        }
-        $lanc = CaixaItemLancamento::firstOrNew([
-            'codportadorperiodo' => $sessao->codportadorperiodo,
-            'codcaixaitem' => $item->codcaixaitem,
-        ]);
-        foreach (['valorentrada', 'valorsaida'] as $col) {
-            $lanc->$col = round((float) ($dados[$col] ?? 0), 2);
-        }
-        $lanc->valorvendido = $item->ehContagem() ? null : (isset($dados['valorvendido']) ? round((float) $dados['valorvendido'], 2) : null);
-        if ($item->ehContagem() && $lanc->valorabertura === null) {
-            $lanc->valorabertura = 0;
-        }
-        $lanc->observacoes = empty(trim($dados['observacoes'] ?? '')) ? null : trim($dados['observacoes']);
-        $lanc->save();
-        $pag = static::pagamentoNaGaveta($sessao, $lanc->Pagamento, $lanc->valorentrada - $lanc->valorsaida, [
-            'codcaixaitemlancamento' => $lanc->codcaixaitemlancamento,
-            'codpdv' => $lanc->Pagamento->codpdv ?? $codpdv,
-            'codpessoa' => $item->codpessoa,
-            'observacoes' => $item->item . ($lanc->observacoes ? " · {$lanc->observacoes}" : ''),
-            'justificativa' => 'Item do caixa zerado',
-        ]);
-        if ($pag && $lanc->codpagamento != $pag->codpagamento) {
-            $lanc->codpagamento = $pag->codpagamento;
-            $lanc->save();
-        }
-        return $lanc->fresh(['CaixaItem']);
-    }
-
-    // um titulo por item com parceiro e liquido <> 0: positivo devemos
-    // (Duplicata a Pagar), negativo o parceiro deve (Duplicata a Receber)
-    public static function titulosRepasse(PortadorPeriodo $sessao, Carbon $momento): void
-    {
-        foreach (static::lancamentos($sessao) as $lanc) {
-            $item = $lanc->CaixaItem;
-            $liquido = $lanc->liquido();
-            if ($liquido == 0 || empty($item->codpessoa) || empty($item->codcontacontabil)) {
-                continue;
-            }
-            $titulo = TituloService::criar([
-                'codtipotitulo' => $liquido > 0 ? TituloService::TIPO_DUPLICATA_PAGAR : TituloService::TIPO_DUPLICATA_RECEBER,
-                'codfilial' => $sessao->Portador->codfilial,
-                'codpessoa' => $item->codpessoa,
-                'codcontacontabil' => $item->codcontacontabil,
-                'numero' => $momento->format('Y-m-d') . '-P' . $sessao->codportadorperiodo,
-                'sufixo' => true,
-                'transacao' => $momento->toDateString(),
-                'emissao' => $momento->toDateString(),
-                'vencimento' => $momento->toDateString(),
-                'valor' => abs($liquido),
-                'observacao' => "Repasse {$item->item} · {$sessao->Portador->portador} sessão {$sessao->codportadorperiodo}",
-            ]);
-            $lanc->codtitulo = $titulo->codtitulo;
-            $lanc->save();
-        }
-    }
-
-    // reabrir: estorna os titulos de repasse dos itens (422 se ja'
-    // movimentados)
-    public static function estornarRepasse(PortadorPeriodo $sessao): void
-    {
-        $lancs = CaixaItemLancamento::where('codportadorperiodo', $sessao->codportadorperiodo)
-            ->whereNotNull('codtitulo')
-            ->with(['Titulo', 'CaixaItem'])
-            ->get();
-        foreach ($lancs as $lanc) {
-            $t = $lanc->Titulo;
-            if (round((float) $t->valor, 2) != round((float) $t->saldo, 2)) {
-                abort(422, "O título de repasse {$t->numero} ({$lanc->CaixaItem->item}) já foi agrupado ou pago: estorne no contas antes de reabrir.");
-            }
-        }
-        foreach ($lancs as $lanc) {
-            TituloService::estornar($lanc->Titulo, "Reabertura do caixa {$sessao->Portador->portador}");
-            $lanc->codtitulo = null;
-            $lanc->save();
-        }
-    }
-
     // dinheiro do sistema no periodo: saldo inicial + entradas - saidas, por
     // documento (V venda, I item do caixa, T titulo, A taxa/tarifa, J ajuste,
     // X transferencia), das linhas que valem
@@ -375,8 +231,8 @@ class CaixaService
                 case
                     when m.tipo = 'A' then 'J'
                     when m.tipo = 'T' then 'X'
+                    when m.tipo = 'I' then 'I'
                     when p.codnegocio is not null then 'V'
-                    when p.codcaixaitemlancamento is not null then 'I'
                     when p.motivo is not null then 'A'
                     else 'T'
                 end as documento,
@@ -472,32 +328,8 @@ class CaixaService
         ];
     }
 
-    // tudo que a tela do caixa mostra da sessao (M13): dinheiro do sistema,
-    // contagens, itens, ajustes, avulsos, transferencias e o informativo
-    // os itens da sessao como a tela do caixa e o periodo mostram
-    public static function itens(PortadorPeriodo $sessao): array
-    {
-        return static::lancamentos($sessao)->map(fn (CaixaItemLancamento $l) => [
-            'codcaixaitemlancamento' => $l->codcaixaitemlancamento,
-            'codcaixaitem' => $l->codcaixaitem,
-            'item' => $l->CaixaItem->item,
-            'modo' => $l->CaixaItem->modo,
-            'parceiro' => !empty($l->CaixaItem->codpessoa),
-            'valorabertura' => $l->valorabertura,
-            'valorentrada' => $l->valorentrada,
-            'valorsaida' => $l->valorsaida,
-            'valorvendido' => $l->valorvendido,
-            'valorfechamento' => $l->valorfechamento,
-            'liquido' => $l->valorfechamento === null && $l->CaixaItem->ehContagem() ? null : $l->liquido(),
-            'observacoes' => $l->observacoes,
-            'codpagamento' => $l->codpagamento,
-            'codtitulo' => $l->codtitulo,
-            'titulo' => optional($l->Titulo)->numero,
-        ])->all();
-    }
-
-    // o que a tela do caixa do PDV mostra do periodo: dinheiro, informativo,
-    // itens e os ajustes
+    // o que a tela do caixa do PDV mostra do periodo: dinheiro, informativo e
+    // os ajustes
     public static function painel(PortadorPeriodo $sessao): array
     {
         $ajustes = PortadorMovimento::where('codportadorperiodo', $sessao->codportadorperiodo)
@@ -513,13 +345,12 @@ class CaixaService
                 'estado' => $m->estado,
                 'observacoes' => $m->observacoes,
                 'justificativa' => $m->justificativa,
-                'usuariocriacao' => optional($m->UsuarioCriacao)->usuario,
+                'usuariocriacao' => $m->usuariocriacao,
                 'podeExcluir' => !$sessao->fechado() && $m->estado != PortadorMovimento::ESTADO_CANCELADO,
             ])->all();
         return [
             'dinheiro' => static::dinheiro($sessao),
             'informativo' => static::informativo($sessao),
-            'itens' => static::itens($sessao),
             'avulsos' => $ajustes,
         ];
     }

@@ -23,8 +23,6 @@ class PagamentoListaResource extends Resource
                 }
                 $texto = $numeros->take(2)->implode(', ');
                 return ($numeros->count() > 2) ? $texto . ' +' . ($numeros->count() - 2) : $texto;
-            case PagamentoListaService::ORIGEM_ITEM:
-                return optional(optional($pag->CaixaItemLancamento)->CaixaItem)->item;
         }
         return PagamentoService::MOTIVOS[$pag->motivo] ?? 'Sem documento';
     }
@@ -61,7 +59,7 @@ class PagamentoListaResource extends Resource
             'codpdv'                    => $this->codpdv,
             'pdv'                       => optional($this->Pdv)->apelido,
             'codusuariocriacao'         => $this->codusuariocriacao,
-            'usuariocriacao'            => optional($this->UsuarioCriacao)->usuario,
+            'usuariocriacao'            => $this->usuariocriacao,
             'observacoes'               => $this->observacoes,
         ];
     }

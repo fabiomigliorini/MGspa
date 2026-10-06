@@ -6,10 +6,11 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Mg\Caixa\CaixaItem;
 use Mg\Pdv\Pdv;
 
 /**
- * Ajuste e transferencia (doc-4, redefinicao do dinheiro): movimento do
+ * Ajuste, transferencia e item (doc-4, redefinicao do dinheiro): movimento do
  * portador, nao pagamento. Rotas v1/portador-movimento. Devolvem a linha e os
  * periodos afetados (R14). Com o codpdv da gaveta, o PDV nao valida o papel
  * nela.
@@ -56,6 +57,32 @@ class PortadorLancamentoController extends Controller
         return $this->resposta($mov);
     }
 
+    // entrada (sinal 1) ou saida (-1) do item na gaveta, no periodo da tela
+    public function item(Request $request, int $id)
+    {
+        $dados = $request->validate([
+            'codcaixaitem' => 'required|integer|exists:tblcaixaitem,codcaixaitem',
+            'sinal' => 'required|in:1,-1',
+            'linhas' => 'required|array|min:1',
+            'linhas.*.preco' => 'required|numeric|min:0.01',
+            'linhas.*.quantidade' => 'required|integer|min:0',
+            'linhas.*.descricao' => 'nullable|string|max:50',
+            'observacoes' => 'nullable|string|max:300',
+            'transacao' => 'nullable|date',
+            'codpdv' => 'nullable|integer',
+        ]);
+        $mov = DB::transaction(fn () => PortadorLancamentoService::lancarItem(
+            PortadorPeriodo::with('Portador')->findOrFail($id),
+            CaixaItem::findOrFail($dados['codcaixaitem']),
+            (int) $dados['sinal'],
+            $dados['linhas'],
+            $dados['observacoes'] ?? null,
+            !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null,
+            $this->livre($request)
+        ));
+        return $this->resposta($mov);
+    }
+
     public function transferir(Request $request)
     {
         $dados = $request->validate([
@@ -85,7 +112,7 @@ class PortadorLancamentoController extends Controller
         return $this->resposta($mov);
     }
 
-    // ajuste ou transferencia
+    // ajuste, item ou transferencia
     public function cancelar(Request $request, int $id)
     {
         $request->validate([
@@ -93,9 +120,12 @@ class PortadorLancamentoController extends Controller
             'codpdv' => 'nullable|integer',
         ]);
         $mov = PortadorMovimento::findOrFail($id);
-        $mov = DB::transaction(fn () => $mov->tipo == PortadorMovimento::TIPO_AJUSTE
-            ? PortadorLancamentoService::cancelarAjuste($mov, $request->justificativa, $this->livre($request))
-            : PortadorLancamentoService::cancelarTransferencia($mov, $request->justificativa, $this->livre($request)));
+        $livre = $this->livre($request);
+        $mov = DB::transaction(fn () => match ($mov->tipo) {
+            PortadorMovimento::TIPO_AJUSTE => PortadorLancamentoService::cancelarAjuste($mov, $request->justificativa, $livre),
+            PortadorMovimento::TIPO_ITEM => PortadorLancamentoService::cancelarItem($mov, $request->justificativa, $livre),
+            default => PortadorLancamentoService::cancelarTransferencia($mov, $request->justificativa, $livre),
+        });
         return $this->resposta($mov);
     }
 }

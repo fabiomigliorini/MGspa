@@ -37,7 +37,7 @@ const noPeriodo = () => {
 }
 const vazio = () => ({
   tipo: 'A',
-  sentido: 'E',
+  sentido: null,
   valor: null,
   observacoes: '',
   transacao: formataTimestampIso(limite()),
@@ -71,11 +71,12 @@ async function salvar() {
   <q-dialog v-model="store.dialogAvulso">
     <q-card flat style="width: 400px; max-width: 90vw">
       <q-form @submit.prevent="salvar">
-        <q-card-section class="text-h6">
-          {{ TIPOS.length ? 'Lançamento' : 'Ajuste' }}
-          <div v-if="ajuste" class="text-caption text-grey-7">
-            Acerto do saldo, sem contraparte. Pagamento, vale e venda não são ajuste.
-          </div>
+        <q-card-section class="text-grey-9 text-overline">
+          {{ TIPOS.length ? 'LANÇAMENTO' : 'AJUSTE' }}
+        </q-card-section>
+        <q-separator inset />
+        <q-card-section v-if="ajuste" class="text-caption text-grey-7 q-pb-none">
+          Acerto do saldo, sem contraparte. Pagamento, vale e venda não são ajuste.
         </q-card-section>
         <q-card-section>
           <div class="row q-col-gutter-md">
@@ -88,36 +89,39 @@ async function salvar() {
                 type="timestamp"
                 default-time="now"
                 label="Data"
-                :autofocus="!TIPOS.length"
                 :rules="[(v) => !!v, noPeriodo]"
               />
-            </div>
-            <div class="col-5">
-              <q-select
-                v-model="form.sentido"
-                :options="SENTIDOS"
-                emit-value
-                map-options
-                outlined
-                label="Entrada ou saída"
-              />
-            </div>
-            <div class="col-7">
-              <MgInputValor v-model="form.valor" label="Valor" :rules="[(v) => v > 0]" lazy-rules />
             </div>
             <div class="col-12">
               <MgInput
                 v-model="form.observacoes"
                 :label="ajuste ? 'Motivo do ajuste' : 'Observação'"
                 type="textarea"
+                :autofocus="!TIPOS.length"
                 autogrow
                 maxlength="300"
                 :rules="[(v) => !ajuste || (v || '').trim().length >= 3]"
                 lazy-rules
               />
             </div>
+            <div class="col-12">
+              <!-- o q-option-group não tem rules: o q-field sem borda valida a escolha -->
+              <q-field
+                v-model="form.sentido"
+                borderless
+                :rules="[(v) => !!v || 'Informe se é entrada ou saída']"
+              >
+                <template #control>
+                  <q-option-group v-model="form.sentido" type="radio" inline :options="SENTIDOS" />
+                </template>
+              </q-field>
+            </div>
+            <div class="col-12">
+              <MgInputValor v-model="form.valor" label="Valor" :rules="[(v) => v > 0]" lazy-rules />
+            </div>
           </div>
         </q-card-section>
+        <q-separator inset />
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat label="Lançar" color="primary" type="submit" :loading="store.salvando" />

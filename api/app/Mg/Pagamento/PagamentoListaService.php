@@ -5,9 +5,9 @@ namespace Mg\Pagamento;
 use Carbon\Carbon;
 
 /**
- * Listagem unica de pagamentos (M6.1 doc-3): venda, titulo, item do caixa e
- * avulso (taxa, tarifa, rendimento), em qualquer estado. Ajuste e
- * transferencia nao sao pagamento (movimento do portador). A mesma consulta serve o contas (v1/pagamento,
+ * Listagem unica de pagamentos (M6.1 doc-3): venda, titulo e avulso (taxa,
+ * tarifa, rendimento), em qualquer estado. Ajuste, transferencia e item do
+ * caixa nao sao pagamento (movimento do portador). A mesma consulta serve o contas (v1/pagamento,
  * filiais do usuario) e o PDV (v1/pdv/pagamento, travada no PDV).
  */
 class PagamentoListaService
@@ -16,13 +16,11 @@ class PagamentoListaService
     const ORIGEM_VENDA = 'V';
     const ORIGEM_TITULO = 'T';
     const ORIGEM_AVULSO = 'A';
-    const ORIGEM_ITEM = 'I';
 
     const ORIGENS = [
         self::ORIGEM_VENDA => 'Venda',
         self::ORIGEM_TITULO => 'Títulos',
         self::ORIGEM_AVULSO => 'Avulso',
-        self::ORIGEM_ITEM => 'Item do caixa',
     ];
 
     const FILTROS = [
@@ -52,19 +50,13 @@ class PagamentoListaService
         'UsuarioCriacao:codusuario,usuario',
         'MovimentoTituloS:codmovimentotitulo,codpagamento,codtitulo,codtipomovimentotitulo,codmovimentotituloestorno',
         'MovimentoTituloS.Titulo:codtitulo,numero',
-        'CaixaItemLancamento:codcaixaitemlancamento,codcaixaitem',
-        'CaixaItemLancamento.CaixaItem:codcaixaitem,item',
     ];
 
-    // Venda, item do caixa, titulo ou avulso
-    // (o resto)
+    // Venda, titulo ou avulso (o resto)
     public static function origem(Pagamento $pag): string
     {
         if (!empty($pag->codnegocio)) {
             return static::ORIGEM_VENDA;
-        }
-        if (!empty($pag->codcaixaitemlancamento)) {
-            return static::ORIGEM_ITEM;
         }
         if ($pag->MovimentoTituloS->isNotEmpty() || !empty($pag->codperiodocolaboradoracerto)) {
             return static::ORIGEM_TITULO;
@@ -183,12 +175,8 @@ class PagamentoListaService
                                 ->where(fn($x) => $x->whereExists($temTitulo)
                                     ->orWhereNotNull('tblpagamento.codperiodocolaboradoracerto')));
                             break;
-                        case static::ORIGEM_ITEM:
-                            $w->orWhereNotNull('tblpagamento.codcaixaitemlancamento');
-                            break;
                         case static::ORIGEM_AVULSO:
                             $w->orWhere(fn($t) => $t->whereNull('tblpagamento.codnegocio')
-                                ->whereNull('tblpagamento.codcaixaitemlancamento')
                                 ->whereNull('tblpagamento.codperiodocolaboradoracerto')
                                 ->whereNotExists($temTitulo));
                             break;

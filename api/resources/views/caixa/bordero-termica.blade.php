@@ -1,14 +1,36 @@
 @php
-    // Bordero do periodo em especie (doc-4, redefinicao do dinheiro): contagem
-    // por cedula e moeda (so' o dinheiro), o resumo com a contagem final e a
-    // diferenca, ajustes e, na gaveta, os itens do caixa (controle a parte).
-    // Cartoes so' em quantidade (o gerente fecha o lote pelo bordero dele).
+    // Bordero do periodo em especie (doc-4, redefinicao do dinheiro e "Itens
+    // do caixa"): contagem por cedula e moeda e os itens do caixa
+    // (contam como cedula: preco x quantidade), o resumo com a contagem final
+    // e a diferenca e os ajustes. Cartoes so' em quantidade (o gerente fecha o
+    // lote pelo bordero dele).
     $filial = $sessao->Portador->Filial;
     $abertura = $sessao->contageminicial ?? [];
     $fechamento = $sessao->contagemfinal ?? [];
     $denominacoes = array_merge(\Mg\Caixa\CaixaService::CEDULAS, \Mg\Caixa\CaixaService::MOEDAS);
-    $itens = collect($painel['itens']);
     $final = $periodo['contagem']['final'] ?? null;
+    // as linhas dos itens: {chave: [rotulo, preco, qtd abertura, qtd fechamento]}
+    $nomes = \Mg\Caixa\CaixaItem::pluck('item', 'codcaixaitem');
+    $itens = [];
+    foreach ([$sessao->contagemitensinicial ?? [], $sessao->contagemitensfinal ?? []] as $n => $cont) {
+        foreach ($cont as $cod => $linhas) {
+            foreach ($linhas as $l) {
+                $chave = $cod . '|' . number_format($l['preco'], 2, '.', '') . '|' . ($l['descricao'] ?? '');
+                $itens[$chave] = $itens[$chave] ?? [
+                    trim(($nomes[$cod] ?? 'Item') . ' ' . ($l['descricao'] ?? '')),
+                    (float) $l['preco'],
+                    0,
+                    0,
+                ];
+                $itens[$chave][2 + $n] = (int) $l['quantidade'];
+            }
+        }
+    }
+    ksort($itens);
+    $totalAbertura = \Mg\Caixa\CaixaService::totalContagem($abertura)
+        + \Mg\Caixa\CaixaItemService::totalContagem($sessao->contagemitensinicial);
+    $totalFechamento = \Mg\Caixa\CaixaService::totalContagem($fechamento)
+        + \Mg\Caixa\CaixaItemService::totalContagem($sessao->contagemitensfinal);
 @endphp
 <!DOCTYPE html>
 <html>
@@ -123,11 +145,29 @@
                 </tr>
             @endif
         @endforeach
+        @foreach ($itens as $c)
+            <tr>
+                <td colspan="10"><small>{{ $c[0] }}</small></td>
+            </tr>
+            <tr>
+                @foreach ([2, 3] as $n)
+                    @if ($c[$n])
+                        <td class="r {{ $n == 3 ? 'lado' : '' }}">{{ $c[$n] }}</td>
+                        <td class="c">x</td>
+                        <td class="r">{{ formataNumero($c[1]) }}</td>
+                        <td class="c">=</td>
+                        <td class="r">{{ formataNumero($c[$n] * $c[1]) }}</td>
+                    @else
+                        <td class="{{ $n == 3 ? 'lado' : '' }}"></td><td></td><td></td><td></td><td></td>
+                    @endif
+                @endforeach
+            </tr>
+        @endforeach
         <tr class="total">
             <td colspan="4"><b>Total</b></td>
-            <td class="r"><b>{{ formataNumero(\Mg\Caixa\CaixaService::totalContagem($abertura)) }}</b></td>
+            <td class="r"><b>{{ formataNumero($totalAbertura) }}</b></td>
             <td colspan="4" class="lado"><b>Total</b></td>
-            <td class="r"><b>{{ formataNumero(\Mg\Caixa\CaixaService::totalContagem($fechamento)) }}</b></td>
+            <td class="r"><b>{{ formataNumero($totalFechamento) }}</b></td>
         </tr>
     </table>
 
@@ -166,32 +206,6 @@
             </tr>
         @endif
     </table>
-
-    @if ($itens->isNotEmpty())
-        <div class="linha"></div>
-        <b>ITENS DO CAIXA</b> <small>(entrada / saída · repasse)</small>
-        <table>
-            @foreach ($itens as $i)
-                @if ($i['valorentrada'] || $i['valorsaida'] || $i['valorvendido'] || $i['liquido'])
-                    <tr>
-                        <td>
-                            {{ $i['item'] }}
-                            @if ($i['modo'] == 'M' && $i['valorvendido'] !== null)
-                                <br><small>vendido {{ formataNumero($i['valorvendido']) }}</small>
-                            @endif
-                        </td>
-                        <td class="r">
-                            {{ formataNumero($i['valorentrada']) }} / {{ formataNumero($i['valorsaida']) }}<br>
-                            <b>{{ formataNumero($i['liquido'] ?? 0) }}</b>
-                            @if ($i['titulo'])
-                                <small>{{ $i['titulo'] }}</small>
-                            @endif
-                        </td>
-                    </tr>
-                @endif
-            @endforeach
-        </table>
-    @endif
 
     @if (!empty($painel['avulsos']))
         <div class="linha"></div>

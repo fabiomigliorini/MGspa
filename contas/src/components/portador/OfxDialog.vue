@@ -43,7 +43,8 @@ const aoFalhar = (response) => {
 <template>
   <q-dialog v-model="dialogOfx">
     <q-card flat style="width: 600px; max-width: 90vw">
-      <q-card-section class="text-h6">Importar OFX</q-card-section>
+      <q-card-section class="text-grey-9 text-overline">IMPORTAR OFX</q-card-section>
+      <q-separator inset />
       <q-card-section>
         <q-uploader
           :url="url"
@@ -61,6 +62,7 @@ const aoFalhar = (response) => {
           @finish="aoTerminar"
         />
       </q-card-section>
+      <q-separator inset />
       <q-card-actions align="right">
         <q-btn flat label="Fechar" color="grey-8" v-close-popup :disable="enviando" />
       </q-card-actions>

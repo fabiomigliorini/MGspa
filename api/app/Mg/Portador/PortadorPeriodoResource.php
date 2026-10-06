@@ -4,6 +4,8 @@ namespace Mg\Portador;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
 use Illuminate\Support\Collection;
+use Mg\Caixa\CaixaItem;
+use Mg\Caixa\CaixaItemService;
 use Mg\Caixa\CaixaService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoListaResource;
@@ -12,19 +14,21 @@ use Mg\Pagamento\PagamentoService;
 
 // Periodo do portador (tela /portador/{cod}/{codperiodo}; doc-4, redefinicao
 // do dinheiro). Situacao aberto/pendente/fechado; com `lancamentos`: as linhas
-// do movimento como extrato (pagamento, ajuste, transferencia), o resumo por
-// origem e, na especie, as contagens e a diferenca.
+// do movimento como extrato (pagamento, ajuste, transferencia, item), o
+// resumo por origem e, na especie, as contagens e a diferenca (com os itens do
+// caixa e os precos que ja' passaram pelo portador).
 class PortadorPeriodoResource extends Resource
 {
-    // origem da linha: as do pagamento (V, T, I, A) e as do movimento
+    // origem da linha: as do pagamento (V, T, A) e as do movimento
     const ORIGEM_AJUSTE = 'J';
     const ORIGEM_TRANSFERENCIA = 'X';
+    const ORIGEM_ITEM = 'I';
 
     // o resumo, na ordem do formulario de papel
     const RESUMO = [
         PagamentoListaService::ORIGEM_VENDA => 'Vendas',
         PagamentoListaService::ORIGEM_TITULO => 'Títulos e vales',
-        PagamentoListaService::ORIGEM_ITEM => 'Itens do caixa',
+        self::ORIGEM_ITEM => 'Itens do caixa',
         self::ORIGEM_TRANSFERENCIA => 'Transferências',
         self::ORIGEM_AJUSTE => 'Ajustes',
         PagamentoListaService::ORIGEM_AVULSO => 'Taxas, tarifas e rendimentos',
@@ -79,10 +83,10 @@ class PortadorPeriodoResource extends Resource
             'observacoes' => $this->observacoes,
             'criacao' => $this->criacao,
             'codusuariocriacao' => $this->codusuariocriacao,
-            'usuariocriacao' => optional($this->UsuarioCriacao)->usuario,
+            'usuariocriacao' => $this->usuariocriacao,
             'alteracao' => $this->alteracao,
             'codusuarioalteracao' => $this->codusuarioalteracao,
-            'usuarioalteracao' => optional($this->UsuarioAlteracao)->usuario,
+            'usuarioalteracao' => $this->usuarioalteracao,
         ];
         if (!$this->comLancamentos) {
             return $ret;
@@ -92,11 +96,12 @@ class PortadorPeriodoResource extends Resource
         if ($caixa) {
             $ret['contagem'] = $this->contagem();
             $ret['pendentes'] = PortadorLancamentoService::pendentes($this->resource);
+            $ret['itens'] = $this->itens();
         }
         return $ret;
     }
 
-    // o dinheiro contado (cedulas e moedas) no inicio e no fim e a diferenca
+    // o contado (cedulas, moedas e itens) no inicio e no fim e a diferenca
     // para o saldo inicial e final (a inicial so' confere)
     private function contagem(): array
     {
@@ -105,11 +110,52 @@ class PortadorPeriodoResource extends Resource
             $contado = PortadorPeriodoService::contado($this->resource, $momento);
             $ret[$momento] = [
                 'contagem' => static::objeto($this->{"contagem{$momento}"}),
+                'itens' => static::objeto($this->{"contagemitens{$momento}"}),
                 'contado' => $contado,
                 'diferenca' => $contado === null ? null : round($contado - (float) $this->$saldo, 2),
             ];
         }
         return $ret;
+    }
+
+    // os itens para lancar (todos os ativos) e contar (`contar`: os que estao
+    // no portador, de um dia para o outro ate' zerar), cada um com os precos (e
+    // descricoes) que ja' passaram: a contagem final do anterior, as deste
+    // periodo e as entradas e saidas dele que valem
+    private function itens(): array
+    {
+        $fontes = [$this->contagemitensinicial, $this->contagemitensfinal];
+        $anterior = PortadorPeriodoService::anterior($this->resource);
+        if ($anterior) {
+            $fontes[] = $anterior->contagemitensfinal;
+        }
+        $linhas = [];
+        foreach ($fontes as $contagem) {
+            foreach ($contagem ?? [] as $cod => $ls) {
+                $linhas[(int) $cod] = array_merge($linhas[(int) $cod] ?? [], $ls);
+            }
+        }
+        PortadorMovimento::where('codportadorperiodo', $this->codportadorperiodo)
+            ->where('tipo', PortadorMovimento::TIPO_ITEM)
+            ->where('estado', '<>', PortadorMovimento::ESTADO_CANCELADO)
+            ->get(['codcaixaitem', 'itens'])
+            ->each(function ($m) use (&$linhas) {
+                $linhas[$m->codcaixaitem] = array_merge($linhas[$m->codcaixaitem] ?? [], $m->itens ?? []);
+            });
+        $itens = CaixaItemService::ativos()
+            ->concat(CaixaItem::whereIn('codcaixaitem', array_keys($linhas))->get())
+            ->unique('codcaixaitem')
+            ->sortBy('item');
+        return $itens->map(fn (CaixaItem $i) => [
+            'codcaixaitem' => $i->codcaixaitem,
+            'item' => $i->item,
+            'inativo' => $i->inativo,
+            'contar' => !empty($linhas[$i->codcaixaitem]),
+            'linhas' => array_map(
+                fn ($l) => ['preco' => $l['preco'], 'descricao' => $l['descricao']],
+                CaixaItemService::linhas(array_map(fn ($l) => array_merge($l, ['quantidade' => 1]), $linhas[$i->codcaixaitem] ?? []))
+            ),
+        ])->values()->all();
     }
 
     // {cedula: quantidade} como objeto: o resource reindexa array de chave
@@ -127,6 +173,7 @@ class PortadorPeriodoResource extends Resource
             ->with([
                 'Pagamento' => fn ($q) => $q->with(PagamentoListaService::RELACOES),
                 'Par.Portador:codportador,portador,tipo',
+                'CaixaItem:codcaixaitem,item',
                 'UsuarioCriacao:codusuario,usuario',
                 'UsuarioCancelamento:codusuario,usuario',
             ])
@@ -154,7 +201,7 @@ class PortadorPeriodoResource extends Resource
                 'estado' => $l->estado,
                 'observacoes' => $l->observacoes,
                 'justificativa' => $l->justificativa,
-                'usuariocriacao' => optional($l->UsuarioCriacao)->usuario,
+                'usuariocriacao' => $l->usuariocriacao,
                 'usuariocancelamento' => optional($l->UsuarioCancelamento)->usuario,
                 'contraparte' => null,
                 'podeConfirmar' => false,
@@ -166,6 +213,15 @@ class PortadorPeriodoResource extends Resource
                         'origem' => static::ORIGEM_AJUSTE,
                         'texto' => 'Ajuste',
                         'detalhe' => $l->observacoes,
+                        'podeCancelar' => $valendo && $mutavel && $operador,
+                    ]);
+                case PortadorMovimento::TIPO_ITEM:
+                    return array_merge($ret, [
+                        'origem' => static::ORIGEM_ITEM,
+                        'texto' => ($l->valor < 0 ? 'Saída: ' : 'Entrada: ') . optional($l->CaixaItem)->item,
+                        'detalhe' => static::detalheItem($l),
+                        'codcaixaitem' => $l->codcaixaitem,
+                        'itens' => $l->itens,
                         'podeCancelar' => $valendo && $mutavel && $operador,
                     ]);
                 case PortadorMovimento::TIPO_TRANSFERENCIA:
@@ -198,6 +254,30 @@ class PortadorPeriodoResource extends Resource
         })->all();
     }
 
+    // "10 × 10,00 Claro pré · 5 × 20,00 · observacao"
+    public static function detalheItem(PortadorMovimento $l): string
+    {
+        $partes = static::partesLinhas($l->itens ?? []);
+        if ($l->observacoes) {
+            $partes[] = $l->observacoes;
+        }
+        return implode(' · ', $partes);
+    }
+
+    // "10 × 10,00 Claro pré · 5 × 20,00"
+    public static function textoLinhas(array $linhas): string
+    {
+        return implode(' · ', static::partesLinhas($linhas));
+    }
+
+    private static function partesLinhas(array $linhas): array
+    {
+        return array_map(
+            fn ($i) => trim($i['quantidade'] . ' × ' . formataNumero($i['preco']) . ' ' . ($i['descricao'] ?? '')),
+            $linhas
+        );
+    }
+
     // "Sangria → Cofre Centro", "Reforço ← Cofre", "Depósito → BB",
     // "Transferência ← Caixa Atacado"
     public static function textoTransferencia(PortadorMovimento $l): string
@@ -219,8 +299,7 @@ class PortadorPeriodoResource extends Resource
         return $saida ? "{$tipo} → {$nome}" : "{$tipo} ← {$nome}";
     }
 
-    // "Venda 123456 · João", "Baixa de 3 titulos · José", "Item: Chips",
-    // "Tarifa · manutencao"
+    // "Venda 123456 · João", "Baixa de 3 titulos · José", "Tarifa · manutencao"
     public static function texto(Pagamento $pag, string $origem): string
     {
         $pessoa = optional(PagamentoListaService::pessoa($pag))->fantasia;
@@ -239,8 +318,6 @@ class PortadorPeriodoResource extends Resource
                 return $comPessoa($numeros->count() == 1
                     ? 'Título ' . $numeros->first()
                     : 'Baixa de ' . $numeros->count() . ' títulos');
-            case PagamentoListaService::ORIGEM_ITEM:
-                return 'Item: ' . optional(optional($pag->CaixaItemLancamento)->CaixaItem)->item;
         }
         $motivo = PagamentoService::MOTIVOS[$pag->motivo] ?? 'Avulso';
         return $pag->observacoes ? "{$motivo} · {$pag->observacoes}" : $motivo;

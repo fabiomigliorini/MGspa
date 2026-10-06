@@ -4,12 +4,16 @@ namespace Mg\Portador;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Mg\Caixa\CaixaItem;
+use Mg\Caixa\CaixaItemService;
 use Mg\Caixa\CaixaService;
 
 /**
- * Ajuste e transferencia (doc-4, redefinicao do dinheiro): nao sao
- * pagamento, sao linhas do movimento do portador.
+ * Ajuste, transferencia e item (doc-4, redefinicao do dinheiro e "Itens do
+ * caixa"): nao sao pagamento, sao linhas do movimento do portador.
  *   Ajuste: so' a linha, com observacao; aceita uma diferenca sem explicacao.
+ *   Item: a entrada (+) ou saida (-) do item do caixa no portador em especie,
+ *   preco x quantidade; o item conta como cedula, vender nao lanca nada.
  *   Transferencia: sai de um portador e entra no outro, duas linhas ligadas
  *   pelo par, com o mesmo estado (este service mantem as duas iguais). Nasce
  *   feita se quem registra e' gestor do destino; senao fica a confirmar ate'
@@ -108,6 +112,60 @@ class PortadorLancamentoService
         $mov->refresh();
         if ($mov->estado == PortadorMovimento::ESTADO_CANCELADO) {
             abort(422, 'Ajuste já cancelado.');
+        }
+        static::exigirNaoFechado($mov->PortadorPeriodo);
+        static::cancelarLinha($mov, $justificativa);
+        PortadorPeriodoService::recalcular($mov->PortadorPeriodo);
+        return $mov;
+    }
+
+    // ==== item do caixa ====
+
+    // a entrada (sinal 1) ou saida (-1) do item no portador em especie: linhas
+    // preco x quantidade, valor com o sinal
+    public static function lancarItem(PortadorPeriodo $periodo, CaixaItem $item, int $sinal, array $linhas, ?string $observacoes = null, ?Carbon $transacao = null, ?int $livre = null): PortadorMovimento
+    {
+        $portador = $periodo->Portador;
+        if (!$portador->ehCaixa()) {
+            abort(422, "{$portador->portador} não é portador em espécie: {$item->item} só se lança em dinheiro vivo.");
+        }
+        if (!static::pode($portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
+            PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Lançar item');
+        }
+        static::travar([$portador->codportador]);
+        $periodo->refresh();
+        static::exigirNaoFechado($periodo);
+        $linhas = CaixaItemService::validarEntrada($linhas);
+        $total = CaixaItemService::totalLinhas($linhas);
+        $observacoes = trim($observacoes ?? '');
+        $mov = PortadorMovimento::create([
+            'codportador' => $portador->codportador,
+            'codportadorperiodo' => $periodo->codportadorperiodo,
+            'tipo' => PortadorMovimento::TIPO_ITEM,
+            'estado' => PortadorMovimento::ESTADO_EFETIVADO,
+            'codcaixaitem' => $item->codcaixaitem,
+            'itens' => $linhas,
+            'valor' => $sinal < 0 ? -$total : $total,
+            'transacao' => static::dataNoPeriodo($periodo, $transacao),
+            'observacoes' => $observacoes === '' ? null : mb_substr($observacoes, 0, 300),
+        ]);
+        PortadorPeriodoService::recalcular($periodo);
+        return $mov;
+    }
+
+    public static function cancelarItem(PortadorMovimento $mov, string $justificativa, ?int $livre = null): PortadorMovimento
+    {
+        if ($mov->tipo != PortadorMovimento::TIPO_ITEM) {
+            abort(422, 'Não é lançamento de item do caixa.');
+        }
+        $portador = $mov->Portador;
+        if (!static::pode($portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
+            PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Cancelar item');
+        }
+        static::travar([$portador->codportador]);
+        $mov->refresh();
+        if ($mov->estado == PortadorMovimento::ESTADO_CANCELADO) {
+            abort(422, 'Lançamento já cancelado.');
         }
         static::exigirNaoFechado($mov->PortadorPeriodo);
         static::cancelarLinha($mov, $justificativa);

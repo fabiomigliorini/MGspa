@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Mg\Caixa\CaixaItemLancamento;
+use Mg\Caixa\CaixaItemService;
 use Mg\Caixa\CaixaService;
 use Mg\Conferencia\ConferenciaService;
 use Mg\Pagamento\Pagamento;
@@ -17,8 +17,9 @@ use Mg\Pagamento\PagamentoService;
  *
  * Especie (gaveta, cofre, troco, Caixa Financeiro): abre, movimenta, conta e
  * fecha. Estados: aberto (sem fim), pendente (com fim, sem fechamento: so'
- * correcao) e fechado. O saldo inicial e' a contagem final do anterior (so'
- * cedulas e moedas); a contagem inicial so' confere. Fechar grava a
+ * correcao) e fechado. O saldo inicial e' a contagem final do anterior
+ * (cedulas e moedas e os itens do caixa, que contam como cedula); a
+ * contagem inicial so' confere. Fechar grava a
  * diferenca (contagem final - saldo final): dentro da tolerancia do portador
  * fecha, acima fica pendente. Reabrir (do mais novo para o mais antigo) deixa
  * corrigir a contagem final. Dividir e unificar.
@@ -99,11 +100,16 @@ class PortadorPeriodoService
 
     // ==== saldos ====
 
-    // o dinheiro contado (cedulas e moedas) no momento; null sem contagem
+    // o contado no momento: cedulas e moedas mais os itens (contam como
+    // cedula); null sem contagem
     public static function contado(PortadorPeriodo $periodo, string $momento): ?float
     {
         $contagem = $periodo->{"contagem{$momento}"};
-        return $contagem === null ? null : CaixaService::totalContagem($contagem);
+        $itens = $periodo->{"contagemitens{$momento}"};
+        if ($contagem === null && $itens === null) {
+            return null;
+        }
+        return round(CaixaService::totalContagem($contagem) + CaixaItemService::totalContagem($itens), 2);
     }
 
     // o saldo inicial do periodo seguinte: a contagem final (especie; sem
@@ -208,7 +214,7 @@ class PortadorPeriodoService
 
     // abre; o saldo inicial vem da contagem final do anterior (no primeiro
     // periodo do portador, da contagem inicial). So' um aberto por portador
-    public static function abrir(Portador $portador, ?Carbon $inicio = null, ?array $contagem = null, array $itens = [], ?string $observacoes = null, ?int $livre = null): PortadorPeriodo
+    public static function abrir(Portador $portador, ?Carbon $inicio = null, ?array $contagem = null, ?array $itens = null, ?string $observacoes = null, ?int $livre = null): PortadorPeriodo
     {
         static::exigirCaixa($portador);
         static::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Abrir', $livre);
@@ -223,7 +229,8 @@ class PortadorPeriodoService
             $anterior->setRelation('Portador', $portador);
             $saldo = static::saldoInicialSeguinte($anterior);
         } else {
-            $saldo = $contagem === null ? 0.0 : CaixaService::totalContagem(CaixaService::contagem($contagem)[0]);
+            $saldo = $contagem === null ? 0.0 : round(CaixaService::totalContagem(CaixaService::contagem($contagem)[0])
+                + CaixaItemService::totalContagem(CaixaItemService::contagem($itens)), 2);
         }
         $periodo = PortadorPeriodo::create([
             'codportador' => $portador->codportador,
@@ -234,13 +241,12 @@ class PortadorPeriodoService
             'observacoes' => empty(trim($observacoes ?? '')) ? null : trim($observacoes),
         ]);
         $periodo->setRelation('Portador', $portador);
-        // os itens do caixa da gaveta (controle a parte)
-        CaixaService::lancamentos($periodo);
         // a contagem inicial nasce com a final do anterior (quem abre confere)
         if ($contagem === null && $anterior && $anterior->contagemfinal !== null) {
             $contagem = $anterior->contagemfinal;
+            $itens = $anterior->contagemitensfinal;
         }
-        if ($contagem !== null || !empty($itens)) {
+        if ($contagem !== null) {
             static::gravarContagem($periodo, 'inicial', $contagem, $itens);
         }
         static::recalcular($periodo);
@@ -248,19 +254,21 @@ class PortadorPeriodoService
     }
 
     // o inicio de um periodo novo quando ninguem informa: o segundo seguinte
-    // ao fim do anterior; sem periodo, o comeco de hoje
+    // ao fim do anterior, nunca depois de agora (fechou neste segundo: comeca
+    // no proprio fim; o lancamento desse segundo cai no novo, o de inicio mais
+    // recente); sem periodo, o comeco de hoje
     public static function inicioDoNovo(Portador $portador): Carbon
     {
         $anterior = CaixaService::ultimaSessao($portador->codportador);
         if ($anterior && $anterior->fim) {
-            return $anterior->fim->copy()->addSecond();
+            return $anterior->fim->copy()->addSecond()->min(Carbon::now()->startOfSecond());
         }
         return Carbon::today();
     }
 
     // contagem inicial (so' confere) ou final (da' a diferenca e o saldo
     // inicial do seguinte) do periodo nao fechado; sem contagem, limpa
-    public static function contar(PortadorPeriodo $periodo, string $momento, ?array $contagem, array $itens = [], ?int $livre = null): PortadorPeriodo
+    public static function contar(PortadorPeriodo $periodo, string $momento, ?array $contagem, ?array $itens = null, ?int $livre = null): PortadorPeriodo
     {
         $portador = $periodo->Portador;
         static::exigirCaixa($portador);
@@ -278,11 +286,18 @@ class PortadorPeriodoService
             }
         }
         $finalAntes = $periodo->contagemfinal;
+        $finalItensAntes = $periodo->contagemitensfinal;
         static::gravarContagem($periodo, $momento, $contagem, $itens);
         // a contagem inicial do seguinte acompanha a final deste, a menos que
         // as duas ja' fossem diferentes (quem abriu contou outra coisa)
-        if ($seguinte && static::mesmaContagem($seguinte->contageminicial, $finalAntes)) {
+        if ($seguinte && static::mesmaContagem(
+            $seguinte->contageminicial,
+            $seguinte->contagemitensinicial,
+            $finalAntes,
+            $finalItensAntes
+        )) {
             $seguinte->contageminicial = $periodo->contagemfinal;
+            $seguinte->contagemitensinicial = $periodo->contagemitensfinal;
             $seguinte->save();
         }
         // primeiro periodo do portador: a contagem inicial e' o saldo inicial
@@ -294,46 +309,37 @@ class PortadorPeriodoService
         return $periodo->fresh();
     }
 
-    // a mesma quantidade de cada cedula e moeda
-    private static function mesmaContagem(?array $a, ?array $b): bool
+    // a mesma quantidade de cada cedula e moeda e as mesmas linhas de cada
+    // item
+    private static function mesmaContagem(?array $a, ?array $itensA, ?array $b, ?array $itensB): bool
     {
         if ($a === null || $b === null) {
             return $a === $b;
         }
-        return CaixaService::contagem($a)[0] == CaixaService::contagem($b)[0];
+        return CaixaService::contagem($a)[0] == CaixaService::contagem($b)[0]
+            && CaixaItemService::contagem($itensA) == CaixaItemService::contagem($itensB);
     }
 
-    // o estoque dos itens de contagem da gaveta fica no lancamento do item
-    // (controle a parte; nao entra no dinheiro)
-    private const COLUNA_ITEM = ['inicial' => 'valorabertura', 'final' => 'valorfechamento'];
-
-    private static function gravarContagem(PortadorPeriodo $periodo, string $momento, ?array $contagem, array $itens): void
+    // grava a contagem do momento: as cedulas e moedas e os itens. Sem
+    // contagem, limpa as duas; itens null = mantem os de antes (a tela do caixa
+    // do PDV ainda nao conta os itens)
+    private static function gravarContagem(PortadorPeriodo $periodo, string $momento, ?array $contagem, ?array $itens): void
     {
         [$limpa] = CaixaService::contagem($contagem);
         $periodo->{"contagem{$momento}"} = $contagem === null ? null : $limpa;
+        if ($contagem === null) {
+            $periodo->{"contagemitens{$momento}"} = null;
+        } elseif ($itens !== null) {
+            $periodo->{"contagemitens{$momento}"} = CaixaItemService::contagem($itens);
+        }
         $periodo->save();
-        if (!$periodo->Portador->ehGaveta()) {
-            return;
-        }
-        $coluna = static::COLUNA_ITEM[$momento];
-        foreach (CaixaService::lancamentos($periodo) as $lanc) {
-            if (!$lanc->CaixaItem->ehContagem() || !array_key_exists($lanc->codcaixaitem, $itens)) {
-                continue;
-            }
-            $valor = round((float) $itens[$lanc->codcaixaitem], 2);
-            if ($valor < 0) {
-                abort(422, "Contagem de {$lanc->CaixaItem->item} não pode ser negativa.");
-            }
-            $lanc->$coluna = $valor;
-            $lanc->save();
-        }
     }
 
     // fecha: grava o fim (sem fim, agora) e a diferenca da contagem final.
     // Dentro da tolerancia, fecha; acima, fica pendente (o mesmo fechar tenta
     // de novo depois da correcao). Recusa, sem mexer em nada, com periodo
     // anterior por fechar ou transferencia a confirmar.
-    public static function fecharCaixa(PortadorPeriodo $periodo, ?array $contagem = null, array $itens = [], ?string $observacoes = null, ?Carbon $fim = null, ?int $livre = null): PortadorPeriodo
+    public static function fecharCaixa(PortadorPeriodo $periodo, ?array $contagem = null, ?array $itens = null, ?string $observacoes = null, ?Carbon $fim = null, ?int $livre = null): PortadorPeriodo
     {
         $portador = $periodo->Portador;
         static::exigirCaixa($portador);
@@ -356,7 +362,7 @@ class PortadorPeriodoService
         if ($pendentes) {
             abort(422, "Há {$pendentes} transferência(s) a confirmar neste período: confirme ou cancele antes de fechar.");
         }
-        if ($contagem !== null || !empty($itens)) {
+        if ($contagem !== null) {
             static::gravarContagem($periodo, 'final', $contagem, $itens);
         }
         $agora = Carbon::now()->startOfSecond();
@@ -383,9 +389,6 @@ class PortadorPeriodoService
             $periodo->codusuariofechamento = Auth::user()->codusuario ?? null;
         }
         $periodo->save();
-        if ($periodo->fechado()) {
-            CaixaService::titulosRepasse($periodo, $fim);
-        }
         static::recalcular($periodo);
         return $periodo->fresh();
     }
@@ -410,7 +413,6 @@ class PortadorPeriodoService
         if ($posterior) {
             abort(422, 'Reabra antes o ' . static::descricao($posterior) . ' (reabre-se do mais novo para o mais antigo).');
         }
-        CaixaService::estornarRepasse($periodo);
         $ultimo = !static::seguinte($periodo);
         $periodo->fill([
             'fim' => $ultimo ? null : $periodo->fim,
@@ -463,14 +465,15 @@ class PortadorPeriodoService
             abort(422, 'O corte precisa ficar entre o início (' . $periodo->inicio->format('d/m/Y H:i')
                 . ') e o fim (' . $ate->format('d/m/Y H:i') . ').');
         }
-        static::exigirSemItens($periodo, 'dividir');
         // a primeira parte termina no corte antes de a segunda nascer (so'
         // um periodo sem fim por portador) e fica pendente
         $fim = $periodo->fim;
         $contagemfinal = $periodo->contagemfinal;
+        $contagemitensfinal = $periodo->contagemitensfinal;
         $periodo->fill([
             'fim' => $corte,
             'contagemfinal' => null,
+            'contagemitensfinal' => null,
             'diferenca' => null,
         ]);
         $periodo->save();
@@ -482,6 +485,7 @@ class PortadorPeriodoService
             'saldoinicial' => 0,
             'saldofinal' => 0,
             'contagemfinal' => $contagemfinal,
+            'contagemitensfinal' => $contagemitensfinal,
         ]);
         static::moverLinhas($periodo, $segunda, $corte);
         $periodo->saldofinal = round((float) $periodo->saldoinicial + static::movimento($periodo), 2);
@@ -510,13 +514,12 @@ class PortadorPeriodoService
         if (round((float) $anterior->diferenca, 2) != 0) {
             abort(422, 'O ' . static::descricao($anterior) . ' tem diferença de contagem: unificar a faria sumir.');
         }
-        static::exigirSemItens($periodo, 'unificar');
         static::moverLinhas($periodo, $anterior, null);
-        CaixaItemLancamento::where('codportadorperiodo', $periodo->codportadorperiodo)->delete();
         $observacoes = trim(implode("\n", array_filter([$anterior->observacoes, $periodo->observacoes])));
         $anterior->fill([
             'fim' => $periodo->fim,
             'contagemfinal' => $periodo->contagemfinal,
+            'contagemitensfinal' => $periodo->contagemitensfinal,
             'diferenca' => $periodo->diferenca,
             'observacoes' => $observacoes ? mb_substr($observacoes, 0, 500) : null,
         ]);
@@ -524,22 +527,6 @@ class PortadorPeriodoService
         $anterior->save();
         static::recalcular($anterior);
         return $anterior->fresh();
-    }
-
-    // os itens do caixa sao controle a parte: periodo com item movimentado
-    // nao se divide nem se une
-    private static function exigirSemItens(PortadorPeriodo $periodo, string $acao): void
-    {
-        $mexido = CaixaItemLancamento::where('codportadorperiodo', $periodo->codportadorperiodo)
-            ->where(fn ($q) => $q->where('valorentrada', '<>', 0)
-                ->orWhere('valorsaida', '<>', 0)
-                ->orWhere('valorvendido', '<>', 0)
-                ->orWhere('valorabertura', '<>', 0)
-                ->orWhere('valorfechamento', '<>', 0))
-            ->exists();
-        if ($mexido) {
-            abort(422, "Período com itens do caixa movimentados não se pode {$acao}.");
-        }
     }
 
     // as linhas (e o periodo gravado no pagamento) de um periodo para outro;
@@ -767,7 +754,6 @@ class PortadorPeriodoService
         $portador = $pag->PortadorDestino ?? $pag->PortadorOrigem;
         if (empty($pag->motivo)
             || !empty($pag->codnegocio)
-            || !empty($pag->codcaixaitemlancamento)
             || $pag->MovimentoTituloS()->exists()
             || !$portador
         ) {

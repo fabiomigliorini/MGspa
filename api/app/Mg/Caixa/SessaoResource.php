@@ -9,7 +9,7 @@ use Mg\Portador\PortadorMovimento;
 use Mg\Portador\PortadorUsuario;
 
 // O periodo da gaveta na tela do caixa do PDV (MgCaixaSessao; sera'
-// refatorada): contagens, dinheiro do sistema, itens, ajustes e
+// refatorada): contagens, dinheiro do sistema, ajustes e
 // transferencias.
 class SessaoResource extends Resource
 {
@@ -37,10 +37,10 @@ class SessaoResource extends Resource
             'transferencias' => $this->transferencias(),
             'criacao' => $this->criacao,
             'codusuariocriacao' => $this->codusuariocriacao,
-            'usuariocriacao' => optional($this->UsuarioCriacao)->usuario,
+            'usuariocriacao' => $this->usuariocriacao,
             'alteracao' => $this->alteracao,
             'codusuarioalteracao' => $this->codusuarioalteracao,
-            'usuarioalteracao' => optional($this->UsuarioAlteracao)->usuario,
+            'usuarioalteracao' => $this->usuarioalteracao,
         ], CaixaService::painel($this->resource));
     }
 
@@ -66,7 +66,7 @@ class SessaoResource extends Resource
                     'estado' => $m->estado,
                     'observacoes' => $m->observacoes,
                     'justificativa' => $m->justificativa,
-                    'usuariocriacao' => optional($m->UsuarioCriacao)->usuario,
+                    'usuariocriacao' => $m->usuariocriacao,
                     'podeConfirmar' => PortadorLancamentoService::podeConfirmar($m),
                     'podeCancelar' => PortadorLancamentoService::podeCancelar($m, $this->codportador),
                 ];

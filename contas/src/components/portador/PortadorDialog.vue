@@ -17,9 +17,10 @@ const { form, dialog, salvando, isNovo } = storeToRefs(store)
   <q-dialog v-model="dialog">
     <q-card flat style="width: 600px; max-width: 90vw">
       <q-form @submit.prevent="store.salvar()">
-        <q-card-section class="text-h6">
-          {{ isNovo ? 'Novo portador' : 'Editar portador' }}
+        <q-card-section class="text-grey-9 text-overline">
+          {{ isNovo ? 'NOVO PORTADOR' : 'EDITAR PORTADOR' }}
         </q-card-section>
+        <q-separator inset />
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12 col-sm-8">
@@ -121,6 +122,7 @@ const { form, dialog, salvando, isNovo } = storeToRefs(store)
             </template>
           </div>
         </q-card-section>
+        <q-separator inset />
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
           <q-btn flat label="Salvar" color="primary" type="submit" :loading="salvando" />
