@@ -30,7 +30,6 @@ function filtrosVazios() {
     etapa: null,
     // 1 = ativos, 2 = cancelados, 9 = todos (MgModel::scopeAtivoInativo)
     inativo: 1,
-    papel: null,
     codunidadearmazenadora: null,
     codplantio: null,
     codcontrato: null,
@@ -44,7 +43,7 @@ function filtrosVazios() {
 
 // Chaves que não contam como "filtro ativo" no valor default (senão o contador
 // do drawer nasce em 1 e o botão limpar parece que não funciona).
-const DEFAULTS_NEUTROS = { inativo: 1, papel: null }
+const DEFAULTS_NEUTROS = { inativo: 1 }
 
 export const useCargaListagemStore = defineStore(
   'cargaListagem',
@@ -53,7 +52,6 @@ export const useCargaListagemStore = defineStore(
     const totais = ref({ qtd: 0, bruto: 0, desconto: 0, liquido: 0, sentidos: {} })
     const paginacao = ref({ page: 1, perPage: PER_PAGE, hasMore: true, loading: false, total: 0 })
     const filtros = ref({ ...filtrosVazios(), data_inicio: primeiroDiaDoMes() })
-    const agrupar = ref('nenhum')
     const carregadoUmaVez = ref(false)
 
     // Cadastros dos selects (online).
@@ -72,17 +70,6 @@ export const useCargaListagemStore = defineStore(
     )
     const contagemFiltros = computed(() => filtrosAtivos.value.length)
     const carregando = computed(() => paginacao.value.loading)
-
-    // Cultura das cargas carregadas, quando é uma só — é o que permite somar
-    // sacas nos totais (a tela decide).
-    // `Safra.cultura` minúsculo: relação aninhada num model sai em snake_case
-    // pelo Eloquent; só o `Safra` do topo é PascalCase (posto pelo Resource).
-    const culturaUnica = computed(() => {
-      const codigos = new Set(cargas.value.map((c) => c.Safra?.codcultura).filter((v) => v != null))
-      if (codigos.size !== 1) return null
-      const cod = [...codigos][0]
-      return cargas.value.find((c) => c.Safra?.codcultura === cod)?.Safra?.cultura || null
-    })
 
     // Tradução UI -> backend. O `inativo` NUNCA pode faltar: o CargaService só
     // aplica o scope quando a chave vem preenchida, então omiti-la traria as
@@ -214,19 +201,18 @@ export const useCargaListagemStore = defineStore(
       }
     }
 
-    // O watch do drawer recarrega; chamar a busca aqui também faria duas
-    // requisições.
+    // Limpa TUDO, inclusive o período: o 1º dia do mês é só o ponto de partida
+    // da primeira abertura. O watch do drawer recarrega; chamar a busca aqui
+    // também faria duas requisições.
     function limparFiltros() {
-      filtros.value = { ...filtrosVazios(), data_inicio: primeiroDiaDoMes() }
+      filtros.value = filtrosVazios()
       plantios.value = []
     }
 
     // O PDF usa EXATAMENTE os filtros da tela — é o que torna "imprimir o que
-    // estou vendo" verdade. `agrupar` só viaja aqui, nunca na busca da tela.
+    // estou vendo" verdade.
     function imprimirRelatorio() {
-      return abrirPdf('v1/carga/relatorio', params({ agrupar: agrupar.value }), {
-        title: 'Romaneios',
-      })
+      return abrirPdf('v1/carga/relatorio', params(), { title: 'Romaneios' })
     }
 
     return {
@@ -234,7 +220,6 @@ export const useCargaListagemStore = defineStore(
       totais,
       paginacao,
       filtros,
-      agrupar,
       carregadoUmaVez,
       safras,
       culturas,
@@ -246,7 +231,6 @@ export const useCargaListagemStore = defineStore(
       contagemFiltros,
       carregando,
       normalizarFiltros,
-      culturaUnica,
       params,
       buscar,
       carregarMais,
@@ -261,7 +245,7 @@ export const useCargaListagemStore = defineStore(
     // `cargas`/`paginacao` fora de propósito: depois de um F5 a tela refaz o
     // fetch com os filtros restaurados, em vez de mostrar dado velho.
     persist: {
-      pick: ['filtros', 'agrupar'],
+      pick: ['filtros'],
       afterHydrate: ({ store }) => store.normalizarFiltros(),
     },
   },

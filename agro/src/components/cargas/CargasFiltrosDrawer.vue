@@ -25,33 +25,10 @@ const SENTIDO_OPCOES = SENTIDOS.map((s) => ({ value: s.value, label: s.label }))
 
 const ETAPA_OPCOES = Object.entries(ETAPA_META).map(([value, m]) => ({ value, label: m.label }))
 
-const LADO_OPCOES = [
-  { label: 'Ambos', value: null },
-  { label: 'Origem', value: 'ORIGEM' },
-  { label: 'Destino', value: 'DESTINO' },
-]
-
 const SITUACAO_OPCOES = [
   { label: 'Ativos', value: 1 },
   { label: 'Cancelados', value: 2 },
   { label: 'Todos', value: 9 },
-]
-
-// Espelha CargaRelatorioService::AGRUPAMENTOS — mudou lá, muda aqui.
-const AGRUPAMENTOS = [
-  { value: 'nenhum', label: 'Sem agrupamento' },
-  { value: 'dia', label: 'Dia' },
-  { value: 'mes', label: 'Mês' },
-  { value: 'sentido', label: 'Tipo de romaneio' },
-  { value: 'etapa', label: 'Etapa' },
-  { value: 'safra', label: 'Safra' },
-  { value: 'cultura', label: 'Cultura' },
-  { value: 'unidade', label: 'Unidade armazenadora' },
-  { value: 'plantio', label: 'Talhão' },
-  { value: 'contrato', label: 'Contrato' },
-  { value: 'pessoa', label: 'Cliente / fornecedor' },
-  { value: 'motorista', label: 'Motorista' },
-  { value: 'placa', label: 'Placa' },
 ]
 
 // A mesma unidade pode se chamar "Silo 1" em dois tipos diferentes; o tipo no
@@ -75,8 +52,7 @@ function rotuloPlantio(p) {
 }
 
 // Uma espera só para o filtro inteiro: o campo de texto emite a cada tecla, e
-// sem isso seria uma requisição por letra. O `agrupar` mora fora de `filtros`:
-// trocar o agrupamento do PDF não refaz a busca da tela.
+// sem isso seria uma requisição por letra.
 let timer = null
 watch(
   filtros,
@@ -216,14 +192,6 @@ onMounted(() => {
           clearable
           :bottom-slots="false"
         />
-        <q-btn-toggle
-          v-model="filtros.papel"
-          spread
-          no-caps
-          flat
-          toggle-color="primary"
-          :options="LADO_OPCOES"
-        />
       </div>
     </FilterGroup>
 
@@ -264,18 +232,6 @@ onMounted(() => {
         flat
         toggle-color="primary"
         :options="SITUACAO_OPCOES"
-      />
-    </FilterGroup>
-
-    <FilterGroup title="Relatório">
-      <q-select
-        v-model="store.agrupar"
-        :options="AGRUPAMENTOS"
-        emit-value
-        map-options
-        outlined
-        hint="Agrupamento do PDF de Imprimir lista"
-        label="Agrupar por"
       />
     </FilterGroup>
   </FilterDrawerShell>

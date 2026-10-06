@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-22 12:23'
-updated_date: '2026-10-06 13:44'
+updated_date: '2026-10-06 14:22'
 labels:
   - agro
 dependencies:
@@ -58,4 +58,8 @@ FALTA VALIDAÇÃO do usuário em https://sistema-dev.mgpapelaria.com.br:8088/#/c
 06/10/2026 (2º ajuste, pedido do usuário): Motorista e Destino numa linha com reticências (max-width 110px, texto inteiro no tooltip); Data só DD/MM/AAAA; Tipo só com o nome, sem ícone. A largura mínima de 130px ficou só na Origem, que continua quebrando linha. Medido no mock: sem rolagem lateral em 1200px; com o drawer aberto em 1366px sobram 115px de rolagem (o nome do tipo e o ano com 4 dígitos ocupam o que o ícone e a data em 2 linhas liberavam).
 
 06/10/2026 (3º ajuste, pedido do usuário): a linha inteira abre o romaneio por link de verdade (router-link em cada célula, com ::after cobrindo a célula; o td do q-table já é position: relative), então Ctrl+clique, botão do meio e "Abrir em nova guia" funcionam. Só o link da 1ª célula entra no Tab. Saiu o botão do olho; a coluna de ações ficou só com a info de criação (fora do link). Origem também com reticências (max-width 105px nas três, texto inteiro no tooltip, que fica acima da camada do link). Linha de totais sem ícone. Medido no mock: sem rolagem lateral em 1200px; elementFromPoint no canto da célula Tipo = <a href="#/cargas/…">, no meio do motorista = div dentro do <a>, nas ações = ícone fora do <a>.
+
+06/10/2026 (4º ajuste, pedido do usuário): rodapé com total de Sacas sempre. CargaService::totais passou a devolver `sacas` (topo e por sentido), calculada carga a carga no SQL: liquido / pesosaca da cultura da safra daquela carga (subquery correlacionada; nullif 0 → 60, igual ao front e ao CargaRelatorioService::sacas), depois somada. Saiu a regra antiga de só mostrar sacas com uma cultura no recorte (culturaUnica removida da store). Conferido em dev: total do servidor = soma linha a linha em 3 recortes (todos, só expedição, desde 01/09). Etapa Finalizado também colorida (verde, cor do ETAPA_META).
+
+06/10/2026 (5º ajuste, pedido do usuário): "limpar filtros" limpa tudo, inclusive o período (o 1º dia do mês ficou só como ponto de partida da primeira abertura). Saíram do drawer o grupo "Relatório" (Agrupar por) e o seletor Ambos/Origem/Destino (`papel`); `agrupar` e `papel` saíram da store e do persist (filtro salvo antigo é limpo pelo normalizarFiltros). Imprimir lista manda só os filtros; o backend usa agrupamento "nenhum".
 <!-- SECTION:NOTES:END -->

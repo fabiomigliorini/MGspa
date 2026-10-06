@@ -16,7 +16,7 @@ import { useCargaListagemStore } from 'src/stores/cargaListagem'
 import { fmtNumero, rotulosDoPapel, sentidoMeta, ETAPA_META } from 'src/utils/carga'
 
 const store = useCargaListagemStore()
-const { cargas, totais, paginacao, carregando, carregadoUmaVez, culturaUnica } = storeToRefs(store)
+const { cargas, totais, paginacao, carregando, carregadoUmaVez } = storeToRefs(store)
 
 const colunas = [
   { name: 'sentido', label: 'Tipo', field: 'sentido', align: 'left' },
@@ -43,7 +43,7 @@ const colunas = [
 // soma embaixo da sua coluna; continua alinhada se a ordem mudar.
 const COLSPAN_ROTULO_TOTAL = colunas.findIndex((c) => c.name === 'bruto')
 const colunasTotais = colunas.slice(COLSPAN_ROTULO_TOTAL)
-const CAMPOS_TOTAL = ['bruto', 'desconto', 'liquido']
+const CAMPOS_TOTAL = { bruto: 0, desconto: 0, liquido: 0, sacas: 1 }
 
 // Totais do RECORTE INTEIRO (não da página carregada), um por tipo e sempre
 // sem as canceladas — mesmo com "Cancelados"/"Todos" no filtro.
@@ -58,16 +58,10 @@ const linhasTotais = () =>
     .map(([sentido, rotulo]) => ({ sentido, rotulo, ...(totais.value.sentidos?.[sentido] ?? {}) }))
     .filter((t) => t.qtd)
 
-// Só faz sentido somar sacas quando o recorte tem UMA cultura — 1000 sacas de
-// soja mais 1000 de milho não é 2000 de coisa nenhuma.
-function sacasTotal(liquido) {
-  const peso = Number(culturaUnica.value?.pesosaca) || 0
-  return peso > 0 ? liquido / peso : null
-}
-
+// Casas decimais de cada total. As sacas vêm somadas do servidor carga a
+// carga, cada uma com o peso de saca da sua cultura: fecha com a coluna.
 function valorTotal(t, coluna) {
-  if (coluna === 'sacas') return fmtNumero(sacasTotal(t.liquido), 1)
-  return CAMPOS_TOTAL.includes(coluna) ? fmtNumero(t[coluna]) : ''
+  return coluna in CAMPOS_TOTAL ? fmtNumero(t[coluna], CAMPOS_TOTAL[coluna]) : ''
 }
 
 // pesosaca da própria safra da carga: uma listagem sem filtro mistura culturas,
@@ -253,12 +247,6 @@ watch(
               </q-td>
               <q-td v-for="col in colunasTotais" :key="col.name" class="text-right">
                 {{ valorTotal(t, col.name) }}
-                <template v-if="col.name === 'sacas'">
-                  <q-tooltip v-if="culturaUnica">
-                    Sacas de {{ culturaUnica.cultura }} ({{ culturaUnica.pesosaca }} kg)
-                  </q-tooltip>
-                  <q-tooltip v-else>Sacas só com uma cultura no filtro</q-tooltip>
-                </template>
               </q-td>
             </q-tr>
           </template>
