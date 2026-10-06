@@ -3,6 +3,7 @@
 namespace Mg\Fazenda;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
+use Mg\Grao\CargaRelatorioService;
 
 class PlantioResource extends Resource
 {
@@ -35,8 +36,32 @@ class PlantioResource extends Resource
         $ret['Talhao'] = $this->whenLoaded('Talhao');
         $ret['Variedade'] = $this->whenLoaded('Variedade');
 
+        // Colheita do talhão (card "Cargas deste plantio"): cada movimento do
+        // extrato, com a PARTE deste talhão — romaneio dividido entre talhões vem
+        // rateado (CargaService::gerarMovimento), igual ao KPI Colhido.
         if ($this->relationLoaded('MovimentoGraoS')) {
-            $ret['MovimentoGraoS'] = $this->MovimentoGraoS;
+            $pesosaca = (float) ($this->Safra->Cultura->pesosaca ?? 60) ?: 60;
+            $ret['MovimentoGraoS'] = $this->MovimentoGraoS
+                ->map(function ($m) use ($pesosaca) {
+                    $kg = (float) $m->liquido;
+                    $carga = $m->Carga;
+                    return [
+                        'codmovimentograo' => (int) $m->codmovimentograo,
+                        'codcarga' => $m->codcarga !== null ? (int) $m->codcarga : null,
+                        'manual' => (bool) $m->manual,
+                        // Hora local de parede, como o MgModel::serializeDate — o
+                        // Carbon cru sairia em UTC ("…Z") e a madrugada viraria
+                        // o dia anterior na tela.
+                        'data' => $m->data?->format('Y-m-d H:i:s'),
+                        'quantidadekg' => $kg,
+                        'quantidadesc' => round($kg / $pesosaca, 2),
+                        'observacao' => $m->observacao,
+                        'placa' => $carga?->placa,
+                        'motorista' => $carga?->motorista,
+                        'destino' => $carga ? (CargaRelatorioService::rotulosDoPapel($carga, 'DESTINO') ?: null) : null,
+                    ];
+                })
+                ->values();
         }
 
         return $ret;

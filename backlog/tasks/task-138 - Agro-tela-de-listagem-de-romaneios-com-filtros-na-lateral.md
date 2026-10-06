@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-22 12:23'
-updated_date: '2026-10-06 15:34'
+updated_date: '2026-10-06 18:34'
 labels:
   - agro
 dependencies:
@@ -33,11 +33,9 @@ NÃO reusar SelectUnidade/SelectContrato/SelectTalhao: leem o Dexie, populado s�
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
-
 <!-- AC:BEGIN -->
-
-- [ ] #1 Listagem no molde de Vales Emitidos: card com cabeçalho de colunas, filtros no padrão do Vale e botão Imprimir lista no topo
-- [ ] #2 Totais separados por recebido, expedido e transferido, sem as canceladas
+- [x] #1 Listagem no molde de Vales Emitidos: card com cabeçalho de colunas, filtros no padrão do Vale e botão Imprimir lista no topo
+- [x] #2 Totais separados por recebido, expedido e transferido, sem as canceladas
 <!-- AC:END -->
 
 ## Implementation Notes

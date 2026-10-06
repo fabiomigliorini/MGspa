@@ -45,7 +45,24 @@ class PlantioController extends MgController
     {
         Autorizador::autoriza(self::GRUPOS);
 
-        return new PlantioResource($this->buscar($codsafra, $codplantio, static::WITH));
+        $plantio = $this->buscar($codsafra, $codplantio, static::WITH);
+
+        // Card "Cargas deste plantio": o extrato do talhão, com o MESMO recorte do
+        // KPI Colhido (SafraService::comercial) — ativos e da safra —, senão a soma
+        // da lista não bate com o número do topo. Só no show: a listagem de
+        // plantios da safra não carrega extrato.
+        $plantio->load([
+            'MovimentoGraoS' => fn ($q) => $q
+                ->whereNull('inativo')
+                ->where('codsafra', $codsafra)
+                ->orderByDesc('data')
+                ->orderByDesc('codmovimentograo'),
+            'MovimentoGraoS.Carga.CargaPontoS.UnidadeArmazenadora',
+            'MovimentoGraoS.Carga.CargaPontoS.Contrato.Pessoa',
+            'MovimentoGraoS.Carga.CargaPontoS.Plantio.Variedade',
+        ]);
+
+        return new PlantioResource($plantio);
     }
 
     public function update(PlantioUpdateRequest $request, $codsafra, $codplantio)
