@@ -405,7 +405,19 @@ estoque, com acerto) vêm um por um, adaptando a estrutura.
    diferença e o total dos fechados); editar, inativar e excluir no cabeçalho (a lista só
    navega).
 
-### Anotado para os próximos itens (não fazer agora)
+### Itens de parceiro (TASK-39, critérios #20 a #22; desenho a fazer)
+
+Dois controles: o **do caixa** (o dinheiro do parceiro que está na gaveta bate com a contagem) e o
+**do financeiro** (quanto se deve a cada parceiro e o acerto que paga). Dois jeitos de o parceiro
+trabalhar com a gente:
+
+- **Só maquineta** (Redeflex, Bilhete Agora, Bradesco Expresso, ingressos vendidos pelo sistema do
+  parceiro): não há estoque no caixa; o caixa lança o total do dia do borderô da maquineta.
+- **Bloquinho e maquineta** (ingressos): o bloquinho conta como cédula (como os chips) e o
+  vendido pela maquineta entra pelo borderô; os dois no mesmo item.
+
+O que já tinha sido conversado:
+
 
 - **Item sem estoque** (Bilhete Agora, Redeflex, Bradesco Expresso): o caixa lança por item o
   **total do dia** do borderô do parceiro, um valor com sinal (tipo I). **Foto do borderô
@@ -462,5 +474,7 @@ estoque, com acerto) vêm um por um, adaptando a estrutura.
 8. Contar zero, fechar e abrir o seguinte: o item some da contagem. Borderô do período mostra os
    itens na contagem.
 9. PDV `/caixa`: sem o bloco de itens; abre e fecha como antes.
-10. Tela do item: os períodos de cada portador e a linha "Total dos fechados" (abertura do mais
-    antigo + entradas + diferença = fechamento do mais novo).
+10. Tela do item: "Saldo nos caixas" com cada portador que tem o item (contagem do último
+    fechamento + entradas do período aberto) e o total; clicar no caixa abre o popup dos
+    períodos em que o item mexeu, com os cards Entradas, Saldo e Diferença (entradas +
+    diferença = saldo); "Descrições" troca o texto de um tipo (descrição + preço) em tudo.
