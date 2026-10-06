@@ -1,11 +1,11 @@
 ---
 id: TASK-138
-title: 'Agro: tela de listagem de romaneios com filtros na lateral'
-status: In Progress
+title: "Agro: tela de listagem de romaneios com filtros na lateral"
+status: Done
 assignee:
-  - '@fabio'
-created_date: '2026-09-22 12:23'
-updated_date: '2026-10-06 14:22'
+  - "@eduardo"
+created_date: "2026-09-22 12:23"
+updated_date: "2026-10-06 14:42"
 labels:
   - agro
 dependencies:
@@ -18,9 +18,11 @@ ordinal: 2000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
+
 Tela /cargas do agro: consulta do histórico de romaneios, online, com filtros no drawer da esquerda. O Pátio (/carga/:uuid) fica INTOCADO: ele é offline-first e só vê a safra ativa; a listagem é online e vê tudo.
 
 Molde: a tela Modelos de Vale do negocios (/vale-modelo: ValeModeloPage + ValeModeloLeftDrawer). Layout, UI e UX iguais, com os dados do romaneio:
+
 - página cinza centralizada (max-width 1200px, decisão do usuário; a vale usa 1086), botão "Imprimir lista" no topo à direita, q-table num card, MgEmptyState, scroll infinito;
 - linha não é link: ações em ícone na última coluna (info de criação e abrir a ficha);
 - sem botão + (romaneio novo continua no pátio);
@@ -29,10 +31,13 @@ Molde: a tela Modelos de Vale do negocios (/vale-modelo: ValeModeloPage + ValeMo
 Colunas: todos os dados do romaneio, para o usuário cortar as desnecessárias na validação.
 
 NÃO reusar SelectUnidade/SelectContrato/SelectTalhao: leem o Dexie, populado só ao abrir o Pátio. Num navegador que nunca abriu o Pátio viriam vazios, em silêncio. Os selects daqui são alimentados pela store cargaListagem (API).
+
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
+
 <!-- AC:BEGIN -->
+
 - [ ] #1 Listagem no molde de Vales Emitidos: card com cabeçalho de colunas, filtros no padrão do Vale e botão Imprimir lista no topo
 - [ ] #2 Totais separados por recebido, expedido e transferido, sem as canceladas
 <!-- AC:END -->
@@ -40,9 +45,11 @@ NÃO reusar SelectUnidade/SelectContrato/SelectTalhao: leem o Dexie, populado s�
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
+
 Refeita em 05/10/2026 no molde da /vale-modelo do negocios (a versão no molde da NotasPage foi reprovada visualmente). Na árvore, sem commit.
 
 Arquivos:
+
 - agro/src/pages/CargasPage.vue: reescrita igual à ValeModeloPage. q-table com 19 colunas (Romaneio, Data, Tipo, Etapa, Safra, Cultura, Placa, Carreta, Motorista, Origem, Destino, PBT, Tara, Bruto, Desconto, Líquido, Sacas, Situação, ações). Totais no #bottom-row: uma linha por tipo (Recebido/Expedido/Transferido) com qtd e as somas embaixo de Bruto, Desconto, Líquido e Sacas (sacas só com uma cultura no recorte). Sai o FAB de impressão; entra "Imprimir lista" no topo (mesmo imprimirRelatorio, mesmos filtros).
 - agro/src/components/cargas/CargasFiltrosDrawer.vue: reescrito no molde do ValeModeloLeftDrawer (FilterDrawerShell/FilterGroup, :bottom-slots=false, uma espera de 500 ms para o filtro inteiro). Lado em q-btn-toggle Ambos/Origem/Destino; Situação em q-btn-toggle Ativos/Cancelados/Todos.
 - agro/src/components/FilterDrawerShell.vue e FilterGroup.vue: cópia literal das do negocios.
@@ -62,4 +69,11 @@ FALTA VALIDAÇÃO do usuário em https://sistema-dev.mgpapelaria.com.br:8088/#/c
 06/10/2026 (4º ajuste, pedido do usuário): rodapé com total de Sacas sempre. CargaService::totais passou a devolver `sacas` (topo e por sentido), calculada carga a carga no SQL: liquido / pesosaca da cultura da safra daquela carga (subquery correlacionada; nullif 0 → 60, igual ao front e ao CargaRelatorioService::sacas), depois somada. Saiu a regra antiga de só mostrar sacas com uma cultura no recorte (culturaUnica removida da store). Conferido em dev: total do servidor = soma linha a linha em 3 recortes (todos, só expedição, desde 01/09). Etapa Finalizado também colorida (verde, cor do ETAPA_META).
 
 06/10/2026 (5º ajuste, pedido do usuário): "limpar filtros" limpa tudo, inclusive o período (o 1º dia do mês ficou só como ponto de partida da primeira abertura). Saíram do drawer o grupo "Relatório" (Agrupar por) e o seletor Ambos/Origem/Destino (`papel`); `agrupar` e `papel` saíram da store e do persist (filtro salvo antigo é limpo pelo normalizarFiltros). Imprimir lista manda só os filtros; o backend usa agrupamento "nenhum".
+
+06/10/2026 (6º ajuste, pedido do usuário, na ficha /cargas/:codcarga — CargaDetailPage): a info de criação (MgInfoCriacao) foi para dentro do card principal, abaixo da barra de etapas; o voltar saiu do FAB e foi para o canto superior direito do card principal (absolute-top-right, escolha do usuário entre esquerda e direita), ficando no topo também no celular. FAB só com Imprimir romaneio. Conferido com screenshot do template real + romaneio #53043 em 1200px e 360px.
+
+06/10/2026 (correção do 6º ajuste, reprovado pelo usuário): o voltar em absolute-top-right dentro do card não funcionava — a q-card-section (position: relative, depois no DOM) ficava por cima e roubava o clique. Agora fica FORA do card, numa linha de botões no topo à direita (row justify-end q-mb-sm, q-btn flat primary arrow_back "Voltar"), mesmo padrão do "Imprimir lista" da listagem e das telas do negocios, acima até do aviso de cancelado. Conferido no mock: elementFromPoint no centro do botão cai dentro do botão; desktop 1200px e celular 360px.
+
+06/10/2026: na ficha, a info de criação (ⓘ) foi para a extrema direita da linha abaixo da barra de etapas (text-right). O voltar do topo ficou como o usuário ajustou no fonte: só a seta, cinza e redonda.
+
 <!-- SECTION:NOTES:END -->
