@@ -1,11 +1,11 @@
 ---
 id: TASK-138
-title: "Agro: tela de listagem de romaneios com filtros na lateral"
+title: 'Agro: tela de listagem de romaneios com filtros na lateral'
 status: Done
 assignee:
-  - "@eduardo"
-created_date: "2026-09-22 12:23"
-updated_date: "2026-10-06 14:42"
+  - '@eduardo'
+created_date: '2026-09-22 12:23'
+updated_date: '2026-10-06 15:34'
 labels:
   - agro
 dependencies:
@@ -18,7 +18,6 @@ ordinal: 2000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-
 Tela /cargas do agro: consulta do histórico de romaneios, online, com filtros no drawer da esquerda. O Pátio (/carga/:uuid) fica INTOCADO: ele é offline-first e só vê a safra ativa; a listagem é online e vê tudo.
 
 Molde: a tela Modelos de Vale do negocios (/vale-modelo: ValeModeloPage + ValeModeloLeftDrawer). Layout, UI e UX iguais, com os dados do romaneio:
@@ -31,7 +30,6 @@ Molde: a tela Modelos de Vale do negocios (/vale-modelo: ValeModeloPage + ValeMo
 Colunas: todos os dados do romaneio, para o usuário cortar as desnecessárias na validação.
 
 NÃO reusar SelectUnidade/SelectContrato/SelectTalhao: leem o Dexie, populado só ao abrir o Pátio. Num navegador que nunca abriu o Pátio viriam vazios, em silêncio. Os selects daqui são alimentados pela store cargaListagem (API).
-
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -45,7 +43,6 @@ NÃO reusar SelectUnidade/SelectContrato/SelectTalhao: leem o Dexie, populado s�
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-
 Refeita em 05/10/2026 no molde da /vale-modelo do negocios (a versão no molde da NotasPage foi reprovada visualmente). Na árvore, sem commit.
 
 Arquivos:
@@ -76,4 +73,7 @@ FALTA VALIDAÇÃO do usuário em https://sistema-dev.mgpapelaria.com.br:8088/#/c
 
 06/10/2026: na ficha, a info de criação (ⓘ) foi para a extrema direita da linha abaixo da barra de etapas (text-right). O voltar do topo ficou como o usuário ajustou no fonte: só a seta, cinza e redonda.
 
+06/10/2026: Origem e Destino mais estreitos (classe celula-ponto, max-width 80px; o motorista segue em 105px). Ajustes do usuário no fonte mantidos: padding lateral 15px, reticências na Safra, sem tooltip no Destino, botão "Gerar relatório". Medido no mock: com 15px a tabela tem 1311px para 1166px (rolagem lateral de ~145px); com 8px cabe exato.
+
+06/10/2026: rolagem lateral voltou com o padding de 15px (1311px para 1166px). Padding lateral 9px: o maior que cabe (medido 12px=1233, 11=1207, 10=1181, 9=1166). Sem rolagem em 1200px; com o drawer aberto em 1366px sobram ~120px de rolagem.
 <!-- SECTION:NOTES:END -->

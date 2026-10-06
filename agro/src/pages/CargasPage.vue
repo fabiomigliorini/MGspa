@@ -156,7 +156,7 @@ watch(
                 </router-link>
               </q-td>
 
-              <q-td key="safra" :props="props">
+              <q-td key="safra" :props="props" class="ellipsis celula-ellipsis">
                 <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
                   <span v-if="props.row.Safra?.safra">{{ props.row.Safra.safra }}</span>
                   <span v-else class="text-grey-6">—</span>
@@ -182,7 +182,10 @@ watch(
 
               <q-td key="origem" :props="props">
                 <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
-                  <div v-if="rotulosDoPapel(props.row, 'ORIGEM')" class="ellipsis celula-ellipsis">
+                  <div
+                    v-if="rotulosDoPapel(props.row, 'ORIGEM')"
+                    class="ellipsis celula-ellipsis celula-ponto"
+                  >
                     {{ rotulosDoPapel(props.row, 'ORIGEM') }}
                     <q-tooltip>{{ rotulosDoPapel(props.row, 'ORIGEM') }}</q-tooltip>
                   </div>
@@ -192,9 +195,11 @@ watch(
 
               <q-td key="destino" :props="props">
                 <router-link :to="linkAbrir(props.row)" class="link-linha" tabindex="-1">
-                  <div v-if="rotulosDoPapel(props.row, 'DESTINO')" class="ellipsis celula-ellipsis">
+                  <div
+                    v-if="rotulosDoPapel(props.row, 'DESTINO')"
+                    class="ellipsis celula-ellipsis celula-ponto"
+                  >
                     {{ rotulosDoPapel(props.row, 'DESTINO') }}
-                    <q-tooltip>{{ rotulosDoPapel(props.row, 'DESTINO') }}</q-tooltip>
                   </div>
                   <span v-else class="text-grey-6">—</span>
                 </router-link>
@@ -263,12 +268,13 @@ watch(
 </template>
 
 <style scoped>
-/* Respiro lateral de 8px (o padrão do q-table é 16px) e texto quebrando linha
-   (wrap-cells): as 14 colunas cabem em 1200px sem rolagem lateral. */
+/* Respiro lateral de 9px (o padrão do q-table é 16px): é o maior que deixa as
+   14 colunas em 1200px sem rolagem lateral — cada px a mais de cada lado custa
+   28px na tabela (com 15px ela passava 145px). */
 .tabela-cargas :deep(th),
 .tabela-cargas :deep(td) {
-  padding-left: 8px;
-  padding-right: 8px;
+  padding-left: 10px;
+  padding-right: 10px;
 }
 
 /* Motorista, origem e destino numa linha só, cortados com reticências; o
@@ -278,6 +284,12 @@ watch(
   position: relative;
   z-index: 1;
   max-width: 105px;
+}
+
+/* Origem e destino mais estreitos que o motorista: o rótulo do ponto é longo
+   ("05A — AgTech 20A38 VIP3") e o começo já identifica o talhão ou silo. */
+.celula-ponto {
+  max-width: 65px;
 }
 
 /* O link da célula cobre a célula inteira (o td do q-table já é
