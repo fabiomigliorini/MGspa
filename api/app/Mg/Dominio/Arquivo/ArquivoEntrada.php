@@ -435,7 +435,8 @@ class ArquivoEntrada extends Arquivo
             $reg->codigoEspecie = 1; // Nota Fiscal em Fornulario - Modelo Antigo
         } else {
             if ($doc->modelo == 55) {
-                if ($doc->serie >= 890) {
+                // paliativo TASK-202: avulsa e serie 890-899; 900-999 (produtor rural) e NF-e comum
+                if ($doc->serie >= 890 && $doc->serie <= 899) {
                     $reg->codigoEspecie = 102; // Nota Fiscal Eletronica Avulsa
                 } else {
                     $reg->codigoEspecie = 36; // NFe
