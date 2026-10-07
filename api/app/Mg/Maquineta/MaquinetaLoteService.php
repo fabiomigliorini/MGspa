@@ -6,7 +6,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Mg\Negocio\NegocioAnexoService;
+use Mg\Anexo\FotoService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 
@@ -363,26 +363,38 @@ class MaquinetaLoteService
         return $ret;
     }
 
-    // ---- foto do bordero (no disco dos anexos do negocio) ----
+    // ---- foto do bordero (disco maquineta-anexo, pasta = codmaquinetalote) ----
+
+    const DISCO_FOTO = 'maquineta-anexo';
 
     public static function diretorioFoto(MaquinetaLote $lote): string
     {
-        return "maquineta-lote/{$lote->codmaquinetalote}";
+        return (string) $lote->codmaquinetalote;
     }
 
     public static function fotos(MaquinetaLote $lote): array
     {
-        return NegocioAnexoService::fotos(static::diretorioFoto($lote));
+        return FotoService::fotos(static::DISCO_FOTO, static::diretorioFoto($lote));
     }
 
     public static function anexarFoto(MaquinetaLote $lote, string $anexoBase64): string
     {
-        return NegocioAnexoService::gravarFoto(static::diretorioFoto($lote), $anexoBase64);
+        return FotoService::gravar(static::DISCO_FOTO, static::diretorioFoto($lote), $anexoBase64);
+    }
+
+    public static function mostrarFoto(MaquinetaLote $lote, string $arquivo)
+    {
+        return FotoService::mostrar(static::DISCO_FOTO, static::diretorioFoto($lote), $arquivo);
+    }
+
+    public static function excluirFoto(MaquinetaLote $lote, string $arquivo): void
+    {
+        FotoService::excluir(static::DISCO_FOTO, static::diretorioFoto($lote), $arquivo);
     }
 
     private static function moverFotos(MaquinetaLote $de, MaquinetaLote $para): void
     {
-        $disco = Storage::disk('negocio-anexo');
+        $disco = Storage::disk(static::DISCO_FOTO);
         foreach (static::fotos($de) as $arquivo) {
             $disco->move(static::diretorioFoto($de) . "/{$arquivo}", static::diretorioFoto($para) . "/{$arquivo}");
         }
@@ -392,10 +404,10 @@ class MaquinetaLoteService
     public static function comFoto(): array
     {
         $ret = [];
-        foreach (Storage::disk('negocio-anexo')->allFiles('maquineta-lote') as $arquivo) {
+        foreach (Storage::disk(static::DISCO_FOTO)->allFiles() as $arquivo) {
             $partes = explode('/', $arquivo);
             if (isset($partes[1])) {
-                $ret[(int) $partes[1]] = true;
+                $ret[(int) $partes[0]] = true;
             }
         }
         return $ret;

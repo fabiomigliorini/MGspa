@@ -4,10 +4,10 @@ namespace Mg\Portador;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Mg\Anexo\FotoService;
 use Mg\Caixa\CaixaItem;
 use Mg\Caixa\CaixaItemService;
 use Mg\Caixa\CaixaService;
-use Mg\Negocio\NegocioAnexoService;
 use Mg\Usuario\Autorizador;
 
 /**
@@ -224,7 +224,7 @@ class PortadorLancamentoService
         PortadorPeriodoService::recalcular($periodo);
         CaixaItemService::recalcularSaldo($item);
         if (!empty($anexoBase64)) {
-            NegocioAnexoService::gravarFoto(static::pastaFoto($mov->codportadormovimento), $anexoBase64);
+            FotoService::gravar(static::DISCO_FOTO, static::pastaFoto($mov->codportadormovimento), $anexoBase64);
         }
         return $mov;
     }
@@ -239,7 +239,7 @@ class PortadorLancamentoService
         if (!static::pode($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
             PortadorAutorizador::autorizar($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, 'Anexar foto do borderô');
         }
-        NegocioAnexoService::gravarFoto(static::pastaFoto($mov->codportadormovimento), $anexoBase64);
+        FotoService::gravar(static::DISCO_FOTO, static::pastaFoto($mov->codportadormovimento), $anexoBase64);
     }
 
     // ve a foto quem opera o portador (e o caixa do PDV da gaveta) e o
@@ -249,17 +249,20 @@ class PortadorLancamentoService
         if (!static::pode($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
             Autorizador::autoriza(['Administrador', 'Financeiro']);
         }
-        return NegocioAnexoService::mostrarFoto(static::pastaFoto($mov->codportadormovimento), $arquivo);
+        return FotoService::mostrar(static::DISCO_FOTO, static::pastaFoto($mov->codportadormovimento), $arquivo);
     }
 
     public static function fotos(int $codportadormovimento): array
     {
-        return NegocioAnexoService::fotos(static::pastaFoto($codportadormovimento));
+        return FotoService::fotos(static::DISCO_FOTO, static::pastaFoto($codportadormovimento));
     }
+
+    // foto do bordero no disco portador-anexo, pasta = codportadormovimento
+    const DISCO_FOTO = 'portador-anexo';
 
     private static function pastaFoto(int $codportadormovimento): string
     {
-        return "portador-movimento/{$codportadormovimento}";
+        return (string) $codportadormovimento;
     }
 
     private static function cancelarLinha(PortadorMovimento $mov, string $justificativa): void

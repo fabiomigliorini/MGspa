@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Carbon;
+use Mg\Anexo\FotoService;
 
 
 class NegocioAnexoService
@@ -69,69 +70,11 @@ class NegocioAnexoService
         return $anexo;
     }
 
-    // ==== foto do bordero: do lote da maquineta (M9 doc-3) e da maquineta de
-    // parceiro (doc-4). A pasta e' o dono da foto; sem coluna no banco: o
-    // disco e' o indice ====
-
-    public static function fotos(string $pasta): array
-    {
-        $arquivos = Storage::disk('negocio-anexo')->files($pasta);
-        sort($arquivos, SORT_STRING);
-        return array_map('basename', $arquivos);
-    }
-
-    public static function gravarFoto(string $pasta, string $anexoBase64): string
-    {
-        $arquivo = $pasta . '/' . date('Y-m-d-H-i-s') . '-' . uniqid() . '.jpeg';
-        Storage::disk('negocio-anexo')->put($arquivo, static::jpeg($anexoBase64, 1600, 1600));
-        return basename($arquivo);
-    }
-
-    public static function mostrarFoto(string $pasta, string $arquivo)
-    {
-        $caminho = $pasta . '/' . basename($arquivo);
-        if (!Storage::disk('negocio-anexo')->exists($caminho)) {
-            abort(404, 'Foto inexistente!');
-        }
-        return Storage::disk('negocio-anexo')->response($caminho);
-    }
-
     // Foto (data URL base64) em JPEG, reduzida para caber em
-    // $maxLargura x $maxAltura. Serve ao anexo do negocio e a' foto do
-    // bordero da maquineta (M9 doc-3).
+    // $maxLargura x $maxAltura
     public static function jpeg(string $anexoBase64, int $maxLargura = 1920, int $maxAltura = 1080): string
     {
-        // tira o anexo da string
-        $data = explode(',', $anexoBase64);
-        $jpeg = base64_decode($data[1]);
-        $anexo = imagecreatefromstring($jpeg);
-
-        // decide tamanho novo
-        list($largura, $altura) = getimagesize($anexoBase64);
-        $novaLargura = $largura;
-        $novaAltura = $altura;
-        do {
-            if ($novaLargura > $maxLargura) {
-                $prop = $maxLargura / $novaLargura;
-                $novaAltura = floor($prop * $novaAltura);
-                $novaLargura = floor($prop * $novaLargura);
-            } else if ($novaAltura > $maxAltura) {
-                $prop = $maxAltura / $novaAltura;
-                $novaAltura = floor($prop * $novaAltura);
-                $novaLargura = floor($prop * $novaLargura);
-            }
-        } while ($novaLargura > $maxLargura || $novaAltura > $maxAltura);
-
-        // redimensiona
-        $anexoRedimensionada = imagecreatetruecolor($novaLargura, $novaAltura);
-        imagecopyresized($anexoRedimensionada, $anexo, 0, 0, 0, 0, $novaLargura, $novaAltura, $largura, $altura);
-
-        // renderiza anexo para variavel
-        ob_start();
-        imagejpeg($anexoRedimensionada);
-        $data = ob_get_contents();
-        ob_end_clean();
-        return $data;
+        return FotoService::jpeg($anexoBase64, $maxLargura, $maxAltura);
     }
 
     public static function uploadConfissao(int $codnegocio, string $pasta, string $ratio, string $anexoBase64)

@@ -4,7 +4,7 @@
 // borderô: o aberto termina agora (o próximo cartão abre o seguinte); bateu no centavo, conferido;
 // senão, pendente (corrige e confere de novo). Não conferido: início e fim, dividir e unificar com
 // o anterior; conferido: reabrir (volta a pendente). Embaixo, borderô × sistema e a foto do
-// borderô (opcional: sem ela o período fica "sem borderô"; anexa a qualquer hora).
+// borderô (opcional: sem ela o período fica "sem borderô"; anexa e exclui a qualquer hora).
 import { ref, computed, watch, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -214,6 +214,14 @@ async function carregarFotos() {
     }
   }
 }
+function excluirFoto(arquivo) {
+  $q.dialog({
+    title: 'Excluir a foto',
+    message: 'Excluir esta foto do borderô? Não dá para desfazer.',
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(() => store.excluirFoto(arquivo))
+}
 watch(() => periodo.value?.fotos?.join('|') + periodo.value?.codmaquinetalote, carregarFotos, {
   immediate: true,
 })
@@ -313,9 +321,23 @@ onBeforeUnmount(() => fotos.value.forEach((f) => URL.revokeObjectURL(f.url)))
       <div class="text-caption text-grey-7 q-mb-sm">Foto do borderô</div>
       <div v-if="fotos.length" class="row q-col-gutter-sm q-mb-sm">
         <div v-for="f in fotos" :key="f.arquivo" class="col-6 col-sm-4">
-          <a :href="f.url" target="_blank">
-            <q-img :src="f.url" :ratio="1" fit="contain" class="rounded-borders" />
-          </a>
+          <div class="relative-position">
+            <a :href="f.url" target="_blank">
+              <q-img :src="f.url" :ratio="1" fit="contain" class="rounded-borders" />
+            </a>
+            <q-btn
+              flat
+              round
+              size="sm"
+              color="grey-7"
+              icon="delete"
+              class="absolute-top-right"
+              :disable="salvando"
+              @click="excluirFoto(f.arquivo)"
+            >
+              <q-tooltip>Excluir a foto</q-tooltip>
+            </q-btn>
+          </div>
         </div>
       </div>
       <MgSlim label="Toque para fotografar o borderô" @imagem="store.anexarFoto" />

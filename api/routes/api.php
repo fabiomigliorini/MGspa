@@ -1382,6 +1382,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('maquineta-lote/{id}/unificar', '\Mg\Maquineta\MaquinetaPeriodoController@unificar')->whereNumber('id');
     Route::post('maquineta-lote/{id}/foto', '\Mg\Maquineta\MaquinetaPeriodoController@foto')->whereNumber('id');
     Route::get('maquineta-lote/{id}/foto/{arquivo}', '\Mg\Maquineta\MaquinetaPeriodoController@mostrarFoto')->whereNumber('id');
+    Route::delete('maquineta-lote/{id}/foto/{arquivo}', '\Mg\Maquineta\MaquinetaPeriodoController@excluirFoto')->whereNumber('id');
 
     // Conferencias e fechamento do caixa (M9 doc-3): tela Fechamentos do contas
     Route::get('conferencia', '\Mg\Conferencia\ConferenciaController@index');

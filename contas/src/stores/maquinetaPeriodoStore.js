@@ -5,7 +5,7 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 
 // A maquineta e seus períodos (TASK-188 M9.8), no padrão do portador e seus períodos (doc-4): o
 // gerente confere o cartão de cada período com o borderô da maquineta (aberto → pendente →
-// conferido), corrige os lançamentos, divide, unifica e anexa a foto. Toda rota que muda devolve
+// conferido), corrige os lançamentos, divide, unifica e anexa ou exclui a foto. Toda rota que muda devolve
 // a tela inteira (maquineta, abas e o período); o store troca pelo que veio.
 
 export const useMaquinetaPeriodoStore = defineStore('maquinetaPeriodo', () => {
@@ -42,13 +42,14 @@ export const useMaquinetaPeriodoStore = defineStore('maquinetaPeriodo', () => {
     carregar(maquineta.value.codmaquineta, periodo.value?.codmaquinetalote ?? null)
 
   // ação do período da tela; devolve o codmaquinetalote que veio (a tela vai para ele)
-  async function executar(acao, payload, mensagem) {
+  async function executar(acao, payload, mensagem, method = 'post') {
     salvando.value = true
     try {
-      const { data } = await api.post(
-        `v1/maquineta-lote/${periodo.value.codmaquinetalote}/${acao}`,
-        payload,
-      )
+      const { data } = await api.request({
+        method,
+        url: `v1/maquineta-lote/${periodo.value.codmaquinetalote}/${acao}`,
+        data: payload,
+      })
       aplicar(data.data)
       if (mensagem) notifySuccess(typeof mensagem === 'function' ? mensagem() : mensagem)
       return periodo.value.codmaquinetalote
@@ -72,6 +73,7 @@ export const useMaquinetaPeriodoStore = defineStore('maquinetaPeriodo', () => {
   const dividir = (corte) => executar('dividir', { corte }, 'Período dividido')
   const unificar = () => executar('unificar', null, 'Períodos unificados')
   const anexarFoto = (anexoBase64) => executar('foto', { anexoBase64 }, 'Foto anexada')
+  const excluirFoto = (arquivo) => executar(`foto/${arquivo}`, null, 'Foto excluída', 'delete')
 
   return {
     maquineta,
@@ -87,5 +89,6 @@ export const useMaquinetaPeriodoStore = defineStore('maquinetaPeriodo', () => {
     dividir,
     unificar,
     anexarFoto,
+    excluirFoto,
   }
 })

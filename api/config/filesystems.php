@@ -86,6 +86,26 @@ return [
             ],
         ],
 
+        'maquineta-anexo' => [
+            'driver' => 'local',
+            'root' => env('MAQUINETA_ANEXO_PATH'),
+            'visibility' => 'public',
+            'permissions' => [
+                'file' => ['public' => 0664, 'private' => 0664],
+                'dir' => ['public' => 0775, 'private' => 0775],
+            ],
+        ],
+
+        'portador-anexo' => [
+            'driver' => 'local',
+            'root' => env('PORTADOR_ANEXO_PATH'),
+            'visibility' => 'public',
+            'permissions' => [
+                'file' => ['public' => 0664, 'private' => 0664],
+                'dir' => ['public' => 0775, 'private' => 0775],
+            ],
+        ],
+
         'contrato-anexo' => [
             'driver' => 'local',
             'root' => env('CONTRATO_ANEXO_PATH', storage_path('app/contrato-anexo')),

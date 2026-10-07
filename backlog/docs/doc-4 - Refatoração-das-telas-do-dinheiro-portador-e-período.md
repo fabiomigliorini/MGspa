@@ -757,6 +757,20 @@ o passado e o momento, lançar e alterar no mesmo lugar.
   não batendo, abrir o seguinte, cartão novo no aberto, mover para pendente, correção no conferido
   recusada, unificar com conferido recusado, reabrir, unificar, conferir de novo, datas invadindo e
   no futuro recusadas, a tela e a lista); eslint e prettier; `quasar build` do contas.
+- **Foto do borderô fora de Negócio** (07/10/2026, com o Fábio): as fotos do borderô estavam no
+  disco `negocio-anexo`, pelo `NegocioAnexoService` (pastas `maquineta-lote/…` e
+  `portador-movimento/…` no meio dos anexos de negócio). Agora:
+  - `Mg\Anexo\FotoService`, genérico: `fotos`, `gravar`, `mostrar`, `excluir` e `jpeg`; recebe o
+    disco e a pasta, não sabe de quem é a foto.
+  - Um disco por dono, como o `pessoa-anexo`: `maquineta-anexo` (`MAQUINETA_ANEXO_PATH`, pasta =
+    `codmaquinetalote`) e `portador-anexo` (`PORTADOR_ANEXO_PATH`, pasta = `codportadormovimento`).
+    Caminhos: produção `/opt/www/Arquivos/Maquinetas` e `/opt/www/Arquivos/Portadores`; dev com
+    `/Anexos` no fim, como o `Pessoas/Anexos` de lá.
+  - `NegocioAnexoService` ficou só com o que é de negócio (o `jpeg` repassa para o `FotoService`).
+  - Excluir a foto: `DELETE v1/maquineta-lote/{id}/foto/{arquivo}`, vale também no conferido; na
+    tela, a lixeira na miniatura, com confirmação. Sem nenhuma foto, volta o "sem borderô".
+  - **Go-live**: variáveis e pastas já criadas em produção (07/10/2026); depois do deploy, `php
+    artisan optimize` (as rotas estão em cache). As fotos do dev já foram movidas.
 
 ### Valida (maquineta e seus períodos)
 
@@ -768,6 +782,7 @@ o passado e o momento, lançar e alterar no mesmo lugar.
 5. No pendente: corrigir um lançamento (ou mover para outro período) e Conferir de novo com o valor
    certo → Conferido.
 6. Conferido sem foto: "sem borderô" no cabeçalho, na aba e na lista. Fotografar → o selo some.
+   Lixeira na miniatura → confirma → a foto some; excluindo todas, o "sem borderô" volta.
 7. Reabrir → Pendente. Dividir o período aberto numa hora → a primeira parte pendente; unificar
    essa parte com o anterior → um período só, com o borderô do anterior.
 8. Início e fim de um período pendente; abas de meses e anos pela URL.

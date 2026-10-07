@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Mg\Conferencia\ConferenciaAutorizador;
-use Mg\Negocio\NegocioAnexoService;
 
 /**
  * A maquineta e seus periodos no contas (TASK-188 M9.8), no padrao do
@@ -142,9 +141,18 @@ class MaquinetaPeriodoController extends Controller
         return $this->resposta($lote);
     }
 
+    // excluir tambem vale no conferido (a foto errada); sem nenhuma, o periodo
+    // volta a "sem bordero"
+    public function excluirFoto(int $id, string $arquivo)
+    {
+        $lote = $this->periodo($id);
+        MaquinetaLoteService::excluirFoto($lote, $arquivo);
+        return $this->resposta($lote);
+    }
+
     public function mostrarFoto(int $id, string $arquivo)
     {
         $lote = $this->periodo($id);
-        return NegocioAnexoService::mostrarFoto(MaquinetaLoteService::diretorioFoto($lote), $arquivo);
+        return MaquinetaLoteService::mostrarFoto($lote, $arquivo);
     }
 }
