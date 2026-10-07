@@ -1,15 +1,15 @@
 <script setup>
 // Dados do motorista NOVO no modal de Operação — o mesmo formulário serve pros
 // dois caminhos: "sem cadastro" (grava tudo só na carga) e "cadastrar" (cria a
-// pessoa com celular e endereço; a chave fica no rodapé do modal). Transportar
-// grão é mais sério que comprar na loja: CPF, nome completo, celular e endereço
-// são obrigatórios nos dois.
+// pessoa com celular e endereço; a chave fica no rodapé do modal). Pra cadastrar,
+// CPF, nome completo, celular e endereço são obrigatórios. Sem cadastro só o nome
+// é (mínimo de 4 letras); o resto, se vier preenchido, ainda tem que ser válido.
 //
 // Só campos, sem q-form: fica DENTRO do form do modal (o Salvar valida tudo
 // junto) e renderiza as colunas direto na grade do pai (fragmento), 3 por linha:
 // CPF | Nome — Telefone | Endereço — Bairro | CEP | Cidade. O endereço é um
 // campo só (rua, número e complemento), sem campos separados.
-import { ref, computed, nextTick } from 'vue'
+import { ref, computed, nextTick, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { MASCARA_CPF, MASCARA_CEP, MASCARA_TELEFONE_CELULAR } from '@components/formatters'
 import { isCpfValido, isTelefoneValido } from '@components/validador'
@@ -33,7 +33,31 @@ const d = computed(() => props.dados)
 const cpfRef = ref(null)
 const nomeRef = ref(null)
 const telefoneRef = ref(null)
+const enderecoRef = ref(null)
+const bairroRef = ref(null)
+const cepRef = ref(null)
+const cidadeRef = ref(null)
 const buscandoCep = ref(false)
+
+// A chave "Cadastrar motorista no sistema" (rodapé do modal) decide o que é
+// obrigatório.
+const cadastrar = computed(() => !!d.value.cadastrarMotorista)
+
+// Sem cadastro, campo vazio passa; preenchido, vale a mesma regra do cadastro.
+const opcional = (regra) => (v) => (!cadastrar.value && !v) || regra(v)
+
+const regraNome = (v) =>
+  cadastrar.value
+    ? nomeCompleto(v) || 'Informe nome e sobrenome.'
+    : ((v || '').match(/\p{L}/gu) || []).length >= 4 || 'Mínimo de 4 letras.'
+
+// Desligar a chave depois de um Salvar recusado não pode deixar os campos
+// vermelhos pelo que deixou de ser obrigatório.
+watch(cadastrar, () => {
+  for (const r of [cpfRef, nomeRef, telefoneRef, enderecoRef, bairroRef, cepRef, cidadeRef]) {
+    r.value?.resetValidation?.()
+  }
+})
 
 // Foco no primeiro campo ainda vazio (o CPF ou o nome podem vir da busca).
 function focar() {
@@ -96,17 +120,17 @@ async function onCep(cep) {
     inputmode="numeric"
     class="col-12 col-sm-4"
     lazy-rules
-    :rules="[(v) => !!v, isCpfValido]"
+    :rules="[opcional(isCpfValido)]"
     @blur="onCpfBlur"
   />
   <MgInput
     ref="nomeRef"
     v-model="d.motorista"
-    label="Nome completo"
+    :label="cadastrar ? 'Nome completo' : 'Nome do motorista'"
     maxlength="60"
     class="col-12 col-sm-8"
     lazy-rules
-    :rules="[nomeCompleto]"
+    :rules="[regraNome]"
   />
 
   <!-- Sempre celular: o pátio liga/manda mensagem pro motorista na estrada. -->
@@ -119,27 +143,30 @@ async function onCep(cep) {
     inputmode="tel"
     class="col-12 col-sm-4"
     lazy-rules
-    :rules="[(v) => isTelefoneValido(v, 2)]"
+    :rules="[opcional((v) => isTelefoneValido(v, 2))]"
   />
   <MgInput
+    ref="enderecoRef"
     v-model="d.enderecomotorista"
     label="Endereço"
     placeholder="Rua, número, complemento"
     maxlength="100"
     class="col-12 col-sm-8"
     lazy-rules
-    :rules="[(v) => !!v]"
+    :rules="[(v) => !cadastrar || !!v]"
   />
 
   <MgInput
+    ref="bairroRef"
     v-model="d.bairromotorista"
     label="Bairro"
     maxlength="50"
     class="col-12 col-sm-4"
     lazy-rules
-    :rules="[(v) => !!v]"
+    :rules="[(v) => !cadastrar || !!v]"
   />
   <MgInput
+    ref="cepRef"
     v-model="d.cepmotorista"
     label="CEP"
     :mask="MASCARA_CEP"
@@ -148,15 +175,16 @@ async function onCep(cep) {
     :loading="buscandoCep"
     class="col-12 col-sm-4"
     lazy-rules
-    :rules="[(v) => (v || '').length === 8]"
+    :rules="[opcional((v) => (v || '').length === 8)]"
     @update:model-value="onCep"
   />
   <!-- Offline não há como buscar cidade: aí ela fica pra depois, pra não
        travar o pátio sem internet. -->
   <MgSelectCidade
+    ref="cidadeRef"
     v-model="d.codcidademotorista"
     class="col-12 col-sm-4"
     lazy-rules
-    :rules="[(v) => !online || !!v]"
+    :rules="[(v) => !cadastrar || !online || !!v]"
   />
 </template>
