@@ -320,6 +320,16 @@ export const periodoStore = defineStore('periodo', {
       )
     },
 
+    excluirFotoBordero(codportadormovimento, arquivo) {
+      return this.executar(
+        () =>
+          api.delete(`v1/portador-movimento/${codportadormovimento}/foto/${arquivo}`, {
+            params: this.params(),
+          }),
+        'Foto do borderô excluída',
+      )
+    },
+
     // ==== período em espécie: abrir, contar, fechar, reabrir, datas, dividir, unificar ====
 
     // só abre; a contagem inicial é outro botão. Devolve o período novo (a tela vai para ele)

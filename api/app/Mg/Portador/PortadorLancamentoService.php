@@ -200,6 +200,9 @@ class PortadorLancamentoService
         if (!$portador->ehCaixa()) {
             abort(422, "{$portador->portador} não é portador em espécie: o borderô da maquineta é o dinheiro que ficou na gaveta.");
         }
+        if ($item->codfilial != $portador->codfilial) {
+            abort(422, "{$item->item} é de outra filial: o borderô entra no caixa da filial da maquineta.");
+        }
         if (!static::pode($portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
             PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Lançar borderô da maquineta');
         }
@@ -240,6 +243,19 @@ class PortadorLancamentoService
             PortadorAutorizador::autorizar($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, 'Anexar foto do borderô');
         }
         FotoService::gravar(static::DISCO_FOTO, static::pastaFoto($mov->codportadormovimento), $anexoBase64);
+    }
+
+    // a foto errada: exclui quem pode anexar; sem nenhuma, a linha volta a
+    // "sem bordero"
+    public static function excluirFoto(PortadorMovimento $mov, string $arquivo, ?int $livre = null): void
+    {
+        if ($mov->tipo != PortadorMovimento::TIPO_MAQUINETA || !$mov->valendo()) {
+            abort(422, 'Foto só no borderô de maquineta que vale.');
+        }
+        if (!static::pode($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
+            PortadorAutorizador::autorizar($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, 'Excluir foto do borderô');
+        }
+        FotoService::excluir(static::DISCO_FOTO, static::pastaFoto($mov->codportadormovimento), $arquivo);
     }
 
     // ve a foto quem opera o portador (e o caixa do PDV da gaveta) e o

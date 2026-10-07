@@ -1330,6 +1330,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('portador-periodo/{id}/maquineta', '\Mg\Portador\PortadorLancamentoController@maquineta')->whereNumber('id');
     Route::post('portador-movimento/{id}/foto', '\Mg\Portador\PortadorLancamentoController@foto')->whereNumber('id');
     Route::get('portador-movimento/{id}/foto/{arquivo}', '\Mg\Portador\PortadorLancamentoController@mostrarFoto')->whereNumber('id');
+    Route::delete('portador-movimento/{id}/foto/{arquivo}', '\Mg\Portador\PortadorLancamentoController@excluirFoto')->whereNumber('id');
     Route::post('portador-movimento/transferencia', '\Mg\Portador\PortadorLancamentoController@transferir');
     Route::post('portador-movimento/{id}/confirmar', '\Mg\Portador\PortadorLancamentoController@confirmar')->whereNumber('id');
     Route::post('portador-movimento/{id}/cancelar', '\Mg\Portador\PortadorLancamentoController@cancelar')->whereNumber('id');
