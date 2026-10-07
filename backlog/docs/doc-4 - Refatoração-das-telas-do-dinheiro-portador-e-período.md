@@ -422,8 +422,10 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
 3. **Borderô** (só na tela do período do contas; o PDV ganha na refatoração dele): a maquineta, a
    data, o **total em dinheiro** (com sinal: negativo quando a maquineta devolveu dinheiro), a
    observação e a **foto do borderô, opcional**. Sem foto a linha mostra "sem borderô"; a foto pode
-   ser anexada depois na linha (mesmo com o período fechado: não muda valor). Cartão e Pix só na
-   foto. Sobe o saldo do portador (explica o dinheiro a mais) e é crédito na conta da maquineta.
+   ser anexada depois na linha (mesmo com o período fechado: não muda valor) e a errada, excluída
+   ali mesmo (quem pode anexar). Só as maquinetas da filial do caixa: o diálogo lista só elas e o
+   servidor recusa a de outra filial. Cartão e Pix só na foto. Sobe o saldo do portador (explica o
+   dinheiro a mais) e é crédito na conta da maquineta.
    Cancela-se com justificativa, como o ajuste.
 4. **Conta corrente por maquineta** (não há "acerto que abrange um período"): crédito = os borderôs
    dos caixas; débito = os títulos gerados; ajuste com sinal e observação obrigatória (a comissão
@@ -529,17 +531,20 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
   `CaixaItemContaService` (`saldo`, `extrato`, `gerarTitulo` via `TituloService::criar`,
   `ajustar`, `cancelar`); rotas `GET v1/caixa-item/{id}/conta`, `POST .../conta/titulo`,
   `POST .../conta/ajuste`, `POST v1/caixa-item-acerto/{id}/cancelar`.
-  `PortadorLancamentoService::lancarMaquineta`, `anexarFoto`/`fotos`/`mostrarFoto` (disco
+  `PortadorLancamentoService::lancarMaquineta` (recusa maquineta de outra filial),
+  `anexarFoto`/`excluirFoto`/`fotos`/`mostrarFoto` (disco
   `negocio-anexo`, pasta `portador-movimento/{cod}`, sem coluna; a foto do borderô, do lote e da
   maquineta de parceiro, grava e lê por `NegocioAnexoService::gravarFoto/fotos/mostrarFoto`);
   `lancarItem` recusa maquineta; cancelar aceita o M. As rotas da conta corrente devolvem o
   extrato de/até já com o que mudou. Rotas `POST v1/portador-periodo/{id}/maquineta`,
-  `POST/GET v1/portador-movimento/{id}/foto`. `PortadorPeriodoResource`: origem M "Maquinetas de
-  parceiros" no resumo (e no borderô impresso), linha "Borderô: …"/"Devolução: …" com `fotos`,
-  `semBordero`, `podeAnexar`; `itens` só os de cédula; `maquinetas` ativas para o diálogo.
+  `POST v1/portador-movimento/{id}/foto`, `GET/DELETE .../foto/{arquivo}`.
+  `PortadorPeriodoResource`: origem M "Maquinetas de parceiros" no resumo (e no borderô impresso),
+  linha "Borderô: …"/"Devolução: …" com `fotos`, `semBordero`, `podeAnexar`; `itens` só os de
+  cédula; `maquinetas` ativas da filial do portador para o diálogo.
   `CaixaService::dinheiro` com o documento M.
 - **Front**: `@components/caixa/MaquinetaCaixaDialog` (borderô, com `MgSlim` para a foto) e
-  `BorderoFotosDialog` (ver e anexar); `periodoStore.lancarMaquineta/anexarFotoBordero` e os
+  `BorderoFotosDialog` (ver, anexar e excluir; o quadro de fotografar do tamanho das fotos, nos
+  dois diálogos); `periodoStore.lancarMaquineta/anexarFotoBordero/excluirFotoBordero` e os
   helpers `limitePeriodo`/`dentroDoPeriodo` (a data dentro do período, usada pelos diálogos de
   ajuste, item, maquineta e transferência); contas:
   botão `point_of_sale` nos lançamentos do período em espécie, badge "sem borderô" e câmera na
@@ -561,7 +566,8 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
 2. Portador em espécie → período aberto → botão `point_of_sale` (Borderô de maquineta): R$ 350,00
    com foto. Linha "Borderô: Rede Card Centro", saldo +350, resumo "Maquinetas de parceiros".
 3. Outro borderô, Devolução R$ 20,00, sem foto: badge "sem borderô"; câmera na linha → anexar → o
-   badge some.
+   badge some. Lixeira numa foto → confirmar → some; sem nenhuma, o badge volta. O diálogo só
+   lista as maquinetas da filial do caixa.
 4. O diálogo do item e a contagem não mostram a maquineta; contar os 330 a mais nas cédulas →
    diferença 0.
 5. Cancelar a devolução com justificativa: saldo volta; aparece em Mostrar cancelados.
