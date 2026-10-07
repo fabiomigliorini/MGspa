@@ -55,15 +55,15 @@ const model = ref({})
 // Travas (legado MGsis): só Numero e Valor são bloqueados.
 // Quando duplicando, geradoAuto/liquidado retornam false porque o novo registro
 // não herda codnegocio/codtituloagrupamento e nasce com saldo positivo.
-const geradoAuto = computed(
+const automatico = computed(
   () =>
-    !duplicando.value &&
     !!(
       titulo.value?.codnegocioparcela ||
       titulo.value?.codtituloagrupamento ||
       titulo.value?.codcaixaitem
     ),
 )
+const geradoAuto = computed(() => !duplicando.value && automatico.value)
 // Quando o título foi LIQUIDADO por um agrupamento, o vínculo está no movimento
 // (não em titulo.codtituloagrupamento, que indica que ele foi GERADO por agrupamento).
 // const codtituloagrupamentoLiquidacao = computed(() => {
@@ -344,6 +344,9 @@ const urlMovimento = (m) => {
   if (titulo.value.codnegocio) {
     return urlNegocio(titulo.value.codnegocio)
   }
+  if (titulo.value.codcaixaitem) {
+    return `/caixa-item/${titulo.value.codcaixaitem}`
+  }
 }
 
 onMounted(carregar)
@@ -373,14 +376,8 @@ watch(() => route.fullPath, carregar)
             <div class="text-h6 text-grey-7 ellipsis" v-if="titulo.fatura">
               {{ titulo.fatura }}
             </div>
-            <div v-if="titulo.codcaixaitem" class="text-caption text-grey-7">
-              Repasse da maquineta
-              <router-link
-                :to="{ name: 'caixa-item-detalhe', params: { codcaixaitem: titulo.codcaixaitem } }"
-              >
-                {{ titulo.caixaitem }}
-              </router-link>
-              (estorna cancelando o débito na conta corrente dela)
+            <div v-if="automatico" class="text-caption text-grey-7">
+              Gerado automaticamente — estorno só pela origem
             </div>
           </q-item-section>
         </q-item>
@@ -677,6 +674,7 @@ watch(() => route.fullPath, carregar)
                       <span v-else-if="titulo.codnegocio">
                         Negócio {{ formataCodigo(titulo.codnegocio) }}
                       </span>
+                      <span v-else-if="titulo.codcaixaitem"> Repasse {{ titulo.caixaitem }} </span>
                       <span v-else class="text-italic text-grey-7 text-weight-regular">
                         Sem Identificação de Origem
                       </span>
