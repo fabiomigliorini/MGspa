@@ -88,12 +88,12 @@ const fixado = computed(() => Number(comercial.value?.fixado) || 0)
 const afixar = computed(() => Number(comercial.value?.afixar) || 0)
 const disponivel = computed(() => Number(comercial.value?.disponivel) || 0)
 const areaplantada = computed(() => Number(comercial.value?.areaplantada) || 0)
-// Expectativa = PRODUÇÃO viva (regra de 3): recalcula conforme o colhido/ha colhido.
-// Sem colheita = expectativa plantada; colhendo = projeção pela produtividade real.
+// Expectativa = PRODUÇÃO estimada (backend): talhão finalizado conta o colhido real;
+// o resto conta a previsão, ou o colhido se já passou dela.
 const producao = computed(() => Number(comercial.value?.producao) || 0)
 const colhido = computed(() => Number(comercial.value?.colhido) || 0)
 const prodColhido = computed(() => Number(comercial.value?.produtividadecolhido) || 0)
-// Colheita mostra hectares colhidos (não %).
+// Colheita = área dos talhões finalizados (check "Talhão finalizado?").
 const hacolhido = computed(() => Number(comercial.value?.hacolhido) || 0)
 
 // Rótulo primário da linha = a OUTRA dimensão do agrupamento, com prefixo
@@ -547,29 +547,14 @@ onMounted(async () => {
                     <!-- Colhido -->
                     <div class="col-6 col-sm-3">
                       <div class="text-caption text-grey-6">Colhido</div>
-                      <q-linear-progress
-                        :value="
-                          Number(l.areaplantada) > 0
-                            ? Math.min(1, (Number(l.hacolhido) || 0) / Number(l.areaplantada))
-                            : 0
-                        "
-                        color="green-6"
-                        track-color="grey-3"
-                        size="8px"
-                        rounded
-                        class="q-my-xs"
-                      />
-                      <div class="text-caption text-grey-7">
-                        {{ fmt(l.hacolhido, 1) }} / {{ fmt(l.areaplantada, 1) }} ha
-                      </div>
+                      <!-- sacas do extrato (mesmo número do KPI da tela do talhão) -->
+                      <div>{{ fmt(mediaLinha(l).colhido) }} sc</div>
                     </div>
                     <!-- Média -->
                     <div class="col-6 col-sm-3">
                       <div class="text-caption text-grey-6">Média</div>
                       <div>
-                        <span class="text-grey-8">{{ fmt(mediaLinha(l).esperada, 1) }}</span>
                         <span v-if="mediaLinha(l).realizada != null">
-                          /
                           <span class="text-green-8 text-weight-medium">{{
                             fmt(mediaLinha(l).realizada, 1)
                           }}</span>
@@ -578,6 +563,23 @@ onMounted(async () => {
                       </div>
                     </div>
                   </div>
+                </q-item-section>
+                <!-- Talhão finalizado? O QCheckbox cancela o clique (stopAndPrevent),
+                     então marcar não abre o talhão. -->
+                <q-item-section side top class="col-check">
+                  <q-checkbox
+                    :model-value="!!l.finalizado"
+                    checked-icon="check_circle"
+                    unchecked-icon="radio_button_unchecked"
+                    color="green-6"
+                    size="lg"
+                    dense
+                    @update:model-value="(v) => store.marcarFinalizado(codsafra, l, v)"
+                  >
+                    <q-tooltip>{{
+                      l.finalizado ? 'Talhão finalizado' : 'Marcar talhão como finalizado'
+                    }}</q-tooltip>
+                  </q-checkbox>
                 </q-item-section>
               </q-item>
 
@@ -601,15 +603,17 @@ onMounted(async () => {
                     <div class="col-6 col-sm-3">
                       <div class="text-caption text-grey-6">Média</div>
                       <div>
-                        <span class="text-grey-8">{{ fmt(grp.total.esperada, 1) }}</span>
                         <span v-if="grp.total.realizada != null">
-                          / <span class="text-green-8">{{ fmt(grp.total.realizada, 1) }}</span>
+                          <span class="text-green-8">{{ fmt(grp.total.realizada, 1) }}</span>
                         </span>
-                        <span v-else class="text-grey-5"> / —</span>
+                        <span v-else class="text-grey-5">—</span>
                       </div>
                     </div>
                   </div>
                 </q-item-section>
+                <!-- Mesma coluna do check "finalizado" das linhas (vazia): sem ela as
+                     colunas do Total ficam mais largas e desalinham. -->
+                <q-item-section side top class="col-check" />
               </q-item>
             </q-list>
           </q-card>
@@ -658,3 +662,12 @@ onMounted(async () => {
     </q-dialog>
   </q-page>
 </template>
+
+<style scoped>
+/* Coluna do check "Talhão finalizado?" com largura fixa nas linhas e no Total —
+   o check (com tooltip) e a coluna vazia do Total mediam diferente, e a grade de
+   métricas desalinhava. */
+.col-check {
+  width: 48px;
+}
+</style>

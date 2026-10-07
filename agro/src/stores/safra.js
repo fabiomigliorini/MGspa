@@ -179,7 +179,15 @@ export const useSafraStore = defineStore('safra', () => {
     })
   }
 
-  // Grava só o ha colhido (slider do card) — patcha o plantio local sem recarregar tudo.
+  // Check "Talhão finalizado?": não existe colheita parcial em ha — marcado grava
+  // hacolhido = área, desmarcado 0. Recarrega o comercial (produção/progresso/médias).
+  async function marcarFinalizado(codsafra, plantio, finalizado) {
+    const hacolhido = finalizado ? Number(plantio.areaplantada) || 0 : 0
+    await salvarHacolhido(codsafra, plantio.codplantio, hacolhido)
+    await carregarComercial(codsafra)
+  }
+
+  // Grava só o ha colhido — patcha o plantio local sem recarregar tudo.
   async function salvarHacolhido(codsafra, codplantio, hacolhido) {
     try {
       const { data } = await api.post(`v1/safra/${codsafra}/plantio/${codplantio}/hacolhido`, {
@@ -221,6 +229,7 @@ export const useSafraStore = defineStore('safra', () => {
     editarPlantio,
     salvarPlantio,
     salvarHacolhido,
+    marcarFinalizado,
     inativarPlantio,
     excluirPlantio,
     removerPlantio,

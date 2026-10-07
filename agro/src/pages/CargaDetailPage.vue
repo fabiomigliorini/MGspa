@@ -2,7 +2,7 @@
 // Ficha do romaneio — SOMENTE LEITURA. Quem edita é o pátio (/carga/:uuid), que
 // trabalha offline no Dexie; aqui é consulta do histórico, direto do servidor.
 import { ref, computed, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { formataTimestamp, tempoRelativo } from '@components/formatters'
@@ -10,9 +10,15 @@ import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import { sentidoMeta, ETAPA_META, fmtNumero } from 'src/utils/carga'
 import { imprimirTicket, ticketDoServidor } from 'src/utils/ticket'
 import { notifyError } from 'src/utils/notify'
+import { goBack } from 'src/utils/goBack'
 import CargaEtapaProgresso from 'components/carga/CargaEtapaProgresso.vue'
 
 const route = useRoute()
+const router = useRouter()
+
+// Volta para onde veio (listagem de romaneios ou card do talhão); aberto em aba
+// nova ou por link direto, cai na listagem.
+const voltar = () => goBack(router, { name: 'cargas' })
 const $q = useQuasar()
 
 const carga = ref(null)
@@ -98,7 +104,7 @@ onMounted(() => carregar(route.params.codcarga))
             icon="arrow_back"
             label="Voltar"
             class="q-mt-md"
-            :to="{ name: 'cargas' }"
+            @click="voltar"
           />
         </q-card-section>
       </q-card>
@@ -107,7 +113,7 @@ onMounted(() => carregar(route.params.codcarga))
         <!-- Voltar fora do card, na linha de botões do topo — mesmo lugar do
              "Imprimir lista" da listagem (padrão das telas do negocios). -->
         <div class="row justify-end q-mb-sm">
-          <q-btn flat color="grey-7" icon="arrow_back" round :to="{ name: 'cargas' }" />
+          <q-btn flat color="grey-7" icon="arrow_back" round @click="voltar" />
         </div>
 
         <q-banner v-if="carga.inativo" rounded class="bg-red-1 text-red-10 q-mb-md">

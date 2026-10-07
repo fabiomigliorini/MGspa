@@ -6,6 +6,7 @@ use Mg\MgService;
 use Mg\Contrato\Contrato;
 use Mg\Contrato\ContratoFixacao;
 use Mg\Fazenda\Plantio;
+use Mg\Fazenda\PlantioService;
 use Mg\Grao\MovimentoGrao;
 
 class SafraService extends MgService
@@ -18,8 +19,10 @@ class SafraService extends MgService
      *   - afixar = max(0, contratado − fixado)
      *   - preço médio R$ = LÍQUIDO/sc do firme (BRL cheio + parte travada das US$)
      *   - preço médio moeda estrangeira = BRUTO/sc do saldo ainda NÃO travado
-     * Agronômico (plantios): área, expectativa, colhido, produção (com regra de 3),
-     * produtividade (exp/ha e colhido/ha-colhido), progresso (ha colhido/área).
+     * Agronômico (plantios): área, expectativa, colhido, produção, produtividade
+     * (exp/área e colhido/área), progresso (área finalizada/área).
+     *   - talhão FINALIZADO = hacolhido ≥ área (o check "Talhão finalizado?"
+     *     grava hacolhido = área; desmarcado, 0). Não há colheita parcial em ha.
      *   - disponível = max(0, Σ produção dos plantios − contratado)
      */
     public static function resumoComercial($codsafra): array
@@ -107,7 +110,9 @@ class SafraService extends MgService
         ) {
             $area = (float) $p->areaplantada;
             $exp = (float) $p->expectativasacas;
-            $ha = (float) $p->hacolhido;
+            // Só conta a área do talhão FINALIZADO: ha parcial antigo (do slider
+            // que saiu) não entra no progresso nem na produção.
+            $ha = PlantioService::finalizado($p) ? $area : 0.0;
             $colhidoSc = (float) ($colhidoKg[$p->codplantio] ?? 0) / $pesosaca;
             $areaTotal += $area;
             $expTotal += $exp;
@@ -117,7 +122,9 @@ class SafraService extends MgService
 
             $plantiosOut[$p->codplantio] = [
                 'esperada' => $area > 0 ? round($exp / $area, 2) : null,
-                'realizada' => $ha > 0 ? round($colhidoSc / $ha, 2) : null,
+                // Média real = sacas colhidas / área PLANTADA, sempre — mesmo no
+                // começo da colheita (regra do usuário, out/2026).
+                'realizada' => $area > 0 ? round($colhidoSc / $area, 2) : null,
                 'colhido' => round($colhidoSc, 0),
             ];
 
@@ -193,7 +200,7 @@ class SafraService extends MgService
             'producao' => round($producaoTotal, 0),
             'hacolhido' => round($hacolhidoTotal, 2),
             'produtividadeexpectativa' => $areaTotal > 0 ? round($expTotal / $areaTotal, 2) : null,
-            'produtividadecolhido' => $hacolhidoTotal > 0 ? round($colhidoTotal / $hacolhidoTotal, 2) : null,
+            'produtividadecolhido' => $areaTotal > 0 ? round($colhidoTotal / $areaTotal, 2) : null,
             'progressocolheita' => $areaTotal > 0 ? min(1, round($hacolhidoTotal / $areaTotal, 4)) : 0,
             // médias/agregados prontos p/ a tabela agrupável (por talhão e por fazenda)
             'plantios' => $plantiosOut,
@@ -225,7 +232,7 @@ class SafraService extends MgService
             'colhido' => round($colhido, 0),
             'hacolhido' => round($ha, 2),
             'esperada' => $area > 0 ? round($exp / $area, 2) : null,
-            'realizada' => $ha > 0 ? round($colhido / $ha, 2) : null,
+            'realizada' => $area > 0 ? round($colhido / $area, 2) : null,
         ]);
     }
 
@@ -237,20 +244,17 @@ class SafraService extends MgService
 
     /**
      * Produção estimada de um plantio (sacas):
-     *   - nada colhido (ha=0 ou colhido=0) → expectativa
-     *   - finalizado (ha colhido ≥ área)   → colhido
-     *   - colhendo → colhido + (colhido/ha) × (área − ha)  [regra de 3: projeta o
-     *     restante pela produtividade REAL do que já colheu]
+     *   - finalizado (ha colhido ≥ área) → colhido (o real)
+     *   - não finalizado → a previsão, ou o colhido se já passou dela
+     * A previsão (expectativasacas) é fixa — só muda editando o talhão — e serve de
+     * régua: o colhido acima ou abaixo dela é o que interessa ver.
      */
     protected static function producaoPlantio(float $area, float $exp, float $ha, float $colhido): float
     {
-        if ($ha <= 0 || $colhido <= 0) {
-            return $exp;
-        }
-        if ($ha >= $area) {
+        if ($area > 0 && $ha >= $area) {
             return $colhido;
         }
-        return $colhido + ($colhido / $ha) * ($area - $ha);
+        return max($exp, $colhido);
     }
 
     public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null)

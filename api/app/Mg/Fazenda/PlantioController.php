@@ -70,17 +70,22 @@ class PlantioController extends MgController
         Autorizador::autoriza(self::GRUPOS);
 
         $model = $this->buscar($codsafra, $codplantio);
+        $eraFinalizado = PlantioService::finalizado($model);
 
         $model->fill($request->validated());
         $model->codsafra = $codsafra;
+        // Finalizado = hacolhido ≥ área: mudar a área na edição não pode
+        // "desfinalizar" o talhão (nem finalizar um que não estava).
+        $model->hacolhido = $eraFinalizado ? $model->areaplantada : 0;
         $model->update();
 
         return new PlantioResource($model->fresh(static::WITH));
     }
 
     /**
-     * Grava só o `hacolhido` (ha já colhidos) — usado pelo slider do card, sem
-     * passar pela validação do plantio inteiro. Dirige produtividade e produção.
+     * Grava só o `hacolhido` — usado pelo check "Talhão finalizado?" (manda a
+     * área inteira ou 0), sem passar pela validação do plantio inteiro. Decide a
+     * produção estimada e o progresso da colheita (SafraService).
      */
     public function hacolhido(Request $request, $codsafra, $codplantio)
     {
