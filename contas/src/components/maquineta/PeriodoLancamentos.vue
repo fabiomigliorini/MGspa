@@ -1,24 +1,20 @@
 <script setup>
-// Lançamentos do período da maquineta (TASK-188 M9.8) como extrato, no padrão dos lançamentos do
-// período do portador: agrupados por dia, a linha do tempo à esquerda (hora e o ícone da origem:
-// venda, título, avulso; o cancelamento com o ícone de desfazer) e o valor à direita, com o
-// acumulado do período. A linha leva à venda ou ao pagamento. No período não conferido, cada
-// linha tem Corrigir (crédito/débito, maquineta, período, bandeira, autorização, parcelas, valor)
-// e Registro indevido (sai do período como se nunca tivesse entrado).
+// Detalhe do período da maquineta (TASK-188 M9.8) na ordem do relatório da maquininha: modalidade
+// → bandeira → hora, uma linha por venda (hora, NSU, autorização, parcelas e valor, como no papel;
+// no computador, em cinza, o caixa e a venda). A linha leva à venda ou ao pagamento. A venda
+// cancelada no próprio período fica fora, como no papel, e volta riscada no "Mostrar cancelados";
+// o cancelamento de venda de outro período e o estorno ficam num bloco no fim, negativos. No
+// período não conferido, cada venda tem Corrigir (crédito/débito, maquineta, período, bandeira,
+// autorização, parcelas, valor) e Registro indevido (sai do período como se nunca tivesse entrado).
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
-import {
-  formataNumero,
-  formataData,
-  formataDataCompleta,
-  formataHora,
-} from '@components/formatters'
+import { formataNumero, formataData, formataHora } from '@components/formatters'
 import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
 import CorrecaoPagamentoDialog from 'components/conferencia/CorrecaoPagamentoDialog.vue'
-import { linhasDoPeriodo } from 'components/maquineta/linhas'
+import { borderoDoPeriodo } from 'components/maquineta/linhas'
 
 const $q = useQuasar()
 const store = useMaquinetaPeriodoStore()
@@ -26,49 +22,28 @@ const sConferencia = useConferenciaStore()
 const { periodo } = storeToRefs(store)
 
 const editavel = computed(() => periodo.value?.situacao !== 'conferido')
+const computador = computed(() => $q.screen.gt.xs)
 
-// as linhas com o acumulado do período, agrupadas por dia
-const dias = computed(() => {
-  const ret = []
-  let acumulado = 0
-  for (const x of linhasDoPeriodo(periodo.value)) {
-    acumulado = Math.round((acumulado + x.valor) * 100) / 100
-    const data = formataData(x.momento)
-    if (ret.at(-1)?.data !== data) {
-      const extenso = formataDataCompleta(x.momento)
-      ret.push({ data, titulo: extenso.charAt(0).toUpperCase() + extenso.slice(1), linhas: [] })
-    }
-    ret.at(-1).linhas.push({ ...x, acumulado })
-  }
-  return ret
-})
+const bordero = computed(() => borderoDoPeriodo(periodo.value))
+const mostrarCancelados = ref(false)
+const blocos = computed(() =>
+  bordero.value.blocos
+    .map((b) => ({ ...b, linhas: b.linhas.filter((x) => mostrarCancelados.value || !x.cancelada) }))
+    .filter((b) => b.linhas.length),
+)
+const vazio = computed(() => !bordero.value.blocos.length && !bordero.value.cancelamentos.length)
 
-const ICONE = { V: 'shopping_cart', T: 'request_quote', A: 'tune' }
-const temAcumulado = computed(() => $q.screen.gt.xs)
-
-const texto = (x) =>
-  (x.cancelamento ? 'Cancelamento · ' : '') +
-  [x.l.meiodescricao, x.l.documento || x.l.origemdescricao].filter(Boolean).join(' · ')
-const detalhe = (x) =>
-  [
-    x.l.pdv || 'Escritório',
-    x.l.fantasia,
-    x.l.bandeiradescricao,
-    x.l.parcelas > 1 ? `${x.l.parcelas}x` : null,
-    x.l.autorizacao ? `aut. ${x.l.autorizacao}` : null,
-  ]
-    .filter(Boolean)
-    .join(' · ')
-const link = (x) =>
-  x.l.codnegocio
-    ? { href: `${process.env.NEGOCIOS_URL}/negocio/${x.l.codnegocio}`, target: '_blank' }
-    : { to: { name: 'pagamento-detalhe', params: { id: x.l.codpagamento } } }
-const corAvatar = (x) => (x.valor < 0 ? 'red-1' : 'green-1')
-const corIcone = (x) => (x.valor < 0 ? 'red-8' : 'green-8')
-const corValor = (x) => (x.valor < 0 ? 'text-red-8' : 'text-green-8')
-const valor = (x) => (x.valor > 0 ? '+' : '') + formataNumero(x.valor)
+// NSU e autorização, cada um quando houver; no celular, só o primeiro que tiver
+const codigos = (l) =>
+  [l.nsu ? `NSU ${l.nsu}` : null, l.autorizacao ? `aut ${l.autorizacao}` : null].filter(Boolean)
+const codigo = (l) => (computador.value ? codigos(l).join(' · ') : (l.nsu ?? l.autorizacao ?? ''))
+const venda = (l) => [l.pdv || 'Escritório', l.documento].filter(Boolean).join(' · ')
+const link = (l) =>
+  l.codnegocio
+    ? { href: `${process.env.NEGOCIOS_URL}/negocio/${l.codnegocio}`, target: '_blank' }
+    : { to: { name: 'pagamento-detalhe', params: { id: l.codpagamento } } }
 // corrigir e indevido só no cartão que caiu aqui, ainda valendo
-const podeCorrigir = (x) => editavel.value && !x.cancelamento && x.l.estado !== 'C'
+const podeCorrigir = (x) => editavel.value && !x.cancelada && x.l.estado !== 'C'
 
 // ---- correções ----
 const dialogCorrecao = ref(false)
@@ -100,66 +75,58 @@ function indevido(x) {
 <template>
   <q-card flat bordered>
     <q-card-section class="row items-center q-pb-sm">
-      <div class="col text-subtitle1 text-weight-medium">Lançamentos</div>
+      <div class="col text-subtitle1 text-weight-medium">Detalhe</div>
+      <q-toggle
+        v-if="bordero.cancelados"
+        v-model="mostrarCancelados"
+        :label="`Mostrar cancelados (${bordero.cancelados})`"
+        color="primary"
+      />
     </q-card-section>
 
-    <q-card-section v-if="dias.length" class="q-pt-none">
-      <!-- cabeçalho das colunas: o mesmo esqueleto da linha, para alinhar -->
-      <div v-if="temAcumulado" class="row no-wrap text-caption text-grey-7">
-        <div style="width: 92px" />
-        <div class="col row no-wrap q-px-sm">
-          <div class="col" />
-          <div class="text-right q-pl-md" style="width: 112px">Valor</div>
-          <div class="text-right q-pl-md" style="width: 112px">Acumulado</div>
+    <q-card-section v-if="!vazio" class="q-pt-none">
+      <div v-for="b in blocos" :key="b.chave" class="q-mb-md">
+        <!-- a bandeira, com quantidade e valor, como no papel -->
+        <div
+          class="row no-wrap items-center text-weight-medium text-grey-9 q-px-sm q-py-xs bg-grey-2 rounded-borders"
+        >
+          <div class="col ellipsis">{{ b.titulo }}</div>
+          <div class="text-right" style="width: 40px">{{ b.quantidade }}</div>
+          <div class="text-right" style="width: 96px">{{ formataNumero(b.valor) }}</div>
+          <div v-if="editavel" style="width: 64px" />
         </div>
-      </div>
 
-      <div v-for="dia in dias" :key="dia.data" class="q-mt-sm">
-        <div class="text-caption text-weight-bold text-grey-8 q-py-xs">{{ dia.titulo }}</div>
-
-        <div v-for="(x, i) in dia.linhas" :key="x.chave" class="row no-wrap">
-          <!-- hora -->
-          <div
-            class="row items-center justify-end text-caption text-grey-7 q-pr-sm"
-            style="width: 48px; height: 56px"
-          >
-            {{ formataHora(x.momento) }}
-          </div>
-
-          <!-- trilho: o ícone da origem, ligado ao anterior e ao próximo do dia -->
-          <div class="column items-center no-wrap" style="width: 36px">
-            <div style="width: 2px; height: 10px" :class="i ? 'bg-grey-3' : ''" />
-            <q-avatar
-              size="36px"
-              font-size="20px"
-              :color="corAvatar(x)"
-              :text-color="corIcone(x)"
-              :icon="x.cancelamento ? 'undo' : ICONE[x.l.origem]"
-            />
-            <div
-              class="col"
-              style="width: 2px; min-height: 10px"
-              :class="i < dia.linhas.length - 1 ? 'bg-grey-3' : ''"
-            />
-          </div>
-
-          <!-- o lançamento -->
-          <q-item
-            clickable
-            v-bind="link(x)"
-            class="col rounded-borders q-px-sm q-ml-sm q-mb-xs"
-            style="min-height: 56px"
-          >
-            <q-item-section>
-              <q-item-label>{{ texto(x) }}</q-item-label>
-              <q-item-label caption class="row items-center q-gutter-x-xs">
-                <span>{{ detalhe(x) }}</span>
+        <q-item
+          v-for="x in b.linhas"
+          :key="x.chave"
+          clickable
+          v-bind="link(x.l)"
+          class="q-px-sm"
+          :class="x.cancelada ? 'text-strike text-grey-5' : ''"
+        >
+          <q-item-section>
+            <div class="row no-wrap items-center">
+              <div style="width: 48px">{{ formataHora(x.momento) }}</div>
+              <div class="col ellipsis" :class="x.cancelada ? '' : 'text-grey-8'">
+                {{ codigo(x.l) }}
+                <span v-if="computador && venda(x.l)" class="text-caption text-grey-6 q-ml-sm">
+                  {{ venda(x.l) }}
+                </span>
+                <q-badge v-if="x.l.correcoes" class="q-ml-xs" color="orange-8" label="corrigido" />
                 <q-badge
-                  v-if="!x.cancelamento && x.l.estado === 'C'"
+                  v-if="!x.cancelada && x.l.estado === 'C'"
+                  class="q-ml-xs"
                   color="grey-5"
                   label="cancelado depois"
                 />
-                <q-badge v-if="x.l.correcoes" color="orange-8" label="corrigido" />
+              </div>
+              <div class="text-right" style="width: 40px">
+                {{ x.l.parcelas > 1 ? `${x.l.parcelas}x` : '' }}
+              </div>
+              <div class="text-right text-weight-medium" style="width: 96px">
+                {{ formataNumero(x.valor) }}
+              </div>
+              <div v-if="editavel" class="row no-wrap justify-end" style="width: 64px">
                 <template v-if="podeCorrigir(x)">
                   <q-btn
                     flat
@@ -183,23 +150,50 @@ function indevido(x) {
                     <q-tooltip>Registro indevido</q-tooltip>
                   </q-btn>
                 </template>
-              </q-item-label>
-            </q-item-section>
+              </div>
+            </div>
+          </q-item-section>
+        </q-item>
+      </div>
 
-            <q-item-section side top style="width: 112px">
-              <q-item-label class="text-weight-bold" :class="corValor(x)">
-                {{ valor(x) }}
-              </q-item-label>
-              <q-item-label v-if="!temAcumulado" caption>
-                acumulado {{ formataNumero(x.acumulado) }}
-              </q-item-label>
-            </q-item-section>
-
-            <q-item-section v-if="temAcumulado" side top style="width: 112px">
-              <q-item-label class="text-grey-8">{{ formataNumero(x.acumulado) }}</q-item-label>
-            </q-item-section>
-          </q-item>
+      <!-- cancelamento de venda de outro período e estorno: descontam do total -->
+      <div v-if="bordero.cancelamentos.length">
+        <div
+          class="row no-wrap items-center text-weight-medium text-red-8 q-px-sm q-py-xs bg-red-1 rounded-borders"
+        >
+          <div class="col ellipsis">Cancelamento de outro período</div>
+          <div class="text-right" style="width: 96px">
+            {{ formataNumero(bordero.cancelamentos.reduce((s, x) => s + x.valor, 0)) }}
+          </div>
+          <div v-if="editavel" style="width: 64px" />
         </div>
+        <q-item
+          v-for="x in bordero.cancelamentos"
+          :key="x.chave"
+          clickable
+          v-bind="link(x.l)"
+          class="q-px-sm"
+        >
+          <q-item-section>
+            <div class="row no-wrap items-center">
+              <div style="width: 48px">{{ formataHora(x.momento) }}</div>
+              <div class="col ellipsis text-grey-8">
+                {{ codigo(x.l) }}
+                <span class="text-caption text-grey-6 q-ml-sm">
+                  {{ x.outroPeriodo ? `venda de ${formataData(x.l.transacao)}` : 'estorno' }}
+                  <template v-if="computador && venda(x.l)"> · {{ venda(x.l) }}</template>
+                </span>
+              </div>
+              <div class="text-right" style="width: 40px">
+                {{ x.l.parcelas > 1 ? `${x.l.parcelas}x` : '' }}
+              </div>
+              <div class="text-right text-weight-medium text-red-8" style="width: 96px">
+                {{ formataNumero(x.valor) }}
+              </div>
+              <div v-if="editavel" style="width: 64px" />
+            </div>
+          </q-item-section>
+        </q-item>
       </div>
     </q-card-section>
 

@@ -1,21 +1,20 @@
 <script setup>
 // Cabeçalho do período da maquineta (TASK-188 M9.8), no padrão do cabeçalho do período do
-// portador: a situação (aberto, pendente, conferido) e as ações, uma por botão. Conferir com o
-// borderô: o aberto termina agora (o próximo cartão abre o seguinte); bateu no centavo, conferido;
-// senão, pendente (corrige e confere de novo). Não conferido: início e fim, dividir e unificar com
-// o anterior; conferido: reabrir (volta a pendente). Embaixo, borderô × sistema e a foto do
-// borderô (opcional: sem ela o período fica "sem borderô"; anexa e exclui a qualquer hora).
-import { ref, computed, watch, onBeforeUnmount } from 'vue'
+// portador: a situação (aberto, pendente, conferido) e as ações, uma por botão. Não conferido:
+// início e fim, dividir e unificar com o anterior; conferido: reabrir (volta a pendente). A
+// conferência (quantidade e total do borderô) fica no resumo; a foto, na coluna ao lado.
+import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
-import { api } from 'src/services/api'
-import { blobUrlFromApi } from '@components/blobUrlFromApi'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
-import MgInputValor from '@components/MgInputValor.vue'
-import MgSlim from '@components/MgSlim.vue'
-import { formataNumero, formataTimestamp, formataTimestampIso } from '@components/formatters'
+import {
+  formataNumero,
+  formataData,
+  formataTimestamp,
+  formataTimestampIso,
+} from '@components/formatters'
 import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 import { linhasDoPeriodo } from 'components/maquineta/linhas'
 
@@ -26,7 +25,6 @@ const { maquineta, periodo, periodos, salvando } = storeToRefs(store)
 
 const situacao = computed(() => periodo.value?.situacao)
 const naoConferido = computed(() => !!periodo.value && situacao.value !== 'conferido')
-const reais = (v) => `R$ ${formataNumero(v ?? 0)}`
 const irPara = (cod) =>
   router.push({
     name: 'maquineta-detalhe',
@@ -50,60 +48,26 @@ const linhas = computed(() => {
   return ret
 })
 
-// ---- borderô × sistema ----
-const informado = computed(
-  () => periodo.value?.creditoinformado != null || periodo.value?.debitoinformado != null,
-)
-const resumo = computed(() => {
+// o relatório da maquininha é de um dia: período não conferido com mais de um dia não bate
+const ms = (d) => new Date(String(d).replace(' ', 'T')).getTime()
+const dias = computed(() => {
   const p = periodo.value
-  const s = p.sistema ?? { credito: 0, debito: 0 }
-  const linha = (rotulo, bordero, sistema) => ({
-    rotulo,
-    bordero,
-    sistema,
-    diferenca: Math.round(((bordero ?? 0) - (sistema ?? 0)) * 100) / 100,
-  })
-  const c = linha('Crédito', p.creditoinformado, s.credito)
-  const d = linha('Débito', p.debitoinformado, s.debito)
-  return [
-    c,
-    d,
-    linha(
-      'Total',
-      informado.value ? (p.creditoinformado ?? 0) + (p.debitoinformado ?? 0) : null,
-      (s.credito ?? 0) + (s.debito ?? 0),
-    ),
-  ]
+  const ini = new Date(ms(p.abertura))
+  const fim = p.fim ? new Date(ms(p.fim)) : new Date()
+  ini.setHours(0, 0, 0, 0)
+  fim.setHours(0, 0, 0, 0)
+  return Math.round((fim - ini) / 86400000) + 1
 })
-const corDiferenca = (v) => (Math.abs(v) < 0.005 ? 'text-green-8' : 'text-red-8')
-const avisoPendente = computed(() =>
-  situacao.value === 'pendente'
-    ? 'O borderô não bate com o sistema: corrija os lançamentos (ou divida e unifique os períodos) ou o valor digitado, e confira de novo.'
+const avisoDias = computed(() =>
+  naoConferido.value && dias.value > 1
+    ? `Este período tem ${dias.value} dias (${formataData(periodo.value.abertura)} a ${formataData(periodo.value.fim ?? new Date())}); o relatório da maquininha é de um dia só. Divida na meia-noite.`
     : null,
 )
-
-// ---- conferir com o borderô ----
-const dialogConferir = ref(false)
-const form = ref({ creditoinformado: null, debitoinformado: null, observacoes: null })
-
-function prepararConferir() {
-  const p = periodo.value
-  form.value = {
-    creditoinformado: p.creditoinformado,
-    debitoinformado: p.debitoinformado,
-    observacoes: p.observacoes,
-  }
-  dialogConferir.value = true
-}
-
-async function salvarConferir() {
-  const ok = await store.conferir({
-    creditoinformado: form.value.creditoinformado ?? 0,
-    debitoinformado: form.value.debitoinformado ?? 0,
-    observacoes: form.value.observacoes || null,
-  })
-  if (ok) dialogConferir.value = false
-}
+const avisoPendente = computed(() =>
+  situacao.value === 'pendente'
+    ? 'O borderô não bate com o sistema: corrija os lançamentos (ou divida e unifique os períodos) ou o digitado, e confira de novo.'
+    : null,
+)
 
 function reabrir() {
   $q.dialog({
@@ -136,7 +100,6 @@ async function salvarDatas() {
 // ---- dividir: o corte na régua do período (do início ao fim; aberto, até agora), com os
 // lançamentos marcados; começa no meio do tempo. O campo de data e a régua andam juntos ----
 const dialogDividir = ref(false)
-const ms = (d) => new Date(String(d).replace(' ', 'T')).getTime()
 const reguaInicio = ref(0)
 const reguaFim = ref(0)
 const corteMs = ref(0)
@@ -198,34 +161,6 @@ function unificar() {
     if (cod) irPara(cod)
   })
 }
-
-// ---- foto do borderô ----
-const fotos = ref([])
-async function carregarFotos() {
-  fotos.value.forEach((f) => URL.revokeObjectURL(f.url))
-  fotos.value = []
-  const cod = periodo.value?.codmaquinetalote
-  for (const arquivo of periodo.value?.fotos ?? []) {
-    try {
-      const url = await blobUrlFromApi(api, `v1/maquineta-lote/${cod}/foto/${arquivo}`, null)
-      fotos.value.push({ arquivo, url })
-    } catch {
-      // foto que não abre não impede a conferência
-    }
-  }
-}
-function excluirFoto(arquivo) {
-  $q.dialog({
-    title: 'Excluir a foto',
-    message: 'Excluir esta foto do borderô? Não dá para desfazer.',
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Excluir', color: 'red-5', flat: true },
-  }).onOk(() => store.excluirFoto(arquivo))
-}
-watch(() => periodo.value?.fotos?.join('|') + periodo.value?.codmaquinetalote, carregarFotos, {
-  immediate: true,
-})
-onBeforeUnmount(() => fotos.value.forEach((f) => URL.revokeObjectURL(f.url)))
 </script>
 
 <template>
@@ -241,6 +176,9 @@ onBeforeUnmount(() => fotos.value.forEach((f) => URL.revokeObjectURL(f.url)))
         <div v-if="avisoPendente" class="text-caption text-amber-10 q-mt-xs">
           {{ avisoPendente }}
         </div>
+        <div v-if="avisoDias" class="text-caption text-amber-10 q-mt-xs">
+          {{ avisoDias }}
+        </div>
         <div
           v-for="(l, i) in periodo.observacoes?.split('\n') ?? []"
           :key="i"
@@ -251,9 +189,6 @@ onBeforeUnmount(() => fotos.value.forEach((f) => URL.revokeObjectURL(f.url)))
       </div>
       <div class="col-auto row no-wrap items-center q-ml-sm">
         <template v-if="naoConferido">
-          <q-btn flat round size="sm" color="primary" icon="fact_check" @click="prepararConferir">
-            <q-tooltip>Conferir com o borderô</q-tooltip>
-          </q-btn>
           <q-btn flat round size="sm" color="grey-7" icon="edit_calendar" @click="prepararDatas">
             <q-tooltip>Início e fim</q-tooltip>
           </q-btn>
@@ -277,114 +212,7 @@ onBeforeUnmount(() => fotos.value.forEach((f) => URL.revokeObjectURL(f.url)))
         </q-btn>
       </div>
     </q-card-section>
-
-    <q-separator inset />
-
-    <!-- borderô × sistema -->
-    <q-card-section>
-      <q-markup-table flat bordered separator="horizontal">
-        <thead>
-          <tr>
-            <th class="text-left"></th>
-            <th class="text-right">Borderô</th>
-            <th class="text-right">Sistema</th>
-            <th class="text-right">Diferença</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr v-for="r in resumo" :key="r.rotulo">
-            <td :class="r.rotulo === 'Total' ? 'text-weight-bold' : ''">{{ r.rotulo }}</td>
-            <td class="text-right">{{ informado ? formataNumero(r.bordero ?? 0) : '—' }}</td>
-            <td class="text-right">{{ formataNumero(r.sistema) }}</td>
-            <td
-              class="text-right text-weight-bold"
-              :class="informado ? corDiferenca(r.diferenca) : 'text-grey-5'"
-            >
-              {{ informado ? formataNumero(r.diferenca) : '—' }}
-            </td>
-          </tr>
-        </tbody>
-      </q-markup-table>
-      <div v-if="periodo.sistema?.pdvs?.length > 1" class="text-caption text-grey-7 q-mt-sm">
-        Por caixa:
-        <div v-for="p in periodo.sistema.pdvs" :key="p.codpdv ?? 0">
-          {{ p.pdv }}: crédito {{ formataNumero(p.credito) }} · débito
-          {{ formataNumero(p.debito) }}
-        </div>
-      </div>
-    </q-card-section>
-
-    <q-separator inset />
-
-    <!-- foto do borderô -->
-    <q-card-section>
-      <div class="text-caption text-grey-7 q-mb-sm">Foto do borderô</div>
-      <div v-if="fotos.length" class="row q-col-gutter-sm q-mb-sm">
-        <div v-for="f in fotos" :key="f.arquivo" class="col-6 col-sm-4">
-          <div class="relative-position">
-            <a :href="f.url" target="_blank">
-              <q-img :src="f.url" :ratio="1" fit="contain" class="rounded-borders" />
-            </a>
-            <q-btn
-              flat
-              round
-              size="sm"
-              color="grey-7"
-              icon="delete"
-              class="absolute-top-right"
-              :disable="salvando"
-              @click="excluirFoto(f.arquivo)"
-            >
-              <q-tooltip>Excluir a foto</q-tooltip>
-            </q-btn>
-          </div>
-        </div>
-      </div>
-      <MgSlim label="Toque para fotografar o borderô" @imagem="store.anexarFoto" />
-    </q-card-section>
   </q-card>
-
-  <!-- conferir com o borderô -->
-  <q-dialog v-model="dialogConferir">
-    <q-card flat style="width: 400px; max-width: 90vw">
-      <q-form @submit.prevent="salvarConferir">
-        <q-card-section class="text-grey-9 text-overline">CONFERIR COM O BORDERÔ</q-card-section>
-        <q-separator inset />
-        <q-card-section class="text-caption text-grey-7 q-pb-none">
-          <template v-if="situacao === 'aberto'">
-            O período termina agora: o próximo cartão já cai no período seguinte.
-          </template>
-          Batendo no centavo com o sistema ({{ reais(periodo.sistema?.credito) }} no crédito e
-          {{ reais(periodo.sistema?.debito) }} no débito), fica conferido; senão, pendente.
-        </q-card-section>
-        <q-card-section>
-          <div class="row q-col-gutter-md">
-            <div class="col-6">
-              <MgInputValor v-model="form.creditoinformado" label="Crédito do borderô" autofocus />
-            </div>
-            <div class="col-6">
-              <MgInputValor v-model="form.debitoinformado" label="Débito do borderô" />
-            </div>
-            <div class="col-12">
-              <MgInput
-                v-model="form.observacoes"
-                label="Observações"
-                type="textarea"
-                autogrow
-                rows="2"
-                maxlength="500"
-              />
-            </div>
-          </div>
-        </q-card-section>
-        <q-separator inset />
-        <q-card-actions align="right">
-          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-          <q-btn flat color="primary" type="submit" label="Conferir" :loading="salvando" />
-        </q-card-actions>
-      </q-form>
-    </q-card>
-  </q-dialog>
 
   <!-- início e fim -->
   <q-dialog v-model="dialogDatas">

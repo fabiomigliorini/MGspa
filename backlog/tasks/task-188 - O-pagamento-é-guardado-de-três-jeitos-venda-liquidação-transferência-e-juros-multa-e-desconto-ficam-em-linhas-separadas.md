@@ -243,3 +243,5 @@ M9.8 (07/10/2026, com o Fábio): a conferência do cartão saiu da tela Fechamen
 
 AC #34: o wizard de recebimento abre na hora com o Dinheiro liberado; a consulta do caixa (GET /v1/pdv/caixa) roda por trás e bloqueia quando chega (negocio.js contextoCobranca). Offline não chega resposta: Dinheiro fica liberado, sem a espera de até 3s de antes.
 <!-- SECTION:NOTES:END -->
+
+M9.8 tela igual ao borderô (07/10/2026, com o Fábio; não validado no navegador): resumo modalidade → bandeira com quantidade e valor, digita só quantidade e total do papel, detalhe na ordem do papel com NSU, foto ao lado, cancelada no período fora da conta (toggle), cancelamento de outro período em bloco próprio, aviso de período com mais de um dia. NSU e parcelas da Saurus e da PagarMe passam a chegar no pagamento (o passado é preenchido no maquineta_periodo.sql). Detalhe, código e roteiro Valida (itens 10–13) no doc-4, 'A tela igual ao borderô'.

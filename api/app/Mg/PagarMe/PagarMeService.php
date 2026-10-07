@@ -358,6 +358,7 @@ class PagarMeService
 
         $tipo = 99; //Outros
         $autorizacao = null;
+        $nsu = null;
         $bandeira = null;
         // POS que cobrou; sem ele, o do pedido
         $pos = $ped->PagarMePos;
@@ -381,6 +382,7 @@ class PagarMeService
                     break;
             }
             $autorizacao = $pag->autorizacao;
+            $nsu = $pag->nsu;
             $bandeira = static::converteBandeiraPagarMeParaBandeiraNfe(
                 $pag->PagarMeBandeira->bandeira
             );
@@ -408,6 +410,9 @@ class PagarMeService
             'juros' => $juros,
             'valortroco' => null,
             'autorizacao' => $autorizacao,
+            // NSU e parcelas, como no relatorio da maquineta (M9.8)
+            'nsu' => $nsu,
+            'parcelas' => $ped->parcelas,
             'bandeira' => $bandeira,
             'codpessoa' => empty($ped->codnegocio) ? $pag->codpessoa : config('services.pagarme.codpessoa'),
             'codmaquineta' => $pos ? MaquinetaService::daPagarMePos($pos)->codmaquineta : null,

@@ -15,6 +15,7 @@ class ConferenciaPagamentoResource extends PagamentoListaResource
             'bandeira' => $this->bandeira,
             'bandeiradescricao' => PagamentoService::BANDEIRAS[$this->bandeira] ?? null,
             'autorizacao' => $this->autorizacao,
+            'nsu' => $this->nsu,
             'integrado' => $this->ehIntegrado(),
             'indevido' => (bool) $this->indevido,
             'codmaquinetalote' => $this->codmaquinetalote,

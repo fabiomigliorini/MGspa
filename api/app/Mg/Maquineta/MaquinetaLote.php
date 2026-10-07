@@ -8,10 +8,10 @@ use Mg\Usuario\Usuario;
 
 /**
  * O periodo da maquineta (TASK-188 M9.8; no banco, lote): o cartao cai no
- * periodo aberto (sem fim). O gerente digita credito e debito do bordero:
- * o periodo ganha fim (abre o seguinte) e fica conferido se bater no
- * centavo, senao pendente. creditosistema/debitosistema sao o sistema no
- * momento da ultima conferencia.
+ * periodo aberto (sem fim). O gerente digita a quantidade e o total do
+ * bordero: o periodo ganha fim (abre o seguinte) e fica conferido se os dois
+ * baterem (o total no centavo), senao pendente. quantidadesistema e
+ * totalsistema sao o sistema no momento da ultima conferencia.
  */
 class MaquinetaLote extends MgModel
 {
@@ -24,10 +24,10 @@ class MaquinetaLote extends MgModel
         'fim',
         'fechamento',
         'codusuariofechamento',
-        'creditoinformado',
-        'debitoinformado',
-        'creditosistema',
-        'debitosistema',
+        'quantidadeinformada',
+        'totalinformado',
+        'quantidadesistema',
+        'totalsistema',
         'observacoes',
     ];
 
@@ -39,13 +39,13 @@ class MaquinetaLote extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'codusuariofechamento' => 'integer',
-        'creditoinformado' => 'float',
-        'creditosistema' => 'float',
         'criacao' => 'datetime',
-        'debitoinformado' => 'float',
-        'debitosistema' => 'float',
         'fechamento' => 'datetime',
         'fim' => 'datetime',
+        'quantidadeinformada' => 'integer',
+        'quantidadesistema' => 'integer',
+        'totalinformado' => 'float',
+        'totalsistema' => 'float',
     ];
 
     const ABERTO = 'aberto';

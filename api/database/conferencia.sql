@@ -8,8 +8,8 @@
 --   tblportadorperiodo     — sessao da gaveta: o caixa abre e fecha com
 --                            contagem no PDV; o gerente confere (as cegas)
 --   tblmaquinetalote       — o bordero da maquineta: um aberto por
---                            maquineta; o gerente fecha digitando credito e
---                            debito do bordero (com foto)
+--                            maquineta; o gerente fecha digitando quantidade
+--                            e total do bordero (com foto)
 --   tblpagamentocorrecao   — trilha das correcoes de pagamento (antes/depois
 --                            + justificativa)
 --   tblnegocioacerto       — destino da diferenca da venda desbalanceada
@@ -76,10 +76,10 @@ CREATE TABLE IF NOT EXISTS tblmaquinetalote (
     abertura timestamp(0) without time zone NOT NULL DEFAULT now(),
     fechamento timestamp(0) without time zone,
     codusuariofechamento bigint,
-    creditoinformado numeric(14,2),
-    debitoinformado numeric(14,2),
-    creditosistema numeric(14,2),
-    debitosistema numeric(14,2),
+    quantidadeinformada integer,
+    totalinformado numeric(14,2),
+    quantidadesistema integer,
+    totalsistema numeric(14,2),
     observacoes varchar(500),
     criacao timestamp(0) without time zone DEFAULT now(),
     codusuariocriacao bigint,

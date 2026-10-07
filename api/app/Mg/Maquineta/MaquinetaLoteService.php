@@ -67,50 +67,104 @@ class MaquinetaLoteService
         }
     }
 
-    // credito e debito do sistema no periodo, no total e por PDV (nulo =
-    // contas). Contrario (codpagamentoorigem) entra negativo; cancelamento
-    // entra com o sinal invertido no periodo em que aconteceu.
+    const MODALIDADES = [
+        'debito' => 'Débito',
+        'vista' => 'Crédito à vista',
+        'parcelado' => 'Crédito parcelado',
+    ];
+
+    // a modalidade do relatorio da maquineta: debito; credito em mais de uma
+    // parcela, parcelado; o resto, a vista
+    public static function modalidade(int $meio, ?int $parcelas): string
+    {
+        if ($meio == PagamentoService::MEIO_DEBITO) {
+            return 'debito';
+        }
+        return ($parcelas ?? 1) > 1 ? 'parcelado' : 'vista';
+    }
+
+    // o sistema no formato do relatorio da maquineta: modalidade -> bandeira,
+    // com quantidade e valor. Venda cancelada no proprio periodo fica fora
+    // (como no relatorio; conta em `cancelados`). Cancelamento de venda de
+    // outro periodo e estorno (contrario, codpagamentoorigem) descontam do
+    // total em `cancelamentos`, sem mudar a quantidade de vendas
     public static function sistema(int $codmaquinetalote): array
     {
         $regs = DB::select("
-            select x.meio, x.codpdv, pdv.apelido as pdv, sum(x.valor) as valor, count(*) as quantidade
-            from (
-                select p.meio, p.codpdv,
-                    case when p.codpagamentoorigem is null then p.total else -p.total end as valor
-                from tblpagamento p
-                where p.codmaquinetalote = :lote1
-                union all
-                select p.meio, p.codpdv,
-                    case when p.codpagamentoorigem is null then -p.total else p.total end as valor
-                from tblpagamento p
-                where p.codmaquinetalotecancelamento = :lote2
-            ) x
-            left join tblpdv pdv on (pdv.codpdv = x.codpdv)
-            group by x.meio, x.codpdv, pdv.apelido
-            order by pdv.apelido nulls first
-        ", ['lote1' => $codmaquinetalote, 'lote2' => $codmaquinetalote]);
+            select p.meio, p.parcelas, p.bandeira, p.total,
+                p.codpagamentoorigem is not null as contrario,
+                coalesce(p.codmaquinetalote = :lote1, false) as daqui,
+                coalesce(p.codmaquinetalotecancelamento = :lote2, false) as canceladoaqui
+            from tblpagamento p
+            where p.codmaquinetalote = :lote3
+            or p.codmaquinetalotecancelamento = :lote4
+        ", [
+            'lote1' => $codmaquinetalote,
+            'lote2' => $codmaquinetalote,
+            'lote3' => $codmaquinetalote,
+            'lote4' => $codmaquinetalote,
+        ]);
 
-        $ret = ['credito' => 0.0, 'debito' => 0.0, 'quantidade' => 0, 'pdvs' => []];
+        $modalidades = [];
+        $cancelamentos = ['quantidade' => 0, 'valor' => 0.0];
+        $cancelados = 0;
         foreach ($regs as $r) {
-            $col = $r->meio == PagamentoService::MEIO_CREDITO ? 'credito' : 'debito';
-            $chave = $r->codpdv ?? 0;
-            if (!isset($ret['pdvs'][$chave])) {
-                $ret['pdvs'][$chave] = [
-                    'codpdv' => $r->codpdv,
-                    'pdv' => $r->pdv ?? 'Escritório',
-                    'credito' => 0.0,
-                    'debito' => 0.0,
+            $total = (float) $r->total;
+            if ($r->daqui && $r->canceladoaqui) {
+                $cancelados++;
+                continue;
+            }
+            if (!$r->daqui || $r->contrario) {
+                // cancelado aqui (venda de outro periodo) ou estorno daqui
+                $valor = $r->daqui ? -$total : ($r->contrario ? $total : -$total);
+                $cancelamentos['quantidade']++;
+                $cancelamentos['valor'] = round($cancelamentos['valor'] + $valor, 2);
+                continue;
+            }
+            $mod = static::modalidade((int) $r->meio, $r->parcelas === null ? null : (int) $r->parcelas);
+            $band = $r->bandeira === null ? 0 : (int) $r->bandeira;
+            $modalidades[$mod]['quantidade'] = ($modalidades[$mod]['quantidade'] ?? 0) + 1;
+            $modalidades[$mod]['valor'] = round(($modalidades[$mod]['valor'] ?? 0) + $total, 2);
+            $b = &$modalidades[$mod]['bandeiras'][$band];
+            $b['quantidade'] = ($b['quantidade'] ?? 0) + 1;
+            $b['valor'] = round(($b['valor'] ?? 0) + $total, 2);
+            unset($b);
+        }
+
+        // na ordem do relatorio: debito, a vista, parcelado; bandeiras em
+        // ordem alfabetica, sem bandeira por ultimo
+        $ret = ['quantidade' => 0, 'total' => 0.0, 'modalidades' => []];
+        foreach (static::MODALIDADES as $mod => $descricao) {
+            if (!isset($modalidades[$mod])) {
+                continue;
+            }
+            $bandeiras = [];
+            foreach ($modalidades[$mod]['bandeiras'] as $band => $b) {
+                $bandeiras[] = [
+                    'bandeira' => $band ?: null,
+                    'descricao' => $band ? (PagamentoService::BANDEIRAS[$band] ?? 'Outros') : 'Sem bandeira',
+                    'quantidade' => $b['quantidade'],
+                    'valor' => $b['valor'],
                 ];
             }
-            $ret['pdvs'][$chave][$col] = round($ret['pdvs'][$chave][$col] + $r->valor, 2);
-            $ret[$col] = round($ret[$col] + $r->valor, 2);
-            $ret['quantidade'] += $r->quantidade;
+            usort($bandeiras, fn ($a, $b) => [$a['bandeira'] === null, $a['descricao']] <=> [$b['bandeira'] === null, $b['descricao']]);
+            $ret['modalidades'][] = [
+                'modalidade' => $mod,
+                'descricao' => $descricao,
+                'quantidade' => $modalidades[$mod]['quantidade'],
+                'valor' => $modalidades[$mod]['valor'],
+                'bandeiras' => $bandeiras,
+            ];
+            $ret['quantidade'] += $modalidades[$mod]['quantidade'];
+            $ret['total'] = round($ret['total'] + $modalidades[$mod]['valor'], 2);
         }
-        $ret['pdvs'] = array_values($ret['pdvs']);
+        $ret['cancelamentos'] = $cancelamentos;
+        $ret['cancelados'] = $cancelados;
+        $ret['total'] = round($ret['total'] + $cancelamentos['valor'], 2);
         return $ret;
     }
 
-    // total do sistema (credito + debito) de cada periodo da maquineta, numa
+    // total do sistema de cada periodo da maquineta, numa
     // consulta so' (as abas da tela): [codmaquinetalote => total]
     public static function totais(int $codmaquineta): array
     {
@@ -173,10 +227,11 @@ class MaquinetaLoteService
             ->first();
     }
 
-    // o gerente digita o bordero. Aberto: termina agora e abre o seguinte.
-    // Bateu no centavo (credito e debito), conferido; senao, pendente: corrige
-    // os lancamentos ou o valor digitado e confere de novo
-    public static function conferir(MaquinetaLote $lote, float $credito, float $debito, ?string $observacoes): MaquinetaLote
+    // o gerente digita a quantidade e o total do bordero. Aberto: termina
+    // agora e abre o seguinte. Bateu (quantidade e o total no centavo),
+    // conferido; senao, pendente: corrige os lancamentos ou o digitado e
+    // confere de novo
+    public static function conferir(MaquinetaLote $lote, int $quantidade, float $total, ?string $observacoes): MaquinetaLote
     {
         static::travar($lote->codmaquineta);
         $lote->refresh();
@@ -190,14 +245,13 @@ class MaquinetaLoteService
             ]);
         }
         $sistema = static::sistema($lote->codmaquinetalote);
-        $credito = round($credito, 2);
-        $debito = round($debito, 2);
-        $bateu = abs($credito - $sistema['credito']) < 0.005 && abs($debito - $sistema['debito']) < 0.005;
+        $total = round($total, 2);
+        $bateu = $quantidade == $sistema['quantidade'] && abs($total - $sistema['total']) < 0.005;
         $lote->fill([
-            'creditoinformado' => $credito,
-            'debitoinformado' => $debito,
-            'creditosistema' => $sistema['credito'],
-            'debitosistema' => $sistema['debito'],
+            'quantidadeinformada' => $quantidade,
+            'totalinformado' => $total,
+            'quantidadesistema' => $sistema['quantidade'],
+            'totalsistema' => $sistema['total'],
             'observacoes' => trim($observacoes ?? '') ?: null,
             'fechamento' => $bateu ? Carbon::now() : null,
             'codusuariofechamento' => $bateu ? Auth::user()->codusuario : null,
@@ -273,14 +327,14 @@ class MaquinetaLoteService
             abort(422, 'O corte precisa ficar entre o início (' . $lote->abertura->format('d/m/Y H:i')
                 . ') e o fim (' . $ate->format('d/m/Y H:i') . ').');
         }
-        $antes = $lote->only(['fim', 'creditoinformado', 'debitoinformado', 'creditosistema', 'debitosistema', 'observacoes']);
+        $antes = $lote->only(['fim', 'quantidadeinformada', 'totalinformado', 'quantidadesistema', 'totalsistema', 'observacoes']);
         // a primeira termina antes de a segunda nascer (so' um aberto)
         $lote->fill([
             'fim' => $corte,
-            'creditoinformado' => null,
-            'debitoinformado' => null,
-            'creditosistema' => null,
-            'debitosistema' => null,
+            'quantidadeinformada' => null,
+            'totalinformado' => null,
+            'quantidadesistema' => null,
+            'totalsistema' => null,
             'observacoes' => null,
         ]);
         $lote->save();
@@ -316,14 +370,14 @@ class MaquinetaLoteService
             ->update(['codmaquinetalote' => $anterior->codmaquinetalote]);
         Pagamento::where('codmaquinetalotecancelamento', $lote->codmaquinetalote)
             ->update(['codmaquinetalotecancelamento' => $anterior->codmaquinetalote]);
-        $bordero = $lote->creditoinformado !== null || $lote->debitoinformado !== null ? $lote : $anterior;
+        $bordero = $lote->totalinformado !== null ? $lote : $anterior;
         $observacoes = trim(implode("\n", array_filter([$anterior->observacoes, $lote->observacoes])));
         $anterior->fill([
             'fim' => $lote->fim,
-            'creditoinformado' => $bordero->creditoinformado,
-            'debitoinformado' => $bordero->debitoinformado,
-            'creditosistema' => $bordero->creditosistema,
-            'debitosistema' => $bordero->debitosistema,
+            'quantidadeinformada' => $bordero->quantidadeinformada,
+            'totalinformado' => $bordero->totalinformado,
+            'quantidadesistema' => $bordero->quantidadesistema,
+            'totalsistema' => $bordero->totalsistema,
             'observacoes' => $observacoes ? mb_substr($observacoes, 0, 500) : null,
         ]);
         static::moverFotos($lote, $anterior);

@@ -6,8 +6,8 @@ use Illuminate\Http\Resources\Json\JsonResource as Resource;
 use Mg\Conferencia\ConferenciaPagamentoResource;
 
 // Periodo da maquineta (TASK-188 M9.8; no banco, lote). Sem `comLancamentos`,
-// so' o cabecalho (as abas da tela); com ele, o sistema por PDV, as fotos e
-// os lancamentos. A visao e' aberta: o sistema vem em qualquer situacao.
+// so' o cabecalho (as abas da tela); com ele, o sistema no formato do
+// relatorio da maquineta (modalidade -> bandeira), as fotos e os lancamentos. A visao e' aberta: o sistema vem em qualquer situacao.
 class MaquinetaLoteResource extends Resource
 {
     public bool $comLancamentos = false;
@@ -42,10 +42,10 @@ class MaquinetaLoteResource extends Resource
             'fechamento' => $this->fechamento,
             'situacao' => $this->situacao(),
             'usuariofechamento' => optional($this->UsuarioFechamento)->usuario,
-            'creditoinformado' => $this->creditoinformado,
-            'debitoinformado' => $this->debitoinformado,
-            'creditosistema' => $this->creditosistema,
-            'debitosistema' => $this->debitosistema,
+            'quantidadeinformada' => $this->quantidadeinformada,
+            'totalinformado' => $this->totalinformado,
+            'quantidadesistema' => $this->quantidadesistema,
+            'totalsistema' => $this->totalsistema,
             'observacoes' => $this->observacoes,
             'criacao' => $this->criacao,
             'codusuariocriacao' => $this->codusuariocriacao,
@@ -62,7 +62,7 @@ class MaquinetaLoteResource extends Resource
         $sistema = MaquinetaLoteService::sistema($this->codmaquinetalote);
         $fotos = MaquinetaLoteService::fotos($this->resource);
         $ret['sistema'] = $sistema;
-        $ret['total'] = round($sistema['credito'] + $sistema['debito'], 2);
+        $ret['total'] = $sistema['total'];
         $ret['fotos'] = $fotos;
         $ret['semBordero'] = !$this->aberto() && empty($fotos);
         $ret['anterior'] = optional(MaquinetaLoteService::anterior($this->resource))->only(['codmaquinetalote', 'fechamento']);

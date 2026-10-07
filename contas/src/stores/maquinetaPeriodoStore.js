@@ -12,7 +12,8 @@ export const useMaquinetaPeriodoStore = defineStore('maquinetaPeriodo', () => {
   const maquineta = ref(null)
   // todos os períodos, sem lançamentos (as abas)
   const periodos = ref([])
-  // o período da tela, com o sistema por PDV, as fotos e os lançamentos
+  // o período da tela, com o sistema no formato do relatório da maquininha, as fotos e os
+  // lançamentos
   const periodo = ref(null)
   const carregando = ref(false)
   const salvando = ref(false)

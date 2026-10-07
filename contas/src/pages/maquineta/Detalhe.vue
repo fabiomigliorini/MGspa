@@ -1,8 +1,9 @@
 <script setup>
 // A maquineta e seus períodos (TASK-188 M9.8), no padrão do portador e seus períodos (doc-4): o
 // cabeçalho da maquineta e os períodos em abas Ano → Mês → Período, só com o que existe. Cada
-// período mostra a situação (aberto, pendente, conferido), o borderô × sistema, a foto e os
-// lançamentos em cartão (venda, título, adiantamento), com as correções na linha. A URL leva
+// período é o borderô do sistema no formato do relatório da maquininha, com a foto do papel ao
+// lado: a situação (aberto, pendente, conferido), o resumo por modalidade e bandeira com a
+// conferência (quantidade e total) e o detalhe, com as correções na linha. A URL leva
 // direto ao período. Gerente da filial, Financeiro e Administrador. O cadastro (editar, parear,
 // juntar, inativar, excluir) fica no cabeçalho, como no portador.
 import { computed, watch, onMounted } from 'vue'
@@ -18,7 +19,9 @@ import {
   maquinetaIntegracaoColor,
 } from 'src/constants/maquinetaIntegracao'
 import PeriodoCabecalho from 'components/maquineta/PeriodoCabecalho.vue'
+import PeriodoResumo from 'components/maquineta/PeriodoResumo.vue'
 import PeriodoLancamentos from 'components/maquineta/PeriodoLancamentos.vue'
+import PeriodoFoto from 'components/maquineta/PeriodoFoto.vue'
 import MaquinetaDialog from 'components/maquineta/MaquinetaDialog.vue'
 import MaquinetaParearDialog from 'components/maquineta/MaquinetaParearDialog.vue'
 import MaquinetaJuntarDialog from 'components/maquineta/MaquinetaJuntarDialog.vue'
@@ -251,10 +254,13 @@ watch(
         </q-card>
 
         <div v-if="periodo" class="row q-col-gutter-md q-mb-md">
-          <div class="col-12 col-md-5">
-            <PeriodoCabecalho />
+          <!-- a foto do borderô ao lado do borderô do sistema, para comparar linha a linha -->
+          <div class="col-12 col-md-4">
+            <PeriodoFoto />
           </div>
-          <div class="col-12 col-md-7">
+          <div class="col-12 col-md-8">
+            <PeriodoCabecalho class="q-mb-md" />
+            <PeriodoResumo class="q-mb-md" />
             <PeriodoLancamentos />
           </div>
         </div>

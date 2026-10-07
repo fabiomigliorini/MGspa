@@ -77,15 +77,15 @@ class MaquinetaPeriodoController extends Controller
     public function conferir(Request $request, int $id)
     {
         $dados = $request->validate([
-            'creditoinformado' => 'required|numeric',
-            'debitoinformado' => 'required|numeric',
+            'quantidade' => 'required|integer|min:0',
+            'total' => 'required|numeric',
             'observacoes' => 'nullable|string|max:500',
         ]);
         $lote = $this->periodo($id);
         DB::transaction(fn () => MaquinetaLoteService::conferir(
             $lote,
-            (float) $dados['creditoinformado'],
-            (float) $dados['debitoinformado'],
+            (int) $dados['quantidade'],
+            (float) $dados['total'],
             $dados['observacoes'] ?? null
         ));
         return $this->resposta($lote->fresh('Maquineta'));

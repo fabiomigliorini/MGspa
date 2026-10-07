@@ -764,8 +764,9 @@ o passado e o momento, lançar e alterar no mesmo lugar.
    período; no banco continua `tblmaquinetalote`). A lista de Maquinetas mostra a situação (aberto
    desde, pendentes, sem borderô) e o nome leva à tela. O grupo Maquinetas sai de Fechamentos.
 2. **Aberto → pendente → conferido.** O cartão cai no período aberto. Conferir com o borderô
-   (crédito e débito digitados): o aberto termina na hora e abre o seguinte; bateu no centavo com o
-   sistema, conferido; não bateu, pendente (sem tolerância). O mesmo botão confere de novo.
+   (quantidade e total digitados; antes eram crédito e débito, ver "A tela igual ao borderô"): o
+   aberto termina na hora e abre o seguinte; bateu (quantidade e o total no centavo) com o sistema,
+   conferido; não bateu, pendente (sem tolerância). O mesmo botão confere de novo.
 3. **Visão aberta**: lançamentos e total do sistema visíveis sempre (sem conferência às cegas).
    Quem está sendo conferido é o caixa; a foto é a prova.
 4. **Foto opcional, com aviso**: conferir sem foto deixa o período "sem borderô" (aba, cabeçalho e
@@ -835,18 +836,81 @@ o passado e o momento, lançar e alterar no mesmo lugar.
   - **Go-live**: variáveis e pastas já criadas em produção (07/10/2026); depois do deploy, `php
     artisan optimize` (as rotas estão em cache). As fotos do dev já foram movidas.
 
+### A tela igual ao borderô (07/10/2026, com o Fábio)
+
+**Por quê**: a primeira versão ("uma merda", nas palavras dele) não deixava bater o olho com o
+papel. O relatório da maquininha (Safrapay, Stone) é modalidade → bandeira → venda, com quantidade
+e valor em cada nível e as vendas por hora; a tela mostrava crédito/débito sem quantidade e um
+extrato por dia com acumulado; o diálogo de conferir cobria os números do sistema; a foto era uma
+miniatura. Convênio (Brasil Card, MultCard, Le Card) não tem relatório: é um monte de comprovantes.
+
+**Decisões**:
+1. A tela imprime o borderô do sistema no formato do papel: **resumo** (débito, crédito à vista,
+   crédito parcelado → bandeira, com quantidade e valor; parcelado = mais de uma parcela) e
+   **detalhe** na ordem do papel (modalidade → bandeira em ordem alfabética, sem bandeira por
+   último → hora).
+2. **Digita só quantidade e total do papel** (todo papel tem; convênio = contar e somar os
+   comprovantes), na própria tela, embaixo do resumo, sem diálogo. O resumo é para o olho. Risco
+   aceito: crédito lançado como débito com o mesmo valor passa no total. Visão continua aberta.
+3. **Linha da venda**: hora · NSU · autorização · parcelas · valor; no computador, em cinza, o caixa
+   e a venda; no celular só hora, NSU (ou autorização), parcelas e valor. Corrigir e indevido na
+   linha.
+4. **Foto ao lado** no computador (coluna da esquerda, alta, rolável, parada enquanto o detalhe
+   rola; clique abre inteira em outra aba); no celular em cima, recolhível.
+5. **Venda cancelada no próprio período** fica fora do resumo, da quantidade e do total (como no
+   papel) e volta riscada no "Mostrar cancelados (n)", como no portador. **Cancelamento de venda de
+   outro período** (e estorno) fica num bloco "Cancelamento de outro período", negativo, sempre
+   visível: desconta do total, não muda a quantidade; o período da venda fica intocado.
+6. Fim do período continua na hora do Conferir; venda depois da impressão do relatório = Dividir.
+   Período não conferido com mais de um dia avisa no cabeçalho (o relatório é de um dia só).
+7. **NSU e parcelas das integrações**: a Saurus (Safrapay, `codNSU`, o mesmo número do relatório) e
+   a PagarMe (Stone) sempre mandaram NSU e parcelas, mas só a autorização chegava ao pagamento —
+   todo crédito integrado cairia em "à vista". Agora `vincularPagamento` das duas copia `nsu` e
+   `parcelas`; o passado é preenchido no go-live. Maquininha manual: só autorização (o PDV não
+   muda).
+
+**Código**:
+- DDL: `conferencia.sql` já nasce com `quantidadeinformada`, `totalinformado`, `quantidadesistema`,
+  `totalsistema` em `tblmaquinetalote` (no lugar de crédito/débito informado e sistema).
+  `maquineta_periodo.sql` acerta o banco que rodou a versão antiga (ADD das novas, DROP das velhas)
+  e preenche `tblpagamento.nsu`/`parcelas` a partir de `tblsauruspagamento`/`tblsauruspedido` e
+  `tblpagarmepagamento`/`tblpagarmepedido`, só onde está vazio (dev: 201.330 + 566.260 linhas, ~35s;
+  rodar de novo: 0).
+- `MaquinetaLoteService::sistema` devolve `{quantidade, total, modalidades[{modalidade, descricao,
+  quantidade, valor, bandeiras[]}], cancelamentos{quantidade, valor}, cancelados}`; `modalidade()`;
+  `conferir($lote, int $quantidade, float $total, $obs)`; `dividir`/`unificar` com as colunas
+  novas. Controller `conferir` valida `quantidade` e `total`. `ConferenciaPagamentoResource` expõe
+  `nsu`. `SaurusService` e `PagarMeService::vincularPagamento` copiam `nsu` e `parcelas`.
+- Front: `Detalhe.vue` em duas colunas (`PeriodoFoto` | `PeriodoCabecalho`, `PeriodoResumo`,
+  `PeriodoLancamentos`). `PeriodoResumo.vue` (novo: resumo + conferir), `PeriodoFoto.vue` (novo:
+  fotos, anexar, excluir), `PeriodoLancamentos.vue` (detalhe), `PeriodoCabecalho.vue` (só situação,
+  avisos e ações), `linhas.js` (`borderoDoPeriodo`; `linhasDoPeriodo` fica para a régua do Dividir).
+- Conferido: `php -l`; tinker com rollback (14 verificações: quantidade, total, cancelada no
+  período, cancelamento de outro período, ordem das modalidades, total das abas, período da venda
+  intocado, conferir errado no centavo e na quantidade = pendente, certo = conferido, dividir e
+  unificar levando o digitado, `nsu` no resource); o agrupamento do front com os mesmos dados no
+  node; eslint e prettier; o dev server compila os módulos.
+
 ### Valida (maquineta e seus períodos)
 
 1. contas → Maquinetas: a coluna Período ("Aberto desde …"); clicar no nome abre a maquineta.
 2. Venda no cartão com essa maquineta no PDV → aparece no período aberto (aba "aberto" com o total).
-3. Conferir com o borderô (`fact_check`) digitando um valor diferente → Pendente, com a diferença
-   em vermelho, e nasce um período aberto novo.
+3. Conferir no resumo digitando quantidade ou total diferente → Pendente, com a diferença em
+   vermelho, e nasce um período aberto novo.
 4. Nova venda na maquineta → cai no período novo.
-5. No pendente: corrigir um lançamento (ou mover para outro período) e Conferir de novo com o valor
-   certo → Conferido.
+5. No pendente: corrigir um lançamento (ou mover para outro período) e Conferir de novo com a
+   quantidade e o total certos → Conferido.
 6. Conferido sem foto: "sem borderô" no cabeçalho, na aba e na lista. Fotografar → o selo some.
    Lixeira na miniatura → confirma → a foto some; excluindo todas, o "sem borderô" volta.
 7. Reabrir → Pendente. Dividir o período aberto numa hora → a primeira parte pendente; unificar
    essa parte com o anterior → um período só, com o borderô do anterior.
 8. Início e fim de um período pendente; abas de meses e anos pela URL.
 9. Fechamentos não mostra mais as maquinetas; o resto continua.
+10. Com o relatório Safrapay ao lado: o resumo bate linha a linha (débito, à vista, parcelado e
+    cada bandeira, quantidade e valor); o detalhe na mesma ordem do papel, com o NSU da venda
+    integrada igual ao do relatório; venda parcelada em "Crédito parcelado" com "3x".
+11. Cancelar uma venda no PDV no mesmo dia → some da conta, aparece "1 venda cancelada" e, no
+    toggle, riscada no lugar dela. Cancelar uma venda de um período já conferido → bloco
+    "Cancelamento de outro período" negativo hoje; o período de ontem continua conferido.
+12. Período aberto desde ontem → aviso de mais de um dia no cabeçalho.
+13. Celular: foto em cima, recolhível; a linha da venda numa linha só.
