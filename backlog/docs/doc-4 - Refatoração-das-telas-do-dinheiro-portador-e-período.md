@@ -402,9 +402,9 @@ estoque, com acerto) vêm um por um, adaptando a estrutura.
    contados (mantém os de antes); gaveta com itens no saldo fechada pelo PDV sem contá-los mostra
    a diferença deles.
 8. **Tela do item** (contas → Itens do Caixa → o item): os registros que apontam para ele, com o
-   que cada portador tem e os períodos em que o item mexeu (abertura, entradas, fechamento,
-   diferença e o total dos fechados); editar, inativar e excluir no cabeçalho (a lista só
-   navega).
+   que cada portador tem e os períodos em que o item mexeu (abertura, entradas e saídas numa
+   coluna só, a saída negativa, fechamento, diferença e o total dos fechados); editar, inativar e
+   excluir no cabeçalho (a lista só navega).
 
 ### Itens de parceiro (TASK-39, critérios #20 e #21; decidido com o Fábio em 06/10/2026)
 
@@ -462,11 +462,14 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
   `CaixaService::lancamentos/salvarItem/pagamentoNaGaveta/titulosRepasse/estornarRepasse/itens`,
   `exigirSemItens`, a origem I dos pagamentos e as rotas `v1/caixa/sessao/{id}/item` e
   `v1/caixa/item-lancamento`.
-- **Front**: `@components/caixa/ItemCaixaDialog` (entrada/saída, linhas novas com typeahead) e
-  `LinhasItemCaixa` (um campo por preço), `ContagemCaixa` com os itens, `periodoStore.lancarItem`;
-  contas: botão nos lançamentos de todo portador em espécie, itens no diálogo da contagem,
-  cadastro só com o nome, tela do item (`caixaItem/Detalhe` e `CaixaItemFechamentosDialog`),
-  "Movimento dos Itens" removido.
+- **Front**: `@components/caixa/ItemCaixaDialog` (Entrada / Saída como primeiro campo, linhas
+  novas com typeahead) e `LinhasItemCaixa` (um campo por preço), `ContagemCaixa` com os itens,
+  `periodoStore.lancarItem`;
+  contas: botão "Entrada ou saída de item" nos lançamentos de todo portador em espécie, itens no
+  diálogo da contagem, cadastro só com o nome, tela do item (`caixaItem/Detalhe` e
+  `CaixaItemFechamentosDialog`, com a coluna e o card "Entradas e saídas"; o campo continua
+  `entradas` no JSON), "Movimento dos Itens" removido. A saída ficou visível em 07/10/2026: o
+  botão dizia só "Entrada de item" e o rádio de Saída ficava escondido abaixo do item.
 
 ### Valida (itens do caixa)
 
