@@ -385,12 +385,16 @@ estoque, com acerto) vêm um por um, adaptando a estrutura.
    com a tolerância do portador. O saldo inicial (contagem final do anterior) já vem com os
    itens.
 3. **Vender não lança nada**: o item vira dinheiro, o saldo não muda.
-4. **Entrada ou saída de item** (botão `style` no cabeçalho dos lançamentos; Entrada / Saída é o
-   primeiro campo do diálogo), com sinal: + chegou; − saiu sem venda (devolveu, perdeu, recolheram
-   o bloco de ingressos). É o **único lançamento** do item: **tipo I** no movimento do
-   portador, sem `tblpagamento`. Cancela-se com justificativa, como o ajuste (operador, período
-   não fechado). As linhas são sempre novas: **descrição** (typeahead com as já usadas no item),
-   **preço** e **quantidade**; "+ Linha" acrescenta, o X exclui.
+4. **Entrada ou saída de item** (botão `style` no cabeçalho dos lançamentos; wizard: Entrada ou
+   Saída, o item, as linhas, data e observação), com sinal: + chegou; − saiu sem venda (devolveu,
+   perdeu, recolheram o bloco de ingressos). É o **único lançamento** do item: **tipo I** no
+   movimento do portador, sem `tblpagamento`. Cancela-se com justificativa, como o ajuste
+   (operador, período não fechado). Na entrada, as linhas são sempre novas: **descrição**
+   (typeahead com as já usadas no item), **preço** e **quantidade**; "+ Linha" acrescenta, o X
+   exclui. **A saída só tira o que está no caixa** (07/10/2026): só os tipos (preço + descrição)
+   do saldo inicial e das entradas do período, uma linha por tipo como na contagem, com a
+   quantidade limitada ao disponível (saldo inicial + entradas − saídas); o servidor recusa o tipo
+   que não está no caixa e a quantidade que passa.
 5. **Contagem**: um bloco por item que está no portador, **um campo de quantidade por preço**
    (como cédula), rotulado com o preço e a descrição. Preço novo só entra pela entrada.
 6. **Qualquer portador em espécie** (gaveta, cofre, troco, Caixa Financeiro). Não há vínculo a
@@ -474,6 +478,8 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
   na ordem do go-live (`caixa_item.sql` e depois este).
 - **Backend**: `PortadorLancamentoService::lancarItem/cancelarItem`, rota
   `POST v1/portador-periodo/{id}/item`, cancelar em `v1/portador-movimento/{id}/cancelar`;
+  `exigirDisponivel` (recusa a saída que não está no caixa), `CaixaItemService::disponivel`
+  (saldo inicial + entradas − saídas do período, por tipo; `itens[].saida` no resource);
   `PortadorPeriodoService` (contado = cédulas + itens; gravarContagem, mesmaContagem, abrir,
   contar, fechar, dividir, unificar levam os itens); `CaixaItemService` (linhas, totais,
   descrições, períodos e total dos fechados);
@@ -483,8 +489,9 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
   `CaixaService::lancamentos/salvarItem/pagamentoNaGaveta/titulosRepasse/estornarRepasse/itens`,
   `exigirSemItens`, a origem I dos pagamentos e as rotas `v1/caixa/sessao/{id}/item` e
   `v1/caixa/item-lancamento`.
-- **Front**: `@components/caixa/ItemCaixaDialog` (Entrada / Saída como primeiro campo, linhas
-  novas com typeahead) e `LinhasItemCaixa` (um campo por preço), `ContagemCaixa` com os itens,
+- **Front**: `@components/caixa/ItemCaixaDialog` (wizard; entrada com linhas novas e typeahead,
+  saída com a `ContagemCaixa` e o disponível de teto), `ContagemCaixa` com os itens (um campo por
+  preço; `LinhasItemCaixa` saiu),
   `periodoStore.lancarItem`;
   contas: botão "Entrada ou saída de item" nos lançamentos de todo portador em espécie, itens no
   diálogo da contagem, cadastro só com o nome, tela do item (`caixaItem/Detalhe` e
@@ -497,11 +504,15 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
 1. contas → Cadastros → Itens do Caixa: criar e editar pedem só o nome; clicar no item abre a
    tela dele.
 2. contas → Portadores → um portador em espécie (gaveta, cofre, troco) → período aberto: botão
-   `style` (Entrada ou saída de item) nos lançamentos → Entrada → escolher o item → descrição
-   (digitar "Cl" sugere "Claro"), preço 10,00, quantidade 10 → Lançar. Saldo final sobe
-   R$ 100,00; linha "Entrada: Chips de celular" na linha do tempo; resumo "Itens do caixa".
-3. Saída sem venda, no mesmo botão com Saída marcada (ex.: o bloco de 25 ingressos de R$ 40,00
-   da Brígida recolhido): saldo desce R$ 1.000,00; linha "Saída: …" em vermelho.
+   `style` (Entrada ou saída de item) nos lançamentos → Entrada (tecla 1) → o item → descrição
+   (digitar "Cl" sugere "Claro"), preço 10,00, quantidade 10 → Continuar → Lançar (já com o
+   foco). Saldo final sobe R$ 100,00; linha "Entrada: Chips de celular" na linha do tempo; resumo
+   "Itens do caixa".
+3. Saída sem venda, no mesmo botão → Saída (ex.: o bloco de 25 ingressos de R$ 40,00 da Brígida
+   recolhido): só aparecem os itens e os tipos que estão no caixa, cada um com o teto do
+   disponível; 25 no de R$ 40,00 → saldo desce R$ 1.000,00; linha "Saída: …" em vermelho. Tirar
+   todo o disponível de um tipo e abrir de novo: o tipo some. Sem nada no caixa, Saída
+   desabilitada.
 4. Contagem final (botão ao lado do saldo final): cédulas + o bloco do item com o campo
    "R$ 10,00" já listado; contar o que sobrou. Total geral = cédulas + itens; diferença uma só.
 5. Venda em dinheiro de um item: nada lançado; contar um a menos e R$ 10,00 a mais → mesma
@@ -516,6 +527,25 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
     dos períodos em que o item mexeu, com os cards Saldo, Entradas e saídas e Diferença (entradas
     e saídas + diferença = saldo; a saída entra na mesma coluna, negativa); "Descrições" troca o
     texto de um tipo (descrição + preço) em tudo.
+
+### Wizards de item e de reforço/sangria (07/10/2026, com o Fábio)
+
+Os dois diálogos de lançamento do período em espécie viraram wizard, no jeito do wizard de
+cobrança (`@components/cobranca/ListaOpcoes`: setas, Enter ou o número; Voltar volta um passo):
+
+- **Item** (`ItemCaixaDialog`, 400px): 1) Entrada ou Saída (Saída desabilitada sem nada no
+  caixa); 2) o item (na saída, só os que estão no caixa; pula quando só tem um); 3) as linhas
+  (entrada livre; saída no jeito da contagem, com o teto) → Continuar; 4) total, data e
+  observação, foco no Lançar.
+- **Reforço / Sangria** (`TransferirCaixaDialog`, 400px; fora do caixa, Enviar / Receber): 1) o
+  sentido; 2) o outro portador, os em espécie da filial primeiro ("Desta filial" / "Mais opções",
+  logo do banco), com o mesmo filtro do select de antes (espécie e banco, sem o próprio, papel
+  depositante no destino e operador na origem, de `v1/select/portador`); 3) o valor; 4) valor,
+  data e observação, foco no Lançar. O título acompanha: "Sangria para Cofre Centro".
+- `MgInputValor` sem label não reserva mais o espaço do rótulo (o número ficava caído no campo).
+
+Valida: sangria só no teclado (1 → número do destino → valor → Enter → Enter) → amarela, a
+confirmar; reforço lista os portadores de onde se pode retirar; Voltar em cada passo.
 
 ### Como ficou no código: maquinetas de parceiro (06–07/10/2026; validado pelo Fábio em 07/10)
 
