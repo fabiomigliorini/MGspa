@@ -17,13 +17,14 @@ class MaquinetaController extends Controller
     public function index(Request $request)
     {
         Autorizador::autoriza(static::GRUPOS);
-        $paginator = MaquinetaService::listar($request->only([
+        // todas de uma vez: a tela agrupa por filial e adquirente, como o painel do portador
+        $maquinetas = MaquinetaService::listar($request->only([
             'codmaquineta', 'texto', 'codfilial', 'codpessoa', 'integracao', 'inativo',
         ]));
         // situacao dos periodos (conferencia do cartao, M9.8)
-        $resumo = MaquinetaLoteService::resumo($paginator->getCollection()->pluck('codmaquineta')->all());
-        $paginator->getCollection()->each(fn ($m) => $m->periodos = $resumo[$m->codmaquineta] ?? null);
-        return MaquinetaResource::collection($paginator);
+        $resumo = MaquinetaLoteService::resumo($maquinetas->pluck('codmaquineta')->all());
+        $maquinetas->each(fn ($m) => $m->periodos = $resumo[$m->codmaquineta] ?? null);
+        return MaquinetaResource::collection($maquinetas);
     }
 
     public function adquirentes()

@@ -3,11 +3,14 @@
 // cabeçalho da maquineta e os períodos em abas Ano → Mês → Período, só com o que existe. Cada
 // período mostra a situação (aberto, pendente, conferido), o borderô × sistema, a foto e os
 // lançamentos em cartão (venda, título, adiantamento), com as correções na linha. A URL leva
-// direto ao período. Gerente da filial, Financeiro e Administrador.
+// direto ao período. Gerente da filial, Financeiro e Administrador. O cadastro (editar, parear,
+// juntar, inativar, excluir) fica no cabeçalho, como no portador.
 import { computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
+import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import { formataNumero, formataDataAbreviada } from '@components/formatters'
 import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 import {
@@ -16,13 +19,19 @@ import {
 } from 'src/constants/maquinetaIntegracao'
 import PeriodoCabecalho from 'components/maquineta/PeriodoCabecalho.vue'
 import PeriodoLancamentos from 'components/maquineta/PeriodoLancamentos.vue'
+import MaquinetaDialog from 'components/maquineta/MaquinetaDialog.vue'
+import MaquinetaParearDialog from 'components/maquineta/MaquinetaParearDialog.vue'
+import MaquinetaJuntarDialog from 'components/maquineta/MaquinetaJuntarDialog.vue'
+import { useMaquinetaStore } from 'src/stores/maquinetaStore'
 
 const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
 
+const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
 const store = useMaquinetaPeriodoStore()
 const { maquineta, periodos, periodo, carregando } = storeToRefs(store)
+const sMaquineta = useMaquinetaStore()
 
 const codmaquineta = computed(() => Number(route.params.codmaquineta))
 const codperiodo = computed(() =>
@@ -66,6 +75,22 @@ const doMes = computed(() =>
 // a aba mostra só a data final (15/jul/2026); sem fim, "aberto"
 const rotulo = (p) => (p.fim ? formataDataAbreviada(p.fim, 4) : 'aberto')
 const BADGE = { aberto: ['green-7', 'Aberto'], pendente: ['amber-8', 'Pendente'] }
+
+// ---- cadastro ----
+function excluir() {
+  $q.dialog({
+    title: 'Excluir',
+    message: `Confirma excluir a maquineta "${maquineta.value.apelido}"?`,
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+  }).onOk(async () => {
+    if (await sMaquineta.excluir(maquineta.value)) router.push({ name: 'maquineta' })
+  })
+}
+
+// juntada: esta deixa de existir, a tela vai para a que ficou
+const juntada = (destino) =>
+  router.push({ name: 'maquineta-detalhe', params: { codmaquineta: destino.codmaquineta } })
 
 // ---- carregar: sem período na URL, o servidor manda o mais novo (o watch abaixo leva a URL) ----
 async function carregar() {
@@ -112,6 +137,64 @@ watch(
               {{ maquineta.compartilhada ? 'Todas as filiais' : maquineta.filial }}
               <template v-if="maquineta.serial"> · {{ maquineta.serial }}</template>
               <template v-if="maquineta.inativo"> · inativa</template>
+            </div>
+          </div>
+          <div class="col-12 col-sm-auto">
+            <div class="row items-center no-wrap justify-end">
+              <MgInfoCriacao :registro="maquineta" />
+              <q-btn
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="edit"
+                @click="sMaquineta.abrirEditar(maquineta)"
+              >
+                <q-tooltip>Editar</q-tooltip>
+              </q-btn>
+              <q-btn
+                v-if="maquineta.integracao === 'S' && !maquineta.inativo"
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="qr_code_2"
+                @click="sMaquineta.abrirParear(maquineta)"
+              >
+                <q-tooltip>Parear de novo</q-tooltip>
+              </q-btn>
+              <q-btn
+                v-if="!maquineta.integracao"
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="merge"
+                @click="sMaquineta.abrirJuntar(maquineta)"
+              >
+                <q-tooltip>Juntar com outra</q-tooltip>
+              </q-btn>
+              <q-btn
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                :icon="maquineta.inativo ? 'play_arrow' : 'pause'"
+                @click="sMaquineta.alternarInativo(maquineta)"
+              >
+                <q-tooltip>{{ maquineta.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
+              </q-btn>
+              <q-btn
+                v-if="!maquineta.integracao"
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="delete"
+                @click="excluir"
+              >
+                <q-tooltip>Excluir</q-tooltip>
+              </q-btn>
             </div>
           </div>
         </div>
@@ -182,5 +265,9 @@ watch(
     </div>
 
     <q-inner-loading :showing="carregando" color="primary" />
+
+    <MaquinetaDialog />
+    <MaquinetaParearDialog />
+    <MaquinetaJuntarDialog @juntada="juntada" />
   </q-page>
 </template>

@@ -38,19 +38,10 @@ class MaquinetaPeriodoController extends Controller
         if ($codmaquinetalote && !$lote) {
             abort(404, 'Período não é desta maquineta.');
         }
-        $maquineta->loadMissing(['Filial', 'Pessoa']);
+        // o cadastro inteiro: o cabecalho da tela edita, inativa, pareia, junta e exclui
+        $maquineta->loadMissing(MaquinetaService::RELACOES);
         return ['data' => [
-            'maquineta' => [
-                'codmaquineta' => $maquineta->codmaquineta,
-                'apelido' => $maquineta->apelido,
-                'serial' => $maquineta->serial,
-                'integracao' => $maquineta->integracao,
-                'compartilhada' => (bool) $maquineta->compartilhada,
-                'codfilial' => $maquineta->codfilial,
-                'filial' => optional($maquineta->Filial)->filial,
-                'adquirente' => optional($maquineta->Pessoa)->fantasia,
-                'inativo' => $maquineta->inativo,
-            ],
+            'maquineta' => (new MaquinetaResource($maquineta))->resolve(),
             'periodos' => MaquinetaLoteResource::lista(
                 $lotes,
                 MaquinetaLoteService::totais($maquineta->codmaquineta),
