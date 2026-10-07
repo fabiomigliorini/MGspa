@@ -1807,7 +1807,7 @@ export const negocioStore = defineStore('negocio', {
     // maquinetas vêm do estoque local; online, as maquinetas são buscadas de novo
     async contextoCobranca(codestoquelocal) {
       const local = async () => (await db.estoqueLocal.get(codestoquelocal)) ?? {}
-      return {
+      const contexto = {
         pdv: sSinc.pdv.uuid,
         codfilial: (await local()).codfilial ?? null,
         carregarMaquinetas: async (aoAtualizar) => {
@@ -1821,8 +1821,20 @@ export const negocioStore = defineStore('negocio', {
         },
         buscarVale: (codtitulo) => sSinc.buscarVale(codtitulo),
         // PDV sem gaveta ou caixa fechado: Dinheiro bloqueado no wizard (M9 doc-3)
-        bloqueioDinheiro: await caixaStore().bloqueioDinheiro(),
+        bloqueioDinheiro: null,
       }
+      // o wizard abre na hora com o Dinheiro liberado; a resposta do servidor chega depois e
+      // bloqueia (offline não chega: fica liberado). Pelo store, se já abriu, para a tela reagir
+      caixaStore()
+        .bloqueioDinheiro()
+        .then((motivo) => {
+          if (toRaw(sCobranca.contexto) === contexto) {
+            sCobranca.contexto.bloqueioDinheiro = motivo
+          } else {
+            contexto.bloqueioDinheiro = motivo
+          }
+        })
+      return contexto
     },
 
     // o negócio como documento do wizard de cobrança

@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-07 19:37'
+updated_date: '2026-10-07 23:33'
 labels:
   - contas
   - negocios
@@ -240,4 +240,6 @@ M9.5 (#37, lançamento avulso de entrada e saída no caixa aberto) feito no M13 
 **Caixa do PDV refeito** (desenhado com o Fábio em 06/10/2026; detalhe no doc-4, seção "Caixa do PDV"; na árvore, sem commit): negocios /caixa mostra a tela do período do portador do contas (componentes movidos para @components/portador), só o período aberto da gaveta do PDV. O caixa abre (só confirma), faz a contagem inicial e a final (com os itens), sangria/reforço, borderô de maquineta e imprime o borderô na térmica; cancela a sangria a confirmar e o borderô. Quem fecha é sempre o gerente, no contas. Sem ajuste nem entrada de item no PDV. Saíram MgCaixaSessao, caixaSessaoStore, SessaoResource, as rotas v1/caixa/gaveta|sessao|avulso e Fechamentos → Caixas abertos. M9.1, M9.5 (antes o avulso no PDV, agora sangria e reforço) e M9.7 reescritos.
 
 M9.8 (07/10/2026, com o Fábio): a conferência do cartão saiu da tela Fechamentos e virou a tela da maquineta e seus períodos, no padrão do portador (aberto → pendente → conferido, visão aberta, foto opcional com aviso 'sem borderô', dividir/unificar/início e fim/mover, reabrir em qualquer ordem). Na árvore, sem commit, não validado. Decisões, código e roteiro Valida no doc-4, seção 'Maquineta e seus períodos'. DDL do go-live: maquineta_periodo.sql, depois do caixa_item_saldo.sql.
+
+AC #34: o wizard de recebimento abre na hora com o Dinheiro liberado; a consulta do caixa (GET /v1/pdv/caixa) roda por trás e bloqueia quando chega (negocio.js contextoCobranca). Offline não chega resposta: Dinheiro fica liberado, sem a espera de até 3s de antes.
 <!-- SECTION:NOTES:END -->

@@ -1399,8 +1399,9 @@ no M9").
   outro caminho que grave pagamento.
 - **Venda**: `PdvNegocioService::fechar` manda o dinheiro para a gaveta do PDV
   (`CaixaService::gavetaAberta`: PDV sem gaveta ou caixa fechado = 422). O wizard desabilita o
-  Dinheiro com o motivo (`contexto.bloqueioDinheiro`, consultado em `v1/pdv/caixa` ao abrir o
-  wizard; offline não bloqueia e o servidor recusa no fechar).
+  Dinheiro com o motivo (`contexto.bloqueioDinheiro`, consultado em `v1/pdv/caixa` por trás: o
+  wizard abre na hora com o Dinheiro liberado e a resposta bloqueia quando chega; offline não
+  chega, não bloqueia e o servidor recusa no fechar).
 - **Backend** `Mg/Conferencia`: `ConferenciaService::pendencias` (sessões, lotes com movimento —
   os da filial e os compartilhados —, cheque e vale recebidos no PDV, venda a prazo F/P/B sem
   confissão, vendas desbalanceadas, PIX/depósito a receber só para o financeiro; sem valores do
