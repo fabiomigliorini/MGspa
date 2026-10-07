@@ -6,6 +6,8 @@ use App\Http\Requests\Mg\Safra\SafraStoreRequest;
 use App\Http\Requests\Mg\Safra\SafraUpdateRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Mg\Fazenda\PlantioService;
 use Mg\MgController;
 use Mg\Usuario\Autorizador;
 
@@ -26,11 +28,22 @@ class SafraController extends MgController
     {
         Autorizador::autoriza(self::GRUPOS);
 
-        $model = new Safra();
-        $model->fill($request->validated());
-        $model->save();
+        $dados = $request->validated();
+        $codsafraorigem = $dados['codsafraorigem'] ?? null;
+        unset($dados['codsafraorigem']);
 
-        return new SafraResource($model->fresh('Cultura'));
+        // Safra e talhoes copiados juntos: se a copia falhar, a safra nao fica
+        // criada pela metade.
+        [$model, $copiados] = DB::transaction(function () use ($dados, $codsafraorigem) {
+            $model = new Safra();
+            $model->fill($dados);
+            $model->save();
+            $copiados = $codsafraorigem ? PlantioService::copiarTalhoes((int) $codsafraorigem, $model) : 0;
+            return [$model, $copiados];
+        });
+
+        return (new SafraResource($model->fresh('Cultura')))
+            ->additional(['talhoescopiados' => $copiados]);
     }
 
     public function show(Request $request, $id)

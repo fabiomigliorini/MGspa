@@ -126,7 +126,9 @@ const fazendasView = computed(() => {
 
     const grupos = {}
     for (const p of ps) {
-      const key = modo === 'variedade' ? p.codvariedade : p.talhao || `Talhão ${p.codplantio}`
+      // Sem variedade (talhão copiado de outra safra) a chave é '' — a mesma que
+      // o backend usa no porVariedade, senão o grupo fica sem total.
+      const key = modo === 'variedade' ? (p.codvariedade ?? '') : p.talhao || `Talhão ${p.codplantio}`
       const nome =
         modo === 'variedade'
           ? p.Variedade?.variedade || 'sem variedade'
@@ -527,6 +529,12 @@ onMounted(async () => {
                   <q-item-label>
                     <span class="text-primary text-weight-medium">{{ rotuloLinha(l) }}</span>
                     <q-badge v-if="!l.geometria" color="grey-5" label="sem mapa" class="q-ml-xs" />
+                    <q-badge
+                      v-if="!l.codvariedade && !l.inativo"
+                      color="orange-7"
+                      label="Variedade pendente"
+                      class="q-ml-xs"
+                    />
                   </q-item-label>
 
                   <div class="row q-col-gutter-sm items-center q-pa-none">
@@ -559,7 +567,9 @@ onMounted(async () => {
                       </div>
                     </div>
                     <!-- Encerrado: QCheckbox cancela o clique (stopAndPrevent),
-                         então marcar não abre o talhão. -->
+                         então marcar não abre o talhão. Sem variedade não fecha
+                         (o backend também recusa): desabilitado, o clique cai na
+                         linha e abre o talhão, que é onde se informa a variedade. -->
                     <div class="col-check text-center">
                       <div class="text-caption text-grey-6">Encerrado</div>
                       <q-checkbox
@@ -569,10 +579,15 @@ onMounted(async () => {
                         color="green-6"
                         size="lg"
                         dense
+                        :disable="!l.codvariedade && !l.finalizado"
                         @update:model-value="(v) => store.marcarFinalizado(codsafra, l, v)"
                       >
                         <q-tooltip>{{
-                          l.finalizado ? 'Talhão finalizado' : 'Marcar talhão como finalizado'
+                          l.finalizado
+                            ? 'Talhão finalizado'
+                            : l.codvariedade
+                              ? 'Marcar talhão como finalizado'
+                              : 'Informe a variedade antes de finalizar'
                         }}</q-tooltip>
                       </q-checkbox>
                     </div>
