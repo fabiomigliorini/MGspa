@@ -57,7 +57,12 @@ const model = ref({})
 // não herda codnegocio/codtituloagrupamento e nasce com saldo positivo.
 const geradoAuto = computed(
   () =>
-    !duplicando.value && !!(titulo.value?.codnegocioparcela || titulo.value?.codtituloagrupamento),
+    !duplicando.value &&
+    !!(
+      titulo.value?.codnegocioparcela ||
+      titulo.value?.codtituloagrupamento ||
+      titulo.value?.codcaixaitem
+    ),
 )
 // Quando o título foi LIQUIDADO por um agrupamento, o vínculo está no movimento
 // (não em titulo.codtituloagrupamento, que indica que ele foi GERADO por agrupamento).
@@ -71,7 +76,7 @@ const liquidado = computed(() => !duplicando.value && Number(titulo.value?.saldo
 const estornado = computed(() => !!titulo.value?.estornado)
 
 // Estornar segue a mesma regra de geradoAuto: títulos gerados automaticamente
-// (vinculados a negócio ou agrupamento) só podem ser estornados pela origem.
+// (vinculados a negócio, agrupamento ou maquineta de parceiro) só podem ser estornados pela origem.
 const podeEstornar = computed(
   () =>
     podeMutar.value &&
@@ -367,6 +372,15 @@ watch(() => route.fullPath, carregar)
             </div>
             <div class="text-h6 text-grey-7 ellipsis" v-if="titulo.fatura">
               {{ titulo.fatura }}
+            </div>
+            <div v-if="titulo.codcaixaitem" class="text-caption text-grey-7">
+              Repasse da maquineta
+              <router-link
+                :to="{ name: 'caixa-item-detalhe', params: { codcaixaitem: titulo.codcaixaitem } }"
+              >
+                {{ titulo.caixaitem }}
+              </router-link>
+              (estorna cancelando o débito na conta corrente dela)
             </div>
           </q-item-section>
         </q-item>

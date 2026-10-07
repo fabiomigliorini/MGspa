@@ -171,6 +171,9 @@ class TituloDetalheResource extends Resource
             'codnegocioparcela' => $this->codnegocioparcela ? (int)$this->codnegocioparcela : null,
             'codnegocio'       => optional($this->NegocioParcela)->codnegocio,
             'codtituloagrupamento' => $this->codtituloagrupamento ? (int)$this->codtituloagrupamento : null,
+            // gerado pela conta corrente da maquineta de parceiro
+            'codcaixaitem'     => optional($this->CaixaItemAcerto)->codcaixaitem,
+            'caixaitem'        => optional(optional($this->CaixaItemAcerto)->CaixaItem)->item,
             'codusuariocriacao' => $this->codusuariocriacao ? (int)$this->codusuariocriacao : null,
             'codusuarioalteracao' => $this->codusuarioalteracao ? (int)$this->codusuarioalteracao : null,
             'emissao'          => $this->emissao,

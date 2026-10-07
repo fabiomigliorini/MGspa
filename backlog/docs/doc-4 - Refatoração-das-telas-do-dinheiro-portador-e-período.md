@@ -429,12 +429,19 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
    dos caixas; débito = os títulos gerados; ajuste com sinal e observação obrigatória (a comissão
    que o parceiro desconta, como a da Rede Card; o saldo que já devíamos no go-live; diferença com
    o relatório do parceiro). Saldo = o que devemos ao parceiro. A comissão só abate: não vira
-   título a receber. Quem decide comissão é o parceiro; o sistema não tem regra.
-5. **Gerar título** (botão na conta corrente da maquineta): valor (sugere o saldo) e vencimento
-   (sugere hoje) → título a pagar (Duplicata a Pagar) para o parceiro, com a filial e a conta da
-   maquineta, em aberto e sem portador, pago pelo caminho normal do contas; o débito fica ligado
-   ao título. Um título por maquineta (pagar vários juntos = liquidação de vários títulos). Cancelar
-   o débito **recusa** enquanto o título não for estornado (estornar é no título).
+   título a receber. Quem decide comissão é o parceiro; o sistema não tem regra. O extrato anda
+   por **semana (domingo a sábado**, a Redeflex fecha no sábado; abre na semana atual), mês ou
+   período personalizado; o servidor calcula o período, o saldo anterior e os saldos (07/10/2026).
+5. **Gerar título** (botão na conta corrente da maquineta): data do fechamento do parceiro (a
+   Redeflex fecha no sábado e o título sai na segunda; é a data do débito no extrato e a transação
+   e o número do título; emissão é hoje), valor (sugere o saldo) e vencimento (sugere hoje) →
+   título a pagar (Duplicata a Pagar) para o parceiro, com a filial e a conta da maquineta, em
+   aberto e sem portador, pago pelo caminho normal do contas; o débito fica ligado ao título. Um
+   título por maquineta (pagar vários juntos = liquidação de vários títulos). **O título é da
+   conta corrente** (07/10/2026), como o do negócio é do negócio: a tela de títulos não o estorna
+   nem muda número, valor e datas (mostra "Repasse da maquineta X" com o link); **cancelar o
+   débito estorna o título junto**. Título já pago (total ou parte) recusa: desfaça o pagamento
+   antes.
 6. **Quem**: cadastro e conta corrente, Administrador e Financeiro; borderô, quem opera o portador
    (como ajuste e item).
 7. **Bloquinho de ingresso com maquineta** (o bloquinho como cédula e a maquineta pelo borderô, no
@@ -508,7 +515,7 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
     e saídas + diferença = saldo; a saída entra na mesma coluna, negativa); "Descrições" troca o
     texto de um tipo (descrição + preço) em tudo.
 
-### Como ficou no código: maquinetas de parceiro (06/10/2026; não validado)
+### Como ficou no código: maquinetas de parceiro (06–07/10/2026; validado pelo Fábio em 07/10)
 
 - **DDL** `api/database/caixa_item_maquineta.sql` (idempotente; rodado no dev; roda no go-live
   depois do `caixa_item_dinamico.sql`): `tblcaixaitem.modo` (C/M) com `codpessoa`, `codfilial`,
@@ -541,6 +548,11 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
   (`CaixaItemContaCorrente`, `CaixaItemTituloDialog`, `CaixaItemAjusteDialog`); lista dos itens
   mostra o parceiro da maquineta. O modo do item não muda depois de qualquer lançamento (caixa
   ou conta corrente).
+- **07/10/2026, depois do teste**: o título leva a data do fechamento do parceiro (débito no
+  extrato, transação e número do título); o título de maquineta só se estorna cancelando o débito
+  na conta corrente (`Titulo::geradoAutomaticamente`, `CaixaItemAcerto` ligado; a tela de títulos
+  recusa e trava número, valor e datas); o extrato anda por semana/mês/personalizado com o período
+  calculado no servidor (`CaixaItemContaService::periodo`, `modo`/`data`/`passo` ou `de`/`ate`).
 
 ### Valida (maquinetas de parceiro)
 

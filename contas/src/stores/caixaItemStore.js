@@ -13,6 +13,14 @@ export const MODOS = [
   { value: 'M', label: 'Maquineta de parceiro' },
 ]
 
+// a conta corrente da maquineta anda por semana (domingo a sábado: a Redeflex fecha no sábado), por
+// mês ou num período personalizado (De/Até); o servidor calcula o período e devolve as datas
+export const PERIODOS_CONTA = [
+  { value: 'S', label: 'Semana' },
+  { value: 'M', label: 'Mês' },
+  { value: 'P', label: 'Personalizado' },
+]
+
 const vazio = () => ({
   codcaixaitem: null,
   item: '',
@@ -46,9 +54,10 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
   const fechamentosTemMais = ref(true)
   // o total dos períodos fechados (todas as páginas), do servidor
   const fechamentosTotais = ref(null)
-  // a conta corrente da maquineta de parceiro: o extrato de/até (sem eles, o servidor manda os
-  // últimos 60 dias e devolve as datas), o título e o ajuste
+  // a conta corrente da maquineta de parceiro: o extrato do período (S semana, padrão, a atual;
+  // M mês; P personalizado, De/Até), o título e o ajuste
   const conta = ref(null)
+  const contaModo = ref('S')
   const contaDe = ref(null)
   const contaAte = ref(null)
   const tituloDialog = ref(false)
@@ -84,6 +93,7 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
       saldos.value = []
       tipos.value = []
       conta.value = null
+      contaModo.value = 'S'
       contaDe.value = null
       contaAte.value = null
       if (item.value.modo === 'M') {
@@ -113,8 +123,9 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
   async function executarConta(fn, ok) {
     salvando.value = true
     try {
-      const { data } = await fn({ de: contaDe.value, ate: contaAte.value })
+      const { data } = await fn(periodoAtual())
       conta.value = data.data
+      contaModo.value = data.data.modo
       contaDe.value = data.data.de
       contaAte.value = data.data.ate
       if (ok) notifySuccess(ok)
@@ -127,16 +138,49 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
     }
   }
 
+  // o pedido do período: semana e mês pela data de referência (sem ela, hoje), andando `passo`;
+  // personalizado pelo De/Até
+  const periodoAtual = (passo = 0) =>
+    contaModo.value === 'P'
+      ? { modo: 'P', de: contaDe.value, ate: contaAte.value }
+      : { modo: contaModo.value, data: contaDe.value, passo }
+
+  // semana ou mês mantendo a referência (o fim do período da tela; no futuro, hoje)
+  function periodoConta(modo) {
+    return executarConta(() =>
+      api.get(`v1/caixa-item/${item.value.codcaixaitem}/conta`, {
+        params: { modo, data: contaAte.value },
+      }),
+    )
+  }
+
+  // a semana ou o mês anterior (-1) ou seguinte (1)
+  function navegarConta(passo) {
+    return executarConta(() =>
+      api.get(`v1/caixa-item/${item.value.codcaixaitem}/conta`, { params: periodoAtual(passo) }),
+    )
+  }
+
+  function filtrarConta(de, ate) {
+    return executarConta(() =>
+      api.get(`v1/caixa-item/${item.value.codcaixaitem}/conta`, {
+        params: { modo: 'P', de, ate },
+      }),
+    )
+  }
+
   function carregarConta() {
     return executarConta((params) =>
       api.get(`v1/caixa-item/${item.value.codcaixaitem}/conta`, { params }),
     )
   }
 
-  // o valor sugerido é o saldo (o que devemos ao parceiro), vencimento hoje
+  // o valor sugerido é o saldo (o que devemos ao parceiro), vencimento hoje; a data é a do
+  // fechamento do parceiro (a Redeflex fecha no sábado e o título sai na segunda), agora por padrão
   function abrirTitulo() {
     const saldo = conta.value?.saldo ?? 0
     tituloModel.value = {
+      transacao: formataTimestampIso(new Date()),
       valor: saldo > 0 ? saldo : null,
       vencimento: formataDataIso(new Date()),
       observacoes: '',
@@ -305,6 +349,7 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
     fechamentosTemMais,
     fechamentosTotais,
     conta,
+    contaModo,
     contaDe,
     contaAte,
     tituloDialog,
@@ -313,6 +358,9 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
     ajusteModel,
     fetchItems,
     carregarConta,
+    periodoConta,
+    navegarConta,
+    filtrarConta,
     abrirTitulo,
     gerarTitulo,
     abrirAjuste,

@@ -7,6 +7,7 @@
 namespace Mg\Titulo;
 
 use Mg\MgModel;
+use Mg\Caixa\CaixaItemAcerto;
 use Mg\Boleto\BoletoRetorno;
 use Mg\Cheque\Cheque;
 use Mg\Cobranca\Cobranca;
@@ -109,6 +110,21 @@ class Titulo extends MgModel
     public function NegocioParcela()
     {
         return $this->belongsTo(NegocioParcela::class, 'codnegocioparcela', 'codnegocioparcela');
+    }
+
+    // titulo a pagar gerado pela conta corrente da maquineta de parceiro
+    public function CaixaItemAcerto()
+    {
+        return $this->hasOne(CaixaItemAcerto::class, 'codtitulo', 'codtitulo');
+    }
+
+    // nasceu de outra tela (negocio, agrupamento, maquineta de parceiro): so'
+    // a origem estorna e muda numero, valor e datas
+    public function geradoAutomaticamente(): bool
+    {
+        return !empty($this->codnegocioparcela)
+            || !empty($this->codtituloagrupamento)
+            || $this->CaixaItemAcerto()->exists();
     }
 
     public function Pessoa()

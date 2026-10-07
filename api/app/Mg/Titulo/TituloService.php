@@ -111,7 +111,7 @@ class TituloService
     {
         $tipoTitulo = TipoTitulo::findOrFail($dados['codtipotitulo'] ?? $titulo->codtipotitulo);
 
-        $geradoAuto = !empty($titulo->codnegocioparcela) || !empty($titulo->codtituloagrupamento);
+        $geradoAuto = $titulo->geradoAutomaticamente();
         $zerado = (float)$titulo->saldo == 0 && !empty($titulo->codtitulo);
 
         // valor: bloqueado se gerado auto ou já zerado
@@ -132,7 +132,7 @@ class TituloService
         }
 
         // Regras de edição (legado MGsis): apenas Numero e Valor são travados.
-        // Numero: travado se gerado automaticamente (negocio/agrupamento).
+        // Numero: travado se gerado automaticamente (negocio/agrupamento/maquineta).
         // Valor: travado se gerado automaticamente OU já liquidado/estornado.
 
         // campos sempre editáveis

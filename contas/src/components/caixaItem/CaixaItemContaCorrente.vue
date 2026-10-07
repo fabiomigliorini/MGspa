@@ -2,11 +2,12 @@
 // Conta corrente da maquineta de parceiro (doc-4, "Itens de parceiro"): o que devemos ao parceiro
 // por esta maquineta, como o extrato do período do portador (PeriodoLancamentos): agrupado por
 // dia, uma linha do tempo à esquerda e, à direita, o valor e o saldo corrente na mesma coluna (no
-// celular, o saldo embaixo do valor). Crédito = o borderô que cada caixa lançou (leva ao caixa, com
+// celular, o saldo embaixo do valor), por semana (domingo a sábado, a atual ao abrir), mês ou um
+// período personalizado. Crédito = o borderô que cada caixa lançou (leva ao caixa, com
 // a foto ou "sem borderô"); débito = o título a pagar gerado aqui (leva ao título); ajuste com
 // observação (comissão que o parceiro desconta, saldo inicial). Gerar título e Ajuste no
-// cabeçalho; cancelar na linha (o borderô se cancela na tela do caixa; o débito do título, só com o
-// título estornado).
+// cabeçalho; cancelar na linha (o borderô se cancela na tela do caixa; cancelar o débito do título
+// estorna o título junto, que só se estorna por aqui).
 import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
@@ -18,12 +19,35 @@ import {
   formataData,
   formataDataCompleta,
   formataHora,
+  formataMesAno,
 } from '@components/formatters'
-import { useCaixaItemStore } from 'src/stores/caixaItemStore'
+import { useCaixaItemStore, PERIODOS_CONTA } from 'src/stores/caixaItemStore'
 
 const $q = useQuasar()
 const store = useCaixaItemStore()
-const { conta, contaDe, contaAte } = storeToRefs(store)
+const { conta, contaModo, contaDe, contaAte } = storeToRefs(store)
+
+// "Semana de 27/09 a 03/10/2026", "out/2026", "De 01/09 a 15/10/2026"
+const tituloPeriodo = computed(() => {
+  if (!contaDe.value) return ''
+  if (contaModo.value === 'M') return formataMesAno(contaDe.value)
+  const periodo = `${formataData(contaDe.value, 0)} a ${formataData(contaAte.value)}`
+  return contaModo.value === 'S' ? `Semana de ${periodo}` : `De ${periodo}`
+})
+
+// o diálogo do período: semana, mês ou personalizado (este com o De/Até no mesmo diálogo); só
+// troca ao aplicar
+const dialogPeriodo = ref(false)
+const escolha = ref({ modo: 'S', de: null, ate: null })
+function abrirPeriodo() {
+  escolha.value = { modo: contaModo.value, de: contaDe.value, ate: contaAte.value }
+  dialogPeriodo.value = true
+}
+async function aplicarPeriodo() {
+  const { modo, de, ate } = escolha.value
+  await (modo === 'P' ? store.filtrarConta(de, ate) : store.periodoConta(modo))
+  dialogPeriodo.value = false
+}
 
 // os cancelados (riscados) só aparecem no toggle
 const mostrarCancelados = ref(false)
@@ -74,8 +98,8 @@ function abrirFotos(l) {
 
 function cancelar(l) {
   $q.dialog({
-    title: l.origem === 'T' ? 'Cancelar o débito do título' : 'Cancelar o ajuste',
-    message: 'Motivo:',
+    title: l.origem === 'T' ? 'Cancelar o débito e estornar o título' : 'Cancelar o ajuste',
+    message: l.origem === 'T' ? `O título ${l.numero} será estornado junto. Motivo:` : 'Motivo:',
     prompt: {
       model: '',
       type: 'text',
@@ -93,8 +117,8 @@ function cancelar(l) {
     <q-card-section class="row items-center q-pb-sm">
       <div class="col text-subtitle1 text-weight-medium">Conta corrente</div>
       <q-toggle
-        v-if="cancelados"
         v-model="mostrarCancelados"
+        :disable="!cancelados"
         :label="`Mostrar cancelados (${cancelados})`"
         color="primary"
       />
@@ -106,15 +130,34 @@ function cancelar(l) {
       </q-btn>
     </q-card-section>
 
-    <q-card-section class="q-pt-none">
-      <div class="row q-col-gutter-md">
-        <div class="col-6 col-sm-3">
-          <MgInputData v-model="contaDe" label="De" @update:model-value="store.carregarConta()" />
-        </div>
-        <div class="col-6 col-sm-3">
-          <MgInputData v-model="contaAte" label="Até" @update:model-value="store.carregarConta()" />
-        </div>
-      </div>
+    <!-- o período: setas andam uma semana (domingo a sábado) ou um mês; o ícone escolhe semana,
+         mês ou personalizado (De/Até) -->
+    <q-card-section class="row items-center justify-center no-wrap q-py-none">
+      <q-btn
+        v-if="contaModo !== 'P'"
+        flat
+        round
+        color="grey-7"
+        icon="chevron_left"
+        @click="store.navegarConta(-1)"
+      >
+        <q-tooltip>{{ contaModo === 'M' ? 'Mês anterior' : 'Semana anterior' }}</q-tooltip>
+      </q-btn>
+      <div class="text-subtitle1 text-grey-9 q-px-sm">{{ tituloPeriodo }}</div>
+      <q-btn flat round size="sm" color="grey-7" icon="date_range" @click="abrirPeriodo">
+        <q-tooltip>Semana, mês ou personalizado</q-tooltip>
+      </q-btn>
+      <q-btn
+        v-if="contaModo !== 'P'"
+        flat
+        round
+        color="grey-7"
+        icon="chevron_right"
+        :disable="conta?.ultimo"
+        @click="store.navegarConta(1)"
+      >
+        <q-tooltip>{{ contaModo === 'M' ? 'Próximo mês' : 'Próxima semana' }}</q-tooltip>
+      </q-btn>
     </q-card-section>
 
     <q-card-section v-if="conta" class="q-pt-none">
@@ -240,6 +283,52 @@ function cancelar(l) {
         <div class="text-right q-pr-sm">{{ formataNumero(conta.saldofinal) }}</div>
       </div>
     </q-card-section>
+
+    <q-dialog v-model="dialogPeriodo">
+      <q-card flat style="width: 400px; max-width: 90vw">
+        <q-card-section class="text-grey-9 text-overline">PERÍODO</q-card-section>
+        <q-form @submit.prevent="aplicarPeriodo">
+          <q-separator inset />
+          <q-card-section>
+            <div class="row q-col-gutter-md">
+              <div class="col-12">
+                <q-option-group
+                  v-model="escolha.modo"
+                  type="radio"
+                  inline
+                  :options="PERIODOS_CONTA"
+                />
+              </div>
+              <template v-if="escolha.modo === 'P'">
+                <div class="col-6">
+                  <MgInputData
+                    v-model="escolha.de"
+                    label="De"
+                    autofocus
+                    :rules="[(v) => !!v || 'Obrigatório']"
+                  />
+                </div>
+                <div class="col-6">
+                  <MgInputData
+                    v-model="escolha.ate"
+                    label="Até"
+                    :rules="[
+                      (v) => !!v || 'Obrigatório',
+                      () => escolha.ate >= escolha.de || 'Antes do De',
+                    ]"
+                  />
+                </div>
+              </template>
+            </div>
+          </q-card-section>
+          <q-separator inset />
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+            <q-btn flat label="Aplicar" color="primary" type="submit" />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
 
     <BorderoFotosDialog
       v-model="dialogFotos"
