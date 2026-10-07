@@ -60,13 +60,22 @@ const cancelados = computed(
 const lista = computed(() =>
   (periodo.value?.lancamentos ?? []).filter(
     (l) =>
-      (!filtroOrigem.value || l.origem === filtroOrigem.value) &&
+      (!filtroOrigem.value ||
+        l.origem === filtroOrigem.value ||
+        `${l.origem}:${l.codcaixaitem}` === filtroOrigem.value) &&
       (mostrarCancelados.value || !l.cancelado),
   ),
 )
-const filtro = computed(
-  () => periodo.value?.resumo?.find((r) => r.origem === filtroOrigem.value)?.descricao,
-)
+// o rótulo do filtro: a linha do quadro (na espécie: a origem ou a movimentação de um item ou
+// maquineta, "I:cod"/"M:cod") ou a origem do resumo
+const filtro = computed(() => {
+  const f = filtroOrigem.value
+  if (!f) return null
+  return (
+    periodo.value?.quadro?.linhas?.find((l) => l.filtro === f)?.rotulo ??
+    periodo.value?.resumo?.find((r) => r.origem === f)?.descricao
+  )
+})
 
 // os lançamentos (já em ordem de transação) agrupados por dia
 const dias = computed(() => {
@@ -165,21 +174,6 @@ function cancelar(l) {
   <q-card v-if="periodo" flat bordered>
     <q-card-section class="row items-center q-pb-sm">
       <div class="col text-subtitle1 text-weight-medium">Lançamentos</div>
-      <q-chip
-        v-if="filtro"
-        removable
-        color="blue-1"
-        text-color="primary"
-        icon="filter_alt"
-        :label="filtro"
-        @remove="filtroOrigem = null"
-      />
-      <q-toggle
-        v-if="cancelados"
-        v-model="mostrarCancelados"
-        :label="`Mostrar cancelados (${cancelados})`"
-        color="primary"
-      />
       <template v-if="podeMovimentar">
         <q-btn
           v-if="!pdv"
@@ -227,6 +221,25 @@ function cancelar(l) {
           <q-tooltip>{{ portador.ehCaixa ? 'Reforço / Sangria' : 'Transferir' }}</q-tooltip>
         </q-btn>
       </template>
+    </q-card-section>
+    <!-- o filtro e os cancelados numa linha própria, sem apertar o título -->
+    <q-card-section v-if="filtro || cancelados" class="row items-center q-gutter-sm q-pt-none">
+      <q-chip
+        v-if="filtro"
+        removable
+        color="blue-1"
+        text-color="primary"
+        icon="filter_alt"
+        :label="filtro"
+        @remove="filtroOrigem = null"
+      />
+      <q-space />
+      <q-toggle
+        v-if="cancelados"
+        v-model="mostrarCancelados"
+        :label="`Mostrar cancelados (${cancelados})`"
+        color="primary"
+      />
     </q-card-section>
 
     <q-card-section v-if="lista.length" class="q-pt-none">

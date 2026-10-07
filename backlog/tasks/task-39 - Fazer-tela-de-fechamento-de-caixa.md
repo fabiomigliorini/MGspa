@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-07 19:54'
+updated_date: '2026-10-07 23:30'
 labels:
   - negocios
   - contas
@@ -60,6 +60,8 @@ Consolidou TASK-33, TASK-34, TASK-48 e TASK-84 (arquivadas).
 - [ ] #22 Validação de ponta a ponta na tela do período pelos roteiros Valida do doc-4 (o core, a redefinição, os itens e os parceiros): venda em dinheiro, sangria e confirmação, cancelamento, recebimento no banco, fechamento com contagem e com corte, itens do caixa (R5)
 - [x] #23 A lista de Itens do Caixa mostra o saldo de cada item sem precisar abrir um por um: quanto tem de cada chip/ingresso nos caixas e quanto devemos a cada maquineta de parceiro, com o total
 - [ ] #24 Na contagem, cada bloco (cédulas, moedas, cada item) tem um botão de copiar: a inicial copia a contagem final do período anterior; a final copia a inicial, com chips e ingressos somando as entradas e tirando as saídas do período
+- [x] #25 O resumo do período em espécie segue a folha Movimento do Caixa: Moedas e Cédulas numa linha cada (entrada = contado no começo, saída = no fim), Total e Diferença no pé
+- [ ] #26 Saída de item só oferece o que está no caixa (saldo inicial + entradas do período), no jeito da contagem, com a quantidade limitada ao disponível
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -88,4 +90,6 @@ Reorganizada em 06/10/2026: critérios renumerados por assunto; os do M11 (trans
 **Achado de passagem, já corrigido**: optional($m->UsuarioCriacao)->usuario num MgModel cai no acessor getUsuariocriacaoAttribute (método no PHP não diferencia maiúsculas) e devolve a string, então ->usuario sai nulo; usar $m->usuariocriacao / ->usuarioalteracao (trocado em 14 pontos de Caixa, Portador, Conferência e Pagamento).
 
 **Virada das maquinetas** (Fábio, 07/10/2026): as maquinetas reais (parceiro, filial, conta) e o saldo inicial de cada uma (ajuste "saldo inicial" na conta corrente) são cadastrados pela tela, pelo Fábio ou pelo financeiro, depois do caixa_item_maquineta.sql; sem script.
+
+**Resumo no jeito do papel** (#25, 07/10/2026): o quadro da espécie é montado no servidor (PortadorPeriodoResource::quadro) e desenhado igual na tela do período e no borderô térmico: Moedas e Cédulas (entrada = contagem que deu o saldo inicial, saída = contagem final), cada item do caixa com Abertura e fechamento e Movimentação, as origens com as maquinetas sob Parceiros, Total e Diferença (só avisa quando passa da tolerância). A calculadora ao lado de cada valor abre a contagem só daquele bloco (quantidade × face = total, um recalcula o outro); a contagem completa saiu. Borderô com situação e impressora também no período aberto.
 <!-- SECTION:NOTES:END -->

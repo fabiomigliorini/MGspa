@@ -1,36 +1,15 @@
 @php
     // Bordero do periodo em especie (doc-4, redefinicao do dinheiro e "Itens
-    // do caixa"): contagem por cedula e moeda e os itens do caixa
-    // (contam como cedula: preco x quantidade), o resumo com a contagem final
-    // e a diferenca e os ajustes. Cartoes so' em quantidade (o gerente fecha o
-    // lote pelo bordero dele).
+    // do caixa"): no alto o quadro da tela do periodo (o "Movimento do Caixa"
+    // de papel: moedas, cedulas, cada item com a movimentacao, as origens com
+    // cada maquineta de parceiro, o total e a diferenca) e os ajustes. Cartoes so' em quantidade (o gerente
+    // fecha o lote pelo bordero dele).
     $filial = $sessao->Portador->Filial;
-    $abertura = $sessao->contageminicial ?? [];
-    $fechamento = $sessao->contagemfinal ?? [];
-    $denominacoes = array_merge(\Mg\Caixa\CaixaService::CEDULAS, \Mg\Caixa\CaixaService::MOEDAS);
-    $final = $periodo['contagem']['final'] ?? null;
-    // as linhas dos itens: {chave: [rotulo, preco, qtd abertura, qtd fechamento]}
-    $nomes = \Mg\Caixa\CaixaItem::pluck('item', 'codcaixaitem');
-    $itens = [];
-    foreach ([$sessao->contagemitensinicial ?? [], $sessao->contagemitensfinal ?? []] as $n => $cont) {
-        foreach ($cont as $cod => $linhas) {
-            foreach ($linhas as $l) {
-                $chave = $cod . '|' . number_format($l['preco'], 2, '.', '') . '|' . ($l['descricao'] ?? '');
-                $itens[$chave] = $itens[$chave] ?? [
-                    trim(($nomes[$cod] ?? 'Item') . ' ' . ($l['descricao'] ?? '')),
-                    (float) $l['preco'],
-                    0,
-                    0,
-                ];
-                $itens[$chave][2 + $n] = (int) $l['quantidade'];
-            }
-        }
-    }
-    ksort($itens);
-    $totalAbertura = \Mg\Caixa\CaixaService::totalContagem($abertura)
-        + \Mg\Caixa\CaixaItemService::totalContagem($sessao->contagemitensinicial);
-    $totalFechamento = \Mg\Caixa\CaixaService::totalContagem($fechamento)
-        + \Mg\Caixa\CaixaItemService::totalContagem($sessao->contagemitensfinal);
+    $quadro = $periodo['quadro'];
+    $contagem = $periodo['contagem'];
+    $final = $contagem['final']['contado'] !== null ? $contagem['final'] : null;
+    $naTolerancia = $final && abs($final['diferenca']) <= $periodo['tolerancia'];
+    $valor = fn ($v) => $v === null ? '' : formataNumero($v);
 @endphp
 <!DOCTYPE html>
 <html>
@@ -72,26 +51,35 @@
             text-align: center;
         }
 
-        .contagem td {
-            font-size: 7pt;
-            padding: 1px 1px;
+        .linha {
+            border-top: 1px dashed #000;
+            margin: 8px 0;
         }
 
-        .contagem .lado {
+        .quadro td {
+            padding: 2px 0;
+            border-bottom: 1px solid #ccc;
+        }
+
+        .quadro .recuo {
             padding-left: 8px;
         }
 
-        .contagem .total td {
+        .cabecalho-dados td {
+            padding: 6px 0;
+        }
+
+        .quadro .total td {
             border-top: 1px solid #000;
+            border-bottom: none;
+            font-size: 10pt;
+            font-weight: bold;
+            padding: 4px 0;
         }
 
-        .linha {
-            border-top: 1px dashed #000;
-            margin: 4px 0;
-        }
-
-        .grande {
-            font-size: 12pt;
+        .quadro .diferenca td {
+            border-bottom: none;
+            font-size: 10pt;
             font-weight: bold;
         }
 
@@ -110,7 +98,11 @@
         {{ $sessao->Portador->portador }} · sessão {{ $sessao->codportadorperiodo }}
     </div>
 
-    <table>
+    <table class="cabecalho-dados">
+        <tr>
+            <td>Situação</td>
+            <td class="r"><b>{{ ['aberto' => 'Aberto', 'pendente' => 'Pendente', 'fechado' => 'Fechado'][$periodo['situacao']] }}</b></td>
+        </tr>
         <tr>
             <td>Abertura</td>
             <td class="r">{{ $sessao->UsuarioAbertura->usuario ?? '' }} {{ $sessao->inicio->format('d/m/Y H:i') }}</td>
@@ -122,87 +114,62 @@
     </table>
 
     <div class="linha"></div>
-    <b>CONTAGEM</b>
-    <table class="contagem">
+    <table class="quadro">
         <tr>
-            <td colspan="5" class="c"><b>ABERTURA</b></td>
-            <td colspan="5" class="c lado"><b>FECHAMENTO</b></td>
+            <td><b>Resumo</b></td>
+            <td class="r"><b>Entrada</b></td>
+            <td class="r"><b>Saída</b></td>
         </tr>
-        @foreach ($denominacoes as $d)
-            @if (!empty($abertura[$d]) || !empty($fechamento[$d]))
+        @if (!$contagem['abertura'])
+            <tr>
+                <td>Saldo inicial</td>
+                <td class="r">{{ $periodo['saldoinicial'] >= 0 ? formataNumero($periodo['saldoinicial']) : '' }}</td>
+                <td class="r">{{ $periodo['saldoinicial'] < 0 ? formataNumero(-$periodo['saldoinicial']) : '' }}</td>
+            </tr>
+        @endif
+        @foreach ($quadro['linhas'] as $l)
+            @if ($l['tipo'] == 'titulo')
                 <tr>
-                    @foreach ([$abertura, $fechamento] as $n => $cont)
-                        @if (!empty($cont[$d]))
-                            <td class="r {{ $n ? 'lado' : '' }}">{{ $cont[$d] }}</td>
-                            <td class="c">x</td>
-                            <td class="r">{{ formataNumero((float) $d) }}</td>
-                            <td class="c">=</td>
-                            <td class="r">{{ formataNumero($cont[$d] * (float) $d) }}</td>
-                        @else
-                            <td class="{{ $n ? 'lado' : '' }}"></td><td></td><td></td><td></td><td></td>
+                    <td colspan="3"><b>{{ $l['descricao'] }}</b></td>
+                </tr>
+            @elseif ($l['tipo'] == 'contagem')
+                <tr>
+                    <td class="{{ $l['recuo'] ? 'recuo' : '' }}">{{ $l['descricao'] }}</td>
+                    <td class="r">
+                        {{ $valor($l['entrada']) }}
+                        @if ($l['confere'] === false)
+                            <br><small>Divergente</small>
                         @endif
-                    @endforeach
+                    </td>
+                    <td class="r">{{ $valor($l['saida']) }}</td>
+                </tr>
+            @else
+                <tr>
+                    <td class="{{ $l['recuo'] ? 'recuo' : '' }}">{{ $l['descricao'] }} ({{ $l['quantidade'] }})</td>
+                    <td class="r">{{ formataNumero($l['entrada']) }}</td>
+                    <td class="r">{{ formataNumero($l['saida']) }}</td>
                 </tr>
             @endif
         @endforeach
-        @foreach ($itens as $c)
-            <tr>
-                <td colspan="10"><small>{{ $c[0] }}</small></td>
-            </tr>
-            <tr>
-                @foreach ([2, 3] as $n)
-                    @if ($c[$n])
-                        <td class="r {{ $n == 3 ? 'lado' : '' }}">{{ $c[$n] }}</td>
-                        <td class="c">x</td>
-                        <td class="r">{{ formataNumero($c[1]) }}</td>
-                        <td class="c">=</td>
-                        <td class="r">{{ formataNumero($c[$n] * $c[1]) }}</td>
-                    @else
-                        <td class="{{ $n == 3 ? 'lado' : '' }}"></td><td></td><td></td><td></td><td></td>
-                    @endif
-                @endforeach
-            </tr>
-        @endforeach
         <tr class="total">
-            <td colspan="4"><b>Total</b></td>
-            <td class="r"><b>{{ formataNumero($totalAbertura) }}</b></td>
-            <td colspan="4" class="lado"><b>Total</b></td>
-            <td class="r"><b>{{ formataNumero($totalFechamento) }}</b></td>
+            <td>Total</td>
+            <td class="r">{{ formataNumero($quadro['totalentrada']) }}</td>
+            <td class="r">{{ formataNumero($quadro['totalsaida']) }}</td>
         </tr>
-    </table>
-
-    <div class="linha"></div>
-    <b>RESUMO</b>
-    <table>
-        <tr>
-            <td></td>
-            <td class="r">Entradas</td>
-            <td class="r">Saídas</td>
-        </tr>
-        <tr>
-            <td>Saldo inicial</td>
-            <td class="r">{{ $periodo['saldoinicial'] >= 0 ? formataNumero($periodo['saldoinicial']) : '' }}</td>
-            <td class="r">{{ $periodo['saldoinicial'] < 0 ? formataNumero(-$periodo['saldoinicial']) : '' }}</td>
-        </tr>
-        @foreach ($periodo['resumo'] as $r)
-            <tr>
-                <td>{{ $r['descricao'] }} ({{ $r['quantidade'] }})</td>
-                <td class="r">{{ formataNumero($r['entrada']) }}</td>
-                <td class="r">{{ formataNumero($r['saida']) }}</td>
+        @if ($final)
+            <tr class="diferenca">
+                <td>Diferença</td>
+                <td colspan="2" class="r">
+                    {{ ($final['diferenca'] > 0 ? '+' : '') . formataNumero($final['diferenca']) }}
+                    @if (!$naTolerancia)
+                        <br><span style="font-size: 7pt; font-weight: normal">Acima Tolerância {{ formataNumero($periodo['tolerancia']) }}</span>
+                    @endif
+                </td>
             </tr>
-        @endforeach
-        <tr>
-            <td><b>Saldo final</b></td>
-            <td colspan="2" class="r grande">{{ formataNumero($periodo['saldofinal']) }}</td>
-        </tr>
-        @if ($final && $final['contado'] !== null)
+        @else
             <tr>
-                <td>Contagem final</td>
-                <td colspan="2" class="r">{{ formataNumero($final['contado']) }}</td>
-            </tr>
-            <tr>
-                <td><b>Diferença</b> <small>(tolerância {{ formataNumero($periodo['tolerancia']) }})</small></td>
-                <td colspan="2" class="r"><b>{{ formataNumero($final['diferenca']) }}</b></td>
+                <td>Saldo final <small>(a contar)</small></td>
+                <td colspan="2" class="r">{{ formataNumero($periodo['saldofinal']) }}</td>
             </tr>
         @endif
     </table>

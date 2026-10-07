@@ -13,10 +13,10 @@ import MaquinetaCaixaDialog from '@components/caixa/MaquinetaCaixaDialog.vue'
 
 <template>
   <div class="row q-col-gutter-md q-mb-md">
-    <div class="col-12 col-md-5">
+    <div class="col-12 col-md-6">
       <PeriodoCabecalho />
     </div>
-    <div class="col-12 col-md-7">
+    <div class="col-12 col-md-6">
       <PeriodoLancamentos />
       <slot />
     </div>
