@@ -34,4 +34,15 @@ class PlantioService extends MgService
         $qry = self::qryColunas($qry, $fields);
         return $qry;
     }
+
+    /**
+     * Talhão finalizado (colhido por completo). Não existe colheita parcial em ha:
+     * o check grava hacolhido = área (marcado) ou 0 (desmarcado). Mesma regra do
+     * SafraService::producaoPlantio.
+     */
+    public static function finalizado(Plantio $plantio): bool
+    {
+        $area = (float) $plantio->areaplantada;
+        return $area > 0 && (float) $plantio->hacolhido >= $area;
+    }
 }

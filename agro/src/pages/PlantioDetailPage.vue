@@ -1,5 +1,5 @@
 <script setup>
-import { ref, reactive, computed, watch, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
@@ -9,7 +9,6 @@ import { corTalhao } from 'src/utils/coresTalhao'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
-import MgInputValor from '@components/MgInputValor.vue'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
 import PlantioWizardDialog from 'components/PlantioWizardDialog.vue'
 import PlantioCargas from 'components/PlantioCargas.vue'
@@ -67,14 +66,12 @@ const plantioCad = reactive({
 // KPIs — área/previsão do plantio; médias esp/real e colhido(sc) prontos do backend.
 const area = computed(() => Number(plantio.value?.areaplantada) || 0)
 const expectativa = computed(() => Number(plantio.value?.expectativasacas) || 0)
-const hacolhido = computed(() => Number(plantio.value?.hacolhido) || 0)
 const media = computed(() => comercial.value?.plantios?.[codplantio] || {})
 const esperada = computed(
   () => media.value.esperada ?? (area.value > 0 ? expectativa.value / area.value : null),
 )
 const realizada = computed(() => media.value.realizada ?? null)
 const colhidoSc = computed(() => Number(media.value.colhido) || 0)
-const progresso = computed(() => (area.value > 0 ? Math.min(1, hacolhido.value / area.value) : 0))
 
 const periodo = computed(() => {
   const s = plantio.value?.Safra
@@ -92,26 +89,10 @@ function fmt(v, dec = 0) {
   })
 }
 
-// ---- Colhido (ha) — input + slider; grava clampado em [0, área] ----
-const hacolhidoEdit = ref(0)
-watch(
-  plantio,
-  (v) => {
-    hacolhidoEdit.value = Number(v?.hacolhido) || 0
-  },
-  { immediate: true },
-)
-const colhidoAlterado = computed(() => (Number(hacolhidoEdit.value) || 0) !== hacolhido.value)
-async function salvarColhido(v) {
-  let valor = Math.max(0, Number(v) || 0)
-  if (area.value > 0) valor = Math.min(valor, area.value)
-  await store.salvarHacolhido(codsafra, codplantio, valor)
+// ---- Talhão finalizado? — check que grava hacolhido = área (ou 0) ----
+async function alternarFinalizado(valor) {
+  await store.marcarFinalizado(codsafra, plantio.value, valor)
   await store.carregarPlantio(codsafra, codplantio)
-  await store.carregarComercial(codsafra)
-}
-function finalizarColhido() {
-  hacolhidoEdit.value = area.value
-  salvarColhido(area.value)
 }
 
 // ---- Ações (cabeçalho) ----
@@ -245,77 +226,23 @@ onMounted(async () => {
           </div>
           <div class="col-6 col-md-3">
             <q-card flat bordered class="full-height">
-              <q-card-section class="row items-center no-wrap">
-                <div class="col">
-                  <div class="text-caption text-grey-7">Colheita</div>
-                  <div class="text-caption text-grey-6">
-                    {{ fmt(hacolhido, 1) }} / {{ fmt(area, 1) }} ha
-                  </div>
-                </div>
-                <q-circular-progress
-                  :value="progresso * 100"
-                  size="52px"
-                  :thickness="0.18"
+              <q-card-section>
+                <div class="text-caption text-grey-7">Talhão finalizado?</div>
+                <q-checkbox
+                  :model-value="!!plantio.finalizado"
+                  checked-icon="check_circle"
+                  unchecked-icon="radio_button_unchecked"
                   color="green-6"
-                  track-color="grey-3"
-                  show-value
-                  class="text-caption text-grey-8"
-                >
-                  {{ fmt(progresso * 100) }}%
-                </q-circular-progress>
+                  size="lg"
+                  dense
+                  label="Sim"
+                  class="text-h6"
+                  @update:model-value="alternarFinalizado"
+                />
               </q-card-section>
             </q-card>
           </div>
         </div>
-
-        <!-- Colheita: editar ha colhidos -->
-        <q-card bordered flat class="q-mb-md">
-          <q-item>
-            <q-item-section avatar>
-              <q-avatar color="green-1" text-color="green-8" icon="agriculture" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-subtitle1">Colheita</q-item-label>
-              <q-item-label caption>Informe os hectares já colhidos deste talhão</q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator />
-          <q-card-section>
-            <div class="row items-center q-col-gutter-md">
-              <div class="col-12 col-sm-5">
-                <MgInputValor
-                  v-model="hacolhidoEdit"
-                  :decimals="2"
-                  :min="0"
-                  :max="area || null"
-                  :suffix="`/ ${fmt(area, 1)} ha`"
-                  label="Colhido (ha)"
-                />
-              </div>
-              <div class="col-12 col-sm">
-                <q-slider
-                  v-model="hacolhidoEdit"
-                  :min="0"
-                  :max="area || 1"
-                  :step="0.01"
-                  color="green-6"
-                  track-color="grey-3"
-                  class="q-px-md"
-                />
-              </div>
-            </div>
-            <div class="row items-center justify-between q-mt-sm">
-              <q-btn flat label="Finalizar" color="green-7" @click="finalizarColhido" />
-              <q-btn
-                flat
-                label="Salvar colhido"
-                color="primary"
-                :disable="!colhidoAlterado"
-                @click="salvarColhido(hacolhidoEdit)"
-              />
-            </div>
-          </q-card-section>
-        </q-card>
 
         <!-- Mapa do talhão -->
         <q-card bordered flat class="q-mb-md overflow-hidden">

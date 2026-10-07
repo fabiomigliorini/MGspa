@@ -1,11 +1,11 @@
 ---
 id: TASK-140
 title: 'Agro: relatorio PDF de romaneios com agrupamento e subtotais'
-status: In Progress
+status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-22 12:24'
-updated_date: '2026-10-06 18:34'
+updated_date: '2026-10-07 15:39'
 labels:
   - agro
 dependencies:
@@ -44,8 +44,8 @@ Criterio de aceite: o total geral do PDF bate com a barra de totais da tela.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Relatório com o visual do de Vales Emitidos, mantendo agrupamento e subtotais
-- [ ] #2 Total do PDF igual ao da tela, por tipo e sem canceladas
+- [x] #1 Relatório em A4 retrato com todas as informações da listagem de cargas (Safra, Origem e Destino em colunas próprias, textos longos cortados), mantendo agrupamento e subtotais
+- [x] #2 Total do PDF igual ao da tela, por tipo e sem canceladas (exceto a coluna Bruto, que no PDF mostra e soma o PBT)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -78,4 +78,17 @@ Verificado no dev:
 - Renderizado em PNG e conferido a olho: nenhuma coluna estourou a margem direita; cabecalho, legenda, grupo, subtotal, total geral e rodape {PAGENO} de {nbpg} todos no lugar.
 
 06/10/2026, a pedido do usuário: removida a exigência de período/safra/romaneio para gerar o PDF (abort 422 "Informe ao menos o período ou a safra..." em CargaRelatorioService::html). O relatório imprime qualquer recorte da tela; continua o teto de 5000 romaneios (LIMITE_LINHAS). Conferido: PDF sem período nem safra gerado em dev (93 KB, %PDF válido); a legenda só omite a linha de período.
+
+07/10/2026, a pedido do usuário: PDF passou a espelhar a listagem de cargas da tela (CargasPage) em vez do visual do Vales Emitidos. Colunas na ordem da tela: Tipo, Data, Etapa, Safra, Placa, Motorista, Origem, Destino, Bruto, Tara, Desconto, Líquido, Sacas (saem Romaneio e carreta). Etapa com as cores do ETAPA_META; cancelada mostra 'Cancelado' em laranja no lugar da etapa; '—' cinza onde não há valor. Origem/destino/motorista quebram linha (no papel não tem tooltip).
+Totais: o TOTAL GERAL único (que misturava tipos e somava canceladas) virou uma linha por tipo — Recebido/Expedido/Transferido — vinda do próprio CargaService::totais(), sem canceladas, igual à barra da tela. Subtotal de grupo também por tipo e sem canceladas.
+Conferido em dev (315 romaneios, 'Todos'): total por tipo do PDF = totais() da tela; soma dos subtotais por tipo = total do tipo nos agrupamentos dia/unidade/pessoa/sentido; PDF renderizado em PNG sem coluna estourando.
+
+07/10/2026, a pedido do usuário: relatório passou para A4 RETRATO (paisagem não agrada). As 13 colunas da tela viraram 10 sem perder campo: Tipo/Data, Etapa, Safra (coluna própria, pedido explícito), Placa/Motorista, Origem/Destino empilhados na mesma célula (2º campo em cinza menor), mais Bruto/Tara/Desconto/Líquido/Sacas. Texto longo (motorista, origem, destino, safra) cortado com reticências em PHP (mb_strimwidth — o mPDF não faz text-overflow), então toda linha tem 2 linhas de altura.
+Gotcha mPDF: o <col> do colgroup sozinho NÃO segura a largura — ele estica a coluna de texto mais longo e espreme as numéricas. A largura vai também no style de cada <th>. Recorte 'Todos' agrupado por dia: 27 páginas em paisagem → 13 em retrato.
+
+07/10/2026: Origem e Destino separados em colunas próprias (22mm cada, corte em 14 caracteres); 11 colunas em 190mm, label Desconto encurtado para 'Desc.'.
+
+07/10/2026, a pedido do usuário: coluna 'Bruto' do PDF mostra o PBT (caminhão cheio), mantendo o nome. Subtotais e totais dessa coluna somam o PBT (decidido com o usuário), então o total geral passou a ser somado das próprias linhas (somar()) e não mais do CargaService::totais(), que não tem PBT. Conferido: qtd/desconto/líquido/sacas por tipo continuam iguais ao totais() da tela; PBT somado = sum(pbt) das ativas.
+
+07/10/2026, a pedido do usuário: totais finais saíram da tabela de romaneios para um quadro próprio no fim (table.resumo), com títulos (Totais, Romaneios, Bruto (kg), Desconto (kg), Líquido (kg), Sacas), fonte 9pt e respiro largo; uma linha por tipo, sem canceladas; page-break-inside: avoid.
 <!-- SECTION:NOTES:END -->

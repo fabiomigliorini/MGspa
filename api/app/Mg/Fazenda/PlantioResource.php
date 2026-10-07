@@ -30,6 +30,9 @@ class PlantioResource extends Resource
         // aqui restauramos a STRING da coluna (o front usa p.talhao como rótulo).
         $ret['talhao'] = $this->resource->talhao;
 
+        // Check "Talhão finalizado?": gravado como hacolhido = área (desmarcado, 0).
+        $ret['finalizado'] = PlantioService::finalizado($this->resource);
+
         // relações em PascalCase (whenLoaded — chaves ausentes somem do JSON)
         $ret['Safra'] = $this->whenLoaded('Safra');
         $ret['Fazenda'] = $this->whenLoaded('Fazenda');
