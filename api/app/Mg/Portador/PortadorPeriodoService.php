@@ -306,6 +306,7 @@ class PortadorPeriodoService
             $periodo->save();
         }
         static::recalcular($periodo);
+        CaixaItemService::recalcularSaldos($portador->codportador);
         return $periodo->fresh();
     }
 
@@ -390,6 +391,7 @@ class PortadorPeriodoService
         }
         $periodo->save();
         static::recalcular($periodo);
+        CaixaItemService::recalcularSaldos($portador->codportador);
         return $periodo->fresh();
     }
 
@@ -421,6 +423,7 @@ class PortadorPeriodoService
         ]);
         $periodo->save();
         static::recalcular($periodo);
+        CaixaItemService::recalcularSaldos($portador->codportador);
         return $periodo->fresh();
     }
 
@@ -441,6 +444,7 @@ class PortadorPeriodoService
         $periodo->fim = $fim;
         $periodo->observacoes = trim($observacoes ?? '') ?: null;
         $periodo->save();
+        CaixaItemService::recalcularSaldos($portador->codportador);
         return $periodo->fresh();
     }
 
@@ -491,6 +495,7 @@ class PortadorPeriodoService
         $periodo->saldofinal = round((float) $periodo->saldoinicial + static::movimento($periodo), 2);
         $periodo->save();
         static::recalcular($segunda);
+        CaixaItemService::recalcularSaldos($portador->codportador);
         return $segunda->fresh();
     }
 
@@ -526,6 +531,7 @@ class PortadorPeriodoService
         $periodo->delete();
         $anterior->save();
         static::recalcular($anterior);
+        CaixaItemService::recalcularSaldos($portador->codportador);
         return $anterior->fresh();
     }
 

@@ -211,6 +211,22 @@ class CaixaItemController extends Controller
         return new CaixaItemResource(CaixaItemService::ativar(CaixaItem::findOrFail($id)));
     }
 
+    // o saldo gravado de todos os itens (go-live, ou para corrigir); devolve a lista
+    public function recalcularSaldos(Request $request)
+    {
+        Autorizador::autoriza(self::GRUPOS);
+        DB::transaction(fn () => CaixaItemService::recalcularSaldos());
+        return $this->index($request);
+    }
+
+    public function recalcularSaldo(int $id)
+    {
+        Autorizador::autoriza(self::GRUPOS);
+        $item = CaixaItem::findOrFail($id);
+        DB::transaction(fn () => CaixaItemService::recalcularSaldo($item));
+        return new CaixaItemResource($item->fresh());
+    }
+
     public function destroy(int $id)
     {
         Autorizador::autoriza(self::GRUPOS);

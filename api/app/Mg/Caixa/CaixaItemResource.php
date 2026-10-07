@@ -18,6 +18,8 @@ class CaixaItemResource extends Resource
             'filial' => optional($this->Filial)->filial,
             'codcontacontabil' => $this->codcontacontabil,
             'contacontabil' => optional($this->ContaContabil)->contacontabil,
+            'saldo' => $this->saldo,
+            'saldoquantidade' => $this->saldoquantidade,
             'inativo' => $this->inativo,
             'criacao' => $this->criacao,
             'codusuariocriacao' => $this->codusuariocriacao,

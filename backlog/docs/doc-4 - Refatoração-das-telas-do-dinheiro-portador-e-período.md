@@ -575,6 +575,43 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
 9. Período fechado recusa borderô novo; usuário fora de Administrador e Financeiro não abre a
    conta corrente.
 
+### Saldo dos itens na lista (TASK-39 #23; decidido com o Fábio em 07/10/2026)
+
+1. A lista de Itens do Caixa tem um card para a cédula (chips, ingressos) e **um card por parceiro**
+   (as maquinetas agrupadas pela pessoa, o nome no cabeçalho), três por linha (`col-12 col-sm-4`).
+2. À direita de cada linha, o saldo: cédula com **quantidade e valor** nos caixas (somando os
+   caixas, a mesma base da tela do item); maquineta com o **saldo a pagar** (R$ 0,00 também,
+   vermelho se negativo). **Total** no fim de cada card, só do que aparece.
+3. **Mostrar inativos**: um toggle em cada card.
+4. O saldo é **gravado** na `tblcaixaitem` e recalculado **só nas ações de item**: venda no PDV não
+   recalcula (o `recalcular` do portador roda em toda venda em dinheiro).
+5. Botão **Recalcular** na lista (todos) e na tela do item (o item): go-live e correção.
+
+### Como ficou no código: saldo dos itens (07/10/2026; validado pelo Fábio em 07/10)
+
+- **DDL** `api/database/caixa_item_saldo.sql` (idempotente; rodado no dev; roda no go-live depois do
+  `caixa_item_maquineta.sql`, e depois dele o Recalcular da lista): `tblcaixaitem.saldo`
+  (`numeric(14,2)`, default 0) e `saldoquantidade` (só cédula).
+- **Backend**: `CaixaItemService::recalcularSaldo` (trava o item; cédula = soma de `saldos()`,
+  maquineta = `CaixaItemContaService::saldo`; grava sem o MgModel, não é alteração do cadastro) e
+  `recalcularSaldos(?codportador)` (os itens que já mexeram naquele caixa, ou todos; em ordem de
+  código). Chamado no `lancarItem`, `cancelarItem` e `lancarMaquineta` do
+  `PortadorLancamentoService`; no `contar`, `fecharCaixa`, `reabrirCaixa`, `dividir`, `unificar` e
+  `editarDatas` do `PortadorPeriodoService`; no `gerarTitulo`, `ajustar` e `cancelar` do
+  `CaixaItemContaService`. Rotas `POST v1/caixa-item/saldo/recalcular` (devolve a lista) e
+  `POST v1/caixa-item/{id}/saldo/recalcular`. `CaixaItemResource` com `saldo` e `saldoquantidade`.
+- **Front** (contas): `caixaItem/Index.vue` com o card da cédula, um por parceiro e o `refresh` no topo;
+  `Detalhe.vue` com o `refresh` no cabeçalho; `caixaItemStore.recalcularSaldos/recalcularSaldo`.
+
+### Valida (saldo dos itens)
+
+1. contas → Itens do Caixa (F5) → Recalcular: chips e ingressos com quantidade e valor; "Bilhete
+   Agora Centro" R$ 632,00; total de cada card.
+2. Os números de cada chip batem com o total "Saldo nos caixas" da tela do item.
+3. Toggle "Inativos" em cada card: o inativo aparece riscado e entra no total.
+4. Período aberto: entrada de chip → a lista soma; cancelar → volta.
+5. Maquineta: ajuste "Diminui" 10,00 → a lista mostra 622,00; cancelar o ajuste → 632,00.
+
 ## Caixa do PDV (06/10/2026, com o Fábio; TASK-188 M9.1, M9.5, M9.7)
 
 A tela do caixa do negocios (`/caixa`) era o `MgCaixaSessao` do M13: cards de avulso e de

@@ -158,6 +158,7 @@ class PortadorLancamentoService
             'observacoes' => $observacoes === '' ? null : mb_substr($observacoes, 0, 300),
         ]);
         PortadorPeriodoService::recalcular($periodo);
+        CaixaItemService::recalcularSaldo($item);
         return $mov;
     }
 
@@ -179,6 +180,7 @@ class PortadorLancamentoService
         static::exigirNaoFechado($mov->PortadorPeriodo);
         static::cancelarLinha($mov, $justificativa);
         PortadorPeriodoService::recalcular($mov->PortadorPeriodo);
+        CaixaItemService::recalcularSaldo($mov->CaixaItem);
         return $mov;
     }
 
@@ -220,6 +222,7 @@ class PortadorLancamentoService
             'observacoes' => $observacoes === '' ? null : mb_substr($observacoes, 0, 300),
         ]);
         PortadorPeriodoService::recalcular($periodo);
+        CaixaItemService::recalcularSaldo($item);
         if (!empty($anexoBase64)) {
             NegocioAnexoService::gravarFoto(static::pastaFoto($mov->codportadormovimento), $anexoBase64);
         }

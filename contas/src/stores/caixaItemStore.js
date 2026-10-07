@@ -77,6 +77,35 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
     }
   }
 
+  // o saldo gravado de todos os itens (go-live, ou para corrigir); o servidor devolve a lista
+  async function recalcularSaldos() {
+    salvando.value = true
+    try {
+      const { data } = await api.post('v1/caixa-item/saldo/recalcular')
+      items.value = data.data
+      notifySuccess('Saldos recalculados')
+    } catch (e) {
+      notifyError(e, 'Erro ao recalcular os saldos')
+    } finally {
+      salvando.value = false
+    }
+  }
+
+  // o saldo gravado do item aberto; recarrega a tela (saldos nos caixas ou conta corrente)
+  async function recalcularSaldo() {
+    salvando.value = true
+    try {
+      const { data } = await api.post(`v1/caixa-item/${item.value.codcaixaitem}/saldo/recalcular`)
+      upsertLocal(data.data)
+      notifySuccess('Saldo recalculado')
+      await carregar(data.data.codcaixaitem)
+    } catch (e) {
+      notifyError(e, 'Erro ao recalcular o saldo')
+    } finally {
+      salvando.value = false
+    }
+  }
+
   function upsertLocal(registro) {
     const idx = items.value.findIndex((i) => i.codcaixaitem === registro.codcaixaitem)
     if (idx >= 0) items.value.splice(idx, 1, registro)
@@ -357,6 +386,8 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
     ajusteDialog,
     ajusteModel,
     fetchItems,
+    recalcularSaldos,
+    recalcularSaldo,
     carregarConta,
     periodoConta,
     navegarConta,

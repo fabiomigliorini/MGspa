@@ -1346,6 +1346,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@destroy')->whereNumber('id');
     Route::post('caixa-item/{id}/inativo', '\Mg\Caixa\CaixaItemController@inativar')->whereNumber('id');
     Route::delete('caixa-item/{id}/inativo', '\Mg\Caixa\CaixaItemController@ativar')->whereNumber('id');
+    Route::post('caixa-item/saldo/recalcular', '\Mg\Caixa\CaixaItemController@recalcularSaldos');
+    Route::post('caixa-item/{id}/saldo/recalcular', '\Mg\Caixa\CaixaItemController@recalcularSaldo')->whereNumber('id');
     Route::get('caixa-item/{id}/conta', '\Mg\Caixa\CaixaItemController@conta')->whereNumber('id');
     Route::post('caixa-item/{id}/conta/titulo', '\Mg\Caixa\CaixaItemController@gerarTitulo')->whereNumber('id');
     Route::post('caixa-item/{id}/conta/ajuste', '\Mg\Caixa\CaixaItemController@ajustarConta')->whereNumber('id');

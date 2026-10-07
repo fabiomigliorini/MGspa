@@ -25,7 +25,7 @@ const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
 const store = useCaixaItemStore()
-const { item, saldos, tipos, conta, loading } = storeToRefs(store)
+const { item, saldos, tipos, conta, loading, salvando } = storeToRefs(store)
 
 const codcaixaitem = computed(() => Number(route.params.codcaixaitem))
 const maquineta = computed(() => item.value?.modo === 'M')
@@ -83,6 +83,17 @@ watch(codcaixaitem, (cod) => cod && store.carregar(cod))
             </div>
             <q-space />
             <MgInfoCriacao :registro="item" />
+            <q-btn
+              flat
+              round
+              size="sm"
+              color="grey-7"
+              icon="refresh"
+              :loading="salvando"
+              @click="store.recalcularSaldo"
+            >
+              <q-tooltip>Recalcular saldo</q-tooltip>
+            </q-btn>
             <q-btn flat round size="sm" color="grey-7" icon="edit" @click="store.abrirEditar(item)">
               <q-tooltip>Editar</q-tooltip>
             </q-btn>

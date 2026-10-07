@@ -409,6 +409,47 @@ class CaixaItemService
         }
     }
 
+    // ==== saldo gravado (TASK-39 #23): a lista de itens so' mostra ====
+
+    // cedula: quantidade e valor em todos os caixas (a soma de saldos(), o
+    // mesmo da tela do item); maquineta: o que devemos ao parceiro. Trava o
+    // item antes de calcular: dois caixas mexendo no mesmo item nao gravam
+    // um saldo sem a mudanca do outro
+    public static function recalcularSaldo(CaixaItem $item): CaixaItem
+    {
+        CaixaItem::whereKey($item->codcaixaitem)->lockForUpdate()->first();
+        if ($item->ehMaquineta()) {
+            $saldo = CaixaItemContaService::saldo($item);
+            $quantidade = null;
+        } else {
+            $saldos = static::saldos($item);
+            $saldo = round(array_sum(array_column($saldos, 'total')), 2);
+            $quantidade = array_sum(array_column($saldos, 'quantidade'));
+        }
+        // sem o MgModel: recalcular nao e' alteracao do cadastro
+        DB::table('tblcaixaitem')
+            ->where('codcaixaitem', $item->codcaixaitem)
+            ->update(['saldo' => $saldo, 'saldoquantidade' => $quantidade]);
+        $item->saldo = $saldo;
+        $item->saldoquantidade = $quantidade;
+        $item->syncOriginalAttributes(['saldo', 'saldoquantidade']);
+        return $item;
+    }
+
+    // os itens que ja' mexeram no caixa (as acoes do periodo mudam a base
+    // do saldo); sem caixa, todos. Em ordem de codigo: as travas sempre na
+    // mesma ordem
+    public static function recalcularSaldos(?int $codportador = null): void
+    {
+        $q = CaixaItem::orderBy('codcaixaitem');
+        if ($codportador) {
+            $q->whereIn('codcaixaitem', PortadorMovimento::where('codportador', $codportador)
+                ->whereNotNull('codcaixaitem')
+                ->select('codcaixaitem'));
+        }
+        $q->get()->each(fn (CaixaItem $item) => static::recalcularSaldo($item));
+    }
+
     // ==== as linhas do item (contam como cedula) ====
 
     // limpa as linhas: preco positivo, quantidade inteira nao negativa,

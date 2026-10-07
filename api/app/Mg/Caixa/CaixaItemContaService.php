@@ -253,7 +253,7 @@ class CaixaItemContaService
             'vencimento' => $vencimento->toDateString(),
             'observacao' => mb_substr("Repasse da maquineta {$item->item}" . ($observacoes ? " - {$observacoes}" : ''), 0, 255),
         ]);
-        return CaixaItemAcerto::create([
+        $acerto = CaixaItemAcerto::create([
             'codcaixaitem' => $item->codcaixaitem,
             'tipo' => CaixaItemAcerto::TIPO_TITULO,
             'valor' => -$valor,
@@ -261,6 +261,8 @@ class CaixaItemContaService
             'transacao' => $transacao,
             'observacoes' => $observacoes === '' ? null : mb_substr($observacoes, 0, 300),
         ]);
+        CaixaItemService::recalcularSaldo($item);
+        return $acerto;
     }
 
     // valor com sinal: positivo aumenta o que devemos
@@ -281,13 +283,15 @@ class CaixaItemContaService
         if ($transacao->gt($agora)) {
             abort(422, 'A data não pode ser no futuro.');
         }
-        return CaixaItemAcerto::create([
+        $acerto = CaixaItemAcerto::create([
             'codcaixaitem' => $item->codcaixaitem,
             'tipo' => CaixaItemAcerto::TIPO_AJUSTE,
             'valor' => $valor,
             'transacao' => $transacao,
             'observacoes' => mb_substr($observacoes, 0, 300),
         ]);
+        CaixaItemService::recalcularSaldo($item);
+        return $acerto;
     }
 
     // ajuste: so' cancela. Titulo: o titulo nasceu aqui, entao cancelar o
@@ -318,6 +322,7 @@ class CaixaItemContaService
         if ($titulo && empty($titulo->estornado)) {
             TituloService::estornar($titulo, "Débito cancelado na maquineta {$acerto->CaixaItem->item}: {$acerto->justificativa}");
         }
+        CaixaItemService::recalcularSaldo($acerto->CaixaItem);
         return $acerto;
     }
 }
