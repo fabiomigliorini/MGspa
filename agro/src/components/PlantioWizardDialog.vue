@@ -70,8 +70,8 @@ const dataMax = computed(
 // As regras leem o valor ISO do form (form.dataplantio), não o argumento do
 // q-input — que chega já formatado em DD/MM/YYYY e quebraria a comparação de
 // string contra o mín/máx ISO (ex.: "11/07/2026" < "2026-01-01").
+// Data opcional (TASK-201): só o período é conferido, quando informada.
 const regrasData = [
-  () => !!form.value.dataplantio || 'Informe a data',
   () => {
     const d = form.value.dataplantio
     return !d || (d >= dataMin.value && d <= dataMax.value) || 'Fora do período da safra'

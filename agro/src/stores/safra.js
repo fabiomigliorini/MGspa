@@ -67,9 +67,14 @@ export const useSafraStore = defineStore('safra', () => {
     salvandoSafra.value = true
     try {
       const f = formSafra.value
+      let copiados = 0
       if (f.codsafra) await api.put(`v1/safra/${f.codsafra}`, f)
-      else await api.post('v1/safra', f)
-      notifySuccess('Safra salva!')
+      else copiados = (await api.post('v1/safra', f)).data?.talhoescopiados || 0
+      notifySuccess(
+        copiados
+          ? `Safra salva — ${copiados} ${copiados === 1 ? 'talhão copiado' : 'talhões copiados'}.`
+          : 'Safra salva!',
+      )
       dialogSafra.value = false
       await carregarSafras()
       if (safra.value?.codsafra === f.codsafra) await carregarSafra(f.codsafra)

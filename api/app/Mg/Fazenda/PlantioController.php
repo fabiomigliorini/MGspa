@@ -93,6 +93,11 @@ class PlantioController extends MgController
 
         $request->validate(['hacolhido' => ['nullable', 'numeric', 'gte:0']]);
         $model = $this->buscar($codsafra, $codplantio);
+        // Plantio copiado de outra safra nasce sem variedade (TASK-201): ela pode
+        // ser dita depois, mas antes de fechar o talhão.
+        if ((float) $request->input('hacolhido') > 0 && !$model->codvariedade) {
+            abort(422, 'Informe a variedade do talhão antes de finalizá-lo.');
+        }
         $model->hacolhido = $request->input('hacolhido');
         $model->save();
         return new PlantioResource($model->fresh(static::WITH));
