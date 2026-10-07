@@ -21,6 +21,9 @@ class CaixaItemService
         if (!empty($filtros['item'])) {
             $q->where('item', 'ilike', '%' . $filtros['item'] . '%');
         }
+        if (!empty($filtros['modo'])) {
+            $q->where('modo', $filtros['modo']);
+        }
         $inativo = $filtros['inativo'] ?? null;
         if (in_array($inativo, [true, 'true', 1, '1'], true)) {
             $q->whereNotNull('inativo');
@@ -30,10 +33,23 @@ class CaixaItemService
         return $q->orderBy('item')->get();
     }
 
-    // itens ativos: os que se lancam em qualquer portador em especie
-    public static function ativos()
+    // itens ativos: os que se lancam em qualquer portador em especie (os de
+    // cedula pela entrada, as maquinetas pelo bordero)
+    public static function ativos(?string $modo = null)
     {
-        return CaixaItem::whereNull('inativo')->orderBy('item')->get();
+        return CaixaItem::whereNull('inativo')
+            ->when($modo, fn ($q) => $q->where('modo', $modo))
+            ->orderBy('item')
+            ->get();
+    }
+
+    // saldos, periodos, tipos e descricoes sao do item que conta como cedula;
+    // a maquineta tem a conta corrente
+    public static function exigirCedula(CaixaItem $item): void
+    {
+        if ($item->ehMaquineta()) {
+            abort(422, "{$item->item} é maquineta de parceiro: não tem estoque nem contagem.");
+        }
     }
 
     // quanto tem do item em cada caixa que ja' mexeu com ele (o item so'
@@ -345,8 +361,21 @@ class CaixaItemService
         ];
     }
 
+    // o modo nao muda depois que o item mexeu em caixa; o item que conta como
+    // cedula nao tem pessoa, filial nem conta
     public static function salvar(CaixaItem $item, array $dados): CaixaItem
     {
+        $modo = $dados['modo'] ?? $item->modo ?? CaixaItem::MODO_CEDULA;
+        if ($item->exists && $item->modo != $modo
+            && PortadorMovimento::where('codcaixaitem', $item->codcaixaitem)->exists()) {
+            abort(409, "{$item->item} já foi lançado em caixa: não muda de "
+                . ($item->ehMaquineta() ? 'maquineta para cédula.' : 'cédula para maquineta.'));
+        }
+        if ($modo == CaixaItem::MODO_CEDULA) {
+            $dados['codpessoa'] = null;
+            $dados['codfilial'] = null;
+            $dados['codcontacontabil'] = null;
+        }
         $item->fill($dados);
         $item->save();
         return $item->fresh();
@@ -461,8 +490,12 @@ class CaixaItemService
             if (empty($linhas)) {
                 continue;
             }
-            if (!CaixaItem::whereKey((int) $cod)->exists()) {
+            $item = CaixaItem::find((int) $cod);
+            if (!$item) {
                 abort(422, "Item do caixa {$cod} não existe.");
+            }
+            if ($item->ehMaquineta()) {
+                abort(422, "{$item->item} é maquineta de parceiro: não se conta.");
             }
             $ret[(int) $cod] = $linhas;
         }

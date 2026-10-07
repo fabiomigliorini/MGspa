@@ -1,14 +1,29 @@
-// Itens do caixa (doc-4, "Itens do caixa"): o que se controla no portador em espécie além do
-// dinheiro (chips, ingressos), que conta como cédula. Cadastro mínimo: o nome.
+// Itens do caixa (doc-4, "Itens do caixa" e "Itens de parceiro"): o que se controla no portador em
+// espécie além do dinheiro. Cédula (chips) conta como cédula no caixa; maquineta de parceiro não se
+// conta: o caixa lança o borderô e o financeiro paga o parceiro pela conta corrente da maquineta
+// (créditos = borderôs; débitos = títulos gerados; ajustes com observação).
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
+import { formataDataIso, formataTimestampIso } from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+
+export const MODOS = [
+  { value: 'C', label: 'Cédula (conta no caixa: chips)' },
+  { value: 'M', label: 'Maquineta de parceiro' },
+]
 
 const vazio = () => ({
   codcaixaitem: null,
   item: '',
+  modo: 'C',
+  codpessoa: null,
+  codfilial: null,
+  codcontacontabil: null,
 })
+
+const hoje = () => formataDataIso(new Date())
+const diasAtras = (n) => formataDataIso(new Date(Date.now() - n * 24 * 60 * 60 * 1000))
 
 export const useCaixaItemStore = defineStore('caixaItem', () => {
   const items = ref([])
@@ -34,6 +49,14 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
   const fechamentosTemMais = ref(true)
   // o total dos períodos fechados (todas as páginas), do servidor
   const fechamentosTotais = ref(null)
+  // a conta corrente da maquineta de parceiro: o extrato de/até, o título e o ajuste
+  const conta = ref(null)
+  const contaDe = ref(diasAtras(60))
+  const contaAte = ref(hoje())
+  const tituloDialog = ref(false)
+  const tituloModel = ref({ valor: null, vencimento: hoje(), observacoes: '' })
+  const ajusteDialog = ref(false)
+  const ajusteModel = ref({ sentido: null, valor: null, observacoes: '', transacao: null })
 
   async function fetchItems() {
     loading.value = true
@@ -54,24 +77,108 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
     if (item.value?.codcaixaitem === registro.codcaixaitem) item.value = registro
   }
 
+  // a maquineta mostra a conta corrente; o item de cédula, os saldos nos caixas e os tipos
   async function carregar(codcaixaitem) {
     loading.value = true
     try {
-      const [i, s, t] = await Promise.all([
-        api.get(`v1/caixa-item/${codcaixaitem}`),
-        api.get(`v1/caixa-item/${codcaixaitem}/saldo`),
-        api.get(`v1/caixa-item/${codcaixaitem}/tipo`),
-      ])
+      const i = await api.get(`v1/caixa-item/${codcaixaitem}`)
       item.value = i.data.data
-      saldos.value = s.data.data
-      tipos.value = t.data.data
+      saldos.value = []
+      tipos.value = []
+      conta.value = null
+      if (item.value.modo === 'M') {
+        await carregarConta()
+      } else {
+        const [s, t] = await Promise.all([
+          api.get(`v1/caixa-item/${codcaixaitem}/saldo`),
+          api.get(`v1/caixa-item/${codcaixaitem}/tipo`),
+        ])
+        saldos.value = s.data.data
+        tipos.value = t.data.data
+      }
     } catch (e) {
       item.value = null
       saldos.value = []
       tipos.value = []
+      conta.value = null
       notifyError(e, 'Erro ao carregar o item')
     } finally {
       loading.value = false
+    }
+  }
+
+  // ==== conta corrente da maquineta de parceiro ====
+
+  async function carregarConta() {
+    try {
+      const { data } = await api.get(`v1/caixa-item/${item.value.codcaixaitem}/conta`, {
+        params: { de: contaDe.value, ate: contaAte.value },
+      })
+      conta.value = data.data
+    } catch (e) {
+      conta.value = null
+      notifyError(e, 'Erro ao carregar a conta corrente')
+    }
+  }
+
+  // o valor sugerido é o saldo (o que devemos ao parceiro), vencimento hoje
+  function abrirTitulo() {
+    const saldo = conta.value?.saldo ?? 0
+    tituloModel.value = { valor: saldo > 0 ? saldo : null, vencimento: hoje(), observacoes: '' }
+    tituloDialog.value = true
+  }
+
+  async function gerarTitulo() {
+    salvando.value = true
+    try {
+      await api.post(`v1/caixa-item/${item.value.codcaixaitem}/conta/titulo`, tituloModel.value)
+      notifySuccess('Título a pagar gerado')
+      tituloDialog.value = false
+      await carregarConta()
+    } catch (e) {
+      notifyError(e, 'Erro ao gerar o título')
+    } finally {
+      salvando.value = false
+    }
+  }
+
+  function abrirAjuste() {
+    ajusteModel.value = {
+      sentido: null,
+      valor: null,
+      observacoes: '',
+      transacao: formataTimestampIso(new Date()),
+    }
+    ajusteDialog.value = true
+  }
+
+  // sentido A aumenta o que devemos ao parceiro, D diminui (comissão que ele desconta)
+  async function ajustarConta() {
+    const m = ajusteModel.value
+    salvando.value = true
+    try {
+      await api.post(`v1/caixa-item/${item.value.codcaixaitem}/conta/ajuste`, {
+        valor: m.sentido === 'A' ? m.valor : -m.valor,
+        observacoes: m.observacoes,
+        transacao: m.transacao || null,
+      })
+      notifySuccess('Ajuste lançado')
+      ajusteDialog.value = false
+      await carregarConta()
+    } catch (e) {
+      notifyError(e, 'Erro ao lançar o ajuste')
+    } finally {
+      salvando.value = false
+    }
+  }
+
+  async function cancelarAcerto(codcaixaitemacerto, justificativa) {
+    try {
+      await api.post(`v1/caixa-item-acerto/${codcaixaitemacerto}/cancelar`, { justificativa })
+      notifySuccess('Lançamento cancelado')
+      await carregarConta()
+    } catch (e) {
+      notifyError(e, 'Erro ao cancelar')
     }
   }
 
@@ -130,6 +237,10 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
     model.value = {
       codcaixaitem: row.codcaixaitem,
       item: row.item,
+      modo: row.modo ?? 'C',
+      codpessoa: row.codpessoa ?? null,
+      codfilial: row.codfilial ?? null,
+      codcontacontabil: row.codcontacontabil ?? null,
     }
     dialog.value = true
   }
@@ -143,6 +254,9 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
       upsertLocal(data.data)
       notifySuccess(isNovo.value ? 'Item criado' : 'Item atualizado')
       dialog.value = false
+      // trocou o modo na tela do item: a conta corrente ou os saldos
+      if (item.value?.codcaixaitem === data.data.codcaixaitem)
+        await carregar(data.data.codcaixaitem)
     } catch (e) {
       notifyError(e, 'Erro ao salvar o item')
     } finally {
@@ -191,7 +305,20 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
     fechamentos,
     fechamentosTemMais,
     fechamentosTotais,
+    conta,
+    contaDe,
+    contaAte,
+    tituloDialog,
+    tituloModel,
+    ajusteDialog,
+    ajusteModel,
     fetchItems,
+    carregarConta,
+    abrirTitulo,
+    gerarTitulo,
+    abrirAjuste,
+    ajustarConta,
+    cancelarAcerto,
     carregar,
     abrirFechamentos,
     abrirTipo,

@@ -11,6 +11,13 @@ class CaixaItemResource extends Resource
         return [
             'codcaixaitem' => $this->codcaixaitem,
             'item' => $this->item,
+            'modo' => $this->modo,
+            'codpessoa' => $this->codpessoa,
+            'pessoa' => optional($this->Pessoa)->fantasia,
+            'codfilial' => $this->codfilial,
+            'filial' => optional($this->Filial)->filial,
+            'codcontacontabil' => $this->codcontacontabil,
+            'contacontabil' => optional($this->ContaContabil)->contacontabil,
             'inativo' => $this->inativo,
             'criacao' => $this->criacao,
             'codusuariocriacao' => $this->codusuariocriacao,

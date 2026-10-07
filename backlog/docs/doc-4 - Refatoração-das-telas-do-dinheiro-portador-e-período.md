@@ -405,28 +405,39 @@ estoque, com acerto) vêm um por um, adaptando a estrutura.
    diferença e o total dos fechados); editar, inativar e excluir no cabeçalho (a lista só
    navega).
 
-### Itens de parceiro (TASK-39, critérios #20 a #22; desenho a fazer)
+### Itens de parceiro (TASK-39, critérios #20 e #21; decidido com o Fábio em 06/10/2026)
 
-Dois controles: o **do caixa** (o dinheiro do parceiro que está na gaveta bate com a contagem) e o
-**do financeiro** (quanto se deve a cada parceiro e o acerto que paga). Dois jeitos de o parceiro
-trabalhar com a gente:
+O parceiro (Bilhete Agora, outras tiqueteiras, Redeflex, Rede Card) deixa a maquineta na loja.
+Cartão e Pix vão direto para ele, sem passar pela gente; só o **dinheiro** fica na gaveta. No fim
+do dia o caixa tira o borderô da maquineta e lança o total em dinheiro, senão sobra dinheiro na
+contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro de tempos em tempos.
 
-- **Só maquineta** (Redeflex, Bilhete Agora, Bradesco Expresso, ingressos vendidos pelo sistema do
-  parceiro): não há estoque no caixa; o caixa lança o total do dia do borderô da maquineta.
-- **Bloquinho e maquineta** (ingressos): o bloquinho conta como cédula (como os chips) e o
-  vendido pela maquineta entra pelo borderô; os dois no mesmo item.
-
-O que já tinha sido conversado:
-
-
-- **Item sem estoque** (Bilhete Agora, Redeflex, Bradesco Expresso): o caixa lança por item o
-  **total do dia** do borderô do parceiro, um valor com sinal (tipo I). **Foto do borderô
-  opcional, com aviso** "sem borderô".
-- **Acerto com o parceiro à parte do caixa**: financeiro ou gerente, a qualquer hora (inclusive
-  com o caixa aberto); cada fechamento do movimento do parceiro vira um título a pagar. Falta
-  definir: o que o fechamento abrange, se o título nasce do fechamento ou por botão, e como fica o
-  estoque no corte.
-- **Ingressos com variações** (masculino/feminino, preços diferentes), que nascem na entrada.
+1. **Cada maquineta é um item do caixa** ("Bilhete Agora — Centro 1"). O item tem um modo:
+   **cédula** (chips: conta como cédula, como acima) ou **maquineta de parceiro** (sem estoque,
+   nunca entra na contagem). O totalizador é por maquineta: o parceiro pode ter várias na mesma
+   filial, e a mesma maquineta pode ser usada em dois caixas.
+2. **Cadastro da maquineta = o mínimo para gerar o título**: nome, parceiro (pessoa), filial e
+   conta contábil do título. O modo não muda depois que o item foi lançado em caixa.
+3. **Borderô** (só na tela do período do contas; o PDV ganha na refatoração dele): a maquineta, a
+   data, o **total em dinheiro** (com sinal: negativo quando a maquineta devolveu dinheiro), a
+   observação e a **foto do borderô, opcional**. Sem foto a linha mostra "sem borderô"; a foto pode
+   ser anexada depois na linha (mesmo com o período fechado: não muda valor). Cartão e Pix só na
+   foto. Sobe o saldo do portador (explica o dinheiro a mais) e é crédito na conta da maquineta.
+   Cancela-se com justificativa, como o ajuste.
+4. **Conta corrente por maquineta** (não há "acerto que abrange um período"): crédito = os borderôs
+   dos caixas; débito = os títulos gerados; ajuste com sinal e observação obrigatória (a comissão
+   que o parceiro desconta, como a da Rede Card; o saldo que já devíamos no go-live; diferença com
+   o relatório do parceiro). Saldo = o que devemos ao parceiro. A comissão só abate: não vira
+   título a receber. Quem decide comissão é o parceiro; o sistema não tem regra.
+5. **Gerar título** (botão na conta corrente da maquineta): valor (sugere o saldo) e vencimento
+   (sugere hoje) → título a pagar (Duplicata a Pagar) para o parceiro, com a filial e a conta da
+   maquineta, em aberto e sem portador, pago pelo caminho normal do contas; o débito fica ligado
+   ao título. Um título por maquineta (pagar vários juntos = liquidação de vários títulos). Cancelar
+   o débito **recusa** enquanto o título não for estornado (estornar é no título).
+6. **Quem**: cadastro e conta corrente, Administrador e Financeiro; borderô, quem opera o portador
+   (como ajuste e item).
+7. **Bloquinho de ingresso com maquineta** (o bloquinho como cédula e a maquineta pelo borderô, no
+   mesmo item): não existe hoje; saiu do escopo.
 
 ### Como ficou no código (04–06/10/2026; não validado)
 
@@ -478,3 +489,52 @@ O que já tinha sido conversado:
     fechamento + entradas do período aberto) e o total; clicar no caixa abre o popup dos
     períodos em que o item mexeu, com os cards Entradas, Saldo e Diferença (entradas +
     diferença = saldo); "Descrições" troca o texto de um tipo (descrição + preço) em tudo.
+
+### Como ficou no código: maquinetas de parceiro (06/10/2026; não validado)
+
+- **DDL** `api/database/caixa_item_maquineta.sql` (idempotente; rodado no dev; roda no go-live
+  depois do `caixa_item_dinamico.sql`): `tblcaixaitem.modo` (C/M) com `codpessoa`, `codfilial`,
+  `codcontacontabil` (check: C sem os três, M com os três); tipo **M** no check do
+  `tblportadormovimento` (com `codcaixaitem`, sem `itens`, estado E/C); tabela nova
+  `tblcaixaitemacerto` (tipo T título com `codtitulo` e valor negativo, A ajuste com observação;
+  cancelamento com justificativa).
+- **Backend**: `CaixaItem` (`MODO_CEDULA`/`MODO_MAQUINETA`, `ehMaquineta`), `CaixaItemAcerto`;
+  `CaixaItemService` (modo no salvar, recusa trocar o modo de item lançado, `ativos($modo)`,
+  `exigirCedula` em saldos/períodos/tipos/descrições, contagem recusa maquineta);
+  `CaixaItemContaService` (`saldo`, `extrato`, `gerarTitulo` via `TituloService::criar`,
+  `ajustar`, `cancelar`); rotas `GET v1/caixa-item/{id}/conta`, `POST .../conta/titulo`,
+  `POST .../conta/ajuste`, `POST v1/caixa-item-acerto/{id}/cancelar`.
+  `PortadorLancamentoService::lancarMaquineta`, `anexarFoto`/`fotos`/`caminhoFoto` (disco
+  `negocio-anexo`, pasta `portador-movimento/{cod}`, sem coluna); `lancarItem` recusa maquineta;
+  cancelar aceita o M. Rotas `POST v1/portador-periodo/{id}/maquineta`,
+  `POST/GET v1/portador-movimento/{id}/foto`. `PortadorPeriodoResource`: origem M "Maquinetas de
+  parceiros" no resumo (e no borderô impresso), linha "Borderô: …"/"Devolução: …" com `fotos`,
+  `semBordero`, `podeAnexar`; `itens` só os de cédula; `maquinetas` ativas para o diálogo.
+  `CaixaService::dinheiro` com o documento M.
+- **Front**: `@components/caixa/MaquinetaCaixaDialog` (borderô, com `MgSlim` para a foto) e
+  `BorderoFotosDialog` (ver e anexar); `periodoStore.lancarMaquineta/anexarFotoBordero`; contas:
+  botão `point_of_sale` nos lançamentos do período em espécie, badge "sem borderô" e câmera na
+  linha; cadastro com o modo e, na maquineta, parceiro, filial e conta; tela do item da maquineta
+  com a conta corrente (`CaixaItemContaCorrente`, `CaixaItemTituloDialog`,
+  `CaixaItemAjusteDialog`); lista dos itens mostra o parceiro da maquineta.
+
+### Valida (maquinetas de parceiro)
+
+1. contas → Itens do Caixa → Novo: modo "Maquineta de parceiro" ("Rede Card Centro"), com parceiro,
+   filial e conta; sem parceiro não salva. O chip continua cédula.
+2. Portador em espécie → período aberto → botão `point_of_sale` (Borderô de maquineta): R$ 350,00
+   com foto. Linha "Borderô: Rede Card Centro", saldo +350, resumo "Maquinetas de parceiros".
+3. Outro borderô, Devolução R$ 20,00, sem foto: badge "sem borderô"; câmera na linha → anexar → o
+   badge some.
+4. Entrada de item e contagem não mostram a maquineta; contar os 330 a mais nas cédulas →
+   diferença 0.
+5. Cancelar a devolução com justificativa: saldo volta; aparece em Mostrar cancelados.
+6. Itens do Caixa → Rede Card Centro: conta corrente com o crédito de 350 (clicar leva ao caixa).
+   Ajuste "Diminui" 15,00 "comissão" → saldo 335; ajuste "Aumenta" 100,00 → 435; cancelar este →
+   335 e aparece em Mostrar cancelados.
+7. Gerar título: sugere 335 e hoje → título a pagar com parceiro, filial e conta da maquineta, sem
+   portador; débito −335, saldo 0; clicar no débito abre o título.
+8. Cancelar o débito do título: recusa ("Estorne o título … antes"). Estornar o título, voltar e
+   cancelar → saldo 335.
+9. Período fechado recusa borderô novo; usuário fora de Administrador e Financeiro não abre a
+   conta corrente.

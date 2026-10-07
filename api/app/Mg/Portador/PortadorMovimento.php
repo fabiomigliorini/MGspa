@@ -14,7 +14,9 @@ use Mg\Usuario\Usuario;
  * e T transferencia (PortadorLancamentoService; a transferencia sao duas
  * linhas ligadas pelo par, com o mesmo estado), I item do caixa (a entrada ou
  * saida do item no portador em especie: codcaixaitem e as linhas em `itens`; o
- * item conta como cedula, vender nao lanca nada). valor com sinal (positivo
+ * item conta como cedula, vender nao lanca nada), M bordero da maquineta de
+ * parceiro (o total em dinheiro do dia: codcaixaitem sem `itens`; credito na
+ * conta corrente da maquineta). valor com sinal (positivo
  * entrou); transacao = quando aparece no portador. Mantido a mao.
  */
 class PortadorMovimento extends MgModel
@@ -26,8 +28,9 @@ class PortadorMovimento extends MgModel
     const TIPO_AJUSTE = 'A';
     const TIPO_TRANSFERENCIA = 'T';
     const TIPO_ITEM = 'I';
+    const TIPO_MAQUINETA = 'M';
 
-    // so' ajuste, transferencia e item
+    // so' ajuste, transferencia, item e maquineta
     const ESTADO_PENDENTE = 'P';
     const ESTADO_EFETIVADO = 'E';
     const ESTADO_CANCELADO = 'C';

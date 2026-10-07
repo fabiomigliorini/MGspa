@@ -23,12 +23,14 @@ class PortadorPeriodoResource extends Resource
     const ORIGEM_AJUSTE = 'J';
     const ORIGEM_TRANSFERENCIA = 'X';
     const ORIGEM_ITEM = 'I';
+    const ORIGEM_MAQUINETA = 'M';
 
     // o resumo, na ordem do formulario de papel
     const RESUMO = [
         PagamentoListaService::ORIGEM_VENDA => 'Vendas',
         PagamentoListaService::ORIGEM_TITULO => 'Títulos e vales',
         self::ORIGEM_ITEM => 'Itens do caixa',
+        self::ORIGEM_MAQUINETA => 'Maquinetas de parceiros',
         self::ORIGEM_TRANSFERENCIA => 'Transferências',
         self::ORIGEM_AJUSTE => 'Ajustes',
         PagamentoListaService::ORIGEM_AVULSO => 'Taxas, tarifas e rendimentos',
@@ -97,6 +99,9 @@ class PortadorPeriodoResource extends Resource
             $ret['contagem'] = $this->contagem();
             $ret['pendentes'] = PortadorLancamentoService::pendentes($this->resource);
             $ret['itens'] = $this->itens();
+            $ret['maquinetas'] = CaixaItemService::ativos(CaixaItem::MODO_MAQUINETA)
+                ->map(fn (CaixaItem $i) => ['codcaixaitem' => $i->codcaixaitem, 'item' => $i->item])
+                ->values()->all();
         }
         return $ret;
     }
@@ -118,7 +123,8 @@ class PortadorPeriodoResource extends Resource
         return $ret;
     }
 
-    // os itens para lancar (todos os ativos) e contar (`contar`: os que estao
+    // os itens que contam como cedula (a maquineta de parceiro nao se conta)
+    // para lancar (todos os ativos) e contar (`contar`: os que estao
     // no portador, de um dia para o outro ate' zerar), cada um com os precos (e
     // descricoes) que ja' passaram: a contagem final do anterior, as deste
     // periodo e as entradas e saidas dele que valem
@@ -142,8 +148,9 @@ class PortadorPeriodoResource extends Resource
             ->each(function ($m) use (&$linhas) {
                 $linhas[$m->codcaixaitem] = array_merge($linhas[$m->codcaixaitem] ?? [], $m->itens ?? []);
             });
-        $itens = CaixaItemService::ativos()
-            ->concat(CaixaItem::whereIn('codcaixaitem', array_keys($linhas))->get())
+        $itens = CaixaItemService::ativos(CaixaItem::MODO_CEDULA)
+            ->concat(CaixaItem::whereIn('codcaixaitem', array_keys($linhas))
+                ->where('modo', CaixaItem::MODO_CEDULA)->get())
             ->unique('codcaixaitem')
             ->sortBy('item');
         return $itens->map(fn (CaixaItem $i) => [
@@ -222,6 +229,18 @@ class PortadorPeriodoResource extends Resource
                         'detalhe' => static::detalheItem($l),
                         'codcaixaitem' => $l->codcaixaitem,
                         'itens' => $l->itens,
+                        'podeCancelar' => $valendo && $mutavel && $operador,
+                    ]);
+                case PortadorMovimento::TIPO_MAQUINETA:
+                    $fotos = PortadorLancamentoService::fotos($l->codportadormovimento);
+                    return array_merge($ret, [
+                        'origem' => static::ORIGEM_MAQUINETA,
+                        'texto' => ($l->valor < 0 ? 'Devolução: ' : 'Borderô: ') . optional($l->CaixaItem)->item,
+                        'detalhe' => $l->observacoes,
+                        'codcaixaitem' => $l->codcaixaitem,
+                        'fotos' => $fotos,
+                        'semBordero' => $valendo && empty($fotos),
+                        'podeAnexar' => $valendo && $operador,
                         'podeCancelar' => $valendo && $mutavel && $operador,
                     ]);
                 case PortadorMovimento::TIPO_TRANSFERENCIA:

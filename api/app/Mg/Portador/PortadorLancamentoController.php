@@ -6,8 +6,10 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Mg\Caixa\CaixaItem;
 use Mg\Pdv\Pdv;
+use Mg\Usuario\Autorizador;
 
 /**
  * Ajuste, transferencia e item (doc-4, redefinicao do dinheiro): movimento do
@@ -83,6 +85,52 @@ class PortadorLancamentoController extends Controller
         return $this->resposta($mov);
     }
 
+    // o total em dinheiro do bordero da maquineta de parceiro (com sinal:
+    // negativo devolveu dinheiro), com a foto opcional, no periodo da tela
+    public function maquineta(Request $request, int $id)
+    {
+        $dados = $request->validate([
+            'codcaixaitem' => 'required|integer|exists:tblcaixaitem,codcaixaitem',
+            'valor' => 'required|numeric|not_in:0',
+            'observacoes' => 'nullable|string|max:300',
+            'transacao' => 'nullable|date',
+            'anexoBase64' => 'nullable|string',
+            'codpdv' => 'nullable|integer',
+        ]);
+        $mov = DB::transaction(fn () => PortadorLancamentoService::lancarMaquineta(
+            PortadorPeriodo::with('Portador')->findOrFail($id),
+            CaixaItem::findOrFail($dados['codcaixaitem']),
+            (float) $dados['valor'],
+            $dados['observacoes'] ?? null,
+            !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null,
+            $dados['anexoBase64'] ?? null,
+            $this->livre($request)
+        ));
+        return $this->resposta($mov);
+    }
+
+    // a foto do bordero anexada depois
+    public function foto(Request $request, int $id)
+    {
+        $request->validate(['anexoBase64' => 'required|string']);
+        $mov = PortadorMovimento::with('Portador')->findOrFail($id);
+        PortadorLancamentoService::anexarFoto($mov, $request->anexoBase64);
+        return $this->resposta($mov);
+    }
+
+    // quem ve o portador ve a foto; o financeiro, pela conta corrente da
+    // maquineta
+    public function mostrarFoto(int $id, string $arquivo)
+    {
+        $mov = PortadorMovimento::with('Portador')->findOrFail($id);
+        if (!PortadorAutorizador::pode($mov->codportador, PortadorUsuario::PAPEL_OPERADOR)) {
+            Autorizador::autoriza(['Administrador', 'Financeiro']);
+        }
+        return Storage::disk(PortadorLancamentoService::DISCO)->response(
+            PortadorLancamentoService::caminhoFoto($mov->codportadormovimento, $arquivo)
+        );
+    }
+
     public function transferir(Request $request)
     {
         $dados = $request->validate([
@@ -112,7 +160,7 @@ class PortadorLancamentoController extends Controller
         return $this->resposta($mov);
     }
 
-    // ajuste, item ou transferencia
+    // ajuste, item, maquineta ou transferencia
     public function cancelar(Request $request, int $id)
     {
         $request->validate([
@@ -123,7 +171,8 @@ class PortadorLancamentoController extends Controller
         $livre = $this->livre($request);
         $mov = DB::transaction(fn () => match ($mov->tipo) {
             PortadorMovimento::TIPO_AJUSTE => PortadorLancamentoService::cancelarAjuste($mov, $request->justificativa, $livre),
-            PortadorMovimento::TIPO_ITEM => PortadorLancamentoService::cancelarItem($mov, $request->justificativa, $livre),
+            PortadorMovimento::TIPO_ITEM,
+            PortadorMovimento::TIPO_MAQUINETA => PortadorLancamentoService::cancelarItem($mov, $request->justificativa, $livre),
             default => PortadorLancamentoService::cancelarTransferencia($mov, $request->justificativa, $livre),
         });
         return $this->resposta($mov);

@@ -33,6 +33,7 @@ export const MOTIVOS = [
 export const DOCUMENTOS = {
   V: 'Vendas',
   I: 'Itens do caixa',
+  M: 'Maquinetas de parceiros',
   J: 'Ajustes de caixa',
   T: 'Títulos (notinhas, vales, adiantamentos)',
   X: 'Transferências (sangria, reforço)',

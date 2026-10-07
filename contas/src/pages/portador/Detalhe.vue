@@ -13,6 +13,7 @@ import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import TransferirCaixaDialog from '@components/caixa/TransferirCaixaDialog.vue'
 import AvulsoCaixaDialog from '@components/caixa/AvulsoCaixaDialog.vue'
 import ItemCaixaDialog from '@components/caixa/ItemCaixaDialog.vue'
+import MaquinetaCaixaDialog from '@components/caixa/MaquinetaCaixaDialog.vue'
 import { formataNumero, formataDataAbreviada } from '@components/formatters'
 import { periodoStore } from '@components/stores/periodoStore'
 import PortadorDialog from 'components/portador/PortadorDialog.vue'
@@ -338,6 +339,7 @@ function abrirPeriodo() {
     <TransferirCaixaDialog />
     <AvulsoCaixaDialog />
     <ItemCaixaDialog />
+    <MaquinetaCaixaDialog />
     <PortadorUsuariosDialog />
     <PortadorDialog />
   </q-page>

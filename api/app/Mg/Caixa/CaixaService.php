@@ -222,8 +222,8 @@ class CaixaService
     }
 
     // dinheiro do sistema no periodo: saldo inicial + entradas - saidas, por
-    // documento (V venda, I item do caixa, T titulo, A taxa/tarifa, J ajuste,
-    // X transferencia), das linhas que valem
+    // documento (V venda, I item do caixa, M maquineta de parceiro, T titulo,
+    // A taxa/tarifa, J ajuste, X transferencia), das linhas que valem
     public static function dinheiro(PortadorPeriodo $sessao): array
     {
         $regs = DB::select("
@@ -232,6 +232,7 @@ class CaixaService
                     when m.tipo = 'A' then 'J'
                     when m.tipo = 'T' then 'X'
                     when m.tipo = 'I' then 'I'
+                    when m.tipo = 'M' then 'M'
                     when p.codnegocio is not null then 'V'
                     when p.motivo is not null then 'A'
                     else 'T'

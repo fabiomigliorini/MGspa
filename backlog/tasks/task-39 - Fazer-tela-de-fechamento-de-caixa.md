@@ -55,16 +55,15 @@ Consolidou TASK-33, TASK-34, TASK-48 e TASK-84 (arquivadas).
 - [x] #17 Abrir o período novo logo depois de fechar o anterior, no mesmo segundo, não dá erro (começa no próprio fim do anterior) (R7.8)
 - [x] #18 Banco, adquirente e cartão: o financeiro fecha o período pela data de corte; fechado é imutável; reabre e fecha em ordem, do mais novo para o mais antigo (antigo M12)
 - [x] #19 Itens do caixa (chips, ingressos) contados no portador em espécie junto com as cédulas (como cédula, preço × quantidade): só a entrada ou a saída sem venda é lançada; vender não lança nada; cadastro de itens dinâmico, com a tela do item mostrando o saldo em cada caixa e os períodos em que mexeu
-- [ ] #20 Itens que o parceiro controla só pela maquineta dele (Redeflex, Bilhete Agora, Bradesco Expresso, ingressos vendidos pelo sistema do parceiro): o caixa lança o total do dia pelo borderô da maquineta, com a foto do borderô (opcional, avisando quando falta), e o valor explica o dinheiro a mais na contagem do caixa
-- [ ] #21 Ingressos que o parceiro deixa em bloquinho e maquineta: os bilhetes do bloquinho contam no caixa como cédula (preço × quantidade, com as variações de preço, como masculino e feminino) e o vendido pela maquineta entra pelo total do borderô do dia, os dois no mesmo item
-- [ ] #22 O financeiro vê, por parceiro, quanto os caixas venderam de cada item e ainda não foi acertado, e faz o acerto gerando o título a pagar ao parceiro, a qualquer hora, sem depender do caixa estar fechado
-- [ ] #23 Validação de ponta a ponta na tela do período pelos roteiros Valida do doc-4 (o core, a redefinição, os itens e os parceiros): venda em dinheiro, sangria e confirmação, cancelamento, recebimento no banco, fechamento com contagem e com corte, itens do caixa (R5)
+- [ ] #20 Maquineta de parceiro (Redeflex, Bilhete Agora, Rede Card), cadastrada como item do caixa, uma por maquineta: o caixa lança na tela do período o total em dinheiro do borderô do dia (negativo quando devolveu dinheiro), com a foto do borderô opcional ("sem borderô" na linha até anexar) e o valor explica o dinheiro a mais na contagem; a maquineta não entra na contagem
+- [ ] #21 O financeiro vê a conta corrente de cada maquineta (borderôs dos caixas, títulos gerados e ajustes como a comissão que o parceiro desconta) e gera o título a pagar ao parceiro pelo saldo, a qualquer hora, sem depender do caixa estar fechado
+- [ ] #22 Validação de ponta a ponta na tela do período pelos roteiros Valida do doc-4 (o core, a redefinição, os itens e os parceiros): venda em dinheiro, sangria e confirmação, cancelamento, recebimento no banco, fechamento com contagem e com corte, itens do caixa (R5)
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Reorganizada em 06/10/2026: critérios renumerados por assunto; os do M11 (transferência como pagamento) e do M12 (corte no cofre) que a redefinição do dinheiro substituiu foram fundidos nos que valem hoje (#11 e #18). Marcados = construídos e commitados (cada etapa foi commitada sem validação, a pedido do Fábio); a validação ficou concentrada no #20. O histórico dia a dia que estava aqui está no git (versões anteriores deste arquivo) e o detalhe técnico, nos "Como ficou no código" do doc-3 e do doc-4.
+Reorganizada em 06/10/2026: critérios renumerados por assunto; os do M11 (transferência como pagamento) e do M12 (corte no cofre) que a redefinição do dinheiro substituiu foram fundidos nos que valem hoje (#11 e #18). Marcados = construídos e commitados (cada etapa foi commitada sem validação, a pedido do Fábio); a validação ficou concentrada no #22. O histórico dia a dia que estava aqui está no git (versões anteriores deste arquivo) e o detalhe técnico, nos "Como ficou no código" do doc-3 e do doc-4.
 
 **Etapas e commits**
 - M10 razão do dinheiro e transacao = data do fato gerador: e82d49511 (02/10)
@@ -78,11 +77,11 @@ Reorganizada em 06/10/2026: critérios renumerados por assunto; os do M11 (trans
 
 **O que saiu pelo caminho** (não procurar no código): ajuste e transferência como pagamento (PagamentoService::transferir, TransferenciaAutorizador, motivo A, origem X na listagem); ajuste automático na abertura e no fechamento; permissão do caixa por grupo e filial; telas Saldos, Cadastros → Portadores e Movimento → Caixas; o item do M13 (pagamento na gaveta, título de repasse ao parceiro, Movimento dos Itens, tblcaixaitemlancamento).
 
-**DDL do go-live** (ordem completa no topo do doc-3): razao.sql, caixa_item.sql, portador_saldo.sql, portador_movimento_tipo.sql, caixa_item_dinamico.sql, antes do tipo_titulo_limpeza.sql.
+**DDL do go-live** (ordem completa no topo do doc-3): razao.sql, caixa_item.sql, portador_saldo.sql, portador_movimento_tipo.sql, caixa_item_dinamico.sql, caixa_item_maquineta.sql, antes do tipo_titulo_limpeza.sql.
 
 **Risco conhecido até a refatoração do PDV** (decisão do Fábio, 06/10): o MgCaixaSessao abre e fecha a gaveta sem a contagem dos itens, mas o saldo já conta os itens. Gaveta com chip ou ingresso fechada pelo PDV acusa diferença falsa (ex.: 10 chips de 25,00 = −250,00), o período seguinte abre sem os itens e a tela do item mostra o caixa zerado. Até lá, gaveta com item fecha pelo contas.
 
-**Itens de parceiro (#20 a #22, incluídos a pedido do Fábio em 06/10/2026; desenho antes de código)**: o que já foi conversado está no doc-4, seção Itens do caixa → "Itens de parceiro". Falta definir: o que um acerto abrange (período, data de corte ou o que está em aberto), se o título nasce do acerto por botão, como fica o estoque do bloquinho no corte e onde guardar a foto do borderô.
+**Maquinetas de parceiro (#20 e #21, desenho com o Fábio em 06/10/2026)**: decisões e "Como ficou no código" no doc-4, seção "Itens de parceiro". Cada maquineta é um item do caixa no modo M; o borderô é o tipo M no movimento do portador; a conta corrente da maquineta tem os borderôs (crédito), os títulos gerados e os ajustes (tblcaixaitemacerto). O antigo critério do bloquinho de ingresso com maquineta saiu: não existe hoje (Fábio, 06/10/2026). DDL do go-live: caixa_item_maquineta.sql, depois do caixa_item_dinamico.sql. Implementado e não validado.
 
 **Achado de passagem, já corrigido**: optional($m->UsuarioCriacao)->usuario num MgModel cai no acessor getUsuariocriacaoAttribute (método no PHP não diferencia maiúsculas) e devolve a string, então ->usuario sai nulo; usar $m->usuariocriacao / ->usuarioalteracao (trocado em 14 pontos de Caixa, Portador, Conferência e Pagamento).
 <!-- SECTION:NOTES:END -->

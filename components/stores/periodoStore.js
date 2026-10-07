@@ -1,7 +1,8 @@
 // Período do portador (doc-4, redefinição do dinheiro): o que entrou e saiu de um portador num
 // período e quanto sobrou. Domínio da tela /portador/{cod}/{codperiodo} do contas e dos dialogs de
-// movimento (@components/caixa: Transferir, Ajuste, Item), que servem qualquer portador (o item,
-// só em espécie). Ajuste, transferência e item são movimento do portador, não pagamento. Toda rota que
+// movimento (@components/caixa: Transferir, Ajuste, Item, Maquineta), que servem qualquer portador
+// (o item e a maquineta, só em espécie). Ajuste, transferência, item e borderô da maquineta são
+// movimento do portador, não pagamento. Toda rota que
 // muda devolve os períodos afetados (R14); o store troca os que tem pelo que veio.
 //   contas:   carregar(codportador, codportadorperiodo) (tela do período)
 //   caixa:    usar(portador, periodo, aoMudar) (MgCaixaSessao do PDV: recarrega a sessão)
@@ -64,7 +65,7 @@ export const periodoStore = defineStore('periodo', {
     periodos: [],
     // o período da tela, com lançamentos, resumo e (espécie) as contagens
     periodo: null,
-    // origem escolhida no resumo (V, T, I, X, J, A): filtra a lista de lançamentos
+    // origem escolhida no resumo (V, T, I, M, X, J, A): filtra a lista de lançamentos
     filtroOrigem: null,
     carregando: false,
     salvando: false,
@@ -74,6 +75,7 @@ export const periodoStore = defineStore('periodo', {
     dialogTransferir: false,
     dialogAvulso: false,
     dialogItem: false,
+    dialogMaquineta: false,
     dialogUsuarios: false,
     // codcaixaitem já escolhido ao abrir o dialog da entrada do item
     item: null,
@@ -261,6 +263,31 @@ export const periodoStore = defineStore('periodo', {
             codpdv: this.contexto.codpdv,
           }),
         sinal > 0 ? 'Entrada lançada' : 'Saída lançada',
+      )
+    },
+
+    // ==== borderô da maquineta de parceiro (em espécie): o total em dinheiro do dia ====
+
+    // valor com sinal: negativo devolveu dinheiro; a foto (base64) é opcional
+    lancarMaquineta({ codcaixaitem, valor, observacoes, transacao, anexoBase64 }) {
+      return this.executar(
+        () =>
+          api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/maquineta`, {
+            codcaixaitem,
+            valor,
+            observacoes: observacoes || null,
+            transacao: transacao || null,
+            anexoBase64: anexoBase64 || null,
+            codpdv: this.contexto.codpdv,
+          }),
+        anexoBase64 ? 'Borderô lançado' : 'Borderô lançado sem a foto: anexe depois',
+      )
+    },
+
+    anexarFotoBordero(codportadormovimento, anexoBase64) {
+      return this.executar(
+        () => api.post(`v1/portador-movimento/${codportadormovimento}/foto`, { anexoBase64 }),
+        'Foto do borderô anexada',
       )
     },
 

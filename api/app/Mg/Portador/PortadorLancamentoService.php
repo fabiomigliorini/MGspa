@@ -4,9 +4,11 @@ namespace Mg\Portador;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Mg\Caixa\CaixaItem;
 use Mg\Caixa\CaixaItemService;
 use Mg\Caixa\CaixaService;
+use Mg\Negocio\NegocioAnexoService;
 
 /**
  * Ajuste, transferencia e item (doc-4, redefinicao do dinheiro e "Itens do
@@ -14,6 +16,9 @@ use Mg\Caixa\CaixaService;
  *   Ajuste: so' a linha, com observacao; aceita uma diferenca sem explicacao.
  *   Item: a entrada (+) ou saida (-) do item do caixa no portador em especie,
  *   preco x quantidade; o item conta como cedula, vender nao lanca nada.
+ *   Maquineta: o total em dinheiro do bordero da maquineta de parceiro no
+ *   portador em especie (negativo = devolveu dinheiro), com a foto do bordero
+ *   (opcional, pode vir depois); credito na conta corrente da maquineta.
  *   Transferencia: sai de um portador e entra no outro, duas linhas ligadas
  *   pelo par, com o mesmo estado (este service mantem as duas iguais). Nasce
  *   feita se quem registra e' gestor do destino; senao fica a confirmar ate'
@@ -129,6 +134,9 @@ class PortadorLancamentoService
         if (!$portador->ehCaixa()) {
             abort(422, "{$portador->portador} não é portador em espécie: {$item->item} só se lança em dinheiro vivo.");
         }
+        if ($item->ehMaquineta()) {
+            abort(422, "{$item->item} é maquineta de parceiro: lance pelo borderô da maquineta.");
+        }
         if (!static::pode($portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
             PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Lançar item');
         }
@@ -153,9 +161,10 @@ class PortadorLancamentoService
         return $mov;
     }
 
+    // entrada ou saida do item, ou bordero da maquineta
     public static function cancelarItem(PortadorMovimento $mov, string $justificativa, ?int $livre = null): PortadorMovimento
     {
-        if ($mov->tipo != PortadorMovimento::TIPO_ITEM) {
+        if (!in_array($mov->tipo, [PortadorMovimento::TIPO_ITEM, PortadorMovimento::TIPO_MAQUINETA])) {
             abort(422, 'Não é lançamento de item do caixa.');
         }
         $portador = $mov->Portador;
@@ -171,6 +180,94 @@ class PortadorLancamentoService
         static::cancelarLinha($mov, $justificativa);
         PortadorPeriodoService::recalcular($mov->PortadorPeriodo);
         return $mov;
+    }
+
+    // ==== bordero da maquineta de parceiro ====
+
+    const DISCO = 'negocio-anexo';
+
+    // o total em dinheiro do bordero (com sinal: negativo devolveu dinheiro)
+    // no portador em especie; a foto e' opcional (a tela avisa sem bordero)
+    public static function lancarMaquineta(PortadorPeriodo $periodo, CaixaItem $item, float $valor, ?string $observacoes = null, ?Carbon $transacao = null, ?string $anexoBase64 = null, ?int $livre = null): PortadorMovimento
+    {
+        $portador = $periodo->Portador;
+        if (!$item->ehMaquineta()) {
+            abort(422, "{$item->item} não é maquineta de parceiro.");
+        }
+        if ($item->inativo) {
+            abort(422, "{$item->item} está inativa.");
+        }
+        if (!$portador->ehCaixa()) {
+            abort(422, "{$portador->portador} não é portador em espécie: o borderô da maquineta é o dinheiro que ficou na gaveta.");
+        }
+        if (!static::pode($portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
+            PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Lançar borderô da maquineta');
+        }
+        static::travar([$portador->codportador]);
+        $periodo->refresh();
+        static::exigirNaoFechado($periodo);
+        $valor = round($valor, 2);
+        if ($valor == 0) {
+            abort(422, 'Informe o valor em dinheiro do borderô.');
+        }
+        $observacoes = trim($observacoes ?? '');
+        $mov = PortadorMovimento::create([
+            'codportador' => $portador->codportador,
+            'codportadorperiodo' => $periodo->codportadorperiodo,
+            'tipo' => PortadorMovimento::TIPO_MAQUINETA,
+            'estado' => PortadorMovimento::ESTADO_EFETIVADO,
+            'codcaixaitem' => $item->codcaixaitem,
+            'valor' => $valor,
+            'transacao' => static::dataNoPeriodo($periodo, $transacao),
+            'observacoes' => $observacoes === '' ? null : mb_substr($observacoes, 0, 300),
+        ]);
+        PortadorPeriodoService::recalcular($periodo);
+        if (!empty($anexoBase64)) {
+            static::gravarFoto($mov, $anexoBase64);
+        }
+        return $mov;
+    }
+
+    // a foto do bordero depois do lancamento (nao muda valor: vale com o
+    // periodo fechado), por quem opera o portador
+    public static function anexarFoto(PortadorMovimento $mov, string $anexoBase64): string
+    {
+        if ($mov->tipo != PortadorMovimento::TIPO_MAQUINETA || !$mov->valendo()) {
+            abort(422, 'Foto só no borderô de maquineta que vale.');
+        }
+        $portador = $mov->Portador;
+        if (!static::pode($portador, PortadorUsuario::PAPEL_OPERADOR, null)) {
+            PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Anexar foto do borderô');
+        }
+        return static::gravarFoto($mov, $anexoBase64);
+    }
+
+    private static function diretorioFoto(int $codportadormovimento): string
+    {
+        return "portador-movimento/{$codportadormovimento}";
+    }
+
+    private static function gravarFoto(PortadorMovimento $mov, string $anexoBase64): string
+    {
+        $arquivo = static::diretorioFoto($mov->codportadormovimento) . '/' . date('Y-m-d-H-i-s') . '-' . uniqid() . '.jpeg';
+        Storage::disk(static::DISCO)->put($arquivo, NegocioAnexoService::jpeg($anexoBase64, 1600, 1600));
+        return basename($arquivo);
+    }
+
+    public static function fotos(int $codportadormovimento): array
+    {
+        $arquivos = Storage::disk(static::DISCO)->files(static::diretorioFoto($codportadormovimento));
+        sort($arquivos, SORT_STRING);
+        return array_map('basename', $arquivos);
+    }
+
+    public static function caminhoFoto(int $codportadormovimento, string $arquivo): string
+    {
+        $caminho = static::diretorioFoto($codportadormovimento) . '/' . basename($arquivo);
+        if (!Storage::disk(static::DISCO)->exists($caminho)) {
+            abort(404, 'Foto inexistente!');
+        }
+        return $caminho;
     }
 
     private static function cancelarLinha(PortadorMovimento $mov, string $justificativa): void

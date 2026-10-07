@@ -3,13 +3,15 @@
 // esquerda (hora e o ícone da origem) e, à direita, o valor e o saldo corrente sempre na mesma
 // coluna (no celular, o saldo embaixo do valor). Pagamento (venda, título, vale) abre o
 // pagamento; ajuste, transferência e item (entrada ou saída de item do caixa, em espécie) são
-// movimento do portador (a transferência leva ao outro portador, no período onde o valor caiu). A
-// confirmar em amarelo; cancelado riscado e fora do saldo, com a justificativa. Confirmar e
-// cancelar ficam na linha.
+// movimento do portador (a transferência leva ao outro portador, no período onde o valor caiu). O
+// borderô da maquineta de parceiro (em espécie) mostra "sem borderô" enquanto não tem a foto, e a
+// câmera da linha vê e anexa. A confirmar em amarelo; cancelado riscado e fora do saldo, com a
+// justificativa. Confirmar e cancelar ficam na linha.
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
+import BorderoFotosDialog from '@components/caixa/BorderoFotosDialog.vue'
 import {
   formataNumero,
   formataData,
@@ -30,6 +32,22 @@ const podeMovimentar = computed(
 const temItens = computed(
   () => !!portador.value?.ehCaixa && (periodo.value?.itens ?? []).some((i) => !i.inativo),
 )
+
+// borderô da maquineta de parceiro: portador em espécie com maquineta ativa
+const temMaquinetas = computed(
+  () => !!portador.value?.ehCaixa && (periodo.value?.maquinetas ?? []).length > 0,
+)
+
+// as fotos do borderô da linha escolhida (a linha vem do período, atualiza ao anexar)
+const fotosDe = ref(null)
+const dialogFotos = ref(false)
+const linhaFotos = computed(() =>
+  (periodo.value?.lancamentos ?? []).find((l) => l.codportadormovimento === fotosDe.value),
+)
+function abrirFotos(l) {
+  fotosDe.value = l.codportadormovimento
+  dialogFotos.value = true
+}
 
 // os cancelados (riscados) só aparecem no toggle
 const mostrarCancelados = ref(false)
@@ -61,12 +79,13 @@ const dias = computed(() => {
   return ret
 })
 
-// a origem do lançamento (V venda, T títulos e vales, I item do caixa, X transferência, J ajuste,
-// A taxa/tarifa/rendimento)
+// a origem do lançamento (V venda, T títulos e vales, I item do caixa, M maquineta de parceiro,
+// X transferência, J ajuste, A taxa/tarifa/rendimento)
 const ICONE = {
   V: 'shopping_cart',
   T: 'request_quote',
   I: 'inventory_2',
+  M: 'point_of_sale',
   X: 'swap_horiz',
   J: 'tune',
   A: 'account_balance',
@@ -151,6 +170,17 @@ function cancelar(l) {
           <q-tooltip>Entrada de item</q-tooltip>
         </q-btn>
         <q-btn
+          v-if="temMaquinetas"
+          flat
+          round
+          size="sm"
+          color="grey-7"
+          icon="point_of_sale"
+          @click="store.dialogMaquineta = true"
+        >
+          <q-tooltip>Borderô de maquineta</q-tooltip>
+        </q-btn>
+        <q-btn
           flat
           round
           size="sm"
@@ -219,6 +249,20 @@ function cancelar(l) {
                 <span v-if="l.detalhe">{{ l.detalhe }}</span>
                 <q-badge v-if="pendente(l)" color="amber-8" label="a confirmar" />
                 <q-badge v-if="cancelado(l)" color="grey-5" label="cancelado" />
+                <q-badge v-if="l.semBordero" color="orange-8" label="sem borderô" />
+                <q-btn
+                  v-if="l.tipo === 'M' && (l.fotos?.length || l.podeAnexar)"
+                  flat
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="photo_camera"
+                  @click.stop.prevent="abrirFotos(l)"
+                >
+                  <q-tooltip>{{
+                    l.fotos?.length ? 'Ver a foto do borderô' : 'Anexar a foto'
+                  }}</q-tooltip>
+                </q-btn>
                 <q-btn
                   v-if="l.contraparte"
                   flat
@@ -286,5 +330,13 @@ function cancelar(l) {
     </q-card-section>
 
     <MgEmptyState v-else plain icon="receipt_long">Nenhum lançamento.</MgEmptyState>
+
+    <BorderoFotosDialog
+      v-model="dialogFotos"
+      :codportadormovimento="fotosDe"
+      :fotos="linhaFotos?.fotos ?? []"
+      :pode-anexar="!!linhaFotos?.podeAnexar"
+      :anexar="(b) => store.anexarFotoBordero(fotosDe, b)"
+    />
   </q-card>
 </template>

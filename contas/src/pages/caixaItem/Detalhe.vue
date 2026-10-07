@@ -3,7 +3,8 @@
 // período fechado de cada um mais as entradas depois dele, como o saldo do dinheiro; com o total):
 // só os com saldo, ou também os zerados. Clicar no caixa abre os períodos dele em que o item mexeu,
 // com as entradas e saídas. Embaixo, os tipos (descrição + preço) já lançados, cada um com o editar
-// da descrição, que muda em tudo. Criação, editar, inativar e excluir no cabeçalho.
+// da descrição, que muda em tudo. Criação, editar, inativar e excluir no cabeçalho. A maquineta de
+// parceiro não tem saldo nos caixas: mostra a conta corrente (o que devemos ao parceiro).
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -13,6 +14,9 @@ import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import CaixaItemDialog from 'components/caixaItem/CaixaItemDialog.vue'
 import CaixaItemFechamentosDialog from 'components/caixaItem/CaixaItemFechamentosDialog.vue'
 import CaixaItemTipoDialog from 'components/caixaItem/CaixaItemTipoDialog.vue'
+import CaixaItemContaCorrente from 'components/caixaItem/CaixaItemContaCorrente.vue'
+import CaixaItemTituloDialog from 'components/caixaItem/CaixaItemTituloDialog.vue'
+import CaixaItemAjusteDialog from 'components/caixaItem/CaixaItemAjusteDialog.vue'
 import { formataNumero, formataTimestamp } from '@components/formatters'
 import { useCaixaItemStore } from 'src/stores/caixaItemStore'
 
@@ -23,6 +27,7 @@ const store = useCaixaItemStore()
 const { item, saldos, tipos, loading } = storeToRefs(store)
 
 const codcaixaitem = computed(() => Number(route.params.codcaixaitem))
+const maquineta = computed(() => item.value?.modo === 'M')
 const semSaldo = ref(false)
 const caixas = computed(() =>
   semSaldo.value ? saldos.value : saldos.value.filter((s) => s.quantidade > 0),
@@ -57,6 +62,9 @@ watch(codcaixaitem, (cod) => cod && store.carregar(cod))
         </div>
         <div class="col" style="min-width: 0">
           <div class="text-h5 text-grey-9 ellipsis">{{ item.item }}</div>
+          <div v-if="maquineta" class="text-caption text-grey-7 ellipsis">
+            Maquineta de {{ item.pessoa }} · {{ item.filial }} · {{ item.contacontabil }}
+          </div>
           <div v-if="item.inativo" class="text-caption text-grey-7">
             Inativo desde {{ formataTimestamp(item.inativo) }}
           </div>
@@ -84,7 +92,9 @@ watch(codcaixaitem, (cod) => cod && store.carregar(cod))
         </div>
       </div>
 
-      <q-card v-if="saldos.length" flat bordered class="q-mb-md">
+      <CaixaItemContaCorrente v-if="maquineta" />
+
+      <q-card v-else-if="saldos.length" flat bordered class="q-mb-md">
         <q-list separator>
           <q-item>
             <q-item-section>
@@ -144,7 +154,7 @@ watch(codcaixaitem, (cod) => cod && store.carregar(cod))
         Nenhum caixa mexeu com este item.
       </MgEmptyState>
 
-      <q-card v-if="tipos.length" flat bordered class="q-mb-md">
+      <q-card v-if="!maquineta && tipos.length" flat bordered class="q-mb-md">
         <q-list separator>
           <q-item>
             <q-item-section>
@@ -174,5 +184,7 @@ watch(codcaixaitem, (cod) => cod && store.carregar(cod))
     <CaixaItemDialog />
     <CaixaItemFechamentosDialog />
     <CaixaItemTipoDialog />
+    <CaixaItemTituloDialog />
+    <CaixaItemAjusteDialog />
   </q-page>
 </template>

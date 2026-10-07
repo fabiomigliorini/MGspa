@@ -1326,6 +1326,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // ajuste e transferencia: movimento do portador, nao pagamento
     Route::post('portador-periodo/{id}/ajuste', '\Mg\Portador\PortadorLancamentoController@ajuste')->whereNumber('id');
     Route::post('portador-periodo/{id}/item', '\Mg\Portador\PortadorLancamentoController@item')->whereNumber('id');
+    Route::post('portador-periodo/{id}/maquineta', '\Mg\Portador\PortadorLancamentoController@maquineta')->whereNumber('id');
+    Route::post('portador-movimento/{id}/foto', '\Mg\Portador\PortadorLancamentoController@foto')->whereNumber('id');
+    Route::get('portador-movimento/{id}/foto/{arquivo}', '\Mg\Portador\PortadorLancamentoController@mostrarFoto')->whereNumber('id');
     Route::post('portador-movimento/transferencia', '\Mg\Portador\PortadorLancamentoController@transferir');
     Route::post('portador-movimento/{id}/confirmar', '\Mg\Portador\PortadorLancamentoController@confirmar')->whereNumber('id');
     Route::post('portador-movimento/{id}/cancelar', '\Mg\Portador\PortadorLancamentoController@cancelar')->whereNumber('id');
@@ -1353,6 +1356,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@destroy')->whereNumber('id');
     Route::post('caixa-item/{id}/inativo', '\Mg\Caixa\CaixaItemController@inativar')->whereNumber('id');
     Route::delete('caixa-item/{id}/inativo', '\Mg\Caixa\CaixaItemController@ativar')->whereNumber('id');
+    Route::get('caixa-item/{id}/conta', '\Mg\Caixa\CaixaItemController@conta')->whereNumber('id');
+    Route::post('caixa-item/{id}/conta/titulo', '\Mg\Caixa\CaixaItemController@gerarTitulo')->whereNumber('id');
+    Route::post('caixa-item/{id}/conta/ajuste', '\Mg\Caixa\CaixaItemController@ajustarConta')->whereNumber('id');
+    Route::post('caixa-item-acerto/{id}/cancelar', '\Mg\Caixa\CaixaItemController@cancelarAcerto')->whereNumber('id');
     Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
     Route::get('portador/{codportador}/info', '\Mg\Portador\PortadorController@info');
     Route::get('portador/{codportador}/extratos', '\Mg\Portador\PortadorController@listaExtratos');
