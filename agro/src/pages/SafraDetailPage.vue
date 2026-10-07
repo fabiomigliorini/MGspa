@@ -9,7 +9,6 @@ import { useCargaStore } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 import { sugerirCor } from 'src/utils/coresTalhao'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import { formataData } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MapaTalhoes from 'components/MapaTalhoes.vue'
 import IconeCultura from 'components/IconeCultura.vue'
@@ -530,14 +529,11 @@ onMounted(async () => {
                     <q-badge v-if="!l.geometria" color="grey-5" label="sem mapa" class="q-ml-xs" />
                   </q-item-label>
 
-                  <div class="row q-col-gutter-md q-mt-xs">
+                  <div class="row q-col-gutter-sm items-center q-pa-none">
                     <!-- Plantado -->
                     <div class="col-6 col-sm-3">
                       <div class="text-caption text-grey-6">Plantado</div>
                       <div>{{ fmt(l.areaplantada, 1) }} ha</div>
-                      <div v-if="l.dataplantio" class="text-caption text-grey-6">
-                        {{ formataData(l.dataplantio) }}
-                      </div>
                     </div>
                     <!-- Previsão -->
                     <div class="col-6 col-sm-3">
@@ -551,7 +547,7 @@ onMounted(async () => {
                       <div>{{ fmt(mediaLinha(l).colhido) }} sc</div>
                     </div>
                     <!-- Média -->
-                    <div class="col-6 col-sm-3">
+                    <div class="col-6 col-sm-2">
                       <div class="text-caption text-grey-6">Média</div>
                       <div>
                         <span v-if="mediaLinha(l).realizada != null">
@@ -562,24 +558,25 @@ onMounted(async () => {
                         <span v-else class="text-grey-5"> / —</span>
                       </div>
                     </div>
+                    <!-- Encerrado: QCheckbox cancela o clique (stopAndPrevent),
+                         então marcar não abre o talhão. -->
+                    <div class="col-check text-center">
+                      <div class="text-caption text-grey-6">Encerrado</div>
+                      <q-checkbox
+                        :model-value="!!l.finalizado"
+                        checked-icon="check_circle"
+                        unchecked-icon="radio_button_unchecked"
+                        color="green-6"
+                        size="lg"
+                        dense
+                        @update:model-value="(v) => store.marcarFinalizado(codsafra, l, v)"
+                      >
+                        <q-tooltip>{{
+                          l.finalizado ? 'Talhão finalizado' : 'Marcar talhão como finalizado'
+                        }}</q-tooltip>
+                      </q-checkbox>
+                    </div>
                   </div>
-                </q-item-section>
-                <!-- Talhão finalizado? O QCheckbox cancela o clique (stopAndPrevent),
-                     então marcar não abre o talhão. -->
-                <q-item-section side top class="col-check">
-                  <q-checkbox
-                    :model-value="!!l.finalizado"
-                    checked-icon="check_circle"
-                    unchecked-icon="radio_button_unchecked"
-                    color="green-6"
-                    size="lg"
-                    dense
-                    @update:model-value="(v) => store.marcarFinalizado(codsafra, l, v)"
-                  >
-                    <q-tooltip>{{
-                      l.finalizado ? 'Talhão finalizado' : 'Marcar talhão como finalizado'
-                    }}</q-tooltip>
-                  </q-checkbox>
                 </q-item-section>
               </q-item>
 
@@ -609,11 +606,11 @@ onMounted(async () => {
                         <span v-else class="text-grey-5">—</span>
                       </div>
                     </div>
+                    <!-- Mesma coluna do check "finalizado" das linhas (vazia): sem ela as
+                         colunas do Total ficam mais largas e desalinham. -->
+                    <div class="col-check" />
                   </div>
                 </q-item-section>
-                <!-- Mesma coluna do check "finalizado" das linhas (vazia): sem ela as
-                     colunas do Total ficam mais largas e desalinham. -->
-                <q-item-section side top class="col-check" />
               </q-item>
             </q-list>
           </q-card>
@@ -668,6 +665,7 @@ onMounted(async () => {
    o check (com tooltip) e a coluna vazia do Total mediam diferente, e a grade de
    métricas desalinhava. */
 .col-check {
-  width: 48px;
+  width: 72px;
+  flex: 0 0 auto;
 }
 </style>
