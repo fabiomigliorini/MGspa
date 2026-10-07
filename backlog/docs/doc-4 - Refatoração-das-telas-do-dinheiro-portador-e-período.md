@@ -722,7 +722,7 @@ o passado e o momento, lançar e alterar no mesmo lugar.
 8. **Correções na linha** (as do M9): corrigir crédito/débito, maquineta, período, bandeira,
    autorização, parcelas e valor; registro indevido. Só no período não conferido.
 9. **Fica para depois**: a dashboard de pendências do gerente (unidade) e do financeiro (geral), que
-   leva cada item à tela onde ele está (TASK-201). O resto de Fechamentos (cheque, vale, duplicata,
+   leva cada item à tela onde ele está (TASK-203). O resto de Fechamentos (cheque, vale, duplicata,
    venda com diferença, PIX) continua como está.
 
 ### Como ficou no código (07/10/2026; não validado)
