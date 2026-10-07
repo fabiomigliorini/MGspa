@@ -439,6 +439,18 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
    (como ajuste e item).
 7. **Bloquinho de ingresso com maquineta** (o bloquinho como cédula e a maquineta pelo borderô, no
    mesmo item): não existe hoje; saiu do escopo.
+8. **Saldo na lista** (07/10/2026, TASK-39 #23, a fazer): a lista de Itens do Caixa mostra o saldo a
+   pagar de cada maquineta, para o financeiro não abrir uma por uma.
+9. **Até a refatoração do PDV** (07/10/2026): o borderô só se lança na tela do portador do
+   contas, que não abre para o grupo Caixa (só Administrador, Financeiro e Gerente). Quem tem
+   acesso lança o borderô antes de fechar a gaveta; fechada pelo PDV sem ele, o dinheiro da
+   maquineta aparece como sobra. O botão na tela do caixa do PDV, para o próprio caixa lançar, é o
+   M9.7 da TASK-188 (o `MaquinetaCaixaDialog` já é compartilhado).
+10. **Virada** (07/10/2026): depois do `caixa_item_maquineta.sql`, as maquinetas reais (parceiro,
+    filial, conta) e o saldo inicial de cada uma (ajuste "saldo inicial" na conta corrente) são
+    cadastrados pela tela, pelo Fábio ou pelo financeiro; sem script.
+11. **Leitura do valor pela foto** (TASK-200, opcional): uma LLM com visão sugere o valor em
+    dinheiro a partir da foto do borderô; o caixa confere antes de lançar.
 
 ### Como ficou no código (04–06/10/2026; não validado)
 

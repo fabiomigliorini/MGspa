@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-06 23:59'
+updated_date: '2026-10-07 02:57'
 labels:
   - negocios
   - contas
@@ -58,6 +58,7 @@ Consolidou TASK-33, TASK-34, TASK-48 e TASK-84 (arquivadas).
 - [ ] #20 Maquineta de parceiro (Redeflex, Bilhete Agora, Rede Card), cadastrada como item do caixa, uma por maquineta: o caixa lança na tela do período o total em dinheiro do borderô do dia (negativo quando devolveu dinheiro), com a foto do borderô opcional ("sem borderô" na linha até anexar) e o valor explica o dinheiro a mais na contagem; a maquineta não entra na contagem
 - [ ] #21 O financeiro vê a conta corrente de cada maquineta (borderôs dos caixas, títulos gerados e ajustes como a comissão que o parceiro desconta) e gera o título a pagar ao parceiro pelo saldo, a qualquer hora, sem depender do caixa estar fechado
 - [ ] #22 Validação de ponta a ponta na tela do período pelos roteiros Valida do doc-4 (o core, a redefinição, os itens e os parceiros): venda em dinheiro, sangria e confirmação, cancelamento, recebimento no banco, fechamento com contagem e com corte, itens do caixa (R5)
+- [ ] #23 A lista de Itens do Caixa mostra o saldo a pagar de cada maquineta de parceiro, sem precisar abrir uma por uma
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -84,4 +85,8 @@ Reorganizada em 06/10/2026: critérios renumerados por assunto; os do M11 (trans
 **Maquinetas de parceiro (#20 e #21, desenho com o Fábio em 06/10/2026)**: decisões e "Como ficou no código" no doc-4, seção "Itens de parceiro". Cada maquineta é um item do caixa no modo M; o borderô é o tipo M no movimento do portador; a conta corrente da maquineta tem os borderôs (crédito), os títulos gerados e os ajustes (tblcaixaitemacerto). O antigo critério do bloquinho de ingresso com maquineta saiu: não existe hoje (Fábio, 06/10/2026). DDL do go-live: caixa_item_maquineta.sql, depois do caixa_item_dinamico.sql. Implementado e não validado.
 
 **Achado de passagem, já corrigido**: optional($m->UsuarioCriacao)->usuario num MgModel cai no acessor getUsuariocriacaoAttribute (método no PHP não diferencia maiúsculas) e devolve a string, então ->usuario sai nulo; usar $m->usuariocriacao / ->usuarioalteracao (trocado em 14 pontos de Caixa, Portador, Conferência e Pagamento).
+
+**Risco conhecido do borderô até a refatoração do PDV** (decisão do Fábio, 07/10/2026): o PDV não tem o botão do borderô da maquineta. O borderô é lançado no contas antes de fechar a gaveta, por quem tem acesso à tela do portador (Administrador, Financeiro, Gerente; o grupo Caixa não abre o contas); fechada pelo PDV sem o borderô, o dinheiro da maquineta aparece como sobra. O botão no PDV, para o próprio caixa lançar, é o M9.7 da TASK-188.
+
+**Virada das maquinetas** (Fábio, 07/10/2026): as maquinetas reais (parceiro, filial, conta) e o saldo inicial de cada uma (ajuste "saldo inicial" na conta corrente) são cadastrados pela tela, pelo Fábio ou pelo financeiro, depois do caixa_item_maquineta.sql; sem script.
 <!-- SECTION:NOTES:END -->
