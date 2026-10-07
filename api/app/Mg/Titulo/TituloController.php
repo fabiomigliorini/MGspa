@@ -123,10 +123,13 @@ class TituloController extends MgController
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);
 
-        // título gerado automaticamente (negócio/agrupamento) só pode ser estornado
-        // pela origem que o criou.
+        // título gerado automaticamente (negócio/agrupamento/maquineta de
+        // parceiro) só pode ser estornado pela origem que o criou.
         $titulo = Titulo::findOrFail($codtitulo);
-        if (!empty($titulo->codnegocioparcela) || !empty($titulo->codtituloagrupamento)) {
+        if ($titulo->CaixaItemAcerto) {
+            abort(422, "Título da maquineta {$titulo->CaixaItemAcerto->CaixaItem->item}: cancele o débito na conta corrente da maquineta, que estorna o título.");
+        }
+        if ($titulo->geradoAutomaticamente()) {
             throw new \Exception("Título gerado automaticamente não pode ser estornado individualmente!", 1);
         }
 

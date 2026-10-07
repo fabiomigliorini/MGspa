@@ -1320,6 +1320,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('portador-periodo/{id}/dividir', '\Mg\Portador\PortadorPeriodoController@dividir')->whereNumber('id');
     Route::post('portador-periodo/{id}/unificar', '\Mg\Portador\PortadorPeriodoController@unificar')->whereNumber('id');
     Route::get('portador-periodo/{id}/bordero', '\Mg\Portador\PortadorPeriodoController@bordero')->whereNumber('id');
+    Route::post('portador-periodo/{id}/bordero/{impressora}', '\Mg\Portador\PortadorPeriodoController@imprimirBordero')->whereNumber('id');
     // taxa, tarifa e rendimento do banco (pagamento sem pessoa)
     Route::post('portador-periodo/lancamento', '\Mg\Portador\PortadorPeriodoController@lancamento');
     Route::post('portador-periodo/lancamento/{codpagamento}/cancelar', '\Mg\Portador\PortadorPeriodoController@cancelarLancamento')->whereNumber('codpagamento');
@@ -1332,17 +1333,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('portador-movimento/transferencia', '\Mg\Portador\PortadorLancamentoController@transferir');
     Route::post('portador-movimento/{id}/confirmar', '\Mg\Portador\PortadorLancamentoController@confirmar')->whereNumber('id');
     Route::post('portador-movimento/{id}/cancelar', '\Mg\Portador\PortadorLancamentoController@cancelar')->whereNumber('id');
-    // tela do caixa do PDV (MgCaixaSessao; sera' refatorada)
-    Route::get('caixa/gaveta/{codportador}', '\Mg\Caixa\CaixaController@gaveta')->whereNumber('codportador');
-    Route::post('caixa/gaveta/{codportador}/abrir', '\Mg\Caixa\CaixaController@abrir')->whereNumber('codportador');
-    Route::get('caixa/sessao/{id}', '\Mg\Caixa\CaixaController@show')->whereNumber('id');
-    Route::post('caixa/sessao/{id}/fechar', '\Mg\Caixa\CaixaController@fechar')->whereNumber('id');
-    Route::post('caixa/sessao/{id}/datas', '\Mg\Caixa\CaixaController@datas')->whereNumber('id');
-    Route::post('caixa/sessao/{id}/reabrir', '\Mg\Caixa\CaixaController@reabrir')->whereNumber('id');
-    Route::post('caixa/sessao/{id}/avulso', '\Mg\Caixa\CaixaController@avulso')->whereNumber('id');
-    Route::post('caixa/avulso/{codportadormovimento}/cancelar', '\Mg\Caixa\CaixaController@cancelarAvulso')->whereNumber('codportadormovimento');
-    Route::get('caixa/sessao/{id}/bordero', '\Mg\Caixa\CaixaController@borderoTela')->whereNumber('id');
-    Route::post('caixa/sessao/{id}/bordero/{impressora}', '\Mg\Caixa\CaixaController@imprimirBordero')->whereNumber('id');
     // itens do caixa (doc-4, "Itens do caixa")
     Route::get('caixa-item', '\Mg\Caixa\CaixaItemController@index');
     Route::get('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@show')->whereNumber('id');
@@ -1356,6 +1346,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@destroy')->whereNumber('id');
     Route::post('caixa-item/{id}/inativo', '\Mg\Caixa\CaixaItemController@inativar')->whereNumber('id');
     Route::delete('caixa-item/{id}/inativo', '\Mg\Caixa\CaixaItemController@ativar')->whereNumber('id');
+    Route::post('caixa-item/saldo/recalcular', '\Mg\Caixa\CaixaItemController@recalcularSaldos');
+    Route::post('caixa-item/{id}/saldo/recalcular', '\Mg\Caixa\CaixaItemController@recalcularSaldo')->whereNumber('id');
     Route::get('caixa-item/{id}/conta', '\Mg\Caixa\CaixaItemController@conta')->whereNumber('id');
     Route::post('caixa-item/{id}/conta/titulo', '\Mg\Caixa\CaixaItemController@gerarTitulo')->whereNumber('id');
     Route::post('caixa-item/{id}/conta/ajuste', '\Mg\Caixa\CaixaItemController@ajustarConta')->whereNumber('id');

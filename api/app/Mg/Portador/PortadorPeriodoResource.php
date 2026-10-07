@@ -96,9 +96,10 @@ class PortadorPeriodoResource extends Resource
         $ret['lancamentos'] = $this->lancamentos();
         $ret['resumo'] = $this->resumo($ret['lancamentos']);
         if ($caixa) {
-            $ret['contagem'] = $this->contagem();
+            $anterior = PortadorPeriodoService::anterior($this->resource);
+            $ret['contagem'] = $this->contagem($anterior);
             $ret['pendentes'] = PortadorLancamentoService::pendentes($this->resource);
-            $ret['itens'] = $this->itens();
+            $ret['itens'] = $this->itens($anterior);
             $ret['maquinetas'] = CaixaItemService::ativos(CaixaItem::MODO_MAQUINETA)
                 ->map(fn (CaixaItem $i) => ['codcaixaitem' => $i->codcaixaitem, 'item' => $i->item])
                 ->values()->all();
@@ -107,8 +108,9 @@ class PortadorPeriodoResource extends Resource
     }
 
     // o contado (cedulas, moedas e itens) no inicio e no fim e a diferenca
-    // para o saldo inicial e final (a inicial so' confere)
-    private function contagem(): array
+    // para o saldo inicial e final (a inicial so' confere); `anterior`: a
+    // contagem final do periodo anterior, para copiar na inicial
+    private function contagem(?PortadorPeriodo $anterior): array
     {
         $ret = [];
         foreach (['inicial' => 'saldoinicial', 'final' => 'saldofinal'] as $momento => $saldo) {
@@ -120,6 +122,10 @@ class PortadorPeriodoResource extends Resource
                 'diferenca' => $contado === null ? null : round($contado - (float) $this->$saldo, 2),
             ];
         }
+        $ret['anterior'] = $anterior && ($anterior->contagemfinal !== null || $anterior->contagemitensfinal !== null) ? [
+            'contagem' => static::objeto($anterior->contagemfinal),
+            'itens' => static::objeto($anterior->contagemitensfinal),
+        ] : null;
         return $ret;
     }
 
@@ -128,10 +134,9 @@ class PortadorPeriodoResource extends Resource
     // no portador, de um dia para o outro ate' zerar), cada um com os precos (e
     // descricoes) que ja' passaram: a contagem final do anterior, as deste
     // periodo e as entradas e saidas dele que valem
-    private function itens(): array
+    private function itens(?PortadorPeriodo $anterior): array
     {
         $fontes = [$this->contagemitensinicial, $this->contagemitensfinal];
-        $anterior = PortadorPeriodoService::anterior($this->resource);
         if ($anterior) {
             $fontes[] = $anterior->contagemitensfinal;
         }
@@ -173,7 +178,9 @@ class PortadorPeriodoResource extends Resource
     }
 
     // as linhas do periodo como extrato: o fato, a origem em texto, o detalhe,
-    // o valor e o saldo corrente (das que valem)
+    // o valor e o saldo corrente (das que valem). No caixa do PDV (a gaveta
+    // dele, livre), as acoes da linha sao so' as do caixa: cancelar a
+    // transferencia a confirmar e o bordero da maquineta e anexar a foto
     private function lancamentos(): array
     {
         $linhas = PortadorMovimento::where('codportadorperiodo', $this->codportadorperiodo)
@@ -190,8 +197,9 @@ class PortadorPeriodoResource extends Resource
         $portador = $this->Portador;
         $saldo = (float) $this->saldoinicial;
         $mutavel = !$this->fechado();
-        $operador = PortadorAutorizador::pode($portador->codportador, PortadorUsuario::PAPEL_OPERADOR);
-        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $portador, $mutavel, $operador) {
+        $pdv = PortadorAutorizador::livre() == $portador->codportador;
+        $operador = !$pdv && PortadorAutorizador::pode($portador->codportador, PortadorUsuario::PAPEL_OPERADOR);
+        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $portador, $mutavel, $operador, $pdv) {
             $l->setRelation('Portador', $portador);
             $valendo = $l->valendo();
             if ($valendo) {
@@ -240,8 +248,8 @@ class PortadorPeriodoResource extends Resource
                         'codcaixaitem' => $l->codcaixaitem,
                         'fotos' => $fotos,
                         'semBordero' => $valendo && empty($fotos),
-                        'podeAnexar' => $valendo && $operador,
-                        'podeCancelar' => $valendo && $mutavel && $operador,
+                        'podeAnexar' => $valendo && ($operador || $pdv),
+                        'podeCancelar' => $valendo && $mutavel && ($operador || $pdv),
                     ]);
                 case PortadorMovimento::TIPO_TRANSFERENCIA:
                     return array_merge($ret, [
@@ -253,8 +261,10 @@ class PortadorPeriodoResource extends Resource
                             'portador' => optional($l->Par->Portador)->portador,
                             'codportadorperiodo' => $l->Par->codportadorperiodo,
                         ] : null,
-                        'podeConfirmar' => PortadorLancamentoService::podeConfirmar($l),
-                        'podeCancelar' => $valendo && PortadorLancamentoService::podeCancelar($l),
+                        'podeConfirmar' => !$pdv && PortadorLancamentoService::podeConfirmar($l),
+                        'podeCancelar' => $valendo && $mutavel && ($pdv
+                            ? PortadorLancamentoService::cancelaNoPdv($l)
+                            : PortadorLancamentoService::podeCancelar($l)),
                     ]);
             }
             $pag = $l->Pagamento;
@@ -262,6 +272,8 @@ class PortadorPeriodoResource extends Resource
             return array_merge($ret, [
                 'origem' => $origem,
                 'estado' => $pag->estado,
+                // a linha leva ao negocio; sem ele, ao pagamento
+                'codnegocio' => $pag->codnegocio,
                 'texto' => static::texto($pag, $origem),
                 'detalhe' => PagamentoService::descricao($pag),
                 'documento' => PagamentoListaResource::documento($pag, $origem),

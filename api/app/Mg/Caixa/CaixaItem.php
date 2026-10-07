@@ -49,6 +49,8 @@ class CaixaItem extends MgModel
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
         'inativo' => 'datetime',
+        'saldo' => 'float',
+        'saldoquantidade' => 'integer',
     ];
 
     public function ehMaquineta(): bool

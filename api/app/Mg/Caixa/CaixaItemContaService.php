@@ -15,9 +15,9 @@ use Mg\Titulo\TituloService;
  *   Debito: o titulo a pagar gerado aqui (tblcaixaitemacerto tipo T).
  *   Ajuste: com sinal e observacao (comissao que o parceiro desconta, saldo
  *   inicial) (tblcaixaitemacerto tipo A).
- * Cada botao faz uma coisa: gerar titulo so' cria o titulo (em aberto, pago
- * pelo caminho normal do contas) e o debito ligado a ele; cancelar o debito
- * recusa enquanto o titulo nao for estornado.
+ * Gerar titulo cria o titulo (em aberto, pago pelo caminho normal do contas)
+ * e o debito ligado a ele; o titulo e' desta tela: cancelar o debito estorna o
+ * titulo (pedido do Fabio, 07/10/2026) e a tela de titulos nao o estorna.
  */
 class CaixaItemContaService
 {
@@ -68,13 +68,40 @@ class CaixaItemContaService
         return round((float) $r->saldo, 2);
     }
 
-    // o extrato de $de a $ate (dias inteiros; sem eles, os ultimos 60 dias):
-    // saldo anterior, as linhas (canceladas tambem, sem saldo) com o saldo
-    // corrente, o saldo no fim e o de hoje
-    public static function extrato(CaixaItem $item, ?Carbon $de = null, ?Carbon $ate = null): array
+    // modo do periodo do extrato: semana (domingo a sabado: a Redeflex fecha no
+    // sabado), mes ou personalizado (de/ate)
+    const PERIODO_SEMANA = 'S';
+    const PERIODO_MES = 'M';
+    const PERIODO_PERSONALIZADO = 'P';
+
+    // [de, ate] do periodo: na semana e no mes, o que contem $data (sem ela ou
+    // no futuro, hoje) andando $passo semanas ou meses; no personalizado, de/ate
+    // (sem eles, os ultimos 60 dias)
+    public static function periodo(string $modo, ?Carbon $data = null, int $passo = 0, ?Carbon $de = null, ?Carbon $ate = null): array
     {
-        $ate = ($ate ?? Carbon::today())->copy()->endOfDay();
-        $de = ($de ?? $ate->copy()->subDays(60))->copy()->startOfDay();
+        if ($modo == static::PERIODO_PERSONALIZADO) {
+            $ate = ($ate ?? Carbon::today())->copy()->endOfDay();
+            $de = ($de ?? $ate->copy()->subDays(60))->copy()->startOfDay();
+            if ($de->gt($ate)) {
+                abort(422, 'O início do período é depois do fim.');
+            }
+            return [$de, $ate];
+        }
+        $data = ($data && $data->lte(Carbon::today()) ? $data : Carbon::today())->copy()->startOfDay();
+        if ($modo == static::PERIODO_MES) {
+            $de = $data->startOfMonth()->addMonthsNoOverflow($passo);
+            return [$de, $de->copy()->endOfMonth()];
+        }
+        $de = $data->startOfWeek(Carbon::SUNDAY)->addWeeks($passo);
+        return [$de, $de->copy()->addDays(6)->endOfDay()];
+    }
+
+    // o extrato do periodo (CaixaItemContaService::periodo): saldo anterior, as
+    // linhas (canceladas tambem, sem saldo) com o saldo corrente, o saldo no
+    // fim e o de hoje; `ultimo` = o periodo chega em hoje (nao ha seguinte)
+    public static function extrato(CaixaItem $item, string $modo = self::PERIODO_SEMANA, ?Carbon $data = null, int $passo = 0, ?Carbon $de = null, ?Carbon $ate = null): array
+    {
+        [$de, $ate] = static::periodo($modo, $data, $passo, $de, $ate);
         $regs = DB::select("
             select * from (
                 select
@@ -167,8 +194,10 @@ class CaixaItemContaService
             ];
         }, $regs);
         return [
+            'modo' => $modo,
             'de' => $de->toDateString(),
             'ate' => $ate->toDateString(),
+            'ultimo' => $ate->gte(Carbon::today()),
             'saldoanterior' => $anterior,
             'linhas' => $linhas,
             'saldofinal' => $saldo,
@@ -189,8 +218,10 @@ class CaixaItemContaService
     }
 
     // o titulo a pagar ao parceiro (pessoa, filial e conta do item), em aberto
-    // e sem portador, e o debito ligado a ele
-    public static function gerarTitulo(CaixaItem $item, float $valor, Carbon $vencimento, ?string $observacoes = null): CaixaItemAcerto
+    // e sem portador, e o debito ligado a ele. $transacao = quando o parceiro
+    // fechou (a Redeflex fecha no sabado e o titulo e' gerado na segunda): a
+    // data do debito no extrato, a transacao e o numero do titulo; emissao e' hoje
+    public static function gerarTitulo(CaixaItem $item, float $valor, Carbon $vencimento, ?string $observacoes = null, ?Carbon $transacao = null): CaixaItemAcerto
     {
         static::exigirMaquineta($item);
         static::travar($item);
@@ -202,6 +233,10 @@ class CaixaItemContaService
         if ($vencimento->copy()->startOfDay()->lt($agora->copy()->startOfDay())) {
             abort(422, 'O vencimento não pode ser no passado.');
         }
+        $transacao = $transacao ?? $agora;
+        if ($transacao->gt($agora)) {
+            abort(422, 'A data do fechamento não pode ser no futuro.');
+        }
         $observacoes = trim($observacoes ?? '');
         $titulo = TituloService::criar([
             'codtipotitulo' => TituloService::TIPO_DUPLICATA_PAGAR,
@@ -210,19 +245,24 @@ class CaixaItemContaService
             'codpessoa' => $item->codpessoa,
             'codcontacontabil' => $item->codcontacontabil,
             'valor' => $valor,
-            'transacao' => $agora->toDateString(),
+            // o numero e' a data do fechamento, como no extrato ("2026-10-03 (1)" se repetir)
+            'numero' => $transacao->toDateString(),
+            'sufixo' => true,
+            'transacao' => $transacao->toDateString(),
             'emissao' => $agora->toDateString(),
             'vencimento' => $vencimento->toDateString(),
             'observacao' => mb_substr("Repasse da maquineta {$item->item}" . ($observacoes ? " - {$observacoes}" : ''), 0, 255),
         ]);
-        return CaixaItemAcerto::create([
+        $acerto = CaixaItemAcerto::create([
             'codcaixaitem' => $item->codcaixaitem,
             'tipo' => CaixaItemAcerto::TIPO_TITULO,
             'valor' => -$valor,
             'codtitulo' => $titulo->codtitulo,
-            'transacao' => $agora,
+            'transacao' => $transacao,
             'observacoes' => $observacoes === '' ? null : mb_substr($observacoes, 0, 300),
         ]);
+        CaixaItemService::recalcularSaldo($item);
+        return $acerto;
     }
 
     // valor com sinal: positivo aumenta o que devemos
@@ -243,17 +283,20 @@ class CaixaItemContaService
         if ($transacao->gt($agora)) {
             abort(422, 'A data não pode ser no futuro.');
         }
-        return CaixaItemAcerto::create([
+        $acerto = CaixaItemAcerto::create([
             'codcaixaitem' => $item->codcaixaitem,
             'tipo' => CaixaItemAcerto::TIPO_AJUSTE,
             'valor' => $valor,
             'transacao' => $transacao,
             'observacoes' => mb_substr($observacoes, 0, 300),
         ]);
+        CaixaItemService::recalcularSaldo($item);
+        return $acerto;
     }
 
-    // ajuste: so' cancela; titulo: so' depois de estornado (estornar e' no
-    // titulo, nao aqui)
+    // ajuste: so' cancela. Titulo: o titulo nasceu aqui, entao cancelar o
+    // debito estorna o titulo junto (a tela de titulos nao estorna titulo de
+    // maquineta); titulo ja' pago recusa: desfaca o pagamento antes
     public static function cancelar(CaixaItemAcerto $acerto, string $justificativa): CaixaItemAcerto
     {
         static::travar($acerto->CaixaItem);
@@ -261,11 +304,10 @@ class CaixaItemContaService
         if ($acerto->cancelamento) {
             abort(422, 'Lançamento já cancelado.');
         }
-        if ($acerto->tipo == CaixaItemAcerto::TIPO_TITULO) {
-            $titulo = $acerto->Titulo;
-            if ($titulo && empty($titulo->estornado)) {
-                abort(422, "Estorne o título {$titulo->numero} antes de cancelar o débito.");
-            }
+        $titulo = $acerto->tipo == CaixaItemAcerto::TIPO_TITULO ? $acerto->Titulo : null;
+        if ($titulo && empty($titulo->estornado)
+            && round((float) $titulo->valor, 2) != round((float) $titulo->saldo, 2)) {
+            abort(422, "O título {$titulo->numero} já foi pago (total ou parte): desfaça o pagamento antes de cancelar o débito.");
         }
         $justificativa = trim($justificativa);
         if (mb_strlen($justificativa) < 5) {
@@ -277,6 +319,10 @@ class CaixaItemContaService
             'justificativa' => mb_substr($justificativa, 0, 300),
         ]);
         $acerto->save();
+        if ($titulo && empty($titulo->estornado)) {
+            TituloService::estornar($titulo, "Débito cancelado na maquineta {$acerto->CaixaItem->item}: {$acerto->justificativa}");
+        }
+        CaixaItemService::recalcularSaldo($acerto->CaixaItem);
         return $acerto;
     }
 }

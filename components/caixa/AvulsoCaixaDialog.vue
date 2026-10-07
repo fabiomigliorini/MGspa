@@ -8,8 +8,12 @@ import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import { formataTimestampIso } from '@components/formatters'
-import { periodoStore, limitePeriodo, dentroDoPeriodo } from '@components/stores/periodoStore'
-import { MOTIVOS } from '@components/stores/caixaSessaoStore'
+import {
+  periodoStore,
+  limitePeriodo,
+  dentroDoPeriodo,
+  MOTIVOS,
+} from '@components/stores/periodoStore'
 
 const SENTIDOS = [
   { label: 'Entrada', value: 'E' },

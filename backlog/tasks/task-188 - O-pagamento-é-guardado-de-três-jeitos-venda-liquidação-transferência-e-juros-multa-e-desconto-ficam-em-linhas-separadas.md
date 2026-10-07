@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-07 02:58'
+updated_date: '2026-10-07 03:24'
 labels:
   - contas
   - negocios
@@ -80,13 +80,13 @@ Milestones:
 - [ ] #30 M6.1.7 Cheque com só o nome do emitente, sem CPF/CNPJ, é aceito na venda e no recebimento de título
 - [ ] #31 M8.1.1 Tipos de título enxutos: 14 tipos renumerados (1xx a receber, 2xx a pagar), o crédito da devolução separado do vale compras e aceito no PDV, e o Vale / Adiantamento só com Vale Colaborador e os dois adiantamentos
 - [ ] #32 M8.1.2 No PDV, qualquer título com saldo de crédito (vale compras, crédito ou adiantamento do cliente, duplicata a pagar) paga uma compra
-- [ ] #33 M9.1 Caixa abre e fecha no PDV com contagem de moedas e cedulas, mostra a diferenca e gera o PDF Movimento do Caixa
+- [ ] #33 M9.1 O caixa abre no PDV e conta cédulas, moedas e itens na abertura e no fechamento, na mesma tela do período do contas (só o período aberto); quem fecha é o gerente, no contas; o borderô sai na térmica do PDV
 - [ ] #34 M9.2 Venda em dinheiro entra no caixa do PDV; sem caixa aberto ou PDV sem portador o Dinheiro fica bloqueado com o motivo
 - [ ] #35 M9.3 So Caixa da filial, Gerente ou Administrador recebe em dinheiro
 - [ ] #36 M9.4 Cancelar venda em dinheiro tira do caixa; com o caixa daquele dia fechado, so reabrindo
-- [ ] #37 M9.5 Lancamento avulso de entrada e saida no caixa aberto
+- [ ] #37 M9.5 Sangria e reforço no PDV, a confirmar pelo gerente e canceláveis pelo caixa enquanto não confirmados (o ajuste avulso ficou só no contas)
 - [ ] #38 M9.6 Notinha recebida, vale de cliente pago, vale de colaborador e adiantamento em dinheiro aparecem no caixa
-- [ ] #39 M9.7 Borderô da maquineta de parceiro lançado na tela do caixa do PDV, antes de fechar a gaveta (hoje só no contas)
+- [ ] #39 M9.7 Borderô da maquineta de parceiro lançado na tela do caixa do PDV, com a foto, antes de o gerente fechar a gaveta
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -235,4 +235,6 @@ ACs M9.1 a M9.6 movidos da TASK-39 (eram os #1 a #6, rotulados M10, da gaveta qu
 M9.5 (#37, lançamento avulso de entrada e saída no caixa aberto) feito no M13 da TASK-39 (03/10/2026, na árvore): tela do caixa → Lançamentos avulsos. No M13 a sessão da gaveta também deixou de ter conferência às cegas separada: fechar é a conferência (doc-3, seção M13). AC desmarcado até a validação.
 
 **M9.7, borderô da maquineta de parceiro no PDV** (Fábio, 07/10/2026): hoje o borderô só se lança na tela do portador do contas, que não abre para o grupo Caixa (só Administrador, Financeiro e Gerente). Até o M9.7, quem lança é quem tem acesso ao contas; com o botão na tela do caixa do PDV, o próprio caixa lança antes de fechar a gaveta (o diálogo @components/caixa/MaquinetaCaixaDialog já é compartilhado; detalhes na TASK-39 e no doc-4, "Itens de parceiro").
+
+**Caixa do PDV refeito** (desenhado com o Fábio em 06/10/2026; detalhe no doc-4, seção "Caixa do PDV"; na árvore, sem commit): negocios /caixa mostra a tela do período do portador do contas (componentes movidos para @components/portador), só o período aberto da gaveta do PDV. O caixa abre (só confirma), faz a contagem inicial e a final (com os itens), sangria/reforço, borderô de maquineta e imprime o borderô na térmica; cancela a sangria a confirmar e o borderô. Quem fecha é sempre o gerente, no contas. Sem ajuste nem entrada de item no PDV. Saíram MgCaixaSessao, caixaSessaoStore, SessaoResource, as rotas v1/caixa/gaveta|sessao|avulso e Fechamentos → Caixas abertos. M9.1, M9.5 (antes o avulso no PDV, agora sangria e reforço) e M9.7 reescritos.
 <!-- SECTION:NOTES:END -->

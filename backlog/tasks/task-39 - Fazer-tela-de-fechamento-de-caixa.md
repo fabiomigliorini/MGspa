@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-07 02:57'
+updated_date: '2026-10-07 19:54'
 labels:
   - negocios
   - contas
@@ -29,7 +29,7 @@ Como ficou: o portador é o razão único do dinheiro (tblportadormovimento com 
 
 Onde está o detalhe: doc-3 (modelo de dados, decisões 1–29, M10 a M12, ordem dos DDL do go-live) e doc-4 (telas, redefinição do domínio do dinheiro, itens do caixa). Onde os dois divergem, manda o doc-4.
 
-Fora desta task: a tela do caixa do PDV (MgCaixaSessao, negocios /caixa), que fica para a refatoração do PDV (critérios M9.x na TASK-188). A fundação (M1 a M9) também está na TASK-188.
+Fora desta task: a tela do caixa do PDV (negocios /caixa), refeita nos critérios M9.x da TASK-188. A fundação (M1 a M9) também está na TASK-188.
 
 Consolidou TASK-33, TASK-34, TASK-48 e TASK-84 (arquivadas).
 <!-- SECTION:DESCRIPTION:END -->
@@ -55,10 +55,11 @@ Consolidou TASK-33, TASK-34, TASK-48 e TASK-84 (arquivadas).
 - [x] #17 Abrir o período novo logo depois de fechar o anterior, no mesmo segundo, não dá erro (começa no próprio fim do anterior) (R7.8)
 - [x] #18 Banco, adquirente e cartão: o financeiro fecha o período pela data de corte; fechado é imutável; reabre e fecha em ordem, do mais novo para o mais antigo (antigo M12)
 - [x] #19 Itens do caixa (chips, ingressos) contados no portador em espécie junto com as cédulas (como cédula, preço × quantidade): só a entrada ou a saída sem venda é lançada; vender não lança nada; cadastro de itens dinâmico, com a tela do item mostrando o saldo em cada caixa e os períodos em que mexeu
-- [ ] #20 Maquineta de parceiro (Redeflex, Bilhete Agora, Rede Card), cadastrada como item do caixa, uma por maquineta: o caixa lança na tela do período o total em dinheiro do borderô do dia (negativo quando devolveu dinheiro), com a foto do borderô opcional ("sem borderô" na linha até anexar) e o valor explica o dinheiro a mais na contagem; a maquineta não entra na contagem
-- [ ] #21 O financeiro vê a conta corrente de cada maquineta (borderôs dos caixas, títulos gerados e ajustes como a comissão que o parceiro desconta) e gera o título a pagar ao parceiro pelo saldo, a qualquer hora, sem depender do caixa estar fechado
+- [x] #20 Maquineta de parceiro (Redeflex, Bilhete Agora, Rede Card), cadastrada como item do caixa, uma por maquineta: o caixa lança na tela do período o total em dinheiro do borderô do dia (negativo quando devolveu dinheiro), com a foto do borderô opcional ("sem borderô" na linha até anexar) e o valor explica o dinheiro a mais na contagem; a maquineta não entra na contagem
+- [x] #21 O financeiro vê a conta corrente de cada maquineta (borderôs dos caixas, títulos gerados e ajustes como a comissão que o parceiro desconta) e gera o título a pagar ao parceiro pelo saldo, a qualquer hora, sem depender do caixa estar fechado
 - [ ] #22 Validação de ponta a ponta na tela do período pelos roteiros Valida do doc-4 (o core, a redefinição, os itens e os parceiros): venda em dinheiro, sangria e confirmação, cancelamento, recebimento no banco, fechamento com contagem e com corte, itens do caixa (R5)
-- [ ] #23 A lista de Itens do Caixa mostra o saldo a pagar de cada maquineta de parceiro, sem precisar abrir uma por uma
+- [x] #23 A lista de Itens do Caixa mostra o saldo de cada item sem precisar abrir um por um: quanto tem de cada chip/ingresso nos caixas e quanto devemos a cada maquineta de parceiro, com o total
+- [ ] #24 Na contagem, cada bloco (cédulas, moedas, cada item) tem um botão de copiar: a inicial copia a contagem final do período anterior; a final copia a inicial, com chips e ingressos somando as entradas e tirando as saídas do período
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -78,15 +79,13 @@ Reorganizada em 06/10/2026: critérios renumerados por assunto; os do M11 (trans
 
 **O que saiu pelo caminho** (não procurar no código): ajuste e transferência como pagamento (PagamentoService::transferir, TransferenciaAutorizador, motivo A, origem X na listagem); ajuste automático na abertura e no fechamento; permissão do caixa por grupo e filial; telas Saldos, Cadastros → Portadores e Movimento → Caixas; o item do M13 (pagamento na gaveta, título de repasse ao parceiro, Movimento dos Itens, tblcaixaitemlancamento).
 
-**DDL do go-live** (ordem completa no topo do doc-3): razao.sql, caixa_item.sql, portador_saldo.sql, portador_movimento_tipo.sql, caixa_item_dinamico.sql, caixa_item_maquineta.sql, antes do tipo_titulo_limpeza.sql.
+**DDL do go-live** (ordem completa no topo do doc-3): razao.sql, caixa_item.sql, portador_saldo.sql, portador_movimento_tipo.sql, caixa_item_dinamico.sql, caixa_item_maquineta.sql, caixa_item_saldo.sql, antes do tipo_titulo_limpeza.sql.
 
-**Risco conhecido até a refatoração do PDV** (decisão do Fábio, 06/10): o MgCaixaSessao abre e fecha a gaveta sem a contagem dos itens, mas o saldo já conta os itens. Gaveta com chip ou ingresso fechada pelo PDV acusa diferença falsa (ex.: 10 chips de 25,00 = −250,00), o período seguinte abre sem os itens e a tela do item mostra o caixa zerado. Até lá, gaveta com item fecha pelo contas.
+**Caixa do PDV refeito** (TASK-188, M9.1/M9.5/M9.7, 06/10/2026): o PDV usa a tela do período (só o aberto), conta os itens e lança o borderô da maquineta; quem fecha é o gerente, no contas. Os dois riscos que estavam aqui (gaveta com itens fechada pelo PDV acusando diferença falsa; borderô só no contas) deixam de existir.
 
-**Maquinetas de parceiro (#20 e #21, desenho com o Fábio em 06/10/2026)**: decisões e "Como ficou no código" no doc-4, seção "Itens de parceiro". Cada maquineta é um item do caixa no modo M; o borderô é o tipo M no movimento do portador; a conta corrente da maquineta tem os borderôs (crédito), os títulos gerados e os ajustes (tblcaixaitemacerto). O antigo critério do bloquinho de ingresso com maquineta saiu: não existe hoje (Fábio, 06/10/2026). DDL do go-live: caixa_item_maquineta.sql, depois do caixa_item_dinamico.sql. Implementado e não validado.
+**Maquinetas de parceiro (#20 e #21, desenho com o Fábio em 06/10/2026)**: decisões e "Como ficou no código" no doc-4, seção "Itens de parceiro". Cada maquineta é um item do caixa no modo M; o borderô é o tipo M no movimento do portador; a conta corrente da maquineta tem os borderôs (crédito), os títulos gerados e os ajustes (tblcaixaitemacerto). O antigo critério do bloquinho de ingresso com maquineta saiu: não existe hoje (Fábio, 06/10/2026). DDL do go-live: caixa_item_maquineta.sql, depois do caixa_item_dinamico.sql. **Validado pelo Fábio em 07/10/2026** (cadastro, borderô com foto, conta corrente por semana/mês/personalizado, título com a data do fechamento, estorno pelo cancelamento do débito). Falta o #23 (saldo na lista de Itens do Caixa): feito e validado pelo Fábio em 07/10/2026; desenho e "Como ficou no código" no doc-4, "Saldo dos itens na lista".
 
 **Achado de passagem, já corrigido**: optional($m->UsuarioCriacao)->usuario num MgModel cai no acessor getUsuariocriacaoAttribute (método no PHP não diferencia maiúsculas) e devolve a string, então ->usuario sai nulo; usar $m->usuariocriacao / ->usuarioalteracao (trocado em 14 pontos de Caixa, Portador, Conferência e Pagamento).
-
-**Risco conhecido do borderô até a refatoração do PDV** (decisão do Fábio, 07/10/2026): o PDV não tem o botão do borderô da maquineta. O borderô é lançado no contas antes de fechar a gaveta, por quem tem acesso à tela do portador (Administrador, Financeiro, Gerente; o grupo Caixa não abre o contas); fechada pelo PDV sem o borderô, o dinheiro da maquineta aparece como sobra. O botão no PDV, para o próprio caixa lançar, é o M9.7 da TASK-188.
 
 **Virada das maquinetas** (Fábio, 07/10/2026): as maquinetas reais (parceiro, filial, conta) e o saldo inicial de cada uma (ajuste "saldo inicial" na conta corrente) são cadastrados pela tela, pelo Fábio ou pelo financeiro, depois do caixa_item_maquineta.sql; sem script.
 <!-- SECTION:NOTES:END -->

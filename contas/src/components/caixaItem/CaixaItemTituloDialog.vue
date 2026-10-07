@@ -1,8 +1,9 @@
 <script setup>
 // Gerar o título a pagar ao parceiro pela conta corrente da maquineta: o valor (sugere o saldo) e
-// o vencimento (sugere hoje). O título nasce em aberto, sem portador, com o parceiro, a filial e a
-// conta contábil da maquineta, e é pago pelo caminho normal do contas. Só gera o título e o
-// débito ligado a ele.
+// o vencimento (sugere hoje). A data é a do fechamento do parceiro (a Redeflex fecha no sábado e
+// o título sai na segunda): é onde o débito cai no extrato e a transação do título. O título nasce
+// em aberto, sem portador, com o parceiro, a filial e a conta contábil da maquineta, e é pago pelo
+// caminho normal do contas. Só gera o título e o débito ligado a ele.
 import { storeToRefs } from 'pinia'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -12,6 +13,12 @@ import { useCaixaItemStore } from 'src/stores/caixaItemStore'
 
 const store = useCaixaItemStore()
 const { item, conta, tituloDialog, tituloModel, salvando } = storeToRefs(store)
+
+// lê o valor do form (ISO), não o texto que o MgInputData passa às rules
+const naoFuturo = () =>
+  !tituloModel.value.transacao ||
+  new Date(tituloModel.value.transacao) <= new Date() ||
+  'Não pode ser no futuro'
 </script>
 
 <template>
@@ -26,6 +33,15 @@ const { item, conta, tituloDialog, tituloModel, salvando } = storeToRefs(store)
         </q-card-section>
         <q-card-section>
           <div class="row q-col-gutter-md">
+            <div class="col-12">
+              <MgInputData
+                v-model="tituloModel.transacao"
+                type="timestamp"
+                default-time="now"
+                label="Data do fechamento do parceiro"
+                :rules="[(v) => !!v || 'Obrigatório', naoFuturo]"
+              />
+            </div>
             <div class="col-12 col-sm-6">
               <MgInputValor
                 v-model="tituloModel.valor"

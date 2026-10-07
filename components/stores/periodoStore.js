@@ -1,11 +1,14 @@
 // Período do portador (doc-4, redefinição do dinheiro): o que entrou e saiu de um portador num
-// período e quanto sobrou. Domínio da tela /portador/{cod}/{codperiodo} do contas e dos dialogs de
-// movimento (@components/caixa: Transferir, Ajuste, Item, Maquineta), que servem qualquer portador
-// (o item e a maquineta, só em espécie). Ajuste, transferência, item e borderô da maquineta são
-// movimento do portador, não pagamento. Toda rota que
-// muda devolve os períodos afetados (R14); o store troca os que tem pelo que veio.
-//   contas:   carregar(codportador, codportadorperiodo) (tela do período)
-//   caixa:    usar(portador, periodo, aoMudar) (MgCaixaSessao do PDV: recarrega a sessão)
+// período e quanto sobrou. Domínio da tela /portador/{cod}/{codperiodo} do contas, da tela do caixa
+// do PDV (negocios /caixa: o mesmo período, só o aberto da gaveta) e dos dialogs de movimento
+// (@components/caixa: Transferir, Ajuste, Item, Maquineta), que servem qualquer portador (o item e
+// a maquineta, só em espécie). Ajuste, transferência, item e borderô da maquineta são movimento do
+// portador, não pagamento. Toda rota que muda devolve os períodos afetados (R14); o store troca os
+// que tem pelo que veio.
+//   contas:   carregar(codportador, codportadorperiodo)
+//   negocios: carregar(gaveta do PDV, null, { codpdv, impressora }): com o codpdv o servidor não
+//             valida o papel na gaveta e só deixa o que é do caixa (abrir, contar, sangria/reforço,
+//             borderô da maquineta, cancelar o que ainda pode); quem fecha é o gerente, no contas
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
@@ -64,6 +67,17 @@ export const dentroDoPeriodo = (periodo, transacao) => {
   )
 }
 
+// cédulas e moedas da contagem (as mesmas chaves do servidor, CaixaService::CEDULAS/MOEDAS)
+export const CEDULAS = ['200', '100', '50', '20', '10', '5', '2']
+export const MOEDAS = ['1', '0.50', '0.25', '0.10', '0.05', '0.01']
+
+// taxa, tarifa e rendimento: só banco (pagamento sem pessoa); o ajuste é movimento do portador
+export const MOTIVOS = [
+  { value: 'T', label: 'Taxa' },
+  { value: 'F', label: 'Tarifa' },
+  { value: 'R', label: 'Rendimento' },
+]
+
 export const PAPEIS = [
   { value: 'D', label: 'Depositante', descricao: 'só manda dinheiro para ele' },
   { value: 'O', label: 'Operador', descricao: 'vê e movimenta' },
@@ -85,9 +99,8 @@ export const periodoStore = defineStore('periodo', {
     filtroOrigem: null,
     carregando: false,
     salvando: false,
+    // no caixa do PDV: o PDV (a gaveta dele) e a impressora térmica do borderô
     contexto: { codpdv: null, impressora: null },
-    // chamado depois de cada movimento (a tela do caixa do PDV recarrega a sessão dela)
-    aoMudar: null,
     dialogTransferir: false,
     dialogAvulso: false,
     dialogItem: false,
@@ -100,16 +113,20 @@ export const periodoStore = defineStore('periodo', {
   }),
 
   getters: {
-    gestor: (state) => state.papel === 'G',
+    gestor: (state) => state.papel === 'G' && !state.contexto.codpdv,
+    // a tela do caixa do PDV (negocios)
+    pdv: (state) => !!state.contexto.codpdv,
   },
 
   actions: {
-    async carregar(codportador, codportadorperiodo = null) {
+    async carregar(codportador, codportadorperiodo = null, contexto = null) {
       this.carregando = true
+      this.contexto = { codpdv: null, impressora: null, ...contexto }
       try {
         const { data } = await api.get(
           `v1/portador/${codportador}/periodo` +
             (codportadorperiodo ? `/${codportadorperiodo}` : ''),
+          { params: this.params() },
         )
         this.portador = {
           ...data.data.portador,
@@ -121,8 +138,6 @@ export const periodoStore = defineStore('periodo', {
         this.periodos = data.data.periodos
         this.periodo = data.data.periodo
         this.filtroOrigem = null
-        this.aoMudar = null
-        this.contexto = { codpdv: null, impressora: null }
       } catch (error) {
         this.portador = null
         avisar(false, erro(error))
@@ -131,12 +146,9 @@ export const periodoStore = defineStore('periodo', {
       }
     },
 
-    // a tela do caixa do PDV (MgCaixaSessao) entrega a gaveta e a sessão para os dialogs
-    usar(portador, periodo, aoMudar) {
-      this.portador = { ...portador, ehGaveta: true, ehCaixa: true }
-      this.periodo = periodo
-      this.periodos = []
-      this.aoMudar = aoMudar
+    // o codpdv nas rotas que o caixa do PDV usa (sem ele, nada)
+    params() {
+      return this.contexto.codpdv ? { codpdv: this.contexto.codpdv } : {}
     },
 
     // troca os períodos que vieram da rota (R14); o da tela também. `removido`: o período que
@@ -171,7 +183,6 @@ export const periodoStore = defineStore('periodo', {
         const { data } = await fn()
         this.aplicar(data.periodos, data.removido)
         if (ok) avisar(true, typeof ok === 'function' ? ok(data.data) : ok)
-        if (this.aoMudar) await this.aoMudar()
         return data
       } catch (error) {
         avisar(false, erro(error))
@@ -232,7 +243,6 @@ export const periodoStore = defineStore('periodo', {
             valor,
             observacoes,
             transacao: transacao || null,
-            codpdv: this.contexto.codpdv,
           }),
         'Ajuste lançado',
       )
@@ -276,7 +286,6 @@ export const periodoStore = defineStore('periodo', {
             linhas,
             observacoes: observacoes || null,
             transacao: transacao || null,
-            codpdv: this.contexto.codpdv,
           }),
         sinal > 0 ? 'Entrada lançada' : 'Saída lançada',
       )
@@ -302,7 +311,11 @@ export const periodoStore = defineStore('periodo', {
 
     anexarFotoBordero(codportadormovimento, anexoBase64) {
       return this.executar(
-        () => api.post(`v1/portador-movimento/${codportadormovimento}/foto`, { anexoBase64 }),
+        () =>
+          api.post(`v1/portador-movimento/${codportadormovimento}/foto`, {
+            anexoBase64,
+            ...this.params(),
+          }),
         'Foto do borderô anexada',
       )
     },
@@ -313,7 +326,7 @@ export const periodoStore = defineStore('periodo', {
     // o início o servidor decide (o segundo seguinte ao fim do anterior; sem período, hoje 00:00)
     async abrir() {
       const data = await this.executar(
-        () => api.post(`v1/portador/${this.portador.codportador}/periodo/abrir`),
+        () => api.post(`v1/portador/${this.portador.codportador}/periodo/abrir`, this.params()),
         'Período aberto',
       )
       return data?.data?.codportadorperiodo ?? null
@@ -327,6 +340,7 @@ export const periodoStore = defineStore('periodo', {
             momento,
             contagem,
             ...(itens ? { itens } : {}),
+            ...this.params(),
           }),
         'Contagem salva',
       )
@@ -404,9 +418,23 @@ export const periodoStore = defineStore('periodo', {
       return abrirPdf(
         api,
         `v1/portador-periodo/${this.periodo.codportadorperiodo}/bordero`,
-        {},
+        this.params(),
         { title: 'Borderô', size: 'cupom' },
       )
+    },
+
+    // no PDV: na impressora térmica dele; sem impressora, o PDF
+    async imprimirBordero() {
+      if (!this.contexto.impressora) return this.abrirBordero()
+      try {
+        await api.post(
+          `v1/portador-periodo/${this.periodo.codportadorperiodo}/bordero/${this.contexto.impressora}`,
+          this.params(),
+        )
+        avisar(true, 'Borderô enviado para a impressora')
+      } catch (error) {
+        avisar(false, erro(error))
+      }
     },
 
     // ==== usuários do portador e o papel de cada um (gestor) ====

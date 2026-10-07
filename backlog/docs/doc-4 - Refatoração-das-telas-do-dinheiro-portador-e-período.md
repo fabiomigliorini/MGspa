@@ -429,12 +429,19 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
    dos caixas; débito = os títulos gerados; ajuste com sinal e observação obrigatória (a comissão
    que o parceiro desconta, como a da Rede Card; o saldo que já devíamos no go-live; diferença com
    o relatório do parceiro). Saldo = o que devemos ao parceiro. A comissão só abate: não vira
-   título a receber. Quem decide comissão é o parceiro; o sistema não tem regra.
-5. **Gerar título** (botão na conta corrente da maquineta): valor (sugere o saldo) e vencimento
-   (sugere hoje) → título a pagar (Duplicata a Pagar) para o parceiro, com a filial e a conta da
-   maquineta, em aberto e sem portador, pago pelo caminho normal do contas; o débito fica ligado
-   ao título. Um título por maquineta (pagar vários juntos = liquidação de vários títulos). Cancelar
-   o débito **recusa** enquanto o título não for estornado (estornar é no título).
+   título a receber. Quem decide comissão é o parceiro; o sistema não tem regra. O extrato anda
+   por **semana (domingo a sábado**, a Redeflex fecha no sábado; abre na semana atual), mês ou
+   período personalizado; o servidor calcula o período, o saldo anterior e os saldos (07/10/2026).
+5. **Gerar título** (botão na conta corrente da maquineta): data do fechamento do parceiro (a
+   Redeflex fecha no sábado e o título sai na segunda; é a data do débito no extrato e a transação
+   e o número do título; emissão é hoje), valor (sugere o saldo) e vencimento (sugere hoje) →
+   título a pagar (Duplicata a Pagar) para o parceiro, com a filial e a conta da maquineta, em
+   aberto e sem portador, pago pelo caminho normal do contas; o débito fica ligado ao título. Um
+   título por maquineta (pagar vários juntos = liquidação de vários títulos). **O título é da
+   conta corrente** (07/10/2026), como o do negócio é do negócio: a tela de títulos não o estorna
+   nem muda número, valor e datas (mostra "Repasse da maquineta X" com o link); **cancelar o
+   débito estorna o título junto**. Título já pago (total ou parte) recusa: desfaça o pagamento
+   antes.
 6. **Quem**: cadastro e conta corrente, Administrador e Financeiro; borderô, quem opera o portador
    (como ajuste e item).
 7. **Bloquinho de ingresso com maquineta** (o bloquinho como cédula e a maquineta pelo borderô, no
@@ -508,7 +515,7 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
     e saídas + diferença = saldo; a saída entra na mesma coluna, negativa); "Descrições" troca o
     texto de um tipo (descrição + preço) em tudo.
 
-### Como ficou no código: maquinetas de parceiro (06/10/2026; não validado)
+### Como ficou no código: maquinetas de parceiro (06–07/10/2026; validado pelo Fábio em 07/10)
 
 - **DDL** `api/database/caixa_item_maquineta.sql` (idempotente; rodado no dev; roda no go-live
   depois do `caixa_item_dinamico.sql`): `tblcaixaitem.modo` (C/M) com `codpessoa`, `codfilial`,
@@ -541,6 +548,11 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
   (`CaixaItemContaCorrente`, `CaixaItemTituloDialog`, `CaixaItemAjusteDialog`); lista dos itens
   mostra o parceiro da maquineta. O modo do item não muda depois de qualquer lançamento (caixa
   ou conta corrente).
+- **07/10/2026, depois do teste**: o título leva a data do fechamento do parceiro (débito no
+  extrato, transação e número do título); o título de maquineta só se estorna cancelando o débito
+  na conta corrente (`Titulo::geradoAutomaticamente`, `CaixaItemAcerto` ligado; a tela de títulos
+  recusa e trava número, valor e datas); o extrato anda por semana/mês/personalizado com o período
+  calculado no servidor (`CaixaItemContaService::periodo`, `modo`/`data`/`passo` ou `de`/`ate`).
 
 ### Valida (maquinetas de parceiro)
 
@@ -562,3 +574,114 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
    cancelar → saldo 335.
 9. Período fechado recusa borderô novo; usuário fora de Administrador e Financeiro não abre a
    conta corrente.
+
+### Saldo dos itens na lista (TASK-39 #23; decidido com o Fábio em 07/10/2026)
+
+1. A lista de Itens do Caixa tem um card para a cédula (chips, ingressos) e **um card por parceiro**
+   (as maquinetas agrupadas pela pessoa, o nome no cabeçalho), três por linha (`col-12 col-sm-4`).
+2. À direita de cada linha, o saldo: cédula com **quantidade e valor** nos caixas (somando os
+   caixas, a mesma base da tela do item); maquineta com o **saldo a pagar** (R$ 0,00 também,
+   vermelho se negativo). **Total** no fim de cada card, só do que aparece.
+3. **Mostrar inativos**: um toggle em cada card.
+4. O saldo é **gravado** na `tblcaixaitem` e recalculado **só nas ações de item**: venda no PDV não
+   recalcula (o `recalcular` do portador roda em toda venda em dinheiro).
+5. Botão **Recalcular** na lista (todos) e na tela do item (o item): go-live e correção.
+
+### Como ficou no código: saldo dos itens (07/10/2026; validado pelo Fábio em 07/10)
+
+- **DDL** `api/database/caixa_item_saldo.sql` (idempotente; rodado no dev; roda no go-live depois do
+  `caixa_item_maquineta.sql`, e depois dele o Recalcular da lista): `tblcaixaitem.saldo`
+  (`numeric(14,2)`, default 0) e `saldoquantidade` (só cédula).
+- **Backend**: `CaixaItemService::recalcularSaldo` (trava o item; cédula = soma de `saldos()`,
+  maquineta = `CaixaItemContaService::saldo`; grava sem o MgModel, não é alteração do cadastro) e
+  `recalcularSaldos(?codportador)` (os itens que já mexeram naquele caixa, ou todos; em ordem de
+  código). Chamado no `lancarItem`, `cancelarItem` e `lancarMaquineta` do
+  `PortadorLancamentoService`; no `contar`, `fecharCaixa`, `reabrirCaixa`, `dividir`, `unificar` e
+  `editarDatas` do `PortadorPeriodoService`; no `gerarTitulo`, `ajustar` e `cancelar` do
+  `CaixaItemContaService`. Rotas `POST v1/caixa-item/saldo/recalcular` (devolve a lista) e
+  `POST v1/caixa-item/{id}/saldo/recalcular`. `CaixaItemResource` com `saldo` e `saldoquantidade`.
+- **Front** (contas): `caixaItem/Index.vue` com o card da cédula, um por parceiro e o `refresh` no topo;
+  `Detalhe.vue` com o `refresh` no cabeçalho; `caixaItemStore.recalcularSaldos/recalcularSaldo`.
+
+### Valida (saldo dos itens)
+
+1. contas → Itens do Caixa (F5) → Recalcular: chips e ingressos com quantidade e valor; "Bilhete
+   Agora Centro" R$ 632,00; total de cada card.
+2. Os números de cada chip batem com o total "Saldo nos caixas" da tela do item.
+3. Toggle "Inativos" em cada card: o inativo aparece riscado e entra no total.
+4. Período aberto: entrada de chip → a lista soma; cancelar → volta.
+5. Maquineta: ajuste "Diminui" 10,00 → a lista mostra 622,00; cancelar o ajuste → 632,00.
+
+## Caixa do PDV (06/10/2026, com o Fábio; TASK-188 M9.1, M9.5, M9.7)
+
+A tela do caixa do negocios (`/caixa`) era o `MgCaixaSessao` do M13: cards de avulso e de
+transferência, tabela de dinheiro própria, abrir e fechar com a contagem embutida, sem itens nem
+borderô de maquineta. Passa a ser **a mesma tela do período do contas**, só com o **período aberto**
+da gaveta do PDV. Esta seção manda sobre o "até a refatoração do PDV" das seções acima (itens,
+item 7; parceiros, item 9).
+
+### Decisões
+
+1. **O PDV não fecha nada.** Quem fecha é sempre o gerente, no contas. A regra do fechamento não
+   muda (recusa com transferência a confirmar, chegando ou saindo): o gerente também confirma a
+   sangria.
+2. **Abrir**: o caixa no PDV (só confirma) ou o gerente no contas (aba "Novo período").
+3. **Contagens**: inicial e final pelos botões do resumo, com os itens, como no contas.
+4. **Sem período aberto**: só "Abrir caixa". Os fechados e o histórico ficam no contas.
+5. **Lançamentos no PDV**: só **Reforço / Sangria** (a confirmar pelo gestor do destino) e
+   **Borderô de maquineta** (com foto; câmera na linha). Ajuste e entrada/saída de item, só no contas.
+6. **Cancelar no PDV**: na linha, com justificativa, a sangria/reforço ainda a confirmar e o borderô
+   de maquineta, com o período aberto. Confirmada, só o gerente no contas.
+7. **Borderô**: botão "Imprimir borderô" no período aberto; térmica do PDV, sem impressora o PDF.
+8. **Link da linha, igual nos dois apps**: com negócio, o negócio; sem negócio, o pagamento. Dentro
+   do app `:to`, no outro `:href` (`NEGOCIOS_URL` / `CONTAS_URL`).
+9. **Fechamentos → "Caixas abertos" saiu**: o gerente vê as gavetas em Movimento → Portadores.
+
+### Como ficou no código (06/10/2026; não validado)
+
+- **Front**: `PeriodoCabecalho`, `PeriodoResumo` e `PeriodoLancamentos` foram para
+  `@components/portador/`, e o corpo do período (cabeçalho e resumo, lançamentos e os diálogos de
+  movimento) virou `@components/portador/Periodo.vue`, usado pelo `Detalhe.vue` do contas e pela
+  `CaixaPage.vue` do negocios. `periodoStore.carregar(cod, codperiodo,
+  { codpdv, impressora })`; com o `codpdv` (getter `pdv`) o cabeçalho troca o Fechar por Imprimir
+  borderô e a lista esconde ajuste e item; `imprimirBordero()`; `CEDULAS`, `MOEDAS` e `MOTIVOS`
+  vieram do `caixaSessaoStore`. `negocios/src/pages/CaixaPage.vue` monta a tela. Saíram
+  `MgCaixaSessao`, `caixaSessaoStore`, `usar`/`aoMudar` do store e `contas/pages/fechamento/Sessao.vue`.
+- **Backend**: `PortadorAutorizador::livre()` (a gaveta do `codpdv` do request: o PDV não valida o
+  papel nela) usado pela tela, abrir, contar, borderô (`GET` e `POST
+  v1/portador-periodo/{id}/bordero/{impressora}`), transferir, maquineta, foto e cancelar. Com o
+  `codpdv`: a tela devolve papel operador sem ações de gestor; cancelar só aceita
+  `PortadorLancamentoService::cancelaNoPdv` (transferência a confirmar e borderô); ajuste e item
+  não aceitam mais o `codpdv`. `PortadorPeriodoResource`: `codnegocio` na linha e, no PDV, sem
+  `podeConfirmar`. Saíram `SessaoResource`, os métodos do `CaixaController` (ficam `status` e o PDF
+  assinado da impressora), as rotas `v1/caixa/gaveta|sessao|avulso`, `CaixaService::envelope/
+  podeOperar/autorizarOperar` e a pendência `sessao` do `ConferenciaService`. De passagem: a
+  transferência em período fechado não mostra mais o cancelar (o servidor já recusava).
+- **Borderô da Bilhete Agora, Redeflex etc.**: é o botão `point_of_sale` dos lançamentos, que só
+  aparece com maquineta de parceiro cadastrada (contas → Itens do Caixa → Novo, modo "Maquineta de
+  parceiro", uma por maquineta). No dev, em 06/10/2026, não havia nenhuma.
+- **Conferido em 06/10/2026** (Chrome headless, PDV 508 ligado a uma gaveta e um cofre temporários,
+  usuário Caixa sem papel na gaveta e o fabio no contas; tudo apagado e o PDV devolvido à gaveta
+  202075 no fim): abrir no PDV; contagem inicial e final; duas sangrias a confirmar, cancelar uma;
+  diálogo do borderô com as maquinetas (simuladas no navegador); imprimir (PDF); "Ver no cofre" e
+  pagamento abrindo no contas em outra aba; no contas venda → negócio (outra aba) e título →
+  pagamento; confirmar a sangria pelo cofre; fechar; reabrir; ajuste e item no contas; PDV sem
+  gaveta; celular nos dois apps. Servidor (tinker com rollback): borderô, cancelar e anexar pelo
+  PDV, ajuste e item recusados com o `codpdv`, sangria já confirmada não se cancela no PDV.
+- **Em aberto (decidir)**: o caixa não consegue registrar **reforço** no PDV, porque tirar do cofre
+  exige operador do cofre e o caixa é só depositante (a lista de origem vem "Nenhum portador"). Hoje
+  o reforço é lançado pelo gerente.
+
+### Valida (caixa do PDV)
+
+1. negocios `/caixa` (PDV 508) com um usuário do grupo Caixa: sem período aberto, só "Abrir caixa";
+   abrir; contagem inicial já preenchida, com os itens.
+2. Venda em dinheiro no wizard → linha "Venda nº", que abre o negócio.
+3. Borderô de maquineta com foto; outro sem foto → anexar pela câmera da linha.
+4. Sangria para o cofre → amarela, a confirmar; cancelar uma pelo PDV.
+5. Contagem final; Imprimir borderô (PDF sem impressora).
+6. Não aparecem Fechar, Ajuste nem Entrada/saída de item.
+7. contas `/portador/{gaveta}/{período}` como gerente: as mesmas linhas; venda abre o negócio
+   (outra aba do negocios), título abre o pagamento; confirmar a sangria pelo cofre; fechar a
+   gaveta → o PDV volta a "Abrir caixa".
+8. Fechamentos sem "Caixas abertos".

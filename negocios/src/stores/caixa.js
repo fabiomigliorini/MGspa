@@ -1,5 +1,5 @@
 // Caixa do PDV: qual é a gaveta deste PDV e se o caixa está aberto (M9 doc-3). A tela do caixa é
-// a mesma do contas desde o M13 (@components/MgCaixaSessao).
+// a do período do portador do contas, só com o período aberto (@components/portador).
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from 'boot/axios'

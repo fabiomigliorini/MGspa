@@ -5,12 +5,13 @@
 // preço (como cédula); preço novo só entra pela entrada do item.
 // v-model = { contagem: { '200': 3 }, itens: { codcaixaitem: [{ preco, descricao, quantidade }] } };
 // o total geral soma tudo, que é o que fica no caixa.
+// `copia` = { titulo, contagem, itens } no mesmo formato: cada bloco (cédulas, moedas, cada item)
+// tem um botão que troca o bloco pelo que está nela (quem chama decide de onde vem).
 import { computed } from 'vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import LinhasItemCaixa from '@components/caixa/LinhasItemCaixa.vue'
 import { formataNumero } from '@components/formatters'
-import { CEDULAS, MOEDAS } from '@components/stores/caixaSessaoStore'
-import { totalLinhas } from '@components/stores/periodoStore'
+import { CEDULAS, MOEDAS, totalLinhas } from '@components/stores/periodoStore'
 
 const model = defineModel({ type: Object, required: true })
 const props = defineProps({
@@ -19,6 +20,8 @@ const props = defineProps({
   autofocus: { type: Boolean, default: false },
   // só consulta (caixa fechado ou sem permissão)
   disable: { type: Boolean, default: false },
+  // de onde copiar, bloco a bloco: { titulo, contagem, itens }; null = sem botão
+  copia: { type: Object, default: null },
 })
 
 const rotulo = (v) => (Number(v) >= 2 ? `R$ ${Number(v)}` : formataNumero(Number(v)))
@@ -44,6 +47,24 @@ const estoque = computed(() =>
   Object.values(blocos.value).reduce((s, linhas) => s + totalLinhas(linhas), 0),
 )
 
+// copia o bloco: o que não está na cópia fica vazio
+const copiarFaces = (faces) => {
+  const c = props.copia?.contagem || {}
+  model.value.contagem = {
+    ...model.value.contagem,
+    ...Object.fromEntries(faces.map((v) => [v, Number(c[v]) > 0 ? Number(c[v]) : null])),
+  }
+}
+const copiarItem = (cod) => {
+  const c = props.copia?.itens?.[cod] || []
+  model.value.itens[cod] = model.value.itens[cod].map((l) => {
+    const q = c.find(
+      (x) => Number(x.preco) === Number(l.preco) && (x.descricao || null) === (l.descricao || null),
+    )?.quantidade
+    return { ...l, quantidade: Number(q) > 0 ? Number(q) : null }
+  })
+}
+
 const total = computed(() => Math.round((soma(CEDULAS) + soma(MOEDAS) + estoque.value) * 100) / 100)
 
 defineExpose({ total })
@@ -53,7 +74,21 @@ defineExpose({ total })
   <div>
     <div class="row q-col-gutter-lg">
       <div v-for="(c, ci) in colunas" :key="c.titulo" class="col-12 col-sm-6 column">
-        <div class="text-caption text-grey-7 q-mb-sm">{{ c.titulo }} (quantidade)</div>
+        <div class="row items-center q-mb-sm">
+          <div class="col text-caption text-grey-7">{{ c.titulo }} (quantidade)</div>
+          <q-btn
+            v-if="copia && !disable"
+            flat
+            round
+            size="sm"
+            color="grey-7"
+            icon="content_copy"
+            tabindex="-1"
+            @click="copiarFaces(c.faces)"
+          >
+            <q-tooltip>{{ copia.titulo }}</q-tooltip>
+          </q-btn>
+        </div>
         <div class="col row q-col-gutter-sm content-start">
           <div v-for="(v, i) in c.faces" :key="v" class="col-4">
             <MgInputValor
@@ -81,7 +116,21 @@ defineExpose({ total })
     <template v-if="itens.length">
       <q-separator class="q-my-md" />
       <div v-for="cod in Object.keys(blocos)" :key="cod" class="q-mb-sm">
-        <div class="text-caption text-grey-7 q-mb-sm">{{ nome(cod) }} (quantidade)</div>
+        <div class="row items-center q-mb-sm">
+          <div class="col text-caption text-grey-7">{{ nome(cod) }} (quantidade)</div>
+          <q-btn
+            v-if="copia && !disable"
+            flat
+            round
+            size="sm"
+            color="grey-7"
+            icon="content_copy"
+            tabindex="-1"
+            @click="copiarItem(cod)"
+          >
+            <q-tooltip>{{ copia.titulo }}</q-tooltip>
+          </q-btn>
+        </div>
         <LinhasItemCaixa v-model="model.itens[cod]" :disable="disable" />
       </div>
       <div class="row items-center q-mt-md">

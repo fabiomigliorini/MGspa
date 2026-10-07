@@ -1,6 +1,6 @@
 <script setup>
 // Fechamentos (M9 doc-3): tudo que o caixa movimentou e ainda não foi conferido na filial —
-// sessões da gaveta, lotes de maquineta, cheques, vales, duplicatas, vendas com diferença e, para o
+// lotes de maquineta, cheques, vales, duplicatas, vendas com diferença e, para o
 // financeiro, PIX a confirmar. O gerente abre um, digita às cegas e confirma. Pensada no celular.
 import { ref, computed, onMounted, watch } from 'vue'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
@@ -13,7 +13,6 @@ const store = useConferenciaStore()
 confissaoStore().configurar({ fixos: {} })
 
 const GRUPOS = [
-  { tipo: 'sessao', label: 'Caixas abertos', icone: 'point_of_sale', cor: 'green-7' },
   { tipo: 'lote', label: 'Maquinetas', icone: 'credit_card', cor: 'deep-orange-7' },
   { tipo: 'cheque', label: 'Cheques', icone: 'money', cor: 'teal-7' },
   { tipo: 'vale', label: 'Vales recebidos', icone: 'card_giftcard', cor: 'pink-6' },
@@ -30,8 +29,6 @@ const grupos = computed(() =>
 
 const destino = (p) => {
   switch (p.tipo) {
-    case 'sessao':
-      return { name: 'fechamento-sessao', params: { id: p.id } }
     case 'lote':
       return { name: 'fechamento-lote', params: { id: p.id } }
     case 'venda':

@@ -98,19 +98,27 @@ class CaixaItemController extends Controller
     }
 
     // ==== conta corrente da maquineta de parceiro ====
-    // todas devolvem o extrato de/ate (padrao: os ultimos 60 dias) ja' com o
-    // que mudou
+    // todas devolvem o extrato do periodo pedido ja' com o que mudou
 
+    // modo S semana (padrao), M mes: o periodo que contem `data` andando
+    // `passo`; P personalizado: de/ate
     private function extrato(Request $request, CaixaItem $item): array
     {
         $request->validate([
+            'modo' => 'nullable|in:S,M,P',
+            'data' => 'nullable|date',
+            'passo' => 'nullable|integer|between:-600,600',
             'de' => 'nullable|date',
             'ate' => 'nullable|date',
         ]);
+        $data = fn ($campo) => $request->input($campo) ? Carbon::parse($request->input($campo)) : null;
         return ['data' => CaixaItemContaService::extrato(
             $item,
-            $request->de ? Carbon::parse($request->de) : null,
-            $request->ate ? Carbon::parse($request->ate) : null
+            $request->input('modo') ?: CaixaItemContaService::PERIODO_SEMANA,
+            $data('data'),
+            (int) $request->input('passo', 0),
+            $data('de'),
+            $data('ate')
         )];
     }
 
@@ -129,13 +137,15 @@ class CaixaItemController extends Controller
             'valor' => 'required|numeric|min:0.01',
             'vencimento' => 'required|date',
             'observacoes' => 'nullable|string|max:200',
+            'transacao' => 'nullable|date',
         ]);
         $item = CaixaItem::findOrFail($id);
         DB::transaction(fn () => CaixaItemContaService::gerarTitulo(
             $item,
             (float) $dados['valor'],
             Carbon::parse($dados['vencimento']),
-            $dados['observacoes'] ?? null
+            $dados['observacoes'] ?? null,
+            !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null
         ));
         return $this->extrato($request, $item);
     }
@@ -199,6 +209,22 @@ class CaixaItemController extends Controller
     {
         Autorizador::autoriza(self::GRUPOS);
         return new CaixaItemResource(CaixaItemService::ativar(CaixaItem::findOrFail($id)));
+    }
+
+    // o saldo gravado de todos os itens (go-live, ou para corrigir); devolve a lista
+    public function recalcularSaldos(Request $request)
+    {
+        Autorizador::autoriza(self::GRUPOS);
+        DB::transaction(fn () => CaixaItemService::recalcularSaldos());
+        return $this->index($request);
+    }
+
+    public function recalcularSaldo(int $id)
+    {
+        Autorizador::autoriza(self::GRUPOS);
+        $item = CaixaItem::findOrFail($id);
+        DB::transaction(fn () => CaixaItemService::recalcularSaldo($item));
+        return new CaixaItemResource($item->fresh());
     }
 
     public function destroy(int $id)
