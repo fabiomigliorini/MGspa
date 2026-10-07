@@ -9,7 +9,7 @@ import { formataDataIso, formataTimestampIso } from '@components/formatters'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 
 export const MODOS = [
-  { value: 'C', label: 'Cédula (conta no caixa: chips)' },
+  { value: 'C', label: 'Conta como cédula (chips, ingressos)' },
   { value: 'M', label: 'Maquineta de parceiro' },
 ]
 
@@ -21,9 +21,6 @@ const vazio = () => ({
   codfilial: null,
   codcontacontabil: null,
 })
-
-const hoje = () => formataDataIso(new Date())
-const diasAtras = (n) => formataDataIso(new Date(Date.now() - n * 24 * 60 * 60 * 1000))
 
 export const useCaixaItemStore = defineStore('caixaItem', () => {
   const items = ref([])
@@ -49,14 +46,15 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
   const fechamentosTemMais = ref(true)
   // o total dos períodos fechados (todas as páginas), do servidor
   const fechamentosTotais = ref(null)
-  // a conta corrente da maquineta de parceiro: o extrato de/até, o título e o ajuste
+  // a conta corrente da maquineta de parceiro: o extrato de/até (sem eles, o servidor manda os
+  // últimos 60 dias e devolve as datas), o título e o ajuste
   const conta = ref(null)
-  const contaDe = ref(diasAtras(60))
-  const contaAte = ref(hoje())
+  const contaDe = ref(null)
+  const contaAte = ref(null)
   const tituloDialog = ref(false)
-  const tituloModel = ref({ valor: null, vencimento: hoje(), observacoes: '' })
+  const tituloModel = ref({})
   const ajusteDialog = ref(false)
-  const ajusteModel = ref({ sentido: null, valor: null, observacoes: '', transacao: null })
+  const ajusteModel = ref({})
 
   async function fetchItems() {
     loading.value = true
@@ -86,6 +84,8 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
       saldos.value = []
       tipos.value = []
       conta.value = null
+      contaDe.value = null
+      contaAte.value = null
       if (item.value.modo === 'M') {
         await carregarConta()
       } else {
@@ -109,42 +109,53 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
 
   // ==== conta corrente da maquineta de parceiro ====
 
-  async function carregarConta() {
-    try {
-      const { data } = await api.get(`v1/caixa-item/${item.value.codcaixaitem}/conta`, {
-        params: { de: contaDe.value, ate: contaAte.value },
-      })
-      conta.value = data.data
-    } catch (e) {
-      conta.value = null
-      notifyError(e, 'Erro ao carregar a conta corrente')
-    }
-  }
-
-  // o valor sugerido é o saldo (o que devemos ao parceiro), vencimento hoje
-  function abrirTitulo() {
-    const saldo = conta.value?.saldo ?? 0
-    tituloModel.value = { valor: saldo > 0 ? saldo : null, vencimento: hoje(), observacoes: '' }
-    tituloDialog.value = true
-  }
-
-  async function gerarTitulo() {
+  // toda rota da conta devolve o extrato de/até já com o que mudou
+  async function executarConta(fn, ok) {
     salvando.value = true
     try {
-      await api.post(`v1/caixa-item/${item.value.codcaixaitem}/conta/titulo`, tituloModel.value)
-      notifySuccess('Título a pagar gerado')
-      tituloDialog.value = false
-      await carregarConta()
+      const { data } = await fn({ de: contaDe.value, ate: contaAte.value })
+      conta.value = data.data
+      contaDe.value = data.data.de
+      contaAte.value = data.data.ate
+      if (ok) notifySuccess(ok)
+      return true
     } catch (e) {
-      notifyError(e, 'Erro ao gerar o título')
+      notifyError(e)
+      return false
     } finally {
       salvando.value = false
     }
   }
 
+  function carregarConta() {
+    return executarConta((params) =>
+      api.get(`v1/caixa-item/${item.value.codcaixaitem}/conta`, { params }),
+    )
+  }
+
+  // o valor sugerido é o saldo (o que devemos ao parceiro), vencimento hoje
+  function abrirTitulo() {
+    const saldo = conta.value?.saldo ?? 0
+    tituloModel.value = {
+      valor: saldo > 0 ? saldo : null,
+      vencimento: formataDataIso(new Date()),
+      observacoes: '',
+    }
+    tituloDialog.value = true
+  }
+
+  async function gerarTitulo() {
+    const url = `v1/caixa-item/${item.value.codcaixaitem}/conta/titulo`
+    if (
+      await executarConta((p) => api.post(url, { ...tituloModel.value, ...p }), 'Título gerado')
+    ) {
+      tituloDialog.value = false
+    }
+  }
+
   function abrirAjuste() {
     ajusteModel.value = {
-      sentido: null,
+      sinal: null,
       valor: null,
       observacoes: '',
       transacao: formataTimestampIso(new Date()),
@@ -152,34 +163,22 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
     ajusteDialog.value = true
   }
 
-  // sentido A aumenta o que devemos ao parceiro, D diminui (comissão que ele desconta)
+  // sinal 1 aumenta o que devemos ao parceiro, -1 diminui (comissão que ele desconta)
   async function ajustarConta() {
-    const m = ajusteModel.value
-    salvando.value = true
-    try {
-      await api.post(`v1/caixa-item/${item.value.codcaixaitem}/conta/ajuste`, {
-        valor: m.sentido === 'A' ? m.valor : -m.valor,
-        observacoes: m.observacoes,
-        transacao: m.transacao || null,
-      })
-      notifySuccess('Ajuste lançado')
+    const { sinal, valor, observacoes, transacao } = ajusteModel.value
+    const url = `v1/caixa-item/${item.value.codcaixaitem}/conta/ajuste`
+    const corpo = { valor: sinal * valor, observacoes, transacao }
+    if (await executarConta((p) => api.post(url, { ...corpo, ...p }), 'Ajuste lançado')) {
       ajusteDialog.value = false
-      await carregarConta()
-    } catch (e) {
-      notifyError(e, 'Erro ao lançar o ajuste')
-    } finally {
-      salvando.value = false
     }
   }
 
-  async function cancelarAcerto(codcaixaitemacerto, justificativa) {
-    try {
-      await api.post(`v1/caixa-item-acerto/${codcaixaitemacerto}/cancelar`, { justificativa })
-      notifySuccess('Lançamento cancelado')
-      await carregarConta()
-    } catch (e) {
-      notifyError(e, 'Erro ao cancelar')
-    }
+  function cancelarAcerto(codcaixaitemacerto, justificativa) {
+    return executarConta(
+      (p) =>
+        api.post(`v1/caixa-item-acerto/${codcaixaitemacerto}/cancelar`, { justificativa, ...p }),
+      'Lançamento cancelado',
+    )
   }
 
   function abrirFechamentos(saldo) {
@@ -246,6 +245,7 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
   }
 
   async function salvar() {
+    const modoAntes = item.value?.codcaixaitem === model.value.codcaixaitem ? item.value.modo : null
     salvando.value = true
     try {
       const { data } = isNovo.value
@@ -254,9 +254,8 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
       upsertLocal(data.data)
       notifySuccess(isNovo.value ? 'Item criado' : 'Item atualizado')
       dialog.value = false
-      // trocou o modo na tela do item: a conta corrente ou os saldos
-      if (item.value?.codcaixaitem === data.data.codcaixaitem)
-        await carregar(data.data.codcaixaitem)
+      // trocou o modo na tela do item: a conta corrente no lugar dos saldos, ou o contrário
+      if (modoAntes && modoAntes !== data.data.modo) await carregar(data.data.codcaixaitem)
     } catch (e) {
       notifyError(e, 'Erro ao salvar o item')
     } finally {

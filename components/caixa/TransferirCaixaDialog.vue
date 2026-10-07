@@ -8,9 +8,9 @@ import { ref, computed, watch } from 'vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
-import { formataTimestamp, formataTimestampIso } from '@components/formatters'
+import { formataTimestampIso } from '@components/formatters'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
-import { periodoStore } from '@components/stores/periodoStore'
+import { periodoStore, limitePeriodo, dentroDoPeriodo } from '@components/stores/periodoStore'
 
 const store = periodoStore()
 const caixa = computed(() => !!store.portador?.ehCaixa)
@@ -28,26 +28,18 @@ const SENTIDOS = computed(() =>
 )
 // a data fica dentro do período da tela (do início ao fim; aberto, até agora)
 const sessao = computed(() => store.periodo)
-const limite = () =>
-  sessao.value?.fim && new Date(sessao.value.fim) < new Date()
-    ? new Date(sessao.value.fim)
-    : new Date()
 // lê o valor do form (ISO), não o texto que o MgInputData passa às rules; vazio fica com o !!v
-const naSessao = () => {
-  if (!form.value.transacao) return true
-  const d = new Date(form.value.transacao)
-  if (d > new Date()) return 'Não pode ser no futuro'
-  if (sessao.value && (d < new Date(sessao.value.inicio) || d > limite())) {
-    return `Fora do período (de ${formataTimestamp(sessao.value.inicio, 0)} a ${formataTimestamp(limite(), 0)})`
-  }
-  return true
-}
+const naSessao = () =>
+  !form.value.transacao ||
+  (new Date(form.value.transacao) > new Date()
+    ? 'Não pode ser no futuro'
+    : dentroDoPeriodo(sessao.value, form.value.transacao))
 const vazio = () => ({
   sentido: 'E',
   codportador: null,
   valor: null,
   observacoes: '',
-  transacao: formataTimestampIso(limite()),
+  transacao: formataTimestampIso(limitePeriodo(sessao.value)),
 })
 const form = ref(vazio())
 // o q-option-group não tem autofocus: ao abrir, o foco vai no rádio marcado

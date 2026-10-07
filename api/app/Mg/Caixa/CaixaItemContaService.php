@@ -42,39 +42,39 @@ class CaixaItemContaService
         CaixaItem::whereKey($item->codcaixaitem)->lockForUpdate()->first();
     }
 
-    // o que devemos ao parceiro (antes de $antes, se informado): borderos que
+    // o que devemos ao parceiro (antes de $antes; sem ele, tudo): borderos que
     // valem + acertos nao cancelados
     public static function saldo(CaixaItem $item, ?Carbon $antes = null): float
     {
+        $antes = $antes ?? Carbon::create(9999);
         $r = DB::selectOne("
             select
                 coalesce((
                     select sum(m.valor) from tblportadormovimento m
                     where m.codcaixaitem = :item1 and m.tipo = 'M' and m.estado <> 'C'
-                    and (cast(:antes1 as timestamp) is null or m.transacao < cast(:antes2 as timestamp))
+                    and m.transacao < :antes1
                 ), 0)
                 + coalesce((
                     select sum(a.valor) from tblcaixaitemacerto a
                     where a.codcaixaitem = :item2 and a.cancelamento is null
-                    and (cast(:antes3 as timestamp) is null or a.transacao < cast(:antes4 as timestamp))
+                    and a.transacao < :antes2
                 ), 0) as saldo
         ", [
             'item1' => $item->codcaixaitem,
             'item2' => $item->codcaixaitem,
             'antes1' => $antes,
             'antes2' => $antes,
-            'antes3' => $antes,
-            'antes4' => $antes,
         ]);
         return round((float) $r->saldo, 2);
     }
 
-    // o extrato de $de a $ate (dias inteiros): saldo anterior, as linhas
-    // (canceladas tambem, sem saldo) com o saldo corrente e o saldo no fim
-    public static function extrato(CaixaItem $item, Carbon $de, Carbon $ate): array
+    // o extrato de $de a $ate (dias inteiros; sem eles, os ultimos 60 dias):
+    // saldo anterior, as linhas (canceladas tambem, sem saldo) com o saldo
+    // corrente, o saldo no fim e o de hoje
+    public static function extrato(CaixaItem $item, ?Carbon $de = null, ?Carbon $ate = null): array
     {
-        $de = $de->copy()->startOfDay();
-        $ate = $ate->copy()->endOfDay();
+        $ate = ($ate ?? Carbon::today())->copy()->endOfDay();
+        $de = ($de ?? $ate->copy()->subDays(60))->copy()->startOfDay();
         $regs = DB::select("
             select * from (
                 select
@@ -143,6 +143,7 @@ class CaixaItemContaService
             $fotos = $bordero ? PortadorLancamentoService::fotos((int) $r->codigo) : [];
             return [
                 'origem' => $r->origem,
+                'texto' => static::texto($r),
                 'codigo' => (int) $r->codigo,
                 'transacao' => Carbon::parse($r->transacao)->toIso8601String(),
                 'valor' => (float) $r->valor,
@@ -173,6 +174,18 @@ class CaixaItemContaService
             'saldofinal' => $saldo,
             'saldo' => static::saldo($item),
         ];
+    }
+
+    // "Borderô: Caixa 1", "Devolução: Caixa 1", "Título 2026-10-06", "Ajuste"
+    private static function texto(object $r): string
+    {
+        switch ($r->origem) {
+            case static::ORIGEM_BORDERO:
+                return ($r->valor < 0 ? 'Devolução: ' : 'Borderô: ') . $r->portador;
+            case CaixaItemAcerto::TIPO_TITULO:
+                return "Título {$r->numero}";
+        }
+        return 'Ajuste';
     }
 
     // o titulo a pagar ao parceiro (pessoa, filial e conta do item), em aberto

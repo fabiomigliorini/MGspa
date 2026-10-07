@@ -4,11 +4,11 @@ namespace Mg\Portador;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Mg\Caixa\CaixaItem;
 use Mg\Caixa\CaixaItemService;
 use Mg\Caixa\CaixaService;
 use Mg\Negocio\NegocioAnexoService;
+use Mg\Usuario\Autorizador;
 
 /**
  * Ajuste, transferencia e item (doc-4, redefinicao do dinheiro e "Itens do
@@ -184,8 +184,6 @@ class PortadorLancamentoService
 
     // ==== bordero da maquineta de parceiro ====
 
-    const DISCO = 'negocio-anexo';
-
     // o total em dinheiro do bordero (com sinal: negativo devolveu dinheiro)
     // no portador em especie; a foto e' opcional (a tela avisa sem bordero)
     public static function lancarMaquineta(PortadorPeriodo $periodo, CaixaItem $item, float $valor, ?string $observacoes = null, ?Carbon $transacao = null, ?string $anexoBase64 = null, ?int $livre = null): PortadorMovimento
@@ -223,51 +221,42 @@ class PortadorLancamentoService
         ]);
         PortadorPeriodoService::recalcular($periodo);
         if (!empty($anexoBase64)) {
-            static::gravarFoto($mov, $anexoBase64);
+            NegocioAnexoService::gravarFoto(static::pastaFoto($mov->codportadormovimento), $anexoBase64);
         }
         return $mov;
     }
 
     // a foto do bordero depois do lancamento (nao muda valor: vale com o
     // periodo fechado), por quem opera o portador
-    public static function anexarFoto(PortadorMovimento $mov, string $anexoBase64): string
+    public static function anexarFoto(PortadorMovimento $mov, string $anexoBase64): void
     {
         if ($mov->tipo != PortadorMovimento::TIPO_MAQUINETA || !$mov->valendo()) {
             abort(422, 'Foto só no borderô de maquineta que vale.');
         }
-        $portador = $mov->Portador;
-        if (!static::pode($portador, PortadorUsuario::PAPEL_OPERADOR, null)) {
-            PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Anexar foto do borderô');
+        if (!static::pode($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, null)) {
+            PortadorAutorizador::autorizar($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, 'Anexar foto do borderô');
         }
-        return static::gravarFoto($mov, $anexoBase64);
+        NegocioAnexoService::gravarFoto(static::pastaFoto($mov->codportadormovimento), $anexoBase64);
     }
 
-    private static function diretorioFoto(int $codportadormovimento): string
+    // ve a foto quem opera o portador e o financeiro (conta corrente da
+    // maquineta)
+    public static function mostrarFoto(PortadorMovimento $mov, string $arquivo)
     {
-        return "portador-movimento/{$codportadormovimento}";
-    }
-
-    private static function gravarFoto(PortadorMovimento $mov, string $anexoBase64): string
-    {
-        $arquivo = static::diretorioFoto($mov->codportadormovimento) . '/' . date('Y-m-d-H-i-s') . '-' . uniqid() . '.jpeg';
-        Storage::disk(static::DISCO)->put($arquivo, NegocioAnexoService::jpeg($anexoBase64, 1600, 1600));
-        return basename($arquivo);
+        if (!PortadorAutorizador::pode($mov->codportador, PortadorUsuario::PAPEL_OPERADOR)) {
+            Autorizador::autoriza(['Administrador', 'Financeiro']);
+        }
+        return NegocioAnexoService::mostrarFoto(static::pastaFoto($mov->codportadormovimento), $arquivo);
     }
 
     public static function fotos(int $codportadormovimento): array
     {
-        $arquivos = Storage::disk(static::DISCO)->files(static::diretorioFoto($codportadormovimento));
-        sort($arquivos, SORT_STRING);
-        return array_map('basename', $arquivos);
+        return NegocioAnexoService::fotos(static::pastaFoto($codportadormovimento));
     }
 
-    public static function caminhoFoto(int $codportadormovimento, string $arquivo): string
+    private static function pastaFoto(int $codportadormovimento): string
     {
-        $caminho = static::diretorioFoto($codportadormovimento) . '/' . basename($arquivo);
-        if (!Storage::disk(static::DISCO)->exists($caminho)) {
-            abort(404, 'Foto inexistente!');
-        }
-        return $caminho;
+        return "portador-movimento/{$codportadormovimento}";
     }
 
     private static function cancelarLinha(PortadorMovimento $mov, string $justificativa): void

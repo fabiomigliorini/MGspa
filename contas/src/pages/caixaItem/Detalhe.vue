@@ -24,7 +24,7 @@ const route = useRoute()
 const router = useRouter()
 const $q = useQuasar()
 const store = useCaixaItemStore()
-const { item, saldos, tipos, loading } = storeToRefs(store)
+const { item, saldos, tipos, conta, loading } = storeToRefs(store)
 
 const codcaixaitem = computed(() => Number(route.params.codcaixaitem))
 const maquineta = computed(() => item.value?.modo === 'M')
@@ -55,8 +55,9 @@ watch(codcaixaitem, (cod) => cod && store.carregar(cod))
 <template>
   <q-page>
     <div v-if="item" class="q-pa-md" style="max-width: 1086px; margin: auto">
-      <!-- voltar, nome e ações; o nome encolhe com reticências e as ações não -->
-      <div class="row no-wrap items-center q-col-gutter-x-sm q-mb-sm">
+      <!-- voltar, nome e ações, como no portador; a maquineta mostra o saldo a pagar ao parceiro.
+           No celular o saldo e as ações descem para a linha de baixo -->
+      <div class="row items-center q-col-gutter-x-sm q-mb-sm">
         <div class="col-auto">
           <q-btn flat round icon="arrow_back" color="grey-7" :to="{ name: 'caixa-item' }" />
         </div>
@@ -69,8 +70,17 @@ watch(codcaixaitem, (cod) => cod && store.carregar(cod))
             Inativo desde {{ formataTimestamp(item.inativo) }}
           </div>
         </div>
-        <div class="col-auto">
+        <div class="col-12 col-sm-auto">
           <div class="row items-center no-wrap">
+            <div
+              v-if="maquineta && conta"
+              class="text-h6 q-mr-sm"
+              :class="conta.saldo < 0 ? 'text-red-8' : 'text-grey-9'"
+            >
+              R$ {{ formataNumero(conta.saldo) }}
+              <q-tooltip>Saldo a pagar ao parceiro</q-tooltip>
+            </div>
+            <q-space />
             <MgInfoCriacao :registro="item" />
             <q-btn flat round size="sm" color="grey-7" icon="edit" @click="store.abrirEditar(item)">
               <q-tooltip>Editar</q-tooltip>
@@ -92,7 +102,7 @@ watch(codcaixaitem, (cod) => cod && store.carregar(cod))
         </div>
       </div>
 
-      <CaixaItemContaCorrente v-if="maquineta" />
+      <CaixaItemContaCorrente v-if="maquineta" class="q-mb-md" />
 
       <q-card v-else-if="saldos.length" flat bordered class="q-mb-md">
         <q-list separator>
@@ -154,7 +164,7 @@ watch(codcaixaitem, (cod) => cod && store.carregar(cod))
         Nenhum caixa mexeu com este item.
       </MgEmptyState>
 
-      <q-card v-if="!maquineta && tipos.length" flat bordered class="q-mb-md">
+      <q-card v-if="tipos.length" flat bordered class="q-mb-md">
         <q-list separator>
           <q-item>
             <q-item-section>

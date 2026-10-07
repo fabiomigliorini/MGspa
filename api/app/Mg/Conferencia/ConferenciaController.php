@@ -5,12 +5,12 @@ namespace Mg\Conferencia;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Mg\Maquineta\Maquineta;
 use Mg\Maquineta\MaquinetaLote;
 use Mg\Maquineta\MaquinetaLoteService;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioAcerto;
+use Mg\Negocio\NegocioAnexoService;
 use Mg\Pagamento\Pagamento;
 
 /**
@@ -86,7 +86,7 @@ class ConferenciaController extends Controller
     public function mostrarFotoLote(int $id, string $arquivo)
     {
         $lote = $this->lote($id);
-        return Storage::disk(MaquinetaLoteService::DISCO)->response(MaquinetaLoteService::caminhoFoto($lote, $arquivo));
+        return NegocioAnexoService::mostrarFoto(MaquinetaLoteService::diretorioFoto($lote), $arquivo);
     }
 
     // ---- venda desbalanceada ----

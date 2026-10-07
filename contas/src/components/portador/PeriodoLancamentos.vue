@@ -251,7 +251,7 @@ function cancelar(l) {
                 <q-badge v-if="cancelado(l)" color="grey-5" label="cancelado" />
                 <q-badge v-if="l.semBordero" color="orange-8" label="sem borderô" />
                 <q-btn
-                  v-if="l.tipo === 'M' && (l.fotos?.length || l.podeAnexar)"
+                  v-if="l.fotos?.length || l.podeAnexar"
                   flat
                   round
                   size="sm"
@@ -336,7 +336,6 @@ function cancelar(l) {
       :codportadormovimento="fotosDe"
       :fotos="linhaFotos?.fotos ?? []"
       :pode-anexar="!!linhaFotos?.podeAnexar"
-      :anexar="(b) => store.anexarFotoBordero(fotosDe, b)"
     />
   </q-card>
 </template>

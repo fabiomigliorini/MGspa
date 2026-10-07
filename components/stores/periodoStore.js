@@ -10,7 +10,7 @@ import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
-import { formataNumero } from '@components/formatters'
+import { formataNumero, formataTimestamp } from '@components/formatters'
 
 const avisar = (ok, message) =>
   Notify.create({
@@ -47,6 +47,22 @@ export const linhasParaSalvar = (linhas) =>
   (linhas || [])
     .filter((l) => Number(l.quantidade) > 0)
     .map((l) => ({ preco: l.preco, descricao: l.descricao || null, quantidade: l.quantidade }))
+
+// a data dos lançamentos do período da tela vai do início ao fim (aberto, até agora)
+export const limitePeriodo = (periodo) =>
+  periodo?.fim && new Date(periodo.fim) < new Date() ? new Date(periodo.fim) : new Date()
+
+// regra do MgInputData da data: lê o valor do form (ISO), não o texto que o MgInputData passa às
+// rules; vazio fica com o !!v
+export const dentroDoPeriodo = (periodo, transacao) => {
+  if (!periodo || !transacao) return true
+  const d = new Date(transacao)
+  const ate = limitePeriodo(periodo)
+  return (
+    (d >= new Date(periodo.inicio) && d <= ate) ||
+    `Fora do período (de ${formataTimestamp(periodo.inicio, 0)} a ${formataTimestamp(ate, 0)})`
+  )
+}
 
 export const PAPEIS = [
   { value: 'D', label: 'Depositante', descricao: 'só manda dinheiro para ele' },

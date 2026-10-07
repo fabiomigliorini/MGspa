@@ -10,8 +10,8 @@ import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSlim from '@components/MgSlim.vue'
-import { formataTimestamp, formataTimestampIso } from '@components/formatters'
-import { periodoStore } from '@components/stores/periodoStore'
+import { formataTimestampIso } from '@components/formatters'
+import { periodoStore, limitePeriodo, dentroDoPeriodo } from '@components/stores/periodoStore'
 
 const SENTIDOS = [
   { label: 'Dinheiro recebido', value: 1 },
@@ -24,19 +24,7 @@ const maquinetas = computed(() =>
   (periodo.value?.maquinetas || []).map((m) => ({ value: m.codcaixaitem, label: m.item })),
 )
 
-const limite = () =>
-  periodo.value?.fim && new Date(periodo.value.fim) < new Date()
-    ? new Date(periodo.value.fim)
-    : new Date()
-// lê o valor do form (ISO), não o texto que o MgInputData passa às rules; vazio fica com o !!v
-const noPeriodo = () => {
-  if (!periodo.value || !form.value.transacao) return true
-  const d = new Date(form.value.transacao)
-  return (
-    (d >= new Date(periodo.value.inicio) && d <= limite()) ||
-    `Fora do período (de ${formataTimestamp(periodo.value.inicio, 0)} a ${formataTimestamp(limite(), 0)})`
-  )
-}
+const noPeriodo = () => dentroDoPeriodo(periodo.value, form.value.transacao)
 
 // com uma maquineta só, ela já vem escolhida; com várias, quem lança escolhe
 const vazio = () => ({
@@ -44,7 +32,7 @@ const vazio = () => ({
   sinal: 1,
   valor: null,
   observacoes: '',
-  transacao: formataTimestampIso(limite()),
+  transacao: formataTimestampIso(limitePeriodo(periodo.value)),
   anexoBase64: null,
 })
 const form = ref(vazio())

@@ -5,7 +5,6 @@ namespace Mg\Maquineta;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Mg\Negocio\NegocioAnexoService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
@@ -18,8 +17,6 @@ use Mg\Pagamento\PagamentoService;
  */
 class MaquinetaLoteService
 {
-    const DISCO = 'negocio-anexo';
-
     // lote que recebe o cartao agora; trava a maquineta para dois PDVs nao
     // abrirem dois lotes ao mesmo tempo
     public static function corrente(int $codmaquineta): MaquinetaLote
@@ -161,24 +158,11 @@ class MaquinetaLoteService
 
     public static function fotos(MaquinetaLote $lote): array
     {
-        $arquivos = Storage::disk(static::DISCO)->files(static::diretorioFoto($lote));
-        sort($arquivos, SORT_STRING);
-        return array_map('basename', $arquivos);
+        return NegocioAnexoService::fotos(static::diretorioFoto($lote));
     }
 
     public static function anexarFoto(MaquinetaLote $lote, string $anexoBase64): string
     {
-        $arquivo = static::diretorioFoto($lote) . '/' . date('Y-m-d-H-i-s') . '-' . uniqid() . '.jpeg';
-        Storage::disk(static::DISCO)->put($arquivo, NegocioAnexoService::jpeg($anexoBase64, 1600, 1600));
-        return basename($arquivo);
-    }
-
-    public static function caminhoFoto(MaquinetaLote $lote, string $arquivo): string
-    {
-        $caminho = static::diretorioFoto($lote) . '/' . basename($arquivo);
-        if (!Storage::disk(static::DISCO)->exists($caminho)) {
-            abort(404, 'Foto inexistente!');
-        }
-        return $caminho;
+        return NegocioAnexoService::gravarFoto(static::diretorioFoto($lote), $anexoBase64);
     }
 }

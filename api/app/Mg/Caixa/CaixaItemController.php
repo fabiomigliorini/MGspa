@@ -98,20 +98,28 @@ class CaixaItemController extends Controller
     }
 
     // ==== conta corrente da maquineta de parceiro ====
+    // todas devolvem o extrato de/ate (padrao: os ultimos 60 dias) ja' com o
+    // que mudou
 
-    // o extrato de/ate (padrao: os ultimos 60 dias)
-    public function conta(Request $request, int $id)
+    private function extrato(Request $request, CaixaItem $item): array
     {
-        Autorizador::autoriza(self::GRUPOS);
         $request->validate([
             'de' => 'nullable|date',
             'ate' => 'nullable|date',
         ]);
+        return ['data' => CaixaItemContaService::extrato(
+            $item,
+            $request->de ? Carbon::parse($request->de) : null,
+            $request->ate ? Carbon::parse($request->ate) : null
+        )];
+    }
+
+    public function conta(Request $request, int $id)
+    {
+        Autorizador::autoriza(self::GRUPOS);
         $item = CaixaItem::findOrFail($id);
         CaixaItemContaService::exigirMaquineta($item);
-        $ate = $request->ate ? Carbon::parse($request->ate) : Carbon::today();
-        $de = $request->de ? Carbon::parse($request->de) : $ate->copy()->subDays(60);
-        return ['data' => CaixaItemContaService::extrato($item, $de, $ate)];
+        return $this->extrato($request, $item);
     }
 
     public function gerarTitulo(Request $request, int $id)
@@ -122,13 +130,14 @@ class CaixaItemController extends Controller
             'vencimento' => 'required|date',
             'observacoes' => 'nullable|string|max:200',
         ]);
-        $acerto = DB::transaction(fn () => CaixaItemContaService::gerarTitulo(
-            CaixaItem::findOrFail($id),
+        $item = CaixaItem::findOrFail($id);
+        DB::transaction(fn () => CaixaItemContaService::gerarTitulo(
+            $item,
             (float) $dados['valor'],
             Carbon::parse($dados['vencimento']),
             $dados['observacoes'] ?? null
         ));
-        return ['data' => ['codcaixaitemacerto' => $acerto->codcaixaitemacerto, 'codtitulo' => $acerto->codtitulo]];
+        return $this->extrato($request, $item);
     }
 
     // valor com sinal: positivo aumenta o que devemos ao parceiro
@@ -140,24 +149,23 @@ class CaixaItemController extends Controller
             'observacoes' => 'required|string|min:3|max:300',
             'transacao' => 'nullable|date',
         ]);
-        $acerto = DB::transaction(fn () => CaixaItemContaService::ajustar(
-            CaixaItem::findOrFail($id),
+        $item = CaixaItem::findOrFail($id);
+        DB::transaction(fn () => CaixaItemContaService::ajustar(
+            $item,
             (float) $dados['valor'],
             $dados['observacoes'],
             !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null
         ));
-        return ['data' => ['codcaixaitemacerto' => $acerto->codcaixaitemacerto]];
+        return $this->extrato($request, $item);
     }
 
     public function cancelarAcerto(Request $request, int $id)
     {
         Autorizador::autoriza(self::GRUPOS);
         $request->validate(['justificativa' => 'required|string|min:5|max:300']);
-        $acerto = DB::transaction(fn () => CaixaItemContaService::cancelar(
-            CaixaItemAcerto::findOrFail($id),
-            $request->justificativa
-        ));
-        return ['data' => ['codcaixaitemacerto' => $acerto->codcaixaitemacerto]];
+        $acerto = CaixaItemAcerto::findOrFail($id);
+        DB::transaction(fn () => CaixaItemContaService::cancelar($acerto, $request->justificativa));
+        return $this->extrato($request, $acerto->CaixaItem);
     }
 
     // "1 × 25,00 Claro · 2 × 30,00 Oi"

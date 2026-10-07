@@ -504,19 +504,25 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
   `CaixaItemContaService` (`saldo`, `extrato`, `gerarTitulo` via `TituloService::criar`,
   `ajustar`, `cancelar`); rotas `GET v1/caixa-item/{id}/conta`, `POST .../conta/titulo`,
   `POST .../conta/ajuste`, `POST v1/caixa-item-acerto/{id}/cancelar`.
-  `PortadorLancamentoService::lancarMaquineta`, `anexarFoto`/`fotos`/`caminhoFoto` (disco
-  `negocio-anexo`, pasta `portador-movimento/{cod}`, sem coluna); `lancarItem` recusa maquineta;
-  cancelar aceita o M. Rotas `POST v1/portador-periodo/{id}/maquineta`,
+  `PortadorLancamentoService::lancarMaquineta`, `anexarFoto`/`fotos`/`mostrarFoto` (disco
+  `negocio-anexo`, pasta `portador-movimento/{cod}`, sem coluna; a foto do borderô, do lote e da
+  maquineta de parceiro, grava e lê por `NegocioAnexoService::gravarFoto/fotos/mostrarFoto`);
+  `lancarItem` recusa maquineta; cancelar aceita o M. As rotas da conta corrente devolvem o
+  extrato de/até já com o que mudou. Rotas `POST v1/portador-periodo/{id}/maquineta`,
   `POST/GET v1/portador-movimento/{id}/foto`. `PortadorPeriodoResource`: origem M "Maquinetas de
   parceiros" no resumo (e no borderô impresso), linha "Borderô: …"/"Devolução: …" com `fotos`,
   `semBordero`, `podeAnexar`; `itens` só os de cédula; `maquinetas` ativas para o diálogo.
   `CaixaService::dinheiro` com o documento M.
 - **Front**: `@components/caixa/MaquinetaCaixaDialog` (borderô, com `MgSlim` para a foto) e
-  `BorderoFotosDialog` (ver e anexar); `periodoStore.lancarMaquineta/anexarFotoBordero`; contas:
+  `BorderoFotosDialog` (ver e anexar); `periodoStore.lancarMaquineta/anexarFotoBordero` e os
+  helpers `limitePeriodo`/`dentroDoPeriodo` (a data dentro do período, usada pelos diálogos de
+  ajuste, item, maquineta e transferência); contas:
   botão `point_of_sale` nos lançamentos do período em espécie, badge "sem borderô" e câmera na
   linha; cadastro com o modo e, na maquineta, parceiro, filial e conta; tela do item da maquineta
-  com a conta corrente (`CaixaItemContaCorrente`, `CaixaItemTituloDialog`,
-  `CaixaItemAjusteDialog`); lista dos itens mostra o parceiro da maquineta.
+  com o saldo a pagar no cabeçalho e a conta corrente no mesmo desenho do extrato do período
+  (`CaixaItemContaCorrente`, `CaixaItemTituloDialog`, `CaixaItemAjusteDialog`); lista dos itens
+  mostra o parceiro da maquineta. O modo do item não muda depois de qualquer lançamento (caixa
+  ou conta corrente).
 
 ### Valida (maquinetas de parceiro)
 

@@ -48,7 +48,6 @@ const { dialog, model, isNovo, salvando } = storeToRefs(store)
               <div class="col-12 col-sm-6">
                 <MgSelectFilial
                   v-model="model.codfilial"
-                  outlined
                   label="Filial do título"
                   :rules="[(v) => !!v || 'Obrigatório']"
                   lazy-rules
@@ -57,7 +56,6 @@ const { dialog, model, isNovo, salvando } = storeToRefs(store)
               <div class="col-12 col-sm-6">
                 <MgSelectContaContabil
                   v-model="model.codcontacontabil"
-                  outlined
                   label="Conta contábil do título"
                   :rules="[(v) => !!v || 'Obrigatório']"
                   lazy-rules

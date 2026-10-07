@@ -6,10 +6,8 @@ use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Mg\Caixa\CaixaItem;
 use Mg\Pdv\Pdv;
-use Mg\Usuario\Autorizador;
 
 /**
  * Ajuste, transferencia e item (doc-4, redefinicao do dinheiro): movimento do
@@ -118,17 +116,9 @@ class PortadorLancamentoController extends Controller
         return $this->resposta($mov);
     }
 
-    // quem ve o portador ve a foto; o financeiro, pela conta corrente da
-    // maquineta
     public function mostrarFoto(int $id, string $arquivo)
     {
-        $mov = PortadorMovimento::with('Portador')->findOrFail($id);
-        if (!PortadorAutorizador::pode($mov->codportador, PortadorUsuario::PAPEL_OPERADOR)) {
-            Autorizador::autoriza(['Administrador', 'Financeiro']);
-        }
-        return Storage::disk(PortadorLancamentoService::DISCO)->response(
-            PortadorLancamentoService::caminhoFoto($mov->codportadormovimento, $arquivo)
-        );
+        return PortadorLancamentoService::mostrarFoto(PortadorMovimento::findOrFail($id), $arquivo);
     }
 
     public function transferir(Request $request)

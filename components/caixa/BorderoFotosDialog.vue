@@ -1,58 +1,54 @@
 <script setup>
 // Fotos do borderô de um lançamento da maquineta de parceiro (doc-4, "Itens de parceiro"): mostra
-// as que já foram anexadas e, para quem opera o portador, anexa mais uma (a foto não muda valor:
-// vale com o período fechado). `anexar(base64)` envia e devolve se deu certo; a tela que usa
-// recarrega a linha.
+// as que já foram anexadas e, com `podeAnexar` (quem opera o portador), anexa mais uma pelo
+// periodoStore (a foto não muda valor: vale com o período fechado); o período volta com a linha
+// atualizada.
 import { ref, watch, onBeforeUnmount } from 'vue'
 import { api } from 'src/services/api'
 import MgSlim from '@components/MgSlim.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import { blobUrlFromApi } from '@components/blobUrlFromApi'
+import { periodoStore } from '@components/stores/periodoStore'
 
 const props = defineProps({
   codportadormovimento: { type: Number, default: null },
   fotos: { type: Array, default: () => [] },
   podeAnexar: { type: Boolean, default: false },
-  anexar: { type: Function, default: null },
 })
 const aberto = defineModel({ type: Boolean, default: false })
 
+const store = periodoStore()
 const urls = ref([])
-const enviando = ref(false)
+// cada carga tem a sua vez: a que chegar atrasada (fechou ou trocou de linha) é descartada
+let vez = 0
 
 function limpar() {
+  vez++
   urls.value.forEach((f) => URL.revokeObjectURL(f.url))
   urls.value = []
 }
 
 async function carregar() {
   limpar()
+  const minha = vez
   for (const arquivo of props.fotos) {
+    let url
     try {
-      const url = await blobUrlFromApi(
+      url = await blobUrlFromApi(
         api,
         `v1/portador-movimento/${props.codportadormovimento}/foto/${arquivo}`,
         null,
       )
-      urls.value.push({ arquivo, url })
     } catch {
-      // foto que não abre não impede ver as outras
+      continue // foto que não abre não impede ver as outras
     }
-  }
-}
-
-async function enviar(base64) {
-  if (!props.anexar) return
-  enviando.value = true
-  try {
-    await props.anexar(base64)
-  } finally {
-    enviando.value = false
+    if (minha !== vez) return URL.revokeObjectURL(url)
+    urls.value.push({ arquivo, url })
   }
 }
 
 watch(
-  () => [aberto.value, props.fotos.join('|')],
+  () => [aberto.value, props.codportadormovimento, props.fotos.join('|')],
   ([sim]) => (sim ? carregar() : limpar()),
 )
 onBeforeUnmount(limpar)
@@ -64,18 +60,20 @@ onBeforeUnmount(limpar)
       <q-card-section class="text-grey-9 text-overline">FOTO DO BORDERÔ</q-card-section>
       <q-separator inset />
       <q-card-section>
-        <div v-if="urls.length" class="row q-col-gutter-sm q-mb-md">
+        <div v-if="fotos.length" class="row q-col-gutter-sm q-mb-md">
           <div v-for="f in urls" :key="f.arquivo" class="col-6 col-sm-4">
             <a :href="f.url" target="_blank">
               <q-img :src="f.url" :ratio="1" fit="contain" class="rounded-borders" />
             </a>
           </div>
         </div>
-        <MgEmptyState v-else-if="!fotos.length" plain icon="no_photography">
-          Sem a foto do borderô.
-        </MgEmptyState>
-        <MgSlim v-if="podeAnexar" label="Toque para fotografar o borderô" @imagem="enviar" />
-        <q-inner-loading :showing="enviando" />
+        <MgEmptyState v-else plain icon="no_photography">Sem a foto do borderô.</MgEmptyState>
+        <MgSlim
+          v-if="podeAnexar"
+          label="Toque para fotografar o borderô"
+          @imagem="(b) => store.anexarFotoBordero(codportadormovimento, b)"
+        />
+        <q-inner-loading :showing="store.salvando" />
       </q-card-section>
       <q-separator inset />
       <q-card-actions align="right">

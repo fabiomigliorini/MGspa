@@ -9,8 +9,8 @@ import MgInputValor from '@components/MgInputValor.vue'
 import { useCaixaItemStore } from 'src/stores/caixaItemStore'
 
 const SENTIDOS = [
-  { label: 'Aumenta o que devemos', value: 'A' },
-  { label: 'Diminui o que devemos', value: 'D' },
+  { label: 'Aumenta o que devemos', value: 1 },
+  { label: 'Diminui o que devemos', value: -1 },
 ]
 
 const store = useCaixaItemStore()
@@ -49,13 +49,13 @@ const { ajusteDialog, ajusteModel, salvando } = storeToRefs(store)
             <div class="col-12">
               <!-- o q-option-group não tem rules: o q-field sem borda valida a escolha -->
               <q-field
-                v-model="ajusteModel.sentido"
+                v-model="ajusteModel.sinal"
                 borderless
                 :rules="[(v) => !!v || 'Informe se aumenta ou diminui']"
               >
                 <template #control>
                   <q-option-group
-                    v-model="ajusteModel.sentido"
+                    v-model="ajusteModel.sinal"
                     type="radio"
                     inline
                     :options="SENTIDOS"

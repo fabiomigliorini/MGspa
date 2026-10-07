@@ -17,7 +17,7 @@ class CaixaItemService
 {
     public static function listar(array $filtros)
     {
-        $q = CaixaItem::query();
+        $q = CaixaItem::with(['Pessoa:codpessoa,fantasia', 'Filial:codfilial,filial', 'ContaContabil:codcontacontabil,contacontabil']);
         if (!empty($filtros['item'])) {
             $q->where('item', 'ilike', '%' . $filtros['item'] . '%');
         }
@@ -361,14 +361,16 @@ class CaixaItemService
         ];
     }
 
-    // o modo nao muda depois que o item mexeu em caixa; o item que conta como
+    // o modo nao muda depois que o item tem lancamento (caixa ou conta corrente); o item que conta como
     // cedula nao tem pessoa, filial nem conta
     public static function salvar(CaixaItem $item, array $dados): CaixaItem
     {
         $modo = $dados['modo'] ?? $item->modo ?? CaixaItem::MODO_CEDULA;
-        if ($item->exists && $item->modo != $modo
-            && PortadorMovimento::where('codcaixaitem', $item->codcaixaitem)->exists()) {
-            abort(409, "{$item->item} já foi lançado em caixa: não muda de "
+        if ($item->exists && $item->modo != $modo && (
+            PortadorMovimento::where('codcaixaitem', $item->codcaixaitem)->exists()
+            || CaixaItemAcerto::where('codcaixaitem', $item->codcaixaitem)->exists()
+        )) {
+            abort(409, "{$item->item} já tem lançamento: não muda de "
                 . ($item->ehMaquineta() ? 'maquineta para cédula.' : 'cédula para maquineta.'));
         }
         if ($modo == CaixaItem::MODO_CEDULA) {

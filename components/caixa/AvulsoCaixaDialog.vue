@@ -7,8 +7,8 @@ import { ref, computed, watch } from 'vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
-import { formataTimestamp, formataTimestampIso } from '@components/formatters'
-import { periodoStore } from '@components/stores/periodoStore'
+import { formataTimestampIso } from '@components/formatters'
+import { periodoStore, limitePeriodo, dentroDoPeriodo } from '@components/stores/periodoStore'
 import { MOTIVOS } from '@components/stores/caixaSessaoStore'
 
 const SENTIDOS = [
@@ -22,25 +22,14 @@ const TIPOS = computed(() =>
   store.portador?.ehCaixa ? [] : [{ value: 'A', label: 'Ajuste' }, ...MOTIVOS],
 )
 const periodo = computed(() => store.periodo)
-const limite = () =>
-  periodo.value?.fim && new Date(periodo.value.fim) < new Date()
-    ? new Date(periodo.value.fim)
-    : new Date()
-// lê o valor do form (ISO), não o texto que o MgInputData passa às rules; vazio fica com o !!v
-const noPeriodo = () => {
-  if (!periodo.value || !form.value.transacao || form.value.tipo !== 'A') return true
-  const d = new Date(form.value.transacao)
-  return (
-    (d >= new Date(periodo.value.inicio) && d <= limite()) ||
-    `Fora do período (de ${formataTimestamp(periodo.value.inicio, 0)} a ${formataTimestamp(limite(), 0)})`
-  )
-}
+const noPeriodo = () =>
+  form.value.tipo !== 'A' || dentroDoPeriodo(periodo.value, form.value.transacao)
 const vazio = () => ({
   tipo: 'A',
   sentido: null,
   valor: null,
   observacoes: '',
-  transacao: formataTimestampIso(limite()),
+  transacao: formataTimestampIso(limitePeriodo(periodo.value)),
 })
 const form = ref(vazio())
 const ajuste = computed(() => form.value.tipo === 'A')

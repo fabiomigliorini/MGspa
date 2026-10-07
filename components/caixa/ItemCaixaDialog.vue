@@ -9,8 +9,14 @@ import { api } from 'src/services/api'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import { formataNumero, formataTimestamp, formataTimestampIso } from '@components/formatters'
-import { periodoStore, linhasParaSalvar, totalLinhas } from '@components/stores/periodoStore'
+import { formataNumero, formataTimestampIso } from '@components/formatters'
+import {
+  periodoStore,
+  linhasParaSalvar,
+  totalLinhas,
+  limitePeriodo,
+  dentroDoPeriodo,
+} from '@components/stores/periodoStore'
 
 const SENTIDOS = [
   { label: 'Entrada', value: 1 },
@@ -22,19 +28,7 @@ const periodo = computed(() => store.periodo)
 const itens = computed(() => (periodo.value?.itens || []).filter((i) => !i.inativo))
 const item = computed(() => itens.value.find((i) => i.codcaixaitem === form.value.codcaixaitem))
 
-const limite = () =>
-  periodo.value?.fim && new Date(periodo.value.fim) < new Date()
-    ? new Date(periodo.value.fim)
-    : new Date()
-// lê o valor do form (ISO), não o texto que o MgInputData passa às rules; vazio fica com o !!v
-const noPeriodo = () => {
-  if (!periodo.value || !form.value.transacao) return true
-  const d = new Date(form.value.transacao)
-  return (
-    (d >= new Date(periodo.value.inicio) && d <= limite()) ||
-    `Fora do período (de ${formataTimestamp(periodo.value.inicio, 0)} a ${formataTimestamp(limite(), 0)})`
-  )
-}
+const noPeriodo = () => dentroDoPeriodo(periodo.value, form.value.transacao)
 
 const linhaVazia = () => ({ descricao: null, preco: null, quantidade: null })
 // mesma regra do servidor (CaixaItemService::validarEntrada): linha toda vazia é ignorada; com
@@ -48,7 +42,7 @@ const vazio = () => ({
   sinal: 1,
   linhas: [linhaVazia()],
   observacoes: '',
-  transacao: formataTimestampIso(limite()),
+  transacao: formataTimestampIso(limitePeriodo(periodo.value)),
 })
 const form = ref(vazio())
 const total = computed(() => totalLinhas(form.value.linhas))
