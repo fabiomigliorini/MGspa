@@ -11,19 +11,6 @@ const routes = [
         redirect: { name: 'pix' },
       },
       {
-        path: 'portador/saldos/:dia(\\d{4}-\\d{2}-\\d{2})?',
-        name: 'portador-saldos',
-        component: () => import('pages/SaldosPage.vue'),
-        meta: {
-          auth: true,
-          title: 'Saldos',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
-          leftDrawer: defineAsyncComponent(
-            () => import('components/drawers/SaldosFiltrosDrawer.vue'),
-          ),
-        },
-      },
-      {
         path: 'banco',
         name: 'banco',
         component: () => import('pages/banco/Index.vue'),
@@ -112,16 +99,28 @@ const routes = [
         },
       },
       {
+        // painel dos portadores (doc-4): substitui Saldos e Cadastros → Portadores
         path: 'portador',
         name: 'portador',
         component: () => import('pages/portador/Index.vue'),
         meta: {
           auth: true,
           title: 'Portadores',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
           leftDrawer: defineAsyncComponent(
             () => import('components/drawers/PortadorFiltrosDrawer.vue'),
           ),
+        },
+      },
+      {
+        // o portador e o período (doc-4)
+        path: 'portador/:codportador(\\d+)/:codportadorperiodo(\\d+)?',
+        name: 'portador-detalhe',
+        component: () => import('pages/portador/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Portador',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
         },
       },
       {
@@ -135,6 +134,26 @@ const routes = [
           leftDrawer: defineAsyncComponent(
             () => import('components/drawers/MaquinetaFiltrosDrawer.vue'),
           ),
+        },
+      },
+      {
+        path: 'caixa-item',
+        name: 'caixa-item',
+        component: () => import('pages/caixaItem/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Itens do Caixa',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
+        path: 'caixa-item/:codcaixaitem(\\d+)',
+        name: 'caixa-item-detalhe',
+        component: () => import('pages/caixaItem/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Item do Caixa',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
         },
       },
       {

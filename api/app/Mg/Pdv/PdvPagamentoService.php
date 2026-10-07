@@ -78,7 +78,10 @@ class PdvPagamentoService
     public static function carregar(Pdv $pdv, int $codpagamento): Pagamento
     {
         $pag = PagamentoListaService::carregar($codpagamento);
-        if ($pag->codpdv != $pdv->codpdv) {
+        // transferencia que chega na gaveta deste PDV (M11) tambem se ve
+        $daGaveta = !empty($pdv->codportador)
+            && in_array($pdv->codportador, [$pag->codportadororigem, $pag->codportadordestino]);
+        if ($pag->codpdv != $pdv->codpdv && !$daGaveta) {
             abort(403, 'Pagamento de outro PDV!');
         }
         return $pag;

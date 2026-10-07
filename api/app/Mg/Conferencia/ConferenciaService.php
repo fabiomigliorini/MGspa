@@ -78,7 +78,8 @@ class ConferenciaService
         $inicio = static::inicio()->format('Y-m-d H:i:s');
         $ret = [];
 
-        // sessoes da gaveta: abertas (em andamento) e fechadas pelo caixa
+        // sessoes da gaveta ainda abertas (fechar e' a conferencia, M13): o
+        // gerente fecha pela mesma tela do caixa
         $params = [];
         $where = static::whereFilial('po.codfilial', $filiais, $params);
         foreach (DB::select("
@@ -89,7 +90,8 @@ class ConferenciaService
             left join tblfilial f on (f.codfilial = po.codfilial)
             left join tblusuario ua on (ua.codusuario = pp.codusuarioabertura)
             left join tblusuario uf on (uf.codusuario = pp.codusuariofechamento)
-            where pp.conferencia is null
+            where pp.fechamento is null
+            and exists (select 1 from tblpdv d where d.codportador = pp.codportador)
             {$where}
             order by pp.inicio
         ", $params) as $r) {
@@ -97,13 +99,11 @@ class ConferenciaService
                 'tipo' => static::TIPO_SESSAO,
                 'id' => $r->codportadorperiodo,
                 'titulo' => $r->portador,
-                'subtitulo' => $r->fim
-                    ? 'Fechado por ' . ($r->usuariofechamento ?? '—') . ' em ' . Carbon::parse($r->fim)->format('d/m H:i')
-                    : 'Aberto por ' . ($r->usuarioabertura ?? '—') . ' em ' . Carbon::parse($r->inicio)->format('d/m H:i') . ' (em andamento)',
+                'subtitulo' => 'Aberto por ' . ($r->usuarioabertura ?? '—') . ' em ' . Carbon::parse($r->inicio)->format('d/m H:i'),
                 'data' => $r->inicio,
                 'codfilial' => $r->codfilial,
                 'filial' => $r->filial,
-                'conferivel' => !empty($r->fim),
+                'conferivel' => true,
             ];
         }
 

@@ -21,6 +21,7 @@ class PortadorResource extends Resource
         $ret['extratoconciliar'] = $this->ExtratoBancarioS()->where('conciliado', false)->count();
         $ret['movimentoconciliar'] = $this->PortadorMovimentoS()->whereNull('inativo')->where('conciliado', false)->count();
         $ret['gaveta'] = $this->ehGaveta();
+        $ret['caixa'] = $this->ehCaixa();
         $ret['banco'] = $this->whenLoaded('Banco', function () {
             return optional($this->Banco)->banco;
         });

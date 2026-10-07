@@ -14,9 +14,17 @@ const props = defineProps({
   tipos: { type: Array, default: null },
   // Esconde as gavetas (espécie com PDV apontando): no contas não se baixa título em gaveta.
   semGaveta: { type: Boolean, default: false },
-  // Agrupa em "Desta filial" (portadores de codfilial) e "Mais opções" (o resto).
+  // Agrupa em "Desta filial" (os em espécie de codfilial) e "Mais opções" (Caixa Financeiro,
+  // bancos, espécie de outras filiais): a lista de destino da transferência (decisão 22).
   agrupar: { type: Boolean, default: false },
   codfilial: { type: [Number, String], default: null },
+  // codportador que não aparecem (o próprio portador, na transferência)
+  excluir: { type: Array, default: null },
+  // { codportador: motivo }: aparecem desabilitados, com o motivo (gaveta fechada)
+  bloqueios: { type: Object, default: null },
+  // só os portadores em que o usuário tem pelo menos este papel (D depositante, O operador, G
+  // gestor): destino da transferência = D, origem = O (doc-4)
+  papel: { type: String, default: null },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
   // Modo multiplo: v-model e Array, onde [] = sem filtro (todos). Espelha o backend,
@@ -24,6 +32,8 @@ const props = defineProps({
   multiple: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'select'])
+
+const NIVEL = { D: 1, O: 2, G: 3 }
 
 const cache = useSelectCacheStore()
 const ENTITY = 'portador'
@@ -40,6 +50,19 @@ const permitidos = computed(() => {
   if (props.semGaveta) {
     todos = todos.filter((v) => !v.gaveta)
   }
+  if (props.papel) {
+    const minimo = NIVEL[props.papel]
+    todos = todos.filter((v) => (NIVEL[v.papel] ?? 0) >= minimo)
+  }
+  if (props.excluir?.length) {
+    const fora = new Set(props.excluir.map((c) => Number(c)))
+    todos = todos.filter((v) => !fora.has(Number(v.value)))
+  }
+  if (props.bloqueios) {
+    todos = todos.map((v) =>
+      props.bloqueios[v.value] ? { ...v, disable: true, motivo: props.bloqueios[v.value] } : v,
+    )
+  }
   if (!props.filiais) return todos
   const set = new Set(props.filiais.map((f) => Number(f)))
   return todos.filter((v) => set.has(Number(v.codfilial)))
@@ -48,8 +71,9 @@ const permitidos = computed(() => {
 // Com agrupar, intercala cabecalhos (opcoes desabilitadas) entre os grupos.
 function agrupados(lista) {
   if (!props.agrupar) return lista
-  const desta = lista.filter((v) => Number(v.codfilial) === Number(props.codfilial))
-  const mais = lista.filter((v) => Number(v.codfilial) !== Number(props.codfilial))
+  const daFilial = (v) => v.tipo === 'E' && Number(v.codfilial) === Number(props.codfilial)
+  const desta = lista.filter(daFilial)
+  const mais = lista.filter((v) => !daFilial(v))
   const ret = []
   if (desta.length) ret.push({ header: true, label: 'Desta filial', disable: true }, ...desta)
   if (mais.length) ret.push({ header: true, label: 'Mais opções', disable: true }, ...mais)
@@ -124,6 +148,7 @@ onMounted(() => carregar())
           <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
             {{ scope.opt.label }}
           </q-item-label>
+          <q-item-label v-if="scope.opt.motivo" caption>{{ scope.opt.motivo }}</q-item-label>
         </q-item-section>
       </q-item>
     </template>

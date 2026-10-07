@@ -43,6 +43,14 @@ const urlPessoa = (cod) => (cod ? `${process.env.PESSOAS_URL}/pessoa/${cod}` : n
 const urlVenda = (cod) => `${process.env.NEGOCIOS_URL}/negocio/${cod}`
 const urlTitulo = (cod) => `${process.env.CONTAS_URL}/titulo/${cod}`
 
+const erro = (e, padrao) =>
+  $q.notify({
+    type: 'negative',
+    message: e?.response?.data?.message ?? e?.message ?? padrao,
+    color: 'red-5',
+    icon: 'error',
+  })
+
 const estornar = () => {
   $q.dialog({
     title: 'Estornar',

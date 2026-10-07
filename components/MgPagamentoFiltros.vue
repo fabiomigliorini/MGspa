@@ -23,8 +23,7 @@ const ESTADOS = [
 const ORIGENS = [
   { value: 'V', label: 'Venda' },
   { value: 'T', label: 'Títulos' },
-  { value: 'X', label: 'Transferência' },
-  { value: 'A', label: 'Avulso' },
+  { value: 'A', label: 'Taxa, tarifa, rendimento' },
 ]
 
 const OPCOES_MEIO = Object.entries(MEIOS).map(([value, label]) => ({ value: Number(value), label }))

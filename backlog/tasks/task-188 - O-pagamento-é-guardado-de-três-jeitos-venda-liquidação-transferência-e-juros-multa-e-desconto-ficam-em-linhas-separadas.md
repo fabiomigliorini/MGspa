@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-02 20:54'
+updated_date: '2026-10-07 02:58'
 labels:
   - contas
   - negocios
@@ -86,6 +86,7 @@ Milestones:
 - [ ] #36 M9.4 Cancelar venda em dinheiro tira do caixa; com o caixa daquele dia fechado, so reabrindo
 - [ ] #37 M9.5 Lancamento avulso de entrada e saida no caixa aberto
 - [ ] #38 M9.6 Notinha recebida, vale de cliente pago, vale de colaborador e adiantamento em dinheiro aparecem no caixa
+- [ ] #39 M9.7 Borderô da maquineta de parceiro lançado na tela do caixa do PDV, antes de fechar a gaveta (hoje só no contas)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -230,4 +231,8 @@ M9 — backend pronto em dev (02/10/2026, na árvore, sem commit). DDL api/datab
 M9 — telas prontas em dev (02/10/2026, na árvore, sem commit; detalhe e roteiro Valida no doc-3, seção M9 'Como ficou no código'). contas: Movimento → Fechamentos (pendências da filial; Lote, Sessão e Venda com digitação às cegas, foto do borderô, correções, acerto, reabrir), Maquinetas → Lotes. negocios: /caixa (abrir/fechar com contagem, borderô na térmica), Dinheiro bloqueado no wizard com o motivo (PDV sem gaveta ou caixa fechado), confissão e anexos pelas rotas novas v1/negocio/... Conferido: php -l; eslint/prettier contas, negocios e @components; quasar build do contas e do negocios (nos containers); controllers e resources pelo tinker com rollback (pendências sem valor do sistema, lote aberto sem sistema e depois borderô × sistema por PDV, sessão às cegas e conferida 120 × 118, reabrir caixa, venda, status do PDV, anexos sem pdv e com pdv inválido = 403). Não testado: navegador (gerar token de teste foi bloqueado pela política de permissões da sessão), impressão na térmica, foto pela câmera do celular. Decidido sem o Fábio (a validar): borderô do caixa só com contagem e quantidades (às cegas); perdão sem título; crédito do cliente = 212; cheque/vale conferido no pagamento; itens do caixa no M13; item Caixa no MainLayout do negocios (arquivo com alterações de outra mão na árvore).
 
 ACs M9.1 a M9.6 movidos da TASK-39 (eram os #1 a #6, rotulados M10, da gaveta que o M9 absorveu), a pedido do Fábio em 02/10/2026 no planejamento do M10. O M9.5 (lançamento avulso) não foi feito pelo M9: fica para depois. O M9.3 restringe hoje abrir/fechar o caixa; receber em dinheiro só exige a sessão aberta (conferir na validação do M9).
+
+M9.5 (#37, lançamento avulso de entrada e saída no caixa aberto) feito no M13 da TASK-39 (03/10/2026, na árvore): tela do caixa → Lançamentos avulsos. No M13 a sessão da gaveta também deixou de ter conferência às cegas separada: fechar é a conferência (doc-3, seção M13). AC desmarcado até a validação.
+
+**M9.7, borderô da maquineta de parceiro no PDV** (Fábio, 07/10/2026): hoje o borderô só se lança na tela do portador do contas, que não abre para o grupo Caixa (só Administrador, Financeiro e Gerente). Até o M9.7, quem lança é quem tem acesso ao contas; com o botão na tela do caixa do PDV, o próprio caixa lança antes de fechar a gaveta (o diálogo @components/caixa/MaquinetaCaixaDialog já é compartilhado; detalhes na TASK-39 e no doc-4, "Itens de parceiro").
 <!-- SECTION:NOTES:END -->

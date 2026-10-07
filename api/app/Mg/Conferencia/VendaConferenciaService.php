@@ -104,7 +104,7 @@ class VendaConferenciaService
                 'justificativa' => $a->justificativa,
                 'inativo' => $a->inativo,
                 'criacao' => $a->criacao,
-                'usuariocriacao' => optional($a->UsuarioCriacao)->usuario,
+                'usuariocriacao' => $a->usuariocriacao,
             ])->values(),
         ];
     }

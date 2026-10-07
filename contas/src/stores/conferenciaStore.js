@@ -80,36 +80,6 @@ export const useConferenciaStore = defineStore(
         return data.data
       }, 'Foto do borderô anexada')
 
-    // ---- sessão da gaveta ----
-    const sessao = ref(null)
-
-    async function carregarSessao(id) {
-      sessao.value = null
-      try {
-        const { data } = await api.get(`v1/conferencia/sessao/${id}`)
-        sessao.value = data.data
-      } catch (e) {
-        notifyError(e, 'Erro ao carregar a sessão do caixa')
-      }
-    }
-
-    const conferirSessao = (id, payload) =>
-      executar(async () => {
-        const { data } = await api.post(`v1/conferencia/sessao/${id}/conferir`, payload)
-        sessao.value = data.data
-        return sessao.value
-      }, 'Caixa conferido')
-
-    const reabrirSessao = (id, caixa = false) =>
-      executar(
-        async () => {
-          const { data } = await api.post(`v1/conferencia/sessao/${id}/reabrir`, { caixa })
-          sessao.value = data.data
-          return sessao.value
-        },
-        caixa ? 'Caixa reaberto' : 'Conferência reaberta',
-      )
-
     // ---- venda desbalanceada ----
     const venda = ref(null)
 
@@ -180,10 +150,6 @@ export const useConferenciaStore = defineStore(
       fecharLote,
       reabrirLote,
       enviarFotoLote,
-      sessao,
-      carregarSessao,
-      conferirSessao,
-      reabrirSessao,
       venda,
       carregarVenda,
       acertarVenda,

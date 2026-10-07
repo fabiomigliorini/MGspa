@@ -21,6 +21,12 @@ const menuGroups = [
         color: 'green-8',
         to: { name: 'fechamento' },
       },
+      {
+        label: 'Portadores',
+        icon: 'account_balance_wallet',
+        color: 'amber-8',
+        to: { name: 'portador' },
+      },
       { label: 'Pix Recebidos', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
       {
         label: 'Pagamentos',
@@ -35,12 +41,6 @@ const menuGroups = [
         to: { name: 'agrupamento' },
       },
       { label: 'Títulos', icon: 'request_quote', color: 'indigo-7', to: { name: 'titulo' } },
-      {
-        label: 'Saldos',
-        icon: 'account_balance_wallet',
-        color: 'amber-8',
-        to: { name: 'portador-saldos' },
-      },
       {
         label: 'Boletos Emitidos',
         icon: 'receipt',
@@ -85,12 +85,17 @@ const menuGroups = [
         color: 'deep-purple-8',
         to: { name: 'tipo-movimento-titulo' },
       },
-      { label: 'Portadores', icon: 'credit_card', color: 'cyan-8', to: { name: 'portador' } },
       {
         label: 'Maquinetas',
         icon: 'point_of_sale',
         color: 'deep-orange-8',
         to: { name: 'maquineta' },
+      },
+      {
+        label: 'Itens do Caixa',
+        icon: 'inventory_2',
+        color: 'amber-9',
+        to: { name: 'caixa-item' },
       },
       {
         label: 'Formas de Pagamento',

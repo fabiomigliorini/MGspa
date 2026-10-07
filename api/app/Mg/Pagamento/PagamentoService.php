@@ -108,17 +108,16 @@ class PagamentoService
         self::ESTADO_CANCELADO => 'Cancelado',
     ];
 
-    // so' pagamento sem documento
+    // so' pagamento sem documento (banco; o ajuste e' movimento do
+    // portador, PortadorLancamentoService)
     const MOTIVO_TAXA = 'T';
     const MOTIVO_TARIFA = 'F';
     const MOTIVO_RENDIMENTO = 'R';
-    const MOTIVO_AJUSTE = 'A';
 
     const MOTIVOS = [
         self::MOTIVO_TAXA => 'Taxa',
         self::MOTIVO_TARIFA => 'Tarifa',
         self::MOTIVO_RENDIMENTO => 'Rendimento',
-        self::MOTIVO_AJUSTE => 'Ajuste de Caixa',
     ];
 
     // total = principal + juros + multa - desconto

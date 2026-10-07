@@ -3,18 +3,24 @@
 namespace Mg\Caixa;
 
 use Carbon\Carbon;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 use Mg\Pdv\Pdv;
 use Mg\Portador\Portador;
+use Mg\Portador\PortadorAutorizador;
+use Mg\Portador\PortadorMovimento;
 use Mg\Portador\PortadorPeriodo;
+use Mg\Portador\PortadorPeriodoService;
+use Mg\Portador\PortadorUsuario;
 
 /**
- * Sessao da gaveta (M9 doc-3): o caixa abre e fecha o dinheiro no PDV com
- * contagem; todo dinheiro que entra ou sai da gaveta fica na sessao aberta
- * (tblpagamento.codportadorperiodo); o gerente confere no contas.
+ * O caixa do PDV (gaveta) sobre o periodo do portador em especie (doc-4,
+ * redefinicao do dinheiro: abrir, contar, fechar, reabrir, ajuste e
+ * transferencia sao do PortadorPeriodoService e do PortadorLancamentoService).
+ * Aqui fica o que e' do PDV: a gaveta do dispositivo, o periodo em que cai o
+ * dinheiro do pagamento (tblpagamento.codportadorperiodo) e o que a tela do
+ * caixa e o bordero mostram.
  */
 class CaixaService
 {
@@ -32,6 +38,36 @@ class CaixaService
         return PortadorPeriodo::where('codportador', $codportador)->whereNull('fim')->first();
     }
 
+    // R12 (doc-4): uma regra so' para movimentar o caixa sem sessao aberta
+    public static function naoAberta(Portador $gaveta): void
+    {
+        abort(422, "{$gaveta->portador} não está aberto: abra o período antes de movimentar.");
+    }
+
+    public static function exigirAberta(Portador $gaveta): PortadorPeriodo
+    {
+        $sessao = static::sessaoAberta($gaveta->codportador);
+        if (!$sessao) {
+            static::naoAberta($gaveta);
+        }
+        return $sessao;
+    }
+
+    // a sessao do pagamento: a gravada nele ou, no lancado antes de o
+    // portador ser caixa (avulso do periodo, M12), a da linha do razao
+    public static function sessaoDoPagamento(Pagamento $pag): ?PortadorPeriodo
+    {
+        if ($pag->PortadorPeriodo) {
+            return $pag->PortadorPeriodo;
+        }
+        $linha = PortadorMovimento::where('codpagamento', $pag->codpagamento)
+            ->whereNull('inativo')
+            ->with('PortadorPeriodo.Portador')
+            ->get()
+            ->first(fn ($l) => $l->PortadorPeriodo->Portador->ehCaixa());
+        return optional($linha)->PortadorPeriodo;
+    }
+
     public static function ultimaSessao(int $codportador): ?PortadorPeriodo
     {
         return PortadorPeriodo::where('codportador', $codportador)
@@ -40,15 +76,33 @@ class CaixaService
             ->first();
     }
 
+    // o caixa do pagamento em dinheiro: o destino se for especie, senao a
+    // origem (ajuste e transferencia nao sao pagamento)
+    public static function gavetaDoPagamento(Pagamento $pag): ?Portador
+    {
+        if ($pag->meio != PagamentoService::MEIO_DINHEIRO) {
+            return null;
+        }
+        foreach ([$pag->codportadordestino, $pag->codportadororigem] as $codportador) {
+            if (empty($codportador)) {
+                continue;
+            }
+            $portador = Portador::find($codportador);
+            if ($portador && $portador->ehCaixa()) {
+                return $portador;
+            }
+        }
+        return null;
+    }
+
     // chamado no saving do Pagamento (via ConferenciaService::vincular):
-    // dinheiro de gaveta cai na sessao aberta; sem sessao, 422
+    // dinheiro de gaveta cai na sessao aberta; sem sessao, 422. Na
+    // transferencia gaveta -> gaveta fica a sessao do destino; a da origem o
+    // razao acha pela data (sessaoDe)
     public static function vincular(Pagamento $pag): void
     {
-        $codportador = $pag->codportadordestino ?? $pag->codportadororigem;
-        $portador = ($pag->meio == PagamentoService::MEIO_DINHEIRO && !empty($codportador))
-            ? Portador::find($codportador)
-            : null;
-        if (!$portador || !$portador->ehGaveta()) {
+        $portador = static::gavetaDoPagamento($pag);
+        if (!$portador) {
             $pag->codportadorperiodo = null;
             return;
         }
@@ -63,8 +117,8 @@ class CaixaService
             // conferida)
             if ($pag->isDirty('estado') && !$pag->indevido && !empty($pag->codportadorperiodo)) {
                 $sessao = PortadorPeriodo::find($pag->codportadorperiodo);
-                if ($sessao && !$sessao->aberto()) {
-                    abort(422, "O caixa {$portador->portador} daquele dinheiro já foi fechado ({$sessao->fim->format('d/m/Y H:i')}): o gerente precisa reabrir a sessão antes.");
+                if ($sessao && !empty($sessao->fechamento)) {
+                    abort(422, "O período de {$portador->portador} daquele dinheiro já foi fechado ({$sessao->fim->format('d/m/Y H:i')}): o gestor precisa reabrir antes.");
                 }
             }
             return;
@@ -72,11 +126,25 @@ class CaixaService
         if (!empty($pag->codportadorperiodo) && !$pag->isDirty(['codportadordestino', 'codportadororigem', 'meio'])) {
             return;
         }
-        $sessao = static::sessaoAberta($portador->codportador);
+        $momento = $pag->transacao ? Carbon::parse($pag->transacao) : Carbon::now();
+        $pag->codportadorperiodo = static::sessaoDoMomento($portador, $momento)->codportadorperiodo;
+    }
+
+    // a sessao do caixa que contem o momento, nao fechada: e' nela que o
+    // dinheiro daquela data cai (agora = a aberta)
+    public static function sessaoDoMomento(Portador $caixa, Carbon $momento): PortadorPeriodo
+    {
+        $sessao = static::sessaoDe($caixa->codportador, $momento);
         if (!$sessao) {
-            abort(422, "Caixa {$portador->portador} fechado: abra o caixa no PDV antes de movimentar dinheiro.");
+            if ($momento->gte(Carbon::now()->subMinute())) {
+                static::naoAberta($caixa);
+            }
+            abort(422, "Não há período de {$caixa->portador} em {$momento->format('d/m/Y H:i')}.");
         }
-        $pag->codportadorperiodo = $sessao->codportadorperiodo;
+        if (!empty($sessao->fechamento)) {
+            abort(422, "O período de {$caixa->portador} de {$momento->format('d/m/Y H:i')} já foi fechado: reabra antes de lançar nele.");
+        }
+        return $sessao;
     }
 
     // gaveta que recebe o dinheiro do PDV agora: sem gaveta ou com o caixa
@@ -84,9 +152,7 @@ class CaixaService
     public static function gavetaAberta(Pdv $pdv): Portador
     {
         $gaveta = static::gaveta($pdv);
-        if (!static::sessaoAberta($gaveta->codportador)) {
-            abort(422, "Caixa {$gaveta->portador} fechado: abra o caixa no PDV antes de receber em dinheiro.");
-        }
+        static::exigirAberta($gaveta);
         return $gaveta;
     }
 
@@ -102,121 +168,85 @@ class CaixaService
             ->first();
     }
 
-    public static function abrir(Pdv $pdv, float $moedas, float $cedulas, ?string $observacoes): PortadorPeriodo
+    // cedulas e moedas da contagem (chave = valor, quantidade no jsonb)
+    const CEDULAS = ['200', '100', '50', '20', '10', '5', '2'];
+    const MOEDAS = ['1', '0.50', '0.25', '0.10', '0.05', '0.01'];
+
+    // quem opera o caixa no contas: operador ou gestor do portador
+    public static function podeOperar(Portador $caixa): bool
     {
-        $gaveta = static::gaveta($pdv);
-        Portador::where('codportador', $gaveta->codportador)->lockForUpdate()->first();
-        if (static::sessaoAberta($gaveta->codportador)) {
-            abort(422, "O caixa {$gaveta->portador} já está aberto.");
-        }
-        return PortadorPeriodo::create([
-            'codportador' => $gaveta->codportador,
-            'inicio' => Carbon::now(),
-            'codusuarioabertura' => Auth::user()->codusuario,
-            'moedasabertura' => round($moedas, 2),
-            'cedulasabertura' => round($cedulas, 2),
-            'saldoinicial' => round($moedas + $cedulas, 2),
-            'observacoes' => $observacoes,
-        ]);
+        return PortadorAutorizador::pode($caixa->codportador, PortadorUsuario::PAPEL_OPERADOR);
     }
 
-    public static function fechar(Pdv $pdv, float $moedas, float $cedulas, ?string $observacoes): PortadorPeriodo
+    public static function autorizarOperar(Portador $caixa): void
     {
-        $gaveta = static::gaveta($pdv);
-        Portador::where('codportador', $gaveta->codportador)->lockForUpdate()->first();
-        $sessao = static::sessaoAberta($gaveta->codportador);
-        if (!$sessao) {
-            abort(422, "O caixa {$gaveta->portador} não está aberto.");
-        }
-        $agora = Carbon::now();
-        $sessao->fill([
-            'fim' => $agora,
-            'fechamento' => $agora,
-            'codusuariofechamento' => Auth::user()->codusuario,
-            'moedasfechamento' => round($moedas, 2),
-            'cedulasfechamento' => round($cedulas, 2),
-            'saldofinal' => round($moedas + $cedulas, 2),
-            'observacoes' => trim(($sessao->observacoes ? $sessao->observacoes . "\n" : '') . ($observacoes ?? '')) ?: null,
-        ]);
-        $sessao->save();
-        return $sessao;
+        PortadorAutorizador::autorizar($caixa, PortadorUsuario::PAPEL_OPERADOR, 'Operar o caixa');
     }
 
-    // o gerente reabre a sessao (so' a ultima da gaveta, e so' sem outra
-    // aberta): volta a aceitar dinheiro e desfaz a conferencia
-    public static function reabrir(PortadorPeriodo $sessao): PortadorPeriodo
+    // o dinheiro de uma contagem {face: quantidade}
+    public static function totalContagem(?array $contagem): float
     {
-        $ultima = static::ultimaSessao($sessao->codportador);
-        if ($ultima->codportadorperiodo != $sessao->codportadorperiodo) {
-            abort(422, 'Só a última sessão do caixa pode ser reaberta; feche a sessão atual e confira antes.');
+        $total = 0.0;
+        foreach ($contagem ?? [] as $face => $qtd) {
+            $total += (int) $qtd * (float) $face;
         }
-        $sessao->fill([
-            'fim' => null,
-            'fechamento' => null,
-            'codusuariofechamento' => null,
-            'conferencia' => null,
-            'codusuarioconferencia' => null,
-            'valorconferido' => null,
-        ]);
-        $sessao->save();
-        return $sessao;
+        return round($total, 2);
     }
 
-    // o gerente confere o dinheiro que subiu (as cegas): so' sessao que o
-    // caixa ja' fechou
-    public static function conferir(PortadorPeriodo $sessao, float $valor, ?string $observacoes): PortadorPeriodo
+    // quantidades por cedula/moeda -> [contagem limpa, moedas, cedulas]
+    public static function contagem(?array $qtds): array
     {
-        if ($sessao->aberto()) {
-            abort(422, 'O caixa ainda está aberto: o caixa fecha no PDV antes da conferência.');
+        $limpa = [];
+        $totais = ['moedas' => 0.0, 'cedulas' => 0.0];
+        foreach (['cedulas' => static::CEDULAS, 'moedas' => static::MOEDAS] as $tipo => $valores) {
+            foreach ($valores as $valor) {
+                $qtd = (int) ($qtds[$valor] ?? 0);
+                if ($qtd < 0) {
+                    abort(422, 'Quantidade de cédula ou moeda não pode ser negativa.');
+                }
+                if ($qtd > 0) {
+                    $limpa[$valor] = $qtd;
+                    $totais[$tipo] += $qtd * (float) $valor;
+                }
+            }
         }
-        if (!empty($sessao->conferencia)) {
-            abort(422, 'Sessão já conferida.');
-        }
-        $sessao->fill([
-            'conferencia' => Carbon::now(),
-            'codusuarioconferencia' => Auth::user()->codusuario,
-            'valorconferido' => round($valor, 2),
-            'observacoes' => trim(($sessao->observacoes ? $sessao->observacoes . "\n" : '') . ($observacoes ?? '')) ?: null,
-        ]);
-        $sessao->save();
-        return $sessao;
+        return [$limpa, round($totais['moedas'], 2), round($totais['cedulas'], 2)];
     }
 
-    // desfaz so' a conferencia (o caixa continua fechado)
-    public static function desconferir(PortadorPeriodo $sessao): PortadorPeriodo
+    // o saldo inicial do proximo periodo: a contagem final do ultimo (0 no
+    // primeiro)
+    public static function envelope(int $codportador): float
     {
-        $sessao->fill([
-            'conferencia' => null,
-            'codusuarioconferencia' => null,
-            'valorconferido' => null,
-        ]);
-        $sessao->save();
-        return $sessao;
+        $ultima = static::ultimaSessao($codportador);
+        return $ultima ? PortadorPeriodoService::saldoInicialSeguinte($ultima) : 0.0;
     }
 
-    // dinheiro do sistema na sessao: saldo inicial + entradas - saidas,
-    // por documento (venda, titulo, avulso)
+    // dinheiro do sistema no periodo: saldo inicial + entradas - saidas, por
+    // documento (V venda, I item do caixa, M maquineta de parceiro, T titulo,
+    // A taxa/tarifa, J ajuste, X transferencia), das linhas que valem
     public static function dinheiro(PortadorPeriodo $sessao): array
     {
         $regs = DB::select("
             select
                 case
+                    when m.tipo = 'A' then 'J'
+                    when m.tipo = 'T' then 'X'
+                    when m.tipo = 'I' then 'I'
+                    when m.tipo = 'M' then 'M'
                     when p.codnegocio is not null then 'V'
-                    when exists (select 1 from tblmovimentotitulo mt where mt.codpagamento = p.codpagamento) then 'T'
-                    else 'A'
+                    when p.motivo is not null then 'A'
+                    else 'T'
                 end as documento,
-                sum(case when p.codportadordestino = :portador1 then p.total else 0 end) as entrada,
-                sum(case when p.codportadororigem = :portador2 then p.total else 0 end) as saida,
+                sum(case when m.valor > 0 then m.valor else 0 end) as entrada,
+                sum(case when m.valor < 0 then -m.valor else 0 end) as saida,
                 count(*) as quantidade
-            from tblpagamento p
-            where p.codportadorperiodo = :sessao
-            and p.estado = 'E'
+            from tblportadormovimento m
+            left join tblpagamento p on (p.codpagamento = m.codpagamento)
+            where m.codportadorperiodo = :sessao
+            and m.inativo is null
+            and coalesce(m.estado, 'E') <> 'C'
             group by 1
-        ", [
-            'portador1' => $sessao->codportador,
-            'portador2' => $sessao->codportador,
-            'sessao' => $sessao->codportadorperiodo,
-        ]);
+        ", ['sessao' => $sessao->codportadorperiodo]);
         $ret = [
             'saldoinicial' => (float) $sessao->saldoinicial,
             'entrada' => 0.0,
@@ -299,11 +329,30 @@ class CaixaService
         ];
     }
 
-    public static function resumo(PortadorPeriodo $sessao): array
+    // o que a tela do caixa do PDV mostra do periodo: dinheiro, informativo e
+    // os ajustes
+    public static function painel(PortadorPeriodo $sessao): array
     {
+        $ajustes = PortadorMovimento::where('codportadorperiodo', $sessao->codportadorperiodo)
+            ->where('tipo', PortadorMovimento::TIPO_AJUSTE)
+            ->with('UsuarioCriacao:codusuario,usuario')
+            ->orderBy('transacao')
+            ->get()
+            ->map(fn (PortadorMovimento $m) => [
+                'codportadormovimento' => $m->codportadormovimento,
+                'transacao' => $m->transacao,
+                'motivodescricao' => 'Ajuste',
+                'valor' => (float) $m->valor,
+                'estado' => $m->estado,
+                'observacoes' => $m->observacoes,
+                'justificativa' => $m->justificativa,
+                'usuariocriacao' => $m->usuariocriacao,
+                'podeExcluir' => !$sessao->fechado() && $m->estado != PortadorMovimento::ESTADO_CANCELADO,
+            ])->all();
         return [
             'dinheiro' => static::dinheiro($sessao),
             'informativo' => static::informativo($sessao),
+            'avulsos' => $ajustes,
         ];
     }
 }

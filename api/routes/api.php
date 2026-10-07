@@ -669,7 +669,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // PDV (público)
     Route::group(['prefix' => 'pdv'], function () {
-        Route::put('dispositivo', '\Mg\Pdv\PdvController@putDispositivo');
+        // registro do dispositivo: primeiro passo da sincronizacao, sem usuario logado
+        Route::put('dispositivo', '\Mg\Pdv\PdvController@putDispositivo')
+            ->withoutMiddleware('auth:api');
         Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio')
             ->name('pdv.negocio.romaneio')
             ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
@@ -874,22 +876,26 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // PDV
     // ============================================================
     Route::group(['prefix' => 'pdv'], function () {
-        Route::get('produto-count', '\Mg\Pdv\PdvController@produtoCount');
-        Route::get('produto', '\Mg\Pdv\PdvController@produto');
-        Route::get('produto/{barras}', '\Mg\Pdv\PdvController@produtoBarras');
-        Route::get('produto/{barras}/detalhe', '\Mg\Pdv\PdvController@produtoDetalhe');
-        Route::get('pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
+        // consulta de precos do quiosque e sincronizacao: sem usuario logado,
+        // o controller autoriza pelo uuid do dispositivo (PdvService::autoriza)
+        Route::withoutMiddleware('auth:api')->group(function () {
+            Route::get('produto-count', '\Mg\Pdv\PdvController@produtoCount');
+            Route::get('produto', '\Mg\Pdv\PdvController@produto');
+            Route::get('produto/{barras}', '\Mg\Pdv\PdvController@produtoBarras');
+            Route::get('produto/{barras}/detalhe', '\Mg\Pdv\PdvController@produtoDetalhe');
+            Route::get('pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
+            Route::get('pessoa', '\Mg\Pdv\PdvController@pessoa');
+            Route::get('natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
+            Route::get('estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
+            Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
+            // catalogo de modelos de vale compras para o cache offline do PDV
+            Route::get('vale-modelo', '\Mg\Pdv\PdvController@valeModelo');
+            Route::get('prancheta', '\Mg\Pdv\PdvController@getPrancheta');
+            Route::get('impressora', '\Mg\Pdv\PdvController@impressora');
+        });
         Route::get('pessoa/cnpj/{cnpj}', '\Mg\Pdv\PdvController@pessoaPeloCnpj');
-        Route::get('pessoa', '\Mg\Pdv\PdvController@pessoa');
         Route::post('pessoa', '\Mg\Pdv\PdvController@postPessoa');
-        Route::get('natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
-        Route::get('estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
-        Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
-        // catalogo de modelos de vale compras para o cache offline do PDV
-        Route::get('vale-modelo', '\Mg\Pdv\PdvController@valeModelo');
-        Route::get('prancheta', '\Mg\Pdv\PdvController@getPrancheta');
         Route::put('prancheta', '\Mg\Pdv\PdvController@putPrancheta');
-        Route::get('impressora', '\Mg\Pdv\PdvController@impressora');
         Route::put('negocio', '\Mg\Pdv\PdvController@putNegocio');
         Route::get('negocio', '\Mg\Pdv\PdvController@getNegocios');
         Route::get('negocio/conferencia', '\Mg\Pdv\PdvController@conferencia');
@@ -932,11 +938,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('pagamento/recibo/{impressora}', '\Mg\Pdv\PdvPagamentoController@imprimirRecibo');
         // vale colaborador e adiantamentos (M8 doc-3)
         Route::post('titulo', '\Mg\Pdv\PdvTituloController@store');
-        // caixa: abrir e fechar o dinheiro da gaveta (M9 doc-3)
+        // caixa: a gaveta do PDV e se esta' aberta (M9; a tela do caixa usa
+        // as rotas v1/caixa desde o M13 doc-3)
         Route::get('caixa', '\Mg\Caixa\CaixaController@status');
-        Route::post('caixa/abrir', '\Mg\Caixa\CaixaController@abrir');
-        Route::post('caixa/fechar', '\Mg\Caixa\CaixaController@fechar');
-        Route::post('caixa/{id}/bordero/{impressora}', '\Mg\Caixa\CaixaController@imprimirBordero')->whereNumber('id');
         // Saurus
         Route::post('saurus/pedido', '\Mg\Pdv\PdvController@criarSaurusPedido');
         Route::post('saurus/pedido/{codsauruspedido}/consultar', '\Mg\Pdv\PdvController@consultarSaurusPedido');
@@ -1294,12 +1298,68 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Portador
     Route::get('portador', '\Mg\Portador\PortadorController@index');
     Route::get('portador/intervalo-saldos', '\Mg\Portador\PortadorController@getIntervaloSaldos');
-    Route::get('portador/lista-saldos', '\Mg\Portador\PortadorController@listaSaldos');
+    // painel e tela do portador e do periodo (doc-4)
+    Route::get('portador/painel', '\Mg\Portador\PortadorController@painel');
+    Route::get('portador/{codportador}/periodo/{codportadorperiodo?}', '\Mg\Portador\PortadorPeriodoController@tela')->whereNumber(['codportador', 'codportadorperiodo']);
     Route::post('portador', '\Mg\Portador\PortadorController@store');
     Route::put('portador/{codportador}', '\Mg\Portador\PortadorController@update');
     Route::delete('portador/{codportador}', '\Mg\Portador\PortadorController@destroy');
     Route::post('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@inativar');
     Route::delete('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@ativar');
+    // usuarios do portador e o papel de cada um (doc-4, redefinicao do dinheiro)
+    Route::get('portador/{codportador}/usuario', '\Mg\Portador\PortadorUsuarioController@index')->whereNumber('codportador');
+    Route::post('portador/{codportador}/usuario', '\Mg\Portador\PortadorUsuarioController@store')->whereNumber('codportador');
+    Route::delete('portador/{codportador}/usuario/{codportadorusuario}', '\Mg\Portador\PortadorUsuarioController@destroy')->whereNumber(['codportador', 'codportadorusuario']);
+    // periodo do portador (doc-4): especie abre, conta, fecha (tolerancia ou
+    // pendente), reabre, datas, divide, unifica; banco fecha com corte
+    Route::post('portador/{codportador}/periodo/abrir', '\Mg\Portador\PortadorPeriodoController@abrir')->whereNumber('codportador');
+    Route::post('portador-periodo/{id}/fechar', '\Mg\Portador\PortadorPeriodoController@fechar')->whereNumber('id');
+    Route::post('portador-periodo/{id}/reabrir', '\Mg\Portador\PortadorPeriodoController@reabrir')->whereNumber('id');
+    Route::post('portador-periodo/{id}/contagem', '\Mg\Portador\PortadorPeriodoController@contar')->whereNumber('id');
+    Route::post('portador-periodo/{id}/datas', '\Mg\Portador\PortadorPeriodoController@datas')->whereNumber('id');
+    Route::post('portador-periodo/{id}/dividir', '\Mg\Portador\PortadorPeriodoController@dividir')->whereNumber('id');
+    Route::post('portador-periodo/{id}/unificar', '\Mg\Portador\PortadorPeriodoController@unificar')->whereNumber('id');
+    Route::get('portador-periodo/{id}/bordero', '\Mg\Portador\PortadorPeriodoController@bordero')->whereNumber('id');
+    // taxa, tarifa e rendimento do banco (pagamento sem pessoa)
+    Route::post('portador-periodo/lancamento', '\Mg\Portador\PortadorPeriodoController@lancamento');
+    Route::post('portador-periodo/lancamento/{codpagamento}/cancelar', '\Mg\Portador\PortadorPeriodoController@cancelarLancamento')->whereNumber('codpagamento');
+    // ajuste e transferencia: movimento do portador, nao pagamento
+    Route::post('portador-periodo/{id}/ajuste', '\Mg\Portador\PortadorLancamentoController@ajuste')->whereNumber('id');
+    Route::post('portador-periodo/{id}/item', '\Mg\Portador\PortadorLancamentoController@item')->whereNumber('id');
+    Route::post('portador-periodo/{id}/maquineta', '\Mg\Portador\PortadorLancamentoController@maquineta')->whereNumber('id');
+    Route::post('portador-movimento/{id}/foto', '\Mg\Portador\PortadorLancamentoController@foto')->whereNumber('id');
+    Route::get('portador-movimento/{id}/foto/{arquivo}', '\Mg\Portador\PortadorLancamentoController@mostrarFoto')->whereNumber('id');
+    Route::post('portador-movimento/transferencia', '\Mg\Portador\PortadorLancamentoController@transferir');
+    Route::post('portador-movimento/{id}/confirmar', '\Mg\Portador\PortadorLancamentoController@confirmar')->whereNumber('id');
+    Route::post('portador-movimento/{id}/cancelar', '\Mg\Portador\PortadorLancamentoController@cancelar')->whereNumber('id');
+    // tela do caixa do PDV (MgCaixaSessao; sera' refatorada)
+    Route::get('caixa/gaveta/{codportador}', '\Mg\Caixa\CaixaController@gaveta')->whereNumber('codportador');
+    Route::post('caixa/gaveta/{codportador}/abrir', '\Mg\Caixa\CaixaController@abrir')->whereNumber('codportador');
+    Route::get('caixa/sessao/{id}', '\Mg\Caixa\CaixaController@show')->whereNumber('id');
+    Route::post('caixa/sessao/{id}/fechar', '\Mg\Caixa\CaixaController@fechar')->whereNumber('id');
+    Route::post('caixa/sessao/{id}/datas', '\Mg\Caixa\CaixaController@datas')->whereNumber('id');
+    Route::post('caixa/sessao/{id}/reabrir', '\Mg\Caixa\CaixaController@reabrir')->whereNumber('id');
+    Route::post('caixa/sessao/{id}/avulso', '\Mg\Caixa\CaixaController@avulso')->whereNumber('id');
+    Route::post('caixa/avulso/{codportadormovimento}/cancelar', '\Mg\Caixa\CaixaController@cancelarAvulso')->whereNumber('codportadormovimento');
+    Route::get('caixa/sessao/{id}/bordero', '\Mg\Caixa\CaixaController@borderoTela')->whereNumber('id');
+    Route::post('caixa/sessao/{id}/bordero/{impressora}', '\Mg\Caixa\CaixaController@imprimirBordero')->whereNumber('id');
+    // itens do caixa (doc-4, "Itens do caixa")
+    Route::get('caixa-item', '\Mg\Caixa\CaixaItemController@index');
+    Route::get('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@show')->whereNumber('id');
+    Route::get('caixa-item/{id}/saldo', '\Mg\Caixa\CaixaItemController@saldos')->whereNumber('id');
+    Route::get('caixa-item/{id}/descricao', '\Mg\Caixa\CaixaItemController@descricoes')->whereNumber('id');
+    Route::get('caixa-item/{id}/tipo', '\Mg\Caixa\CaixaItemController@tipos')->whereNumber('id');
+    Route::put('caixa-item/{id}/tipo', '\Mg\Caixa\CaixaItemController@renomearTipo')->whereNumber('id');
+    Route::get('caixa-item/{id}/saldo/{codportador}', '\Mg\Caixa\CaixaItemController@fechamentos')->whereNumber(['id', 'codportador']);
+    Route::post('caixa-item', '\Mg\Caixa\CaixaItemController@store');
+    Route::put('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@update')->whereNumber('id');
+    Route::delete('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@destroy')->whereNumber('id');
+    Route::post('caixa-item/{id}/inativo', '\Mg\Caixa\CaixaItemController@inativar')->whereNumber('id');
+    Route::delete('caixa-item/{id}/inativo', '\Mg\Caixa\CaixaItemController@ativar')->whereNumber('id');
+    Route::get('caixa-item/{id}/conta', '\Mg\Caixa\CaixaItemController@conta')->whereNumber('id');
+    Route::post('caixa-item/{id}/conta/titulo', '\Mg\Caixa\CaixaItemController@gerarTitulo')->whereNumber('id');
+    Route::post('caixa-item/{id}/conta/ajuste', '\Mg\Caixa\CaixaItemController@ajustarConta')->whereNumber('id');
+    Route::post('caixa-item-acerto/{id}/cancelar', '\Mg\Caixa\CaixaItemController@cancelarAcerto')->whereNumber('id');
     Route::get('portador/{codportador}', '\Mg\Portador\PortadorController@show');
     Route::get('portador/{codportador}/info', '\Mg\Portador\PortadorController@info');
     Route::get('portador/{codportador}/extratos', '\Mg\Portador\PortadorController@listaExtratos');
@@ -1328,9 +1388,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('conferencia/lote/{id}/reabrir', '\Mg\Conferencia\ConferenciaController@reabrirLote')->whereNumber('id');
     Route::post('conferencia/lote/{id}/foto', '\Mg\Conferencia\ConferenciaController@fotoLote')->whereNumber('id');
     Route::get('conferencia/lote/{id}/foto/{arquivo}', '\Mg\Conferencia\ConferenciaController@mostrarFotoLote')->whereNumber('id');
-    Route::get('conferencia/sessao/{id}', '\Mg\Conferencia\ConferenciaController@showSessao')->whereNumber('id');
-    Route::post('conferencia/sessao/{id}/conferir', '\Mg\Conferencia\ConferenciaController@conferirSessao')->whereNumber('id');
-    Route::post('conferencia/sessao/{id}/reabrir', '\Mg\Conferencia\ConferenciaController@reabrirSessao')->whereNumber('id');
     Route::get('conferencia/venda/{id}', '\Mg\Conferencia\ConferenciaController@showVenda')->whereNumber('id');
     Route::post('conferencia/venda/{id}/acerto', '\Mg\Conferencia\ConferenciaController@acertarVenda')->whereNumber('id');
     Route::post('conferencia/venda/{id}/pagamento', '\Mg\Conferencia\ConferenciaController@incluirPagamento')->whereNumber('id');

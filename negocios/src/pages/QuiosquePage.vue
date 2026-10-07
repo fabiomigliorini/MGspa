@@ -5,7 +5,8 @@ import { formataNumero, formataCodigo } from '@components/formatters'
 import { quiosqueStore } from 'stores/quiosque'
 import { produtoStore } from 'stores/produto'
 import { sincronizacaoStore } from 'stores/sincronizacao'
-import MgInput from '@components/MgInput.vue'
+import DialogPesquisaProduto from 'components/offline/DialogPesquisaProduto.vue'
+import DialogSincronizacao from 'components/offline/DialogSincronizacao.vue'
 
 const $q = useQuasar()
 const sQuiosque = quiosqueStore()
@@ -17,7 +18,7 @@ const alternarTelaCheia = () => $q.fullscreen.toggle()
 // so abre o quiosque se o dispositivo (PDV) estiver autorizado
 const autorizado = computed(() => sSinc.pdv.autorizado)
 
-const TEMPO_ESPERA = 90000 // 90s sem uso -> volta pra tela de espera
+const TEMPO_ESPERA = 60000 // 60s depois da consulta -> volta pra tela de espera
 const TEMPO_NAO_ENCONTRADO = 8000 // limpa o "nao encontrado" mais rapido
 const TEMPO_LIMPAR_DIGITACAO = 10000 // pausa max entre teclas antes de zerar o codigo (digitacao manual lenta)
 
@@ -254,7 +255,7 @@ onUnmounted(() => {
         </q-chip>
       </q-page-sticky>
 
-      <!-- controles do operador: FAB que expande os 3 botoes -->
+      <!-- controles do operador: FAB que expande os botoes -->
       <q-page-sticky position="bottom-right" :offset="[18, 18]" class="z-fab">
         <q-fab
           icon="menu"
@@ -275,6 +276,14 @@ onUnmounted(() => {
             <q-tooltip anchor="center left" self="center right">
               {{ $q.fullscreen.isActive ? 'Sair da tela cheia' : 'Tela cheia (F11)' }}
             </q-tooltip>
+          </q-fab-action>
+          <q-fab-action
+            color="white"
+            text-color="primary"
+            icon="refresh"
+            @click="sSinc.importacao.dialog = true"
+          >
+            <q-tooltip anchor="center left" self="center right">Sincronizar</q-tooltip>
           </q-fab-action>
           <q-fab-action color="white" text-color="primary" icon="point_of_sale" :to="{ path: '/' }">
             <q-tooltip anchor="center left" self="center right">Voltar ao PDV</q-tooltip>
@@ -528,86 +537,9 @@ onUnmounted(() => {
         </div>
       </div>
 
-      <!-- ===================== DIALOG DE PESQUISA (reuso do F1) ===================== -->
-      <q-dialog v-model="sProduto.dialogPesquisa" maximized>
-        <q-card>
-          <q-card-section class="bg-primary text-white">
-            <div class="row q-col-gutter-sm">
-              <MgInput
-                outlined
-                autofocus
-                v-model="sProduto.textoPesquisa"
-                label="Pesquisa"
-                bg-color="white"
-                class="col"
-                @keydown.enter.prevent="sProduto.pesquisar()"
-              >
-                <template v-slot:append>
-                  <q-btn round flat icon="close" @click="sProduto.textoPesquisa = ''">
-                    <q-tooltip class="bg-accent">Limpar</q-tooltip>
-                  </q-btn>
-                  <q-btn round flat icon="search" @click="sProduto.pesquisar()">
-                    <q-tooltip class="bg-accent">Pesquisar</q-tooltip>
-                  </q-btn>
-                  <q-btn round flat icon="logout" @click="sProduto.dialogPesquisa = false">
-                    <q-tooltip class="bg-accent">Fechar</q-tooltip>
-                  </q-btn>
-                </template>
-              </MgInput>
-              <q-select
-                outlined
-                borderless
-                v-model="sProduto.sortPesquisa"
-                :options="['Alfabética', 'Preço', 'Código', 'Barras']"
-                label="Ordem"
-                bg-color="white"
-                style="width: 130px"
-                @update:model-value="sProduto.pesquisar()"
-              />
-            </div>
-          </q-card-section>
-
-          <q-card-section class="q-pa-none q-ma-none">
-            <div class="row q-pa-md q-col-gutter-md">
-              <template
-                v-for="prod in sProduto.resultadoPesquisa"
-                v-bind:key="prod.codprodutobarra"
-              >
-                <div class="col-xl-2 col-lg-2 col-md-3 col-sm-3 col-xs-6">
-                  <q-card
-                    v-ripple
-                    class="cursor-pointer q-hoverable"
-                    @click="selecionarDoDialog(prod.barras)"
-                  >
-                    <span class="q-focus-helper"></span>
-                    <q-img ratio="1" :src="sProduto.urlImagem(prod.codimagem)" />
-                    <q-card-section>
-                      <div
-                        class="absolute"
-                        style="top: 0; right: 5px; transform: translateY(-37px)"
-                      >
-                        <q-chip color="grey-2" text-color="grey-7">
-                          {{ prod.sigla }}
-                          <template v-if="prod.quantidade > 0">
-                            C/{{ formataNumero(prod.quantidade, 0) }}
-                          </template>
-                        </q-chip>
-                      </div>
-                      <div class="text-h5">
-                        <small class="text-grey-7">R$</small>
-                        {{ formataNumero(prod.preco) }}
-                      </div>
-                      <div class="text-caption text-grey-7">
-                        {{ prod.barras }} | {{ prod.produto }}
-                      </div>
-                    </q-card-section>
-                  </q-card>
-                </div>
-              </template>
-            </div>
-          </q-card-section>
-        </q-card>
-      </q-dialog>
+      <!-- ===================== DIALOG DE PESQUISA (F1) ===================== -->
+      <dialog-pesquisa-produto @select="(p) => selecionarDoDialog(p.barras)" />
+      <dialog-sincronizacao />
     </template>
   </q-page>
 </template>

@@ -28,6 +28,9 @@ class Portador extends MgModel
 {
     const CARTEIRA = 999;
 
+    // especie do escritorio: quem opera e' o Financeiro (decisao 23)
+    const CAIXA_FINANCEIRO = 100;
+
     const TIPO_ESPECIE = 'E';
     const TIPO_BANCO = 'B';
     const TIPO_ADQUIRENTE = 'A';
@@ -64,7 +67,8 @@ class Portador extends MgModel
         'inativo',
         'pixdict',
         'portador',
-        'tipo'
+        'tipo',
+        'tolerancia'
     ];
 
     protected $casts = [
@@ -84,14 +88,27 @@ class Portador extends MgModel
         'convenio' => 'float',
         'criacao' => 'datetime',
         'emiteboleto' => 'boolean',
-        'inativo' => 'datetime'
+        'inativo' => 'datetime',
+        'saldo' => 'float',
+        'tolerancia' => 'float'
     ];
 
 
-    // Gaveta = portador em especie com PDV apontando
+    // Caixa = portador em especie (gaveta, cofre, troco, Caixa Financeiro):
+    // trabalha em sessao, que abre, so' movimenta aberta, conta e fecha
+    public function ehCaixa(): bool
+    {
+        return $this->tipo === self::TIPO_ESPECIE;
+    }
+
+    // Gaveta = caixa com PDV apontando: o que e' so' do PDV (itens do caixa,
+    // o grupo Caixa operando). Lembrado na instancia: as listas do periodo
+    // perguntam linha a linha
+    private ?bool $gaveta = null;
+
     public function ehGaveta(): bool
     {
-        return $this->tipo === self::TIPO_ESPECIE && $this->PdvS()->exists();
+        return $this->gaveta ??= $this->tipo === self::TIPO_ESPECIE && $this->PdvS()->exists();
     }
 
     // Chaves Estrangeiras
@@ -171,6 +188,11 @@ class Portador extends MgModel
     public function PortadorMovimentoS()
     {
         return $this->hasMany(PortadorMovimento::class, 'codportador', 'codportador');
+    }
+
+    public function PortadorUsuarioS()
+    {
+        return $this->hasMany(PortadorUsuario::class, 'codportador', 'codportador');
     }
 
     public function PortadorSaldoS()

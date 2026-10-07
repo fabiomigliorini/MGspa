@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-03 00:32'
+updated_date: '2026-10-07 02:57'
 labels:
   - negocios
   - contas
@@ -14,6 +14,7 @@ dependencies:
   - TASK-186
 documentation:
   - backlog/docs/doc-3 - Plano-do-fechamento-de-caixa-por-milestones.md
+  - backlog/docs/doc-4 - Refatoração-das-telas-do-dinheiro-portador-e-período.md
 priority: high
 type: feature
 ordinal: 59000
@@ -22,35 +23,70 @@ ordinal: 59000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Hoje o fechamento de caixa é feito à mão no formulário "Movimento do Caixa" (contagem de moedas/cédulas/chips/ingressos, vendas à vista, recebimentos, cartões, PIX, sangrias, diferença). O sistema só tem o protótipo "Totais de Caixa" do MG Lara, que lista totais e não fecha nada.
+O fechamento de caixa era feito à mão no formulário de papel "Movimento do Caixa" (contagem de cédulas, moedas e chips, vendas à vista, recebimentos, sangrias, diferença) e o sistema só tinha o protótipo "Totais de Caixa" do MG Lara, que lista totais e não fecha nada.
 
-Desenho: portador como razão único do dinheiro (tblportadormovimento), gaveta = portador em espécie com PDV apontando, períodos por portador (sessão da gaveta / corte do financeiro), transferências em dois passos, itens de parceiros virando título de repasse. Plano completo, decisões e roteiro de cada milestone em backlog/docs/doc-3.
+Como ficou: o portador é o razão único do dinheiro (tblportadormovimento com pagamento, ajuste, transferência e item do caixa). Todo portador em espécie (gaveta, cofre, troco, Caixa Financeiro) abre, conta e fecha períodos, com tolerância de diferença; banco, adquirente e cartão fecham pela data de corte. Cada portador tem sua lista de usuários com papel. Tudo visto e operado em contas → Movimento → Portadores (painel) e na tela do portador e do período.
 
-Execução por milestones, um por conversa, validado na tela antes do seguinte. Esta task cobre M10 a M13 (razão, transferências, períodos e itens do caixa). A fundação (M1 a M8.1) está na TASK-188 e a sessão da gaveta foi feita no M9 (critérios M9.x na TASK-188).
+Onde está o detalhe: doc-3 (modelo de dados, decisões 1–29, M10 a M12, ordem dos DDL do go-live) e doc-4 (telas, redefinição do domínio do dinheiro, itens do caixa). Onde os dois divergem, manda o doc-4.
 
-Consolida: TASK-33 (codportador na manutenção de PDV), TASK-34 (não movimentar dinheiro sem portador no PDV), TASK-48 (dinheiro só para Caixa/Gerente/Administrador) e TASK-84 (destino do Caixa Totais: negocios /caixa + contas Caixas).
+Fora desta task: a tela do caixa do PDV (MgCaixaSessao, negocios /caixa), que fica para a refatoração do PDV (critérios M9.x na TASK-188). A fundação (M1 a M9) também está na TASK-188.
+
+Consolidou TASK-33, TASK-34, TASK-48 e TASK-84 (arquivadas).
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 M11 - Sangria e suprimento entre caixas, cofre, troco, financeiro e banco, com confirmacao de quem recebe e cancelamento com justificativa
-- [ ] #2 M11 - Nao transfere de ou para caixa fechado; caixa nao fecha com transferencia chegando pendente
-- [ ] #3 M11 - Tela Caixas no contas com saldos dos portadores em especie e transferencias
-- [ ] #4 M12 - Financeiro fecha periodo de cofre e banco pela data de corte; fechado e imutavel; reabre e fecha em ordem (em cadeia)
-- [ ] #5 M13 - Chips, ingressos e maquinetas de parceiros contados no caixa e virando titulo de repasse ao parceiro (Duplicata a Pagar) no fechamento
-- [ ] #6 M10.1 Dinheiro, PIX, deposito, transferencia e boleto feitos depois do go-live aparecem no razao da gaveta, cofre, banco ou conta onde cairam: entrada positiva, saida negativa, na data da transacao
-- [ ] #7 M10.2 Cancelar, estornar ou corrigir um pagamento (valor, portador, meio ou data, no contas ou na conferencia do gerente) acerta o razao junto; com o caixa daquele dinheiro ja conferido, so reabrindo
-- [ ] #8 M10.3 O detalhe do pagamento, no contas e no PDV, mostra os lancamentos do razao, com a sessao do caixa ou o periodo em que cairam, e os desfeitos riscados
-- [ ] #9 M10.4 O saldo de cada caixa, cofre e banco e o saldo inicial do periodo mais o que caiu ate hoje
-- [ ] #10 M10.5 Pagamento, cheque, extrato bancario e bonificacao guardam a data e hora em que o fato aconteceu, separada de quando foi digitado (o PIX de ontem lancado hoje fica com a data de ontem)
+- [x] #1 Dinheiro, PIX, depósito, transferência e boleto feitos depois do go-live aparecem no razão da gaveta, cofre, banco ou conta onde caíram: entrada positiva, saída negativa, na data da transação (M10.1)
+- [x] #2 Cancelar, estornar ou corrigir um pagamento (valor, portador, meio ou data, no contas ou na conferência do gerente) acerta o razão junto; com o período daquele dinheiro fechado, só reabrindo (M10.2)
+- [x] #3 O detalhe do pagamento, no contas e no PDV, mostra os lançamentos do razão, com o período em que caíram, e os desfeitos riscados (M10.3)
+- [x] #4 O saldo de cada portador é o saldo inicial do período mais o que caiu até agora, gravado no período e no portador e sempre atualizado (M10.4)
+- [x] #5 Pagamento, cheque, extrato bancário e bonificação guardam a data e hora em que o fato aconteceu, separada de quando foi digitado (o PIX de ontem lançado hoje fica com a data de ontem) (M10.5)
+- [x] #6 Uma tela Portadores no contas mostra todos os portadores por filial, com o saldo da espécie e a situação de cada caixa, e substitui Saldos e Cadastros > Portadores (criar, editar, inativar e importar OFX nela) (R1)
+- [x] #7 Ao abrir um portador, os períodos aparecem em abas Ano > Mês > Período, e o endereço da página leva direto ao período escolhido (R2)
+- [x] #8 O período mostra saldo inicial, entradas e saídas por origem e saldo final, com a lista de lançamentos e o saldo corrente linha a linha (R3)
+- [x] #9 Transferir, ajustar, dar entrada de item, contar, abrir, fechar e reabrir feitos na própria tela do período, que se atualiza na hora (R4)
+- [x] #10 Ajuste de caixa lançado só no portador, sem virar pagamento, com observação; cancela com justificativa e fica visível em Mostrar cancelados (R7.1)
+- [x] #11 Sangria, reforço e depósito entre gaveta, cofre, troco, Caixa Financeiro e banco não viram pagamento: saem de um portador e entram no outro; ficam a confirmar quando quem registrou não é gestor do destino; cancelam com justificativa; não caem em período fechado; o período não fecha com transferência a confirmar, chegando ou saindo (R7.2, antigo M11)
+- [x] #12 Cada portador tem sua lista de usuários com papel (cadeado ao lado do editar): depositante só manda dinheiro para ele, operador vê e movimenta, gestor também confirma, reabre e cuida da lista; os selects de origem e destino só mostram os portadores do usuário; Administrador é gestor em todos; o PDV não valida (R7.3)
+- [x] #13 O período em espécie começa com a contagem final do anterior; a contagem inicial só confere e mostra se não bater (R7.4)
+- [x] #14 Fechar com diferença até a tolerância do portador (padrão R$ 2,00) fecha e registra a diferença; acima fica pendente até ser corrigido, sem travar o dia seguinte (R7.5)
+- [x] #15 Reabrir deixa corrigir a contagem final, do período mais novo para o mais antigo (R7.6)
+- [x] #16 Dividir um período numa data de corte e unificar dois períodos (R7.7)
+- [x] #17 Abrir o período novo logo depois de fechar o anterior, no mesmo segundo, não dá erro (começa no próprio fim do anterior) (R7.8)
+- [x] #18 Banco, adquirente e cartão: o financeiro fecha o período pela data de corte; fechado é imutável; reabre e fecha em ordem, do mais novo para o mais antigo (antigo M12)
+- [x] #19 Itens do caixa (chips, ingressos) contados no portador em espécie junto com as cédulas (como cédula, preço × quantidade): só a entrada ou a saída sem venda é lançada; vender não lança nada; cadastro de itens dinâmico, com a tela do item mostrando o saldo em cada caixa e os períodos em que mexeu
+- [ ] #20 Maquineta de parceiro (Redeflex, Bilhete Agora, Rede Card), cadastrada como item do caixa, uma por maquineta: o caixa lança na tela do período o total em dinheiro do borderô do dia (negativo quando devolveu dinheiro), com a foto do borderô opcional ("sem borderô" na linha até anexar) e o valor explica o dinheiro a mais na contagem; a maquineta não entra na contagem
+- [ ] #21 O financeiro vê a conta corrente de cada maquineta (borderôs dos caixas, títulos gerados e ajustes como a comissão que o parceiro desconta) e gera o título a pagar ao parceiro pelo saldo, a qualquer hora, sem depender do caixa estar fechado
+- [ ] #22 Validação de ponta a ponta na tela do período pelos roteiros Valida do doc-4 (o core, a redefinição, os itens e os parceiros): venda em dinheiro, sangria e confirmação, cancelamento, recebimento no banco, fechamento com contagem e com corte, itens do caixa (R5)
+- [ ] #23 A lista de Itens do Caixa mostra o saldo a pagar de cada maquineta de parceiro, sem precisar abrir uma por uma
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Planejamento do M10 (02/10/2026, com o Fábio; detalhe no doc-3, seção M10): o razão lança dinheiro, PIX, depósito, transferência e boleto, uma linha por lado; chamado explicitamente pelo PagamentoService e pela edição/correção; só do go-live (CONFERENCIA_INICIO) em diante; corrente de cofre/banco/adquirente nasce no 1º lançamento com início no go-live e saldo 0; coluna transacao = quando cai; na gaveta o razão trava na conferência do gerente; card Razão no detalhe do pagamento. Padronização transacao = fato gerador: pagamento, cheque, extrato e bonificação no M10; negócio e o resto do sistema em task própria. Critérios #1 a #6 antigos (gaveta) movidos para a TASK-188 como M9.1 a M9.6.
+Reorganizada em 06/10/2026: critérios renumerados por assunto; os do M11 (transferência como pagamento) e do M12 (corte no cofre) que a redefinição do dinheiro substituiu foram fundidos nos que valem hoje (#11 e #18). Marcados = construídos e commitados (cada etapa foi commitada sem validação, a pedido do Fábio); a validação ficou concentrada no #22. O histórico dia a dia que estava aqui está no git (versões anteriores deste arquivo) e o detalhe técnico, nos "Como ficou no código" do doc-3 e do doc-4.
 
-M10 executado em dev em 02/10/2026, na árvore, sem commit (ACs M10.x desmarcados até a validação). DDL api/database/razao.sql rodado 2x (idempotente): lancamento → transacao em pagamento, cheque, extrato e bonificação; tblportadormovimento recriada; tblportadortransferencia apagada. Backend: PortadorMovimentoService::sincronizar (chamado em PagamentoService criar/contrario/efetivar/cancelar, PagamentoTituloService pagamentoDaForma/daBaixa/atualizar, PagamentoCorrecaoService corrigir/incluir), PortadorPeriodoService (corrente, imutavel, saldo), razao[] no detalhe; rename em toda a API, @components, contas e pessoas. Frontend: card Razão no MgPagamentoDetalhe. Conferido com rollback no tinker (detalhe no doc-3, seção M10 'Como ficou no código'). Não aberto no navegador.
+**Etapas e commits**
+- M10 razão do dinheiro e transacao = data do fato gerador: e82d49511 (02/10)
+- M11 transferências entre portadores: 565647005 (02/10), refeito na redefinição
+- M12 períodos no contas com corte: c570a6f7e (03/10), hoje só fora da espécie
+- M13 itens do caixa e caixa numa tela só: e8ab52048 (03/10), itens refeitos depois
+- Painel e tela do portador e do período (doc-4, R1 a R5): bc4354f7d (03/10)
+- R6 processo único do caixa em espécie: 57513c029 (03/10)
+- Redefinição do dinheiro (ajuste e transferência no movimento do portador, papéis, período com tolerância, dividir e unificar): 86138ae06 (03/10)
+- Itens do caixa que contam como cédula, tela do item com saldo nos caixas e popup dos períodos, R7.8: 08f79b64d (06/10)
 
-M10 commitado sem validação a pedido do Fábio (02/10/2026): ele valida amanhã, junto com M11 e M12. ACs M10.x seguem desmarcados até a validação.
+**O que saiu pelo caminho** (não procurar no código): ajuste e transferência como pagamento (PagamentoService::transferir, TransferenciaAutorizador, motivo A, origem X na listagem); ajuste automático na abertura e no fechamento; permissão do caixa por grupo e filial; telas Saldos, Cadastros → Portadores e Movimento → Caixas; o item do M13 (pagamento na gaveta, título de repasse ao parceiro, Movimento dos Itens, tblcaixaitemlancamento).
+
+**DDL do go-live** (ordem completa no topo do doc-3): razao.sql, caixa_item.sql, portador_saldo.sql, portador_movimento_tipo.sql, caixa_item_dinamico.sql, caixa_item_maquineta.sql, antes do tipo_titulo_limpeza.sql.
+
+**Risco conhecido até a refatoração do PDV** (decisão do Fábio, 06/10): o MgCaixaSessao abre e fecha a gaveta sem a contagem dos itens, mas o saldo já conta os itens. Gaveta com chip ou ingresso fechada pelo PDV acusa diferença falsa (ex.: 10 chips de 25,00 = −250,00), o período seguinte abre sem os itens e a tela do item mostra o caixa zerado. Até lá, gaveta com item fecha pelo contas.
+
+**Maquinetas de parceiro (#20 e #21, desenho com o Fábio em 06/10/2026)**: decisões e "Como ficou no código" no doc-4, seção "Itens de parceiro". Cada maquineta é um item do caixa no modo M; o borderô é o tipo M no movimento do portador; a conta corrente da maquineta tem os borderôs (crédito), os títulos gerados e os ajustes (tblcaixaitemacerto). O antigo critério do bloquinho de ingresso com maquineta saiu: não existe hoje (Fábio, 06/10/2026). DDL do go-live: caixa_item_maquineta.sql, depois do caixa_item_dinamico.sql. Implementado e não validado.
+
+**Achado de passagem, já corrigido**: optional($m->UsuarioCriacao)->usuario num MgModel cai no acessor getUsuariocriacaoAttribute (método no PHP não diferencia maiúsculas) e devolve a string, então ->usuario sai nulo; usar $m->usuariocriacao / ->usuarioalteracao (trocado em 14 pontos de Caixa, Portador, Conferência e Pagamento).
+
+**Risco conhecido do borderô até a refatoração do PDV** (decisão do Fábio, 07/10/2026): o PDV não tem o botão do borderô da maquineta. O borderô é lançado no contas antes de fechar a gaveta, por quem tem acesso à tela do portador (Administrador, Financeiro, Gerente; o grupo Caixa não abre o contas); fechada pelo PDV sem o borderô, o dinheiro da maquineta aparece como sobra. O botão no PDV, para o próprio caixa lançar, é o M9.7 da TASK-188.
+
+**Virada das maquinetas** (Fábio, 07/10/2026): as maquinetas reais (parceiro, filial, conta) e o saldo inicial de cada uma (ajuste "saldo inicial" na conta corrente) são cadastrados pela tela, pelo Fábio ou pelo financeiro, depois do caixa_item_maquineta.sql; sem script.
 <!-- SECTION:NOTES:END -->

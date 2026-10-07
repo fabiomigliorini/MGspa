@@ -7,9 +7,12 @@ use Mg\Pagamento\Pagamento;
 use Mg\Usuario\Usuario;
 
 /**
- * Periodo do portador (M9 doc-3; modelo do M10). Na gaveta e' a sessao do
- * caixa: abre e fecha com contagem no PDV (fim/fechamento + saldofinal =
- * contado pelo caixa) e o gerente confere (conferencia + valorconferido).
+ * Periodo do portador (doc-4, redefinicao do dinheiro). Tres estados: aberto
+ * (sem fim, recebe o movimento do dia a dia), pendente (com fim, sem
+ * fechamento: so' correcao) e fechado (o razao trava). Na especie, o saldo
+ * inicial e' a contagem final do anterior; a contagem inicial so' confere e a
+ * final da' a diferenca (contagem final - saldo final). A contagem tem tambem
+ * os itens do caixa (contagemitens*), que contam como cedula.
  */
 class PortadorPeriodo extends MgModel
 {
@@ -25,42 +28,48 @@ class PortadorPeriodo extends MgModel
         'codusuariofechamento',
         'saldoinicial',
         'saldofinal',
-        'moedasabertura',
-        'cedulasabertura',
-        'moedasfechamento',
-        'cedulasfechamento',
-        'conferencia',
-        'codusuarioconferencia',
-        'valorconferido',
         'observacoes',
+        'contageminicial',
+        'contagemfinal',
+        'contagemitensinicial',
+        'contagemitensfinal',
+        'diferenca',
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'cedulasabertura' => 'float',
-        'cedulasfechamento' => 'float',
         'codportador' => 'integer',
         'codportadorperiodo' => 'integer',
+        'contageminicial' => 'array',
+        'contagemfinal' => 'array',
+        'contagemitensinicial' => 'array',
+        'contagemitensfinal' => 'array',
         'codusuarioabertura' => 'integer',
         'codusuarioalteracao' => 'integer',
-        'codusuarioconferencia' => 'integer',
         'codusuariocriacao' => 'integer',
         'codusuariofechamento' => 'integer',
-        'conferencia' => 'datetime',
         'criacao' => 'datetime',
         'fechamento' => 'datetime',
         'fim' => 'datetime',
         'inicio' => 'datetime',
-        'moedasabertura' => 'float',
-        'moedasfechamento' => 'float',
         'saldofinal' => 'float',
         'saldoinicial' => 'float',
-        'valorconferido' => 'float',
+        'diferenca' => 'float',
     ];
 
     public function aberto(): bool
     {
         return empty($this->fim);
+    }
+
+    public function fechado(): bool
+    {
+        return !empty($this->fechamento);
+    }
+
+    public function pendente(): bool
+    {
+        return !empty($this->fim) && empty($this->fechamento);
     }
 
     // Chaves Estrangeiras
@@ -77,11 +86,6 @@ class PortadorPeriodo extends MgModel
     public function UsuarioFechamento()
     {
         return $this->belongsTo(Usuario::class, 'codusuariofechamento', 'codusuario');
-    }
-
-    public function UsuarioConferencia()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuarioconferencia', 'codusuario');
     }
 
     public function UsuarioCriacao()

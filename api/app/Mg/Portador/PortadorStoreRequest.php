@@ -27,6 +27,7 @@ class PortadorStoreRequest extends FormRequest
             'carteira' => 'nullable|integer',
             'carteiravariacao' => 'nullable|integer',
             'pixdict' => 'nullable|string|max:77',
+            'tolerancia' => 'nullable|numeric|min:0',
         ];
     }
 }

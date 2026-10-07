@@ -5,20 +5,19 @@ namespace Mg\Conferencia;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Mg\Caixa\CaixaService;
 use Mg\Maquineta\Maquineta;
 use Mg\Maquineta\MaquinetaLote;
 use Mg\Maquineta\MaquinetaLoteService;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioAcerto;
+use Mg\Negocio\NegocioAnexoService;
 use Mg\Pagamento\Pagamento;
-use Mg\Portador\PortadorPeriodo;
 
 /**
  * Tela Fechamentos do contas (M9 doc-3): pendencias da filial e a
- * conferencia de cada uma (sessao da gaveta, lote da maquineta, cheque,
- * vale, venda desbalanceada), com as correcoes. Rotas v1/conferencia.
+ * conferencia de cada uma (lote da maquineta, cheque, vale, venda
+ * desbalanceada), com as correcoes. Rotas v1/conferencia. A sessao da
+ * gaveta fecha na tela do caixa (v1/caixa, M13).
  */
 class ConferenciaController extends Controller
 {
@@ -87,46 +86,7 @@ class ConferenciaController extends Controller
     public function mostrarFotoLote(int $id, string $arquivo)
     {
         $lote = $this->lote($id);
-        return Storage::disk(MaquinetaLoteService::DISCO)->response(MaquinetaLoteService::caminhoFoto($lote, $arquivo));
-    }
-
-    // ---- sessao da gaveta ----
-
-    private function sessao(int $id): PortadorPeriodo
-    {
-        $sessao = PortadorPeriodo::with('Portador')->findOrFail($id);
-        ConferenciaAutorizador::autorizar($sessao->Portador->codfilial);
-        return $sessao;
-    }
-
-    public function showSessao(int $id)
-    {
-        return new SessaoResource($this->sessao($id));
-    }
-
-    public function conferirSessao(Request $request, int $id)
-    {
-        $dados = $request->validate([
-            'valorconferido' => 'required|numeric',
-            'observacoes' => 'nullable|string|max:300',
-        ]);
-        $sessao = $this->sessao($id);
-        DB::transaction(fn () => CaixaService::conferir($sessao, (float) $dados['valorconferido'], $dados['observacoes'] ?? null));
-        return new SessaoResource($sessao->fresh('Portador'));
-    }
-
-    // reabrir a conferencia; com `caixa`, reabre tambem a sessao (volta a
-    // aceitar dinheiro)
-    public function reabrirSessao(Request $request, int $id)
-    {
-        $sessao = $this->sessao($id);
-        DB::transaction(function () use ($sessao, $request) {
-            CaixaService::desconferir($sessao);
-            if ($request->boolean('caixa')) {
-                CaixaService::reabrir($sessao);
-            }
-        });
-        return new SessaoResource($sessao->fresh('Portador'));
+        return NegocioAnexoService::mostrarFoto(MaquinetaLoteService::diretorioFoto($lote), $arquivo);
     }
 
     // ---- venda desbalanceada ----

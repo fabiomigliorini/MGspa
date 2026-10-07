@@ -69,6 +69,33 @@ class NegocioAnexoService
         return $anexo;
     }
 
+    // ==== foto do bordero: do lote da maquineta (M9 doc-3) e da maquineta de
+    // parceiro (doc-4). A pasta e' o dono da foto; sem coluna no banco: o
+    // disco e' o indice ====
+
+    public static function fotos(string $pasta): array
+    {
+        $arquivos = Storage::disk('negocio-anexo')->files($pasta);
+        sort($arquivos, SORT_STRING);
+        return array_map('basename', $arquivos);
+    }
+
+    public static function gravarFoto(string $pasta, string $anexoBase64): string
+    {
+        $arquivo = $pasta . '/' . date('Y-m-d-H-i-s') . '-' . uniqid() . '.jpeg';
+        Storage::disk('negocio-anexo')->put($arquivo, static::jpeg($anexoBase64, 1600, 1600));
+        return basename($arquivo);
+    }
+
+    public static function mostrarFoto(string $pasta, string $arquivo)
+    {
+        $caminho = $pasta . '/' . basename($arquivo);
+        if (!Storage::disk('negocio-anexo')->exists($caminho)) {
+            abort(404, 'Foto inexistente!');
+        }
+        return Storage::disk('negocio-anexo')->response($caminho);
+    }
+
     // Foto (data URL base64) em JPEG, reduzida para caber em
     // $maxLargura x $maxAltura. Serve ao anexo do negocio e a' foto do
     // bordero da maquineta (M9 doc-3).
