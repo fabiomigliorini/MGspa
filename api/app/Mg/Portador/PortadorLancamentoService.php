@@ -144,6 +144,9 @@ class PortadorLancamentoService
         $periodo->refresh();
         static::exigirNaoFechado($periodo);
         $linhas = CaixaItemService::validarEntrada($linhas);
+        if ($sinal < 0) {
+            static::exigirDisponivel($periodo, $item, $linhas);
+        }
         $total = CaixaItemService::totalLinhas($linhas);
         $observacoes = trim($observacoes ?? '');
         $mov = PortadorMovimento::create([
@@ -160,6 +163,28 @@ class PortadorLancamentoService
         PortadorPeriodoService::recalcular($periodo);
         CaixaItemService::recalcularSaldo($item);
         return $mov;
+    }
+
+    // so' sai o que esta' no caixa: o saldo inicial e as entradas do periodo,
+    // menos as saidas ja' lancadas, por preco e descricao
+    private static function exigirDisponivel(PortadorPeriodo $periodo, CaixaItem $item, array $linhas): void
+    {
+        $disponivel = CaixaItemService::disponivel($periodo, PortadorPeriodoService::anterior($periodo))[$item->codcaixaitem] ?? [];
+        $chave = fn ($l) => number_format((float) $l['preco'], 2, '.', '') . '|' . mb_strtolower($l['descricao'] ?? '');
+        $tem = [];
+        foreach ($disponivel as $l) {
+            $tem[$chave($l)] = $l['quantidade'];
+        }
+        foreach ($linhas as $l) {
+            $nome = trim(($l['descricao'] ?? '') . ' ' . number_format((float) $l['preco'], 2, ',', '.'));
+            $q = $tem[$chave($l)] ?? 0;
+            if ($q <= 0) {
+                abort(422, "{$item->item} {$nome} não está no caixa (nem no saldo inicial nem em entrada do período).");
+            }
+            if ($l['quantidade'] > $q) {
+                abort(422, "Saída de {$l['quantidade']} × {$item->item} {$nome}: só tem {$q} no caixa.");
+            }
+        }
     }
 
     // entrada ou saida do item, ou bordero da maquineta

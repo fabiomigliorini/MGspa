@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-07 23:30'
+updated_date: '2026-10-07 23:31'
 labels:
   - negocios
   - contas
@@ -61,7 +61,7 @@ Consolidou TASK-33, TASK-34, TASK-48 e TASK-84 (arquivadas).
 - [x] #23 A lista de Itens do Caixa mostra o saldo de cada item sem precisar abrir um por um: quanto tem de cada chip/ingresso nos caixas e quanto devemos a cada maquineta de parceiro, com o total
 - [ ] #24 Na contagem, cada bloco (cédulas, moedas, cada item) tem um botão de copiar: a inicial copia a contagem final do período anterior; a final copia a inicial, com chips e ingressos somando as entradas e tirando as saídas do período
 - [x] #25 O resumo do período em espécie segue a folha Movimento do Caixa: Moedas e Cédulas numa linha cada (entrada = contado no começo, saída = no fim), Total e Diferença no pé
-- [ ] #26 Saída de item só oferece o que está no caixa (saldo inicial + entradas do período), no jeito da contagem, com a quantidade limitada ao disponível
+- [x] #26 Saída de item só oferece o que está no caixa (saldo inicial + entradas do período), no jeito da contagem, com a quantidade limitada ao disponível
 <!-- AC:END -->
 
 ## Implementation Notes
