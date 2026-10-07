@@ -19,6 +19,7 @@ class ConferenciaPagamentoResource extends PagamentoListaResource
             'indevido' => (bool) $this->indevido,
             'codmaquinetalote' => $this->codmaquinetalote,
             'codmaquinetalotecancelamento' => $this->codmaquinetalotecancelamento,
+            'cancelamento' => $this->cancelamento,
             'codportadorperiodo' => $this->codportadorperiodo,
             'conferencia' => $this->conferencia,
             'justificativa' => $this->justificativa,

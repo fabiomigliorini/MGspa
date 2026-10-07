@@ -20,6 +20,9 @@ class MaquinetaController extends Controller
         $paginator = MaquinetaService::listar($request->only([
             'codmaquineta', 'texto', 'codfilial', 'codpessoa', 'integracao', 'inativo',
         ]));
+        // situacao dos periodos (conferencia do cartao, M9.8)
+        $resumo = MaquinetaLoteService::resumo($paginator->getCollection()->pluck('codmaquineta')->all());
+        $paginator->getCollection()->each(fn ($m) => $m->periodos = $resumo[$m->codmaquineta] ?? null);
         return MaquinetaResource::collection($paginator);
     }
 

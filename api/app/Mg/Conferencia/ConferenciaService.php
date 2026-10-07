@@ -11,13 +11,13 @@ use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 
 /**
- * Conferencias do que o caixa movimentou (M9 doc-3): lote da maquineta,
- * cheque e vale recebidos, duplicata (confissao), venda
- * desbalanceada e, para o financeiro, PIX manual. Cada uma fecha sozinha.
+ * Conferencias do que o caixa movimentou (M9 doc-3): cheque e vale
+ * recebidos, duplicata (confissao), venda desbalanceada e, para o
+ * financeiro, PIX manual. Cada uma fecha sozinha. O cartao se confere no
+ * periodo da maquineta, na tela dela (M9.8).
  */
 class ConferenciaService
 {
-    const TIPO_LOTE = 'lote';
     const TIPO_CHEQUE = 'cheque';
     const TIPO_VALE = 'vale';
     const TIPO_DUPLICATA = 'duplicata';
@@ -76,43 +76,6 @@ class ConferenciaService
         $filiais = static::filiais($codfilial);
         $inicio = static::inicio()->format('Y-m-d H:i:s');
         $ret = [];
-
-        // lotes de maquineta abertos com movimento (as da filial e as
-        // compartilhadas, que aparecem em todas)
-        $params = [];
-        $where = '';
-        if ($filiais !== null) {
-            $where = ' and (m.compartilhada or ' . substr(static::whereFilial('m.codfilial', $filiais, $params), 5) . ')';
-        }
-        foreach (DB::select("
-            select l.codmaquinetalote, l.abertura, m.codmaquineta, m.apelido, m.codfilial, f.filial, pe.fantasia as adquirente,
-                (select count(*) from tblpagamento p where p.codmaquinetalote = l.codmaquinetalote) as quantidade,
-                (select string_agg(distinct coalesce(pdv.apelido, 'Escritório'), ', ')
-                    from tblpagamento p left join tblpdv pdv on (pdv.codpdv = p.codpdv)
-                    where p.codmaquinetalote = l.codmaquinetalote) as pdvs
-            from tblmaquinetalote l
-            inner join tblmaquineta m on (m.codmaquineta = l.codmaquineta)
-            left join tblfilial f on (f.codfilial = m.codfilial)
-            left join tblpessoa pe on (pe.codpessoa = m.codpessoa)
-            where l.fechamento is null
-            and (
-                exists (select 1 from tblpagamento p where p.codmaquinetalote = l.codmaquinetalote)
-                or exists (select 1 from tblpagamento p where p.codmaquinetalotecancelamento = l.codmaquinetalote)
-            )
-            {$where}
-            order by l.abertura
-        ", $params) as $r) {
-            $ret[] = [
-                'tipo' => static::TIPO_LOTE,
-                'id' => $r->codmaquinetalote,
-                'titulo' => "{$r->apelido} ({$r->adquirente})",
-                'subtitulo' => "{$r->quantidade} lançamentos desde " . Carbon::parse($r->abertura)->format('d/m H:i') . ($r->pdvs ? " · {$r->pdvs}" : ''),
-                'data' => $r->abertura,
-                'codfilial' => $r->codfilial,
-                'filial' => $r->filial,
-                'conferivel' => true,
-            ];
-        }
 
         // cheque e vale recebidos no PDV, item a item
         $params = ['inicio' => $inicio];

@@ -68,7 +68,7 @@ class PagamentoCorrecaoService
     public static function exigirAberta(Pagamento $pag): void
     {
         if (!empty($pag->codmaquinetalote)) {
-            MaquinetaLoteService::exigirAberto($pag->MaquinetaLote);
+            MaquinetaLoteService::exigirNaoConferido($pag->MaquinetaLote);
         }
         if (!empty($pag->codportadorperiodo) && !empty($pag->PortadorPeriodo->fechamento)) {
             abort(422, 'O caixa deste dinheiro já foi fechado: reabra a sessão antes.');
@@ -154,13 +154,13 @@ class PagamentoCorrecaoService
                     $pag->$c = $dados[$c] === '' ? null : $dados[$c];
                 }
             }
-            // mover de lote: so' entre lotes abertos da mesma maquineta
+            // mover de periodo: so' entre periodos nao conferidos da mesma maquineta
             if (!empty($dados['codmaquinetalote']) && $dados['codmaquinetalote'] != $pag->codmaquinetalote) {
                 $lote = MaquinetaLote::findOrFail((int) $dados['codmaquinetalote']);
                 if ($lote->codmaquineta != $pag->codmaquineta) {
-                    abort(422, 'O lote de destino é de outra maquineta: troque a maquineta.');
+                    abort(422, 'O período de destino é de outra maquineta: troque a maquineta.');
                 }
-                MaquinetaLoteService::exigirAberto($lote);
+                MaquinetaLoteService::exigirNaoConferido($lote);
                 $pag->codmaquinetalote = $lote->codmaquinetalote;
             }
         }
@@ -236,7 +236,7 @@ class PagamentoCorrecaoService
         $pag->save();
         PortadorMovimentoService::sincronizar($pag);
         if (!empty($pag->codmaquinetalote)) {
-            MaquinetaLoteService::exigirAberto($pag->MaquinetaLote);
+            MaquinetaLoteService::exigirNaoConferido($pag->MaquinetaLote);
         }
         static::registrar($pag, [], $justificativa);
         return $pag->fresh();

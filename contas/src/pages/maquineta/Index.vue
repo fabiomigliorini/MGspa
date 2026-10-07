@@ -7,6 +7,7 @@ import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectMaquineta from '@components/MgSelectMaquineta.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import { formataTimestamp } from '@components/formatters'
 import { useMaquinetaStore } from 'src/stores/maquinetaStore'
 import {
   MAQUINETA_INTEGRACAO_OPTIONS,
@@ -25,6 +26,7 @@ const columns = [
   { name: 'adquirente', label: 'Adquirente', field: 'adquirente', align: 'left' },
   { name: 'filial', label: 'Filial', field: 'filial', align: 'left' },
   { name: 'serial', label: 'Serial', field: 'serial', align: 'left' },
+  { name: 'periodo', label: 'Período', field: 'periodos', align: 'left' },
   { name: 'inativo', label: 'Status', field: 'inativo', align: 'center' },
   { name: 'acoes', label: '', field: 'acoes', align: 'right' },
 ]
@@ -77,12 +79,39 @@ onMounted(() => {
           no-data-label="Nenhuma maquineta encontrada"
         >
           <template #body-cell-apelido="props">
-            <q-td
-              :props="props"
-              class="text-weight-medium text-primary cursor-pointer"
-              @click="store.abrirEditar(props.row)"
-            >
-              {{ props.value }}
+            <q-td :props="props" class="text-weight-medium">
+              <router-link
+                :to="{
+                  name: 'maquineta-detalhe',
+                  params: { codmaquineta: props.row.codmaquineta },
+                }"
+                class="text-primary"
+              >
+                {{ props.value }}
+              </router-link>
+            </q-td>
+          </template>
+
+          <!-- conferência do cartão com o borderô: o período aberto, os pendentes e os sem foto -->
+          <template #body-cell-periodo="props">
+            <q-td :props="props">
+              <template v-if="props.row.periodos">
+                <div v-if="props.row.periodos.aberto" class="text-caption text-grey-7">
+                  Aberto desde {{ formataTimestamp(props.row.periodos.aberto, 2) }}
+                </div>
+                <q-badge
+                  v-if="props.row.periodos.pendentes"
+                  color="amber-8"
+                  class="q-mr-xs"
+                  :label="`${props.row.periodos.pendentes} pendente(s)`"
+                />
+                <q-badge
+                  v-if="props.row.periodos.semBordero"
+                  color="orange-8"
+                  :label="`${props.row.periodos.semBordero} sem borderô`"
+                />
+              </template>
+              <span v-else class="text-grey-5">—</span>
             </q-td>
           </template>
 
@@ -129,16 +158,6 @@ onMounted(() => {
                 @click="store.abrirEditar(props.row)"
               >
                 <q-tooltip>Editar</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                round
-                size="sm"
-                color="grey-7"
-                icon="receipt_long"
-                :to="{ name: 'maquineta-lotes', params: { id: props.row.codmaquineta } }"
-              >
-                <q-tooltip>Lotes (borderôs)</q-tooltip>
               </q-btn>
               <q-btn
                 v-if="props.row.integracao === 'S' && !props.row.inativo"

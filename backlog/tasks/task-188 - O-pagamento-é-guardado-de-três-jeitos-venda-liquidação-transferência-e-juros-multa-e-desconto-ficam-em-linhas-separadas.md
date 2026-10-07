@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-07 03:24'
+updated_date: '2026-10-07 19:37'
 labels:
   - contas
   - negocios
@@ -87,6 +87,7 @@ Milestones:
 - [ ] #37 M9.5 Sangria e reforço no PDV, a confirmar pelo gerente e canceláveis pelo caixa enquanto não confirmados (o ajuste avulso ficou só no contas)
 - [ ] #38 M9.6 Notinha recebida, vale de cliente pago, vale de colaborador e adiantamento em dinheiro aparecem no caixa
 - [ ] #39 M9.7 Borderô da maquineta de parceiro lançado na tela do caixa do PDV, com a foto, antes de o gerente fechar a gaveta
+- [ ] #40 M9.8 O gerente confere o cartão de cada maquineta com o borderô na tela da maquineta e seus períodos (aberto, pendente, conferido; dividir, unificar, início e fim, mover), com a foto, corrigindo os lançamentos na mesma tela
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -237,4 +238,6 @@ M9.5 (#37, lançamento avulso de entrada e saída no caixa aberto) feito no M13 
 **M9.7, borderô da maquineta de parceiro no PDV** (Fábio, 07/10/2026): hoje o borderô só se lança na tela do portador do contas, que não abre para o grupo Caixa (só Administrador, Financeiro e Gerente). Até o M9.7, quem lança é quem tem acesso ao contas; com o botão na tela do caixa do PDV, o próprio caixa lança antes de fechar a gaveta (o diálogo @components/caixa/MaquinetaCaixaDialog já é compartilhado; detalhes na TASK-39 e no doc-4, "Itens de parceiro").
 
 **Caixa do PDV refeito** (desenhado com o Fábio em 06/10/2026; detalhe no doc-4, seção "Caixa do PDV"; na árvore, sem commit): negocios /caixa mostra a tela do período do portador do contas (componentes movidos para @components/portador), só o período aberto da gaveta do PDV. O caixa abre (só confirma), faz a contagem inicial e a final (com os itens), sangria/reforço, borderô de maquineta e imprime o borderô na térmica; cancela a sangria a confirmar e o borderô. Quem fecha é sempre o gerente, no contas. Sem ajuste nem entrada de item no PDV. Saíram MgCaixaSessao, caixaSessaoStore, SessaoResource, as rotas v1/caixa/gaveta|sessao|avulso e Fechamentos → Caixas abertos. M9.1, M9.5 (antes o avulso no PDV, agora sangria e reforço) e M9.7 reescritos.
+
+M9.8 (07/10/2026, com o Fábio): a conferência do cartão saiu da tela Fechamentos e virou a tela da maquineta e seus períodos, no padrão do portador (aberto → pendente → conferido, visão aberta, foto opcional com aviso 'sem borderô', dividir/unificar/início e fim/mover, reabrir em qualquer ordem). Na árvore, sem commit, não validado. Decisões, código e roteiro Valida no doc-4, seção 'Maquineta e seus períodos'. DDL do go-live: maquineta_periodo.sql, depois do caixa_item_saldo.sql.
 <!-- SECTION:NOTES:END -->

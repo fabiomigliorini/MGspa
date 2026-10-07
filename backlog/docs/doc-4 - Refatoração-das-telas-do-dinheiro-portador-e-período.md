@@ -685,3 +685,90 @@ item 7; parceiros, item 9).
    (outra aba do negocios), título abre o pagamento; confirmar a sangria pelo cofre; fechar a
    gaveta → o PDV volta a "Abrir caixa".
 8. Fechamentos sem "Caixas abertos".
+
+## Maquineta e seus períodos (07/10/2026, com o Fábio; TASK-188 M9.8)
+
+**Por quê**: todo dia o gerente da unidade confere o que passou em cada maquineta de cartão
+(venda, recebimento de título, adiantamento) com o borderô do dia impresso por ela, e anexa a
+foto. É assim que se pega o caixa que lançou errado ou fake. Não é o que cai no banco (isso é a
+TASK-195, M14). O lote da maquineta do M9 já fazia a conta, mas na tela Fechamentos ("lança e
+some; errou, não tem como desfazer"). A tela passa a seguir o padrão do portador e seus períodos:
+o passado e o momento, lançar e alterar no mesmo lugar.
+
+### Decisões
+
+1. **Cada maquineta tem uma tela com os períodos em abas** Ano → Mês → Período (o lote do M9 é o
+   período; no banco continua `tblmaquinetalote`). A lista de Maquinetas mostra a situação (aberto
+   desde, pendentes, sem borderô) e o nome leva à tela. O grupo Maquinetas sai de Fechamentos.
+2. **Aberto → pendente → conferido.** O cartão cai no período aberto. Conferir com o borderô
+   (crédito e débito digitados): o aberto termina na hora e abre o seguinte; bateu no centavo com o
+   sistema, conferido; não bateu, pendente (sem tolerância). O mesmo botão confere de novo.
+3. **Visão aberta**: lançamentos e total do sistema visíveis sempre (sem conferência às cegas).
+   Quem está sendo conferido é o caixa; a foto é a prova.
+4. **Foto opcional, com aviso**: conferir sem foto deixa o período "sem borderô" (aba, cabeçalho e
+   lista de Maquinetas) até anexar; anexa a qualquer hora, inclusive no conferido.
+5. **Acertar o período, igual ao caixa**: dividir (régua com os lançamentos), unificar com o
+   anterior (os dois não conferidos; vale com diferença), início e fim, e mover um lançamento de
+   período (na correção da linha). **O período manda, não a hora**: o lançamento movido fica no
+   período mesmo fora do início e fim, e editar as datas não recusa por isso (resolve também a venda
+   offline do PDV, gravada na hora da sincronização). Caso típico: o caixa fechou, alguém vendeu
+   depois na mesma maquineta, a venda caiu no período de hoje → divide hoje isolando a venda e
+   unifica o pedaço com ontem (ou move a venda).
+6. **Reabrir** qualquer período conferido, em qualquer ordem (cartão não tem saldo encadeado): volta
+   a pendente.
+7. **Quem**: Gerente da filial, Financeiro e Administrador; maquineta compartilhada (as virtuais
+   Le Card Site, MultVale Site, Brasil Card Site), qualquer gerente. As virtuais têm período como
+   as outras; às vezes são conferidas por semana (o período fica aberto até alguém conferir).
+8. **Correções na linha** (as do M9): corrigir crédito/débito, maquineta, período, bandeira,
+   autorização, parcelas e valor; registro indevido. Só no período não conferido.
+9. **Fica para depois**: a dashboard de pendências do gerente (unidade) e do financeiro (geral), que
+   leva cada item à tela onde ele está (TASK-201). O resto de Fechamentos (cheque, vale, duplicata,
+   venda com diferença, PIX) continua como está.
+
+### Como ficou no código (07/10/2026; não validado)
+
+- **DDL** `api/database/maquineta_periodo.sql` (idempotente; rodado 2x no dev; go-live depois do
+  `caixa_item_saldo.sql`): `tblmaquinetalote.fim`; conferido antigo ganha `fim = fechamento`; o
+  índice do aberto passa a ser `fim is null`. `abertura` é o início.
+- **Backend**: `MaquinetaLote` (`fim`, `situacao()` aberto/pendente/conferido; `aberto()` = sem
+  fim). `MaquinetaLoteService`: `corrente` (o sem fim; nasce no fim+1s do último), `conferir`,
+  `reabrir`, `editarDatas`, `dividir` (cartão por `transacao`, cancelamento por `cancelamento`
+  depois do corte; o borderô digitado e as fotos vão para a segunda parte), `unificar` (fica o
+  anterior, com o fim e o borderô do posterior; sem ele, o do anterior; as fotos vão junto),
+  `exigirNaoConferido` (no lugar do `exigirAberto`, usado nas correções), `totais` (as abas numa
+  consulta), `resumo` (a lista de Maquinetas), `comFoto`. `MaquinetaLoteResource` mudou para
+  `Mg/Maquineta` (sem `comLancamentos`: as abas com `total` e `semBordero`; com: sistema por PDV,
+  fotos, anterior e lançamentos). `MaquinetaPeriodoController`: `GET
+  v1/maquineta/{cod}/periodo/{codlote?}` (a tela), `GET v1/maquineta/{cod}/lote` (não conferidos,
+  destino do mover), `POST v1/maquineta-lote/{id}/conferir|reabrir|datas|dividir|unificar|foto`,
+  `GET v1/maquineta-lote/{id}/foto/{arquivo}`; toda ação devolve a tela. Saíram as rotas
+  `v1/conferencia/lote*` e o bloco dos lotes de `ConferenciaService::pendencias`.
+  `MaquinetaController::index` traz `periodos` (aberto desde, pendentes, sem borderô nos últimos 60
+  dias). `ConferenciaPagamentoResource` ganhou `cancelamento`.
+- **Front (contas)**: `pages/maquineta/Detalhe.vue` (rota `maquineta-detalhe`,
+  `maquineta/:codmaquineta/:codmaquinetalote?`), `components/maquineta/PeriodoCabecalho.vue`
+  (situação, ações, borderô × sistema, por PDV, foto) e `PeriodoLancamentos.vue` (extrato por dia,
+  com acumulado; corrigir e indevido na linha), `components/maquineta/linhas.js` (as linhas com o
+  sinal do sistema), `stores/maquinetaPeriodoStore.js`. Lista de Maquinetas com a coluna Período e
+  o nome como link. `CorrecaoPagamentoDialog`: "Período" no lugar de "Lote". Saíram
+  `pages/fechamento/Lote.vue`, `pages/maquineta/Lotes.vue`, as rotas `fechamento-lote` e
+  `maquineta-lotes` e as funções de lote do `conferenciaStore`.
+- Conferido: `php -l`; cenário no tinker com rollback (16 verificações: dividir, conferir batendo e
+  não batendo, abrir o seguinte, cartão novo no aberto, mover para pendente, correção no conferido
+  recusada, unificar com conferido recusado, reabrir, unificar, conferir de novo, datas invadindo e
+  no futuro recusadas, a tela e a lista); eslint e prettier; `quasar build` do contas.
+
+### Valida (maquineta e seus períodos)
+
+1. contas → Maquinetas: a coluna Período ("Aberto desde …"); clicar no nome abre a maquineta.
+2. Venda no cartão com essa maquineta no PDV → aparece no período aberto (aba "aberto" com o total).
+3. Conferir com o borderô (`fact_check`) digitando um valor diferente → Pendente, com a diferença
+   em vermelho, e nasce um período aberto novo.
+4. Nova venda na maquineta → cai no período novo.
+5. No pendente: corrigir um lançamento (ou mover para outro período) e Conferir de novo com o valor
+   certo → Conferido.
+6. Conferido sem foto: "sem borderô" no cabeçalho, na aba e na lista. Fotografar → o selo some.
+7. Reabrir → Pendente. Dividir o período aberto numa hora → a primeira parte pendente; unificar
+   essa parte com o anterior → um período só, com o borderô do anterior.
+8. Início e fim de um período pendente; abas de meses e anos pela URL.
+9. Fechamentos não mostra mais as maquinetas; o resto continua.
