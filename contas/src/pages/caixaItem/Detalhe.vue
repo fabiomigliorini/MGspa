@@ -1,10 +1,11 @@
 <script setup>
 // O item do caixa e quanto tem dele em cada caixa que já mexeu com ele (a contagem final do último
-// período fechado de cada um mais as entradas depois dele, como o saldo do dinheiro; com o total):
-// só os com saldo, ou também os zerados. Clicar no caixa abre os períodos dele em que o item mexeu,
-// com as entradas e saídas. Embaixo, os tipos (descrição + preço) já lançados, cada um com o editar
-// da descrição, que muda em tudo. Criação, editar, inativar e excluir no cabeçalho. A maquineta de
-// parceiro não tem saldo nos caixas: mostra a conta corrente (o que devemos ao parceiro).
+// período fechado de cada um mais as entradas e saídas depois dele, como o saldo do dinheiro; com
+// o total): só os com saldo, ou também os zerados. Clicar no caixa abre os períodos dele em que o
+// item mexeu, com as entradas e saídas. Embaixo, os tipos (descrição + preço) já lançados, cada um
+// com o editar da descrição, que muda em tudo. Criação, editar, inativar e excluir no cabeçalho. A
+// maquineta de parceiro não tem saldo nos caixas: mostra a conta corrente (o que devemos ao
+// parceiro).
 import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -126,13 +127,13 @@ watch(codcaixaitem, (cod) => cod && store.carregar(cod))
               <q-item-label caption>
                 <template v-if="s.contado">
                   Contado no fechamento de {{ formataTimestamp(s.fim) }}
-                  <template v-if="s.entradas"> + entradas depois</template>
+                  <template v-if="s.entradas"> + entradas e saídas depois</template>
                 </template>
                 <template v-else-if="s.fim && s.entradas">
-                  Entradas depois do fechamento de {{ formataTimestamp(s.fim) }}
+                  Entradas e saídas depois do fechamento de {{ formataTimestamp(s.fim) }}
                 </template>
                 <template v-else-if="s.entradas">
-                  Entradas desde a abertura, ainda sem fechamento
+                  Entradas e saídas desde a abertura, ainda sem fechamento
                 </template>
                 <template v-else-if="s.fim">
                   Zerado no fechamento de {{ formataTimestamp(s.fim) }}

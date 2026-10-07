@@ -1,5 +1,5 @@
 <script setup>
-// Entrada de item (doc-4, "Itens do caixa"): o item conta como cédula, então o saldo do
+// Entrada ou saída de item (doc-4, "Itens do caixa"): o item conta como cédula, então o saldo do
 // portador só muda quando ele entra (+) ou sai sem venda (−: devolveu, perdeu). Vender não lança
 // nada. Linhas novas de descrição (typeahead com as já usadas no item), preço e quantidade; cai no
 // período da tela, com a data dentro dele, e só se cancela, com justificativa. Qualquer portador
@@ -107,6 +107,9 @@ async function salvar() {
         </q-card-section>
         <q-card-section>
           <div class="row q-col-gutter-md">
+            <div class="col-12">
+              <q-option-group v-model="form.sinal" type="radio" inline :options="SENTIDOS" />
+            </div>
             <div v-if="itens.length > 1" class="col-12">
               <q-option-group
                 v-model="form.codcaixaitem"
@@ -114,9 +117,6 @@ async function salvar() {
                 inline
                 :options="itens.map((i) => ({ value: i.codcaixaitem, label: i.item }))"
               />
-            </div>
-            <div class="col-12">
-              <q-option-group v-model="form.sinal" type="radio" inline :options="SENTIDOS" />
             </div>
             <div class="col-12">
               <MgInputData

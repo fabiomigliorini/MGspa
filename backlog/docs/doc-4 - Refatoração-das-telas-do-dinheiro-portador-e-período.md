@@ -385,8 +385,9 @@ estoque, com acerto) vêm um por um, adaptando a estrutura.
    com a tolerância do portador. O saldo inicial (contagem final do anterior) já vem com os
    itens.
 3. **Vender não lança nada**: o item vira dinheiro, o saldo não muda.
-4. **Entrada de item** (botão `style` no cabeçalho dos lançamentos), com sinal: + chegou; − saiu
-   sem venda (devolveu, perdeu). É o **único lançamento** do item: **tipo I** no movimento do
+4. **Entrada ou saída de item** (botão `style` no cabeçalho dos lançamentos; Entrada / Saída é o
+   primeiro campo do diálogo), com sinal: + chegou; − saiu sem venda (devolveu, perdeu, recolheram
+   o bloco de ingressos). É o **único lançamento** do item: **tipo I** no movimento do
    portador, sem `tblpagamento`. Cancela-se com justificativa, como o ajuste (operador, período
    não fechado). As linhas são sempre novas: **descrição** (typeahead com as já usadas no item),
    **preço** e **quantidade**; "+ Linha" acrescenta, o X exclui.
@@ -472,10 +473,11 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
 1. contas → Cadastros → Itens do Caixa: criar e editar pedem só o nome; clicar no item abre a
    tela dele.
 2. contas → Portadores → um portador em espécie (gaveta, cofre, troco) → período aberto: botão
-   `style` (Entrada de item) nos lançamentos → escolher o item → descrição (digitar "Cl" sugere
-   "Claro"), preço 10,00, quantidade 10 → Lançar. Saldo final sobe R$ 100,00; linha "Entrada:
-   Chips de celular" na linha do tempo; resumo "Itens do caixa".
-3. Saída de 1 × R$ 10,00 (sem venda): saldo desce R$ 10,00.
+   `style` (Entrada ou saída de item) nos lançamentos → Entrada → escolher o item → descrição
+   (digitar "Cl" sugere "Claro"), preço 10,00, quantidade 10 → Lançar. Saldo final sobe
+   R$ 100,00; linha "Entrada: Chips de celular" na linha do tempo; resumo "Itens do caixa".
+3. Saída sem venda, no mesmo botão com Saída marcada (ex.: o bloco de 25 ingressos de R$ 40,00
+   da Brígida recolhido): saldo desce R$ 1.000,00; linha "Saída: …" em vermelho.
 4. Contagem final (botão ao lado do saldo final): cédulas + o bloco do item com o campo
    "R$ 10,00" já listado; contar o que sobrou. Total geral = cédulas + itens; diferença uma só.
 5. Venda em dinheiro de um item: nada lançado; contar um a menos e R$ 10,00 a mais → mesma
@@ -486,9 +488,10 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
    itens na contagem.
 9. PDV `/caixa`: sem o bloco de itens; abre e fecha como antes.
 10. Tela do item: "Saldo nos caixas" com cada portador que tem o item (contagem do último
-    fechamento + entradas do período aberto) e o total; clicar no caixa abre o popup dos
-    períodos em que o item mexeu, com os cards Entradas, Saldo e Diferença (entradas +
-    diferença = saldo); "Descrições" troca o texto de um tipo (descrição + preço) em tudo.
+    fechamento + entradas e saídas do período aberto) e o total; clicar no caixa abre o popup
+    dos períodos em que o item mexeu, com os cards Saldo, Entradas e saídas e Diferença (entradas
+    e saídas + diferença = saldo; a saída entra na mesma coluna, negativa); "Descrições" troca o
+    texto de um tipo (descrição + preço) em tudo.
 
 ### Como ficou no código: maquinetas de parceiro (06/10/2026; não validado)
 
@@ -532,7 +535,7 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
    com foto. Linha "Borderô: Rede Card Centro", saldo +350, resumo "Maquinetas de parceiros".
 3. Outro borderô, Devolução R$ 20,00, sem foto: badge "sem borderô"; câmera na linha → anexar → o
    badge some.
-4. Entrada de item e contagem não mostram a maquineta; contar os 330 a mais nas cédulas →
+4. O diálogo do item e a contagem não mostram a maquineta; contar os 330 a mais nas cédulas →
    diferença 0.
 5. Cancelar a devolução com justificativa: saldo volta; aparece em Mostrar cancelados.
 6. Itens do Caixa → Rede Card Centro: conta corrente com o crédito de 350 (clicar leva ao caixa).

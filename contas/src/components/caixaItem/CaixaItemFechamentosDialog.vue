@@ -1,12 +1,13 @@
 <script setup>
 // Os períodos de um caixa em que o item mexeu, do mais novo (o aberto, se mexeu) para o mais
 // antigo, com rolagem infinita: o que tinha na abertura, o que entrou ou saiu sem venda (com cada
-// lançamento e quem fez), o contado no fechamento e a diferença (fechamento − abertura − entradas;
-// negativa é o que saiu sem lançamento: vendido ou levado para outro caixa).
+// lançamento e quem fez), o contado no fechamento e a diferença (fechamento − abertura − entradas
+// e saídas; negativa é o que saiu sem lançamento: vendido ou levado para outro caixa).
 // Cada um leva ao período (Ctrl+clique abre noutra aba sem fechar o popup). Em cima, três cards
-// com os totais do servidor (a lista é paginada): as entradas de todos os períodos (o aberto
-// também), o saldo (o mesmo de "Saldo nos caixas": contado no último fechamento + entradas depois) e
-// a diferença dos fechados (o aberto ainda não foi contado); entradas + diferença = saldo.
+// com os totais do servidor (a lista é paginada): as entradas e saídas de todos os períodos (o
+// aberto também; saída com sinal, na mesma coluna), o saldo (o mesmo de "Saldo nos caixas": contado
+// no último fechamento + entradas e saídas depois) e a diferença dos fechados (o aberto ainda não
+// foi contado); entradas e saídas + diferença = saldo.
 import { onBeforeUnmount, ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
@@ -22,7 +23,7 @@ const rolagem = ref(null)
 const infinito = ref(null)
 // no celular (grid e visibilidade do Quasar): cada período em bloco, a data em cima e os 4 números
 // embaixo, cada um com o nome; o cabeçalho da tabela só a partir do sm
-const colunas = ['Abertura', 'Entradas', 'Fechamento', 'Diferença']
+const colunas = ['Abertura', 'Entradas e saídas', 'Fechamento', 'Diferença']
 const corDiferenca = (v) => (v < 0 ? 'text-red-8' : v > 0 ? 'text-green-8' : '')
 
 // navegar para o período desmonta a tela; sem isto, o popup reabriria ao voltar
@@ -49,7 +50,7 @@ const carregarMais = async (index, done) => {
         <div
           v-for="c in [
             { label: 'Saldo', v: fechamentosTotais.saldo },
-            { label: 'Entradas', v: fechamentosTotais.entradas },
+            { label: 'Entradas e saídas', v: fechamentosTotais.entradas },
             { label: 'Diferença', v: fechamentosTotais.diferenca, cor: true },
           ]"
           :key="c.label"
@@ -109,7 +110,7 @@ const carregarMais = async (index, done) => {
                     <q-item-label caption>{{ f.abertura.quantidade }} un.</q-item-label>
                   </div>
                   <div class="col-3 col-sm-2 text-right">
-                    <q-item-label caption class="xs ellipsis">Entradas</q-item-label>
+                    <q-item-label caption class="xs ellipsis">Entradas e saídas</q-item-label>
                     <q-item-label>{{ formataNumero(f.entradas.total) }}</q-item-label>
                     <q-item-label caption>{{ f.entradas.quantidade }} un.</q-item-label>
                   </div>

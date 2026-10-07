@@ -167,7 +167,7 @@ function cancelar(l) {
           icon="style"
           @click="store.abrirItem()"
         >
-          <q-tooltip>Entrada de item</q-tooltip>
+          <q-tooltip>Entrada ou saída de item</q-tooltip>
         </q-btn>
         <q-btn
           v-if="temMaquinetas"
