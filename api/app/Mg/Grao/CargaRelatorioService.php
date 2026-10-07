@@ -44,11 +44,20 @@ class CargaRelatorioService
         'TRANSFERENCIA' => 'Transferência',
     ];
 
-    /** Abreviacao da coluna Sent. (11mm nao cabe "Transferência"). */
-    public const SENTIDO_CURTO = [
-        'ENTRADA' => 'Receb.',
-        'SAIDA' => 'Exped.',
-        'TRANSFERENCIA' => 'Transf.',
+    /** Cor da etapa — hex das cores Quasar do ETAPA_META (agro/src/utils/carga.js). */
+    public const ETAPA_COR = [
+        'PBT' => '#ef6c00',
+        'TARA' => '#00796b',
+        'CLASSIFICACAO' => '#5e35b1',
+        'FISCAL' => '#e64a19',
+        'FINALIZADO' => '#388e3c',
+    ];
+
+    /** Rotulo das linhas de total — os mesmos da barra de totais da tela. */
+    public const TOTAL_LABEL = [
+        'ENTRADA' => 'Recebido',
+        'SAIDA' => 'Expedido',
+        'TRANSFERENCIA' => 'Transferido',
     ];
 
     public const ETAPA_LABEL = [
@@ -68,11 +77,11 @@ class CargaRelatorioService
             @mkdir($tempDir, 0775, true);
         }
 
-        // Paisagem: 11 colunas nao cabem em A4 retrato sem espremer origem/destino
-        // a ponto de so sobrar reticencia.
+        // Retrato: as 13 colunas da tela cabem em 9 empilhando dois campos por
+        // celula e cortando texto longo (ver a view).
         $mpdf = new Mpdf([
             'mode' => 'utf-8',
-            'format' => 'A4-L',
+            'format' => 'A4',
             'margin_left' => 8,
             'margin_right' => 8,
             'margin_top' => 16,
@@ -114,6 +123,10 @@ class CargaRelatorioService
         )->get();
 
         $grupos = static::agrupar($cargas, $agrupar);
+        // Total geral somado das mesmas linhas, como os subtotais: um por tipo,
+        // sem as canceladas (somar entrada com saida nao significa nada). Nao
+        // vem do totais() da tela porque a coluna Bruto do PDF mostra o PBT,
+        // que a tela nao soma; desconto/liquido/sacas batem com ela.
         $total = static::somar($cargas);
         $legenda = static::legenda($filtros, $agrupar);
 
@@ -261,17 +274,32 @@ class CargaRelatorioService
         return null;
     }
 
+    /**
+     * Subtotal no formato do totais() da tela: `qtd` conta todas as linhas do
+     * grupo; `sentidos` soma por tipo e so as ativas — cancelada aparece na
+     * listagem mas nao movimentou grao.
+     */
     protected static function somar(Collection $cargas): array
     {
-        $tot = ['qtd' => 0, 'bruto' => 0.0, 'desconto' => 0.0, 'liquido' => 0.0, 'sacas' => 0.0];
+        $tot = ['qtd' => $cargas->count(), 'sentidos' => []];
 
         foreach ($cargas as $c) {
-            $tot['qtd']++;
-            $tot['bruto'] += (float) $c->bruto;
-            $tot['desconto'] += (float) $c->desconto;
-            $tot['liquido'] += (float) $c->liquido;
-            $tot['sacas'] += static::sacas($c);
+            if ($c->inativo) {
+                continue;
+            }
+            $s = &$tot['sentidos'][$c->sentido];
+            $s ??= ['qtd' => 0, 'pbt' => 0.0, 'desconto' => 0.0, 'liquido' => 0.0, 'sacas' => 0.0];
+            $s['qtd']++;
+            $s['pbt'] += (float) $c->pbt;
+            $s['desconto'] += (float) $c->desconto;
+            $s['liquido'] += (float) $c->liquido;
+            $s['sacas'] += static::sacas($c);
+            unset($s);
         }
+
+        // Mesma ordem de tipos da tela.
+        $ordem = array_flip(CargaService::SENTIDOS);
+        uksort($tot['sentidos'], fn ($a, $b) => ($ordem[$a] ?? 99) <=> ($ordem[$b] ?? 99));
 
         return $tot;
     }
