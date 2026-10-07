@@ -70,8 +70,8 @@ ou período, podem passar a apontar para a tela nova se for trivial.
    **estado**: na gaveta, Abrir caixa e Fechar com contagem (`@components/caixa/ContagemCaixa.vue`,
    regras do M13), Reabrir, Borderô; nos demais, Fechar com corte e Reabrir (regras do M12).
 9. **Resumo do período** acima da lista: saldo inicial; entradas e saídas **por origem** (Vendas,
-   Títulos, Transferências, Avulsos e ajustes, Itens do caixa); saldo final. Na gaveta, também
-   contado × sistema na abertura e no fechamento. É o formulário "Movimento do Caixa" de papel.
+   Títulos, Transferências, Avulsos e ajustes); saldo final. Na espécie, é o formulário
+   "Movimento do Caixa" de papel linha a linha (ver **Resumo** em "A tela do portador").
    Clicar numa origem filtra a lista.
 10. **Lista de lançamentos** = linha de extrato: data e hora do fato (`transacao`); origem em texto
     com link ("Venda 123456 · João", "Sangria → Cofre Centro", "Baixa de 3 títulos · José",
@@ -329,9 +329,35 @@ Cada portador (qualquer tipo) tem uma **lista de usuários com papel** (`tblport
   período"** é a primeira aba.
 - **Cabeçalho do período**: a situação e um botão por ação (fechar, início e fim, dividir,
   unificar, reabrir, borderô), conforme o papel. Pendente mostra o que falta.
-- **Resumo**: saldo inicial (com a contagem inicial e se confere), entradas e saídas por origem
-  (vendas, títulos e vales, itens, transferências, ajustes, taxas), saldo final, contagem final e
-  diferença (verde dentro da tolerância). Os botões ao lado dos saldos são as contagens.
+- **Resumo** (refeito com o Fábio em 07/10/2026, critério #25 da TASK-39): na espécie, o
+  formulário "Movimento do Caixa" de papel, uma linha por coisa física; **Entrada** = o que tinha
+  no começo ou entrou, **Saída** = o que sobrou no fim ou saiu. Na ordem:
+  - **Moedas** e **Cédulas**: entrada = a contagem que deu o saldo inicial (a final do anterior;
+    sem ela, a inicial deste), saída = a contagem final. Sem contagem que divida o saldo inicial
+    (primeiro período, dividir sem contagem), volta a linha única "Saldo inicial".
+  - **Cada item do caixa** (chips, ingressos): o título e, recuadas, "Abertura e fechamento" (o
+    valor do item nas mesmas contagens) e "Movimentação (n)" (as entradas e saídas lançadas do
+    item, se teve). A linha "Itens do caixa" deixou de existir.
+  - As origens (vendas, títulos e vales, transferências, ajustes, taxas), com as **maquinetas de
+    parceiros** sob o título "Parceiros", uma linha por maquineta (borderôs na entrada,
+    devoluções na saída).
+  - **Total** da entrada e da saída e **Diferença** (saída − entrada = contado − saldo final),
+    verde dentro da tolerância; só acima dela aparece "Acima Tolerância 2,00". Sem contagem
+    final, "Saldo final (a contar)".
+
+  A entrada de cada bloco contado fica **azul** quando a contagem inicial dele bate com a abertura
+  e **roxa** com "Divergente" quando não. A **calculadora ao lado de cada valor** abre a contagem
+  **só daquele bloco** (moedas, cédulas ou o item): uma linha por face (no item, por preço, com a
+  descrição) com quantidade, face e total, um recalculando o outro; o copiar fica no título e a
+  inicial mostra o valor do bloco na abertura. Salva a contagem inteira, com o resto como estava.
+  Não há mais a contagem completa. Clicar numa movimentação ou origem filtra a lista
+  ("I:cod"/"M:cod" para item e maquineta).
+
+  O quadro é montado no servidor (`PortadorPeriodoResource::quadro`, com `contagem.*.moedas`,
+  `cedulas`, `valoritens` e `contagem.abertura`) e desenhado igual na tela (`PeriodoResumo`) e
+  no **borderô térmico** (`caixa/bordero-termica`, com a situação do período no topo; sem o
+  detalhe por cédula). O borderô sai pela impressora do cabeçalho em qualquer situação, também
+  no aberto (no PDV, a impressora dele manda para a térmica).
 - **Lançamentos**: linha do tempo por dia; pagamento abre o pagamento; transferência leva ao outro
   portador; confirmar e cancelar na linha. Os botões de **ajuste (+)** e **reforço/sangria** ficam
   no cabeçalho dos lançamentos.
@@ -395,8 +421,9 @@ estoque, com acerto) vêm um por um, adaptando a estrutura.
    do saldo inicial e das entradas do período, uma linha por tipo como na contagem, com a
    quantidade limitada ao disponível (saldo inicial + entradas − saídas); o servidor recusa o tipo
    que não está no caixa e a quantidade que passa.
-5. **Contagem**: um bloco por item que está no portador, **um campo de quantidade por preço**
-   (como cédula), rotulado com o preço e a descrição. Preço novo só entra pela entrada.
+5. **Contagem**: cada item que está no portador é um bloco, contado pela calculadora da linha
+   dele no resumo: **uma linha por preço** (com a descrição), quantidade e total, como cédula.
+   Preço novo só entra pela entrada.
 6. **Qualquer portador em espécie** (gaveta, cofre, troco, Caixa Financeiro). Não há vínculo a
    cadastrar: a entrada oferece todos os itens ativos, e o item entra na contagem do portador na
    primeira entrada ali e **vai de um dia para o outro até zerar** (contou zero, some da contagem
@@ -485,13 +512,13 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
   descrições, períodos e total dos fechados);
   `PortadorPeriodoResource` (linha I, `contagem.*.itens`, `itens` ativos com os preços conhecidos
   e `contar` quando está no portador); `GET v1/caixa-item/{id}/descricao` (typeahead) e as rotas
-  da tela do item; borderô com os itens na contagem. Saíram `CaixaItemLancamento(Service)`,
+  da tela do item; borderô com os itens no quadro do resumo. Saíram `CaixaItemLancamento(Service)`,
   `CaixaService::lancamentos/salvarItem/pagamentoNaGaveta/titulosRepasse/estornarRepasse/itens`,
   `exigirSemItens`, a origem I dos pagamentos e as rotas `v1/caixa/sessao/{id}/item` e
   `v1/caixa/item-lancamento`.
 - **Front**: `@components/caixa/ItemCaixaDialog` (wizard; entrada com linhas novas e typeahead,
-  saída com a `ContagemCaixa` e o disponível de teto), `ContagemCaixa` com os itens (um campo por
-  preço; `LinhasItemCaixa` saiu),
+  saída com a `ContagemCaixa` e o disponível de teto), `ContagemCaixa` um bloco por vez (uma linha
+  por preço, com quantidade e total; `LinhasItemCaixa` saiu),
   `periodoStore.lancarItem`;
   contas: botão "Entrada ou saída de item" nos lançamentos de todo portador em espécie, itens no
   diálogo da contagem, cadastro só com o nome, tela do item (`caixaItem/Detalhe` e
@@ -506,21 +533,21 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
 2. contas → Portadores → um portador em espécie (gaveta, cofre, troco) → período aberto: botão
    `style` (Entrada ou saída de item) nos lançamentos → Entrada (tecla 1) → o item → descrição
    (digitar "Cl" sugere "Claro"), preço 10,00, quantidade 10 → Continuar → Lançar (já com o
-   foco). Saldo final sobe R$ 100,00; linha "Entrada: Chips de celular" na linha do tempo; resumo
-   "Itens do caixa".
+   foco). Saldo final sobe R$ 100,00; linha "Entrada: Chips de celular" na linha do tempo; no
+   resumo, o item com "Movimentação (1)".
 3. Saída sem venda, no mesmo botão → Saída (ex.: o bloco de 25 ingressos de R$ 40,00 da Brígida
    recolhido): só aparecem os itens e os tipos que estão no caixa, cada um com o teto do
    disponível; 25 no de R$ 40,00 → saldo desce R$ 1.000,00; linha "Saída: …" em vermelho. Tirar
    todo o disponível de um tipo e abrir de novo: o tipo some. Sem nada no caixa, Saída
    desabilitada.
-4. Contagem final (botão ao lado do saldo final): cédulas + o bloco do item com o campo
-   "R$ 10,00" já listado; contar o que sobrou. Total geral = cédulas + itens; diferença uma só.
+4. Contagem final do item (calculadora ao lado da saída de "Abertura e fechamento" dele): a
+   linha de 10,00 já listada; contar o que sobrou. Diferença uma só, de cédulas, moedas e itens.
 5. Venda em dinheiro de um item: nada lançado; contar um a menos e R$ 10,00 a mais → mesma
    diferença.
 6. Cancelar a entrada (na linha): saldo volta; aparece em "Mostrar cancelados".
 7. Fechar e abrir o seguinte: contagem inicial já vem com os itens.
-8. Contar zero, fechar e abrir o seguinte: o item some da contagem. Borderô do período mostra os
-   itens na contagem.
+8. Contar zero, fechar e abrir o seguinte: o item some da contagem. Borderô do período mostra o
+   item no quadro.
 9. PDV `/caixa`: sem o bloco de itens; abre e fecha como antes.
 10. Tela do item: "Saldo nos caixas" com cada portador que tem o item (contagem do último
     fechamento + entradas e saídas do período aberto) e o total; clicar no caixa abre o popup
