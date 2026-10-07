@@ -19,6 +19,8 @@ use Mg\Usuario\Autorizador;
  * contar, fechar, reabrir, datas, dividir, unificar; banco: fechar com corte,
  * reabrir, taxa/tarifa/rendimento). Quem pode: o papel no portador
  * (PortadorAutorizador). O que muda devolve os periodos afetados (R14).
+ * O caixa do PDV usa a mesma tela, so' com o periodo aberto da gaveta: com o
+ * codpdv dela (livre), ve, abre, conta e imprime o bordero sem papel.
  */
 class PortadorPeriodoController extends Controller
 {
@@ -36,11 +38,15 @@ class PortadorPeriodoController extends Controller
 
     // tela /portador/{cod}/{codperiodo}: o portador, as abas (todos os
     // periodos, sem lancamentos) e o periodo escolhido (sem ele, o ultimo).
-    // So' operador ou gestor do portador
+    // So' operador ou gestor do portador; no PDV, a gaveta dele (sem as acoes
+    // de gestor)
     public function tela(int $codportador, ?int $codportadorperiodo = null)
     {
         $portador = Portador::with(['Banco', 'Filial'])->findOrFail($codportador);
-        PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Ver');
+        $pdv = PortadorAutorizador::livre() == $codportador;
+        if (!$pdv) {
+            PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Ver');
+        }
         $periodos = PortadorPeriodo::where('codportador', $codportador)
             ->with(['UsuarioAbertura:codusuario,usuario', 'UsuarioFechamento:codusuario,usuario'])
             ->orderBy('inicio')
@@ -51,12 +57,12 @@ class PortadorPeriodoController extends Controller
         if ($codportadorperiodo && !$periodo) {
             abort(404, 'Período não é deste portador.');
         }
-        $gestor = PortadorAutorizador::pode($codportador, PortadorUsuario::PAPEL_GESTOR);
+        $gestor = !$pdv && PortadorAutorizador::pode($codportador, PortadorUsuario::PAPEL_GESTOR);
         return ['data' => [
             'portador' => new PortadorResource($portador),
-            'papel' => PortadorAutorizador::papel($codportador),
+            'papel' => $pdv ? PortadorUsuario::PAPEL_OPERADOR : PortadorAutorizador::papel($codportador),
             'pode' => [
-                'cadastro' => Autorizador::pode(['Financeiro']),
+                'cadastro' => !$pdv && Autorizador::pode(['Financeiro']),
                 'operar' => true,
                 'gestor' => $gestor,
                 'usuarios' => $gestor,
@@ -102,7 +108,8 @@ class PortadorPeriodoController extends Controller
             $request->inicio ? Carbon::parse($request->inicio) : PortadorPeriodoService::inicioDoNovo($portador),
             $request->has('contagem') ? ($dados['contagem'] ?? []) : null,
             $this->itens($request, $dados),
-            $dados['observacoes'] ?? null
+            $dados['observacoes'] ?? null,
+            PortadorAutorizador::livre()
         ));
         return $this->resposta($periodo);
     }
@@ -115,7 +122,8 @@ class PortadorPeriodoController extends Controller
             $this->periodo($id),
             $request->momento,
             $dados['contagem'] ?? null,
-            $this->itens($request, $dados)
+            $this->itens($request, $dados),
+            PortadorAutorizador::livre()
         ));
         return $this->resposta($periodo);
     }
@@ -188,14 +196,30 @@ class PortadorPeriodoController extends Controller
             ->additional(['periodos' => PortadorPeriodoResource::lista(PortadorPeriodoService::desde($anterior)), 'removido' => $id]);
     }
 
-    public function bordero(int $id)
+    // o bordero de quem ve o periodo (o caixa do PDV, a gaveta dele)
+    private function periodoDoBordero(int $id): PortadorPeriodo
     {
         $periodo = $this->periodo($id);
-        PortadorAutorizador::autorizar($periodo->Portador, PortadorUsuario::PAPEL_OPERADOR, 'Ver');
+        if (PortadorAutorizador::livre() != $periodo->codportador) {
+            PortadorAutorizador::autorizar($periodo->Portador, PortadorUsuario::PAPEL_OPERADOR, 'Ver');
+        }
+        return $periodo;
+    }
+
+    public function bordero(int $id)
+    {
+        $periodo = $this->periodoDoBordero($id);
         return response()->make(CaixaBorderoService::pdf($periodo), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="Bordero' . $periodo->codportadorperiodo . '.pdf"',
         ]);
+    }
+
+    // na termica do PDV (rota assinada do bordero, CaixaBorderoService)
+    public function imprimirBordero(int $id, string $impressora)
+    {
+        CaixaBorderoService::imprimir($this->periodoDoBordero($id), $impressora);
+        return ['ok' => true];
     }
 
     // ==== banco: taxa, tarifa, rendimento ====

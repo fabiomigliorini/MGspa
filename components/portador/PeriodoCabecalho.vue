@@ -5,6 +5,8 @@
 // tolerância do portador fecha, acima dá erro e fica pendente), reabrir, início e fim, dividir,
 // unificar e borderô. As contagens são os botões do resumo. Banco: fechar com corte e reabrir
 // (M12). Abrir, contar e fechar: operador; o resto: gestor.
+// No caixa do PDV (negocios) só o período aberto: as contagens e imprimir o borderô (na térmica do
+// PDV); quem fecha é o gerente, no contas.
 // Embaixo, no mesmo card, o resumo do período.
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
@@ -13,14 +15,14 @@ import { storeToRefs } from 'pinia'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
 import ContagemCaixa from '@components/caixa/ContagemCaixa.vue'
-import PeriodoResumo from 'components/portador/PeriodoResumo.vue'
+import PeriodoResumo from '@components/portador/PeriodoResumo.vue'
 import { formataNumero, formataTimestamp, formataTimestampIso } from '@components/formatters'
 import { periodoStore, linhasDoItem, linhasParaSalvar } from '@components/stores/periodoStore'
 
 const router = useRouter()
 const $q = useQuasar()
 const store = periodoStore()
-const { portador, periodo, periodos, salvando, gestor } = storeToRefs(store)
+const { portador, periodo, periodos, salvando, gestor, pdv } = storeToRefs(store)
 
 const caixa = computed(() => !!portador.value?.ehCaixa)
 const situacao = computed(() => periodo.value?.situacao)
@@ -92,6 +94,29 @@ const momento = ref('inicial')
 const contagem = ref({ contagem: {}, itens: {} })
 const soConsulta = computed(() => !naoFechado.value)
 const itensAtivos = computed(() => (periodo.value?.itens || []).filter((i) => !i.inativo))
+const copia = ref(null)
+
+// de onde copiar, bloco a bloco: a inicial copia a final do período anterior; a final copia a
+// inicial, com os itens somando as entradas e tirando as saídas do período (as que valem)
+function copiaDaAbertura() {
+  const ini = periodo.value.contagem?.inicial
+  const movimentos = (periodo.value.lancamentos || []).filter((l) => l.tipo === 'I' && !l.cancelado)
+  if (ini?.contado == null && !movimentos.length) return null
+  const chave = (l) => `${Number(l.preco)}|${l.descricao || ''}`
+  const itens = {}
+  const somar = (cod, linhas, sinal) => {
+    const atual = (itens[cod] = itens[cod] || [])
+    ;(linhas || []).forEach((l) => {
+      const achou = atual.find((x) => chave(x) === chave(l))
+      const q = sinal * (Number(l.quantidade) || 0)
+      if (achou) achou.quantidade += q
+      else atual.push({ preco: l.preco, descricao: l.descricao || null, quantidade: q })
+    })
+  }
+  Object.entries(ini?.itens || {}).forEach(([cod, linhas]) => somar(cod, linhas, 1))
+  movimentos.forEach((l) => somar(l.codcaixaitem, l.itens, l.valor < 0 ? -1 : 1))
+  return { titulo: 'Copiar da abertura', contagem: ini?.contagem || {}, itens }
+}
 
 function prepararContar(m) {
   momento.value = m
@@ -104,6 +129,11 @@ function prepararContar(m) {
         .map((i) => [i.codcaixaitem, linhasDoItem(i, c?.itens?.[i.codcaixaitem])]),
     ),
   }
+  const anterior = periodo.value.contagem?.anterior
+  copia.value =
+    m === 'final'
+      ? copiaDaAbertura()
+      : anterior && { titulo: 'Copiar do fechamento anterior', ...anterior }
   dialogContagem.value = true
 }
 
@@ -278,8 +308,19 @@ async function fecharCorte() {
       </div>
       <div class="col-auto row no-wrap items-center q-ml-sm">
         <template v-if="caixa">
+          <q-btn
+            v-if="pdv"
+            flat
+            round
+            size="sm"
+            color="grey-7"
+            icon="print"
+            @click="store.imprimirBordero()"
+          >
+            <q-tooltip>Imprimir borderô</q-tooltip>
+          </q-btn>
           <!-- desabilitado o botão não mostra a dica: ela fica no span -->
-          <span v-if="naoFechado">
+          <span v-else-if="naoFechado">
             <q-btn
               flat
               round
@@ -367,7 +408,13 @@ async function fecharCorte() {
           {{ reais(momento === 'inicial' ? periodo.saldoinicial : periodo.saldofinal) }}
         </q-card-section>
         <q-card-section>
-          <ContagemCaixa v-model="contagem" :itens="itensAtivos" :disable="soConsulta" autofocus />
+          <ContagemCaixa
+            v-model="contagem"
+            :itens="itensAtivos"
+            :disable="soConsulta"
+            :copia="copia"
+            autofocus
+          />
         </q-card-section>
         <q-separator inset />
         <q-card-actions align="right">

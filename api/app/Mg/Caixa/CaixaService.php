@@ -8,19 +8,16 @@ use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 use Mg\Pdv\Pdv;
 use Mg\Portador\Portador;
-use Mg\Portador\PortadorAutorizador;
 use Mg\Portador\PortadorMovimento;
 use Mg\Portador\PortadorPeriodo;
-use Mg\Portador\PortadorPeriodoService;
-use Mg\Portador\PortadorUsuario;
 
 /**
  * O caixa do PDV (gaveta) sobre o periodo do portador em especie (doc-4,
  * redefinicao do dinheiro: abrir, contar, fechar, reabrir, ajuste e
  * transferencia sao do PortadorPeriodoService e do PortadorLancamentoService).
  * Aqui fica o que e' do PDV: a gaveta do dispositivo, o periodo em que cai o
- * dinheiro do pagamento (tblpagamento.codportadorperiodo) e o que a tela do
- * caixa e o bordero mostram.
+ * dinheiro do pagamento (tblpagamento.codportadorperiodo) e o que o bordero
+ * do caixa mostra.
  */
 class CaixaService
 {
@@ -172,17 +169,6 @@ class CaixaService
     const CEDULAS = ['200', '100', '50', '20', '10', '5', '2'];
     const MOEDAS = ['1', '0.50', '0.25', '0.10', '0.05', '0.01'];
 
-    // quem opera o caixa no contas: operador ou gestor do portador
-    public static function podeOperar(Portador $caixa): bool
-    {
-        return PortadorAutorizador::pode($caixa->codportador, PortadorUsuario::PAPEL_OPERADOR);
-    }
-
-    public static function autorizarOperar(Portador $caixa): void
-    {
-        PortadorAutorizador::autorizar($caixa, PortadorUsuario::PAPEL_OPERADOR, 'Operar o caixa');
-    }
-
     // o dinheiro de uma contagem {face: quantidade}
     public static function totalContagem(?array $contagem): float
     {
@@ -211,14 +197,6 @@ class CaixaService
             }
         }
         return [$limpa, round($totais['moedas'], 2), round($totais['cedulas'], 2)];
-    }
-
-    // o saldo inicial do proximo periodo: a contagem final do ultimo (0 no
-    // primeiro)
-    public static function envelope(int $codportador): float
-    {
-        $ultima = static::ultimaSessao($codportador);
-        return $ultima ? PortadorPeriodoService::saldoInicialSeguinte($ultima) : 0.0;
     }
 
     // dinheiro do sistema no periodo: saldo inicial + entradas - saidas, por
@@ -329,8 +307,8 @@ class CaixaService
         ];
     }
 
-    // o que a tela do caixa do PDV mostra do periodo: dinheiro, informativo e
-    // os ajustes
+    // o que o bordero do caixa mostra do periodo: dinheiro, informativo e os
+    // ajustes
     public static function painel(PortadorPeriodo $sessao): array
     {
         $ajustes = PortadorMovimento::where('codportadorperiodo', $sessao->codportadorperiodo)

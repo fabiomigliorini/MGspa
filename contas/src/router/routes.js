@@ -187,16 +187,6 @@ const routes = [
         },
       },
       {
-        path: 'fechamento/sessao/:id(\\d+)',
-        name: 'fechamento-sessao',
-        component: () => import('pages/fechamento/Sessao.vue'),
-        meta: {
-          auth: true,
-          title: 'Caixa',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
-        },
-      },
-      {
         path: 'fechamento/venda/:id(\\d+)',
         name: 'fechamento-venda',
         component: () => import('pages/fechamento/Venda.vue'),

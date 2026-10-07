@@ -11,13 +11,12 @@ use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 
 /**
- * Conferencias do que o caixa movimentou (M9 doc-3): sessao da gaveta, lote
- * da maquineta, cheque e vale recebidos, duplicata (confissao), venda
+ * Conferencias do que o caixa movimentou (M9 doc-3): lote da maquineta,
+ * cheque e vale recebidos, duplicata (confissao), venda
  * desbalanceada e, para o financeiro, PIX manual. Cada uma fecha sozinha.
  */
 class ConferenciaService
 {
-    const TIPO_SESSAO = 'sessao';
     const TIPO_LOTE = 'lote';
     const TIPO_CHEQUE = 'cheque';
     const TIPO_VALE = 'vale';
@@ -77,35 +76,6 @@ class ConferenciaService
         $filiais = static::filiais($codfilial);
         $inicio = static::inicio()->format('Y-m-d H:i:s');
         $ret = [];
-
-        // sessoes da gaveta ainda abertas (fechar e' a conferencia, M13): o
-        // gerente fecha pela mesma tela do caixa
-        $params = [];
-        $where = static::whereFilial('po.codfilial', $filiais, $params);
-        foreach (DB::select("
-            select pp.codportadorperiodo, pp.inicio, pp.fim, po.portador, po.codfilial, f.filial,
-                ua.usuario as usuarioabertura, uf.usuario as usuariofechamento
-            from tblportadorperiodo pp
-            inner join tblportador po on (po.codportador = pp.codportador)
-            left join tblfilial f on (f.codfilial = po.codfilial)
-            left join tblusuario ua on (ua.codusuario = pp.codusuarioabertura)
-            left join tblusuario uf on (uf.codusuario = pp.codusuariofechamento)
-            where pp.fechamento is null
-            and exists (select 1 from tblpdv d where d.codportador = pp.codportador)
-            {$where}
-            order by pp.inicio
-        ", $params) as $r) {
-            $ret[] = [
-                'tipo' => static::TIPO_SESSAO,
-                'id' => $r->codportadorperiodo,
-                'titulo' => $r->portador,
-                'subtitulo' => 'Aberto por ' . ($r->usuarioabertura ?? '—') . ' em ' . Carbon::parse($r->inicio)->format('d/m H:i'),
-                'data' => $r->inicio,
-                'codfilial' => $r->codfilial,
-                'filial' => $r->filial,
-                'conferivel' => true,
-            ];
-        }
 
         // lotes de maquineta abertos com movimento (as da filial e as
         // compartilhadas, que aparecem em todas)

@@ -3,6 +3,7 @@
 namespace Mg\Portador;
 
 use Illuminate\Support\Facades\Auth;
+use Mg\Pdv\Pdv;
 use Mg\Usuario\Autorizador;
 
 /**
@@ -13,7 +14,7 @@ use Mg\Usuario\Autorizador;
  *   ser destino de transferencia: depositante
  *   confirmar transferencia chegando, reabrir, datas, dividir, unificar,
  *   a lista de usuarios: gestor
- * O PDV nao passa por aqui: quem esta' na gaveta trabalha nela.
+ * O PDV nao passa por aqui: quem esta' na gaveta trabalha nela (livre).
  */
 class PortadorAutorizador
 {
@@ -30,6 +31,14 @@ class PortadorAutorizador
     private static function codusuario(?int $codusuario): ?int
     {
         return $codusuario ?? (Auth::user()->codusuario ?? null);
+    }
+
+    // a gaveta do PDV que pede (codpdv no request): o PDV nao valida o papel
+    // nela. null fora do PDV
+    public static function livre(): ?int
+    {
+        $codpdv = request()->input('codpdv');
+        return $codpdv ? optional(Pdv::find((int) $codpdv))->codportador : null;
     }
 
     public static function admin(?int $codusuario = null): bool

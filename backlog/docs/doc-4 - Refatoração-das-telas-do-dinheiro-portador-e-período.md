@@ -574,3 +574,77 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
    cancelar → saldo 335.
 9. Período fechado recusa borderô novo; usuário fora de Administrador e Financeiro não abre a
    conta corrente.
+
+## Caixa do PDV (06/10/2026, com o Fábio; TASK-188 M9.1, M9.5, M9.7)
+
+A tela do caixa do negocios (`/caixa`) era o `MgCaixaSessao` do M13: cards de avulso e de
+transferência, tabela de dinheiro própria, abrir e fechar com a contagem embutida, sem itens nem
+borderô de maquineta. Passa a ser **a mesma tela do período do contas**, só com o **período aberto**
+da gaveta do PDV. Esta seção manda sobre o "até a refatoração do PDV" das seções acima (itens,
+item 7; parceiros, item 9).
+
+### Decisões
+
+1. **O PDV não fecha nada.** Quem fecha é sempre o gerente, no contas. A regra do fechamento não
+   muda (recusa com transferência a confirmar, chegando ou saindo): o gerente também confirma a
+   sangria.
+2. **Abrir**: o caixa no PDV (só confirma) ou o gerente no contas (aba "Novo período").
+3. **Contagens**: inicial e final pelos botões do resumo, com os itens, como no contas.
+4. **Sem período aberto**: só "Abrir caixa". Os fechados e o histórico ficam no contas.
+5. **Lançamentos no PDV**: só **Reforço / Sangria** (a confirmar pelo gestor do destino) e
+   **Borderô de maquineta** (com foto; câmera na linha). Ajuste e entrada/saída de item, só no contas.
+6. **Cancelar no PDV**: na linha, com justificativa, a sangria/reforço ainda a confirmar e o borderô
+   de maquineta, com o período aberto. Confirmada, só o gerente no contas.
+7. **Borderô**: botão "Imprimir borderô" no período aberto; térmica do PDV, sem impressora o PDF.
+8. **Link da linha, igual nos dois apps**: com negócio, o negócio; sem negócio, o pagamento. Dentro
+   do app `:to`, no outro `:href` (`NEGOCIOS_URL` / `CONTAS_URL`).
+9. **Fechamentos → "Caixas abertos" saiu**: o gerente vê as gavetas em Movimento → Portadores.
+
+### Como ficou no código (06/10/2026; não validado)
+
+- **Front**: `PeriodoCabecalho`, `PeriodoResumo` e `PeriodoLancamentos` foram para
+  `@components/portador/`, e o corpo do período (cabeçalho e resumo, lançamentos e os diálogos de
+  movimento) virou `@components/portador/Periodo.vue`, usado pelo `Detalhe.vue` do contas e pela
+  `CaixaPage.vue` do negocios. `periodoStore.carregar(cod, codperiodo,
+  { codpdv, impressora })`; com o `codpdv` (getter `pdv`) o cabeçalho troca o Fechar por Imprimir
+  borderô e a lista esconde ajuste e item; `imprimirBordero()`; `CEDULAS`, `MOEDAS` e `MOTIVOS`
+  vieram do `caixaSessaoStore`. `negocios/src/pages/CaixaPage.vue` monta a tela. Saíram
+  `MgCaixaSessao`, `caixaSessaoStore`, `usar`/`aoMudar` do store e `contas/pages/fechamento/Sessao.vue`.
+- **Backend**: `PortadorAutorizador::livre()` (a gaveta do `codpdv` do request: o PDV não valida o
+  papel nela) usado pela tela, abrir, contar, borderô (`GET` e `POST
+  v1/portador-periodo/{id}/bordero/{impressora}`), transferir, maquineta, foto e cancelar. Com o
+  `codpdv`: a tela devolve papel operador sem ações de gestor; cancelar só aceita
+  `PortadorLancamentoService::cancelaNoPdv` (transferência a confirmar e borderô); ajuste e item
+  não aceitam mais o `codpdv`. `PortadorPeriodoResource`: `codnegocio` na linha e, no PDV, sem
+  `podeConfirmar`. Saíram `SessaoResource`, os métodos do `CaixaController` (ficam `status` e o PDF
+  assinado da impressora), as rotas `v1/caixa/gaveta|sessao|avulso`, `CaixaService::envelope/
+  podeOperar/autorizarOperar` e a pendência `sessao` do `ConferenciaService`. De passagem: a
+  transferência em período fechado não mostra mais o cancelar (o servidor já recusava).
+- **Borderô da Bilhete Agora, Redeflex etc.**: é o botão `point_of_sale` dos lançamentos, que só
+  aparece com maquineta de parceiro cadastrada (contas → Itens do Caixa → Novo, modo "Maquineta de
+  parceiro", uma por maquineta). No dev, em 06/10/2026, não havia nenhuma.
+- **Conferido em 06/10/2026** (Chrome headless, PDV 508 ligado a uma gaveta e um cofre temporários,
+  usuário Caixa sem papel na gaveta e o fabio no contas; tudo apagado e o PDV devolvido à gaveta
+  202075 no fim): abrir no PDV; contagem inicial e final; duas sangrias a confirmar, cancelar uma;
+  diálogo do borderô com as maquinetas (simuladas no navegador); imprimir (PDF); "Ver no cofre" e
+  pagamento abrindo no contas em outra aba; no contas venda → negócio (outra aba) e título →
+  pagamento; confirmar a sangria pelo cofre; fechar; reabrir; ajuste e item no contas; PDV sem
+  gaveta; celular nos dois apps. Servidor (tinker com rollback): borderô, cancelar e anexar pelo
+  PDV, ajuste e item recusados com o `codpdv`, sangria já confirmada não se cancela no PDV.
+- **Em aberto (decidir)**: o caixa não consegue registrar **reforço** no PDV, porque tirar do cofre
+  exige operador do cofre e o caixa é só depositante (a lista de origem vem "Nenhum portador"). Hoje
+  o reforço é lançado pelo gerente.
+
+### Valida (caixa do PDV)
+
+1. negocios `/caixa` (PDV 508) com um usuário do grupo Caixa: sem período aberto, só "Abrir caixa";
+   abrir; contagem inicial já preenchida, com os itens.
+2. Venda em dinheiro no wizard → linha "Venda nº", que abre o negócio.
+3. Borderô de maquineta com foto; outro sem foto → anexar pela câmera da linha.
+4. Sangria para o cofre → amarela, a confirmar; cancelar uma pelo PDV.
+5. Contagem final; Imprimir borderô (PDF sem impressora).
+6. Não aparecem Fechar, Ajuste nem Entrada/saída de item.
+7. contas `/portador/{gaveta}/{período}` como gerente: as mesmas linhas; venda abre o negócio
+   (outra aba do negocios), título abre o pagamento; confirmar a sangria pelo cofre; fechar a
+   gaveta → o PDV volta a "Abrir caixa".
+8. Fechamentos sem "Caixas abertos".

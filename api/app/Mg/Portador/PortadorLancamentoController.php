@@ -7,23 +7,17 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Mg\Caixa\CaixaItem;
-use Mg\Pdv\Pdv;
 
 /**
  * Ajuste, transferencia e item (doc-4, redefinicao do dinheiro): movimento do
  * portador, nao pagamento. Rotas v1/portador-movimento. Devolvem a linha e os
- * periodos afetados (R14). Com o codpdv da gaveta, o PDV nao valida o papel
- * nela.
+ * periodos afetados (R14). Com o codpdv da gaveta (PortadorAutorizador::livre),
+ * o caixa do PDV transfere (sangria, reforco), lanca o bordero da maquineta e
+ * cancela a transferencia a confirmar e o bordero sem validar o papel; ajuste
+ * e item, so' quem opera o portador.
  */
 class PortadorLancamentoController extends Controller
 {
-    // a gaveta do PDV que pede (livre de papel)
-    private function livre(Request $request): ?int
-    {
-        $codpdv = $request->input('codpdv');
-        return $codpdv ? optional(Pdv::find($codpdv))->codportador : null;
-    }
-
     private function resposta(PortadorMovimento $mov)
     {
         $linhas = collect([$mov->fresh()]);
@@ -45,14 +39,12 @@ class PortadorLancamentoController extends Controller
             'valor' => 'required|numeric|not_in:0',
             'observacoes' => 'required|string|min:3|max:300',
             'transacao' => 'nullable|date',
-            'codpdv' => 'nullable|integer',
         ]);
         $mov = DB::transaction(fn () => PortadorLancamentoService::ajustar(
             PortadorPeriodo::with('Portador')->findOrFail($id),
             (float) $dados['valor'],
             $dados['observacoes'],
-            !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null,
-            $this->livre($request)
+            !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null
         ));
         return $this->resposta($mov);
     }
@@ -69,7 +61,6 @@ class PortadorLancamentoController extends Controller
             'linhas.*.descricao' => 'nullable|string|max:50',
             'observacoes' => 'nullable|string|max:300',
             'transacao' => 'nullable|date',
-            'codpdv' => 'nullable|integer',
         ]);
         $mov = DB::transaction(fn () => PortadorLancamentoService::lancarItem(
             PortadorPeriodo::with('Portador')->findOrFail($id),
@@ -77,8 +68,7 @@ class PortadorLancamentoController extends Controller
             (int) $dados['sinal'],
             $dados['linhas'],
             $dados['observacoes'] ?? null,
-            !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null,
-            $this->livre($request)
+            !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null
         ));
         return $this->resposta($mov);
     }
@@ -102,7 +92,7 @@ class PortadorLancamentoController extends Controller
             $dados['observacoes'] ?? null,
             !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null,
             $dados['anexoBase64'] ?? null,
-            $this->livre($request)
+            PortadorAutorizador::livre()
         ));
         return $this->resposta($mov);
     }
@@ -112,13 +102,13 @@ class PortadorLancamentoController extends Controller
     {
         $request->validate(['anexoBase64' => 'required|string']);
         $mov = PortadorMovimento::with('Portador')->findOrFail($id);
-        PortadorLancamentoService::anexarFoto($mov, $request->anexoBase64);
+        PortadorLancamentoService::anexarFoto($mov, $request->anexoBase64, PortadorAutorizador::livre());
         return $this->resposta($mov);
     }
 
     public function mostrarFoto(int $id, string $arquivo)
     {
-        return PortadorLancamentoService::mostrarFoto(PortadorMovimento::findOrFail($id), $arquivo);
+        return PortadorLancamentoService::mostrarFoto(PortadorMovimento::findOrFail($id), $arquivo, PortadorAutorizador::livre());
     }
 
     public function transferir(Request $request)
@@ -139,7 +129,7 @@ class PortadorLancamentoController extends Controller
             $dados['observacoes'] ?? null,
             !empty($dados['transacao']) ? Carbon::parse($dados['transacao']) : null,
             !empty($dados['codportadorperiodo']) ? PortadorPeriodo::with('Portador')->findOrFail($dados['codportadorperiodo']) : null,
-            $this->livre($request)
+            PortadorAutorizador::livre()
         ));
         return $this->resposta($mov);
     }
@@ -158,7 +148,11 @@ class PortadorLancamentoController extends Controller
             'codpdv' => 'nullable|integer',
         ]);
         $mov = PortadorMovimento::findOrFail($id);
-        $livre = $this->livre($request);
+        $livre = PortadorAutorizador::livre();
+        // no PDV: so' a transferencia a confirmar e o bordero da maquineta
+        if ($livre && !PortadorLancamentoService::cancelaNoPdv($mov)) {
+            abort(403, 'No caixa do PDV só se cancela a sangria ou o reforço a confirmar e o borderô de maquineta.');
+        }
         $mov = DB::transaction(fn () => match ($mov->tipo) {
             PortadorMovimento::TIPO_AJUSTE => PortadorLancamentoService::cancelarAjuste($mov, $request->justificativa, $livre),
             PortadorMovimento::TIPO_ITEM,

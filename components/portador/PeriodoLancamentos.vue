@@ -1,12 +1,14 @@
 <script setup>
 // Lançamentos do período (doc-4, R10) como extrato: agrupados por dia, uma linha do tempo à
 // esquerda (hora e o ícone da origem) e, à direita, o valor e o saldo corrente sempre na mesma
-// coluna (no celular, o saldo embaixo do valor). Pagamento (venda, título, vale) abre o
-// pagamento; ajuste, transferência e item (entrada ou saída de item do caixa, em espécie) são
-// movimento do portador (a transferência leva ao outro portador, no período onde o valor caiu). O
-// borderô da maquineta de parceiro (em espécie) mostra "sem borderô" enquanto não tem a foto, e a
-// câmera da linha vê e anexa. A confirmar em amarelo; cancelado riscado e fora do saldo, com a
-// justificativa. Confirmar e cancelar ficam na linha.
+// coluna (no celular, o saldo embaixo do valor). Pagamento leva ao negócio (venda) ou, sem negócio
+// (título, vale), ao pagamento; ajuste, transferência e item (entrada ou saída de item do caixa, em
+// espécie) são movimento do portador (a transferência leva ao outro portador, no período onde o
+// valor caiu). O borderô da maquineta de parceiro (em espécie) mostra "sem borderô" enquanto não
+// tem a foto, e a câmera da linha vê e anexa. A confirmar em amarelo; cancelado riscado e fora do
+// saldo, com a justificativa. Confirmar e cancelar ficam na linha.
+// No caixa do PDV (negocios) os botões são só Reforço / Sangria e Borderô de maquineta, e o que é
+// do contas (pagamento, outro portador) abre por :href.
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
@@ -22,15 +24,16 @@ import { periodoStore } from '@components/stores/periodoStore'
 
 const $q = useQuasar()
 const store = periodoStore()
-const { portador, pode, periodo, filtroOrigem } = storeToRefs(store)
+const { portador, pode, periodo, filtroOrigem, pdv } = storeToRefs(store)
 
 // ajuste e transferência no período da tela, não fechado
 const podeMovimentar = computed(
   () => !!pode.value.operar && !!periodo.value && periodo.value.situacao !== 'fechado',
 )
-// entrada de item: portador em espécie com item ativo
+// entrada de item: portador em espécie com item ativo (no contas)
 const temItens = computed(
-  () => !!portador.value?.ehCaixa && (periodo.value?.itens ?? []).some((i) => !i.inativo),
+  () =>
+    !pdv.value && !!portador.value?.ehCaixa && (periodo.value?.itens ?? []).some((i) => !i.inativo),
 )
 
 // borderô da maquineta de parceiro: portador em espécie com maquineta ativa
@@ -95,9 +98,34 @@ const temSaldoColuna = computed(() => $q.screen.gt.xs)
 
 const cancelado = (l) => l.cancelado
 const pendente = (l) => !cancelado(l) && l.estado === 'P'
-// só o pagamento abre (ajuste e transferência não são pagamento)
-const link = (l) =>
-  l.codpagamento ? { name: 'pagamento-detalhe', params: { id: l.codpagamento } } : null
+// só o pagamento abre (ajuste e transferência não são pagamento): o negócio, se tiver; senão o
+// pagamento. Dentro do app :to, no outro :href em outra aba
+const link = (l) => {
+  if (l.codnegocio) {
+    return pdv.value
+      ? { to: `/negocio/${l.codnegocio}` }
+      : { href: `${process.env.NEGOCIOS_URL}/negocio/${l.codnegocio}`, target: '_blank' }
+  }
+  if (l.codpagamento) {
+    return pdv.value
+      ? { href: `${process.env.CONTAS_URL}/pagamento/${l.codpagamento}`, target: '_blank' }
+      : { to: { name: 'pagamento-detalhe', params: { id: l.codpagamento } } }
+  }
+  return {}
+}
+// a transferência: o outro lado, no período onde o valor caiu (no contas)
+const contraparte = (c) =>
+  pdv.value
+    ? {
+        href: `${process.env.CONTAS_URL}/portador/${c.codportador}/${c.codportadorperiodo}`,
+        target: '_blank',
+      }
+    : {
+        to: {
+          name: 'portador-detalhe',
+          params: { codportador: c.codportador, codportadorperiodo: c.codportadorperiodo },
+        },
+      }
 const corAvatar = (l) =>
   cancelado(l) ? 'grey-2' : pendente(l) ? 'amber-2' : l.valor < 0 ? 'red-1' : 'green-1'
 const corIcone = (l) =>
@@ -153,7 +181,15 @@ function cancelar(l) {
         color="primary"
       />
       <template v-if="podeMovimentar">
-        <q-btn flat round size="sm" color="primary" icon="add" @click="store.dialogAvulso = true">
+        <q-btn
+          v-if="!pdv"
+          flat
+          round
+          size="sm"
+          color="primary"
+          icon="add"
+          @click="store.dialogAvulso = true"
+        >
           <q-tooltip>{{
             portador.ehCaixa ? 'Ajuste' : 'Ajuste, taxa, tarifa, rendimento'
           }}</q-tooltip>
@@ -235,8 +271,8 @@ function cancelar(l) {
 
           <!-- o lançamento -->
           <q-item
-            :clickable="!!link(l)"
-            :to="link(l)"
+            :clickable="!!(link(l).to || link(l).href)"
+            v-bind="link(l)"
             class="col rounded-borders q-px-sm q-ml-sm q-mb-xs"
             :class="pendente(l) ? 'bg-amber-1' : ''"
             style="min-height: 56px"
@@ -270,13 +306,7 @@ function cancelar(l) {
                   size="sm"
                   color="grey-7"
                   icon="open_in_new"
-                  :to="{
-                    name: 'portador-detalhe',
-                    params: {
-                      codportador: l.contraparte.codportador,
-                      codportadorperiodo: l.contraparte.codportadorperiodo,
-                    },
-                  }"
+                  v-bind="contraparte(l.contraparte)"
                   @click.stop
                 >
                   <q-tooltip>Ver em {{ l.contraparte.portador }}</q-tooltip>

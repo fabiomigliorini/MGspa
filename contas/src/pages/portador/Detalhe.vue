@@ -10,15 +10,10 @@ import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import TransferirCaixaDialog from '@components/caixa/TransferirCaixaDialog.vue'
-import AvulsoCaixaDialog from '@components/caixa/AvulsoCaixaDialog.vue'
-import ItemCaixaDialog from '@components/caixa/ItemCaixaDialog.vue'
-import MaquinetaCaixaDialog from '@components/caixa/MaquinetaCaixaDialog.vue'
+import Periodo from '@components/portador/Periodo.vue'
 import { formataNumero, formataDataAbreviada } from '@components/formatters'
 import { periodoStore } from '@components/stores/periodoStore'
 import PortadorDialog from 'components/portador/PortadorDialog.vue'
-import PeriodoCabecalho from 'components/portador/PeriodoCabecalho.vue'
-import PeriodoLancamentos from 'components/portador/PeriodoLancamentos.vue'
 import PortadorUsuariosDialog from 'components/portador/PortadorUsuariosDialog.vue'
 import { usePortadorStore } from 'src/stores/portadorStore'
 import { portadorTipoLabel, portadorTipoColor } from 'src/constants/portadorTipo'
@@ -319,27 +314,16 @@ function abrirPeriodo() {
           </template>
         </q-card>
 
-        <!-- o período: cabeçalho e resumo à esquerda, lançamentos à direita -->
-        <div class="row q-col-gutter-md q-mb-md">
-          <div class="col-12 col-md-5">
-            <PeriodoCabecalho />
-          </div>
-          <div class="col-12 col-md-7">
-            <PeriodoLancamentos />
-            <MgEmptyState v-if="!periodos.length && !carregando" icon="receipt_long">
-              Nenhum movimento neste portador.
-            </MgEmptyState>
-          </div>
-        </div>
+        <Periodo>
+          <MgEmptyState v-if="!periodos.length && !carregando" icon="receipt_long">
+            Nenhum movimento neste portador.
+          </MgEmptyState>
+        </Periodo>
       </template>
     </div>
 
     <q-inner-loading :showing="carregando" color="primary" />
 
-    <TransferirCaixaDialog />
-    <AvulsoCaixaDialog />
-    <ItemCaixaDialog />
-    <MaquinetaCaixaDialog />
     <PortadorUsuariosDialog />
     <PortadorDialog />
   </q-page>

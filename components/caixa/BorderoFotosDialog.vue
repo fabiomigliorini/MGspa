@@ -38,6 +38,7 @@ async function carregar() {
         api,
         `v1/portador-movimento/${props.codportadormovimento}/foto/${arquivo}`,
         null,
+        store.params(),
       )
     } catch {
       continue // foto que não abre não impede ver as outras

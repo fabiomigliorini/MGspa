@@ -228,22 +228,22 @@ class PortadorLancamentoService
 
     // a foto do bordero depois do lancamento (nao muda valor: vale com o
     // periodo fechado), por quem opera o portador
-    public static function anexarFoto(PortadorMovimento $mov, string $anexoBase64): void
+    public static function anexarFoto(PortadorMovimento $mov, string $anexoBase64, ?int $livre = null): void
     {
         if ($mov->tipo != PortadorMovimento::TIPO_MAQUINETA || !$mov->valendo()) {
             abort(422, 'Foto só no borderô de maquineta que vale.');
         }
-        if (!static::pode($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, null)) {
+        if (!static::pode($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
             PortadorAutorizador::autorizar($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, 'Anexar foto do borderô');
         }
         NegocioAnexoService::gravarFoto(static::pastaFoto($mov->codportadormovimento), $anexoBase64);
     }
 
-    // ve a foto quem opera o portador e o financeiro (conta corrente da
-    // maquineta)
-    public static function mostrarFoto(PortadorMovimento $mov, string $arquivo)
+    // ve a foto quem opera o portador (e o caixa do PDV da gaveta) e o
+    // financeiro (conta corrente da maquineta)
+    public static function mostrarFoto(PortadorMovimento $mov, string $arquivo, ?int $livre = null)
     {
-        if (!PortadorAutorizador::pode($mov->codportador, PortadorUsuario::PAPEL_OPERADOR)) {
+        if (!static::pode($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
             Autorizador::autoriza(['Administrador', 'Financeiro']);
         }
         return NegocioAnexoService::mostrarFoto(static::pastaFoto($mov->codportadormovimento), $arquivo);
@@ -374,6 +374,14 @@ class PortadorLancamentoService
         return in_array($livre, [$saida->codportador, $entrada->codportador])
             || PortadorAutorizador::pode($saida->codportador, PortadorUsuario::PAPEL_OPERADOR)
             || PortadorAutorizador::pode($entrada->codportador, PortadorUsuario::PAPEL_GESTOR);
+    }
+
+    // o que o caixa do PDV cancela: a transferencia ainda a confirmar (sangria,
+    // reforco) e o bordero da maquineta; o resto, so' no contas
+    public static function cancelaNoPdv(PortadorMovimento $mov): bool
+    {
+        return $mov->tipo == PortadorMovimento::TIPO_MAQUINETA
+            || ($mov->tipo == PortadorMovimento::TIPO_TRANSFERENCIA && $mov->estado == PortadorMovimento::ESTADO_PENDENTE);
     }
 
     public static function confirmar(PortadorMovimento $mov): PortadorMovimento
