@@ -1,7 +1,7 @@
 <script setup>
 // Foto do borderô do período da maquineta (TASK-188 M9.8), para comparar com o borderô do sistema
-// ao lado: no computador, a coluna da esquerda, alta e rolável, parada enquanto o detalhe rola;
-// no celular, em cima, recolhível. Clicar abre a foto inteira em outra aba (para dar zoom).
+// ao lado: no computador, a coluna da esquerda, a foto inteira, sem rolagem própria; no celular,
+// em cima, recolhível. Clicar abre a foto inteira em outra aba (para dar zoom).
 // Opcional: sem foto o período fica "sem borderô"; anexa e exclui a qualquer hora, também no
 // conferido.
 import { ref, watch, onBeforeUnmount } from 'vue'
@@ -45,16 +45,13 @@ onBeforeUnmount(() => fotos.value.forEach((f) => URL.revokeObjectURL(f.url)))
 </script>
 
 <template>
-  <q-card flat bordered :style="$q.screen.gt.sm ? 'position: sticky; top: 16px' : ''">
+  <q-card flat bordered>
     <q-expansion-item
       :default-opened="$q.screen.gt.sm"
       :label="fotos.length ? `Foto do borderô (${fotos.length})` : 'Foto do borderô'"
       header-class="text-subtitle1 text-weight-medium"
     >
-      <q-card-section
-        class="q-pt-none"
-        :style="$q.screen.gt.sm ? 'max-height: calc(100vh - 120px); overflow-y: auto' : ''"
-      >
+      <q-card-section class="q-pt-none">
         <div v-for="f in fotos" :key="f.arquivo" class="relative-position q-mb-sm">
           <a :href="f.url" target="_blank">
             <q-img :src="f.url" fit="contain" class="rounded-borders" />

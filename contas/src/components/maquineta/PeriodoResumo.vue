@@ -2,21 +2,17 @@
 // Resumo do período da maquineta (TASK-188 M9.8) no formato do relatório da maquininha, dentro do
 // card do cabeçalho (como o resumo do período do portador): modalidade (débito, crédito à vista,
 // crédito parcelado) → bandeira, com quantidade e valor, para bater o olho com o topo do papel.
-// Embaixo do total, o borderô digitado e a diferença; no não conferido, o botão da linha do
-// borderô abre o Conferir (no cabeçalho). Venda cancelada no próprio período fica fora, como no
-// papel.
+// Embaixo do total, o borderô digitado (o Conferir é o FAB da página) e a diferença. Venda
+// cancelada no próprio período fica fora, como no papel.
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { formataNumero } from '@components/formatters'
 import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 
-const emit = defineEmits(['conferir'])
-
 const store = useMaquinetaPeriodoStore()
 const { periodo } = storeToRefs(store)
 
 const sistema = computed(() => periodo.value?.sistema)
-const naoConferido = computed(() => periodo.value?.situacao !== 'conferido')
 const informado = computed(() => periodo.value?.totalinformado != null)
 
 const diferenca = computed(() => ({
@@ -61,21 +57,7 @@ const cor = (v) => (Math.abs(v) < 0.005 ? 'text-green-8' : 'text-red-8')
         <td class="text-right text-weight-bold">{{ formataNumero(sistema?.total ?? 0) }}</td>
       </tr>
       <tr>
-        <td>
-          Borderô
-          <q-btn
-            v-if="naoConferido"
-            flat
-            round
-            size="sm"
-            color="grey-7"
-            icon="fact_check"
-            class="q-ml-xs"
-            @click="emit('conferir')"
-          >
-            <q-tooltip>Conferir com o borderô</q-tooltip>
-          </q-btn>
-        </td>
+        <td>Borderô</td>
         <td class="text-right">{{ informado ? periodo.quantidadeinformada : '—' }}</td>
         <td class="text-right">{{ informado ? formataNumero(periodo.totalinformado) : '—' }}</td>
       </tr>
