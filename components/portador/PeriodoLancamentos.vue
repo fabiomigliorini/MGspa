@@ -7,8 +7,8 @@
 // valor caiu). O borderô da maquineta de parceiro (em espécie) mostra "sem borderô" enquanto não
 // tem a foto, e a câmera da linha vê e anexa. A confirmar em amarelo; cancelado riscado e fora do
 // saldo, com a justificativa. Confirmar e cancelar ficam na linha.
-// No caixa do PDV (negocios) os botões são só Reforço / Sangria e Borderô de maquineta, e o que é
-// do contas (pagamento, outro portador) abre por :href.
+// Lançar é um FAB no canto da tela que abre a lista do que fazer (LancarCaixaDialog). No caixa do
+// PDV (negocios) o que é do contas (pagamento, outro portador) abre por :href.
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
@@ -26,19 +26,9 @@ const $q = useQuasar()
 const store = periodoStore()
 const { portador, pode, periodo, filtroOrigem, pdv } = storeToRefs(store)
 
-// ajuste e transferência no período da tela, não fechado
+// lançar (o FAB) no período da tela, não fechado
 const podeMovimentar = computed(
   () => !!pode.value.operar && !!periodo.value && periodo.value.situacao !== 'fechado',
-)
-// entrada de item: portador em espécie com item ativo (no contas)
-const temItens = computed(
-  () =>
-    !pdv.value && !!portador.value?.ehCaixa && (periodo.value?.itens ?? []).some((i) => !i.inativo),
-)
-
-// borderô da maquineta de parceiro: portador em espécie com maquineta ativa
-const temMaquinetas = computed(
-  () => !!portador.value?.ehCaixa && (periodo.value?.maquinetas ?? []).length > 0,
 )
 
 // as fotos do borderô da linha escolhida (a linha vem do período, atualiza ao anexar)
@@ -174,53 +164,6 @@ function cancelar(l) {
   <q-card v-if="periodo" flat bordered>
     <q-card-section class="row items-center q-pb-sm">
       <div class="col text-subtitle1 text-weight-medium">Lançamentos</div>
-      <template v-if="podeMovimentar">
-        <q-btn
-          v-if="!pdv"
-          flat
-          round
-          size="sm"
-          color="primary"
-          icon="add"
-          @click="store.dialogAvulso = true"
-        >
-          <q-tooltip>{{
-            portador.ehCaixa ? 'Ajuste' : 'Ajuste, taxa, tarifa, rendimento'
-          }}</q-tooltip>
-        </q-btn>
-        <q-btn
-          v-if="temItens"
-          flat
-          round
-          size="sm"
-          color="grey-7"
-          icon="style"
-          @click="store.abrirItem()"
-        >
-          <q-tooltip>Entrada ou saída de item</q-tooltip>
-        </q-btn>
-        <q-btn
-          v-if="temMaquinetas"
-          flat
-          round
-          size="sm"
-          color="grey-7"
-          icon="point_of_sale"
-          @click="store.dialogMaquineta = true"
-        >
-          <q-tooltip>Borderô de maquineta</q-tooltip>
-        </q-btn>
-        <q-btn
-          flat
-          round
-          size="sm"
-          color="grey-7"
-          icon="swap_horiz"
-          @click="store.dialogTransferir = true"
-        >
-          <q-tooltip>{{ portador.ehCaixa ? 'Reforço / Sangria' : 'Transferir' }}</q-tooltip>
-        </q-btn>
-      </template>
     </q-card-section>
     <!-- o filtro e os cancelados numa linha própria, sem apertar o título -->
     <q-card-section v-if="filtro || cancelados" class="row items-center q-gutter-sm q-pt-none">
@@ -381,4 +324,12 @@ function cancelar(l) {
       :pode-anexar="!!linhaFotos?.podeAnexar"
     />
   </q-card>
+
+  <!-- o respiro para o FAB não cobrir o fim da lista -->
+  <div v-if="podeMovimentar" class="q-py-xl" />
+  <q-page-sticky v-if="podeMovimentar" position="bottom-right" :offset="[18, 18]">
+    <q-btn fab icon="add" color="primary" @click="store.dialogLancar = true">
+      <q-tooltip anchor="center left" self="center right">Lançar</q-tooltip>
+    </q-btn>
+  </q-page-sticky>
 </template>

@@ -51,9 +51,9 @@ export const linhasParaSalvar = (linhas) =>
     .filter((l) => Number(l.quantidade) > 0)
     .map((l) => ({ preco: l.preco, descricao: l.descricao || null, quantidade: l.quantidade }))
 
-// a data dos lançamentos do período da tela vai do início ao fim (aberto, até agora)
-export const limitePeriodo = (periodo) =>
-  periodo?.fim && new Date(periodo.fim) < new Date() ? new Date(periodo.fim) : new Date()
+// a data dos lançamentos do período da tela vai do início ao fim (aberto, até agora); é também a
+// data que os dialogs trazem
+export const limitePeriodo = (periodo) => (periodo?.fim ? new Date(periodo.fim) : new Date())
 
 // regra do MgInputData da data: lê o valor do form (ISO), não o texto que o MgInputData passa às
 // rules; vazio fica com o !!v
@@ -101,13 +101,15 @@ export const periodoStore = defineStore('periodo', {
     salvando: false,
     // no caixa do PDV: o PDV (a gaveta dele) e a impressora térmica do borderô
     contexto: { codpdv: null, impressora: null },
+    dialogLancar: false,
     dialogTransferir: false,
     dialogAvulso: false,
     dialogItem: false,
     dialogMaquineta: false,
     dialogUsuarios: false,
-    // codcaixaitem já escolhido ao abrir o dialog da entrada do item
-    item: null,
+    // o sentido escolhido no Lançar ao abrir o dialog: item 1 (entrada) ou -1 (saída); transferência
+    // 'R' (reforço/receber) ou 'E' (sangria/enviar)
+    sentido: null,
     // a lista de usuários do portador (cadeado)
     usuarios: [],
   }),
@@ -194,6 +196,11 @@ export const periodoStore = defineStore('periodo', {
 
     // ==== transferência: sentido E sai deste portador, R chega nele ====
 
+    abrirTransferir(sentido) {
+      this.sentido = sentido
+      this.dialogTransferir = true
+    },
+
     transferir({ sentido, codportador, valor, observacoes, transacao }) {
       const meu = this.portador.codportador
       return this.executar(
@@ -272,8 +279,8 @@ export const periodoStore = defineStore('periodo', {
 
     // ==== item do caixa (em espécie): entrada (+) ou saída (−); vender não lança ====
 
-    abrirItem(codcaixaitem = null) {
-      this.item = codcaixaitem
+    abrirItem(sinal) {
+      this.sentido = sinal
       this.dialogItem = true
     },
 

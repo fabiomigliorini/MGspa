@@ -4,23 +4,22 @@
 // período da tela, com a data dentro dele (do início ao fim; aberto, até agora); o outro lado,
 // pela data. Só os portadores do usuário: destino = depositante, origem = operador. Nasce feita
 // quando quem registra é gestor do destino; senão fica a confirmar.
-// Wizard, como a entrada e saída de item: 1) enviar ou receber; 2) o outro portador (os em espécie
-// da filial primeiro); 3) o valor; 4) data e observação, foco no Lançar. Passos 1 e 2 no teclado
-// (setas, Enter, número), como o wizard de cobrança.
+// Enviar ou receber já vem escolhido no FAB dos lançamentos (store.sentido). Wizard, como a entrada
+// e saída de item: 1) o outro portador (os em espécie da filial primeiro); 2) data, valor (foco
+// nele) e observação. Passo 1 no teclado (setas e Enter), como o wizard de cobrança.
 import { ref, computed, watch, nextTick } from 'vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import ListaOpcoes from '@components/cobranca/ListaOpcoes.vue'
 import { logo } from '@components/cobranca/logos.js'
-import { formataNumero, formataTimestampIso } from '@components/formatters'
+import { formataTimestampIso } from '@components/formatters'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { periodoStore, limitePeriodo, dentroDoPeriodo } from '@components/stores/periodoStore'
 
 const store = periodoStore()
 const cache = useSelectCacheStore()
 const caixa = computed(() => !!store.portador?.ehCaixa)
-const nome = computed(() => store.portador?.portador)
 // a data fica dentro do período da tela (do início ao fim; aberto, até agora)
 const sessao = computed(() => store.periodo)
 // lê o valor do form (ISO), não o texto que o MgInputData passa às rules; vazio fica com o !!v
@@ -44,25 +43,6 @@ const NIVEL = { D: 1, O: 2, G: 3 }
 const portadores = ref([])
 const outro = computed(() => portadores.value.find((p) => p.codportador === form.value.codportador))
 
-const opcoesSentido = computed(() => [
-  {
-    valor: 'E',
-    tecla: 1,
-    label: caixa.value ? 'Sangria' : 'Enviar',
-    caption: `Sai de ${nome.value}`,
-    icone: 'arrow_upward',
-    cor: 'red-5',
-  },
-  {
-    valor: 'R',
-    tecla: 2,
-    label: caixa.value ? 'Reforço' : 'Receber',
-    caption: `Entra em ${nome.value}`,
-    icone: 'arrow_downward',
-    cor: 'green-6',
-  },
-])
-
 const opcoesPortador = computed(() => {
   const minimo = NIVEL[form.value.sentido === 'E' ? 'D' : 'O']
   const codfilial = Number(store.portador?.codfilial)
@@ -77,7 +57,6 @@ const opcoesPortador = computed(() => {
     .sort((a, b) => (daFilial(a) ? 0 : 1) - (daFilial(b) ? 0 : 1))
   return lista.map((p, i) => ({
     valor: p.codportador,
-    tecla: i < 9 ? i + 1 : null,
     label: p.portador,
     caption: [p.filial, p.banco].filter(Boolean).join(' · '),
     logo: p.codbanco ? logo(`/bancos/${p.codbanco}.svg`) : null,
@@ -88,7 +67,6 @@ const opcoesPortador = computed(() => {
 })
 
 const titulo = computed(() => {
-  if (!form.value.sentido) return caixa.value ? 'Reforço / Sangria' : 'Transferir'
   const enviar = form.value.sentido === 'E'
   const acao = caixa.value ? (enviar ? 'Sangria' : 'Reforço') : enviar ? 'Enviar' : 'Receber'
   return outro.value ? `${acao} ${enviar ? 'para' : 'de'} ${outro.value.portador}` : acao
@@ -99,17 +77,10 @@ const titulo = computed(() => {
 const passo = ref(1)
 const cardRef = ref(null)
 const listaRef = ref(null)
-const lancarRef = ref(null)
-
-function escolherSentido(opcao) {
-  form.value.sentido = opcao.valor
-  form.value.codportador = null
-  passo.value = 2
-}
 
 function escolherPortador(opcao) {
   form.value.codportador = opcao.valor
-  passo.value = 3
+  passo.value = 2
 }
 
 function voltar() {
@@ -118,22 +89,17 @@ function voltar() {
     return
   }
   passo.value--
-  if (passo.value <= 2) nextTick(() => cardRef.value?.$el.focus())
+  if (passo.value === 1) nextTick(() => cardRef.value?.$el.focus())
 }
 
-// o submit do form: no passo 3 valida o valor e segue; no 4 lança
+// o submit do form: no passo 2 valida e lança
 function avancar() {
-  if (passo.value === 3) {
-    passo.value = 4
-    nextTick(() => lancarRef.value?.$el.focus())
-    return
-  }
-  if (passo.value === 4) salvar()
+  if (passo.value === 2) salvar()
 }
 
-// passos 1 e 2: as teclas vão para a lista
+// passo 1: as teclas vão para a lista
 function tecla(e) {
-  if (passo.value > 2 || !listaRef.value?.tecla(e)) return
+  if (passo.value > 1 || !listaRef.value?.tecla(e)) return
   e.preventDefault()
   e.stopPropagation()
 }
@@ -142,7 +108,7 @@ watch(
   () => store.dialogTransferir,
   async (aberto) => {
     if (!aberto) return
-    form.value = vazio()
+    form.value = { ...vazio(), sentido: store.sentido }
     passo.value = 1
     try {
       portadores.value = await cache.loadList('portador', 'v1/select/portador')
@@ -177,13 +143,8 @@ async function salvar() {
         </q-card-section>
         <q-separator inset />
 
-        <!-- PASSO 1: ENVIAR OU RECEBER -->
-        <q-card-section v-if="passo === 1">
-          <ListaOpcoes ref="listaRef" :opcoes="opcoesSentido" @escolher="escolherSentido" />
-        </q-card-section>
-
-        <!-- PASSO 2: O OUTRO PORTADOR -->
-        <q-card-section v-else-if="passo === 2" class="scroll" style="max-height: 60vh">
+        <!-- PASSO 1: O OUTRO PORTADOR -->
+        <q-card-section v-if="passo === 1" class="scroll" style="max-height: 60vh">
           <ListaOpcoes
             v-if="opcoesPortador.length"
             ref="listaRef"
@@ -196,25 +157,9 @@ async function salvar() {
           </div>
         </q-card-section>
 
-        <!-- PASSO 3: O VALOR -->
-        <q-card-section v-else-if="passo === 3">
-          <MgInputValor
-            v-model="form.valor"
-            label="Valor"
-            prefix="R$"
-            autofocus
-            :rules="[(v) => v > 0 || 'Informe o valor']"
-            lazy-rules
-          />
-        </q-card-section>
-
-        <!-- PASSO 4: DATA E OBSERVAÇÃO -->
+        <!-- PASSO 2: DATA, VALOR E OBSERVAÇÃO -->
         <q-card-section v-else>
           <div class="row q-col-gutter-md">
-            <div class="col-12 row items-center">
-              <div class="col text-subtitle2">Valor</div>
-              <div class="text-h6">R$ {{ formataNumero(form.valor) }}</div>
-            </div>
             <div class="col-12">
               <MgInputData
                 v-model="form.transacao"
@@ -224,13 +169,17 @@ async function salvar() {
               />
             </div>
             <div class="col-12">
-              <MgInput
-                v-model="form.observacoes"
-                label="Observação"
-                type="textarea"
-                autogrow
-                maxlength="300"
+              <MgInputValor
+                v-model="form.valor"
+                label="Valor"
+                prefix="R$"
+                autofocus
+                :rules="[(v) => v > 0 || 'Informe o valor']"
+                lazy-rules
               />
+            </div>
+            <div class="col-12">
+              <MgInput v-model="form.observacoes" label="Observação" maxlength="300" />
             </div>
           </div>
         </q-card-section>
@@ -244,10 +193,8 @@ async function salvar() {
             tabindex="-1"
             @click="voltar"
           />
-          <q-btn v-if="passo === 3" flat label="Continuar" color="primary" type="submit" />
           <q-btn
-            v-if="passo === 4"
-            ref="lancarRef"
+            v-if="passo === 2"
             flat
             :label="caixa ? 'Lançar' : 'Transferir'"
             color="primary"

@@ -88,6 +88,7 @@ Milestones:
 - [ ] #38 M9.6 Notinha recebida, vale de cliente pago, vale de colaborador e adiantamento em dinheiro aparecem no caixa
 - [ ] #39 M9.7 Borderô da maquineta de parceiro lançado na tela do caixa do PDV, com a foto, antes de o gerente fechar a gaveta
 - [ ] #40 M9.8 O gerente confere o cartão de cada maquineta com o borderô na tela da maquineta e seus períodos (aberto, pendente, conferido; dividir, unificar, início e fim, mover), com a foto, corrigindo os lançamentos na mesma tela
+- [x] #41 M9.9 Lançar no período por um botão só no canto da tela, que abre a lista do que fazer (Sangria, Reforço, Entrada e Saída de item, Vendas de Parceiro, Ajuste; no banco Enviar, Receber, Ajuste/taxa/tarifa/rendimento), cada opção no seu wizard já no sentido escolhido, com data, valor e observação na mesma ordem
 <!-- AC:END -->
 
 ## Implementation Notes

@@ -3,11 +3,12 @@
 // portador só muda quando ele entra (+) ou sai sem venda (−: devolveu, perdeu). Vender não lança
 // nada. Cai no período da tela, com a data dentro dele, e só se cancela, com justificativa.
 // Qualquer portador em espécie.
-// Wizard: 1) entrada ou saída; 2) o item (pula quando só tem um); 3) as linhas — na entrada,
-// descrição (typeahead com as já usadas no item), preço e quantidade; na saída, só o que está no
-// caixa (`saida` do item no período: saldo inicial + entradas − saídas), no jeito da contagem, com
-// o disponível de teto; 4) data e observação, foco no Lançar. Passos 1 e 2 no teclado (setas,
-// Enter, número), como o wizard de cobrança.
+// Entrada ou saída já vem escolhida no Lançar (store.sentido; a saída com o caixa vazio o Lançar
+// desabilita). Wizard: 1) o item (pula quando só tem um); 2) as linhas — na entrada, descrição
+// (typeahead com as já usadas no item), preço e quantidade; na saída, só o que está no caixa
+// (`saida` do item no período: saldo inicial + entradas − saídas), no jeito da contagem, com o
+// disponível de teto; 3) data, o total e observação, foco no Lançar. Passo 1 no teclado (setas e
+// Enter).
 import { ref, computed, watch, nextTick } from 'vue'
 import { api } from 'src/services/api'
 import MgInput from '@components/MgInput.vue'
@@ -83,45 +84,20 @@ const cardRef = ref(null)
 const listaRef = ref(null)
 const lancarRef = ref(null)
 
-const opcoesSentido = computed(() => [
-  { valor: 1, tecla: 1, label: 'Entrada', icone: 'add', cor: 'green-6' },
-  {
-    valor: -1,
-    tecla: 2,
-    label: 'Saída',
-    icone: 'remove',
-    cor: 'red-5',
-    caption: 'Devolvido, perdido: só o que está no caixa',
-    desabilitado: !itensSaida.value.length,
-    motivo: 'Nenhum item no caixa (saldo inicial ou entrada do período)',
-  },
-])
 const itensDoSentido = computed(() => (form.value.sinal < 0 ? itensSaida.value : itens.value))
 const opcoesItem = computed(() =>
   itensDoSentido.value.map((i, n) => ({
     valor: i.codcaixaitem,
-    tecla: n < 9 ? n + 1 : null,
     label: i.item,
     icone: 'confirmation_number',
     cor: 'blue-grey-5',
   })),
 )
 
-const titulo = computed(() =>
-  form.value.sinal == null
-    ? 'Item do caixa'
-    : `${form.value.sinal > 0 ? 'Entrada' : 'Saída'}${item.value ? ` de ${item.value.item}` : ''}`,
+const titulo = computed(
+  () =>
+    `${form.value.sinal > 0 ? 'Entrada' : 'Saída'}${item.value ? ` de ${item.value.item}` : ''}`,
 )
-
-function escolherSentido(opcao) {
-  form.value.sinal = opcao.valor
-  if (itensDoSentido.value.length === 1) {
-    escolherItem({ valor: itensDoSentido.value[0].codcaixaitem })
-    return
-  }
-  form.value.codcaixaitem = null
-  passo.value = 2
-}
 
 // as linhas novas do item: na entrada, uma em branco; na saída, uma por tipo que está no caixa
 function escolherItem(opcao) {
@@ -139,32 +115,35 @@ function escolherItem(opcao) {
       })),
     },
   }
-  passo.value = 3
+  passo.value = 2
 }
 
+// com um item só, o passo 1 não aparece: voltar das linhas fecha
+const primeiro = computed(() => (itensDoSentido.value.length === 1 ? 2 : 1))
+
 function voltar() {
-  if (passo.value === 1) {
+  if (passo.value === primeiro.value) {
     store.dialogItem = false
     return
   }
-  passo.value = passo.value === 3 && itensDoSentido.value.length === 1 ? 1 : passo.value - 1
-  if (passo.value <= 2) nextTick(() => cardRef.value?.$el.focus())
+  passo.value--
+  if (passo.value === 1) nextTick(() => cardRef.value?.$el.focus())
 }
 
-// o submit do form: no passo 3 valida as linhas e segue; no 4 lança
+// o submit do form: no passo 2 valida as linhas e segue; no 3 lança
 function avancar() {
-  if (passo.value === 3) {
+  if (passo.value === 2) {
     if (total.value <= 0) return
-    passo.value = 4
+    passo.value = 3
     nextTick(() => lancarRef.value?.$el.focus())
     return
   }
-  if (passo.value === 4) salvar()
+  if (passo.value === 3) salvar()
 }
 
-// passos 1 e 2: as teclas vão para a lista
+// passo 1: as teclas vão para a lista
 function tecla(e) {
-  if (passo.value > 2 || !listaRef.value?.tecla(e)) return
+  if (passo.value > 1 || !listaRef.value?.tecla(e)) return
   e.preventDefault()
   e.stopPropagation()
 }
@@ -173,8 +152,11 @@ watch(
   () => store.dialogItem,
   (aberto) => {
     if (!aberto) return
-    form.value = vazio()
+    form.value = { ...vazio(), sinal: store.sentido }
     passo.value = 1
+    if (itensDoSentido.value.length === 1) {
+      escolherItem({ valor: itensDoSentido.value[0].codcaixaitem })
+    }
   },
 )
 
@@ -192,7 +174,7 @@ async function salvar() {
 </script>
 
 <template>
-  <q-dialog v-model="store.dialogItem" @show="cardRef?.$el.focus()">
+  <q-dialog v-model="store.dialogItem" @show="passo === 1 && cardRef?.$el.focus()">
     <q-card
       ref="cardRef"
       flat
@@ -207,24 +189,13 @@ async function salvar() {
         </q-card-section>
         <q-separator inset />
 
-        <!-- PASSO 1: ENTRADA OU SAÍDA -->
-        <template v-if="passo === 1">
-          <q-card-section class="text-caption text-grey-7 q-pb-none">
-            O item conta como cédula: vender não lança nada. Aqui só o que chegou ou saiu sem venda
-            (devolvido, perdido).
-          </q-card-section>
-          <q-card-section>
-            <ListaOpcoes ref="listaRef" :opcoes="opcoesSentido" @escolher="escolherSentido" />
-          </q-card-section>
-        </template>
-
-        <!-- PASSO 2: O ITEM -->
-        <q-card-section v-else-if="passo === 2">
+        <!-- PASSO 1: O ITEM -->
+        <q-card-section v-if="passo === 1">
           <ListaOpcoes ref="listaRef" :opcoes="opcoesItem" @escolher="escolherItem" />
         </q-card-section>
 
-        <!-- PASSO 3: AS LINHAS -->
-        <q-card-section v-else-if="passo === 3">
+        <!-- PASSO 2: AS LINHAS -->
+        <q-card-section v-else-if="passo === 2">
           <ContagemCaixa
             v-if="form.sinal < 0"
             v-model="form.saida"
@@ -286,13 +257,9 @@ async function salvar() {
           </template>
         </q-card-section>
 
-        <!-- PASSO 4: DATA E OBSERVAÇÃO -->
+        <!-- PASSO 3: DATA, TOTAL E OBSERVAÇÃO -->
         <q-card-section v-else>
           <div class="row q-col-gutter-md">
-            <div class="col-12 row items-center">
-              <div class="col text-subtitle2">Total</div>
-              <div class="text-h6">R$ {{ formataNumero(total) }}</div>
-            </div>
             <div class="col-12">
               <MgInputData
                 v-model="form.transacao"
@@ -302,14 +269,12 @@ async function salvar() {
                 :rules="[(v) => !!v, noPeriodo]"
               />
             </div>
+            <div class="col-12 row items-center">
+              <div class="col text-subtitle2">Total</div>
+              <div class="text-h6">R$ {{ formataNumero(total) }}</div>
+            </div>
             <div class="col-12">
-              <MgInput
-                v-model="form.observacoes"
-                label="Observação"
-                type="textarea"
-                autogrow
-                maxlength="300"
-              />
+              <MgInput v-model="form.observacoes" label="Observação" maxlength="300" />
             </div>
           </div>
         </q-card-section>
@@ -318,13 +283,13 @@ async function salvar() {
         <q-card-actions align="right">
           <q-btn
             flat
-            :label="passo === 1 ? 'Cancelar' : 'Voltar'"
+            :label="passo === primeiro ? 'Cancelar' : 'Voltar'"
             color="grey-8"
             tabindex="-1"
             @click="voltar"
           />
           <q-btn
-            v-if="passo === 3"
+            v-if="passo === 2"
             flat
             label="Continuar"
             color="primary"
@@ -332,7 +297,7 @@ async function salvar() {
             :disable="total <= 0"
           />
           <q-btn
-            v-if="passo === 4"
+            v-if="passo === 3"
             ref="lancarRef"
             flat
             label="Lançar"
