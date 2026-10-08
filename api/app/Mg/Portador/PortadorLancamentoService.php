@@ -4,10 +4,10 @@ namespace Mg\Portador;
 
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Mg\Anexo\FotoService;
 use Mg\Caixa\CaixaItem;
 use Mg\Caixa\CaixaItemService;
 use Mg\Caixa\CaixaService;
-use Mg\Negocio\NegocioAnexoService;
 use Mg\Usuario\Autorizador;
 
 /**
@@ -144,6 +144,9 @@ class PortadorLancamentoService
         $periodo->refresh();
         static::exigirNaoFechado($periodo);
         $linhas = CaixaItemService::validarEntrada($linhas);
+        if ($sinal < 0) {
+            static::exigirDisponivel($periodo, $item, $linhas);
+        }
         $total = CaixaItemService::totalLinhas($linhas);
         $observacoes = trim($observacoes ?? '');
         $mov = PortadorMovimento::create([
@@ -160,6 +163,28 @@ class PortadorLancamentoService
         PortadorPeriodoService::recalcular($periodo);
         CaixaItemService::recalcularSaldo($item);
         return $mov;
+    }
+
+    // so' sai o que esta' no caixa: o saldo inicial e as entradas do periodo,
+    // menos as saidas ja' lancadas, por preco e descricao
+    private static function exigirDisponivel(PortadorPeriodo $periodo, CaixaItem $item, array $linhas): void
+    {
+        $disponivel = CaixaItemService::disponivel($periodo, PortadorPeriodoService::anterior($periodo))[$item->codcaixaitem] ?? [];
+        $chave = fn ($l) => number_format((float) $l['preco'], 2, '.', '') . '|' . mb_strtolower($l['descricao'] ?? '');
+        $tem = [];
+        foreach ($disponivel as $l) {
+            $tem[$chave($l)] = $l['quantidade'];
+        }
+        foreach ($linhas as $l) {
+            $nome = trim(($l['descricao'] ?? '') . ' ' . number_format((float) $l['preco'], 2, ',', '.'));
+            $q = $tem[$chave($l)] ?? 0;
+            if ($q <= 0) {
+                abort(422, "{$item->item} {$nome} não está no caixa (nem no saldo inicial nem em entrada do período).");
+            }
+            if ($l['quantidade'] > $q) {
+                abort(422, "Saída de {$l['quantidade']} × {$item->item} {$nome}: só tem {$q} no caixa.");
+            }
+        }
     }
 
     // entrada ou saida do item, ou bordero da maquineta
@@ -200,6 +225,9 @@ class PortadorLancamentoService
         if (!$portador->ehCaixa()) {
             abort(422, "{$portador->portador} não é portador em espécie: o borderô da maquineta é o dinheiro que ficou na gaveta.");
         }
+        if ($item->codfilial != $portador->codfilial) {
+            abort(422, "{$item->item} é de outra filial: o borderô entra no caixa da filial da maquineta.");
+        }
         if (!static::pode($portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
             PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, 'Lançar borderô da maquineta');
         }
@@ -224,7 +252,7 @@ class PortadorLancamentoService
         PortadorPeriodoService::recalcular($periodo);
         CaixaItemService::recalcularSaldo($item);
         if (!empty($anexoBase64)) {
-            NegocioAnexoService::gravarFoto(static::pastaFoto($mov->codportadormovimento), $anexoBase64);
+            FotoService::gravar(static::DISCO_FOTO, static::pastaFoto($mov->codportadormovimento), $anexoBase64);
         }
         return $mov;
     }
@@ -239,7 +267,20 @@ class PortadorLancamentoService
         if (!static::pode($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
             PortadorAutorizador::autorizar($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, 'Anexar foto do borderô');
         }
-        NegocioAnexoService::gravarFoto(static::pastaFoto($mov->codportadormovimento), $anexoBase64);
+        FotoService::gravar(static::DISCO_FOTO, static::pastaFoto($mov->codportadormovimento), $anexoBase64);
+    }
+
+    // a foto errada: exclui quem pode anexar; sem nenhuma, a linha volta a
+    // "sem bordero"
+    public static function excluirFoto(PortadorMovimento $mov, string $arquivo, ?int $livre = null): void
+    {
+        if ($mov->tipo != PortadorMovimento::TIPO_MAQUINETA || !$mov->valendo()) {
+            abort(422, 'Foto só no borderô de maquineta que vale.');
+        }
+        if (!static::pode($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
+            PortadorAutorizador::autorizar($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, 'Excluir foto do borderô');
+        }
+        FotoService::excluir(static::DISCO_FOTO, static::pastaFoto($mov->codportadormovimento), $arquivo);
     }
 
     // ve a foto quem opera o portador (e o caixa do PDV da gaveta) e o
@@ -249,17 +290,20 @@ class PortadorLancamentoService
         if (!static::pode($mov->Portador, PortadorUsuario::PAPEL_OPERADOR, $livre)) {
             Autorizador::autoriza(['Administrador', 'Financeiro']);
         }
-        return NegocioAnexoService::mostrarFoto(static::pastaFoto($mov->codportadormovimento), $arquivo);
+        return FotoService::mostrar(static::DISCO_FOTO, static::pastaFoto($mov->codportadormovimento), $arquivo);
     }
 
     public static function fotos(int $codportadormovimento): array
     {
-        return NegocioAnexoService::fotos(static::pastaFoto($codportadormovimento));
+        return FotoService::fotos(static::DISCO_FOTO, static::pastaFoto($codportadormovimento));
     }
+
+    // foto do bordero no disco portador-anexo, pasta = codportadormovimento
+    const DISCO_FOTO = 'portador-anexo';
 
     private static function pastaFoto(int $codportadormovimento): string
     {
-        return "portador-movimento/{$codportadormovimento}";
+        return (string) $codportadormovimento;
     }
 
     private static function cancelarLinha(PortadorMovimento $mov, string $justificativa): void

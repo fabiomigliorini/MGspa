@@ -157,12 +157,12 @@ const routes = [
         },
       },
       {
-        path: 'maquineta/:id(\\d+)/lotes',
-        name: 'maquineta-lotes',
-        component: () => import('pages/maquineta/Lotes.vue'),
+        path: 'maquineta/:codmaquineta(\\d+)/:codmaquinetalote(\\d+)?',
+        name: 'maquineta-detalhe',
+        component: () => import('pages/maquineta/Detalhe.vue'),
         meta: {
           auth: true,
-          title: 'Lotes da Maquineta',
+          title: 'Maquineta',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
         },
       },
@@ -173,16 +173,6 @@ const routes = [
         meta: {
           auth: true,
           title: 'Fechamentos',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
-        },
-      },
-      {
-        path: 'fechamento/lote/:id(\\d+)',
-        name: 'fechamento-lote',
-        component: () => import('pages/fechamento/Lote.vue'),
-        meta: {
-          auth: true,
-          title: 'Lote da Maquineta',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
         },
       },

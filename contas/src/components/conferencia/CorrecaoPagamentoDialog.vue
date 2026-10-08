@@ -1,10 +1,11 @@
 <script setup>
 // Correção de um lançamento na conferência (M9 doc-3): o gerente acerta o pagamento com a
-// realidade — crédito/débito, maquineta, lote, bandeira, autorização, parcelas, valor, ou
+// realidade — crédito/débito, maquineta, período, bandeira, autorização, parcelas, valor, ou
 // cartão que foi dinheiro. Justificativa obrigatória; o antes/depois fica gravado.
 import { ref, computed, watch } from 'vue'
 import { api } from 'src/services/api'
 import { BANDEIRAS } from '@components/cobranca/pagamento.js'
+import { formataTimestamp } from '@components/formatters'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectMaquineta from '@components/MgSelectMaquineta.vue'
@@ -50,7 +51,8 @@ watch(model, (aberto) => {
   }
 })
 
-// lotes abertos da maquineta escolhida (mover a venda feita depois do borderô)
+// períodos não conferidos da maquineta escolhida (mover a venda feita depois do borderô)
+const SITUACAO = { aberto: 'aberto', pendente: 'pendente' }
 watch(
   () => [model.value, form.value.codmaquineta],
   async ([aberto, codmaquineta]) => {
@@ -58,9 +60,12 @@ watch(
     if (!aberto || !codmaquineta) return
     try {
       const { data } = await api.get(`v1/maquineta/${codmaquineta}/lote`)
-      lotes.value = data.data
-        .filter((l) => l.aberto)
-        .map((l) => ({ value: l.codmaquinetalote, label: `Lote ${l.codmaquinetalote}` }))
+      lotes.value = data.data.map((l) => ({
+        value: l.codmaquinetalote,
+        label:
+          `${formataTimestamp(l.abertura, 2)} até ` +
+          `${l.fim ? formataTimestamp(l.fim, 2) : 'agora'} (${SITUACAO[l.situacao]})`,
+      }))
     } catch {
       lotes.value = []
     }
@@ -80,7 +85,7 @@ async function salvar() {
   ]) {
     if (form.value[campo] !== l[campo]) payload[campo] = form.value[campo]
   }
-  // mover de lote só na mesma maquineta (trocar a maquineta já leva ao lote aberto dela)
+  // mover de período só na mesma maquineta (trocar a maquineta já leva ao período aberto dela)
   if (
     form.value.codmaquineta === l.codmaquineta &&
     form.value.codmaquinetalote !== l.codmaquinetalote
@@ -133,9 +138,9 @@ async function salvar() {
                   emit-value
                   map-options
                   outlined
-                  label="Lote"
+                  label="Período"
                   :disable="form.codmaquineta !== lancamento?.codmaquineta"
-                  hint="Mover para outro lote aberto"
+                  hint="Mover para outro período não conferido"
                 />
               </div>
               <div class="col-12 col-sm-6">

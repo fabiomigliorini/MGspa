@@ -73,7 +73,7 @@ class MaquinetaService
 
         $q->orderBy('codfilial')->orderBy('apelido')->orderBy('codmaquineta');
 
-        return $q->paginate(50);
+        return $q->get();
     }
 
     // adquirentes que têm maquineta (filtro e formulário do contas)

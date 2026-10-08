@@ -108,7 +108,7 @@ class CaixaItemService
 
     // o contado mais as entradas (saida com o sinal do valor), somando as
     // quantidades de mesmo preco e descricao; tira as zeradas
-    private static function somarLinhas(array $contado, array $lancamentos): array
+    public static function somarLinhas(array $contado, array $lancamentos): array
     {
         $juntas = [];
         $somar = function (array $l, int $sinal) use (&$juntas) {
@@ -126,6 +126,36 @@ class CaixaItemService
         }
         ksort($juntas);
         return array_values(array_filter($juntas, fn ($l) => $l['quantidade'] != 0));
+    }
+
+    // o que tem de cada item no periodo, para a saida: a contagem que deu o
+    // saldo inicial (a final do anterior; sem ela, a inicial deste) mais as
+    // entradas e menos as saidas dele que valem, por preco e descricao, so'
+    // as linhas com quantidade {codcaixaitem: [{preco, descricao, quantidade}]}
+    public static function disponivel(PortadorPeriodo $periodo, ?PortadorPeriodo $anterior): array
+    {
+        $abertura = $anterior && ($anterior->contagemfinal !== null || $anterior->contagemitensfinal !== null)
+            ? $anterior->contagemitensfinal
+            : $periodo->contagemitensinicial;
+        $lancamentos = [];
+        PortadorMovimento::where('codportadorperiodo', $periodo->codportadorperiodo)
+            ->where('tipo', PortadorMovimento::TIPO_ITEM)
+            ->where('estado', '<>', PortadorMovimento::ESTADO_CANCELADO)
+            ->get(['codcaixaitem', 'valor', 'itens'])
+            ->each(function ($m) use (&$lancamentos) {
+                $lancamentos[$m->codcaixaitem][] = ['valor' => (float) $m->valor, 'itens' => $m->itens];
+            });
+        $ret = [];
+        foreach (array_unique(array_merge(array_map('intval', array_keys($abertura ?? [])), array_keys($lancamentos))) as $cod) {
+            $linhas = array_values(array_filter(
+                static::somarLinhas($abertura[$cod] ?? [], $lancamentos[$cod] ?? []),
+                fn ($l) => $l['quantidade'] > 0
+            ));
+            if (!empty($linhas)) {
+                $ret[$cod] = $linhas;
+            }
+        }
+        return $ret;
     }
 
     // os periodos de um caixa em que o item mexeu (abertura diferente do

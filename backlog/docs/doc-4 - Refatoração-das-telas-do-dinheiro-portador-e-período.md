@@ -70,8 +70,8 @@ ou período, podem passar a apontar para a tela nova se for trivial.
    **estado**: na gaveta, Abrir caixa e Fechar com contagem (`@components/caixa/ContagemCaixa.vue`,
    regras do M13), Reabrir, Borderô; nos demais, Fechar com corte e Reabrir (regras do M12).
 9. **Resumo do período** acima da lista: saldo inicial; entradas e saídas **por origem** (Vendas,
-   Títulos, Transferências, Avulsos e ajustes, Itens do caixa); saldo final. Na gaveta, também
-   contado × sistema na abertura e no fechamento. É o formulário "Movimento do Caixa" de papel.
+   Títulos, Transferências, Avulsos e ajustes); saldo final. Na espécie, é o formulário
+   "Movimento do Caixa" de papel linha a linha (ver **Resumo** em "A tela do portador").
    Clicar numa origem filtra a lista.
 10. **Lista de lançamentos** = linha de extrato: data e hora do fato (`transacao`); origem em texto
     com link ("Venda 123456 · João", "Sangria → Cofre Centro", "Baixa de 3 títulos · José",
@@ -329,9 +329,35 @@ Cada portador (qualquer tipo) tem uma **lista de usuários com papel** (`tblport
   período"** é a primeira aba.
 - **Cabeçalho do período**: a situação e um botão por ação (fechar, início e fim, dividir,
   unificar, reabrir, borderô), conforme o papel. Pendente mostra o que falta.
-- **Resumo**: saldo inicial (com a contagem inicial e se confere), entradas e saídas por origem
-  (vendas, títulos e vales, itens, transferências, ajustes, taxas), saldo final, contagem final e
-  diferença (verde dentro da tolerância). Os botões ao lado dos saldos são as contagens.
+- **Resumo** (refeito com o Fábio em 07/10/2026, critério #25 da TASK-39): na espécie, o
+  formulário "Movimento do Caixa" de papel, uma linha por coisa física; **Entrada** = o que tinha
+  no começo ou entrou, **Saída** = o que sobrou no fim ou saiu. Na ordem:
+  - **Moedas** e **Cédulas**: entrada = a contagem que deu o saldo inicial (a final do anterior;
+    sem ela, a inicial deste), saída = a contagem final. Sem contagem que divida o saldo inicial
+    (primeiro período, dividir sem contagem), volta a linha única "Saldo inicial".
+  - **Cada item do caixa** (chips, ingressos): o título e, recuadas, "Abertura e fechamento" (o
+    valor do item nas mesmas contagens) e "Movimentação (n)" (as entradas e saídas lançadas do
+    item, se teve). A linha "Itens do caixa" deixou de existir.
+  - As origens (vendas, títulos e vales, transferências, ajustes, taxas), com as **maquinetas de
+    parceiros** sob o título "Parceiros", uma linha por maquineta (borderôs na entrada,
+    devoluções na saída).
+  - **Total** da entrada e da saída e **Diferença** (saída − entrada = contado − saldo final),
+    verde dentro da tolerância; só acima dela aparece "Acima Tolerância 2,00". Sem contagem
+    final, "Saldo final (a contar)".
+
+  A entrada de cada bloco contado fica **azul** quando a contagem inicial dele bate com a abertura
+  e **roxa** com "Divergente" quando não. A **calculadora ao lado de cada valor** abre a contagem
+  **só daquele bloco** (moedas, cédulas ou o item): uma linha por face (no item, por preço, com a
+  descrição) com quantidade, face e total, um recalculando o outro; o copiar fica no título e a
+  inicial mostra o valor do bloco na abertura. Salva a contagem inteira, com o resto como estava.
+  Não há mais a contagem completa. Clicar numa movimentação ou origem filtra a lista
+  ("I:cod"/"M:cod" para item e maquineta).
+
+  O quadro é montado no servidor (`PortadorPeriodoResource::quadro`, com `contagem.*.moedas`,
+  `cedulas`, `valoritens` e `contagem.abertura`) e desenhado igual na tela (`PeriodoResumo`) e
+  no **borderô térmico** (`caixa/bordero-termica`, com a situação do período no topo; sem o
+  detalhe por cédula). O borderô sai pela impressora do cabeçalho em qualquer situação, também
+  no aberto (no PDV, a impressora dele manda para a térmica).
 - **Lançamentos**: linha do tempo por dia; pagamento abre o pagamento; transferência leva ao outro
   portador; confirmar e cancelar na linha. Os botões de **ajuste (+)** e **reforço/sangria** ficam
   no cabeçalho dos lançamentos.
@@ -385,14 +411,19 @@ estoque, com acerto) vêm um por um, adaptando a estrutura.
    com a tolerância do portador. O saldo inicial (contagem final do anterior) já vem com os
    itens.
 3. **Vender não lança nada**: o item vira dinheiro, o saldo não muda.
-4. **Entrada ou saída de item** (botão `style` no cabeçalho dos lançamentos; Entrada / Saída é o
-   primeiro campo do diálogo), com sinal: + chegou; − saiu sem venda (devolveu, perdeu, recolheram
-   o bloco de ingressos). É o **único lançamento** do item: **tipo I** no movimento do
-   portador, sem `tblpagamento`. Cancela-se com justificativa, como o ajuste (operador, período
-   não fechado). As linhas são sempre novas: **descrição** (typeahead com as já usadas no item),
-   **preço** e **quantidade**; "+ Linha" acrescenta, o X exclui.
-5. **Contagem**: um bloco por item que está no portador, **um campo de quantidade por preço**
-   (como cédula), rotulado com o preço e a descrição. Preço novo só entra pela entrada.
+4. **Entrada ou saída de item** (botão `style` no cabeçalho dos lançamentos; wizard: Entrada ou
+   Saída, o item, as linhas, data e observação), com sinal: + chegou; − saiu sem venda (devolveu,
+   perdeu, recolheram o bloco de ingressos). É o **único lançamento** do item: **tipo I** no
+   movimento do portador, sem `tblpagamento`. Cancela-se com justificativa, como o ajuste
+   (operador, período não fechado). Na entrada, as linhas são sempre novas: **descrição**
+   (typeahead com as já usadas no item), **preço** e **quantidade**; "+ Linha" acrescenta, o X
+   exclui. **A saída só tira o que está no caixa** (07/10/2026): só os tipos (preço + descrição)
+   do saldo inicial e das entradas do período, uma linha por tipo como na contagem, com a
+   quantidade limitada ao disponível (saldo inicial + entradas − saídas); o servidor recusa o tipo
+   que não está no caixa e a quantidade que passa.
+5. **Contagem**: cada item que está no portador é um bloco, contado pela calculadora da linha
+   dele no resumo: **uma linha por preço** (com a descrição), quantidade e total, como cédula.
+   Preço novo só entra pela entrada.
 6. **Qualquer portador em espécie** (gaveta, cofre, troco, Caixa Financeiro). Não há vínculo a
    cadastrar: a entrada oferece todos os itens ativos, e o item entra na contagem do portador na
    primeira entrada ali e **vai de um dia para o outro até zerar** (contou zero, some da contagem
@@ -422,8 +453,10 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
 3. **Borderô** (só na tela do período do contas; o PDV ganha na refatoração dele): a maquineta, a
    data, o **total em dinheiro** (com sinal: negativo quando a maquineta devolveu dinheiro), a
    observação e a **foto do borderô, opcional**. Sem foto a linha mostra "sem borderô"; a foto pode
-   ser anexada depois na linha (mesmo com o período fechado: não muda valor). Cartão e Pix só na
-   foto. Sobe o saldo do portador (explica o dinheiro a mais) e é crédito na conta da maquineta.
+   ser anexada depois na linha (mesmo com o período fechado: não muda valor) e a errada, excluída
+   ali mesmo (quem pode anexar). Só as maquinetas da filial do caixa: o diálogo lista só elas e o
+   servidor recusa a de outra filial. Cartão e Pix só na foto. Sobe o saldo do portador (explica o
+   dinheiro a mais) e é crédito na conta da maquineta.
    Cancela-se com justificativa, como o ajuste.
 4. **Conta corrente por maquineta** (não há "acerto que abrange um período"): crédito = os borderôs
    dos caixas; débito = os títulos gerados; ajuste com sinal e observação obrigatória (a comissão
@@ -472,17 +505,20 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
   na ordem do go-live (`caixa_item.sql` e depois este).
 - **Backend**: `PortadorLancamentoService::lancarItem/cancelarItem`, rota
   `POST v1/portador-periodo/{id}/item`, cancelar em `v1/portador-movimento/{id}/cancelar`;
+  `exigirDisponivel` (recusa a saída que não está no caixa), `CaixaItemService::disponivel`
+  (saldo inicial + entradas − saídas do período, por tipo; `itens[].saida` no resource);
   `PortadorPeriodoService` (contado = cédulas + itens; gravarContagem, mesmaContagem, abrir,
   contar, fechar, dividir, unificar levam os itens); `CaixaItemService` (linhas, totais,
   descrições, períodos e total dos fechados);
   `PortadorPeriodoResource` (linha I, `contagem.*.itens`, `itens` ativos com os preços conhecidos
   e `contar` quando está no portador); `GET v1/caixa-item/{id}/descricao` (typeahead) e as rotas
-  da tela do item; borderô com os itens na contagem. Saíram `CaixaItemLancamento(Service)`,
+  da tela do item; borderô com os itens no quadro do resumo. Saíram `CaixaItemLancamento(Service)`,
   `CaixaService::lancamentos/salvarItem/pagamentoNaGaveta/titulosRepasse/estornarRepasse/itens`,
   `exigirSemItens`, a origem I dos pagamentos e as rotas `v1/caixa/sessao/{id}/item` e
   `v1/caixa/item-lancamento`.
-- **Front**: `@components/caixa/ItemCaixaDialog` (Entrada / Saída como primeiro campo, linhas
-  novas com typeahead) e `LinhasItemCaixa` (um campo por preço), `ContagemCaixa` com os itens,
+- **Front**: `@components/caixa/ItemCaixaDialog` (wizard; entrada com linhas novas e typeahead,
+  saída com a `ContagemCaixa` e o disponível de teto), `ContagemCaixa` um bloco por vez (uma linha
+  por preço, com quantidade e total; `LinhasItemCaixa` saiu),
   `periodoStore.lancarItem`;
   contas: botão "Entrada ou saída de item" nos lançamentos de todo portador em espécie, itens no
   diálogo da contagem, cadastro só com o nome, tela do item (`caixaItem/Detalhe` e
@@ -495,25 +531,48 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
 1. contas → Cadastros → Itens do Caixa: criar e editar pedem só o nome; clicar no item abre a
    tela dele.
 2. contas → Portadores → um portador em espécie (gaveta, cofre, troco) → período aberto: botão
-   `style` (Entrada ou saída de item) nos lançamentos → Entrada → escolher o item → descrição
-   (digitar "Cl" sugere "Claro"), preço 10,00, quantidade 10 → Lançar. Saldo final sobe
-   R$ 100,00; linha "Entrada: Chips de celular" na linha do tempo; resumo "Itens do caixa".
-3. Saída sem venda, no mesmo botão com Saída marcada (ex.: o bloco de 25 ingressos de R$ 40,00
-   da Brígida recolhido): saldo desce R$ 1.000,00; linha "Saída: …" em vermelho.
-4. Contagem final (botão ao lado do saldo final): cédulas + o bloco do item com o campo
-   "R$ 10,00" já listado; contar o que sobrou. Total geral = cédulas + itens; diferença uma só.
+   `style` (Entrada ou saída de item) nos lançamentos → Entrada (tecla 1) → o item → descrição
+   (digitar "Cl" sugere "Claro"), preço 10,00, quantidade 10 → Continuar → Lançar (já com o
+   foco). Saldo final sobe R$ 100,00; linha "Entrada: Chips de celular" na linha do tempo; no
+   resumo, o item com "Movimentação (1)".
+3. Saída sem venda, no mesmo botão → Saída (ex.: o bloco de 25 ingressos de R$ 40,00 da Brígida
+   recolhido): só aparecem os itens e os tipos que estão no caixa, cada um com o teto do
+   disponível; 25 no de R$ 40,00 → saldo desce R$ 1.000,00; linha "Saída: …" em vermelho. Tirar
+   todo o disponível de um tipo e abrir de novo: o tipo some. Sem nada no caixa, Saída
+   desabilitada.
+4. Contagem final do item (calculadora ao lado da saída de "Abertura e fechamento" dele): a
+   linha de 10,00 já listada; contar o que sobrou. Diferença uma só, de cédulas, moedas e itens.
 5. Venda em dinheiro de um item: nada lançado; contar um a menos e R$ 10,00 a mais → mesma
    diferença.
 6. Cancelar a entrada (na linha): saldo volta; aparece em "Mostrar cancelados".
 7. Fechar e abrir o seguinte: contagem inicial já vem com os itens.
-8. Contar zero, fechar e abrir o seguinte: o item some da contagem. Borderô do período mostra os
-   itens na contagem.
+8. Contar zero, fechar e abrir o seguinte: o item some da contagem. Borderô do período mostra o
+   item no quadro.
 9. PDV `/caixa`: sem o bloco de itens; abre e fecha como antes.
 10. Tela do item: "Saldo nos caixas" com cada portador que tem o item (contagem do último
     fechamento + entradas e saídas do período aberto) e o total; clicar no caixa abre o popup
     dos períodos em que o item mexeu, com os cards Saldo, Entradas e saídas e Diferença (entradas
     e saídas + diferença = saldo; a saída entra na mesma coluna, negativa); "Descrições" troca o
     texto de um tipo (descrição + preço) em tudo.
+
+### Wizards de item e de reforço/sangria (07/10/2026, com o Fábio)
+
+Os dois diálogos de lançamento do período em espécie viraram wizard, no jeito do wizard de
+cobrança (`@components/cobranca/ListaOpcoes`: setas, Enter ou o número; Voltar volta um passo):
+
+- **Item** (`ItemCaixaDialog`, 400px): 1) Entrada ou Saída (Saída desabilitada sem nada no
+  caixa); 2) o item (na saída, só os que estão no caixa; pula quando só tem um); 3) as linhas
+  (entrada livre; saída no jeito da contagem, com o teto) → Continuar; 4) total, data e
+  observação, foco no Lançar.
+- **Reforço / Sangria** (`TransferirCaixaDialog`, 400px; fora do caixa, Enviar / Receber): 1) o
+  sentido; 2) o outro portador, os em espécie da filial primeiro ("Desta filial" / "Mais opções",
+  logo do banco), com o mesmo filtro do select de antes (espécie e banco, sem o próprio, papel
+  depositante no destino e operador na origem, de `v1/select/portador`); 3) o valor; 4) valor,
+  data e observação, foco no Lançar. O título acompanha: "Sangria para Cofre Centro".
+- `MgInputValor` sem label não reserva mais o espaço do rótulo (o número ficava caído no campo).
+
+Valida: sangria só no teclado (1 → número do destino → valor → Enter → Enter) → amarela, a
+confirmar; reforço lista os portadores de onde se pode retirar; Voltar em cada passo.
 
 ### Como ficou no código: maquinetas de parceiro (06–07/10/2026; validado pelo Fábio em 07/10)
 
@@ -529,17 +588,20 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
   `CaixaItemContaService` (`saldo`, `extrato`, `gerarTitulo` via `TituloService::criar`,
   `ajustar`, `cancelar`); rotas `GET v1/caixa-item/{id}/conta`, `POST .../conta/titulo`,
   `POST .../conta/ajuste`, `POST v1/caixa-item-acerto/{id}/cancelar`.
-  `PortadorLancamentoService::lancarMaquineta`, `anexarFoto`/`fotos`/`mostrarFoto` (disco
+  `PortadorLancamentoService::lancarMaquineta` (recusa maquineta de outra filial),
+  `anexarFoto`/`excluirFoto`/`fotos`/`mostrarFoto` (disco
   `negocio-anexo`, pasta `portador-movimento/{cod}`, sem coluna; a foto do borderô, do lote e da
   maquineta de parceiro, grava e lê por `NegocioAnexoService::gravarFoto/fotos/mostrarFoto`);
   `lancarItem` recusa maquineta; cancelar aceita o M. As rotas da conta corrente devolvem o
   extrato de/até já com o que mudou. Rotas `POST v1/portador-periodo/{id}/maquineta`,
-  `POST/GET v1/portador-movimento/{id}/foto`. `PortadorPeriodoResource`: origem M "Maquinetas de
-  parceiros" no resumo (e no borderô impresso), linha "Borderô: …"/"Devolução: …" com `fotos`,
-  `semBordero`, `podeAnexar`; `itens` só os de cédula; `maquinetas` ativas para o diálogo.
+  `POST v1/portador-movimento/{id}/foto`, `GET/DELETE .../foto/{arquivo}`.
+  `PortadorPeriodoResource`: origem M "Maquinetas de parceiros" no resumo (e no borderô impresso),
+  linha "Borderô: …"/"Devolução: …" com `fotos`, `semBordero`, `podeAnexar`; `itens` só os de
+  cédula; `maquinetas` ativas da filial do portador para o diálogo.
   `CaixaService::dinheiro` com o documento M.
 - **Front**: `@components/caixa/MaquinetaCaixaDialog` (borderô, com `MgSlim` para a foto) e
-  `BorderoFotosDialog` (ver e anexar); `periodoStore.lancarMaquineta/anexarFotoBordero` e os
+  `BorderoFotosDialog` (ver, anexar e excluir; o quadro de fotografar do tamanho das fotos, nos
+  dois diálogos); `periodoStore.lancarMaquineta/anexarFotoBordero/excluirFotoBordero` e os
   helpers `limitePeriodo`/`dentroDoPeriodo` (a data dentro do período, usada pelos diálogos de
   ajuste, item, maquineta e transferência); contas:
   botão `point_of_sale` nos lançamentos do período em espécie, badge "sem borderô" e câmera na
@@ -561,7 +623,8 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
 2. Portador em espécie → período aberto → botão `point_of_sale` (Borderô de maquineta): R$ 350,00
    com foto. Linha "Borderô: Rede Card Centro", saldo +350, resumo "Maquinetas de parceiros".
 3. Outro borderô, Devolução R$ 20,00, sem foto: badge "sem borderô"; câmera na linha → anexar → o
-   badge some.
+   badge some. Lixeira numa foto → confirmar → some; sem nenhuma, o badge volta. O diálogo só
+   lista as maquinetas da filial do caixa.
 4. O diálogo do item e a contagem não mostram a maquineta; contar os 330 a mais nas cédulas →
    diferença 0.
 5. Cancelar a devolução com justificativa: saldo volta; aparece em Mostrar cancelados.
@@ -685,3 +748,169 @@ item 7; parceiros, item 9).
    (outra aba do negocios), título abre o pagamento; confirmar a sangria pelo cofre; fechar a
    gaveta → o PDV volta a "Abrir caixa".
 8. Fechamentos sem "Caixas abertos".
+
+## Maquineta e seus períodos (07/10/2026, com o Fábio; TASK-188 M9.8)
+
+**Por quê**: todo dia o gerente da unidade confere o que passou em cada maquineta de cartão
+(venda, recebimento de título, adiantamento) com o borderô do dia impresso por ela, e anexa a
+foto. É assim que se pega o caixa que lançou errado ou fake. Não é o que cai no banco (isso é a
+TASK-195, M14). O lote da maquineta do M9 já fazia a conta, mas na tela Fechamentos ("lança e
+some; errou, não tem como desfazer"). A tela passa a seguir o padrão do portador e seus períodos:
+o passado e o momento, lançar e alterar no mesmo lugar.
+
+### Decisões
+
+1. **Cada maquineta tem uma tela com os períodos em abas** Ano → Mês → Período (o lote do M9 é o
+   período; no banco continua `tblmaquinetalote`). A lista de Maquinetas mostra a situação (aberto
+   desde, pendentes, sem borderô) e o nome leva à tela. O grupo Maquinetas sai de Fechamentos.
+2. **Aberto → pendente → conferido.** O cartão cai no período aberto. Conferir com o borderô
+   (quantidade e total digitados; antes eram crédito e débito, ver "A tela igual ao borderô"): o
+   aberto termina na hora e abre o seguinte; bateu (quantidade e o total no centavo) com o sistema,
+   conferido; não bateu, pendente (sem tolerância). O mesmo botão confere de novo.
+3. **Visão aberta**: lançamentos e total do sistema visíveis sempre (sem conferência às cegas).
+   Quem está sendo conferido é o caixa; a foto é a prova.
+4. **Foto opcional, com aviso**: conferir sem foto deixa o período "sem borderô" (aba, cabeçalho e
+   lista de Maquinetas) até anexar; anexa a qualquer hora, inclusive no conferido.
+5. **Acertar o período, igual ao caixa**: dividir (régua com os lançamentos), unificar com o
+   anterior (os dois não conferidos; vale com diferença), início e fim, e mover um lançamento de
+   período (na correção da linha). **O período manda, não a hora**: o lançamento movido fica no
+   período mesmo fora do início e fim, e editar as datas não recusa por isso (resolve também a venda
+   offline do PDV, gravada na hora da sincronização). Caso típico: o caixa fechou, alguém vendeu
+   depois na mesma maquineta, a venda caiu no período de hoje → divide hoje isolando a venda e
+   unifica o pedaço com ontem (ou move a venda).
+6. **Reabrir** qualquer período conferido, em qualquer ordem (cartão não tem saldo encadeado): volta
+   a pendente.
+7. **Quem**: Gerente da filial, Financeiro e Administrador; maquineta compartilhada (as virtuais
+   Le Card Site, MultVale Site, Brasil Card Site), qualquer gerente. As virtuais têm período como
+   as outras; às vezes são conferidas por semana (o período fica aberto até alguém conferir).
+8. **Correções na linha** (as do M9): corrigir crédito/débito, maquineta, período, bandeira,
+   autorização, parcelas e valor; registro indevido. Só no período não conferido.
+9. **Fica para depois**: a dashboard de pendências do gerente (unidade) e do financeiro (geral), que
+   leva cada item à tela onde ele está (TASK-203). O resto de Fechamentos (cheque, vale, duplicata,
+   venda com diferença, PIX) continua como está.
+
+### Como ficou no código (07/10/2026; não validado)
+
+- **DDL** `api/database/maquineta_periodo.sql` (idempotente; rodado 2x no dev; go-live depois do
+  `caixa_item_saldo.sql`): `tblmaquinetalote.fim`; conferido antigo ganha `fim = fechamento`; o
+  índice do aberto passa a ser `fim is null`. `abertura` é o início.
+- **Backend**: `MaquinetaLote` (`fim`, `situacao()` aberto/pendente/conferido; `aberto()` = sem
+  fim). `MaquinetaLoteService`: `corrente` (o sem fim; nasce no fim+1s do último), `conferir`,
+  `reabrir`, `editarDatas`, `dividir` (cartão por `transacao`, cancelamento por `cancelamento`
+  depois do corte; o borderô digitado e as fotos vão para a segunda parte), `unificar` (fica o
+  anterior, com o fim e o borderô do posterior; sem ele, o do anterior; as fotos vão junto),
+  `exigirNaoConferido` (no lugar do `exigirAberto`, usado nas correções), `totais` (as abas numa
+  consulta), `resumo` (a lista de Maquinetas), `comFoto`. `MaquinetaLoteResource` mudou para
+  `Mg/Maquineta` (sem `comLancamentos`: as abas com `total` e `semBordero`; com: sistema por PDV,
+  fotos, anterior e lançamentos). `MaquinetaPeriodoController`: `GET
+  v1/maquineta/{cod}/periodo/{codlote?}` (a tela), `GET v1/maquineta/{cod}/lote` (não conferidos,
+  destino do mover), `POST v1/maquineta-lote/{id}/conferir|reabrir|datas|dividir|unificar|foto`,
+  `GET v1/maquineta-lote/{id}/foto/{arquivo}`; toda ação devolve a tela. Saíram as rotas
+  `v1/conferencia/lote*` e o bloco dos lotes de `ConferenciaService::pendencias`.
+  `MaquinetaController::index` traz `periodos` (aberto desde, pendentes, sem borderô nos últimos 60
+  dias). `ConferenciaPagamentoResource` ganhou `cancelamento`.
+- **Front (contas)**: `pages/maquineta/Detalhe.vue` (rota `maquineta-detalhe`,
+  `maquineta/:codmaquineta/:codmaquinetalote?`), `components/maquineta/PeriodoCabecalho.vue`
+  (situação, ações, borderô × sistema, por PDV, foto) e `PeriodoLancamentos.vue` (extrato por dia,
+  com acumulado; corrigir e indevido na linha), `components/maquineta/linhas.js` (as linhas com o
+  sinal do sistema), `stores/maquinetaPeriodoStore.js`. Lista de Maquinetas com a coluna Período e
+  o nome como link. `CorrecaoPagamentoDialog`: "Período" no lugar de "Lote". Saíram
+  `pages/fechamento/Lote.vue`, `pages/maquineta/Lotes.vue`, as rotas `fechamento-lote` e
+  `maquineta-lotes` e as funções de lote do `conferenciaStore`.
+- Conferido: `php -l`; cenário no tinker com rollback (16 verificações: dividir, conferir batendo e
+  não batendo, abrir o seguinte, cartão novo no aberto, mover para pendente, correção no conferido
+  recusada, unificar com conferido recusado, reabrir, unificar, conferir de novo, datas invadindo e
+  no futuro recusadas, a tela e a lista); eslint e prettier; `quasar build` do contas.
+- **Foto do borderô fora de Negócio** (07/10/2026, com o Fábio): as fotos do borderô estavam no
+  disco `negocio-anexo`, pelo `NegocioAnexoService` (pastas `maquineta-lote/…` e
+  `portador-movimento/…` no meio dos anexos de negócio). Agora:
+  - `Mg\Anexo\FotoService`, genérico: `fotos`, `gravar`, `mostrar`, `excluir` e `jpeg`; recebe o
+    disco e a pasta, não sabe de quem é a foto.
+  - Um disco por dono, como o `pessoa-anexo`: `maquineta-anexo` (`MAQUINETA_ANEXO_PATH`, pasta =
+    `codmaquinetalote`) e `portador-anexo` (`PORTADOR_ANEXO_PATH`, pasta = `codportadormovimento`).
+    Caminhos: produção `/opt/www/Arquivos/Maquinetas` e `/opt/www/Arquivos/Portadores`; dev com
+    `/Anexos` no fim, como o `Pessoas/Anexos` de lá.
+  - `NegocioAnexoService` ficou só com o que é de negócio (o `jpeg` repassa para o `FotoService`).
+  - Excluir a foto: `DELETE v1/maquineta-lote/{id}/foto/{arquivo}`, vale também no conferido; na
+    tela, a lixeira na miniatura, com confirmação. Sem nenhuma foto, volta o "sem borderô".
+  - **Go-live**: variáveis e pastas já criadas em produção (07/10/2026); depois do deploy, `php
+    artisan optimize` (as rotas estão em cache). As fotos do dev já foram movidas.
+
+### A tela igual ao borderô (07/10/2026, com o Fábio)
+
+**Por quê**: a primeira versão ("uma merda", nas palavras dele) não deixava bater o olho com o
+papel. O relatório da maquininha (Safrapay, Stone) é modalidade → bandeira → venda, com quantidade
+e valor em cada nível e as vendas por hora; a tela mostrava crédito/débito sem quantidade e um
+extrato por dia com acumulado; o diálogo de conferir cobria os números do sistema; a foto era uma
+miniatura. Convênio (Brasil Card, MultCard, Le Card) não tem relatório: é um monte de comprovantes.
+
+**Decisões**:
+1. A tela imprime o borderô do sistema no formato do papel: **resumo** (débito, crédito à vista,
+   crédito parcelado → bandeira, com quantidade e valor; parcelado = mais de uma parcela) e
+   **detalhe** na ordem do papel (modalidade → bandeira em ordem alfabética, sem bandeira por
+   último → hora).
+2. **Digita só quantidade e total do papel** (todo papel tem; convênio = contar e somar os
+   comprovantes), na própria tela, embaixo do resumo, sem diálogo. O resumo é para o olho. Risco
+   aceito: crédito lançado como débito com o mesmo valor passa no total. Visão continua aberta.
+3. **Linha da venda**: hora · NSU · autorização · parcelas · valor; no computador, em cinza, o caixa
+   e a venda; no celular só hora, NSU (ou autorização), parcelas e valor. Corrigir e indevido na
+   linha.
+4. **Foto ao lado** no computador (coluna da esquerda, alta, rolável, parada enquanto o detalhe
+   rola; clique abre inteira em outra aba); no celular em cima, recolhível.
+5. **Venda cancelada no próprio período** fica fora do resumo, da quantidade e do total (como no
+   papel) e volta riscada no "Mostrar cancelados (n)", como no portador. **Cancelamento de venda de
+   outro período** (e estorno) fica num bloco "Cancelamento de outro período", negativo, sempre
+   visível: desconta do total, não muda a quantidade; o período da venda fica intocado.
+6. Fim do período continua na hora do Conferir; venda depois da impressão do relatório = Dividir.
+   Período não conferido com mais de um dia avisa no cabeçalho (o relatório é de um dia só).
+7. **NSU e parcelas das integrações**: a Saurus (Safrapay, `codNSU`, o mesmo número do relatório) e
+   a PagarMe (Stone) sempre mandaram NSU e parcelas, mas só a autorização chegava ao pagamento —
+   todo crédito integrado cairia em "à vista". Agora `vincularPagamento` das duas copia `nsu` e
+   `parcelas`; o passado é preenchido no go-live. Maquininha manual: só autorização (o PDV não
+   muda).
+
+**Código**:
+- DDL: `conferencia.sql` já nasce com `quantidadeinformada`, `totalinformado`, `quantidadesistema`,
+  `totalsistema` em `tblmaquinetalote` (no lugar de crédito/débito informado e sistema).
+  `maquineta_periodo.sql` acerta o banco que rodou a versão antiga (ADD das novas, DROP das velhas)
+  e preenche `tblpagamento.nsu`/`parcelas` a partir de `tblsauruspagamento`/`tblsauruspedido` e
+  `tblpagarmepagamento`/`tblpagarmepedido`, só onde está vazio (dev: 201.330 + 566.260 linhas, ~35s;
+  rodar de novo: 0).
+- `MaquinetaLoteService::sistema` devolve `{quantidade, total, modalidades[{modalidade, descricao,
+  quantidade, valor, bandeiras[]}], cancelamentos{quantidade, valor}, cancelados}`; `modalidade()`;
+  `conferir($lote, int $quantidade, float $total, $obs)`; `dividir`/`unificar` com as colunas
+  novas. Controller `conferir` valida `quantidade` e `total`. `ConferenciaPagamentoResource` expõe
+  `nsu`. `SaurusService` e `PagarMeService::vincularPagamento` copiam `nsu` e `parcelas`.
+- Front: `Detalhe.vue` em duas colunas (`PeriodoFoto` | `PeriodoCabecalho`, `PeriodoResumo`,
+  `PeriodoLancamentos`). `PeriodoResumo.vue` (novo: resumo + conferir), `PeriodoFoto.vue` (novo:
+  fotos, anexar, excluir), `PeriodoLancamentos.vue` (detalhe), `PeriodoCabecalho.vue` (só situação,
+  avisos e ações), `linhas.js` (`borderoDoPeriodo`; `linhasDoPeriodo` fica para a régua do Dividir).
+- Conferido: `php -l`; tinker com rollback (14 verificações: quantidade, total, cancelada no
+  período, cancelamento de outro período, ordem das modalidades, total das abas, período da venda
+  intocado, conferir errado no centavo e na quantidade = pendente, certo = conferido, dividir e
+  unificar levando o digitado, `nsu` no resource); o agrupamento do front com os mesmos dados no
+  node; eslint e prettier; o dev server compila os módulos.
+
+### Valida (maquineta e seus períodos)
+
+1. contas → Maquinetas: a coluna Período ("Aberto desde …"); clicar no nome abre a maquineta.
+2. Venda no cartão com essa maquineta no PDV → aparece no período aberto (aba "aberto" com o total).
+3. Conferir no resumo digitando quantidade ou total diferente → Pendente, com a diferença em
+   vermelho, e nasce um período aberto novo.
+4. Nova venda na maquineta → cai no período novo.
+5. No pendente: corrigir um lançamento (ou mover para outro período) e Conferir de novo com a
+   quantidade e o total certos → Conferido.
+6. Conferido sem foto: "sem borderô" no cabeçalho, na aba e na lista. Fotografar → o selo some.
+   Lixeira na miniatura → confirma → a foto some; excluindo todas, o "sem borderô" volta.
+7. Reabrir → Pendente. Dividir o período aberto numa hora → a primeira parte pendente; unificar
+   essa parte com o anterior → um período só, com o borderô do anterior.
+8. Início e fim de um período pendente; abas de meses e anos pela URL.
+9. Fechamentos não mostra mais as maquinetas; o resto continua.
+10. Com o relatório Safrapay ao lado: o resumo bate linha a linha (débito, à vista, parcelado e
+    cada bandeira, quantidade e valor); o detalhe na mesma ordem do papel, com o NSU da venda
+    integrada igual ao do relatório; venda parcelada em "Crédito parcelado" com "3x".
+11. Cancelar uma venda no PDV no mesmo dia → some da conta, aparece "1 venda cancelada" e, no
+    toggle, riscada no lugar dela. Cancelar uma venda de um período já conferido → bloco
+    "Cancelamento de outro período" negativo hoje; o período de ontem continua conferido.
+12. Período aberto desde ontem → aviso de mais de um dia no cabeçalho.
+13. Celular: foto em cima, recolhível; a linha da venda numa linha só.

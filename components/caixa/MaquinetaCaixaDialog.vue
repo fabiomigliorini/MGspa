@@ -111,16 +111,26 @@ async function salvar() {
                 maxlength="300"
               />
             </div>
-            <div class="col-12">
-              <MgSlim
-                manter
-                label="Toque para fotografar o borderô"
-                @imagem="(b) => (form.anexoBase64 = b)"
-                @removida="form.anexoBase64 = null"
-              />
-              <div v-if="!form.anexoBase64" class="text-caption text-orange-8 q-mt-xs">
-                Sem a foto do borderô: dá para lançar e anexar depois, na linha do lançamento.
-              </div>
+            <!-- do tamanho das fotos do borderô: o quadrado, com o Slim preenchendo -->
+            <div class="col-6 col-sm-4">
+              <q-responsive :ratio="1">
+                <MgSlim
+                  manter
+                  style="
+                    position: absolute;
+                    inset: 0;
+                    min-width: 0;
+                    min-height: 0;
+                    overflow: hidden;
+                  "
+                  label="Toque para fotografar o borderô"
+                  @imagem="(b) => (form.anexoBase64 = b)"
+                  @removida="form.anexoBase64 = null"
+                />
+              </q-responsive>
+            </div>
+            <div v-if="!form.anexoBase64" class="col text-caption text-orange-8">
+              Sem a foto do borderô: dá para lançar e anexar depois, na linha do lançamento.
             </div>
           </div>
         </q-card-section>

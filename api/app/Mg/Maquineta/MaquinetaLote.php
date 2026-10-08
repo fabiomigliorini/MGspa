@@ -7,9 +7,11 @@ use Mg\Pagamento\Pagamento;
 use Mg\Usuario\Usuario;
 
 /**
- * O bordero da maquineta (M9 doc-3): o cartao cai no lote corrente (o mais
- * novo, se aberto); o gerente fecha digitando credito e debito do bordero.
- * creditosistema/debitosistema sao gravados no fechamento.
+ * O periodo da maquineta (TASK-188 M9.8; no banco, lote): o cartao cai no
+ * periodo aberto (sem fim). O gerente digita a quantidade e o total do
+ * bordero: o periodo ganha fim (abre o seguinte) e fica conferido se os dois
+ * baterem (o total no centavo), senao pendente. quantidadesistema e
+ * totalsistema sao o sistema no momento da ultima conferencia.
  */
 class MaquinetaLote extends MgModel
 {
@@ -19,12 +21,13 @@ class MaquinetaLote extends MgModel
     protected $fillable = [
         'codmaquineta',
         'abertura',
+        'fim',
         'fechamento',
         'codusuariofechamento',
-        'creditoinformado',
-        'debitoinformado',
-        'creditosistema',
-        'debitosistema',
+        'quantidadeinformada',
+        'totalinformado',
+        'quantidadesistema',
+        'totalsistema',
         'observacoes',
     ];
 
@@ -36,17 +39,36 @@ class MaquinetaLote extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'codusuariofechamento' => 'integer',
-        'creditoinformado' => 'float',
-        'creditosistema' => 'float',
         'criacao' => 'datetime',
-        'debitoinformado' => 'float',
-        'debitosistema' => 'float',
         'fechamento' => 'datetime',
+        'fim' => 'datetime',
+        'quantidadeinformada' => 'integer',
+        'quantidadesistema' => 'integer',
+        'totalinformado' => 'float',
+        'totalsistema' => 'float',
     ];
 
+    const ABERTO = 'aberto';
+    const PENDENTE = 'pendente';
+    const CONFERIDO = 'conferido';
+
+    // aberto = recebe o cartao (sem fim)
     public function aberto(): bool
     {
-        return empty($this->fechamento);
+        return empty($this->fim);
+    }
+
+    public function conferido(): bool
+    {
+        return !empty($this->fechamento);
+    }
+
+    public function situacao(): string
+    {
+        if ($this->conferido()) {
+            return static::CONFERIDO;
+        }
+        return $this->aberto() ? static::ABERTO : static::PENDENTE;
     }
 
     // Chaves Estrangeiras

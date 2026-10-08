@@ -5,19 +5,16 @@ namespace Mg\Conferencia;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Mg\Maquineta\Maquineta;
-use Mg\Maquineta\MaquinetaLote;
-use Mg\Maquineta\MaquinetaLoteService;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioAcerto;
-use Mg\Negocio\NegocioAnexoService;
 use Mg\Pagamento\Pagamento;
 
 /**
  * Tela Fechamentos do contas (M9 doc-3): pendencias da filial e a
- * conferencia de cada uma (lote da maquineta, cheque, vale, venda
- * desbalanceada), com as correcoes. Rotas v1/conferencia. A sessao da
- * gaveta fecha na tela do caixa (v1/caixa, M13).
+ * conferencia de cada uma (cheque, vale, venda desbalanceada), com as
+ * correcoes. Rotas v1/conferencia. A sessao da gaveta fecha na tela do
+ * caixa (v1/caixa, M13); o periodo da maquineta, na tela da maquineta
+ * (MaquinetaPeriodoController, M9.8).
  */
 class ConferenciaController extends Controller
 {
@@ -25,68 +22,6 @@ class ConferenciaController extends Controller
     {
         $request->validate(['codfilial' => 'nullable|integer']);
         return ['data' => ConferenciaService::pendencias($request->codfilial ? (int) $request->codfilial : null)];
-    }
-
-    // ---- lote da maquineta ----
-
-    private function lote(int $id): MaquinetaLote
-    {
-        $lote = MaquinetaLote::with('Maquineta')->findOrFail($id);
-        ConferenciaAutorizador::autorizarMaquineta($lote->Maquineta);
-        return $lote;
-    }
-
-    public function showLote(int $id)
-    {
-        return (new MaquinetaLoteResource($this->lote($id)))->comLancamentos();
-    }
-
-    public function lotes(Request $request, int $codmaquineta)
-    {
-        $maquineta = Maquineta::findOrFail($codmaquineta);
-        ConferenciaAutorizador::autorizarMaquineta($maquineta);
-        $lotes = MaquinetaLote::where('codmaquineta', $codmaquineta)
-            ->orderBy('codmaquinetalote', 'desc')
-            ->paginate(30);
-        return MaquinetaLoteResource::collection($lotes);
-    }
-
-    public function fecharLote(Request $request, int $id)
-    {
-        $dados = $request->validate([
-            'creditoinformado' => 'required|numeric',
-            'debitoinformado' => 'required|numeric',
-            'observacoes' => 'nullable|string|max:500',
-        ]);
-        $lote = $this->lote($id);
-        DB::transaction(fn () => MaquinetaLoteService::fechar(
-            $lote,
-            (float) $dados['creditoinformado'],
-            (float) $dados['debitoinformado'],
-            $dados['observacoes'] ?? null
-        ));
-        return (new MaquinetaLoteResource($lote->fresh('Maquineta')))->comLancamentos();
-    }
-
-    public function reabrirLote(int $id)
-    {
-        $lote = $this->lote($id);
-        DB::transaction(fn () => MaquinetaLoteService::reabrir($lote));
-        return (new MaquinetaLoteResource($lote->fresh('Maquineta')))->comLancamentos();
-    }
-
-    public function fotoLote(Request $request, int $id)
-    {
-        $request->validate(['anexoBase64' => 'required|string']);
-        $lote = $this->lote($id);
-        MaquinetaLoteService::anexarFoto($lote, $request->anexoBase64);
-        return new MaquinetaLoteResource($lote);
-    }
-
-    public function mostrarFotoLote(int $id, string $arquivo)
-    {
-        $lote = $this->lote($id);
-        return NegocioAnexoService::mostrarFoto(MaquinetaLoteService::diretorioFoto($lote), $arquivo);
     }
 
     // ---- venda desbalanceada ----

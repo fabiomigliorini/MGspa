@@ -1,7 +1,8 @@
 <script setup>
 // Fechamentos (M9 doc-3): tudo que o caixa movimentou e ainda não foi conferido na filial —
-// lotes de maquineta, cheques, vales, duplicatas, vendas com diferença e, para o
-// financeiro, PIX a confirmar. O gerente abre um, digita às cegas e confirma. Pensada no celular.
+// cheques, vales, duplicatas, vendas com diferença e, para o financeiro, PIX a confirmar. O
+// gerente abre um e confirma. Pensada no celular. O cartão se confere na tela da maquineta e seus
+// períodos (Maquinetas, M9.8).
 import { ref, computed, onMounted, watch } from 'vue'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
 import { confissaoStore } from '@components/stores/confissaoStore'
@@ -13,7 +14,6 @@ const store = useConferenciaStore()
 confissaoStore().configurar({ fixos: {} })
 
 const GRUPOS = [
-  { tipo: 'lote', label: 'Maquinetas', icone: 'credit_card', cor: 'deep-orange-7' },
   { tipo: 'cheque', label: 'Cheques', icone: 'money', cor: 'teal-7' },
   { tipo: 'vale', label: 'Vales recebidos', icone: 'card_giftcard', cor: 'pink-6' },
   { tipo: 'duplicata', label: 'Duplicatas a prazo', icone: 'draw', cor: 'indigo-6' },
@@ -29,8 +29,6 @@ const grupos = computed(() =>
 
 const destino = (p) => {
   switch (p.tipo) {
-    case 'lote':
-      return { name: 'fechamento-lote', params: { id: p.id } }
     case 'venda':
       return { name: 'fechamento-venda', params: { id: p.id } }
     case 'cheque':

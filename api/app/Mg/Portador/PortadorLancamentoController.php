@@ -106,6 +106,13 @@ class PortadorLancamentoController extends Controller
         return $this->resposta($mov);
     }
 
+    public function excluirFoto(int $id, string $arquivo)
+    {
+        $mov = PortadorMovimento::with('Portador')->findOrFail($id);
+        PortadorLancamentoService::excluirFoto($mov, $arquivo, PortadorAutorizador::livre());
+        return $this->resposta($mov);
+    }
+
     public function mostrarFoto(int $id, string $arquivo)
     {
         return PortadorLancamentoService::mostrarFoto(PortadorMovimento::findOrFail($id), $arquivo, PortadorAutorizador::livre());

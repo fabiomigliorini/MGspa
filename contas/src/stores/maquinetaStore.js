@@ -3,9 +3,11 @@ import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 
-// Domínio maquineta: listagem, cadastro (manual, Stone integrada, SafraPay pelo QR),
-// parear de novo, juntar e inativar.
+// Domínio maquineta: listagem (por filial e adquirente, como o painel do portador), cadastro
+// (manual, Stone integrada, SafraPay pelo QR), parear de novo, juntar e inativar. A lista abre a
+// maquineta; as ações ficam no cabeçalho dela.
 
 const defaultFilters = () => ({
   texto: null,
@@ -32,8 +34,6 @@ export const useMaquinetaStore = defineStore(
     const filters = ref(defaultFilters())
     const items = ref([])
     const loading = ref(false)
-    const page = ref(1)
-    const hasMore = ref(true)
     const adquirentes = ref([])
 
     const activeFiltersCount = computed(() => {
@@ -47,21 +47,40 @@ export const useMaquinetaStore = defineStore(
       return count
     })
 
-    async function fetchItems(reset = false) {
-      if (reset) {
-        page.value = 1
-        hasMore.value = true
+    // filial → adquirente → maquinetas; a compartilhada fica na filial do cadastro
+    const filiais = computed(() => {
+      const porFilial = new Map()
+      for (const m of items.value) {
+        const f = porFilial.get(m.codfilial) ?? {
+          codfilial: m.codfilial,
+          filial: m.filial,
+          adquirentes: new Map(),
+        }
+        porFilial.set(m.codfilial, f)
+        const a = f.adquirentes.get(m.codpessoa) ?? {
+          codpessoa: m.codpessoa,
+          adquirente: m.adquirente,
+          maquinetas: [],
+        }
+        f.adquirentes.set(m.codpessoa, a)
+        a.maquinetas.push(m)
       }
-      if (!hasMore.value || loading.value) return
+      const nome = (x) => x ?? ''
+      return [...porFilial.values()].map((f) => ({
+        ...f,
+        adquirentes: [...f.adquirentes.values()].sort((a, b) =>
+          nome(a.adquirente).localeCompare(nome(b.adquirente)),
+        ),
+      }))
+    })
 
+    async function fetchItems() {
       loading.value = true
       try {
-        const params = { ...filters.value, page: page.value }
-        const { data } = await api.get('v1/maquineta', { params })
-        const rows = data.data || []
-        items.value = reset ? rows : [...items.value, ...rows]
-        hasMore.value = page.value < (data.meta?.last_page ?? page.value)
-        page.value++
+        const { data } = await api.get('v1/maquineta', { params: filters.value })
+        items.value = data.data || []
+      } catch (e) {
+        notifyError(e, 'Erro ao carregar as maquinetas')
       } finally {
         loading.value = false
       }
@@ -76,11 +95,14 @@ export const useMaquinetaStore = defineStore(
       filters.value = defaultFilters()
     }
 
+    // o cadastro alterado vale também para a tela da maquineta aberta
     function upsertLocal(item) {
       const idx = items.value.findIndex((i) => i.codmaquineta === item.codmaquineta)
       if (idx >= 0) items.value.splice(idx, 1, item)
       else items.value.unshift(item)
       useSelectCacheStore().invalidate('maquineta')
+      const sPeriodo = useMaquinetaPeriodoStore()
+      if (sPeriodo.maquineta?.codmaquineta === item.codmaquineta) sPeriodo.maquineta = item
     }
 
     function removeLocal(codmaquineta) {
@@ -175,8 +197,10 @@ export const useMaquinetaStore = defineStore(
         dialog.value = false
         dialogParear.value = false
         // pinpad anterior do mesmo PDV Saurus foi inativado: recarrega
-        await fetchItems(true)
+        await fetchItems()
         useSelectCacheStore().invalidate('maquineta')
+        const sPeriodo = useMaquinetaPeriodoStore()
+        if (sPeriodo.maquineta) sPeriodo.recarregar()
       } catch (e) {
         notifyError(e, 'Erro ao confirmar a leitura')
       } finally {
@@ -204,6 +228,7 @@ export const useMaquinetaStore = defineStore(
       dialogJuntar.value = true
     }
 
+    // devolve a maquineta que ficou (a tela da juntada vai para ela)
     async function juntar() {
       salvando.value = true
       try {
@@ -214,8 +239,10 @@ export const useMaquinetaStore = defineStore(
         upsertLocal(data.data)
         notifySuccess(`Juntada em ${data.data.apelido}`)
         dialogJuntar.value = false
+        return data.data
       } catch (e) {
         notifyError(e, 'Erro ao juntar maquinetas')
+        return null
       } finally {
         salvando.value = false
       }
@@ -239,8 +266,10 @@ export const useMaquinetaStore = defineStore(
         await api.delete(`v1/maquineta/${row.codmaquineta}`)
         removeLocal(row.codmaquineta)
         notifySuccess('Maquineta excluída')
+        return true
       } catch (e) {
         notifyError(e, 'Erro ao excluir')
+        return false
       }
     }
 
@@ -248,7 +277,7 @@ export const useMaquinetaStore = defineStore(
       filters,
       items,
       loading,
-      hasMore,
+      filiais,
       adquirentes,
       activeFiltersCount,
       fetchItems,

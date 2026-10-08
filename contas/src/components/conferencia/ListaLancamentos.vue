@@ -1,29 +1,22 @@
 <script setup>
-// Lançamentos de uma conferência (lote da maquineta, venda): a linha da listagem única com o
+// Lançamentos de uma conferência (venda): a linha da listagem única com o
 // que a conferência corrige. Com `editavel`, cada linha tem Corrigir e Registro indevido.
 import { formataTimestamp, formataNumero } from '@components/formatters'
 import { visualPagamento } from '@components/cobranca/pagamento.js'
 import LogoPagamento from '@components/cobranca/LogoPagamento.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 
-const props = defineProps({
+defineProps({
   lancamentos: { type: Array, default: () => [] },
   editavel: { type: Boolean, default: false },
-  // lote que se está conferindo: o cancelado nele aparece como saída
-  codmaquinetalote: { type: Number, default: null },
 })
 
 const emit = defineEmits(['corrigir', 'indevido'])
 
 const COR_ESTADO = { P: 'amber-8', E: 'green-7', C: 'red-7' }
 
-// contrário (cancelamento parcial) e cancelamento caído neste lote entram negativos
-const valor = (l) => {
-  const negativo =
-    l.operacao === 'DB' ||
-    (props.codmaquinetalote && l.codmaquinetalotecancelamento === props.codmaquinetalote)
-  return negativo ? -l.total : l.total
-}
+// contrário (cancelamento parcial) entra negativo
+const valor = (l) => (l.operacao === 'DB' ? -l.total : l.total)
 
 const legenda = (l) =>
   [

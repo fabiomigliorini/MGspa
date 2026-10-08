@@ -86,7 +86,7 @@ uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha s
 `pagamento.sql` (a tabela já virou view). `pagamento_liquidacao.sql` leva ~45 s em dev (175 mil
 liquidações, 437 mil movimentos) e precisa do `pagamento.sql` antes. O `.env` de produção do negocios
 pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). `conferencia.sql` (M9) e depois `razao.sql`
-(M10), `caixa_item.sql` (M13), `portador_saldo.sql` (doc-4, saldo gravado), `portador_movimento_tipo.sql` (doc-4, redefinição do dinheiro) `caixa_item_dinamico.sql` (doc-4, chips) `caixa_item_maquineta.sql` (doc-4, maquinetas de parceiro) e `caixa_item_saldo.sql` (doc-4, saldo gravado dos itens), nessa ordem, rodam antes do `tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
+(M10), `caixa_item.sql` (M13), `portador_saldo.sql` (doc-4, saldo gravado), `portador_movimento_tipo.sql` (doc-4, redefinição do dinheiro) `caixa_item_dinamico.sql` (doc-4, chips) `caixa_item_maquineta.sql` (doc-4, maquinetas de parceiro) e `caixa_item_saldo.sql` (doc-4, saldo gravado dos itens) e `maquineta_periodo.sql` (M9.8, período da maquineta), nessa ordem, rodam antes do `tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
 script** (renumera os tipos de título; os anteriores usam os códigos antigos), e o
 `NfeTerceiroController.php` do MGsis sobe junto (grava Duplicata a Pagar, código novo 200).
 
@@ -1280,6 +1280,13 @@ Mais os 5 inativos de histórico da parte 2 (130, 131, 132, 133, 230), abaixo.
 
 ## M9 — Conferências e fechamento do caixa (Receber no balcão; absorve a gaveta do M10)
 
+> **Mudou no M9.8 (07/10/2026, com o Fábio):** a tela Fechamentos foi reprovada para o cartão
+> ("lança e as coisas somem; errou, não tem como desfazer"). O lote da maquineta virou o
+> **período da maquineta**, numa tela da maquineta no padrão do portador e seus períodos (doc-4,
+> "Maquineta e seus períodos"): aberto → pendente → conferido, sem conferência às cegas, com
+> dividir, unificar, início e fim e mover. As decisões 3 e 4 abaixo valem só para o que sobrou em
+> Fechamentos (cheque, vale, duplicata, venda, PIX); o grupo Maquinetas saiu de lá.
+
 > **Mudou no M13 (03/10/2026, com o Fábio):** a sessão da gaveta deixou de ter conferência às
 > cegas separada. Fechar (no PDV pelo caixa ou no contas pelo gerente, na mesma tela) é a
 > conferência; o borderô traz tudo. Lote, cheque, vale, duplicata e venda continuam como abaixo.
@@ -1392,8 +1399,9 @@ no M9").
   outro caminho que grave pagamento.
 - **Venda**: `PdvNegocioService::fechar` manda o dinheiro para a gaveta do PDV
   (`CaixaService::gavetaAberta`: PDV sem gaveta ou caixa fechado = 422). O wizard desabilita o
-  Dinheiro com o motivo (`contexto.bloqueioDinheiro`, consultado em `v1/pdv/caixa` ao abrir o
-  wizard; offline não bloqueia e o servidor recusa no fechar).
+  Dinheiro com o motivo (`contexto.bloqueioDinheiro`, consultado em `v1/pdv/caixa` por trás: o
+  wizard abre na hora com o Dinheiro liberado e a resposta bloqueia quando chega; offline não
+  chega, não bloqueia e o servidor recusa no fechar).
 - **Backend** `Mg/Conferencia`: `ConferenciaService::pendencias` (sessões, lotes com movimento —
   os da filial e os compartilhados —, cheque e vale recebidos no PDV, venda a prazo F/P/B sem
   confissão, vendas desbalanceadas, PIX/depósito a receber só para o financeiro; sem valores do

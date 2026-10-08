@@ -1330,6 +1330,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('portador-periodo/{id}/maquineta', '\Mg\Portador\PortadorLancamentoController@maquineta')->whereNumber('id');
     Route::post('portador-movimento/{id}/foto', '\Mg\Portador\PortadorLancamentoController@foto')->whereNumber('id');
     Route::get('portador-movimento/{id}/foto/{arquivo}', '\Mg\Portador\PortadorLancamentoController@mostrarFoto')->whereNumber('id');
+    Route::delete('portador-movimento/{id}/foto/{arquivo}', '\Mg\Portador\PortadorLancamentoController@excluirFoto')->whereNumber('id');
     Route::post('portador-movimento/transferencia', '\Mg\Portador\PortadorLancamentoController@transferir');
     Route::post('portador-movimento/{id}/confirmar', '\Mg\Portador\PortadorLancamentoController@confirmar')->whereNumber('id');
     Route::post('portador-movimento/{id}/cancelar', '\Mg\Portador\PortadorLancamentoController@cancelar')->whereNumber('id');
@@ -1371,15 +1372,21 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('maquineta/{codmaquineta}/inativo', '\Mg\Maquineta\MaquinetaController@inativar')->whereNumber('codmaquineta');
     Route::delete('maquineta/{codmaquineta}/inativo', '\Mg\Maquineta\MaquinetaController@ativar')->whereNumber('codmaquineta');
     Route::post('maquineta/{codmaquineta}/juntar', '\Mg\Maquineta\MaquinetaController@juntar')->whereNumber('codmaquineta');
-    Route::get('maquineta/{codmaquineta}/lote', '\Mg\Conferencia\ConferenciaController@lotes')->whereNumber('codmaquineta');
+
+    // Maquineta e seus periodos (TASK-188 M9.8): conferencia do cartao com o bordero
+    Route::get('maquineta/{codmaquineta}/periodo/{codmaquinetalote?}', '\Mg\Maquineta\MaquinetaPeriodoController@tela')->whereNumber(['codmaquineta', 'codmaquinetalote']);
+    Route::get('maquineta/{codmaquineta}/lote', '\Mg\Maquineta\MaquinetaPeriodoController@lista')->whereNumber('codmaquineta');
+    Route::post('maquineta-lote/{id}/conferir', '\Mg\Maquineta\MaquinetaPeriodoController@conferir')->whereNumber('id');
+    Route::post('maquineta-lote/{id}/reabrir', '\Mg\Maquineta\MaquinetaPeriodoController@reabrir')->whereNumber('id');
+    Route::post('maquineta-lote/{id}/datas', '\Mg\Maquineta\MaquinetaPeriodoController@datas')->whereNumber('id');
+    Route::post('maquineta-lote/{id}/dividir', '\Mg\Maquineta\MaquinetaPeriodoController@dividir')->whereNumber('id');
+    Route::post('maquineta-lote/{id}/unificar', '\Mg\Maquineta\MaquinetaPeriodoController@unificar')->whereNumber('id');
+    Route::post('maquineta-lote/{id}/foto', '\Mg\Maquineta\MaquinetaPeriodoController@foto')->whereNumber('id');
+    Route::get('maquineta-lote/{id}/foto/{arquivo}', '\Mg\Maquineta\MaquinetaPeriodoController@mostrarFoto')->whereNumber('id');
+    Route::delete('maquineta-lote/{id}/foto/{arquivo}', '\Mg\Maquineta\MaquinetaPeriodoController@excluirFoto')->whereNumber('id');
 
     // Conferencias e fechamento do caixa (M9 doc-3): tela Fechamentos do contas
     Route::get('conferencia', '\Mg\Conferencia\ConferenciaController@index');
-    Route::get('conferencia/lote/{id}', '\Mg\Conferencia\ConferenciaController@showLote')->whereNumber('id');
-    Route::post('conferencia/lote/{id}/fechar', '\Mg\Conferencia\ConferenciaController@fecharLote')->whereNumber('id');
-    Route::post('conferencia/lote/{id}/reabrir', '\Mg\Conferencia\ConferenciaController@reabrirLote')->whereNumber('id');
-    Route::post('conferencia/lote/{id}/foto', '\Mg\Conferencia\ConferenciaController@fotoLote')->whereNumber('id');
-    Route::get('conferencia/lote/{id}/foto/{arquivo}', '\Mg\Conferencia\ConferenciaController@mostrarFotoLote')->whereNumber('id');
     Route::get('conferencia/venda/{id}', '\Mg\Conferencia\ConferenciaController@showVenda')->whereNumber('id');
     Route::post('conferencia/venda/{id}/acerto', '\Mg\Conferencia\ConferenciaController@acertarVenda')->whereNumber('id');
     Route::post('conferencia/venda/{id}/pagamento', '\Mg\Conferencia\ConferenciaController@incluirPagamento')->whereNumber('id');

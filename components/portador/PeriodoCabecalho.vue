@@ -16,7 +16,12 @@ import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
 import ContagemCaixa from '@components/caixa/ContagemCaixa.vue'
 import PeriodoResumo from '@components/portador/PeriodoResumo.vue'
-import { formataNumero, formataTimestamp, formataTimestampIso } from '@components/formatters'
+import {
+  formataData,
+  formataNumero,
+  formataTimestamp,
+  formataTimestampIso,
+} from '@components/formatters'
 import { periodoStore, linhasDoItem, linhasParaSalvar } from '@components/stores/periodoStore'
 
 const router = useRouter()
@@ -49,21 +54,17 @@ const linhas = computed(() => {
 const anteriorPendente = computed(() =>
   periodos.value.some((p) => p.inicio < periodo.value?.inicio && p.situacao !== 'fechado'),
 )
-const avisoPendente = computed(() => {
+// a diferença e a tolerância ficam no pé do resumo; aqui, só o que impede de fechar
+const avisoPendente = computed(() =>
+  periodo.value?.situacao === 'pendente' && anteriorPendente.value
+    ? 'Há período anterior pendente: este só fecha depois dele (feche do mais antigo para o mais novo).'
+    : null,
+)
+// o título: na espécie, o dia em que começou (a hora está no "De … até …")
+const titulo = computed(() => {
   const p = periodo.value
-  if (p?.situacao !== 'pendente' || p.diferenca == null) return null
-  if (anteriorPendente.value) {
-    return 'Há período anterior pendente: este só fecha depois dele (feche do mais antigo para o mais novo).'
-  }
-  if (Math.abs(p.diferenca) <= p.tolerancia) {
-    return `Diferença de ${reais(p.diferenca)} dentro da tolerância (${reais(p.tolerancia)}): feche para concluir.`
-  }
-  return (
-    `Diferença de ${reais(p.diferenca)} acima da tolerância (${reais(p.tolerancia)}). ` +
-    (p.diferenca < 0
-      ? 'Faltou dinheiro: lance o vale do colaborador ou o movimento que faltou e feche de novo.'
-      : 'Sobrou dinheiro: ache o que aconteceu, lance a correção e feche de novo.')
-  )
+  if (!p) return 'Sem período'
+  return caixa.value ? formataData(p.inicio) : p.descricao
 })
 
 const iso = (d) => formataTimestampIso(d ? new Date(d) : new Date())
@@ -86,14 +87,27 @@ function fecharPeriodo() {
   store.fechar()
 }
 
-// ---- contagem inicial ou final pelo resumo (fechado: só para ver), com os itens do caixa: abre com
-// os que estão no portador (vêm de um dia para o outro até zerar), um campo por preço; preço novo
-// só entra pela entrada do item ----
+// ---- contagem inicial ou final pelo resumo (fechado: só para ver), um bloco por vez: `bloco`
+// ('moedas', 'cedulas' ou o codcaixaitem, pelo ícone da linha). Os itens abrem com os que estão no
+// portador (vêm de um dia para o outro até zerar), uma linha por preço; preço novo só entra pela
+// entrada do item. Salva a contagem inteira, com o resto como estava ----
 const dialogContagem = ref(false)
 const momento = ref('inicial')
+const bloco = ref(null)
+const contagemCaixa = ref(null)
+const nomeBloco = { moedas: 'Moedas', cedulas: 'Cédulas' }
+// o nome do bloco (moedas, cédulas ou o item) e o valor dele na abertura (null sem abertura)
+const nomeDoBloco = (b) =>
+  nomeBloco[b] ??
+  (periodo.value?.itens || []).find((i) => String(i.codcaixaitem) === String(b))?.item ??
+  'Item'
+const aberturaDoBloco = (b) => {
+  const a = periodo.value?.contagem?.abertura
+  if (!a) return null
+  return nomeBloco[b] ? a[b] : (a.valoritens?.[b] ?? 0)
+}
 const contagem = ref({ contagem: {}, itens: {} })
 const soConsulta = computed(() => !naoFechado.value)
-const itensAtivos = computed(() => (periodo.value?.itens || []).filter((i) => !i.inativo))
 const copia = ref(null)
 
 // de onde copiar, bloco a bloco: a inicial copia a final do período anterior; a final copia a
@@ -118,8 +132,9 @@ function copiaDaAbertura() {
   return { titulo: 'Copiar da abertura', contagem: ini?.contagem || {}, itens }
 }
 
-function prepararContar(m) {
+function prepararContar(m, b) {
   momento.value = m
+  bloco.value = b
   const c = periodo.value.contagem?.[m]
   contagem.value = {
     contagem: { ...(c?.contagem || {}) },
@@ -285,7 +300,7 @@ async function fecharCorte() {
     <q-card-section class="row no-wrap items-start">
       <div class="col">
         <div class="text-subtitle1 text-weight-medium">
-          {{ periodo?.descricao ?? 'Sem período' }}
+          {{ titulo }}
           <q-badge
             v-if="periodo"
             class="q-ml-sm"
@@ -362,13 +377,14 @@ async function fecharCorte() {
           >
             <q-tooltip>Reabrir</q-tooltip>
           </q-btn>
+          <!-- o borderô em PDF, também no aberto (no PDV, a impressora de cima manda para a térmica) -->
           <q-btn
-            v-if="periodo && situacao !== 'aberto'"
+            v-if="periodo && !pdv"
             flat
             round
             size="sm"
             color="grey-7"
-            icon="picture_as_pdf"
+            icon="print"
             @click="store.abrirBordero()"
           >
             <q-tooltip>Borderô</q-tooltip>
@@ -397,20 +413,40 @@ async function fecharCorte() {
 
   <!-- contagem inicial ou final -->
   <q-dialog v-model="dialogContagem">
-    <q-card flat style="width: 600px; max-width: 95vw">
+    <q-card flat style="width: 400px; max-width: 95vw">
       <q-form @submit.prevent="salvarContagem">
-        <q-card-section class="text-grey-9 text-overline text-uppercase">
-          Contagem {{ momento }}
+        <q-card-section class="row items-center">
+          <div class="col">
+            <div class="text-grey-9 text-overline text-uppercase">
+              Contagem {{ momento }} · {{ nomeDoBloco(bloco) }}
+            </div>
+            <div
+              v-if="momento === 'inicial' && aberturaDoBloco(bloco) != null"
+              class="text-caption text-grey-7"
+            >
+              {{ nomeDoBloco(bloco) }} na abertura {{ reais(aberturaDoBloco(bloco)) }}
+            </div>
+          </div>
+          <q-btn
+            v-if="copia && !soConsulta"
+            flat
+            round
+            size="sm"
+            color="grey-7"
+            icon="content_copy"
+            tabindex="-1"
+            @click="contagemCaixa.copiarBloco()"
+          >
+            <q-tooltip>{{ copia.titulo }}</q-tooltip>
+          </q-btn>
         </q-card-section>
         <q-separator inset />
-        <q-card-section class="text-caption text-grey-7 q-pb-none">
-          Saldo {{ momento }} no sistema
-          {{ reais(momento === 'inicial' ? periodo.saldoinicial : periodo.saldofinal) }}
-        </q-card-section>
         <q-card-section>
           <ContagemCaixa
+            ref="contagemCaixa"
             v-model="contagem"
-            :itens="itensAtivos"
+            :bloco="bloco"
+            :nome="nomeDoBloco(bloco)"
             :disable="soConsulta"
             :copia="copia"
             autofocus

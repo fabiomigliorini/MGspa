@@ -10,12 +10,12 @@ import { MAQUINETA_INTEGRACAO_OPTIONS } from 'src/constants/maquinetaIntegracao'
 
 const store = useMaquinetaStore()
 
-const debouncedFetch = useDebounceFn(() => store.fetchItems(true), 800)
+const debouncedFetch = useDebounceFn(() => store.fetchItems(), 800)
 watch(() => store.filters, debouncedFetch, { deep: true })
 
 const clear = () => {
   store.clearFilters()
-  store.fetchItems(true)
+  store.fetchItems()
 }
 
 const statusOptions = [

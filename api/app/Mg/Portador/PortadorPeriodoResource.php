@@ -100,7 +100,12 @@ class PortadorPeriodoResource extends Resource
             $ret['contagem'] = $this->contagem($anterior);
             $ret['pendentes'] = PortadorLancamentoService::pendentes($this->resource);
             $ret['itens'] = $this->itens($anterior);
+            $ret['quadro'] = $this->quadro($ret['contagem'], $ret['resumo'], $ret['lancamentos'], $ret['itens']);
+            // so' as maquinetas da filial do portador
+            // so' as maquinetas da filial do portador
             $ret['maquinetas'] = CaixaItemService::ativos(CaixaItem::MODO_MAQUINETA)
+                ->where('codfilial', $this->Portador->codfilial)
+                ->where('codfilial', $this->Portador->codfilial)
                 ->map(fn (CaixaItem $i) => ['codcaixaitem' => $i->codcaixaitem, 'item' => $i->item])
                 ->values()->all();
         }
@@ -108,32 +113,162 @@ class PortadorPeriodoResource extends Resource
     }
 
     // o contado (cedulas, moedas e itens) no inicio e no fim e a diferenca
-    // para o saldo inicial e final (a inicial so' confere); `anterior`: a
-    // contagem final do periodo anterior, para copiar na inicial
+    // para o saldo inicial e final (a inicial so' confere), com os totais de
+    // moedas, cedulas e itens; `anterior`: a contagem final do periodo
+    // anterior, para copiar na inicial; `abertura`: os totais da contagem que
+    // deu o saldo inicial (a final do anterior; sem ela, a inicial deste),
+    // null quando nao somam o saldo inicial (dividir sem contagem)
     private function contagem(?PortadorPeriodo $anterior): array
     {
         $ret = [];
         foreach (['inicial' => 'saldoinicial', 'final' => 'saldofinal'] as $momento => $saldo) {
             $contado = PortadorPeriodoService::contado($this->resource, $momento);
-            $ret[$momento] = [
+            $ret[$momento] = array_merge([
                 'contagem' => static::objeto($this->{"contagem{$momento}"}),
                 'itens' => static::objeto($this->{"contagemitens{$momento}"}),
                 'contado' => $contado,
                 'diferenca' => $contado === null ? null : round($contado - (float) $this->$saldo, 2),
-            ];
+            ], static::totais($this->{"contagem{$momento}"}, $this->{"contagemitens{$momento}"}));
         }
-        $ret['anterior'] = $anterior && ($anterior->contagemfinal !== null || $anterior->contagemitensfinal !== null) ? [
+        $ret['anterior'] = $anterior && ($anterior->contagemfinal !== null || $anterior->contagemitensfinal !== null) ? array_merge([
             'contagem' => static::objeto($anterior->contagemfinal),
             'itens' => static::objeto($anterior->contagemitensfinal),
-        ] : null;
+        ], static::totais($anterior->contagemfinal, $anterior->contagemitensfinal)) : null;
+        $abertura = $ret['anterior'] ?? ($ret['inicial']['contado'] !== null ? $ret['inicial'] : null);
+        $ret['abertura'] = $abertura
+            && round($abertura['moedas'] + $abertura['cedulas'] + $abertura['itensvalor'], 2) == round((float) $this->saldoinicial, 2)
+            ? array_intersect_key($abertura, array_flip(['moedas', 'cedulas', 'itensvalor', 'valoritens']))
+            : null;
         return $ret;
+    }
+
+    // o quadro da especie, no jeito do formulario "Movimento do Caixa" de papel
+    // (a tela do periodo e o bordero), linha a linha na ordem do papel: Moedas e
+    // Cedulas; por item do caixa, o titulo, "Abertura e fechamento" e a
+    // "Movimentacao" (as entradas e saidas lancadas do item, se teve); depois as
+    // origens do resumo, com as maquinetas de parceiros sob o titulo
+    // "Parceiros", uma linha cada (os borderos e as devolucoes). Entrada = o contado
+    // no comeco (a contagem que deu o saldo inicial), saida = o contado no fim.
+    // `bloco`: o que a contagem daquela linha abre; `confere`: a contagem
+    // inicial do bloco bate com a abertura (null sem contagem inicial);
+    // `filtro`: o que a linha filtra na lista (a origem, ou "I:cod"/"M:cod"),
+    // com o `rotulo` do filtro. Os totais somam tudo, com o saldo inicial
+    // quando a contagem nao o divide (sem `abertura`)
+    private function quadro(array $contagem, array $resumo, array $lancamentos, array $itens): array
+    {
+        $a = $contagem['abertura'];
+        $i = $contagem['inicial']['contado'] !== null ? $contagem['inicial'] : null;
+        $f = $contagem['final']['contado'] !== null ? $contagem['final'] : null;
+        $contada = fn (string $descricao, string $nome, $bloco, callable $v, bool $recuo = false) => [
+            'tipo' => 'contagem',
+            'chave' => "c{$bloco}{$nome}",
+            'descricao' => $descricao,
+            'nome' => $nome,
+            'bloco' => $bloco,
+            'entrada' => $v($a),
+            'saida' => $v($f),
+            'confere' => $a && $i ? round($v($i) - $v($a), 2) == 0 : null,
+            'recuo' => $recuo,
+        ];
+        $movimento = fn (string $filtro, string $descricao, string $rotulo, bool $recuo, int $quantidade, float $entrada, float $saida) => [
+            'tipo' => 'movimento',
+            'chave' => "m{$filtro}",
+            'descricao' => $descricao,
+            'rotulo' => $rotulo,
+            'filtro' => $filtro,
+            'recuo' => $recuo,
+            'quantidade' => $quantidade,
+            'entrada' => round($entrada, 2),
+            'saida' => round($saida, 2),
+        ];
+        // as linhas que valem de um tipo (item ou maquineta), por codcaixaitem
+        $porItem = fn (string $tipo) => collect($lancamentos)
+            ->filter(fn ($l) => $l['tipo'] == $tipo && !$l['cancelado'])
+            ->groupBy('codcaixaitem');
+        $movimentacao = fn (string $filtro, string $nome, Collection $ls) => $movimento(
+            $filtro,
+            'Movimentação',
+            "Movimentação: {$nome}",
+            true,
+            $ls->count(),
+            $ls->sum(fn ($l) => max($l['valor'], 0)),
+            $ls->sum(fn ($l) => max(-$l['valor'], 0))
+        );
+
+        $linhas = [
+            $contada('Moedas', 'moedas', 'moedas', fn ($c) => $c ? (float) $c['moedas'] : null),
+            $contada('Cédulas', 'cédulas', 'cedulas', fn ($c) => $c ? (float) $c['cedulas'] : null),
+        ];
+        $movItens = $porItem(PortadorMovimento::TIPO_ITEM);
+        foreach ($itens as $it) {
+            $cod = $it['codcaixaitem'];
+            $v = fn ($c) => $c ? (float) (((array) $c['valoritens'])[$cod] ?? 0) : null;
+            $doItem = $movItens->get($cod, collect());
+            if (!$it['contar'] && $doItem->isEmpty() && !$v($a) && !$v($f)) {
+                continue;
+            }
+            $linhas[] = ['tipo' => 'titulo', 'chave' => "t{$cod}", 'descricao' => $it['item']];
+            $linhas[] = $contada('Abertura e fechamento', $it['item'], $it['contar'] ? $cod : null, $v, true);
+            if ($doItem->isNotEmpty()) {
+                $linhas[] = $movimentacao("I:{$cod}", $it['item'], $doItem);
+            }
+        }
+        $movMaquinetas = $porItem(PortadorMovimento::TIPO_MAQUINETA);
+        $nomes = CaixaItem::whereIn('codcaixaitem', $movMaquinetas->keys())->pluck('item', 'codcaixaitem');
+        foreach ($resumo as $r) {
+            if ($r['origem'] == static::ORIGEM_ITEM) {
+                continue;
+            }
+            if ($r['origem'] != static::ORIGEM_MAQUINETA) {
+                $linhas[] = $movimento($r['origem'], $r['descricao'], $r['descricao'], false, $r['quantidade'], $r['entrada'], $r['saida']);
+                continue;
+            }
+            $linhas[] = ['tipo' => 'titulo', 'chave' => 'tM', 'descricao' => 'Parceiros'];
+            foreach ($movMaquinetas->sortBy(fn ($ls, $cod) => $nomes[$cod] ?? '') as $cod => $ls) {
+                $nome = $nomes[$cod] ?? 'Maquineta';
+                $linhas[] = $movimento(
+                    "M:{$cod}",
+                    $nome,
+                    $nome,
+                    true,
+                    $ls->count(),
+                    $ls->sum(fn ($l) => max($l['valor'], 0)),
+                    $ls->sum(fn ($l) => max(-$l['valor'], 0))
+                );
+            }
+        }
+        $saldo = (float) $this->saldoinicial;
+        $soma = fn ($campo) => round(
+            ($a ? 0 : max($campo == 'entrada' ? $saldo : -$saldo, 0))
+            + array_sum(array_map(fn ($l) => $l[$campo] ?? 0, $linhas)),
+            2
+        );
+        return [
+            'linhas' => $linhas,
+            'totalentrada' => $soma('entrada'),
+            'totalsaida' => $soma('saida'),
+        ];
+    }
+
+    // moedas, cedulas e itens (preco x quantidade) de uma contagem; `valoritens`:
+    // o valor de cada item {codcaixaitem: valor}
+    private static function totais(?array $contagem, ?array $itens): array
+    {
+        [, $moedas, $cedulas] = CaixaService::contagem($contagem ?? []);
+        return [
+            'moedas' => $moedas,
+            'cedulas' => $cedulas,
+            'itensvalor' => CaixaItemService::totalContagem($itens),
+            'valoritens' => (object) array_map(fn ($ls) => CaixaItemService::totalLinhas($ls), $itens ?? []),
+        ];
     }
 
     // os itens que contam como cedula (a maquineta de parceiro nao se conta)
     // para lancar (todos os ativos) e contar (`contar`: os que estao
     // no portador, de um dia para o outro ate' zerar), cada um com os precos (e
     // descricoes) que ja' passaram: a contagem final do anterior, as deste
-    // periodo e as entradas e saidas dele que valem
+    // periodo e as entradas e saidas dele que valem; `saida`: o que tem dele
+    // no caixa (saldo inicial + entradas - saidas), o que pode sair
     private function itens(?PortadorPeriodo $anterior): array
     {
         $fontes = [$this->contagemitensinicial, $this->contagemitensfinal];
@@ -158,6 +293,7 @@ class PortadorPeriodoResource extends Resource
                 ->where('modo', CaixaItem::MODO_CEDULA)->get())
             ->unique('codcaixaitem')
             ->sortBy('item');
+        $disponivel = CaixaItemService::disponivel($this->resource, $anterior);
         return $itens->map(fn (CaixaItem $i) => [
             'codcaixaitem' => $i->codcaixaitem,
             'item' => $i->item,
@@ -167,6 +303,7 @@ class PortadorPeriodoResource extends Resource
                 fn ($l) => ['preco' => $l['preco'], 'descricao' => $l['descricao']],
                 CaixaItemService::linhas(array_map(fn ($l) => array_merge($l, ['quantidade' => 1]), $linhas[$i->codcaixaitem] ?? []))
             ),
+            'saida' => $disponivel[$i->codcaixaitem] ?? [],
         ])->values()->all();
     }
 

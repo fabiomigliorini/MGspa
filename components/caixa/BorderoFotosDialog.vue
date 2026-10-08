@@ -1,9 +1,10 @@
 <script setup>
 // Fotos do borderô de um lançamento da maquineta de parceiro (doc-4, "Itens de parceiro"): mostra
-// as que já foram anexadas e, com `podeAnexar` (quem opera o portador), anexa mais uma pelo
-// periodoStore (a foto não muda valor: vale com o período fechado); o período volta com a linha
-// atualizada.
+// as que já foram anexadas e, com `podeAnexar` (quem opera o portador), anexa mais uma ou exclui a
+// errada pelo periodoStore (a foto não muda valor: vale com o período fechado); o período volta
+// com a linha atualizada.
 import { ref, watch, onBeforeUnmount } from 'vue'
+import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import MgSlim from '@components/MgSlim.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
@@ -17,6 +18,7 @@ const props = defineProps({
 })
 const aberto = defineModel({ type: Boolean, default: false })
 
+const $q = useQuasar()
 const store = periodoStore()
 const urls = ref([])
 // cada carga tem a sua vez: a que chegar atrasada (fechou ou trocou de linha) é descartada
@@ -48,6 +50,15 @@ async function carregar() {
   }
 }
 
+function excluir(arquivo) {
+  $q.dialog({
+    title: 'Excluir a foto',
+    message: 'Excluir esta foto do borderô? Não dá para desfazer.',
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Excluir', color: 'red-5', flat: true },
+  }).onOk(() => store.excluirFotoBordero(props.codportadormovimento, arquivo))
+}
+
 watch(
   () => [aberto.value, props.codportadormovimento, props.fotos.join('|')],
   ([sim]) => (sim ? carregar() : limpar()),
@@ -61,19 +72,41 @@ onBeforeUnmount(limpar)
       <q-card-section class="text-grey-9 text-overline">FOTO DO BORDERÔ</q-card-section>
       <q-separator inset />
       <q-card-section>
-        <div v-if="fotos.length" class="row q-col-gutter-sm q-mb-md">
+        <MgEmptyState v-if="!fotos.length && !podeAnexar" plain icon="no_photography">
+          Sem a foto do borderô.
+        </MgEmptyState>
+        <div v-else class="row q-col-gutter-sm">
           <div v-for="f in urls" :key="f.arquivo" class="col-6 col-sm-4">
-            <a :href="f.url" target="_blank">
-              <q-img :src="f.url" :ratio="1" fit="contain" class="rounded-borders" />
-            </a>
+            <div class="relative-position">
+              <a :href="f.url" target="_blank">
+                <q-img :src="f.url" :ratio="1" fit="contain" class="rounded-borders" />
+              </a>
+              <q-btn
+                v-if="podeAnexar"
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="delete"
+                class="absolute-top-right"
+                :disable="store.salvando"
+                @click="excluir(f.arquivo)"
+              >
+                <q-tooltip>Excluir a foto</q-tooltip>
+              </q-btn>
+            </div>
+          </div>
+          <!-- do tamanho das fotos: o quadrado, com o Slim preenchendo -->
+          <div v-if="podeAnexar" class="col-6 col-sm-4">
+            <q-responsive :ratio="1">
+              <MgSlim
+                style="position: absolute; inset: 0; min-width: 0; min-height: 0; overflow: hidden"
+                label="Toque para fotografar o borderô"
+                @imagem="(b) => store.anexarFotoBordero(codportadormovimento, b)"
+              />
+            </q-responsive>
           </div>
         </div>
-        <MgEmptyState v-else plain icon="no_photography">Sem a foto do borderô.</MgEmptyState>
-        <MgSlim
-          v-if="podeAnexar"
-          label="Toque para fotografar o borderô"
-          @imagem="(b) => store.anexarFotoBordero(codportadormovimento, b)"
-        />
         <q-inner-loading :showing="store.salvando" />
       </q-card-section>
       <q-separator inset />

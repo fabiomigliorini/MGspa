@@ -5,8 +5,8 @@ import { useAuthStore } from 'src/stores/auth'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 
 // Domínio conferência (M9 doc-3): o que o caixa movimentou e o gerente confere — pendências da
-// filial, lote da maquineta, sessão da gaveta, venda desbalanceada, cheque e vale — e as
-// correções dos lançamentos. Rotas v1/conferencia.
+// filial, venda desbalanceada, cheque e vale — e as correções dos lançamentos (também usadas na
+// tela da maquineta e seus períodos). Rotas v1/conferencia.
 
 export const useConferenciaStore = defineStore(
   'conferencia',
@@ -45,40 +45,6 @@ export const useConferenciaStore = defineStore(
         salvando.value = false
       }
     }
-
-    // ---- lote da maquineta ----
-    const lote = ref(null)
-
-    async function carregarLote(id) {
-      lote.value = null
-      try {
-        const { data } = await api.get(`v1/conferencia/lote/${id}`)
-        lote.value = data.data
-      } catch (e) {
-        notifyError(e, 'Erro ao carregar o lote')
-      }
-    }
-
-    const fecharLote = (id, payload) =>
-      executar(async () => {
-        const { data } = await api.post(`v1/conferencia/lote/${id}/fechar`, payload)
-        lote.value = data.data
-        return lote.value
-      }, 'Lote conferido')
-
-    const reabrirLote = (id) =>
-      executar(async () => {
-        const { data } = await api.post(`v1/conferencia/lote/${id}/reabrir`)
-        lote.value = data.data
-        return lote.value
-      }, 'Lote reaberto')
-
-    const enviarFotoLote = (id, anexoBase64) =>
-      executar(async () => {
-        const { data } = await api.post(`v1/conferencia/lote/${id}/foto`, { anexoBase64 })
-        if (lote.value?.codmaquinetalote === id) lote.value.fotos = data.data.fotos
-        return data.data
-      }, 'Foto do borderô anexada')
 
     // ---- venda desbalanceada ----
     const venda = ref(null)
@@ -145,11 +111,6 @@ export const useConferenciaStore = defineStore(
       carregando,
       salvando,
       buscarPendencias,
-      lote,
-      carregarLote,
-      fecharLote,
-      reabrirLote,
-      enviarFotoLote,
       venda,
       carregarVenda,
       acertarVenda,

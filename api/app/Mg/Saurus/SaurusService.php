@@ -315,6 +315,7 @@ class SaurusService
 
         $tipo = 99; //Outros
         $autorizacao = null;
+        $nsu = null;
         $bandeira = null;
         // pinpad que cobrou; sem ele, o mais novo do PDV Saurus
         $pinpad = $ped->SaurusPdv->SaurusPinPadS()->orderBy('codsauruspinpad', 'desc')->first();
@@ -322,6 +323,7 @@ class SaurusService
             $tipo = $pag->modpagamento;
 
             $autorizacao = $pag->autorizacao;
+            $nsu = $pag->nsu;
             $bandeira = static::buscaOuCriaBandeira(
                 $pag->SaurusBandeira->bandeira
             );
@@ -353,6 +355,9 @@ class SaurusService
             'juros' => $ped->valorjuros ?? 0,
             'valortroco' => null,
             'autorizacao' => $autorizacao,
+            // NSU e parcelas, como no relatorio da maquineta (M9.8)
+            'nsu' => $nsu,
+            'parcelas' => $ped->parcelas,
             'bandeira' => $bandeira->tband ?? null,
             'codpessoa' => empty($ped->codnegocio) ? null : config('mg.codpessoa_safra'),
             'codmaquineta' => $maquineta->codmaquineta ?? null,
