@@ -21,12 +21,6 @@ const menuGroups = [
         color: 'green-8',
         to: { name: 'fechamento' },
       },
-      {
-        label: 'Portadores',
-        icon: 'account_balance_wallet',
-        color: 'amber-8',
-        to: { name: 'portador' },
-      },
       { label: 'Pix Recebidos', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
       {
         label: 'Pagamentos',
@@ -53,6 +47,29 @@ const menuGroups = [
         icon: 'move_up',
         color: 'deep-purple-7',
         to: { name: 'cheque-repasse' },
+      },
+    ],
+  },
+  {
+    label: 'Caixa',
+    items: [
+      {
+        label: 'Portadores',
+        icon: 'account_balance_wallet',
+        color: 'amber-8',
+        to: { name: 'portador' },
+      },
+      {
+        label: 'Itens do Caixa',
+        icon: 'inventory_2',
+        color: 'amber-9',
+        to: { name: 'caixa-item' },
+      },
+      {
+        label: 'Maquinetas',
+        icon: 'point_of_sale',
+        color: 'deep-orange-8',
+        to: { name: 'maquineta' },
       },
     ],
   },
@@ -84,18 +101,6 @@ const menuGroups = [
         icon: 'sync_alt',
         color: 'deep-purple-8',
         to: { name: 'tipo-movimento-titulo' },
-      },
-      {
-        label: 'Maquinetas',
-        icon: 'point_of_sale',
-        color: 'deep-orange-8',
-        to: { name: 'maquineta' },
-      },
-      {
-        label: 'Itens do Caixa',
-        icon: 'inventory_2',
-        color: 'amber-9',
-        to: { name: 'caixa-item' },
       },
       {
         label: 'Formas de Pagamento',

@@ -499,9 +499,9 @@ class PortadorPeriodoService
         return $segunda->fresh();
     }
 
-    // junta o periodo ao anterior (os dois nao fechados; o anterior sem
-    // diferenca, para nenhuma sumir). Fica o anterior, com o fim, a contagem
-    // final e a diferenca deste. Devolve o anterior
+    // junta o periodo ao anterior (os dois nao fechados). Fica o anterior, com
+    // o fim e a contagem final deste; a diferenca do anterior entra na do
+    // unificado (o saldo inicial e' o do anterior). Devolve o anterior
     public static function unificar(PortadorPeriodo $periodo): PortadorPeriodo
     {
         $portador = $periodo->Portador;
@@ -515,9 +515,6 @@ class PortadorPeriodoService
         }
         if ($periodo->fechado() || $anterior->fechado()) {
             abort(422, 'Os dois períodos precisam estar não fechados: reabra antes.');
-        }
-        if (round((float) $anterior->diferenca, 2) != 0) {
-            abort(422, 'O ' . static::descricao($anterior) . ' tem diferença de contagem: unificar a faria sumir.');
         }
         static::moverLinhas($periodo, $anterior, null);
         $observacoes = trim(implode("\n", array_filter([$anterior->observacoes, $periodo->observacoes])));

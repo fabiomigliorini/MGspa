@@ -2,10 +2,10 @@
 // A maquineta e seus períodos (TASK-188 M9.8), no padrão do portador e seus períodos (doc-4): o
 // cabeçalho da maquineta e os períodos em abas Ano → Mês → Período, só com o que existe. Cada
 // período é o borderô do sistema no formato do relatório da maquininha, com a foto do papel ao
-// lado: a situação (aberto, pendente, conferido), o resumo por modalidade e bandeira com a
-// conferência (quantidade e total) e o detalhe, com as correções na linha. A URL leva
-// direto ao período. Gerente da filial, Financeiro e Administrador. O cadastro (editar, parear,
-// juntar, inativar, excluir) fica no cabeçalho, como no portador.
+// lado: a situação (aberto, pendente, conferido) com o resumo por modalidade e bandeira e a
+// conferência (quantidade e total, em dialog) no mesmo card, e o detalhe, com as correções na
+// linha. A URL leva direto ao período. Gerente da filial, Financeiro e Administrador. O cadastro
+// (editar, parear, juntar, inativar, excluir) fica no cabeçalho, como no portador.
 import { computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -19,7 +19,6 @@ import {
   maquinetaIntegracaoColor,
 } from 'src/constants/maquinetaIntegracao'
 import PeriodoCabecalho from 'components/maquineta/PeriodoCabecalho.vue'
-import PeriodoResumo from 'components/maquineta/PeriodoResumo.vue'
 import PeriodoLancamentos from 'components/maquineta/PeriodoLancamentos.vue'
 import PeriodoFoto from 'components/maquineta/PeriodoFoto.vue'
 import MaquinetaDialog from 'components/maquineta/MaquinetaDialog.vue'
@@ -259,8 +258,8 @@ watch(
             <PeriodoFoto />
           </div>
           <div class="col-12 col-md-8">
-            <PeriodoCabecalho class="q-mb-md" />
-            <PeriodoResumo class="q-mb-md" />
+            <!-- o cabeçalho tem os dialogs junto (vários nós): o espaço fica no div -->
+            <div class="q-mb-md"><PeriodoCabecalho /></div>
             <PeriodoLancamentos />
           </div>
         </div>

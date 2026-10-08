@@ -33,9 +33,9 @@ const blocos = computed(() =>
 )
 const vazio = computed(() => !bordero.value.blocos.length && !bordero.value.cancelamentos.length)
 
-// NSU e autorização, cada um quando houver; no celular, só o primeiro que tiver
-const codigos = (l) =>
-  [l.nsu ? `NSU ${l.nsu}` : null, l.autorizacao ? `aut ${l.autorizacao}` : null].filter(Boolean)
+// NSU e autorização, cada um quando houver (a autorização sem rótulo: é o número do papel); no
+// celular, só o primeiro que tiver
+const codigos = (l) => [l.nsu ? `NSU ${l.nsu}` : null, l.autorizacao].filter(Boolean)
 const codigo = (l) => (computador.value ? codigos(l).join(' · ') : (l.nsu ?? l.autorizacao ?? ''))
 const venda = (l) => [l.pdv || 'Escritório', l.documento].filter(Boolean).join(' · ')
 const link = (l) =>
@@ -74,7 +74,7 @@ function indevido(x) {
 
 <template>
   <q-card flat bordered>
-    <q-card-section class="row items-center q-pb-sm">
+    <q-card-section class="row items-center">
       <div class="col text-subtitle1 text-weight-medium">Detalhe</div>
       <q-toggle
         v-if="bordero.cancelados"
@@ -84,29 +84,30 @@ function indevido(x) {
       />
     </q-card-section>
 
-    <q-card-section v-if="!vazio" class="q-pt-none">
-      <div v-for="b in blocos" :key="b.chave" class="q-mb-md">
+    <q-list v-if="!vazio">
+      <template v-for="b in blocos" :key="b.chave">
         <!-- a bandeira, com quantidade e valor, como no papel -->
+        <q-separator />
         <div
-          class="row no-wrap items-center text-weight-medium text-grey-9 q-px-sm q-py-xs bg-grey-2 rounded-borders"
+          class="row no-wrap items-center text-weight-medium text-grey-9 q-px-md q-py-sm bg-grey-2"
         >
           <div class="col ellipsis">{{ b.titulo }}</div>
           <div class="text-right" style="width: 40px">{{ b.quantidade }}</div>
           <div class="text-right" style="width: 96px">{{ formataNumero(b.valor) }}</div>
           <div v-if="editavel" style="width: 64px" />
         </div>
+        <q-separator />
 
         <q-item
           v-for="x in b.linhas"
           :key="x.chave"
           clickable
           v-bind="link(x.l)"
-          class="q-px-sm"
           :class="x.cancelada ? 'text-strike text-grey-5' : ''"
         >
           <q-item-section>
             <div class="row no-wrap items-center">
-              <div style="width: 48px">{{ formataHora(x.momento) }}</div>
+              <div style="width: 56px">{{ formataHora(x.momento) }}</div>
               <div class="col ellipsis" :class="x.cancelada ? '' : 'text-grey-8'">
                 {{ codigo(x.l) }}
                 <span v-if="computador && venda(x.l)" class="text-caption text-grey-6 q-ml-sm">
@@ -154,12 +155,13 @@ function indevido(x) {
             </div>
           </q-item-section>
         </q-item>
-      </div>
+      </template>
 
       <!-- cancelamento de venda de outro período e estorno: descontam do total -->
-      <div v-if="bordero.cancelamentos.length">
+      <template v-if="bordero.cancelamentos.length">
+        <q-separator />
         <div
-          class="row no-wrap items-center text-weight-medium text-red-8 q-px-sm q-py-xs bg-red-1 rounded-borders"
+          class="row no-wrap items-center text-weight-medium text-red-8 q-px-md q-py-sm bg-red-1"
         >
           <div class="col ellipsis">Cancelamento de outro período</div>
           <div class="text-right" style="width: 96px">
@@ -167,16 +169,11 @@ function indevido(x) {
           </div>
           <div v-if="editavel" style="width: 64px" />
         </div>
-        <q-item
-          v-for="x in bordero.cancelamentos"
-          :key="x.chave"
-          clickable
-          v-bind="link(x.l)"
-          class="q-px-sm"
-        >
+        <q-separator />
+        <q-item v-for="x in bordero.cancelamentos" :key="x.chave" clickable v-bind="link(x.l)">
           <q-item-section>
             <div class="row no-wrap items-center">
-              <div style="width: 48px">{{ formataHora(x.momento) }}</div>
+              <div style="width: 56px">{{ formataHora(x.momento) }}</div>
               <div class="col ellipsis text-grey-8">
                 {{ codigo(x.l) }}
                 <span class="text-caption text-grey-6 q-ml-sm">
@@ -194,8 +191,8 @@ function indevido(x) {
             </div>
           </q-item-section>
         </q-item>
-      </div>
-    </q-card-section>
+      </template>
+    </q-list>
 
     <MgEmptyState v-else plain icon="credit_card">Nenhum cartão neste período.</MgEmptyState>
 

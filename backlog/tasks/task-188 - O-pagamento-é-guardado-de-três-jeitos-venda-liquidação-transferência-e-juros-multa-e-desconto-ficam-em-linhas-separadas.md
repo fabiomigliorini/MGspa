@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-07 23:33'
+updated_date: '2026-10-08 21:42'
 labels:
   - contas
   - negocios
@@ -89,6 +89,7 @@ Milestones:
 - [ ] #39 M9.7 Borderô da maquineta de parceiro lançado na tela do caixa do PDV, com a foto, antes de o gerente fechar a gaveta
 - [ ] #40 M9.8 O gerente confere o cartão de cada maquineta com o borderô na tela da maquineta e seus períodos (aberto, pendente, conferido; dividir, unificar, início e fim, mover), com a foto, corrigindo os lançamentos na mesma tela
 - [x] #41 M9.9 Lançar no período por um botão só no canto da tela, que abre a lista do que fazer (Sangria, Reforço, Entrada e Saída de item, Vendas de Parceiro, Ajuste; no banco Enviar, Receber, Ajuste/taxa/tarifa/rendimento), cada opção no seu wizard já no sentido escolhido, com data, valor e observação na mesma ordem
+- [x] #42 Período do caixa unifica com o anterior pendente mesmo com diferença de contagem; a diferença dele entra na do unificado
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -243,6 +244,10 @@ M9.5 (#37, lançamento avulso de entrada e saída no caixa aberto) feito no M13 
 M9.8 (07/10/2026, com o Fábio): a conferência do cartão saiu da tela Fechamentos e virou a tela da maquineta e seus períodos, no padrão do portador (aberto → pendente → conferido, visão aberta, foto opcional com aviso 'sem borderô', dividir/unificar/início e fim/mover, reabrir em qualquer ordem). Na árvore, sem commit, não validado. Decisões, código e roteiro Valida no doc-4, seção 'Maquineta e seus períodos'. DDL do go-live: maquineta_periodo.sql, depois do caixa_item_saldo.sql.
 
 AC #34: o wizard de recebimento abre na hora com o Dinheiro liberado; a consulta do caixa (GET /v1/pdv/caixa) roda por trás e bloqueia quando chega (negocio.js contextoCobranca). Offline não chega resposta: Dinheiro fica liberado, sem a espera de até 3s de antes.
-<!-- SECTION:NOTES:END -->
 
 M9.8 tela igual ao borderô (07/10/2026, com o Fábio; não validado no navegador): resumo modalidade → bandeira com quantidade e valor, digita só quantidade e total do papel, detalhe na ordem do papel com NSU, foto ao lado, cancelada no período fora da conta (toggle), cancelamento de outro período em bloco próprio, aviso de período com mais de um dia. NSU e parcelas da Saurus e da PagarMe passam a chegar no pagamento (o passado é preenchido no maquineta_periodo.sql). Detalhe, código e roteiro Valida (itens 10–13) no doc-4, 'A tela igual ao borderô'.
+
+Unificar no caixa (08/10/2026, com o Fábio; validado): a trava 'o anterior sem diferença (para nenhuma sumir)' foi invenção (86138ae06) e saiu, da API (PortadorPeriodoService::unificar) e do botão (PeriodoCabecalho podeUnificar). O saldo inicial do seguinte é a contagem final do anterior, então a diferença do anterior entra na do unificado (ex.: −0,10 e +7,10 → +7,00). Perde-se só em que parte a diferença aconteceu; diferenças opostas se anulam. Continua exigindo os dois não fechados. doc-4, 'Período'.
+
+M9.8 conferir em diálogo (08/10/2026): o resumo da maquineta foi para dentro do card do cabeçalho e a digitação do borderô virou o diálogo 'Conferir com o borderô' (botão na linha Borderô do resumo). Menu do contas: grupo Caixa com Portadores, Itens do Caixa e Maquinetas. doc-4, 'A tela igual ao borderô'.
+<!-- SECTION:NOTES:END -->

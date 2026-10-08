@@ -102,9 +102,7 @@ class PortadorPeriodoResource extends Resource
             $ret['itens'] = $this->itens($anterior);
             $ret['quadro'] = $this->quadro($ret['contagem'], $ret['resumo'], $ret['lancamentos'], $ret['itens']);
             // so' as maquinetas da filial do portador
-            // so' as maquinetas da filial do portador
             $ret['maquinetas'] = CaixaItemService::ativos(CaixaItem::MODO_MAQUINETA)
-                ->where('codfilial', $this->Portador->codfilial)
                 ->where('codfilial', $this->Portador->codfilial)
                 ->map(fn (CaixaItem $i) => ['codcaixaitem' => $i->codcaixaitem, 'item' => $i->item])
                 ->values()->all();

@@ -1,14 +1,18 @@
 <script setup>
 // Cabeçalho do período da maquineta (TASK-188 M9.8), no padrão do cabeçalho do período do
 // portador: a situação (aberto, pendente, conferido) e as ações, uma por botão. Não conferido:
-// início e fim, dividir e unificar com o anterior; conferido: reabrir (volta a pendente). A
-// conferência (quantidade e total do borderô) fica no resumo; a foto, na coluna ao lado.
+// início e fim, dividir e unificar com o anterior; conferido: reabrir (volta a pendente). O
+// resumo vem no mesmo card, embaixo; o botão da linha do borderô abre o Conferir: digita a
+// quantidade e o total do papel (todo relatório tem os dois; no convênio, conta e soma os
+// comprovantes). O aberto termina na hora do Conferir (o próximo cartão já cai no seguinte);
+// bateu (quantidade e total no centavo), conferido; senão, pendente. A foto fica na coluna ao lado.
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 import {
   formataNumero,
   formataData,
@@ -17,6 +21,7 @@ import {
 } from '@components/formatters'
 import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 import { linhasDoPeriodo } from 'components/maquineta/linhas'
+import PeriodoResumo from 'components/maquineta/PeriodoResumo.vue'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -68,6 +73,28 @@ const avisoPendente = computed(() =>
     ? 'O borderô não bate com o sistema: corrija os lançamentos (ou divida e unifique os períodos) ou o digitado, e confira de novo.'
     : null,
 )
+
+// ---- conferir: os campos abrem com o digitado da última vez ----
+const dialogConferir = ref(false)
+const conferencia = ref({ quantidade: null, total: null, observacoes: null })
+const obrigatorio = (v) => (v !== null && v !== '') || 'Obrigatório'
+
+function prepararConferir() {
+  const p = periodo.value
+  conferencia.value = {
+    quantidade: p.quantidadeinformada ?? null,
+    total: p.totalinformado ?? null,
+    observacoes: p.observacoes ?? null,
+  }
+  dialogConferir.value = true
+}
+
+async function salvarConferir() {
+  const { quantidade, total, observacoes } = conferencia.value
+  if (await store.conferir({ quantidade, total, observacoes: observacoes || null })) {
+    dialogConferir.value = false
+  }
+}
 
 function reabrir() {
   $q.dialog({
@@ -212,7 +239,57 @@ function unificar() {
         </q-btn>
       </div>
     </q-card-section>
+    <PeriodoResumo @conferir="prepararConferir" />
   </q-card>
+
+  <!-- conferir com o borderô -->
+  <q-dialog v-model="dialogConferir">
+    <q-card flat style="width: 400px; max-width: 90vw">
+      <q-form @submit.prevent="salvarConferir">
+        <q-card-section class="text-grey-9 text-overline">CONFERIR COM O BORDERÔ</q-card-section>
+        <q-separator inset />
+        <q-card-section class="text-caption text-grey-7 q-pb-none">
+          A quantidade e o total do relatório da maquininha.
+          <template v-if="situacao === 'aberto'">
+            O período termina agora: o próximo cartão já cai no seguinte.
+          </template>
+        </q-card-section>
+        <q-card-section>
+          <div class="row q-col-gutter-md">
+            <div class="col-5">
+              <MgInputValor
+                v-model="conferencia.quantidade"
+                label="Quantidade"
+                :decimals="0"
+                :grouping="false"
+                :min="0"
+                autofocus
+                :rules="[obrigatorio]"
+              />
+            </div>
+            <div class="col-7">
+              <MgInputValor v-model="conferencia.total" label="Total" :rules="[obrigatorio]" />
+            </div>
+            <div class="col-12">
+              <MgInput
+                v-model="conferencia.observacoes"
+                label="Observações"
+                type="textarea"
+                autogrow
+                rows="2"
+                maxlength="500"
+              />
+            </div>
+          </div>
+        </q-card-section>
+        <q-separator inset />
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn flat color="primary" type="submit" label="Conferir" :loading="salvando" />
+        </q-card-actions>
+      </q-form>
+    </q-card>
+  </q-dialog>
 
   <!-- início e fim -->
   <q-dialog v-model="dialogDatas">

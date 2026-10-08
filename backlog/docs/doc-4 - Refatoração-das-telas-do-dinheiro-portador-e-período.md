@@ -141,7 +141,9 @@ ou período, podem passar a apontar para a tela nova se for trivial.
   (Financeiro, justificativa).
 - **Abas**: período que atravessa meses fica no mês do **início**.
 - **Menu**: Movimento → Portadores (no lugar de Saldos); Cadastros → Portadores saiu. Rota aberta
-  também ao Gerente; cadastro e OFX escondidos para ele e recusados (403) no backend.
+  também ao Gerente; cadastro e OFX escondidos para ele e recusados (403) no backend. Em
+  08/10/2026 Portadores, Itens do Caixa e Maquinetas passaram para um grupo próprio **Caixa** no
+  menu (saíram de Movimento e de Cadastros).
 - **Mensagem única** da gaveta sem caixa aberto, no `CaixaService::naoAberta`: "Gaveta não aberta
   (nome): abra o caixa antes de movimentar." (vincular, recebimento no PDV, transferência, avulso,
   item, cancelar avulso).
@@ -318,8 +320,8 @@ Cada portador (qualquer tipo) tem uma **lista de usuários com papel** (`tblport
   pendentes**: a primeira termina no corte, sem contagem final; a segunda fica com o fim, a
   contagem final e o estado de antes (se o original estava aberto, ela continua aberta) e começa
   com o saldo da primeira.
-- **Unificar** (gestor): junta o período ao anterior, os dois não fechados e o anterior sem
-  diferença (para nenhuma sumir).
+- **Unificar** (gestor): junta o período ao anterior, os dois não fechados. Fica o anterior, com o
+  fim e a contagem final deste; a diferença do anterior entra na do unificado (nenhuma some).
 - A linha do item divide e unifica como qualquer linha (seção "Itens do caixa").
 
 ### A tela do portador
@@ -359,8 +361,8 @@ Cada portador (qualquer tipo) tem uma **lista de usuários com papel** (`tblport
   detalhe por cédula). O borderô sai pela impressora do cabeçalho em qualquer situação, também
   no aberto (no PDV, a impressora dele manda para a térmica).
 - **Lançamentos**: linha do tempo por dia; pagamento abre o pagamento; transferência leva ao outro
-  portador; confirmar e cancelar na linha. Os botões de **ajuste (+)** e **reforço/sangria** ficam
-  no cabeçalho dos lançamentos.
+  portador; confirmar e cancelar na linha. Lançar é o **FAB "+"** no canto da tela, que abre a
+  lista do que fazer (seção "Lançar no período"); o cabeçalho dos lançamentos não tem mais botões.
 - **Cadastro do portador em espécie**: só portador, tipo, filial e tolerância (sem banco, conta,
   Pix, boleto).
 
@@ -411,8 +413,8 @@ estoque, com acerto) vêm um por um, adaptando a estrutura.
    com a tolerância do portador. O saldo inicial (contagem final do anterior) já vem com os
    itens.
 3. **Vender não lança nada**: o item vira dinheiro, o saldo não muda.
-4. **Entrada ou saída de item** (botão `style` no cabeçalho dos lançamentos; wizard: Entrada ou
-   Saída, o item, as linhas, data e observação), com sinal: + chegou; − saiu sem venda (devolveu,
+4. **Entrada ou saída de item** (Lançar → Entrada de item no caixa / Saída de item do caixa;
+   wizard: o item, as linhas, data e observação), com sinal: + chegou; − saiu sem venda (devolveu,
    perdeu, recolheram o bloco de ingressos). É o **único lançamento** do item: **tipo I** no
    movimento do portador, sem `tblpagamento`. Cancela-se com justificativa, como o ajuste
    (operador, período não fechado). Na entrada, as linhas são sempre novas: **descrição**
@@ -520,7 +522,7 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
   saída com a `ContagemCaixa` e o disponível de teto), `ContagemCaixa` um bloco por vez (uma linha
   por preço, com quantidade e total; `LinhasItemCaixa` saiu),
   `periodoStore.lancarItem`;
-  contas: botão "Entrada ou saída de item" nos lançamentos de todo portador em espécie, itens no
+  contas: Entrada e Saída de item no Lançar de todo portador em espécie, itens no
   diálogo da contagem, cadastro só com o nome, tela do item (`caixaItem/Detalhe` e
   `CaixaItemFechamentosDialog`, com a coluna e o card "Entradas e saídas"; o campo continua
   `entradas` no JSON), "Movimento dos Itens" removido. A saída ficou visível em 07/10/2026: o
@@ -530,8 +532,8 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
 
 1. contas → Cadastros → Itens do Caixa: criar e editar pedem só o nome; clicar no item abre a
    tela dele.
-2. contas → Portadores → um portador em espécie (gaveta, cofre, troco) → período aberto: botão
-   `style` (Entrada ou saída de item) nos lançamentos → Entrada (tecla 1) → o item → descrição
+2. contas → Portadores → um portador em espécie (gaveta, cofre, troco) → período aberto: FAB "+"
+   → Entrada de item no caixa → o item → descrição
    (digitar "Cl" sugere "Claro"), preço 10,00, quantidade 10 → Continuar → Lançar (já com o
    foco). Saldo final sobe R$ 100,00; linha "Entrada: Chips de celular" na linha do tempo; no
    resumo, o item com "Movimentação (1)".
@@ -557,6 +559,9 @@ contagem. O financeiro acompanha o que deve a cada maquineta e paga o parceiro d
 
 ### Wizards de item e de reforço/sangria (07/10/2026, com o Fábio)
 
+> Substituído em 08/10/2026 pela seção "Lançar no período": o sentido saiu dos wizards (vem do
+> Lançar), os atalhos numéricos saíram e o valor juntou com data e observação.
+
 Os dois diálogos de lançamento do período em espécie viraram wizard, no jeito do wizard de
 cobrança (`@components/cobranca/ListaOpcoes`: setas, Enter ou o número; Voltar volta um passo):
 
@@ -573,6 +578,62 @@ cobrança (`@components/cobranca/ListaOpcoes`: setas, Enter ou o número; Voltar
 
 Valida: sangria só no teclado (1 → número do destino → valor → Enter → Enter) → amarela, a
 confirmar; reforço lista os portadores de onde se pode retirar; Voltar em cada passo.
+
+### Lançar no período (08/10/2026, com o Fábio; TASK-188 M9.9)
+
+Os botões de ícone do cabeçalho dos lançamentos (ajuste, item, borderô, reforço/sangria) viraram
+**um FAB "+" no canto da tela** que abre o diálogo **Lançar**: a lista do que fazer, cada opção
+com o seu ícone e a sua cor, que abre o seu wizard já no sentido escolhido. Cada opção faz uma
+coisa só: entrada e saída, reforço e sangria são opções separadas, não um diálogo que pergunta.
+
+Decisões:
+
+1. **Ordem** (a mais usada primeiro, os pares juntos): Sangria · Reforço · Entrada de item no
+   caixa · Saída de item do caixa · Vendas de Parceiro · Ajuste. No banco: Enviar · Receber ·
+   Ajuste, taxa, tarifa, rendimento. No caixa do PDV: Sangria · Reforço · Vendas de Parceiro.
+2. **O que não se aplica**: o que o caixa não tem não aparece (item sem item ativo, Vendas de
+   Parceiro sem maquineta); a Saída de item com o caixa vazio aparece **desabilitada, com o
+   motivo** ("Nenhum item no caixa…"). Período fechado: sem o FAB.
+3. **FAB** no canto inferior direito da janela (`q-page-sticky`, como as outras telas do contas),
+   com um respiro no fim da lista para não cobrir o último lançamento.
+4. **Wizards sem atalho numérico** (setas e Enter continuam) e **sem o passo do sentido**.
+5. **Último passo igual em todos: Data → Valor → Observação.** A data já vem com o **máximo do
+   período** (o fim; aberto, agora), o foco no valor, a observação/motivo num campo de uma linha
+   (Enter lança).
+6. **Valor com sinal no lugar do Entrada/Saída**: no Ajuste e nas Vendas de Parceiro o negativo
+   sai (devolução = Vendas de Parceiro com valor negativo, sem opção própria); taxa e tarifa
+   sempre saem e rendimento sempre entra, pelo tipo, com o valor positivo. Reforço/Sangria e
+   Enviar/Receber continuam positivos (o sentido veio do Lançar).
+7. **Vendas de Parceiro vira wizard**: 1) a maquineta (pula com uma só); 2) a foto do borderô
+   (opcional, o quadrado no centro; sem ela, o aviso "sem borderô"); 3) data, valor e observação.
+   Altura fixa, o conteúdo no meio de cada passo.
+
+Como ficou no código (`d9a85fbda`, validado pelo Fábio em 08/10/2026):
+
+- `@components/caixa/LancarCaixaDialog` (novo): a lista (`ListaOpcoes`), as regras de quais
+  opções aparecem; montado no `Periodo.vue` com os outros diálogos. O FAB está no
+  `PeriodoLancamentos` (`store.dialogLancar`).
+- `periodoStore`: `sentido` (o que o Lançar escolheu: item 1/−1, transferência R/E),
+  `abrirItem(sinal)`, `abrirTransferir(sentido)`; `limitePeriodo` devolve o fim do período, se
+  tiver, sem comparar com o relógio do navegador (era a data padrão dos diálogos caindo fora do
+  período quando o relógio estava atrasado).
+- `TransferirCaixaDialog`: 1) o outro portador; 2) data, valor e observação.
+  `ItemCaixaDialog`: 1) o item (pula com um só); 2) as linhas; 3) data, total e observação, foco
+  no Lançar. `MaquinetaCaixaDialog`: o wizard do item 7, valor ≠ 0 (o servidor já aceitava
+  negativo). `AvulsoCaixaDialog`: sem o Entrada/Saída, o valor do ajuste com sinal e o da taxa
+  pelo tipo.
+
+Valida:
+
+1. Caixa no contas, período aberto: FAB "+" → a lista na ordem, Sangria já destacada (Enter
+   abre). Sem item no caixa, a Saída de item cinza com o motivo.
+2. Sangria: o portador → data já preenchida, foco no valor → Enter lança. Título "Sangria para …".
+3. Ajuste −10 com motivo → −10,00; ajuste 10 → +10,00; zero recusa.
+4. Banco: Tarifa 15 → −15,00; Rendimento 5 → +5,00.
+5. Vendas de Parceiro: maquineta → foto (Continuar com o foco) → valor 100 → +100 "Borderô: …";
+   de novo com −20 → "Devolução: …".
+6. Período encerrado: a data dos diálogos vem com o fim do período. Período fechado: sem o FAB.
+7. Caixa do PDV: só Sangria, Reforço e Vendas de Parceiro.
 
 ### Como ficou no código: maquinetas de parceiro (06–07/10/2026; validado pelo Fábio em 07/10)
 
@@ -620,9 +681,8 @@ confirmar; reforço lista os portadores de onde se pode retirar; Voltar em cada 
 
 1. contas → Itens do Caixa → Novo: modo "Maquineta de parceiro" ("Rede Card Centro"), com parceiro,
    filial e conta; sem parceiro não salva. O chip continua cédula.
-2. Portador em espécie → período aberto → botão `point_of_sale` (Borderô de maquineta): R$ 350,00
-   com foto. Linha "Borderô: Rede Card Centro", saldo +350, resumo "Maquinetas de parceiros".
-3. Outro borderô, Devolução R$ 20,00, sem foto: badge "sem borderô"; câmera na linha → anexar → o
+2. Portador em espécie → período aberto → FAB "+" → Vendas de Parceiro: R$ 350,00 com foto. Linha "Borderô: Rede Card Centro", saldo +350, resumo "Maquinetas de parceiros".
+3. Outro borderô, devolução (valor −20,00), sem foto: badge "sem borderô"; câmera na linha → anexar → o
    badge some. Lixeira numa foto → confirmar → some; sem nenhuma, o badge volta. O diálogo só
    lista as maquinetas da filial do caixa.
 4. O diálogo do item e a contagem não mostram a maquineta; contar os 330 a mais nas cédulas →
@@ -691,8 +751,9 @@ item 7; parceiros, item 9).
 2. **Abrir**: o caixa no PDV (só confirma) ou o gerente no contas (aba "Novo período").
 3. **Contagens**: inicial e final pelos botões do resumo, com os itens, como no contas.
 4. **Sem período aberto**: só "Abrir caixa". Os fechados e o histórico ficam no contas.
-5. **Lançamentos no PDV**: só **Reforço / Sangria** (a confirmar pelo gestor do destino) e
-   **Borderô de maquineta** (com foto; câmera na linha). Ajuste e entrada/saída de item, só no contas.
+5. **Lançamentos no PDV**: o Lançar só tem **Sangria / Reforço** (a confirmar pelo gestor do
+   destino) e **Vendas de Parceiro** (com foto; câmera na linha). Ajuste e entrada/saída de item,
+   só no contas.
 6. **Cancelar no PDV**: na linha, com justificativa, a sangria/reforço ainda a confirmar e o borderô
    de maquineta, com o período aberto. Confirmada, só o gerente no contas.
 7. **Borderô**: botão "Imprimir borderô" no período aberto; térmica do PDV, sem impressora o PDF.
@@ -850,8 +911,12 @@ miniatura. Convênio (Brasil Card, MultCard, Le Card) não tem relatório: é um
    **detalhe** na ordem do papel (modalidade → bandeira em ordem alfabética, sem bandeira por
    último → hora).
 2. **Digita só quantidade e total do papel** (todo papel tem; convênio = contar e somar os
-   comprovantes), na própria tela, embaixo do resumo, sem diálogo. O resumo é para o olho. Risco
-   aceito: crédito lançado como débito com o mesmo valor passa no total. Visão continua aberta.
+   comprovantes). O resumo é para o olho. Risco aceito: crédito lançado como débito com o mesmo
+   valor passa no total. Visão continua aberta. Em 08/10/2026 o resumo foi para dentro do card do
+   cabeçalho (como no período do portador) e a digitação virou o diálogo **Conferir com o
+   borderô**, aberto pelo botão `fact_check` da linha "Borderô" do resumo (só no não conferido);
+   os campos abrem com o digitado da última vez. A linha "Borderô" aparece sempre ("—" sem
+   digitação), a "Diferença" só depois de conferir.
 3. **Linha da venda**: hora · NSU · autorização · parcelas · valor; no computador, em cinza, o caixa
    e a venda; no celular só hora, NSU (ou autorização), parcelas e valor. Corrigir e indevido na
    linha.
@@ -881,10 +946,13 @@ miniatura. Convênio (Brasil Card, MultCard, Le Card) não tem relatório: é um
   `conferir($lote, int $quantidade, float $total, $obs)`; `dividir`/`unificar` com as colunas
   novas. Controller `conferir` valida `quantidade` e `total`. `ConferenciaPagamentoResource` expõe
   `nsu`. `SaurusService` e `PagarMeService::vincularPagamento` copiam `nsu` e `parcelas`.
-- Front: `Detalhe.vue` em duas colunas (`PeriodoFoto` | `PeriodoCabecalho`, `PeriodoResumo`,
-  `PeriodoLancamentos`). `PeriodoResumo.vue` (novo: resumo + conferir), `PeriodoFoto.vue` (novo:
-  fotos, anexar, excluir), `PeriodoLancamentos.vue` (detalhe), `PeriodoCabecalho.vue` (só situação,
-  avisos e ações), `linhas.js` (`borderoDoPeriodo`; `linhasDoPeriodo` fica para a régua do Dividir).
+- Front: `Detalhe.vue` em duas colunas (`PeriodoFoto` | `PeriodoCabecalho`, `PeriodoLancamentos`).
+  `PeriodoCabecalho.vue` (situação, avisos, ações e os diálogos, com o diálogo Conferir; o
+  `PeriodoResumo` embaixo, no mesmo card), `PeriodoResumo.vue` (novo: o resumo; o botão da linha
+  do borderô emite `conferir`), `PeriodoFoto.vue` (novo: fotos, anexar, excluir),
+  `PeriodoLancamentos.vue` (detalhe; bandeiras como faixas de lista, a autorização sem o rótulo
+  "aut", que é o número do papel), `linhas.js` (`borderoDoPeriodo`; `linhasDoPeriodo` fica para a
+  régua do Dividir).
 - Conferido: `php -l`; tinker com rollback (14 verificações: quantidade, total, cancelada no
   período, cancelamento de outro período, ordem das modalidades, total das abas, período da venda
   intocado, conferir errado no centavo e na quantidade = pendente, certo = conferido, dividir e
@@ -895,8 +963,9 @@ miniatura. Convênio (Brasil Card, MultCard, Le Card) não tem relatório: é um
 
 1. contas → Maquinetas: a coluna Período ("Aberto desde …"); clicar no nome abre a maquineta.
 2. Venda no cartão com essa maquineta no PDV → aparece no período aberto (aba "aberto" com o total).
-3. Conferir no resumo digitando quantidade ou total diferente → Pendente, com a diferença em
-   vermelho, e nasce um período aberto novo.
+3. Botão `fact_check` na linha "Borderô" do resumo → diálogo Conferir: quantidade ou total
+   diferente → Pendente, com a diferença em vermelho, e nasce um período aberto novo. Abrir o
+   Conferir de novo traz o digitado.
 4. Nova venda na maquineta → cai no período novo.
 5. No pendente: corrigir um lançamento (ou mover para outro período) e Conferir de novo com a
    quantidade e o total certos → Conferido.
