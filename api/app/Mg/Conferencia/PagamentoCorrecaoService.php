@@ -3,12 +3,12 @@
 namespace Mg\Conferencia;
 
 use Carbon\Carbon;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Caixa\CaixaService;
 use Mg\Maquineta\Maquineta;
 use Mg\Maquineta\MaquinetaLoteService;
 use Mg\Negocio\Negocio;
 use Mg\Pagamento\Pagamento;
-use Mg\Pagamento\PagamentoCorrecao;
 use Mg\Pagamento\PagamentoService;
 use Mg\Portador\PortadorMovimentoService;
 use Mg\Portador\PortadorPeriodo;
@@ -17,7 +17,7 @@ use Mg\Portador\PortadorPeriodo;
  * Correcao dos lancamentos na conferencia (M9 doc-3): o gerente acerta o
  * pagamento com a realidade (o caixa errou, a API da maquineta duplicou ou
  * mandou valor errado). Justificativa obrigatoria e o antes/depois na
- * tblpagamentocorrecao. Total da venda, itens e nota nao mudam: a venda que
+ * tblauditoria. Total da venda, itens e nota nao mudam: a venda que
  * ficar desbalanceada vira pendencia (VendaConferenciaService).
  */
 class PagamentoCorrecaoService
@@ -39,14 +39,9 @@ class PagamentoCorrecaoService
         return $ret;
     }
 
-    private static function registrar(Pagamento $pag, array $antes, string $justificativa): void
+    private static function registrar(Pagamento $pag, int $tipo, ?array $antes, string $justificativa): void
     {
-        PagamentoCorrecao::create([
-            'codpagamento' => $pag->codpagamento,
-            'antes' => $antes,
-            'depois' => static::foto($pag),
-            'justificativa' => mb_substr($justificativa, 0, 300),
-        ]);
+        AuditoriaService::registrar('tblpagamento', $pag->codpagamento, $tipo, $antes, static::foto($pag), $justificativa);
     }
 
     private static function justificativa(?string $justificativa): string
@@ -162,7 +157,7 @@ class PagamentoCorrecaoService
         PagamentoService::validar($pag);
         $pag->save();
         PortadorMovimentoService::sincronizar($pag);
-        static::registrar($pag, $antes, $justificativa);
+        static::registrar($pag, AuditoriaService::TIPO_CORRIGIDO_CONFERENCIA, $antes, $justificativa);
         return $pag->fresh();
     }
 
@@ -180,7 +175,7 @@ class PagamentoCorrecaoService
         $antes = static::foto($pag);
         $pag->indevido = true;
         PagamentoService::cancelar($pag, "Registro indevido: {$justificativa}");
-        static::registrar($pag, $antes, $justificativa);
+        static::registrar($pag, AuditoriaService::TIPO_REGISTRO_INDEVIDO, $antes, $justificativa);
         return $pag->fresh();
     }
 
@@ -228,7 +223,7 @@ class PagamentoCorrecaoService
         if (!empty($pag->codmaquinetalote)) {
             MaquinetaLoteService::exigirNaoConferido($pag->MaquinetaLote);
         }
-        static::registrar($pag, [], $justificativa);
+        static::registrar($pag, AuditoriaService::TIPO_INCLUIDO_CONFERENCIA, null, $justificativa);
         return $pag->fresh();
     }
 }

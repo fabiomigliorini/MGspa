@@ -4,6 +4,7 @@ namespace Mg\Pagamento;
 
 use Mg\Ocorrencia\OcorrenciaService;
 use Carbon\Carbon;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Cheque\Cheque;
 use Mg\Cheque\ChequeService;
 use Mg\Cheque\Cmc7\Cmc7;
@@ -501,8 +502,8 @@ class PagamentoTituloService
         $titulo = $mov->Titulo;
         // a data alterada a mao (TASK-204) vale sobre a do banco no
         // reprocessamento: o pagamento e o movimento do titulo ficam nela
-        $alterada = $pag->exists && PagamentoCorrecao::where('codpagamento', $pag->codpagamento)
-            ->whereRaw("antes->>'transacao' is distinct from depois->>'transacao'")
+        $alterada = $pag->exists && $pag->AuditoriaS()
+            ->where('tipo', AuditoriaService::TIPO_DATA_ALTERADA)
             ->exists();
         PagamentoService::preencher($pag, [
             'codportadordestino' => $entrada ? $codportador : null,

@@ -3,6 +3,7 @@
 namespace Mg\Pagamento;
 
 use Mg\MgModel;
+use Mg\Auditoria\Auditoria;
 use Mg\Cheque\Cheque;
 use Mg\Filial\Filial;
 use Mg\Lio\LioPedido;
@@ -298,9 +299,11 @@ class Pagamento extends MgModel
         return $this->hasMany(Pagamento::class, 'codpagamentoorigem', 'codpagamento');
     }
 
-    public function PagamentoCorrecaoS()
+    // auditoria (TASK-204): data alterada e correcoes da conferencia
+    public function AuditoriaS()
     {
-        return $this->hasMany(PagamentoCorrecao::class, 'codpagamento', 'codpagamento');
+        return $this->hasMany(Auditoria::class, 'codigo', 'codpagamento')
+            ->where('tabela', 'tblpagamento');
     }
 
     // razao (M10 doc-3): o que este pagamento lancou em cada portador

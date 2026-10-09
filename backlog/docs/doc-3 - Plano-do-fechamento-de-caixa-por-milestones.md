@@ -85,7 +85,7 @@ as views temporárias. `pagamento.sql` leva ~7 min em dev (5,3 milhões de forma
 uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha se rodar depois do
 `pagamento.sql` (a tabela já virou view). `pagamento_liquidacao.sql` leva ~45 s em dev (175 mil
 liquidações, 437 mil movimentos) e precisa do `pagamento.sql` antes. O `.env` de produção do negocios
-pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). `conferencia.sql` (M9) e depois `razao.sql`
+pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). `conferencia.sql` (M9), `auditoria.sql` (TASK-204, auditoria única; tira a replicação antiga) e depois `razao.sql`
 (M10), `caixa_item.sql` (M13), `portador_saldo.sql` (doc-4, saldo gravado), `portador_movimento_tipo.sql` (doc-4, redefinição do dinheiro) `caixa_item_dinamico.sql` (doc-4, chips) `caixa_item_maquineta.sql` (doc-4, maquinetas de parceiro) e `caixa_item_saldo.sql` (doc-4, saldo gravado dos itens) e `maquineta_periodo.sql` (M9.8, período da maquineta) e `ocorrencia.sql` (TASK-205, livro de ocorrências), nessa ordem, rodam antes do `tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
 script** (renumera os tipos de título; os anteriores usam os códigos antigos), e o
 `NfeTerceiroController.php` do MGsis sobe junto (grava Duplicata a Pagar, código novo 200).
@@ -1362,7 +1362,8 @@ no M9").
   lote), `codportadorperiodo` (sessão da gaveta do dinheiro), `conferencia`/`codusuarioconferencia`
   (cheque e vale recebido, item a item).
 - `tblpagamentocorrecao`: `codpagamentocorrecao PK, codpagamento NN, antes jsonb, depois jsonb,
-  justificativa NN, audit` (uma linha por correção).
+  justificativa NN, audit` (uma linha por correção). **Substituída pela `tblauditoria`** (TASK-204,
+  `auditoria.sql`): tipos 3 corrigido, 4 indevido, 5 incluído.
 - `tblnegocioacerto`: `codnegocioacerto PK, codnegocio NN, valor (com sinal: positivo = faltou
   pagar), destino char(1) P perdão / C colaborador / D duplicata do cliente / R crédito do cliente,
   codpessoa, codtitulo, justificativa, inativo, audit`.

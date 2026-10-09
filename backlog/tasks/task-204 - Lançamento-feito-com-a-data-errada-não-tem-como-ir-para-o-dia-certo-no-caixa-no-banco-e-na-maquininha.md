@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-08 21:59'
-updated_date: '2026-10-09 00:33'
+updated_date: '2026-10-09 23:40'
 labels:
   - contas
 dependencies: []
@@ -28,7 +28,7 @@ Notas técnicas:
 - PDV: transacao = Carbon::now(); o pagamento grava codportadorperiodo (sessão), que PortadorMovimentoService::periodo usa antes da data.
 - Maquineta: MaquinetaLoteService::vincular põe no lote corrente; o "mover" de PagamentoCorrecaoService::corrigir muda o lote sem mudar a data. O cancelamento já tem data (tblpagamento.cancelamento) e lote (codmaquinetalotecancelamento) próprios.
 - Movimento do portador (item, borderô, ajuste, transferência): PortadorLancamentoService::dataNoPeriodo.
-- Rastro: PagamentoCorrecaoService::registrar (antes/depois + justificativa) para pagamento; movimento do portador ainda não tem onde registrar.
+- Rastro: tblauditoria (AuditoriaService::registrar), para pagamento e movimento do portador.
 - Fecha-se em ordem (caixa, banco), então período mais novo que o destino nunca está fechado.
 <!-- SECTION:DESCRIPTION:END -->
 
@@ -50,6 +50,9 @@ Notas técnicas:
 - [ ] #14 Mudar de mês é permitido, com aviso de que pode afetar DIMP e relatórios já apurados
 - [ ] #15 Juros, multa, desconto e total não mudam ao alterar a data
 - [ ] #16 O caixa pendente não fecha sozinho depois da alteração: fecha pelo botão Fechar
+- [ ] #18 Toda correção de lançamento (data alterada, correção da conferência) fica registrada num lugar só, a auditoria
+- [ ] #19 O selo 'corrigido' na conferência e na maquininha aparece só quando o valor ou o meio foi corrigido
+- [ ] #20 A auditoria antiga da replicação entre bases sai: tabelas, funções e o usuário de banco
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -62,8 +65,10 @@ Servidor
 - Rotas: POST v1/portador-movimento/{id}/data e POST v1/maquineta-lote/{id}/pagamento/{codpagamento}/data. Removidos o "mover" da correção (PagamentoCorrecaoService) e a rota GET v1/maquineta/{cod}/lote.
 - Baixa de título e vale/adiantamento (contas e PDV) usam a data com hora informada; sem data, agora. Lápis do recebimento: data com hora; mudou, vai pelo alterarPagamento com justificativa.
 - Maquineta: o cartão entra no período da data se ele não estiver conferido; senão, no aberto (o cartão que a API confirma depois não trava).
-- Trilha: pagamento em tblpagamentocorrecao; movimento na tabela nova tblportadormovimentocorrecao.
-- DDL do go-live: api/database/portador_movimento_correcao.sql (já aplicada no banco de dev).
+- Auditoria única (09/10/2026): tblauditoria genérica (tabela + codigo + tipo; antes/depois só com os campos relevantes que mudaram; justificativa pode ficar vazia) no lugar de tblpagamentocorrecao e tblportadormovimentocorrecao. Tipos: 1 data alterada, 2 data do cancelamento alterada, 3 corrigido na conferência, 4 registro indevido, 5 incluído na conferência (6–14 vêm com a TASK-205, que aponta a ocorrência para a auditoria). Selo "corrigido" conta só 3 e 4. O reprocessamento do boleto procura o tipo 1, não o JSON.
+- A replicação entre bases de 2011 saiu: tblauditoria antiga, tblauditoriatransmissao, tblauditoriaexcecao, tblbaseremota, geraauditoria(), criatriggers_geraauditoria(boolean) e o usuário mgsis_replicacao (a tblcobrancahistoricotitulo passa para o mgsis). O mgsis_yii fica (o MGsis usa).
+- Corrigido junto: o nome de quem alterou não aparecia no "era dd/mm" (o accessor usuariocriacao do MgModel engolia a relação).
+- DDL do go-live: api/database/auditoria.sql, depois do conferencia.sql (rodado 2x no dev). portador_movimento_correcao.sql e a seção da tblpagamentocorrecao no conferencia.sql saíram.
 
 Telas
 - Extrato do portador (contas e caixa do PDV): botão de calendário na linha, dialog AlterarDataDialog (data com hora, justificativa, aviso de troca de mês); linha mostra "era dd/mm hh:mm: justificativa · usuário"; venda com pagamento noutro dia mostra o selo "venda de dd/mm".

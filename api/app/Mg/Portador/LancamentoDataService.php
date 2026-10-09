@@ -4,6 +4,7 @@ namespace Mg\Portador;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Caixa\CaixaItemService;
 use Mg\Caixa\CaixaService;
 use Mg\Cheque\Cheque;
@@ -12,7 +13,6 @@ use Mg\Conferencia\ConferenciaService;
 use Mg\Conferencia\PagamentoCorrecaoService;
 use Mg\Maquineta\MaquinetaLoteService;
 use Mg\Pagamento\Pagamento;
-use Mg\Pagamento\PagamentoCorrecao;
 use Mg\Pagamento\PagamentoService;
 use Mg\Titulo\MovimentoTituloService;
 
@@ -29,7 +29,7 @@ use Mg\Titulo\MovimentoTituloService;
  *   Movimento (ajuste, item, bordero, transferencia): a transacao e o periodo
  *   de cada linha; a transferencia muda as duas pontas juntas.
  * Periodo fechado (caixa, banco) ou conferido (maquineta) nao recebe nem perde
- * lancamento. Justificativa obrigatoria, com o antes/depois na trilha. So' o
+ * lancamento. Justificativa obrigatoria, com o antes/depois na auditoria. So' o
  * gestor do portador (o cartao, quem confere a maquineta; no PDV, a gaveta
  * dele). Sem transacao interna: o controller abre.
  */
@@ -147,7 +147,7 @@ class LancamentoDataService
         }
     }
 
-    // o que a data muda no pagamento, para a trilha
+    // o que a data muda no pagamento, para a auditoria
     private static function fotoPagamento(Pagamento $pag): array
     {
         return [
@@ -159,14 +159,9 @@ class LancamentoDataService
         ];
     }
 
-    private static function registrarPagamento(Pagamento $pag, array $antes, string $justificativa): void
+    private static function registrarPagamento(Pagamento $pag, int $tipo, array $antes, string $justificativa): void
     {
-        PagamentoCorrecao::create([
-            'codpagamento' => $pag->codpagamento,
-            'antes' => $antes,
-            'depois' => static::fotoPagamento($pag),
-            'justificativa' => $justificativa,
-        ]);
+        AuditoriaService::registrar('tblpagamento', $pag->codpagamento, $tipo, $antes, static::fotoPagamento($pag), $justificativa);
     }
 
     // os periodos do portador onde o pagamento tem linha (antes de mudar)
@@ -247,7 +242,7 @@ class LancamentoDataService
         // o cheque recebido leva a data junto
         Cheque::where('codpagamento', $pag->codpagamento)->update(['transacao' => $data]);
 
-        static::registrarPagamento($pag, $antes, $justificativa);
+        static::registrarPagamento($pag, AuditoriaService::TIPO_DATA_ALTERADA, $antes, $justificativa);
         return $pag->fresh();
     }
 
@@ -273,7 +268,7 @@ class LancamentoDataService
         $pag->cancelamento = $data;
         $pag->codmaquinetalotecancelamento = MaquinetaLoteService::daData($pag->codmaquineta, $data)->codmaquinetalote;
         $pag->save();
-        static::registrarPagamento($pag, $antes, $justificativa);
+        static::registrarPagamento($pag, AuditoriaService::TIPO_DATA_CANCELAMENTO_ALTERADA, $antes, $justificativa);
         return $pag->fresh();
     }
 
@@ -335,12 +330,14 @@ class LancamentoDataService
             $l->codportadorperiodo = $destino->codportadorperiodo;
             $l->save();
             $mexidos->push($l->codportadorperiodo);
-            PortadorMovimentoCorrecao::create([
-                'codportadormovimento' => $l->codportadormovimento,
-                'antes' => $antes,
-                'depois' => ['transacao' => $l->transacao->format('Y-m-d H:i:s'), 'codportadorperiodo' => $l->codportadorperiodo],
-                'justificativa' => $justificativa,
-            ]);
+            AuditoriaService::registrar(
+                'tblportadormovimento',
+                $l->codportadormovimento,
+                AuditoriaService::TIPO_DATA_ALTERADA,
+                $antes,
+                ['transacao' => $l->transacao->format('Y-m-d H:i:s'), 'codportadorperiodo' => $l->codportadorperiodo],
+                $justificativa
+            );
         }
         static::recalcular($mexidos);
         if (in_array($mov->tipo, [PortadorMovimento::TIPO_ITEM, PortadorMovimento::TIPO_MAQUINETA])) {
@@ -354,40 +351,30 @@ class LancamentoDataService
     // cancelamento
     public static function alteracoesPagamento(array $codpagamentos, string $campo = 'transacao'): array
     {
-        if (empty($codpagamentos)) {
-            return [];
-        }
-        return PagamentoCorrecao::with('UsuarioCriacao:codusuario,usuario')
-            ->whereIn('codpagamento', array_values(array_unique($codpagamentos)))
-            ->whereRaw("antes->>? is distinct from depois->>?", [$campo, $campo])
-            ->orderBy('codpagamentocorrecao')
-            ->get()
-            ->keyBy('codpagamento')
-            ->map(fn ($c) => static::alteracao($c, $campo))
-            ->all();
+        $tipo = $campo == 'cancelamento'
+            ? AuditoriaService::TIPO_DATA_CANCELAMENTO_ALTERADA
+            : AuditoriaService::TIPO_DATA_ALTERADA;
+        return array_map(
+            fn ($a) => static::alteracao($a, $campo),
+            AuditoriaService::ultimas('tblpagamento', $codpagamentos, $tipo)
+        );
     }
 
     // a ultima data alterada de cada movimento: [codportadormovimento => {...}]
     public static function alteracoesMovimento(array $codportadormovimentos): array
     {
-        if (empty($codportadormovimentos)) {
-            return [];
-        }
-        return PortadorMovimentoCorrecao::with('UsuarioCriacao:codusuario,usuario')
-            ->whereIn('codportadormovimento', array_values(array_unique($codportadormovimentos)))
-            ->orderBy('codportadormovimentocorrecao')
-            ->get()
-            ->keyBy('codportadormovimento')
-            ->map(fn ($c) => static::alteracao($c, 'transacao'))
-            ->all();
+        return array_map(
+            fn ($a) => static::alteracao($a, 'transacao'),
+            AuditoriaService::ultimas('tblportadormovimento', $codportadormovimentos, AuditoriaService::TIPO_DATA_ALTERADA)
+        );
     }
 
-    private static function alteracao($correcao, string $campo): array
+    private static function alteracao($auditoria, string $campo): array
     {
         return [
-            'de' => $correcao->antes[$campo] ?? null,
-            'usuario' => optional($correcao->UsuarioCriacao)->usuario,
-            'justificativa' => $correcao->justificativa,
+            'de' => $auditoria->antes[$campo] ?? null,
+            'usuario' => $auditoria->usuariocriacao,
+            'justificativa' => $auditoria->justificativa,
         ];
     }
 }

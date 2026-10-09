@@ -10,8 +10,6 @@
 --   tblmaquinetalote       — o bordero da maquineta: um aberto por
 --                            maquineta; o gerente fecha digitando quantidade
 --                            e total do bordero (com foto)
---   tblpagamentocorrecao   — trilha das correcoes de pagamento (antes/depois
---                            + justificativa)
 --   tblnegocioacerto       — destino da diferenca da venda desbalanceada
 --                            (perdao, vale colaborador, duplicata, credito)
 --   tblpagamento           — lote do cartao, lote do cancelamento, registro
@@ -113,25 +111,7 @@ CREATE INDEX IF NOT EXISTS idx_tblpagamento_codportadorperiodo
     ON tblpagamento (codportadorperiodo) WHERE codportadorperiodo IS NOT NULL;
 
 -- ---------------------------------------------------------------------
--- 4. Trilha das correcoes de pagamento
--- ---------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS tblpagamentocorrecao (
-    codpagamentocorrecao bigserial NOT NULL,
-    codpagamento bigint NOT NULL,
-    antes jsonb NOT NULL,
-    depois jsonb NOT NULL,
-    justificativa varchar(300) NOT NULL,
-    criacao timestamp(0) without time zone DEFAULT now(),
-    codusuariocriacao bigint,
-    alteracao timestamp(0) without time zone DEFAULT now(),
-    codusuarioalteracao bigint,
-    CONSTRAINT pk_tblpagamentocorrecao PRIMARY KEY (codpagamentocorrecao)
-);
-CREATE INDEX IF NOT EXISTS idx_tblpagamentocorrecao_codpagamento
-    ON tblpagamentocorrecao (codpagamento);
-
--- ---------------------------------------------------------------------
--- 5. Acerto da venda desbalanceada (destino da diferenca)
+-- 4. Acerto da venda desbalanceada (destino da diferenca)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS tblnegocioacerto (
     codnegocioacerto bigserial NOT NULL,
@@ -155,7 +135,7 @@ CREATE TABLE IF NOT EXISTS tblnegocioacerto (
 CREATE INDEX IF NOT EXISTS idx_tblnegocioacerto_codnegocio ON tblnegocioacerto (codnegocio);
 
 -- ---------------------------------------------------------------------
--- 6. Chaves estrangeiras
+-- 5. Chaves estrangeiras
 -- ---------------------------------------------------------------------
 DO $$
 DECLARE
@@ -177,9 +157,6 @@ BEGIN
             ('fk_tblpagamento_tblmaquinetalote_cancelamento', 'tblpagamento', 'codmaquinetalotecancelamento', 'tblmaquinetalote', 'codmaquinetalote'),
             ('fk_tblpagamento_tblportadorperiodo', 'tblpagamento', 'codportadorperiodo', 'tblportadorperiodo', 'codportadorperiodo'),
             ('fk_tblpagamento_tblusuario_conferencia', 'tblpagamento', 'codusuarioconferencia', 'tblusuario', 'codusuario'),
-            ('fk_tblpagamentocorrecao_tblpagamento', 'tblpagamentocorrecao', 'codpagamento', 'tblpagamento', 'codpagamento'),
-            ('fk_tblpagamentocorrecao_tblusuario', 'tblpagamentocorrecao', 'codusuariocriacao', 'tblusuario', 'codusuario'),
-            ('fk_tblpagamentocorrecao_tblusuario_0', 'tblpagamentocorrecao', 'codusuarioalteracao', 'tblusuario', 'codusuario'),
             ('fk_tblnegocioacerto_tblnegocio', 'tblnegocioacerto', 'codnegocio', 'tblnegocio', 'codnegocio'),
             ('fk_tblnegocioacerto_tblpessoa', 'tblnegocioacerto', 'codpessoa', 'tblpessoa', 'codpessoa'),
             ('fk_tblnegocioacerto_tbltitulo', 'tblnegocioacerto', 'codtitulo', 'tbltitulo', 'codtitulo'),
