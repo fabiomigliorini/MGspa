@@ -4,6 +4,8 @@ import SelectFilial from 'components/selects/SelectFilial.vue'
 import SelectSetor from 'src/components/selects/SelectSetor.vue'
 import MgInput from '@components/MgInput.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
+import MgInputData from '@components/MgInputData.vue'
+import MgInputValor from '@components/MgInputValor.vue'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -68,6 +70,19 @@ const salvar = () => {
             :tipos="['E']"
             :filiais="[model.codfilial]"
             clearable
+          />
+          <!-- livro de ocorrencias (TASK-205): sem data, o PDV nao e' monitorado -->
+          <MgInputData
+            v-model="model.monitoramento"
+            label="Monitorar a partir de"
+            hint="Vazio = não monitora"
+          />
+          <MgInputValor
+            v-model="model.minutosesquecido"
+            label="Minutos até considerar o negócio esquecido"
+            :decimals="0"
+            :min="10"
+            :rules="[(val) => !val || val >= 10 || 'Mínimo de 10 minutos']"
           />
           <MgInput
             outlined

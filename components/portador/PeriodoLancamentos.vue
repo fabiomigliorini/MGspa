@@ -6,19 +6,23 @@
 // espécie) são movimento do portador (a transferência leva ao outro portador, no período onde o
 // valor caiu). O borderô da maquineta de parceiro (em espécie) mostra "sem borderô" enquanto não
 // tem a foto, e a câmera da linha vê e anexa. A confirmar em amarelo; cancelado riscado e fora do
-// saldo, com a justificativa. Confirmar e cancelar ficam na linha.
-// No caixa do PDV (negocios) os botões são só Reforço / Sangria e Borderô de maquineta, e o que é
-// do contas (pagamento, outro portador) abre por :href.
+// saldo, com a justificativa. Confirmar, cancelar e alterar a data (TASK-204: a linha vai para o
+// período da data, com justificativa; a data alterada aparece embaixo) ficam na linha. A venda com
+// o pagamento noutro dia mostra a data da venda (a da NFC-e).
+// Lançar é um FAB no canto da tela que abre a lista do que fazer (LancarCaixaDialog). No caixa do
+// PDV (negocios) o que é do contas (pagamento, outro portador) abre por :href.
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import BorderoFotosDialog from '@components/caixa/BorderoFotosDialog.vue'
+import AlterarDataDialog from '@components/portador/AlterarDataDialog.vue'
 import {
   formataNumero,
   formataData,
   formataDataCompleta,
   formataHora,
+  formataTimestamp,
 } from '@components/formatters'
 import { periodoStore } from '@components/stores/periodoStore'
 
@@ -26,19 +30,9 @@ const $q = useQuasar()
 const store = periodoStore()
 const { portador, pode, periodo, filtroOrigem, pdv } = storeToRefs(store)
 
-// ajuste e transferência no período da tela, não fechado
+// lançar (o FAB) no período da tela, não fechado
 const podeMovimentar = computed(
   () => !!pode.value.operar && !!periodo.value && periodo.value.situacao !== 'fechado',
-)
-// entrada de item: portador em espécie com item ativo (no contas)
-const temItens = computed(
-  () =>
-    !pdv.value && !!portador.value?.ehCaixa && (periodo.value?.itens ?? []).some((i) => !i.inativo),
-)
-
-// borderô da maquineta de parceiro: portador em espécie com maquineta ativa
-const temMaquinetas = computed(
-  () => !!portador.value?.ehCaixa && (periodo.value?.maquinetas ?? []).length > 0,
 )
 
 // as fotos do borderô da linha escolhida (a linha vem do período, atualiza ao anexar)
@@ -143,6 +137,17 @@ const corValor = (l) =>
   cancelado(l) ? 'text-strike text-grey-5' : l.valor < 0 ? 'text-red-8' : 'text-green-8'
 const valor = (l) => (l.valor > 0 ? '+' : '') + formataNumero(l.valor)
 
+// alterar a data da linha escolhida
+const dataDe = ref(null)
+const dialogData = ref(false)
+function abrirData(l) {
+  dataDe.value = l
+  dialogData.value = true
+}
+async function alterarData(dados) {
+  if (await store.alterarData(dataDe.value.codportadormovimento, dados)) dialogData.value = false
+}
+
 const justificar = (title, ok, fn) =>
   $q
     .dialog({
@@ -174,53 +179,6 @@ function cancelar(l) {
   <q-card v-if="periodo" flat bordered>
     <q-card-section class="row items-center q-pb-sm">
       <div class="col text-subtitle1 text-weight-medium">Lançamentos</div>
-      <template v-if="podeMovimentar">
-        <q-btn
-          v-if="!pdv"
-          flat
-          round
-          size="sm"
-          color="primary"
-          icon="add"
-          @click="store.dialogAvulso = true"
-        >
-          <q-tooltip>{{
-            portador.ehCaixa ? 'Ajuste' : 'Ajuste, taxa, tarifa, rendimento'
-          }}</q-tooltip>
-        </q-btn>
-        <q-btn
-          v-if="temItens"
-          flat
-          round
-          size="sm"
-          color="grey-7"
-          icon="style"
-          @click="store.abrirItem()"
-        >
-          <q-tooltip>Entrada ou saída de item</q-tooltip>
-        </q-btn>
-        <q-btn
-          v-if="temMaquinetas"
-          flat
-          round
-          size="sm"
-          color="grey-7"
-          icon="point_of_sale"
-          @click="store.dialogMaquineta = true"
-        >
-          <q-tooltip>Borderô de maquineta</q-tooltip>
-        </q-btn>
-        <q-btn
-          flat
-          round
-          size="sm"
-          color="grey-7"
-          icon="swap_horiz"
-          @click="store.dialogTransferir = true"
-        >
-          <q-tooltip>{{ portador.ehCaixa ? 'Reforço / Sangria' : 'Transferir' }}</q-tooltip>
-        </q-btn>
-      </template>
     </q-card-section>
     <!-- o filtro e os cancelados numa linha própria, sem apertar o título -->
     <q-card-section v-if="filtro || cancelados" class="row items-center q-gutter-sm q-pt-none">
@@ -299,6 +257,16 @@ function cancelar(l) {
                 <q-badge v-if="pendente(l)" color="amber-8" label="a confirmar" />
                 <q-badge v-if="cancelado(l)" color="grey-5" label="cancelado" />
                 <q-badge v-if="l.semBordero" color="orange-8" label="sem borderô" />
+                <q-badge
+                  v-if="l.dataVenda"
+                  color="orange-8"
+                  :label="`venda de ${formataData(l.dataVenda)}`"
+                >
+                  <q-tooltip>
+                    A venda (e a NFC-e) é de {{ formataTimestamp(l.dataVenda) }}; o pagamento está
+                    noutra data
+                  </q-tooltip>
+                </q-badge>
                 <q-btn
                   v-if="l.fotos?.length || l.podeAnexar"
                   flat
@@ -336,6 +304,17 @@ function cancelar(l) {
                   <q-tooltip>Confirmar o recebimento</q-tooltip>
                 </q-btn>
                 <q-btn
+                  v-if="l.podeAlterarData"
+                  flat
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="event"
+                  @click.stop.prevent="abrirData(l)"
+                >
+                  <q-tooltip>Alterar a data</q-tooltip>
+                </q-btn>
+                <q-btn
                   v-if="l.podeCancelar"
                   flat
                   round
@@ -346,6 +325,11 @@ function cancelar(l) {
                 >
                   <q-tooltip>Cancelar</q-tooltip>
                 </q-btn>
+              </q-item-label>
+              <q-item-label v-if="l.dataAlterada" caption class="text-grey-7">
+                <q-icon name="event" size="xs" />
+                era {{ formataTimestamp(l.dataAlterada.de) }}: {{ l.dataAlterada.justificativa }}
+                <template v-if="l.dataAlterada.usuario"> · {{ l.dataAlterada.usuario }}</template>
               </q-item-label>
               <q-item-label v-if="cancelado(l) && l.justificativa" caption class="text-grey-7">
                 {{ l.justificativa }}
@@ -374,6 +358,12 @@ function cancelar(l) {
 
     <MgEmptyState v-else plain icon="receipt_long">Nenhum lançamento.</MgEmptyState>
 
+    <AlterarDataDialog
+      v-model="dialogData"
+      :data="dataDe?.transacao"
+      :salvando="store.salvando"
+      @salvar="alterarData"
+    />
     <BorderoFotosDialog
       v-model="dialogFotos"
       :codportadormovimento="fotosDe"
@@ -381,4 +371,12 @@ function cancelar(l) {
       :pode-anexar="!!linhaFotos?.podeAnexar"
     />
   </q-card>
+
+  <!-- o respiro para o FAB não cobrir o fim da lista -->
+  <div v-if="podeMovimentar" class="q-py-xl" />
+  <q-page-sticky v-if="podeMovimentar" position="bottom-right" :offset="[18, 18]">
+    <q-btn fab icon="add" color="primary" @click="store.dialogLancar = true">
+      <q-tooltip anchor="center left" self="center right">Lançar</q-tooltip>
+    </q-btn>
+  </q-page-sticky>
 </template>

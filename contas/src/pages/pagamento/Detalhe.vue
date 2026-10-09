@@ -1,6 +1,7 @@
 <script setup>
 // Pagamento (M6.1 doc-3): o detalhe compartilhado (MgPagamentoDetalhe) com o que é do contas:
-// recibos em PDF e a correção de pessoa, portador, meio, data e observação (como a liquidação).
+// recibos em PDF e a correção de pessoa, portador, meio, data e observação (como a liquidação). A
+// data tem hora e, se muda, pede justificativa (TASK-204: vai para o período da data, com o título).
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { notifySuccess, notifyError } from 'src/utils/notify'
@@ -9,6 +10,7 @@ import { PERMISSOES } from 'src/constants/permissoes'
 import { abrirPdf } from 'src/utils/abrirPdf'
 import { configurarPagamentoLista } from 'src/utils/pagamentoLista'
 import { MEIOS } from '@components/cobranca/pagamento.js'
+import { formataTimestampIso } from '@components/formatters'
 import MgPagamentoDetalhe from '@components/MgPagamentoDetalhe.vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -74,11 +76,27 @@ function abrirDialogEditar() {
     codpessoa: pag.value.codpessoa,
     codportador: pag.value.codportador,
     meio: pag.value.meio,
-    transacao: String(pag.value.transacao).slice(0, 10),
+    transacao: formataTimestampIso(pag.value.transacao).slice(0, 16),
     observacao: pag.value.observacoes ?? '',
+    justificativa: '',
   }
   dialogEditar.value = true
 }
+
+// a data mudou: pede a justificativa
+const dataMudou = computed(
+  () =>
+    !!editar.value.transacao &&
+    !!pag.value &&
+    editar.value.transacao !== formataTimestampIso(pag.value.transacao).slice(0, 16),
+)
+
+// mudar de mês avisa (DIMP e relatórios já apurados), sem bloquear
+const trocaMes = computed(
+  () =>
+    dataMudou.value &&
+    editar.value.transacao.slice(0, 7) !== formataTimestampIso(pag.value.transacao).slice(0, 7),
+)
 
 // trocar o portador sugere o meio dele
 const portadorEscolhido = (p) => {
@@ -93,6 +111,7 @@ async function salvarEdicao() {
       codportador: semPortador.value ? null : editar.value.codportador,
       meio: semPortador.value ? null : editar.value.meio,
       observacao: editar.value.observacao || null,
+      justificativa: dataMudou.value ? editar.value.justificativa : null,
     })
     notifySuccess('Alterado')
     dialogEditar.value = false
@@ -191,7 +210,7 @@ watch(() => route.fullPath, carregar)
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
-              <div class="col-8" v-if="!semPortador">
+              <div class="col-12 col-sm-7" v-if="!semPortador">
                 <MgSelectPortador
                   v-model="editar.codportador"
                   label="Portador"
@@ -200,11 +219,32 @@ watch(() => route.fullPath, carregar)
                   @select="portadorEscolhido"
                 />
               </div>
-              <div class="col-4">
+              <div class="col-12 col-sm-5">
                 <MgInputData
                   v-model="editar.transacao"
+                  type="timestamp"
+                  default-time="keep"
+                  :seconds="false"
                   label="Data"
                   :rules="[(v) => !!v || 'Obrigatório']"
+                />
+              </div>
+              <div
+                v-if="trocaMes"
+                class="col-12 text-caption text-orange-9 row no-wrap items-center"
+              >
+                <q-icon name="warning" size="xs" class="q-mr-xs" />
+                Muda de mês: pode afetar a DIMP e relatórios já apurados.
+              </div>
+              <div class="col-12" v-if="dataMudou">
+                <MgInput
+                  v-model="editar.justificativa"
+                  label="Por que a data mudou"
+                  maxlength="300"
+                  :rules="[
+                    (v) => (v || '').trim().length >= 5 || 'Diga o motivo (mínimo 5 letras)',
+                  ]"
+                  lazy-rules
                 />
               </div>
               <div class="col-8" v-if="!semPortador">

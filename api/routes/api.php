@@ -1334,6 +1334,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('portador-movimento/transferencia', '\Mg\Portador\PortadorLancamentoController@transferir');
     Route::post('portador-movimento/{id}/confirmar', '\Mg\Portador\PortadorLancamentoController@confirmar')->whereNumber('id');
     Route::post('portador-movimento/{id}/cancelar', '\Mg\Portador\PortadorLancamentoController@cancelar')->whereNumber('id');
+    // alterar a data da linha do extrato (TASK-204)
+    Route::post('portador-movimento/{id}/data', '\Mg\Portador\PortadorLancamentoController@data')->whereNumber('id');
     // itens do caixa (doc-4, "Itens do caixa")
     Route::get('caixa-item', '\Mg\Caixa\CaixaItemController@index');
     Route::get('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@show')->whereNumber('id');
@@ -1375,7 +1377,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // Maquineta e seus periodos (TASK-188 M9.8): conferencia do cartao com o bordero
     Route::get('maquineta/{codmaquineta}/periodo/{codmaquinetalote?}', '\Mg\Maquineta\MaquinetaPeriodoController@tela')->whereNumber(['codmaquineta', 'codmaquinetalote']);
-    Route::get('maquineta/{codmaquineta}/lote', '\Mg\Maquineta\MaquinetaPeriodoController@lista')->whereNumber('codmaquineta');
     Route::post('maquineta-lote/{id}/conferir', '\Mg\Maquineta\MaquinetaPeriodoController@conferir')->whereNumber('id');
     Route::post('maquineta-lote/{id}/reabrir', '\Mg\Maquineta\MaquinetaPeriodoController@reabrir')->whereNumber('id');
     Route::post('maquineta-lote/{id}/datas', '\Mg\Maquineta\MaquinetaPeriodoController@datas')->whereNumber('id');
@@ -1384,6 +1385,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('maquineta-lote/{id}/foto', '\Mg\Maquineta\MaquinetaPeriodoController@foto')->whereNumber('id');
     Route::get('maquineta-lote/{id}/foto/{arquivo}', '\Mg\Maquineta\MaquinetaPeriodoController@mostrarFoto')->whereNumber('id');
     Route::delete('maquineta-lote/{id}/foto/{arquivo}', '\Mg\Maquineta\MaquinetaPeriodoController@excluirFoto')->whereNumber('id');
+    Route::post('maquineta-lote/{id}/pagamento/{codpagamento}/data', '\Mg\Maquineta\MaquinetaPeriodoController@data')->whereNumber(['id', 'codpagamento']);
 
     // Conferencias e fechamento do caixa (M9 doc-3): tela Fechamentos do contas
     Route::get('conferencia', '\Mg\Conferencia\ConferenciaController@index');
@@ -1395,6 +1397,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('conferencia/pagamento/{id}/indevido', '\Mg\Conferencia\ConferenciaController@indevido')->whereNumber('id');
     Route::post('conferencia/pagamento/{id}/conferir', '\Mg\Conferencia\ConferenciaController@conferirPagamento')->whereNumber('id');
     Route::delete('conferencia/pagamento/{id}/conferir', '\Mg\Conferencia\ConferenciaController@reabrirPagamento')->whereNumber('id');
+
+    // Livro de ocorrencias (TASK-205): tela Ocorrencias do contas
+    Route::get('ocorrencia', '\Mg\Ocorrencia\OcorrenciaController@index');
+    Route::post('ocorrencia/{id}/conferir', '\Mg\Ocorrencia\OcorrenciaController@conferir')->whereNumber('id');
+    Route::delete('ocorrencia/{id}/conferir', '\Mg\Ocorrencia\OcorrenciaController@reabrir')->whereNumber('id');
 
     // Mercos
     Route::post('pdv/mercos/pedido/importar/{alterado_apos?}', '\Mg\Pdv\PdvMercosController@importarPedido');

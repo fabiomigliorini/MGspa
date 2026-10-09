@@ -230,7 +230,7 @@ async function salvarDividir() {
   })
 }
 
-// ---- unificar com o anterior (os dois não fechados; o anterior sem diferença) ----
+// ---- unificar com o anterior (os dois não fechados; a diferença dele entra na do novo) ----
 const anterior = computed(() => {
   const i = periodos.value.findIndex(
     (p) => p.codportadorperiodo === periodo.value?.codportadorperiodo,
@@ -238,11 +238,7 @@ const anterior = computed(() => {
   return i > 0 ? periodos.value[i - 1] : null
 })
 const podeUnificar = computed(
-  () =>
-    naoFechado.value &&
-    !!anterior.value &&
-    anterior.value.situacao !== 'fechado' &&
-    !anterior.value.diferenca,
+  () => naoFechado.value && !!anterior.value && anterior.value.situacao !== 'fechado',
 )
 
 function unificar() {

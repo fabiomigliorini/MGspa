@@ -503,7 +503,18 @@ class PdvService
     public static function update($pdv, $data)
     {
 
+        foreach (['monitoramento', 'minutosesquecido'] as $campo) {
+            if (array_key_exists($campo, $data) && $data[$campo] === '') {
+                $data[$campo] = null;
+            }
+        }
         $pdv->fill($data);
+        if ($pdv->minutosesquecido === null) {
+            $pdv->minutosesquecido = 120;
+        }
+        if ($pdv->minutosesquecido < 10) {
+            abort(422, 'O tempo para considerar o negócio esquecido precisa ser de pelo menos 10 minutos!');
+        }
         if (!empty($pdv->codportador)) {
             $portador = Portador::findOrFail($pdv->codportador);
             if ($portador->tipo !== Portador::TIPO_ESPECIE) {

@@ -102,9 +102,7 @@ class PortadorPeriodoResource extends Resource
             $ret['itens'] = $this->itens($anterior);
             $ret['quadro'] = $this->quadro($ret['contagem'], $ret['resumo'], $ret['lancamentos'], $ret['itens']);
             // so' as maquinetas da filial do portador
-            // so' as maquinetas da filial do portador
             $ret['maquinetas'] = CaixaItemService::ativos(CaixaItem::MODO_MAQUINETA)
-                ->where('codfilial', $this->Portador->codfilial)
                 ->where('codfilial', $this->Portador->codfilial)
                 ->map(fn (CaixaItem $i) => ['codcaixaitem' => $i->codcaixaitem, 'item' => $i->item])
                 ->values()->all();
@@ -336,7 +334,14 @@ class PortadorPeriodoResource extends Resource
         $mutavel = !$this->fechado();
         $pdv = PortadorAutorizador::livre() == $portador->codportador;
         $operador = !$pdv && PortadorAutorizador::pode($portador->codportador, PortadorUsuario::PAPEL_OPERADOR);
-        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $portador, $mutavel, $operador, $pdv) {
+        // alterar a data (TASK-204): o gestor de cada portador da linha; no
+        // PDV, so' o que e' so' da gaveta dele
+        $livre = PortadorAutorizador::livre() ?? 0;
+        $alteradas = LancamentoDataService::alteracoesMovimento(
+            $linhas->where('tipo', '<>', PortadorMovimento::TIPO_PAGAMENTO)->pluck('codportadormovimento')->all()
+        );
+        $alteradosPag = LancamentoDataService::alteracoesPagamento($linhas->pluck('codpagamento')->filter()->all());
+        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $portador, $mutavel, $operador, $pdv, $livre, $alteradas, $alteradosPag) {
             $l->setRelation('Portador', $portador);
             $valendo = $l->valendo();
             if ($valendo) {
@@ -358,6 +363,11 @@ class PortadorPeriodoResource extends Resource
                 'contraparte' => null,
                 'podeConfirmar' => false,
                 'podeCancelar' => false,
+                'podeAlterarData' => $valendo && $mutavel && LancamentoDataService::podeMovimento($l, $livre),
+                // a ultima data alterada: {de, usuario, justificativa}
+                'dataAlterada' => $l->tipo == PortadorMovimento::TIPO_PAGAMENTO
+                    ? ($alteradosPag[$l->codpagamento] ?? null)
+                    : ($alteradas[$l->codportadormovimento] ?? null),
             ];
             switch ($l->tipo) {
                 case PortadorMovimento::TIPO_AJUSTE:
@@ -414,6 +424,13 @@ class PortadorPeriodoResource extends Resource
                 'texto' => static::texto($pag, $origem),
                 'detalhe' => PagamentoService::descricao($pag),
                 'documento' => PagamentoListaResource::documento($pag, $origem),
+                // venda com o pagamento noutro dia: a data do negocio (a da NFC-e)
+                'dataVenda' => $pag->Negocio && $pag->Negocio->lancamento
+                    && $pag->transacao && $pag->Negocio->lancamento->format('Y-m-d') != $pag->transacao->format('Y-m-d')
+                    ? $pag->Negocio->lancamento : null,
+                // conferido: so' reabrindo a conferencia
+                'podeAlterarData' => $valendo && $mutavel && empty($pag->conferencia)
+                    && LancamentoDataService::podeMovimento($l, $livre),
                 // taxa, tarifa, rendimento (banco)
                 'podeCancelar' => $valendo && $mutavel && $operador
                     && $origem == PagamentoListaService::ORIGEM_AVULSO

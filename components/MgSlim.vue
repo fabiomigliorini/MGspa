@@ -63,14 +63,8 @@ watch(
 <template>
   <div
     ref="refSlim"
-    class="slim"
-    style="
-      min-width: 250px;
-      min-height: 300px;
-      max-height: 60vh;
-      border: 1px dashed lightgrey;
-      border-radius: 4px;
-    "
+    class="slim rounded-borders"
+    style="min-height: 300px; max-height: 60vh; border: 1px dashed lightgrey"
   />
 </template>
 

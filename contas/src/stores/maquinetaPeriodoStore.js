@@ -5,7 +5,8 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 
 // A maquineta e seus períodos (TASK-188 M9.8), no padrão do portador e seus períodos (doc-4): o
 // gerente confere o cartão de cada período com o borderô da maquineta (aberto → pendente →
-// conferido), corrige os lançamentos, divide, unifica e anexa ou exclui a foto. Toda rota que muda devolve
+// conferido), corrige os lançamentos, altera a data deles (o período segue a data), divide, unifica e
+// anexa ou exclui a foto. Toda rota que muda devolve
 // a tela inteira (maquineta, abas e o período); o store troca pelo que veio.
 
 export const useMaquinetaPeriodoStore = defineStore('maquinetaPeriodo', () => {
@@ -75,6 +76,9 @@ export const useMaquinetaPeriodoStore = defineStore('maquinetaPeriodo', () => {
   const unificar = () => executar('unificar', null, 'Períodos unificados')
   const anexarFoto = (anexoBase64) => executar('foto', { anexoBase64 }, 'Foto anexada')
   const excluirFoto = (arquivo) => executar(`foto/${arquivo}`, null, 'Foto excluída', 'delete')
+  // a data do cartão ou do cancelamento (TASK-204): vai para o período da data
+  const alterarData = (codpagamento, dados, cancelamento = false) =>
+    executar(`pagamento/${codpagamento}/data`, { ...dados, cancelamento }, 'Data alterada')
 
   return {
     maquineta,
@@ -91,5 +95,6 @@ export const useMaquinetaPeriodoStore = defineStore('maquinetaPeriodo', () => {
     unificar,
     anexarFoto,
     excluirFoto,
+    alterarData,
   }
 })

@@ -8,6 +8,7 @@ use Mg\PagarMe\PagarMePedidoResource;
 use Mg\Pix\PixCobResource;
 use Mg\Titulo\TituloResource;
 use Mg\Pagamento\PagamentoResource;
+use Mg\Ocorrencia\OcorrenciaService;
 use Mg\Pdv\PdvNegocioPagamentoService;
 use Mg\Saurus\SaurusPedidoResource;
 use Mg\Woo\WooPedidoResource;
@@ -70,6 +71,9 @@ class NegocioResource extends Resource
             $vale['valordescontopagamento'] = $fatias[$vale['uuid']] ?? null;
         }
         unset($vale);
+        // ocorrencias que o caixa registrou (TASK-205): o PDV substitui o
+        // documento pela resposta e nao pode perde-las
+        $ret['ocorrencias'] = OcorrenciaService::paraPdv($this->resource);
         $ret['pixCob'] = PixCobResource::collection($this->PixCobS()->orderBy('criacao', 'desc')->get());
         $ret['PagarMePedidoS'] = PagarMePedidoResource::collection($this->PagarMePedidoS()->orderBy('criacao', 'desc')->get());
         $ret['SaurusPedidoS'] = SaurusPedidoResource::collection($this->SaurusPedidoS()->orderBy('criacao', 'desc')->get());

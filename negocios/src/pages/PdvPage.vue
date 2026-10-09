@@ -1,5 +1,5 @@
 <script setup>
-import { formataCodigo, formataTimestamp } from '@components/formatters'
+import { formataCodigo, formataData, formataTimestamp } from '@components/formatters'
 import { onMounted, ref, watch } from 'vue'
 import { pdvStore } from 'src/stores/pdv'
 import moment from 'moment/min/moment-with-locales'
@@ -162,6 +162,10 @@ onMounted(() => {
             <q-item-label caption class="ellipsis">
               <q-icon name="point_of_sale" />
               {{ pdv.portador || 'Sem portador' }}
+            </q-item-label>
+            <q-item-label caption class="ellipsis" v-if="pdv.monitoramento">
+              <q-icon name="policy" />
+              Monitorado desde {{ formataData(pdv.monitoramento) }}
             </q-item-label>
             <q-item-label caption class="ellipsis" v-if="pdv.observacoes">
               IP: {{ pdv.ip }}

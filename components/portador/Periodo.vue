@@ -9,6 +9,7 @@ import TransferirCaixaDialog from '@components/caixa/TransferirCaixaDialog.vue'
 import AvulsoCaixaDialog from '@components/caixa/AvulsoCaixaDialog.vue'
 import ItemCaixaDialog from '@components/caixa/ItemCaixaDialog.vue'
 import MaquinetaCaixaDialog from '@components/caixa/MaquinetaCaixaDialog.vue'
+import LancarCaixaDialog from '@components/caixa/LancarCaixaDialog.vue'
 </script>
 
 <template>
@@ -22,6 +23,7 @@ import MaquinetaCaixaDialog from '@components/caixa/MaquinetaCaixaDialog.vue'
     </div>
   </div>
 
+  <LancarCaixaDialog />
   <TransferirCaixaDialog />
   <AvulsoCaixaDialog />
   <ItemCaixaDialog />

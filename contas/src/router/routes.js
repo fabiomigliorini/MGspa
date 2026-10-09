@@ -177,6 +177,19 @@ const routes = [
         },
       },
       {
+        path: 'ocorrencia',
+        name: 'ocorrencia',
+        component: () => import('pages/ocorrencia/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Ocorrências',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/OcorrenciaFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
         path: 'fechamento/venda/:id(\\d+)',
         name: 'fechamento-venda',
         component: () => import('pages/fechamento/Venda.vue'),

@@ -18,6 +18,7 @@ use Mg\Negocio\NegocioValeProdutoBarra;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalStatusService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
+use Mg\Ocorrencia\OcorrenciaService;
 use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Titulo\TituloService;
 use Illuminate\Support\Facades\Log;
@@ -229,6 +230,9 @@ class PdvNegocioService
         // pagamento ja' vem rateado no valordesconto dos itens e vales
         PdvNegocioPagamentoService::importar($negocio, $data['pagamentos'] ?? [], $data['parcelas'] ?? []);
 
+        // o que o caixa removeu ou diminuiu, com o motivo (TASK-205)
+        OcorrenciaService::importarDoPdv($negocio, $data['ocorrencias'] ?? []);
+
         if (!static::confereTotais($negocio)) {
             throw new Exception('Total do Negócio não bate com o Total dos Itens! Tente transmitir novamente para o servidor (Botão Roxo)!', 1);
         }
@@ -268,6 +272,9 @@ class PdvNegocioService
         $negocio->fill($data);
         $negocio->codfilial = $negocio->EstoqueLocal->codfilial;
         $negocio->save();
+
+        // ocorrencia registrada antes de fechar que nao tinha chegado
+        OcorrenciaService::importarDoPdv($negocio, $data['ocorrencias'] ?? []);
 
         foreach (NegocioParcelaService::titulos($negocio) as $titulo) {
             $titulo->codpessoa = $negocio->codpessoa;
@@ -480,6 +487,9 @@ class PdvNegocioService
             $negocio->save();
         }
 
+        // desconto acima do permitido vai para o gerente conferir (TASK-205)
+        OcorrenciaService::descontoNoFechamento($negocio);
+
         // salva transacao no banco de dados
         DB::commit();
 
@@ -555,6 +565,9 @@ class PdvNegocioService
         PdvNegocioValeService::estornarCreditos($negocio);
         PdvNegocioChequeService::cancelar($negocio);
 
+        // o que o negocio tinha, para o livro de ocorrencias (TASK-205)
+        $foto = OcorrenciaService::fotoCancelamento($negocio);
+
         // pagamentos da venda cancelados junto (o dinheiro que entrou sai
         // pelo caixa no M10)
         foreach ($negocio->PagamentoS()->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->get() as $pag) {
@@ -564,6 +577,7 @@ class PdvNegocioService
         $negocio->codnegociostatus = NegocioService::STATUS_CANCELADO;
         $negocio->justificativa = $justificativa;
         $negocio->save();
+        OcorrenciaService::negocioCancelado($negocio, $foto, $justificativa);
         static::movimentarEstoque($negocio);
         return $negocio;
     }

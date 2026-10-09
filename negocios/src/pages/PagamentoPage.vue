@@ -83,6 +83,7 @@ const recibo = async (pag) => {
       :formas="FORMAS_ADIANTAMENTO"
       :contexto="contexto"
       :finalizar="{ url: 'v1/pdv/titulo', extras: { pdv } }"
+      com-data
       :padrao="sNegocio.padrao"
       @finalizado="adiantamentoLancado"
     />

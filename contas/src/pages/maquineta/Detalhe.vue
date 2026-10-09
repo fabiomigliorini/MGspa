@@ -2,11 +2,11 @@
 // A maquineta e seus períodos (TASK-188 M9.8), no padrão do portador e seus períodos (doc-4): o
 // cabeçalho da maquineta e os períodos em abas Ano → Mês → Período, só com o que existe. Cada
 // período é o borderô do sistema no formato do relatório da maquininha, com a foto do papel ao
-// lado: a situação (aberto, pendente, conferido), o resumo por modalidade e bandeira com a
-// conferência (quantidade e total) e o detalhe, com as correções na linha. A URL leva
-// direto ao período. Gerente da filial, Financeiro e Administrador. O cadastro (editar, parear,
-// juntar, inativar, excluir) fica no cabeçalho, como no portador.
-import { computed, watch, onMounted } from 'vue'
+// lado: a situação (aberto, pendente, conferido) com o resumo por modalidade e bandeira e a
+// conferência no FAB (a foto, se ainda não tiver, e a quantidade e o total), e o detalhe, com as
+// correções na linha. A URL leva direto ao período. Gerente da filial, Financeiro e Administrador. O cadastro
+// (editar, parear, juntar, inativar, excluir) fica no cabeçalho, como no portador.
+import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
@@ -19,9 +19,9 @@ import {
   maquinetaIntegracaoColor,
 } from 'src/constants/maquinetaIntegracao'
 import PeriodoCabecalho from 'components/maquineta/PeriodoCabecalho.vue'
-import PeriodoResumo from 'components/maquineta/PeriodoResumo.vue'
 import PeriodoLancamentos from 'components/maquineta/PeriodoLancamentos.vue'
 import PeriodoFoto from 'components/maquineta/PeriodoFoto.vue'
+import PeriodoConferirDialog from 'components/maquineta/PeriodoConferirDialog.vue'
 import MaquinetaDialog from 'components/maquineta/MaquinetaDialog.vue'
 import MaquinetaParearDialog from 'components/maquineta/MaquinetaParearDialog.vue'
 import MaquinetaJuntarDialog from 'components/maquineta/MaquinetaJuntarDialog.vue'
@@ -79,6 +79,10 @@ const doMes = computed(() =>
 const rotulo = (p) => (p.fim ? formataDataAbreviada(p.fim, 4) : 'aberto')
 const BADGE = { aberto: ['green-7', 'Aberto'], pendente: ['amber-8', 'Pendente'] }
 
+// ---- conferir com o borderô: só o período não conferido ----
+const dialogConferir = ref(false)
+const podeConferir = computed(() => !!periodo.value && periodo.value.situacao !== 'conferido')
+
 // ---- cadastro ----
 function excluir() {
   $q.dialog({
@@ -117,7 +121,12 @@ watch(
 
 <template>
   <q-page>
-    <div class="q-pa-md" style="max-width: 1086px; margin: auto">
+    <!-- com o FAB, o fim da página sobra para ele não cobrir a última linha -->
+    <div
+      class="q-pa-md"
+      :class="{ 'q-pb-xl': podeConferir }"
+      style="max-width: 1086px; margin: auto"
+    >
       <template v-if="maquineta">
         <div class="row items-center q-col-gutter-x-sm q-mb-sm">
           <div class="col-auto">
@@ -255,12 +264,12 @@ watch(
 
         <div v-if="periodo" class="row q-col-gutter-md q-mb-md">
           <!-- a foto do borderô ao lado do borderô do sistema, para comparar linha a linha -->
-          <div class="col-12 col-md-4">
+          <div class="col-12 col-md-3">
             <PeriodoFoto />
           </div>
-          <div class="col-12 col-md-8">
-            <PeriodoCabecalho class="q-mb-md" />
-            <PeriodoResumo class="q-mb-md" />
+          <div class="col-12 col-md-9">
+            <!-- o cabeçalho tem os dialogs junto (vários nós): o espaço fica no div -->
+            <div class="q-mb-md"><PeriodoCabecalho /></div>
             <PeriodoLancamentos />
           </div>
         </div>
@@ -271,6 +280,14 @@ watch(
     </div>
 
     <q-inner-loading :showing="carregando" color="primary" />
+
+    <q-page-sticky v-if="podeConferir" position="bottom-right" :offset="[18, 18]">
+      <q-btn fab icon="fact_check" color="primary" @click="dialogConferir = true">
+        <q-tooltip anchor="center left" self="center right">Conferir com o borderô</q-tooltip>
+      </q-btn>
+    </q-page-sticky>
+
+    <PeriodoConferirDialog v-model="dialogConferir" />
 
     <MaquinetaDialog />
     <MaquinetaParearDialog />

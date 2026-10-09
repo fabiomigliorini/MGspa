@@ -2,11 +2,12 @@
 // Receber ou pagar títulos, a mesma tela no contas e no PDV (M6.1 do plano doc-3): seleciona os
 // títulos (capital, multa, juros, desconto) e paga pelo wizard de cobrança, uma forma por
 // pagamento. Quando as formas fecham o líquido, grava. Cada app informa onde busca os títulos,
-// as formas, o contexto do wizard (PDV ou contas) e para onde manda a baixa.
+// as formas, o contexto do wizard (PDV ou contas) e para onde manda a baixa. A data tem hora
+// (TASK-204: a data manda no período do portador); sem mexer nela, vai vazia e o servidor usa agora.
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
-import { formataNumero, formataDataIso } from '@components/formatters'
+import { formataNumero, formataTimestampIso } from '@components/formatters'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
@@ -37,7 +38,7 @@ const props = defineProps({
     type: Object,
     required: true,
   },
-  // data da baixa (só o contas escolhe; o PDV é agora)
+  // data e hora da baixa (sem ela, agora)
   comData: {
     type: Boolean,
     default: false,
@@ -56,7 +57,9 @@ const sBaixa = baixaTitulosStore()
 const titulos = ref([])
 const codpessoaFiltro = ref(null)
 const codpessoa = ref(null)
-const transacao = ref(formataDataIso(new Date()))
+// a data de quando abriu a tela; sem mexer, vai vazia (agora, no servidor)
+const transacaoAbertura = formataTimestampIso(new Date()).slice(0, 16)
+const transacao = ref(transacaoAbertura)
 const observacao = ref('')
 
 const lancou = computed(() => sBaixa.pagamentos.length > 0)
@@ -115,7 +118,9 @@ const abrirWizard = async () => {
 const gravar = async () => {
   const pags = await sBaixa.finalizar(props.finalizar.url, {
     ...props.finalizar.extras,
-    ...(props.comData ? { transacao: transacao.value } : {}),
+    ...(props.comData && transacao.value !== transacaoAbertura
+      ? { transacao: transacao.value }
+      : {}),
     observacao: observacao.value || null,
   })
   if (!pags) return
@@ -164,10 +169,17 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
       <q-separator inset />
       <q-card-section>
         <div class="row q-col-gutter-md">
-          <div class="col-xs-12 col-sm-3" v-if="comData">
-            <MgInputData v-model="transacao" label="Data" :bottom-slots="false" />
+          <div class="col-xs-12 col-sm-4" v-if="comData">
+            <MgInputData
+              v-model="transacao"
+              type="timestamp"
+              default-time="keep"
+              :seconds="false"
+              label="Data"
+              :bottom-slots="false"
+            />
           </div>
-          <div class="col-xs-12" :class="comData ? 'col-sm-9' : ''">
+          <div class="col-xs-12" :class="comData ? 'col-sm-8' : ''">
             <MgSelectPessoa v-model="codpessoa" label="Pessoa" :bottom-slots="false" />
           </div>
           <div class="col-12">

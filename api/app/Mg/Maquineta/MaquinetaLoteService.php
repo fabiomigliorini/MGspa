@@ -12,16 +12,17 @@ use Mg\Pagamento\PagamentoService;
 
 /**
  * Periodo da maquineta (TASK-188 M9.8; no banco, lote), no padrao do
- * portador e seus periodos (doc-4). O cartao com maquineta cai no periodo
- * aberto (sem fim); o cancelamento de verdade cai no aberto no momento do
- * cancelamento, como no extrato da maquineta. Registro indevido sai do
- * periodo. O gerente confere: aberto -> pendente (bordero digitado que nao
- * bateu) -> conferido. O lancamento pertence ao periodo pelo vinculo, nao
- * pela hora: mover deixa fora do inicio e fim, e tudo bem.
+ * portador e seus periodos (doc-4). A data manda no periodo (TASK-204): o
+ * cartao cai no periodo da data dele (o aberto, se for agora; o de um
+ * periodo ja' conferido vai para o aberto); o cancelamento de verdade cai no
+ * aberto no momento do cancelamento, como no extrato da maquineta. Alterar a
+ * data (LancamentoDataService) leva o cartao ou o cancelamento para o periodo
+ * da data. Registro indevido sai do periodo. O gerente confere: aberto ->
+ * pendente (bordero digitado que nao bateu) -> conferido.
  */
 class MaquinetaLoteService
 {
-    private static function travar(int $codmaquineta): void
+    public static function travar(int $codmaquineta): void
     {
         Maquineta::where('codmaquineta', $codmaquineta)->lockForUpdate()->first();
     }
@@ -47,6 +48,49 @@ class MaquinetaLoteService
         ]);
     }
 
+    // periodo que contem a data (TASK-204: a data manda no periodo), nao
+    // conferido; depois do ultimo fim, o corrente
+    public static function daData(int $codmaquineta, Carbon $data): MaquinetaLote
+    {
+        $lote = MaquinetaLote::where('codmaquineta', $codmaquineta)
+            ->where('abertura', '<=', $data)
+            ->where(fn ($q) => $q->whereNull('fim')->orWhere('fim', '>=', $data))
+            ->orderBy('abertura', 'desc')
+            ->first();
+        if (!$lote) {
+            $depois = MaquinetaLote::where('codmaquineta', $codmaquineta)
+                ->where('abertura', '>', $data)
+                ->exists();
+            if ($depois) {
+                abort(422, "Não há período da maquineta em {$data->format('d/m/Y H:i')}.");
+            }
+            $lote = static::corrente($codmaquineta);
+        }
+        static::exigirNaoConferido($lote);
+        return $lote;
+    }
+
+    // ao entrar (TASK-204, a data manda no periodo): o periodo da data, se nao
+    // conferido; senao (conferido, ou sem data) o corrente, como sempre foi —
+    // o cartao que a API confirma depois nao trava num periodo ja' conferido
+    private static function doMomento(int $codmaquineta, $transacao): MaquinetaLote
+    {
+        if ($transacao) {
+            $data = Carbon::parse($transacao);
+            $lote = MaquinetaLote::where('codmaquineta', $codmaquineta)
+                ->where('abertura', '<=', $data)
+                ->whereNotNull('fim')
+                ->where('fim', '>=', $data)
+                ->whereNull('fechamento')
+                ->orderBy('abertura', 'desc')
+                ->first();
+            if ($lote) {
+                return $lote;
+            }
+        }
+        return static::corrente($codmaquineta);
+    }
+
     // chamado no saving do Pagamento (via ConferenciaService::vincular)
     public static function vincular(Pagamento $pag): void
     {
@@ -60,7 +104,7 @@ class MaquinetaLoteService
             return;
         }
         if (empty($pag->codmaquinetalote) || $pag->isDirty('codmaquineta')) {
-            $pag->codmaquinetalote = static::corrente($pag->codmaquineta)->codmaquinetalote;
+            $pag->codmaquinetalote = static::doMomento($pag->codmaquineta, $pag->transacao)->codmaquinetalote;
         }
         if ($cancelado && empty($pag->codmaquinetalotecancelamento)) {
             $pag->codmaquinetalotecancelamento = static::corrente($pag->codmaquineta)->codmaquinetalote;

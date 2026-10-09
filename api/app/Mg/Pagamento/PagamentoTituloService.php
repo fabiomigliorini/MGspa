@@ -2,12 +2,14 @@
 
 namespace Mg\Pagamento;
 
+use Mg\Ocorrencia\OcorrenciaService;
 use Carbon\Carbon;
 use Mg\Cheque\Cheque;
 use Mg\Cheque\ChequeService;
 use Mg\Cheque\Cmc7\Cmc7;
 use Mg\Maquineta\Maquineta;
 use Mg\Pdv\Pdv;
+use Mg\Portador\LancamentoDataService;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorMovimentoService;
 use Mg\Titulo\MovimentoTitulo;
@@ -108,7 +110,7 @@ class PagamentoTituloService
     /**
      * Baixa os titulos com as formas informadas e devolve os pagamentos.
      *
-     * $dados: codpessoa, transacao (contas), observacao, titulos[] (codtitulo,
+     * $dados: codpessoa, transacao (com hora), observacao, titulos[] (codtitulo,
      * saldo, juros, multa, desconto, total) e pagamentos[] (meio, total,
      * codportador, codmaquineta, bandeira, autorizacao, parcelas, cheque,
      * codpagamento = cobranca integrada ja' confirmada, codpagamentoorigem =
@@ -122,9 +124,8 @@ class PagamentoTituloService
         if (empty($dados['titulos']) || !is_array($dados['titulos'])) {
             abort(422, 'Selecione ao menos um título!');
         }
-        $transacao = $pdv
-            ? Carbon::now()
-            : Carbon::parse($dados['transacao'] ?? 'today')->startOfDay();
+        // a data com hora (TASK-204), no contas e no PDV: o periodo sai dela
+        $transacao = LancamentoDataService::dataInformada($dados['transacao'] ?? null);
 
         // linhas dos titulos, com o sinal do movimento (negativo = entra)
         $linhas = [];
@@ -183,6 +184,9 @@ class PagamentoTituloService
         foreach ($formas as $i => $forma) {
             $somaPartes = static::somarPartes($partes[$i]);
             $pag = static::pagamentoDaForma($forma, $entrada, $compensacao, $somaPartes, $dados, $transacao, $pdv, $codfilialTitulos);
+            // o titulo liquida na data do pagamento (a cobranca integrada tem
+            // a dela, da confirmacao): um lugar so' manda na data
+            $dataPagamento = Carbon::parse($pag->transacao ?? $transacao)->format('Y-m-d');
             foreach ($partes[$i] as $parte) {
                 MovimentoTituloHelper::liquidar(
                     $parte['titulo'],
@@ -190,7 +194,7 @@ class PagamentoTituloService
                     $parte['juros'],
                     $parte['multa'],
                     $parte['desconto'],
-                    $transacao->format('Y-m-d'),
+                    $dataPagamento,
                     $pag->codportadordestino ?? $pag->codportadororigem,
                     null,
                     $pag->codpagamento
@@ -495,6 +499,11 @@ class PagamentoTituloService
         $pag = $mov->Pagamento ?? new Pagamento();
         $entrada = (float) $mov->total < 0;
         $titulo = $mov->Titulo;
+        // a data alterada a mao (TASK-204) vale sobre a do banco no
+        // reprocessamento: o pagamento e o movimento do titulo ficam nela
+        $alterada = $pag->exists && PagamentoCorrecao::where('codpagamento', $pag->codpagamento)
+            ->whereRaw("antes->>'transacao' is distinct from depois->>'transacao'")
+            ->exists();
         PagamentoService::preencher($pag, [
             'codportadordestino' => $entrada ? $codportador : null,
             'codportadororigem' => $entrada ? null : $codportador,
@@ -504,16 +513,23 @@ class PagamentoTituloService
             'juros' => (float) $mov->juros,
             'multa' => (float) $mov->multa,
             'desconto' => (float) $mov->desconto,
-            'transacao' => Carbon::parse($transacao ?? $mov->transacao),
+            'transacao' => $alterada ? $pag->transacao : Carbon::parse($transacao ?? $mov->transacao),
             'efetivacao' => $pag->efetivacao ?? Carbon::now(),
             'codpessoa' => $titulo->codpessoa,
             'codfilial' => $titulo->codfilial,
         ]);
         $pag->save();
         PortadorMovimentoService::sincronizar($pag);
-        if ($mov->codpagamento != $pag->codpagamento) {
+        $dia = Carbon::parse($pag->transacao)->format('Y-m-d');
+        if ($mov->codpagamento != $pag->codpagamento || ($alterada && Carbon::parse($mov->transacao)->format('Y-m-d') != $dia)) {
             $mov->codpagamento = $pag->codpagamento;
+            if ($alterada) {
+                $mov->transacao = $dia;
+            }
             $mov->save();
+            if ($alterada) {
+                MovimentoTituloService::recalcular($titulo);
+            }
         }
         return $pag;
     }
@@ -521,7 +537,8 @@ class PagamentoTituloService
     // Corrige pessoa, portador, meio, data e observacao, como a liquidacao
     // permitia (decisao do Fabio, 01/10/2026: excecao a regra de o pagamento
     // nao mudar). Valores e titulos nao mudam: para isso, estorna e lanca de
-    // novo. O portador e a data vao junto para as linhas do movimento.
+    // novo. O portador vai junto para as linhas do movimento; a data, pelo
+    // LancamentoDataService (com justificativa, TASK-204).
     public static function atualizar(Pagamento $pag, array $dados): Pagamento
     {
         if ($pag->estado == PagamentoService::ESTADO_CANCELADO) {
@@ -541,8 +558,14 @@ class PagamentoTituloService
                 abort(422, 'Baixa de boleto pelo banco não é alterada aqui.');
             }
         }
-        $transacao = Carbon::parse($dados['transacao'])->startOfDay();
-        $mudouData = $pag->transacao->format('Y-m-d') != $transacao->format('Y-m-d');
+        // a data com hora (TASK-204): mudou, vai primeiro pelo alterar data
+        // (periodo, razao, titulos e a trilha, com justificativa), com a
+        // permissao do lapis; depois o portador, ja' na data nova
+        $transacao = Carbon::parse($dados['transacao'])->startOfMinute();
+        if ($pag->transacao->format('Y-m-d H:i') != $transacao->format('Y-m-d H:i')) {
+            LancamentoDataService::alterarPagamento($pag, $transacao, $dados['justificativa'] ?? null, true);
+            $pag->refresh();
+        }
 
         // compensacao (sem dinheiro) continua sem portador
         $codportador = null;
@@ -574,7 +597,6 @@ class PagamentoTituloService
             $pag->codfilial = $portador->codfilial ?? $pag->codfilial;
         }
         $pag->codpessoa = (int) $dados['codpessoa'];
-        $pag->transacao = $transacao;
         $pag->observacoes = $dados['observacao'] ?? null;
         PagamentoService::validar($pag);
         $pag->save();
@@ -582,12 +604,7 @@ class PagamentoTituloService
 
         foreach ($pag->MovimentoTituloS as $mov) {
             $mov->codportador = $codportador;
-            $mov->transacao = $transacao->format('Y-m-d');
             $mov->save();
-            // a data de liquidacao do titulo sai da transacao dos movimentos
-            if ($mudouData) {
-                MovimentoTituloService::recalcular($mov->Titulo);
-            }
         }
         return PagamentoListaService::carregar($pag->codpagamento);
     }
@@ -621,6 +638,7 @@ class PagamentoTituloService
             $cheque->cancelamento = Carbon::now();
             $cheque->save();
         }
+        $vale = $pag->meio == PagamentoService::MEIO_VALE;
         foreach ($pag->MovimentoTituloS as $mov) {
             if ($mov->ehEstorno() || $mov->MovimentoTituloEstornoS()->exists()) {
                 continue;
@@ -628,6 +646,7 @@ class PagamentoTituloService
             // vale colaborador / adiantamento: o pagamento nasceu com o
             // titulo, estornar e' desfazer o titulo (so' se nao movimentado)
             if ($mov->codtipomovimentotitulo == MovimentoTituloService::TIPO_IMPLANTACAO) {
+                $vale = true;
                 TituloService::estornar($mov->Titulo, $justificativa);
                 continue;
             }
@@ -635,6 +654,7 @@ class PagamentoTituloService
         }
         $pag->refresh();
         PagamentoService::cancelar($pag, $justificativa);
+        OcorrenciaService::pagamentoEstornado($pag, $vale, $justificativa);
         return PagamentoListaService::carregar($pag->codpagamento);
     }
 

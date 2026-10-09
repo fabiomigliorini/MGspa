@@ -4,13 +4,15 @@
 // conta e observação → wizard de cobrança no sentido do tipo (vale e adiantamento a fornecedor:
 // sai dinheiro; adiantamento de cliente: entra). Cada forma lançada vira um título; quando as
 // formas fecham o valor, grava. Cada app informa as formas, o contexto do wizard (PDV ou contas)
-// e para onde manda. O wizard e os dialogs PIX/Stone/SafraPay ficam na página que usa.
+// e para onde manda. O wizard e os dialogs PIX/Stone/SafraPay ficam na página que usa. A data tem
+// hora (TASK-204: a data manda no período do portador; no PDV, a sessão da gaveta daquela hora);
+// sem mexer nela, vai vazia e o servidor usa agora.
 import { ref, computed, watch } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
-import { formataNumero, formataDataIso } from '@components/formatters'
+import { formataNumero, formataDataIso, formataTimestampIso } from '@components/formatters'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -26,7 +28,7 @@ const props = defineProps({
   contexto: { type: Function, required: true },
   // para onde vai: { url, extras }
   finalizar: { type: Object, required: true },
-  // data e filial escolhidas (contas); no PDV são agora e a filial dele
+  // data e hora (contas e PDV) e filial escolhida (contas; no PDV, a dele)
   comData: { type: Boolean, default: false },
   comFilial: { type: Boolean, default: false },
   filialPadrao: { type: Number, default: null },
@@ -48,6 +50,10 @@ const daquiA30Dias = () => {
   return formataDataIso(d)
 }
 
+// a data de quando abriu; sem mexer, vai vazia (agora, no servidor)
+const agora = () => formataTimestampIso(new Date()).slice(0, 16)
+const transacaoAbertura = ref(agora())
+
 const vazio = () => ({
   codtipotitulo: null,
   codpessoa: null,
@@ -55,7 +61,7 @@ const vazio = () => ({
   vencimento: daquiA30Dias(),
   codcontacontabil: null,
   codfilial: props.filialPadrao,
-  transacao: formataDataIso(new Date()),
+  transacao: transacaoAbertura.value,
   observacao: null,
 })
 
@@ -99,6 +105,7 @@ watch(
   () => props.modelValue,
   async (aberto) => {
     if (!aberto) return
+    transacaoAbertura.value = agora()
     form.value = vazio()
     sBaixa.iniciar({ pessoa: null, titulos: [] })
     await carregarTipos()
@@ -147,7 +154,9 @@ const gravar = async () => {
       codcontacontabil: form.value.codcontacontabil,
       vencimento: form.value.vencimento,
       observacao: form.value.observacao,
-      ...(props.comData ? { transacao: form.value.transacao } : {}),
+      ...(props.comData && form.value.transacao !== transacaoAbertura.value
+        ? { transacao: form.value.transacao }
+        : {}),
       ...(props.comFilial ? { codfilial: form.value.codfilial } : {}),
       pagamentos: sBaixa.pagamentos.map((p) => {
         const forma = { ...p }
@@ -196,16 +205,19 @@ watch(
                 @update:model-value="trocarTipo"
               />
             </div>
-            <div class="col-12 col-sm-4" v-if="comData">
+            <div class="col-12 col-sm-5" v-if="comData">
               <MgInputData
                 v-model="form.transacao"
+                type="timestamp"
+                default-time="keep"
+                :seconds="false"
                 label="Data"
                 :disable="lancou"
                 :rules="[(v) => !!v]"
                 lazy-rules
               />
             </div>
-            <div class="col-12 col-sm-8" v-if="comFilial">
+            <div class="col-12 col-sm-7" v-if="comFilial">
               <MgSelectFilial
                 v-model="form.codfilial"
                 label="Filial"

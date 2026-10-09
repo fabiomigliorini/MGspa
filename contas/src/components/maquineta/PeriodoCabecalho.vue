@@ -1,8 +1,8 @@
 <script setup>
 // Cabeçalho do período da maquineta (TASK-188 M9.8), no padrão do cabeçalho do período do
 // portador: a situação (aberto, pendente, conferido) e as ações, uma por botão. Não conferido:
-// início e fim, dividir e unificar com o anterior; conferido: reabrir (volta a pendente). A
-// conferência (quantidade e total do borderô) fica no resumo; a foto, na coluna ao lado.
+// início e fim, dividir e unificar com o anterior; conferido: reabrir (volta a pendente). O
+// resumo vem no mesmo card, embaixo; o Conferir é o FAB da página; a foto, na coluna ao lado.
 import { ref, computed, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -17,6 +17,7 @@ import {
 } from '@components/formatters'
 import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 import { linhasDoPeriodo } from 'components/maquineta/linhas'
+import PeriodoResumo from 'components/maquineta/PeriodoResumo.vue'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -212,6 +213,7 @@ function unificar() {
         </q-btn>
       </div>
     </q-card-section>
+    <PeriodoResumo />
   </q-card>
 
   <!-- início e fim -->

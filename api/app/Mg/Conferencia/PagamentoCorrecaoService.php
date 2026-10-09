@@ -5,7 +5,6 @@ namespace Mg\Conferencia;
 use Carbon\Carbon;
 use Mg\Caixa\CaixaService;
 use Mg\Maquineta\Maquineta;
-use Mg\Maquineta\MaquinetaLote;
 use Mg\Maquineta\MaquinetaLoteService;
 use Mg\Negocio\Negocio;
 use Mg\Pagamento\Pagamento;
@@ -153,15 +152,6 @@ class PagamentoCorrecaoService
                 if (array_key_exists($c, $dados)) {
                     $pag->$c = $dados[$c] === '' ? null : $dados[$c];
                 }
-            }
-            // mover de periodo: so' entre periodos nao conferidos da mesma maquineta
-            if (!empty($dados['codmaquinetalote']) && $dados['codmaquinetalote'] != $pag->codmaquinetalote) {
-                $lote = MaquinetaLote::findOrFail((int) $dados['codmaquinetalote']);
-                if ($lote->codmaquineta != $pag->codmaquineta) {
-                    abort(422, 'O período de destino é de outra maquineta: troque a maquineta.');
-                }
-                MaquinetaLoteService::exigirNaoConferido($lote);
-                $pag->codmaquinetalote = $lote->codmaquinetalote;
             }
         }
 
