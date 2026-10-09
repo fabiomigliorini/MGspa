@@ -48,6 +48,9 @@ const props = defineProps({
   carga: { type: Object, required: true },
   novo: { type: Boolean, default: false },
 })
+// `fechado(salvou)`: o modal fechou — pelo Salvar (true) ou por ESC, clique fora
+// ou Cancelar (false). O CargaForm usa pra desistir da carga nova no 1º passo.
+const emit = defineEmits(['fechado'])
 
 const $q = useQuasar()
 const store = useCargaStore()
@@ -113,6 +116,7 @@ const legendaMotorista = computed(() =>
 // ---- Modal ----
 const dialogAberto = ref(false)
 const salvando = ref(false)
+const salvou = ref(false)
 const edicao = ref({})
 // 'pesquisa' = select de pessoa; 'novo' = motorista sem cadastro ou a cadastrar
 // (CPF, nome, telefone, endereço — CargaMotoristaCampos).
@@ -193,6 +197,7 @@ function abrir() {
   semConexao.value = false
   inativoAvisado = null
   placaBusca.value = edicao.value.placa || ''
+  salvou.value = false
   dialogAberto.value = true
 }
 // Reativo ao sentido EM EDIÇÃO (não ao já salvo): trocar pra Expedição no
@@ -450,6 +455,7 @@ async function salvar() {
     // comum logo depois de trocar a operação): o aviso já saiu e a correção é
     // no bloco de Origem/Destino, não aqui; a gravação vem junto com ela.
     await persistirBloco()
+    salvou.value = true
     dialogAberto.value = false
     proximoPasso('operacao')
   } catch {
@@ -464,7 +470,7 @@ async function salvar() {
   <q-card flat bordered>
     <q-card-section>
       <div class="row items-center q-mb-sm">
-        <div class="text-subtitle2 text-grey-8">Operação</div>
+        <div class="text-subtitle1 text-grey-8">Operação</div>
         <q-space />
         <q-btn
           flat
@@ -479,50 +485,50 @@ async function salvar() {
 
       <div class="row q-col-gutter-md">
         <div class="col-6 col-sm-4">
-          <div class="text-caption text-grey-6">Operação</div>
+          <div class="text-body2 text-grey-6">Operação</div>
           <div class="row items-center no-wrap">
             <q-icon :name="sentido.icon" :color="sentido.color" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium">{{ sentido.label }}</span>
+            <span class="text-h6 text-weight-medium">{{ sentido.label }}</span>
           </div>
         </div>
         <div class="col-6 col-sm-4">
-          <div class="text-caption text-grey-6">Safra</div>
+          <div class="text-body2 text-grey-6">Safra</div>
           <div class="row items-center no-wrap">
             <q-icon name="eco" color="light-green-8" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium ellipsis">
+            <span class="text-h6 text-weight-medium ellipsis">
               {{ nomeSafra(carga.codsafra) || '—' }}
             </span>
           </div>
         </div>
         <div class="col-12 col-sm-4">
-          <div class="text-caption text-grey-6">Chegada</div>
+          <div class="text-body2 text-grey-6">Chegada</div>
           <div class="row items-center no-wrap">
             <q-icon name="schedule" color="blue-grey-6" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium">
+            <span class="text-h6 text-weight-medium">
               {{ carga.data ? formataTimestamp(carga.data) : '—' }}
             </span>
           </div>
         </div>
 
         <div class="col-6 col-sm-4">
-          <div class="text-caption text-grey-6">Placa</div>
+          <div class="text-body2 text-grey-6">Placa</div>
           <div class="row items-center no-wrap">
             <q-icon name="local_shipping" color="blue-grey-6" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium">{{ carga.placa || '—' }}</span>
+            <span class="text-h6 text-weight-medium">{{ carga.placa || '—' }}</span>
           </div>
         </div>
         <div v-if="ehExpedicao" class="col-6 col-sm-4">
-          <div class="text-caption text-grey-6">Reboque</div>
+          <div class="text-body2 text-grey-6">Reboque</div>
           <div class="row items-center no-wrap">
             <q-icon name="link" color="blue-grey-6" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium">{{ reboques || '—' }}</span>
+            <span class="text-h6 text-weight-medium">{{ reboques || '—' }}</span>
           </div>
         </div>
         <div class="col-12 col-sm-4">
-          <div class="text-caption text-grey-6">Motorista</div>
+          <div class="text-body2 text-grey-6">Motorista</div>
           <div class="row items-center no-wrap">
             <q-icon name="person" color="blue-grey-6" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium ellipsis">{{ carga.motorista || '—' }}</span>
+            <span class="text-h6 text-weight-medium ellipsis">{{ carga.motorista || '—' }}</span>
           </div>
           <div v-if="motoristaSemCadastro" class="text-caption text-grey-6">
             {{ legendaMotorista }}
@@ -532,7 +538,11 @@ async function salvar() {
     </q-card-section>
   </q-card>
 
-  <q-dialog v-model="dialogAberto" :maximized="$q.screen.lt.sm">
+  <q-dialog
+    v-model="dialogAberto"
+    :maximized="$q.screen.lt.sm"
+    @hide="emit('fechado', salvou)"
+  >
     <!-- F3 aqui confirma ESTE dialog; o .stop segura o F3 da página. -->
     <q-card
       flat

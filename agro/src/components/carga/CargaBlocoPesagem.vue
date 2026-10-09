@@ -99,7 +99,7 @@ async function salvar() {
           size="20px"
           class="q-mr-sm"
         />
-        <div class="text-subtitle2 text-grey-8">Pesagem</div>
+        <div class="text-subtitle1 text-grey-8">Pesagem</div>
         <q-space />
         <q-btn
           flat
@@ -114,25 +114,25 @@ async function salvar() {
 
       <div v-if="mostrarResultado" class="row text-center bg-grey-1 rounded-borders q-pa-sm">
         <div class="col">
-          <div class="text-caption text-grey-6">Bruto</div>
+          <div class="text-body2 text-grey-6">Bruto</div>
           <div class="text-h6">{{ fmt(calc.bruto) }} <small>kg</small></div>
         </div>
         <div class="col">
-          <div class="text-caption text-grey-6">Desconto</div>
+          <div class="text-body2 text-grey-6">Desconto</div>
           <div class="text-h6 text-orange-9">{{ fmt(calc.desconto) }} <small>kg</small></div>
         </div>
         <div class="col">
-          <div class="text-caption text-grey-6">Líquido</div>
+          <div class="text-body2 text-grey-6">Líquido</div>
           <div class="text-h6 text-green-9">{{ fmt(calc.liquido) }} <small>kg</small></div>
         </div>
         <div class="col">
-          <div class="text-caption text-grey-6">Sacas</div>
+          <div class="text-body2 text-grey-6">Sacas</div>
           <div class="text-h6">{{ fmt(sacasLiquido, 1) }}</div>
         </div>
       </div>
       <div v-else class="row q-col-gutter-md">
         <div v-if="mostrarPbt" class="col-6">
-          <div class="text-caption text-grey-6">Peso bruto total</div>
+          <div class="text-body2 text-grey-6">Peso bruto total</div>
           <div class="row items-center no-wrap">
             <q-icon
               :name="ETAPA_META.PBT.icon"
@@ -140,13 +140,13 @@ async function salvar() {
               size="24px"
               class="q-mr-sm"
             />
-            <span class="text-body1 text-weight-medium">
+            <span class="text-h6 text-weight-medium">
               {{ carga.pbt != null ? `${fmt(carga.pbt)} kg` : '—' }}
             </span>
           </div>
         </div>
         <div v-if="mostrarTara" class="col-6">
-          <div class="text-caption text-grey-6">Tara</div>
+          <div class="text-body2 text-grey-6">Tara</div>
           <div class="row items-center no-wrap">
             <q-icon
               :name="ETAPA_META.TARA.icon"
@@ -154,7 +154,7 @@ async function salvar() {
               size="24px"
               class="q-mr-sm"
             />
-            <span class="text-body1 text-weight-medium">
+            <span class="text-h6 text-weight-medium">
               {{ carga.tara != null ? `${fmt(carga.tara)} kg` : '—' }}
             </span>
           </div>

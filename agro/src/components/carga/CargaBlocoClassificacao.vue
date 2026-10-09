@@ -125,7 +125,7 @@ async function salvar() {
           size="20px"
           class="q-mr-sm"
         />
-        <div class="text-subtitle2 text-grey-8">Classificação</div>
+        <div class="text-subtitle1 text-grey-8">Classificação</div>
         <q-space />
         <q-btn
           flat
@@ -148,10 +148,10 @@ async function salvar() {
           :key="item.codparametroclassificacao"
           class="col-6 col-sm-4 col-md-3"
         >
-          <div class="text-caption text-grey-6 ellipsis">
+          <div class="text-body2 text-grey-6 ellipsis">
             {{ item.ordem }}. {{ item.parametroclassificacao }}
           </div>
-          <div class="text-body1 text-weight-medium">
+          <div class="text-h6 text-weight-medium">
             <template v-if="linhaDe(item.codparametroclassificacao).leitura != null">
               {{ fmt(linhaDe(item.codparametroclassificacao).leitura, 1) }}%
             </template>

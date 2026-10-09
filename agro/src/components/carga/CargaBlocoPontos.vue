@@ -166,7 +166,7 @@ async function salvar() {
   <q-card flat bordered>
     <q-card-section>
       <div class="row items-center q-mb-sm">
-        <div class="text-subtitle2 text-grey-8">Origem / Destino do grão</div>
+        <div class="text-subtitle1 text-grey-8">Origem / Destino do grão</div>
         <q-space />
         <q-btn
           flat
@@ -182,7 +182,7 @@ async function salvar() {
         <div class="col-12 col-md-6">
           <!-- login/logout: os mesmos ícones que o CargaResumo usa pra origem e
                destino no drawer da direita. -->
-          <div class="text-caption text-grey-6 q-mb-xs">
+          <div class="text-body2 text-grey-6 q-mb-xs">
             <q-icon name="login" size="16px" class="q-mr-xs" />Origem
           </div>
           <div v-if="!origens.length" class="text-grey-5">Nenhuma origem informada.</div>
@@ -196,7 +196,7 @@ async function salvar() {
               <q-tooltip>{{ contatipoMeta(p.contatipo).label }}</q-tooltip>
             </q-icon>
             <div class="col">
-              <div class="text-body1 text-weight-medium ellipsis">
+              <div class="text-h6 text-weight-medium ellipsis">
                 {{ p.rotulo || 'Não informado' }}
               </div>
               <div class="text-caption text-grey-6">
@@ -210,7 +210,7 @@ async function salvar() {
           </div>
         </div>
         <div class="col-12 col-md-6">
-          <div class="text-caption text-grey-6 q-mb-xs">
+          <div class="text-body2 text-grey-6 q-mb-xs">
             <q-icon name="logout" size="16px" class="q-mr-xs" />Destino
           </div>
           <div v-if="!destinos.length" class="text-grey-5">Nenhum destino informado.</div>
@@ -224,7 +224,7 @@ async function salvar() {
               <q-tooltip>{{ contatipoMeta(p.contatipo).label }}</q-tooltip>
             </q-icon>
             <div class="col">
-              <div class="text-body1 text-weight-medium ellipsis">
+              <div class="text-h6 text-weight-medium ellipsis">
                 {{ p.rotulo || 'Não informado' }}
               </div>
               <div class="text-caption text-grey-6">
