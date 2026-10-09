@@ -35,6 +35,8 @@ class Pdv extends MgModel
         'ip',
         'latitude',
         'longitude',
+        'minutosesquecido',
+        'monitoramento',
         'navegador',
         'observacoes',
         'plataforma',
@@ -57,6 +59,8 @@ class Pdv extends MgModel
         'inativo' => 'datetime',
         'latitude' => 'float',
         'longitude' => 'float',
+        'minutosesquecido' => 'integer',
+        'monitoramento' => 'date:Y-m-d',
         'precisao' => 'float'
     ];
 

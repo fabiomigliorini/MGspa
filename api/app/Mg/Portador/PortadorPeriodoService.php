@@ -2,6 +2,7 @@
 
 namespace Mg\Portador;
 
+use Mg\Ocorrencia\OcorrenciaService;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
@@ -392,6 +393,9 @@ class PortadorPeriodoService
         $periodo->save();
         static::recalcular($periodo);
         CaixaItemService::recalcularSaldos($portador->codportador);
+        // negocio ainda aberto no PDV desta gaveta vai para o livro de
+        // ocorrencias (TASK-205); o caixa fecha do mesmo jeito
+        OcorrenciaService::esquecidos($portador->codportador);
         return $periodo->fresh();
     }
 

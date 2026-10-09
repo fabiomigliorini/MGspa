@@ -21,6 +21,12 @@ const menuGroups = [
         color: 'green-8',
         to: { name: 'fechamento' },
       },
+      {
+        label: 'Ocorrências',
+        icon: 'policy',
+        color: 'red-7',
+        to: { name: 'ocorrencia' },
+      },
       { label: 'Pix Recebidos', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
       {
         label: 'Pagamentos',

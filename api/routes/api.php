@@ -1398,6 +1398,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('conferencia/pagamento/{id}/conferir', '\Mg\Conferencia\ConferenciaController@conferirPagamento')->whereNumber('id');
     Route::delete('conferencia/pagamento/{id}/conferir', '\Mg\Conferencia\ConferenciaController@reabrirPagamento')->whereNumber('id');
 
+    // Livro de ocorrencias (TASK-205): tela Ocorrencias do contas
+    Route::get('ocorrencia', '\Mg\Ocorrencia\OcorrenciaController@index');
+    Route::post('ocorrencia/{id}/conferir', '\Mg\Ocorrencia\OcorrenciaController@conferir')->whereNumber('id');
+    Route::delete('ocorrencia/{id}/conferir', '\Mg\Ocorrencia\OcorrenciaController@reabrir')->whereNumber('id');
+
     // Mercos
     Route::post('pdv/mercos/pedido/importar/{alterado_apos?}', '\Mg\Pdv\PdvMercosController@importarPedido');
     Route::get('pdv/mercos/pedido/', '\Mg\Pdv\PdvMercosController@listagemPedido');

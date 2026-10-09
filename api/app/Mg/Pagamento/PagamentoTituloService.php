@@ -2,6 +2,7 @@
 
 namespace Mg\Pagamento;
 
+use Mg\Ocorrencia\OcorrenciaService;
 use Carbon\Carbon;
 use Mg\Cheque\Cheque;
 use Mg\Cheque\ChequeService;
@@ -637,6 +638,7 @@ class PagamentoTituloService
             $cheque->cancelamento = Carbon::now();
             $cheque->save();
         }
+        $vale = $pag->meio == PagamentoService::MEIO_VALE;
         foreach ($pag->MovimentoTituloS as $mov) {
             if ($mov->ehEstorno() || $mov->MovimentoTituloEstornoS()->exists()) {
                 continue;
@@ -644,6 +646,7 @@ class PagamentoTituloService
             // vale colaborador / adiantamento: o pagamento nasceu com o
             // titulo, estornar e' desfazer o titulo (so' se nao movimentado)
             if ($mov->codtipomovimentotitulo == MovimentoTituloService::TIPO_IMPLANTACAO) {
+                $vale = true;
                 TituloService::estornar($mov->Titulo, $justificativa);
                 continue;
             }
@@ -651,6 +654,7 @@ class PagamentoTituloService
         }
         $pag->refresh();
         PagamentoService::cancelar($pag, $justificativa);
+        OcorrenciaService::pagamentoEstornado($pag, $vale, $justificativa);
         return PagamentoListaService::carregar($pag->codpagamento);
     }
 
