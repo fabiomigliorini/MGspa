@@ -4,6 +4,7 @@ namespace Mg\Maquineta;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
 use Mg\Conferencia\ConferenciaPagamentoResource;
+use Mg\Portador\LancamentoDataService;
 
 // Periodo da maquineta (TASK-188 M9.8; no banco, lote). Sem `comLancamentos`,
 // so' o cabecalho (as abas da tela); com ele, o sistema no formato do
@@ -66,9 +67,13 @@ class MaquinetaLoteResource extends Resource
         $ret['fotos'] = $fotos;
         $ret['semBordero'] = !$this->aberto() && empty($fotos);
         $ret['anterior'] = optional(MaquinetaLoteService::anterior($this->resource))->only(['codmaquinetalote', 'fechamento']);
-        $ret['lancamentos'] = ConferenciaPagamentoResource::collection(
-            MaquinetaLoteService::pagamentos($this->codmaquinetalote)
-        );
+        $pagamentos = MaquinetaLoteService::pagamentos($this->codmaquinetalote);
+        $ret['lancamentos'] = ConferenciaPagamentoResource::collection($pagamentos);
+        // a ultima data alterada (TASK-204) da venda e do cancelamento:
+        // {codpagamento: {de, usuario, justificativa}}
+        $cods = $pagamentos->pluck('codpagamento')->all();
+        $ret['datasAlteradas'] = (object) LancamentoDataService::alteracoesPagamento($cods);
+        $ret['cancelamentosAlterados'] = (object) LancamentoDataService::alteracoesPagamento($cods, 'cancelamento');
         return $ret;
     }
 }

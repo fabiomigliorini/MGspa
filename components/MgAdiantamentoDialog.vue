@@ -50,6 +50,11 @@ const daquiA30Dias = () => {
   return formataDataIso(d)
 }
 
+// data de outro mês avisa (DIMP e relatórios já apurados), sem bloquear
+const trocaMes = computed(
+  () => !!form.value.transacao && form.value.transacao.slice(0, 7) !== agora().slice(0, 7),
+)
+
 // a data de quando abriu; sem mexer, vai vazia (agora, no servidor)
 const agora = () => formataTimestampIso(new Date()).slice(0, 16)
 const transacaoAbertura = ref(agora())
@@ -225,6 +230,13 @@ watch(
                 :rules="[(v) => !!v]"
                 lazy-rules
               />
+            </div>
+            <div
+              v-if="comData && trocaMes"
+              class="col-12 text-caption text-orange-9 row no-wrap items-center"
+            >
+              <q-icon name="warning" size="xs" class="q-mr-xs" />
+              Data de outro mês: pode afetar a DIMP e relatórios já apurados.
             </div>
             <div class="col-12">
               <MgSelectPessoa

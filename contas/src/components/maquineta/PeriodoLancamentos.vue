@@ -7,12 +7,12 @@
 // período não conferido, cada venda tem Corrigir (crédito/débito, maquineta, bandeira, autorização,
 // parcelas, valor), Registro indevido (sai do período como se nunca tivesse entrado) e Alterar a
 // data (TASK-204: a data manda no período, o cartão vai para o período da data); o cancelamento
-// tem a data própria, que se altera sem mexer na venda.
+// tem a data própria, que se altera sem mexer na venda. A data alterada aparece embaixo da linha.
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
-import { formataNumero, formataData, formataHora } from '@components/formatters'
+import { formataNumero, formataData, formataHora, formataTimestamp } from '@components/formatters'
 import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
 import CorrecaoPagamentoDialog from 'components/conferencia/CorrecaoPagamentoDialog.vue'
@@ -62,6 +62,11 @@ const dataDe = ref(null)
 const dialogData = ref(false)
 const ehCancelamento = (x) => x.cancelada || !!x.outroPeriodo
 const podeAlterarData = (x) => editavel.value && (ehCancelamento(x) || x.l.estado !== 'C')
+// a última data alterada da linha (a da venda ou a do cancelamento): {de, usuario, justificativa}
+const alterada = (x) =>
+  ehCancelamento(x)
+    ? periodo.value?.cancelamentosAlterados?.[x.l.codpagamento]
+    : periodo.value?.datasAlteradas?.[x.l.codpagamento]
 function abrirData(x) {
   dataDe.value = {
     codpagamento: x.l.codpagamento,
@@ -188,6 +193,11 @@ function indevido(x) {
                 </template>
               </div>
             </div>
+            <div v-if="alterada(x)" class="text-caption text-grey-7 q-pl-xl">
+              <q-icon name="event" size="xs" />
+              era {{ formataTimestamp(alterada(x).de) }}: {{ alterada(x).justificativa }}
+              <template v-if="alterada(x).usuario"> · {{ alterada(x).usuario }}</template>
+            </div>
           </q-item-section>
         </q-item>
       </template>
@@ -237,6 +247,11 @@ function indevido(x) {
                   </q-tooltip>
                 </q-btn>
               </div>
+            </div>
+            <div v-if="alterada(x)" class="text-caption text-grey-7 q-pl-xl">
+              <q-icon name="event" size="xs" />
+              era {{ formataTimestamp(alterada(x).de) }}: {{ alterada(x).justificativa }}
+              <template v-if="alterada(x).usuario"> · {{ alterada(x).usuario }}</template>
             </div>
           </q-item-section>
         </q-item>
