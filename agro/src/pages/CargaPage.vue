@@ -130,6 +130,13 @@ async function onCancelar(carga) {
   router.replace({ name: 'carga' })
 }
 
+// Desistiu da carga nova no 1º modal: volta pra "Nenhuma carga aberta". Só se
+// ainda estiver em 'nova' — clicar noutra carga com o modal aberto desmonta o
+// form e fecha o dialog, e isso não pode sequestrar a navegação pro vazio.
+function onDesistir() {
+  if (route.params.uuid === 'nova') router.replace({ name: 'carga' })
+}
+
 function novaCarga() {
   router.push({ name: 'carga', params: { uuid: 'nova' } })
 }
@@ -187,6 +194,7 @@ onUnmounted(() => {
       @registrada="onRegistrada"
       @avancar="onAvancar"
       @cancelar="onCancelar"
+      @desistir="onDesistir"
     />
 
     <div v-else class="absolute-center text-center text-grey-6 q-pa-md">

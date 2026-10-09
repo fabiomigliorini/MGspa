@@ -43,7 +43,7 @@ const props = defineProps({
   // através dela (via persistirBloco), nunca chamando a store diretamente.
   persistir: { type: Function, default: null },
 })
-const emit = defineEmits(['registrada', 'avancar', 'cancelar'])
+const emit = defineEmits(['registrada', 'avancar', 'cancelar', 'desistir'])
 
 const $q = useQuasar()
 const store = useCargaStore()
@@ -609,9 +609,20 @@ provide('finalizando', finalizando)
 // Carga nova já abre no modal de Operação, com o cursor na Safra — é o 1º passo
 // da cadeia. Vale também pra carga em branco que aparece depois de finalizar
 // (o `:key` da página remonta o form).
+// Fechar esse 1º modal sem salvar (ESC, clique fora, Cancelar) é desistir da
+// carga: a página volta pra "Nenhuma carga aberta" em vez de deixar o formulário
+// em branco na tela. Só o 1º: reaberto depois (pelo card ou pelo Registrar sem
+// safra), a carga nova pode já ter dado digitado nos outros blocos.
+let primeiroPasso = false
 onMounted(() => {
-  if (props.novo) blocoOperacao.value?.abrir()
+  if (!props.novo) return
+  primeiroPasso = true
+  blocoOperacao.value?.abrir()
 })
+function onOperacaoFechada(salvou) {
+  if (primeiroPasso && !salvou) emit('desistir')
+  primeiroPasso = false
+}
 
 // Atalhos da página (F3 = principal com validação do q-form; F4 = imprimir).
 defineExpose({
@@ -626,7 +637,12 @@ defineExpose({
 <template>
   <q-form v-if="local" ref="formRef" @submit.prevent="onSubmit" @validation-error="onErroValidacao">
     <div class="q-pa-md q-gutter-y-md carga-form">
-      <CargaBlocoOperacao ref="blocoOperacao" :carga="local" :novo="ehNova" />
+      <CargaBlocoOperacao
+        ref="blocoOperacao"
+        :carga="local"
+        :novo="ehNova"
+        @fechado="onOperacaoFechada"
+      />
       <CargaBlocoPontos ref="blocoPontos" :carga="local" :novo="ehNova" />
       <CargaBlocoPesagem ref="blocoPesagem" :carga="local" :novo="ehNova" />
       <CargaBlocoClassificacao ref="blocoClassificacao" :carga="local" :novo="ehNova" />
