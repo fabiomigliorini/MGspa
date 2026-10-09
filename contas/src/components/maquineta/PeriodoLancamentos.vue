@@ -61,8 +61,7 @@ function corrigir(x) {
 const dataDe = ref(null)
 const dialogData = ref(false)
 const ehCancelamento = (x) => x.cancelada || !!x.outroPeriodo
-const podeAlterarData = (x) =>
-  editavel.value && (ehCancelamento(x) || x.l.estado !== 'C' || x.l.operacao === 'DB')
+const podeAlterarData = (x) => editavel.value && (ehCancelamento(x) || x.l.estado !== 'C')
 function abrirData(x) {
   dataDe.value = {
     codpagamento: x.l.codpagamento,

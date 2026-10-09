@@ -166,8 +166,9 @@ class PortadorLancamentoService
     }
 
     // so' sai o que esta' no caixa: o saldo inicial e as entradas do periodo,
-    // menos as saidas ja' lancadas, por preco e descricao
-    private static function exigirDisponivel(PortadorPeriodo $periodo, CaixaItem $item, array $linhas): void
+    // menos as saidas ja' lancadas, por preco e descricao (tambem ao levar a
+    // saida para outro periodo, LancamentoDataService)
+    public static function exigirDisponivel(PortadorPeriodo $periodo, CaixaItem $item, array $linhas): void
     {
         $disponivel = CaixaItemService::disponivel($periodo, PortadorPeriodoService::anterior($periodo))[$item->codcaixaitem] ?? [];
         $chave = fn ($l) => number_format((float) $l['preco'], 2, '.', '') . '|' . mb_strtolower($l['descricao'] ?? '');

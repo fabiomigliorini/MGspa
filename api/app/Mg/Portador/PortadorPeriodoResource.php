@@ -334,13 +334,14 @@ class PortadorPeriodoResource extends Resource
         $mutavel = !$this->fechado();
         $pdv = PortadorAutorizador::livre() == $portador->codportador;
         $operador = !$pdv && PortadorAutorizador::pode($portador->codportador, PortadorUsuario::PAPEL_OPERADOR);
-        // alterar a data (TASK-204): o gestor do portador; no PDV, a gaveta dele
-        $alteraData = $mutavel && ($pdv || PortadorAutorizador::pode($portador->codportador, PortadorUsuario::PAPEL_GESTOR));
+        // alterar a data (TASK-204): o gestor de cada portador da linha; no
+        // PDV, so' o que e' so' da gaveta dele
+        $livre = PortadorAutorizador::livre() ?? 0;
         $alteradas = LancamentoDataService::alteracoesMovimento(
             $linhas->where('tipo', '<>', PortadorMovimento::TIPO_PAGAMENTO)->pluck('codportadormovimento')->all()
         );
         $alteradosPag = LancamentoDataService::alteracoesPagamento($linhas->pluck('codpagamento')->filter()->all());
-        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $portador, $mutavel, $operador, $pdv, $alteraData, $alteradas, $alteradosPag) {
+        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $portador, $mutavel, $operador, $pdv, $livre, $alteradas, $alteradosPag) {
             $l->setRelation('Portador', $portador);
             $valendo = $l->valendo();
             if ($valendo) {
@@ -362,7 +363,7 @@ class PortadorPeriodoResource extends Resource
                 'contraparte' => null,
                 'podeConfirmar' => false,
                 'podeCancelar' => false,
-                'podeAlterarData' => $valendo && $alteraData,
+                'podeAlterarData' => $valendo && $mutavel && LancamentoDataService::podeMovimento($l, $livre),
                 // a ultima data alterada: {de, usuario, justificativa}
                 'dataAlterada' => $l->tipo == PortadorMovimento::TIPO_PAGAMENTO
                     ? ($alteradosPag[$l->codpagamento] ?? null)
@@ -428,7 +429,8 @@ class PortadorPeriodoResource extends Resource
                     && $pag->transacao && $pag->Negocio->lancamento->format('Y-m-d') != $pag->transacao->format('Y-m-d')
                     ? $pag->Negocio->lancamento : null,
                 // conferido: so' reabrindo a conferencia
-                'podeAlterarData' => $valendo && $alteraData && empty($pag->conferencia),
+                'podeAlterarData' => $valendo && $mutavel && empty($pag->conferencia)
+                    && LancamentoDataService::podeMovimento($l, $livre),
                 // taxa, tarifa, rendimento (banco)
                 'podeCancelar' => $valendo && $mutavel && $operador
                     && $origem == PagamentoListaService::ORIGEM_AVULSO

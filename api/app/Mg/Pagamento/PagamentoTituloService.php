@@ -183,6 +183,9 @@ class PagamentoTituloService
         foreach ($formas as $i => $forma) {
             $somaPartes = static::somarPartes($partes[$i]);
             $pag = static::pagamentoDaForma($forma, $entrada, $compensacao, $somaPartes, $dados, $transacao, $pdv, $codfilialTitulos);
+            // o titulo liquida na data do pagamento (a cobranca integrada tem
+            // a dela, da confirmacao): um lugar so' manda na data
+            $dataPagamento = Carbon::parse($pag->transacao ?? $transacao)->format('Y-m-d');
             foreach ($partes[$i] as $parte) {
                 MovimentoTituloHelper::liquidar(
                     $parte['titulo'],
@@ -190,7 +193,7 @@ class PagamentoTituloService
                     $parte['juros'],
                     $parte['multa'],
                     $parte['desconto'],
-                    $transacao->format('Y-m-d'),
+                    $dataPagamento,
                     $pag->codportadordestino ?? $pag->codportadororigem,
                     null,
                     $pag->codpagamento
@@ -495,6 +498,11 @@ class PagamentoTituloService
         $pag = $mov->Pagamento ?? new Pagamento();
         $entrada = (float) $mov->total < 0;
         $titulo = $mov->Titulo;
+        // a data alterada a mao (TASK-204) vale sobre a do banco no
+        // reprocessamento: o pagamento e o movimento do titulo ficam nela
+        $alterada = $pag->exists && PagamentoCorrecao::where('codpagamento', $pag->codpagamento)
+            ->whereRaw("antes->>'transacao' is distinct from depois->>'transacao'")
+            ->exists();
         PagamentoService::preencher($pag, [
             'codportadordestino' => $entrada ? $codportador : null,
             'codportadororigem' => $entrada ? null : $codportador,
@@ -504,16 +512,23 @@ class PagamentoTituloService
             'juros' => (float) $mov->juros,
             'multa' => (float) $mov->multa,
             'desconto' => (float) $mov->desconto,
-            'transacao' => Carbon::parse($transacao ?? $mov->transacao),
+            'transacao' => $alterada ? $pag->transacao : Carbon::parse($transacao ?? $mov->transacao),
             'efetivacao' => $pag->efetivacao ?? Carbon::now(),
             'codpessoa' => $titulo->codpessoa,
             'codfilial' => $titulo->codfilial,
         ]);
         $pag->save();
         PortadorMovimentoService::sincronizar($pag);
-        if ($mov->codpagamento != $pag->codpagamento) {
+        $dia = Carbon::parse($pag->transacao)->format('Y-m-d');
+        if ($mov->codpagamento != $pag->codpagamento || ($alterada && Carbon::parse($mov->transacao)->format('Y-m-d') != $dia)) {
             $mov->codpagamento = $pag->codpagamento;
+            if ($alterada) {
+                $mov->transacao = $dia;
+            }
             $mov->save();
+            if ($alterada) {
+                MovimentoTituloService::recalcular($titulo);
+            }
         }
         return $pag;
     }
@@ -542,10 +557,14 @@ class PagamentoTituloService
                 abort(422, 'Baixa de boleto pelo banco não é alterada aqui.');
             }
         }
-        // a data com hora (TASK-204): mudou, vai pelo alterar data (periodo,
-        // razao, titulos e a trilha, com justificativa) depois do resto
+        // a data com hora (TASK-204): mudou, vai primeiro pelo alterar data
+        // (periodo, razao, titulos e a trilha, com justificativa), com a
+        // permissao do lapis; depois o portador, ja' na data nova
         $transacao = Carbon::parse($dados['transacao'])->startOfMinute();
-        $mudouData = $pag->transacao->format('Y-m-d H:i') != $transacao->format('Y-m-d H:i');
+        if ($pag->transacao->format('Y-m-d H:i') != $transacao->format('Y-m-d H:i')) {
+            LancamentoDataService::alterarPagamento($pag, $transacao, $dados['justificativa'] ?? null, true);
+            $pag->refresh();
+        }
 
         // compensacao (sem dinheiro) continua sem portador
         $codportador = null;
@@ -585,9 +604,6 @@ class PagamentoTituloService
         foreach ($pag->MovimentoTituloS as $mov) {
             $mov->codportador = $codportador;
             $mov->save();
-        }
-        if ($mudouData) {
-            LancamentoDataService::alterarPagamento($pag->fresh(), $transacao, $dados['justificativa'] ?? null);
         }
         return PagamentoListaService::carregar($pag->codpagamento);
     }

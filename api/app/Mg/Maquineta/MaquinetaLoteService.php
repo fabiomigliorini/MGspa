@@ -22,7 +22,7 @@ use Mg\Pagamento\PagamentoService;
  */
 class MaquinetaLoteService
 {
-    private static function travar(int $codmaquineta): void
+    public static function travar(int $codmaquineta): void
     {
         Maquineta::where('codmaquineta', $codmaquineta)->lockForUpdate()->first();
     }

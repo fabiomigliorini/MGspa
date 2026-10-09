@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-08 21:59'
-updated_date: '2026-10-08 22:12'
+updated_date: '2026-10-09 00:33'
 labels:
   - contas
 dependencies: []
@@ -85,4 +85,20 @@ Roteiro de teste
 5. Maquineta: calendário num cartão → vai para o período da data; num cancelamento de outro período → muda só a data do cancelamento.
 6. Troca de mês: escolher data noutro mês → aviso laranja no dialog.
 7. Lápis do recebimento: mudar a hora → pede justificativa; salva e o razão mostra a data nova.
+
+Revisão (08/10/2026, depois do commit 783933f7b; testado no dev em transação desfeita)
+- Calendário zerava a hora ao escolher o dia (voltava a cair no período das 00:00): MgInputData ganhou default-time="keep" (troca o dia, mantém a hora), usado nos campos novos.
+- Permissão: gestor de CADA portador que muda (antes bastava um lado: o gestor do caixa mexia na ponta do cofre). O PDV só altera o que é só da gaveta dele. O botão da linha segue a mesma regra.
+- Lápis do recebimento volta à permissão dele (a de editar o pagamento; o encontro de contas, sem portador, só o admin conseguia); a data vai primeiro, depois o portador novo.
+- Cobrança integrada (PIX QR, Stone, SafraPay) na baixa e no vale: o título usa a data do pagamento.
+- Saída de item só vai para período onde o item está no caixa (a mesma regra do lançamento).
+- Vale: a data nova não passa do vencimento nem de baixa já feita no título.
+- Cheque recebido acompanha a data do pagamento.
+- Boleto reprocessado (retorno/API BB) mantém a data alterada à mão.
+- Trava da maquineta ao alterar a data (corrida com o Conferir); botão de data não aparece no estorno cancelado (o servidor recusa).
+
+Riscos que ficam (não tratados)
+- Mover uma ENTRADA de item para outro período não confere as saídas que dependiam dela.
+- O número do vale gerado pela data de emissão (AAAA-MM-DD) não muda junto.
+- O codpdv do request não é validado pelo dispositivo (padrão que já existia em sangria e cancelamento); com a regra por portador, o alcance fica na gaveta do próprio PDV.
 <!-- SECTION:NOTES:END -->

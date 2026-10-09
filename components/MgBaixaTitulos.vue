@@ -173,6 +173,7 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
             <MgInputData
               v-model="transacao"
               type="timestamp"
+              default-time="keep"
               :seconds="false"
               label="Data"
               :bottom-slots="false"

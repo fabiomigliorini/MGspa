@@ -223,6 +223,7 @@ watch(() => route.fullPath, carregar)
                 <MgInputData
                   v-model="editar.transacao"
                   type="timestamp"
+                  default-time="keep"
                   :seconds="false"
                   label="Data"
                   :rules="[(v) => !!v || 'Obrigatório']"

@@ -12,7 +12,8 @@ const props = defineProps({
   defaultTime: {
     type: String,
     default: "start",
-    validator: (v) => ["start", "end", "now"].includes(v),
+    // keep: troca o dia e mantém a hora que já estava (sem valor, a de agora)
+    validator: (v) => ["start", "end", "now", "keep"].includes(v),
   },
   yearDigits: {
     type: [Number, String],
@@ -459,6 +460,9 @@ function applyDefaultTime(dt) {
   } else if (props.defaultTime === "now") {
     const now = new Date();
     dt.setHours(now.getHours(), now.getMinutes(), now.getSeconds(), 0);
+  } else if (props.defaultTime === "keep") {
+    const hora = lastValid.value ?? new Date();
+    dt.setHours(hora.getHours(), hora.getMinutes(), hora.getSeconds(), 0);
   } else {
     dt.setHours(0, 0, 0, 0);
   }

@@ -61,6 +61,7 @@ function salvar() {
               <MgInputData
                 v-model="form.transacao"
                 type="timestamp"
+                default-time="keep"
                 :seconds="false"
                 label="Data"
                 autofocus

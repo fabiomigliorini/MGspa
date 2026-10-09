@@ -83,13 +83,16 @@ class TituloAdiantamentoService
         $pagamentos = [];
         foreach ($formas as $forma) {
             $pag = PagamentoTituloService::pagamentoDaForma($forma, $entrada, false, $zero, $dados, $transacao, $pdv, $codfilial);
+            // o titulo nasce na data do pagamento (a cobranca integrada tem a
+            // dela, da confirmacao)
+            $dataPagamento = Carbon::parse($pag->transacao ?? $transacao)->toDateString();
             TituloService::criar([
                 'codtipotitulo' => $tipo->codtipotitulo,
                 'codfilial' => $codfilial,
                 'codpessoa' => (int) $dados['codpessoa'],
                 'codcontacontabil' => (int) $dados['codcontacontabil'],
-                'transacao' => $transacao->toDateString(),
-                'emissao' => $transacao->toDateString(),
+                'transacao' => $dataPagamento,
+                'emissao' => $dataPagamento,
                 'vencimento' => $vencimento->toDateString(),
                 'valor' => (float) $pag->total,
                 'observacao' => $dados['observacao'] ?? null,
