@@ -3,9 +3,11 @@ id: TASK-204
 title: >-
   Lançamento feito com a data errada não tem como ir para o dia certo no caixa,
   no banco e na maquininha
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@fabio'
 created_date: '2026-10-08 21:59'
+updated_date: '2026-10-08 22:12'
 labels:
   - contas
 dependencies: []
@@ -49,3 +51,38 @@ Notas técnicas:
 - [ ] #15 Juros, multa, desconto e total não mudam ao alterar a data
 - [ ] #16 O caixa pendente não fecha sozinho depois da alteração: fecha pelo botão Fechar
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Implementação (08/10/2026, aguardando teste do Fábio; nada commitado):
+
+Servidor
+- LancamentoDataService (Mg\Portador): alterarPagamento (transação, sessão da gaveta, período da maquineta, razão via sincronizar, movimentos dos títulos com recálculo da liquidação; título que nasceu com o pagamento leva emissão e transação), alterarCancelamento (data e período do cancelamento do cartão), alterarMovimento (ajuste, item, borderô, transferência nas duas pontas), dataInformada (data com hora ao lançar).
+- Rotas: POST v1/portador-movimento/{id}/data e POST v1/maquineta-lote/{id}/pagamento/{codpagamento}/data. Removidos o "mover" da correção (PagamentoCorrecaoService) e a rota GET v1/maquineta/{cod}/lote.
+- Baixa de título e vale/adiantamento (contas e PDV) usam a data com hora informada; sem data, agora. Lápis do recebimento: data com hora; mudou, vai pelo alterarPagamento com justificativa.
+- Maquineta: o cartão entra no período da data se ele não estiver conferido; senão, no aberto (o cartão que a API confirma depois não trava).
+- Trilha: pagamento em tblpagamentocorrecao; movimento na tabela nova tblportadormovimentocorrecao.
+- DDL do go-live: api/database/portador_movimento_correcao.sql (já aplicada no banco de dev).
+
+Telas
+- Extrato do portador (contas e caixa do PDV): botão de calendário na linha, dialog AlterarDataDialog (data com hora, justificativa, aviso de troca de mês); linha mostra "era dd/mm hh:mm: justificativa · usuário"; venda com pagamento noutro dia mostra o selo "venda de dd/mm".
+- Período da maquineta: calendário na venda, no estorno e no cancelamento (data do cancelamento); "Corrigir" não move mais de período.
+- Baixa de títulos e Vale/Adiantamento: data com hora no contas e no PDV (antes o PDV não tinha data).
+- Detalhe do pagamento (lápis): data com hora, justificativa e aviso de troca de mês quando a data muda.
+
+Escolhas feitas sem perguntar (revisar no teste)
+- Permissão: gestor de qualquer um dos portadores envolvidos (na transferência, origem ou destino); cartão: quem confere a maquineta (Gerente da filial/Financeiro); no PDV, a gaveta dele. O lápis do recebimento também exige isso para mudar a data.
+- Data informada até 5 minutos à frente vira agora (relógio do cliente); mais que isso, recusa.
+- O contas continua recusando a gaveta do PDV na baixa/vale (o PDV informa a data, decisão 4).
+- A data não pode ir para antes do início do razão (go-live).
+
+Roteiro de teste
+1. Caixa pendente de ontem: no PDV, lançar o vale com a data/hora de ontem dentro do período pendente → cai no período de ontem; no contas, Fechar o período de ontem → fecha se a diferença zerou.
+2. Lançar hoje e corrigir: no extrato do caixa de hoje, calendário na linha do vale (ou venda, título, item, borderô, ajuste, sangria) → data de ontem → a linha some de hoje, aparece em ontem com "era ... : justificativa"; a sangria muda também no cofre.
+3. Período fechado: tentar levar para um período fechado → recusa pedindo para reabrir.
+4. Título: alterar a data de um recebimento → a liquidação do título muda junto (tela do título).
+5. Maquineta: calendário num cartão → vai para o período da data; num cancelamento de outro período → muda só a data do cancelamento.
+6. Troca de mês: escolher data noutro mês → aviso laranja no dialog.
+7. Lápis do recebimento: mudar a hora → pede justificativa; salva e o razão mostra a data nova.
+<!-- SECTION:NOTES:END -->

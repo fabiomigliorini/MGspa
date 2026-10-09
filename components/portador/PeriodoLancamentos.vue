@@ -6,7 +6,9 @@
 // espécie) são movimento do portador (a transferência leva ao outro portador, no período onde o
 // valor caiu). O borderô da maquineta de parceiro (em espécie) mostra "sem borderô" enquanto não
 // tem a foto, e a câmera da linha vê e anexa. A confirmar em amarelo; cancelado riscado e fora do
-// saldo, com a justificativa. Confirmar e cancelar ficam na linha.
+// saldo, com a justificativa. Confirmar, cancelar e alterar a data (TASK-204: a linha vai para o
+// período da data, com justificativa; a data alterada aparece embaixo) ficam na linha. A venda com
+// o pagamento noutro dia mostra a data da venda (a da NFC-e).
 // Lançar é um FAB no canto da tela que abre a lista do que fazer (LancarCaixaDialog). No caixa do
 // PDV (negocios) o que é do contas (pagamento, outro portador) abre por :href.
 import { ref, computed } from 'vue'
@@ -14,11 +16,13 @@ import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import BorderoFotosDialog from '@components/caixa/BorderoFotosDialog.vue'
+import AlterarDataDialog from '@components/portador/AlterarDataDialog.vue'
 import {
   formataNumero,
   formataData,
   formataDataCompleta,
   formataHora,
+  formataTimestamp,
 } from '@components/formatters'
 import { periodoStore } from '@components/stores/periodoStore'
 
@@ -133,6 +137,17 @@ const corValor = (l) =>
   cancelado(l) ? 'text-strike text-grey-5' : l.valor < 0 ? 'text-red-8' : 'text-green-8'
 const valor = (l) => (l.valor > 0 ? '+' : '') + formataNumero(l.valor)
 
+// alterar a data da linha escolhida
+const dataDe = ref(null)
+const dialogData = ref(false)
+function abrirData(l) {
+  dataDe.value = l
+  dialogData.value = true
+}
+async function alterarData(dados) {
+  if (await store.alterarData(dataDe.value.codportadormovimento, dados)) dialogData.value = false
+}
+
 const justificar = (title, ok, fn) =>
   $q
     .dialog({
@@ -242,6 +257,16 @@ function cancelar(l) {
                 <q-badge v-if="pendente(l)" color="amber-8" label="a confirmar" />
                 <q-badge v-if="cancelado(l)" color="grey-5" label="cancelado" />
                 <q-badge v-if="l.semBordero" color="orange-8" label="sem borderô" />
+                <q-badge
+                  v-if="l.dataVenda"
+                  color="orange-8"
+                  :label="`venda de ${formataData(l.dataVenda)}`"
+                >
+                  <q-tooltip>
+                    A venda (e a NFC-e) é de {{ formataTimestamp(l.dataVenda) }}; o pagamento está
+                    noutra data
+                  </q-tooltip>
+                </q-badge>
                 <q-btn
                   v-if="l.fotos?.length || l.podeAnexar"
                   flat
@@ -279,6 +304,17 @@ function cancelar(l) {
                   <q-tooltip>Confirmar o recebimento</q-tooltip>
                 </q-btn>
                 <q-btn
+                  v-if="l.podeAlterarData"
+                  flat
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="event"
+                  @click.stop.prevent="abrirData(l)"
+                >
+                  <q-tooltip>Alterar a data</q-tooltip>
+                </q-btn>
+                <q-btn
                   v-if="l.podeCancelar"
                   flat
                   round
@@ -289,6 +325,11 @@ function cancelar(l) {
                 >
                   <q-tooltip>Cancelar</q-tooltip>
                 </q-btn>
+              </q-item-label>
+              <q-item-label v-if="l.dataAlterada" caption class="text-grey-7">
+                <q-icon name="event" size="xs" />
+                era {{ formataTimestamp(l.dataAlterada.de) }}: {{ l.dataAlterada.justificativa }}
+                <template v-if="l.dataAlterada.usuario"> · {{ l.dataAlterada.usuario }}</template>
               </q-item-label>
               <q-item-label v-if="cancelado(l) && l.justificativa" caption class="text-grey-7">
                 {{ l.justificativa }}
@@ -317,6 +358,12 @@ function cancelar(l) {
 
     <MgEmptyState v-else plain icon="receipt_long">Nenhum lançamento.</MgEmptyState>
 
+    <AlterarDataDialog
+      v-model="dialogData"
+      :data="dataDe?.transacao"
+      :salvando="store.salvando"
+      @salvar="alterarData"
+    />
     <BorderoFotosDialog
       v-model="dialogFotos"
       :codportadormovimento="fotosDe"

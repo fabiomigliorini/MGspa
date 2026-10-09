@@ -41,7 +41,7 @@ class PagamentoListaService
 
     const RELACOES = [
         'Pessoa:codpessoa,fantasia',
-        'Negocio:codnegocio,codpessoa',
+        'Negocio:codnegocio,codpessoa,lancamento',
         'Negocio.Pessoa:codpessoa,fantasia',
         'PortadorDestino:codportador,portador,codfilial,tipo',
         'PortadorOrigem:codportador,portador,codfilial,tipo',

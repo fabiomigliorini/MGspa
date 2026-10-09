@@ -1,11 +1,10 @@
 <script setup>
 // Correção de um lançamento na conferência (M9 doc-3): o gerente acerta o pagamento com a
-// realidade — crédito/débito, maquineta, período, bandeira, autorização, parcelas, valor, ou
-// cartão que foi dinheiro. Justificativa obrigatória; o antes/depois fica gravado.
+// realidade — crédito/débito, maquineta, bandeira, autorização, parcelas, valor, ou cartão que foi
+// dinheiro. Justificativa obrigatória; o antes/depois fica gravado. Mudar de período é alterar a
+// data (TASK-204: a data manda no período), no botão da data da linha.
 import { ref, computed, watch } from 'vue'
-import { api } from 'src/services/api'
 import { BANDEIRAS } from '@components/cobranca/pagamento.js'
-import { formataTimestamp } from '@components/formatters'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectMaquineta from '@components/MgSelectMaquineta.vue'
@@ -30,7 +29,6 @@ const OPCOES_BANDEIRA = Object.entries(BANDEIRAS).map(([value, label]) => ({
 }))
 
 const form = ref({})
-const lotes = ref([])
 
 const cartao = computed(() => [3, 4].includes(form.value.meio))
 // valor e meio só mudam em pagamento de venda ou avulso (o de título estorna e lança de novo)
@@ -43,34 +41,12 @@ watch(model, (aberto) => {
     meio: l.meio,
     principal: l.principal,
     codmaquineta: l.codmaquineta,
-    codmaquinetalote: l.codmaquinetalote,
     bandeira: l.bandeira,
     autorizacao: l.autorizacao,
     parcelas: l.parcelas,
     justificativa: '',
   }
 })
-
-// períodos não conferidos da maquineta escolhida (mover a venda feita depois do borderô)
-const SITUACAO = { aberto: 'aberto', pendente: 'pendente' }
-watch(
-  () => [model.value, form.value.codmaquineta],
-  async ([aberto, codmaquineta]) => {
-    lotes.value = []
-    if (!aberto || !codmaquineta) return
-    try {
-      const { data } = await api.get(`v1/maquineta/${codmaquineta}/lote`)
-      lotes.value = data.data.map((l) => ({
-        value: l.codmaquinetalote,
-        label:
-          `${formataTimestamp(l.abertura, 2)} até ` +
-          `${l.fim ? formataTimestamp(l.fim, 2) : 'agora'} (${SITUACAO[l.situacao]})`,
-      }))
-    } catch {
-      lotes.value = []
-    }
-  },
-)
 
 async function salvar() {
   const l = props.lancamento
@@ -84,13 +60,6 @@ async function salvar() {
     'parcelas',
   ]) {
     if (form.value[campo] !== l[campo]) payload[campo] = form.value[campo]
-  }
-  // mover de período só na mesma maquineta (trocar a maquineta já leva ao período aberto dela)
-  if (
-    form.value.codmaquineta === l.codmaquineta &&
-    form.value.codmaquinetalote !== l.codmaquinetalote
-  ) {
-    payload.codmaquinetalote = form.value.codmaquinetalote
   }
   const ret = await store.corrigirPagamento(l.codpagamento, payload)
   if (ret) {
@@ -130,18 +99,6 @@ async function salvar() {
             <template v-if="cartao">
               <div class="col-12 col-sm-6">
                 <MgSelectMaquineta v-model="form.codmaquineta" label="Maquineta" />
-              </div>
-              <div class="col-12 col-sm-6">
-                <q-select
-                  v-model="form.codmaquinetalote"
-                  :options="lotes"
-                  emit-value
-                  map-options
-                  outlined
-                  label="Período"
-                  :disable="form.codmaquineta !== lancamento?.codmaquineta"
-                  hint="Mover para outro período não conferido"
-                />
               </div>
               <div class="col-12 col-sm-6">
                 <q-select

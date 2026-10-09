@@ -7,6 +7,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Mg\Conferencia\ConferenciaAutorizador;
+use Mg\Pagamento\Pagamento;
+use Mg\Portador\LancamentoDataService;
 
 /**
  * A maquineta e seus periodos no contas (TASK-188 M9.8), no padrao do
@@ -55,18 +57,6 @@ class MaquinetaPeriodoController extends Controller
         $maquineta = Maquineta::findOrFail($codmaquineta);
         ConferenciaAutorizador::autorizarMaquineta($maquineta);
         return $this->dados($maquineta, $codmaquinetalote);
-    }
-
-    // periodos nao conferidos (destino do "mover" na correcao do lancamento)
-    public function lista(int $codmaquineta)
-    {
-        $maquineta = Maquineta::findOrFail($codmaquineta);
-        ConferenciaAutorizador::autorizarMaquineta($maquineta);
-        $lotes = MaquinetaLote::where('codmaquineta', $codmaquineta)
-            ->whereNull('fechamento')
-            ->orderBy('abertura', 'desc')
-            ->get();
-        return ['data' => MaquinetaLoteResource::lista($lotes, [], [])];
     }
 
     private function resposta(MaquinetaLote $lote)
@@ -130,6 +120,27 @@ class MaquinetaPeriodoController extends Controller
         $lote = $this->periodo($id);
         $anterior = DB::transaction(fn () => MaquinetaLoteService::unificar($lote));
         return $this->resposta($anterior->fresh('Maquineta'));
+    }
+
+    // alterar a data do cartao (TASK-204): a data manda no periodo, o cartao
+    // vai para o periodo da data; `cancelamento`: a data do cancelamento.
+    // Devolve a tela no periodo de onde saiu
+    public function data(Request $request, int $id, int $codpagamento)
+    {
+        $dados = $request->validate([
+            'transacao' => 'required|date',
+            'justificativa' => 'required|string|min:5|max:300',
+            'cancelamento' => 'nullable|boolean',
+        ]);
+        $lote = $this->periodo($id);
+        $pag = Pagamento::findOrFail($codpagamento);
+        if ($pag->codmaquinetalote != $lote->codmaquinetalote && $pag->codmaquinetalotecancelamento != $lote->codmaquinetalote) {
+            abort(422, 'O pagamento não é deste período.');
+        }
+        DB::transaction(fn () => empty($dados['cancelamento'])
+            ? LancamentoDataService::alterarPagamento($pag, Carbon::parse($dados['transacao']), $dados['justificativa'])
+            : LancamentoDataService::alterarCancelamento($pag, Carbon::parse($dados['transacao']), $dados['justificativa']));
+        return $this->resposta($lote->fresh('Maquineta'));
     }
 
     // anexar vale tambem no conferido (a foto que faltou)

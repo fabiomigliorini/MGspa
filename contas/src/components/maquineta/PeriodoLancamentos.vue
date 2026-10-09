@@ -4,8 +4,10 @@
 // no computador, em cinza, o caixa e a venda). A linha leva à venda ou ao pagamento. A venda
 // cancelada no próprio período fica fora, como no papel, e volta riscada no "Mostrar cancelados";
 // o cancelamento de venda de outro período e o estorno ficam num bloco no fim, negativos. No
-// período não conferido, cada venda tem Corrigir (crédito/débito, maquineta, período, bandeira,
-// autorização, parcelas, valor) e Registro indevido (sai do período como se nunca tivesse entrado).
+// período não conferido, cada venda tem Corrigir (crédito/débito, maquineta, bandeira, autorização,
+// parcelas, valor), Registro indevido (sai do período como se nunca tivesse entrado) e Alterar a
+// data (TASK-204: a data manda no período, o cartão vai para o período da data); o cancelamento
+// tem a data própria, que se altera sem mexer na venda.
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
@@ -14,6 +16,7 @@ import { formataNumero, formataData, formataHora } from '@components/formatters'
 import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
 import CorrecaoPagamentoDialog from 'components/conferencia/CorrecaoPagamentoDialog.vue'
+import AlterarDataDialog from '@components/portador/AlterarDataDialog.vue'
 import { borderoDoPeriodo } from 'components/maquineta/linhas'
 
 const $q = useQuasar()
@@ -51,6 +54,26 @@ const corrigindo = ref(null)
 function corrigir(x) {
   corrigindo.value = x.l
   dialogCorrecao.value = true
+}
+
+// alterar a data: da venda que vale (ou do estorno), ou do cancelamento (a venda cancelada aqui
+// e a de outro período cancelada aqui)
+const dataDe = ref(null)
+const dialogData = ref(false)
+const ehCancelamento = (x) => x.cancelada || !!x.outroPeriodo
+const podeAlterarData = (x) =>
+  editavel.value && (ehCancelamento(x) || x.l.estado !== 'C' || x.l.operacao === 'DB')
+function abrirData(x) {
+  dataDe.value = {
+    codpagamento: x.l.codpagamento,
+    cancelamento: ehCancelamento(x),
+    data: ehCancelamento(x) ? (x.l.cancelamento ?? x.l.transacao) : x.l.transacao,
+  }
+  dialogData.value = true
+}
+async function alterarData(dados) {
+  const d = dataDe.value
+  if (await store.alterarData(d.codpagamento, dados, d.cancelamento)) dialogData.value = false
 }
 
 function indevido(x) {
@@ -94,7 +117,7 @@ function indevido(x) {
           <div class="col ellipsis">{{ b.titulo }}</div>
           <div class="text-right" style="width: 40px">{{ b.quantidade }}</div>
           <div class="text-right" style="width: 96px">{{ formataNumero(b.valor) }}</div>
-          <div v-if="editavel" style="width: 64px" />
+          <div v-if="editavel" style="width: 96px" />
         </div>
         <q-separator />
 
@@ -127,7 +150,20 @@ function indevido(x) {
               <div class="text-right text-weight-medium" style="width: 96px">
                 {{ formataNumero(x.valor) }}
               </div>
-              <div v-if="editavel" class="row no-wrap justify-end" style="width: 64px">
+              <div v-if="editavel" class="row no-wrap justify-end" style="width: 96px">
+                <q-btn
+                  v-if="podeAlterarData(x)"
+                  flat
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="event"
+                  @click.stop.prevent="abrirData(x)"
+                >
+                  <q-tooltip>
+                    {{ ehCancelamento(x) ? 'Alterar a data do cancelamento' : 'Alterar a data' }}
+                  </q-tooltip>
+                </q-btn>
                 <template v-if="podeCorrigir(x)">
                   <q-btn
                     flat
@@ -137,7 +173,7 @@ function indevido(x) {
                     icon="edit"
                     @click.stop.prevent="corrigir(x)"
                   >
-                    <q-tooltip>Corrigir (ou mover para outro período)</q-tooltip>
+                    <q-tooltip>Corrigir</q-tooltip>
                   </q-btn>
                   <q-btn
                     v-if="x.l.origem !== 'T'"
@@ -167,7 +203,7 @@ function indevido(x) {
           <div class="text-right" style="width: 96px">
             {{ formataNumero(bordero.cancelamentos.reduce((s, x) => s + x.valor, 0)) }}
           </div>
-          <div v-if="editavel" style="width: 64px" />
+          <div v-if="editavel" style="width: 96px" />
         </div>
         <q-separator />
         <q-item v-for="x in bordero.cancelamentos" :key="x.chave" clickable v-bind="link(x.l)">
@@ -187,7 +223,21 @@ function indevido(x) {
               <div class="text-right text-weight-medium text-red-8" style="width: 96px">
                 {{ formataNumero(x.valor) }}
               </div>
-              <div v-if="editavel" style="width: 64px" />
+              <div v-if="editavel" class="row no-wrap justify-end" style="width: 96px">
+                <q-btn
+                  v-if="podeAlterarData(x)"
+                  flat
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="event"
+                  @click.stop.prevent="abrirData(x)"
+                >
+                  <q-tooltip>
+                    {{ ehCancelamento(x) ? 'Alterar a data do cancelamento' : 'Alterar a data' }}
+                  </q-tooltip>
+                </q-btn>
+              </div>
             </div>
           </q-item-section>
         </q-item>
@@ -196,6 +246,13 @@ function indevido(x) {
 
     <MgEmptyState v-else plain icon="credit_card">Nenhum cartão neste período.</MgEmptyState>
 
+    <AlterarDataDialog
+      v-model="dialogData"
+      :data="dataDe?.data"
+      :rotulo="dataDe?.cancelamento ? 'a data do cancelamento' : 'a data'"
+      :salvando="store.salvando"
+      @salvar="alterarData"
+    />
     <CorrecaoPagamentoDialog
       v-model="dialogCorrecao"
       :lancamento="corrigindo"

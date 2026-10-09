@@ -94,7 +94,6 @@ class ConferenciaController extends Controller
             'meio' => 'nullable|integer',
             'principal' => 'nullable|numeric|gt:0',
             'codmaquineta' => 'nullable|integer|exists:tblmaquineta,codmaquineta',
-            'codmaquinetalote' => 'nullable|integer|exists:tblmaquinetalote,codmaquinetalote',
             'bandeira' => 'nullable|integer',
             'autorizacao' => 'nullable|string|max:40',
             'parcelas' => 'nullable|integer|min:1',
@@ -103,7 +102,7 @@ class ConferenciaController extends Controller
         $pag = $this->pagamento($id);
         $pag = DB::transaction(fn () => PagamentoCorrecaoService::corrigir(
             $pag,
-            $request->only(['meio', 'principal', 'codmaquineta', 'codmaquinetalote', 'bandeira', 'autorizacao', 'parcelas']),
+            $request->only(['meio', 'principal', 'codmaquineta', 'bandeira', 'autorizacao', 'parcelas']),
             $dados['justificativa']
         ));
         return new ConferenciaPagamentoResource($pag);

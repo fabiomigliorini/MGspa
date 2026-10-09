@@ -147,6 +147,26 @@ class PortadorLancamentoController extends Controller
         return $this->resposta($mov);
     }
 
+    // alterar a data da linha (TASK-204): a linha vai para o periodo da data;
+    // pagamento muda inteiro (razao, titulos), a transferencia nas duas pontas
+    public function data(Request $request, int $id)
+    {
+        $dados = $request->validate([
+            'transacao' => 'required|date',
+            'justificativa' => 'required|string|min:5|max:300',
+            'codpdv' => 'nullable|integer',
+        ]);
+        $mov = PortadorMovimento::with('Pagamento')->findOrFail($id);
+        $mexidos = DB::transaction(fn () => LancamentoDataService::alterarMovimento(
+            $mov,
+            Carbon::parse($dados['transacao']),
+            $dados['justificativa']
+        ));
+        $periodos = PortadorPeriodo::whereIn('codportadorperiodo', $mexidos->filter()->unique()->values())->get();
+        return ['data' => ['codportadormovimento' => $mov->codportadormovimento],
+            'periodos' => PortadorPeriodoResource::lista(PortadorPeriodoService::comSeguintes($periodos))];
+    }
+
     // ajuste, item, maquineta ou transferencia
     public function cancelar(Request $request, int $id)
     {

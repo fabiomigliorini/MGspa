@@ -8,6 +8,7 @@ use Mg\Pagamento\PagamentoListaService;
 use Mg\Pagamento\PagamentoService;
 use Mg\Pagamento\PagamentoTituloService;
 use Mg\Pdv\Pdv;
+use Mg\Portador\LancamentoDataService;
 use Mg\Usuario\Autorizador;
 
 /**
@@ -18,10 +19,11 @@ use Mg\Usuario\Autorizador;
  * a receber (vale, adiantamento a fornecedor) = sai dinheiro; a pagar
  * (adiantamento/credito de cliente) = entra.
  *
- * No PDV: dinheiro na gaveta, data = agora, filial do PDV, o caixa lanca
- * sozinho (Caixa/Gerente da filial) e a saida e' so' em dinheiro. No contas:
- * banco, cofre, cartao da empresa, cheque, cartao e PIX QR, com data e
- * filial escolhidas (quem pode, o controller confere).
+ * No PDV: dinheiro na gaveta, filial do PDV, o caixa lanca sozinho
+ * (Caixa/Gerente da filial) e a saida e' so' em dinheiro. No contas: banco,
+ * cofre, cartao da empresa, cheque, cartao e PIX QR, com a filial escolhida
+ * (quem pode, o controller confere). Nos dois, a data com hora (TASK-204;
+ * sem data, agora): a gaveta recusa sessao fechada.
  *
  * Estorno pela listagem de pagamentos (PagamentoTituloService::estornar
  * desfaz o titulo). Sem transacao interna.
@@ -47,7 +49,8 @@ class TituloAdiantamentoService
         if (empty($codfilial)) {
             abort(422, 'Informe a filial!');
         }
-        $transacao = $pdv ? Carbon::now() : Carbon::parse($dados['transacao'] ?? 'today')->startOfDay();
+        // a data com hora (TASK-204), no contas e no PDV: o periodo sai dela
+        $transacao = LancamentoDataService::dataInformada($dados['transacao'] ?? null);
         $vencimento = Carbon::parse($dados['vencimento'])->startOfDay();
         if ($vencimento->lt($transacao->copy()->startOfDay())) {
             abort(422, 'Vencimento não pode ser antes da data do lançamento!');

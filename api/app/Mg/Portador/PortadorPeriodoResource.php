@@ -334,7 +334,13 @@ class PortadorPeriodoResource extends Resource
         $mutavel = !$this->fechado();
         $pdv = PortadorAutorizador::livre() == $portador->codportador;
         $operador = !$pdv && PortadorAutorizador::pode($portador->codportador, PortadorUsuario::PAPEL_OPERADOR);
-        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $portador, $mutavel, $operador, $pdv) {
+        // alterar a data (TASK-204): o gestor do portador; no PDV, a gaveta dele
+        $alteraData = $mutavel && ($pdv || PortadorAutorizador::pode($portador->codportador, PortadorUsuario::PAPEL_GESTOR));
+        $alteradas = LancamentoDataService::alteracoesMovimento(
+            $linhas->where('tipo', '<>', PortadorMovimento::TIPO_PAGAMENTO)->pluck('codportadormovimento')->all()
+        );
+        $alteradosPag = LancamentoDataService::alteracoesPagamento($linhas->pluck('codpagamento')->filter()->all());
+        return $linhas->map(function (PortadorMovimento $l) use (&$saldo, $portador, $mutavel, $operador, $pdv, $alteraData, $alteradas, $alteradosPag) {
             $l->setRelation('Portador', $portador);
             $valendo = $l->valendo();
             if ($valendo) {
@@ -356,6 +362,11 @@ class PortadorPeriodoResource extends Resource
                 'contraparte' => null,
                 'podeConfirmar' => false,
                 'podeCancelar' => false,
+                'podeAlterarData' => $valendo && $alteraData,
+                // a ultima data alterada: {de, usuario, justificativa}
+                'dataAlterada' => $l->tipo == PortadorMovimento::TIPO_PAGAMENTO
+                    ? ($alteradosPag[$l->codpagamento] ?? null)
+                    : ($alteradas[$l->codportadormovimento] ?? null),
             ];
             switch ($l->tipo) {
                 case PortadorMovimento::TIPO_AJUSTE:
@@ -412,6 +423,12 @@ class PortadorPeriodoResource extends Resource
                 'texto' => static::texto($pag, $origem),
                 'detalhe' => PagamentoService::descricao($pag),
                 'documento' => PagamentoListaResource::documento($pag, $origem),
+                // venda com o pagamento noutro dia: a data do negocio (a da NFC-e)
+                'dataVenda' => $pag->Negocio && $pag->Negocio->lancamento
+                    && $pag->transacao && $pag->Negocio->lancamento->format('Y-m-d') != $pag->transacao->format('Y-m-d')
+                    ? $pag->Negocio->lancamento : null,
+                // conferido: so' reabrindo a conferencia
+                'podeAlterarData' => $valendo && $alteraData && empty($pag->conferencia),
                 // taxa, tarifa, rendimento (banco)
                 'podeCancelar' => $valendo && $mutavel && $operador
                     && $origem == PagamentoListaService::ORIGEM_AVULSO

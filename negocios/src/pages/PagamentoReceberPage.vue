@@ -37,6 +37,7 @@ const finalizado = async (pags) => {
         :formas="FORMAS_RECEBER"
         :contexto="contexto"
         :finalizar="{ url: 'v1/pdv/pagamento', extras: { pdv } }"
+        com-data
         :impressora="sNegocio.padrao.impressora"
         @finalizado="finalizado"
       />
