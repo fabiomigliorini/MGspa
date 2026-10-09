@@ -73,7 +73,13 @@ class ConferenciaService
     // as cegas.
     public static function pendencias(?int $codfilial): array
     {
-        $filiais = static::filiais($codfilial);
+        return static::consultar(static::filiais($codfilial), ConferenciaAutorizador::irrestrito());
+    }
+
+    // as pendencias das filiais pedidas (null = todas), sem olhar o usuario:
+    // quem autoriza e' quem chama. $comPix: PIX e deposito a confirmar
+    public static function consultar(?array $filiais, bool $comPix): array
+    {
         $inicio = static::inicio()->format('Y-m-d H:i:s');
         $ret = [];
 
@@ -162,7 +168,7 @@ class ConferenciaService
 
         // PIX por chave e deposito a receber: so' o financeiro, contra o
         // extrato (baixa o titulo no contas)
-        if (ConferenciaAutorizador::irrestrito()) {
+        if ($comPix) {
             $params = ['inicio' => $inicio];
             $where = static::whereFilial('t.codfilial', $filiais, $params);
             foreach (DB::select("

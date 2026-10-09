@@ -167,6 +167,17 @@ const routes = [
         },
       },
       {
+        // painel da filial (TASK-203): tudo pendente na filial, leva à tela que resolve
+        path: 'painel/:codfilial(\\d+)?',
+        name: 'painel',
+        component: () => import('pages/painel/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Painel',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+        },
+      },
+      {
         path: 'fechamento',
         name: 'fechamento',
         component: () => import('pages/fechamento/Index.vue'),

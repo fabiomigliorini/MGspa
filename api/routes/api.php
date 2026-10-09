@@ -1403,6 +1403,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('ocorrencia/{id}/conferir', '\Mg\Ocorrencia\OcorrenciaController@conferir')->whereNumber('id');
     Route::delete('ocorrencia/{id}/conferir', '\Mg\Ocorrencia\OcorrenciaController@reabrir')->whereNumber('id');
 
+    // Painel da filial (TASK-203): tudo pendente na filial, leva 'a tela que resolve
+    Route::get('filial/{codfilial}/painel', '\Mg\Painel\PainelController@show')->whereNumber('codfilial');
+
     // Mercos
     Route::post('pdv/mercos/pedido/importar/{alterado_apos?}', '\Mg\Pdv\PdvMercosController@importarPedido');
     Route::get('pdv/mercos/pedido/', '\Mg\Pdv\PdvMercosController@listagemPedido');
