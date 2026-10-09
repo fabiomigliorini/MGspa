@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-09 00:20'
-updated_date: '2026-10-09 01:36'
+updated_date: '2026-10-09 01:40'
 labels:
   - negocios
 dependencies: []
@@ -57,4 +57,6 @@ Revisão exaustiva (08/10/2026 à noite):
 - Corrigido: data de criação inválida ou adiantada vinda do PDV derrubava a sincronização (agora vira o momento atual); salvar o PDV com data vazia dava erro de SQL; a ocorrência agora é da filial do PDV (loja do gerente), não da filial do estoque do negócio; texto do vazio na tela.
 - HTTP via kernel: listagem, validações 422, conferir/reabrir, 404.
 - Navegador headless: contas /ocorrencia (conferir com Enter, filtros, reabrir, ordem por valor, celular sem rolagem lateral) ok; PDV: '−' pede motivo e recusa sem motivo, '+' não pede, excluir item com Outro exige texto.
+
+Testes de tela no PDV (headless, PDV 508, negócio 4541414 do dev, restaurado depois): '−' com motivo, excluir item com Outro, baixar preço no editar e excluir pagamento de cartão chegaram ao banco com item, antes/depois, valor e motivo certos; offline: a ocorrência fica no Dexie e chega uma vez só ao voltar a rede, com a hora da ação; PDV não monitorado mantém o fluxo antigo. Cadastro do PDV: minutos < 10 recusado, data vazia salva como não monitorado, lista mostra 'Monitorado desde'.
 <!-- SECTION:NOTES:END -->
