@@ -282,6 +282,25 @@ class LancamentoDataService
             : [$mov];
     }
 
+    // a entrada de item que sai do periodo: o disponivel do item la' (saldo
+    // inicial + entradas - saidas, com ela) tem de cobrir o que ela leva
+    private static function exigirEntradaLivre(PortadorMovimento $entrada): void
+    {
+        $periodo = $entrada->PortadorPeriodo;
+        $disponivel = CaixaItemService::disponivel($periodo, PortadorPeriodoService::anterior($periodo))[$entrada->codcaixaitem] ?? [];
+        $chave = fn ($l) => number_format((float) $l['preco'], 2, '.', '') . '|' . mb_strtolower($l['descricao'] ?? '');
+        $tem = [];
+        foreach ($disponivel as $l) {
+            $tem[$chave($l)] = $l['quantidade'];
+        }
+        foreach ($entrada->itens ?? [] as $l) {
+            if (($tem[$chave($l)] ?? 0) < $l['quantidade']) {
+                $nome = trim(optional($entrada->CaixaItem)->item . ' ' . ($l['descricao'] ?? '') . ' ' . number_format((float) $l['preco'], 2, ',', '.'));
+                abort(422, "A saída de {$nome} deste período usa esta entrada: mova ou cancele a saída antes.");
+            }
+        }
+    }
+
     public static function podeMovimento(PortadorMovimento $mov, ?int $livre = null): bool
     {
         if ($mov->tipo == PortadorMovimento::TIPO_PAGAMENTO) {
@@ -325,6 +344,11 @@ class LancamentoDataService
             // a saida de item so' vai para onde o item esta' no caixa, como ao lancar
             if ($l->tipo == PortadorMovimento::TIPO_ITEM && $l->valor < 0 && $destino->codportadorperiodo != $l->codportadorperiodo) {
                 PortadorLancamentoService::exigirDisponivel($destino, $l->CaixaItem, $l->itens ?? []);
+            }
+            // a entrada de item so' sai do periodo se a saida que ja' saiu
+            // dele continua coberta (o disponivel la' cobre o que ela leva)
+            if ($l->tipo == PortadorMovimento::TIPO_ITEM && $l->valor > 0 && $destino->codportadorperiodo != $l->codportadorperiodo) {
+                static::exigirEntradaLivre($l);
             }
             $l->transacao = $data;
             $l->codportadorperiodo = $destino->codportadorperiodo;
