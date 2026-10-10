@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-10 03:09'
+updated_date: '2026-10-10 15:39'
 labels:
   - contas
   - negocios
@@ -65,8 +65,9 @@ Desenho, decisões e o registro da execução de cada etapa: doc-3 (Plano do fec
 - [ ] #31 PIX pela chave que o banco confirma vira pagamento efetivado, sem documento, no razão do banco (a partir do início do razão), com a pessoa do CPF/CNPJ do pagador; aparece em não resolvidos
 - [ ] #32 PIX QR e Stone sem venda confirmam com a pessoa da cobrança
 - [ ] #33 'PIX pela chave' sai da forma Banco do contas (é só da venda, como parcela a receber)
-- [ ] #34 Permissão do dinheiro pelo papel do usuário no portador: receber = depositante; pagar, desamarrar, cancelar, corrigir e devolver = operador; alterar data = gestor (no cartão, o portador da adquirente); o PDV só pré-seleciona a gaveta (sai a gaveta livre por codpdv)
+- [ ] #34 Permissão do dinheiro pelo papel do usuário no portador: receber = depositante; pagar, desamarrar, cancelar, corrigir e devolver = operador; alterar data = gestor, ou operador com o período de onde sai e o para onde vai abertos (no cartão, o portador da adquirente); o PDV só pré-seleciona a gaveta (sai a gaveta livre por codpdv)
 - [ ] #35 SQL de go-live api/database/pagamento_amarracao.sql: portador Encontro de Contas e os papéis que faltam (caixa/gerente depositante em adquirentes, Carteira e bancos da filial; Cobrança como o Financeiro)
+- [ ] #37 Cartão Stone ou SafraPay de venda cancelada aparece em Não resolvidos para o caixa da filial, como entrada, com Já lançado, Devolver e Já recebido na venda; a listagem mostra a adquirente como portador e o filtro por portador acha o cartão
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -133,4 +134,6 @@ Mudanças de regra que o Fábio precisa conhecer:
 Deploy: rodar api/database/pagamento_amarracao.sql (revisar a seção 2), php artisan optimize (rotas novas) e reiniciar os workers da fila (queue:restart).
 
 Dados do dev criados/alterados pelos testes de tela: pagamentos 80247775–80247881 (vários cancelados), títulos 650418–650431, PIX 80246944/80246945/80247735 amarrados em parte, rascunho de venda 4549121 no PDV 511. Tudo de valor pequeno.
+
+Cartão órfão da venda (10/10/2026, testes depois do go-live): o pagamento de cartão da venda nunca gravou portador (codportadordestino e codportadororigem nulos; ~1 milhão de registros, Stone e SafraPay inclusive). Tudo que decidia o sentido e o portador por esses dois campos errava no cartão: o órfão não entrava em Não resolvidos para quem não é admin (filtro pelos portadores do papel), saía como saída (sem Já lançado nem Devolver), não amarrava em venda nova e na listagem virava encontro de contas (CP). Correção na leitura, sem SQL: Pagamento::portadorDoPagamento/codportadorDoPagamento caem na adquirente da maquineta e Pagamento::entrada() trata o cartão sem portador como entrada (salvo o cancelamento); usados em PagamentoPendenciaService (listar em SQL, formatar, duplicados, jaLancado, devolver), PagamentoTituloService (baixa com Já recebido, lápis), PdvPagamentoService (carregar, amarrarVenda), TituloService (vale) e PagamentoListaService (operacao CR e filtro por portador). portadorDaMaquineta lembra a adquirente no request (listagem de 48 para 14 consultas) e relê a pessoa quando a maquineta veio parcial. Testado: bateria s11 (23 checagens) e E2E no PDV como caixa.
 <!-- SECTION:NOTES:END -->

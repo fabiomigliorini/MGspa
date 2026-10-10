@@ -78,12 +78,26 @@ class PagamentoTituloService
         if (!$maquineta) {
             return null;
         }
-        return Portador::where('tipo', Portador::TIPO_ADQUIRENTE)
-            ->where('codpessoa', $maquineta->codpessoa)
-            ->whereNull('inativo')
-            ->orderBy('codportador')
-            ->first();
+        // a maquineta carregada so' com algumas colunas (a da listagem) vem
+        // sem a pessoa: sem ela, casaria a primeira adquirente sem pessoa
+        $codpessoa = $maquineta->codpessoa
+            ?? Maquineta::whereKey($maquineta->codmaquineta)->value('codpessoa');
+        if (empty($codpessoa)) {
+            return null;
+        }
+        // lembrado no request: a listagem pergunta uma vez por cartao
+        if (!array_key_exists($codpessoa, static::$adquirentes)) {
+            static::$adquirentes[$codpessoa] = Portador::where('tipo', Portador::TIPO_ADQUIRENTE)
+                ->where('codpessoa', $codpessoa)
+                ->whereNull('inativo')
+                ->orderBy('codportador')
+                ->first();
+        }
+        return static::$adquirentes[$codpessoa];
     }
+
+    // {codpessoa: Portador|null} da adquirente
+    private static array $adquirentes = [];
 
     // Liquido dos titulos com o sinal do movimento: negativo = entra
     // dinheiro (recebe mais do que paga), positivo = sai
@@ -191,7 +205,7 @@ class PagamentoTituloService
                 $linha['multa'],
                 $linha['desconto'],
                 $dataPagamento,
-                $pag->codportadordestino ?? $pag->codportadororigem,
+                $pag->codportadorDoPagamento(),
                 null,
                 $pag->codpagamento
             );
@@ -224,7 +238,7 @@ class PagamentoTituloService
         if (!empty($pag->codnegocio)) {
             abort(422, "O pagamento {$pag->codpagamento} está amarrado à venda #{$pag->codnegocio}!");
         }
-        if ($entrada != !empty($pag->codportadordestino)) {
+        if ($entrada != $pag->entrada()) {
             abort(422, $entrada
                 ? "O pagamento {$pag->codpagamento} é uma saída de dinheiro!"
                 : "O pagamento {$pag->codpagamento} é uma entrada de dinheiro!");
@@ -550,7 +564,7 @@ class PagamentoTituloService
         if (!empty($pag->codperiodocolaboradoracerto)) {
             abort(422, 'Pagamento de acerto de RH: altere pelo acerto.');
         }
-        $atual = $pag->codportadordestino ?? $pag->codportadororigem;
+        $atual = $pag->codportadorDoPagamento();
         if ((!empty($dados['meio']) && (int) $dados['meio'] != $pag->meio)
             || (!empty($dados['codportador']) && (int) $dados['codportador'] != $atual)) {
             abort(422, 'Meio e portador não mudam: desamarre os títulos, cancele e lance de novo.');

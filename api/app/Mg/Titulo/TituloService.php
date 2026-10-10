@@ -96,7 +96,7 @@ class TituloService
             $pagamento ? ['total' => (float) $titulo->valor] : [],
             [
                 'codportador'          => $pagamento
-                    ? ($pagamento->codportadordestino ?? $pagamento->codportadororigem)
+                    ? $pagamento->codportadorDoPagamento()
                     : $titulo->codportador,
                 'codtituloagrupamento' => $titulo->codtituloagrupamento,
                 'transacao'            => $titulo->transacao,

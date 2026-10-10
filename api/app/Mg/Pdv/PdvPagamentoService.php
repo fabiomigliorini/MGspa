@@ -75,7 +75,7 @@ class PdvPagamentoService
         $pag = PagamentoListaService::carregar($codpagamento);
         $daGaveta = !empty($pdv->codportador)
             && in_array($pdv->codportador, [$pag->codportadororigem, $pag->codportadordestino]);
-        $portador = $pag->codportadordestino ?? $pag->codportadororigem;
+        $portador = $pag->codportadorDoPagamento();
         $temPapel = !empty($portador)
             && \Mg\Portador\PortadorAutorizador::pode((int) $portador, \Mg\Portador\PortadorUsuario::PAPEL_DEPOSITANTE);
         if ($pag->codpdv != $pdv->codpdv && !$daGaveta && !$temPapel) {
@@ -101,7 +101,7 @@ class PdvPagamentoService
         if ($pag->estado != PagamentoService::ESTADO_EFETIVADO || !empty($pag->codnegocio)) {
             abort(422, "O pagamento {$pag->codpagamento} não está livre!");
         }
-        if (empty($pag->codportadordestino) || !empty($pag->codportadororigem)) {
+        if (!$pag->entrada()) {
             abort(422, "O pagamento {$pag->codpagamento} não é uma entrada de dinheiro!");
         }
         if (PagamentoPendenciaService::movimentosAtivos($pag)->isNotEmpty()

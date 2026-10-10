@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Mg\Auditoria\AuditoriaService;
 use Mg\Conferencia\ConferenciaService;
 use Mg\Negocio\NegocioService;
+use Mg\Portador\Portador;
 use Mg\Portador\PortadorAutorizador;
 use Mg\Portador\PortadorUsuario;
 use Mg\Titulo\MovimentoTitulo;
@@ -120,6 +121,14 @@ class PagamentoPendenciaService
             'primeiropessoa' => !empty($filtros['codpessoaprimeiro']) ? (int) $filtros['codpessoaprimeiro'] : null,
             'primeirofilial' => !empty($filtros['codfilialprimeiro']) ? (int) $filtros['codfilialprimeiro'] : null,
         ];
+        // o portador do pagamento; o cartao da venda nao grava portador: o da
+        // adquirente da maquineta (Pagamento::portadorDoPagamento)
+        $portador = "coalesce(p.codportadordestino, p.codportadororigem, (
+            select a.codportador from tblmaquineta mq
+            join tblportador a on (a.tipo = '" . Portador::TIPO_ADQUIRENTE . "' and a.codpessoa = mq.codpessoa and a.inativo is null)
+            where mq.codmaquineta = p.codmaquineta
+            order by a.codportador limit 1
+        ))";
         $where = [];
         if (!empty($filtros['codpessoa'])) {
             $where[] = 'p.codpessoa = :codpessoa';
@@ -130,7 +139,7 @@ class PagamentoPendenciaService
             $binds['codfilial'] = (int) $filtros['codfilial'];
         }
         if (!empty($filtros['codportador'])) {
-            $where[] = 'coalesce(p.codportadordestino, p.codportadororigem) = :codportador';
+            $where[] = "{$portador} = :codportador";
             $binds['codportador'] = (int) $filtros['codportador'];
         }
         if (!empty($filtros['codpagamento'])) {
@@ -138,7 +147,7 @@ class PagamentoPendenciaService
             $binds['codpagamento'] = (int) $filtros['codpagamento'];
         }
         if (($filtros['sentido'] ?? null) === 'entrada') {
-            $where[] = 'p.codportadordestino is not null';
+            $where[] = 'p.codportadororigem is null and (p.codportadordestino is not null or p.codmaquineta is not null)';
         } elseif (($filtros['sentido'] ?? null) === 'saida') {
             $where[] = 'p.codportadororigem is not null';
         }
@@ -147,7 +156,7 @@ class PagamentoPendenciaService
             if (empty($meus)) {
                 return [];
             }
-            $where[] = 'coalesce(p.codportadordestino, p.codportadororigem) in (' . implode(',', array_map('intval', $meus)) . ')';
+            $where[] = "{$portador} in (" . implode(',', array_map('intval', $meus)) . ')';
         }
         $internos = implode(',', static::MEIOS_INTERNOS);
         $sql = "
@@ -213,7 +222,7 @@ class PagamentoPendenciaService
     {
         return array_map(function ($l) {
             $pag = $l['pagamento'];
-            $portador = $pag->PortadorDestino ?? $pag->PortadorOrigem;
+            $portador = $pag->portadorDoPagamento();
             return [
                 'codpagamento' => (int) $pag->codpagamento,
                 'uuid' => $pag->uuid,
@@ -221,7 +230,7 @@ class PagamentoPendenciaService
                 'meiodescricao' => PagamentoService::descricao($pag),
                 // hora de Cuiaba sem fuso, como o detalhe e o extrato
                 'transacao' => optional($pag->transacao)->format('Y-m-d\TH:i:s'),
-                'entrada' => !empty($pag->codportadordestino),
+                'entrada' => $pag->entrada(),
                 'total' => (float) $pag->total,
                 'saldo' => $l['saldo'],
                 'amarrado' => $l['amarrado'],
@@ -241,10 +250,8 @@ class PagamentoPendenciaService
                 'integrado' => !PagamentoTituloService::manual($pag),
                 // o que o usuario pode fazer: amarrar (ja' filtrado: depositante)
                 // e, como operador do portador, devolver e casar com o digitado
-                'operador' => PortadorAutorizador::pode(
-                    (int) ($pag->codportadordestino ?? $pag->codportadororigem),
-                    PortadorUsuario::PAPEL_OPERADOR
-                ),
+                'operador' => !empty($portador)
+                    && PortadorAutorizador::pode((int) $portador->codportador, PortadorUsuario::PAPEL_OPERADOR),
                 'codpdv' => $pag->codpdv,
                 'pdv' => optional($pag->Pdv)->apelido,
             ];
@@ -268,9 +275,9 @@ class PagamentoPendenciaService
     // autorizacao quando os dois tem
     public static function duplicados(Pagamento $integrado): array
     {
-        $entrada = !empty($integrado->codportadordestino);
+        $entrada = $integrado->entrada();
         $dia = $integrado->transacao->copy();
-        $q = Pagamento::with(['Maquineta:codmaquineta,apelido', 'Pessoa:codpessoa,fantasia', 'Negocio:codnegocio,codnegociostatus'])
+        $q = Pagamento::with(['Maquineta:codmaquineta,apelido,codpessoa', 'Pessoa:codpessoa,fantasia', 'Negocio:codnegocio,codnegociostatus'])
             ->where('estado', PagamentoService::ESTADO_EFETIVADO)
             ->where('codpagamento', '!=', $integrado->codpagamento)
             ->whereBetween('total', [(float) $integrado->total - 0.005, (float) $integrado->total + 0.005])
@@ -278,7 +285,10 @@ class PagamentoPendenciaService
             ->whereNull('codpixcob')->whereNull('codpix')->whereNull('codpagarmepedido')
             ->whereNull('codsauruspedido')->whereNull('codliopedido')
             ->whereNull('codpagamentoorigem');
-        $q->whereNotNull($entrada ? 'codportadordestino' : 'codportadororigem');
+        // mesmo sentido (o cartao da venda nao grava portador: entrou)
+        $entrada
+            ? $q->whereNull('codportadororigem')->where(fn ($w) => $w->whereNotNull('codportadordestino')->orWhereNotNull('codmaquineta'))
+            : $q->whereNotNull('codportadororigem');
         if (in_array((int) $integrado->meio, PagamentoService::MEIOS_CARTAO)) {
             $q->whereIn('meio', PagamentoService::MEIOS_CARTAO);
             if (!empty($integrado->autorizacao)) {
@@ -325,7 +335,7 @@ class PagamentoPendenciaService
             abort(422, "O pagamento {$digitado->codpagamento} também é integrado!");
         }
         if (abs((float) $integrado->total - (float) $digitado->total) > 0.005
-            || empty($integrado->codportadordestino) != empty($digitado->codportadordestino)) {
+            || $integrado->entrada() != $digitado->entrada()) {
             abort(422, 'Os pagamentos não têm o mesmo valor e sentido!');
         }
         if (static::amarrado($integrado) > 0.005 || !empty($integrado->codnegocio)) {
@@ -334,7 +344,7 @@ class PagamentoPendenciaService
         // o lote da maquineta e o caixa do digitado ainda abertos
         \Mg\Conferencia\PagamentoCorrecaoService::exigirAberta($digitado);
 
-        $portador = $integrado->codportadordestino ?? $integrado->codportadororigem;
+        $portador = $integrado->codportadorDoPagamento();
         foreach (static::movimentosAtivos($digitado) as $mov) {
             $mov->codpagamento = $integrado->codpagamento;
             $mov->codportador = $portador;
@@ -369,7 +379,7 @@ class PagamentoPendenciaService
     public static function devolver(Pagamento $pag, float $valor, string $justificativa): Pagamento
     {
         $pag = Pagamento::lockForUpdate()->findOrFail($pag->codpagamento);
-        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO || empty($pag->codportadordestino)) {
+        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO || !$pag->entrada()) {
             abort(422, 'Só se devolve um recebimento efetivado!');
         }
         if (!in_array((int) $pag->meio, [PagamentoService::MEIO_CREDITO, PagamentoService::MEIO_DEBITO, PagamentoService::MEIO_PIX])) {
