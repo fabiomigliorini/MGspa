@@ -7,10 +7,11 @@ import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
 
 const sPagarMe = pagarMeStore()
-const rodando = ref(false)
+// qual botão está rodando: só ele gira, os outros esperam
+const rodando = ref(null)
 
 const consultar = async (ped) => {
-  rodando.value = true
+  rodando.value = 'consultar' + ped.codpagarmepedido
   try {
     sPagarMe.pedido = ped
     await sPagarMe.consultarPedido()
@@ -23,11 +24,11 @@ const consultar = async (ped) => {
       actions: [{ icon: 'close', color: 'white' }],
     })
   }
-  rodando.value = false
+  rodando.value = null
 }
 
 const cancelar = async (ped) => {
-  rodando.value = true
+  rodando.value = 'cancelar' + ped.codpagarmepedido
   try {
     sPagarMe.pedido = ped
     await sPagarMe.cancelarPedido()
@@ -40,11 +41,11 @@ const cancelar = async (ped) => {
       actions: [{ icon: 'close', color: 'white' }],
     })
   }
-  rodando.value = false
+  rodando.value = null
 }
 
 const atualizar = async () => {
-  rodando.value = true
+  rodando.value = 'atualizar'
   try {
     await sPagarMe.consultarPedidosPendentes()
   } catch (error) {
@@ -55,11 +56,11 @@ const atualizar = async () => {
       actions: [{ icon: 'close', color: 'white' }],
     })
   }
-  rodando.value = false
+  rodando.value = null
 }
 
 const importar = async () => {
-  rodando.value = true
+  rodando.value = 'importar'
   try {
     await sPagarMe.importarPedidosPendentes()
   } catch (error) {
@@ -70,7 +71,7 @@ const importar = async () => {
       actions: [{ icon: 'close', color: 'white' }],
     })
   }
-  rodando.value = false
+  rodando.value = null
 }
 
 onMounted(() => {
@@ -80,11 +81,25 @@ onMounted(() => {
 <template>
   <q-page class="bg-grey-2">
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn @click="atualizar()" fab icon="refresh" color="secondary" :loading="rodando">
+      <q-btn
+        @click="atualizar()"
+        fab
+        icon="refresh"
+        color="secondary"
+        :loading="rodando === 'atualizar'"
+        :disable="!!rodando && rodando !== 'atualizar'"
+      >
         <q-tooltip class="" :offset="[10, 10]"> Atualizar Listagem </q-tooltip>
       </q-btn>
       &nbsp;
-      <q-btn @click="importar()" fab icon="cloud_sync" color="accent" :loading="rodando">
+      <q-btn
+        @click="importar()"
+        fab
+        icon="cloud_sync"
+        color="accent"
+        :loading="rodando === 'importar'"
+        :disable="!!rodando && rodando !== 'importar'"
+      >
         <q-tooltip class="" :offset="[10, 10]"> Buscar Listagem da PagarMe </q-tooltip>
       </q-btn>
     </q-page-sticky>
@@ -143,7 +158,8 @@ onMounted(() => {
                   round
                   icon="refresh"
                   @click="consultar(ped)"
-                  :loading="rodando"
+                  :loading="rodando === 'consultar' + ped.codpagarmepedido"
+                  :disable="!!rodando && rodando !== 'consultar' + ped.codpagarmepedido"
                 />
                 <q-btn
                   dense
@@ -152,7 +168,8 @@ onMounted(() => {
                   round
                   icon="cancel"
                   @click="cancelar(ped)"
-                  :loading="rodando"
+                  :loading="rodando === 'cancelar' + ped.codpagarmepedido"
+                  :disable="!!rodando && rodando !== 'cancelar' + ped.codpagarmepedido"
                 />
               </div>
             </q-item-section>

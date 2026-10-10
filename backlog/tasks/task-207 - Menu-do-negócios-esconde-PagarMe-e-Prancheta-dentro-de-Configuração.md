@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-10 18:31'
-updated_date: '2026-10-10 18:42'
+updated_date: '2026-10-10 18:43'
 labels:
   - negocios
 dependencies: []
@@ -27,6 +27,7 @@ Junto: o negócios tinha 19 layouts que eram cópia do MainLayout mudando só t�
 - [x] #1 PagarMe e Prancheta como itens do menu (Administração), /config removido
 - [x] #2 Layouts do negócios unificados no MainLayout por route.meta (sobram MainLayout e QuiosqueLayout)
 - [x] #3 Tela PagarMe não quebra (nem trava a navegação) com pedido pendente sem maquininha vinculada
+- [x] #4 Na tela PagarMe só gira o botão clicado (os outros esperam desabilitados)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -43,4 +44,6 @@ Implementação:
 Teste: smoke em Chrome headless passando por todas as rotas — título, voltar e drawers conferem; /config/pagar-me cai no 404; quiosque sem cabeçalho.
 
 PagarMe: pedido pendente sem maquininha vinculada vem com apelido nulo (no dev: os da filial 103 de fev/mar); o ped.apelido.charAt(0) do avatar quebrava o render no meio da lista e travava a navegação para fora da tela (Cannot destructure property 'type' of 'vnode'). Teste com a API interceptada: sem o conserto a lista para no 2º item e a navegação não sai do PagarMe; com o conserto os 4 aparecem e a navegação funciona.
+
+PagarMe: todos os botões (atualizar, buscar, consultar e cancelar de cada pedido) usavam o mesmo rodando=true no :loading, então clicar em um fazia todos girarem. rodando passou a guardar a chave do botão ('atualizar', 'importar', 'consultar'/'cancelar' + codpagarmepedido): só ele mostra o spinner, os outros ficam :disable até terminar (consultar/cancelar dividem o sPagarMe.pedido, não podem rodar juntos).
 <!-- SECTION:NOTES:END -->
