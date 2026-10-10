@@ -2,11 +2,11 @@
 // Vale colaborador e adiantamentos (M8 do plano doc-3), o mesmo dialog no contas e no PDV: título
 // que já nasce com o dinheiro (tipos com "movimenta portador"). Tipo, pessoa, valor, vencimento,
 // conta e observação → wizard de cobrança no sentido do tipo (vale e adiantamento a fornecedor:
-// sai dinheiro; adiantamento de cliente: entra). Cada forma lançada vira um título; quando as
-// formas fecham o valor, grava. Cada app informa as formas, o contexto do wizard (PDV ou contas)
-// e para onde manda. O wizard e os dialogs PIX/Stone/SafraPay ficam na página que usa. A data tem
-// hora (TASK-204: a data manda no período do portador; no PDV, a sessão da gaveta daquela hora);
-// sem mexer nela, vai vazia e o servidor usa agora.
+// sai dinheiro; adiantamento de cliente: entra). A forma confirmada no wizard grava na hora (a
+// integrada, quando o banco/maquineta confirma). Cada app informa as formas, o contexto do wizard
+// (PDV ou contas) e para onde manda. O wizard e os dialogs PIX/Stone/SafraPay ficam na página que
+// usa. A data tem hora (TASK-204: a data manda no período do portador; no PDV, a sessão da gaveta
+// daquela hora); sem mexer nela, vai vazia e o servidor usa agora.
 import { ref, computed, watch } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
@@ -151,16 +151,13 @@ const prepararBaixa = () => {
 const cobrar = async () => {
   if (sBaixa.finalizando) return
   prepararBaixa()
-  // o pagamento que veio para amarrar é a forma, com o valor do formulário: não há o que cobrar,
-  // grava direto; não gravou, volta a editar
+  // o pagamento que veio para amarrar é a forma, com o valor do formulário: não há o que cobrar
   if (props.pagamento) {
     sBaixa.adicionar({
       codpagamento: props.pagamento.codpagamento,
       total: sBaixa.totalLiquido,
       descricao: props.pagamento.descricao,
     })
-    await gravar()
-    if (lancou.value) sBaixa.remover()
     return
   }
   sBaixa.abrirWizard({
@@ -193,10 +190,21 @@ const gravar = async () => {
     emit('finalizado', data.data)
   } catch (error) {
     notificar('negative', error?.response?.data?.message ?? error?.message ?? 'Erro ao lançar')
+    // não gravou: volta a editar; a integrada já confirmada (o dinheiro entrou) fica para o Gravar
+    if (props.pagamento || !sBaixa.forma?.codpagamento) sBaixa.remover()
   } finally {
     sBaixa.finalizando = false
   }
 }
+
+// a forma chegou (confirmada no wizard, a integrada confirmada pelo banco/maquineta ou o
+// pagamento do Amarrar): grava na hora
+watch(
+  () => sBaixa.forma,
+  (forma) => {
+    if (props.modelValue && forma) gravar()
+  },
+)
 </script>
 
 <template>
@@ -304,40 +312,21 @@ const gravar = async () => {
           <q-item>
             <q-item-section>{{ sBaixa.forma.descricao }}</q-item-section>
             <q-item-section side>R$ {{ formataNumero(sBaixa.forma.total) }}</q-item-section>
-            <q-item-section side>
-              <q-btn
-                v-if="!sBaixa.forma.codpagamento"
-                flat
-                round
-                size="sm"
-                icon="close"
-                color="grey-7"
-                @click="sBaixa.remover()"
-              >
-                <q-tooltip>Trocar a forma</q-tooltip>
-              </q-btn>
-            </q-item-section>
           </q-item>
         </q-list>
 
         <q-card-actions align="right">
           <q-btn flat color="grey-8" label="Cancelar" v-close-popup tabindex="-1" />
           <q-btn
-            v-if="pagamento || !lancou"
+            v-if="!lancou || sBaixa.finalizando"
             flat
             color="primary"
             :label="pagamento ? 'Amarrar' : verbo"
             type="submit"
             :loading="sBaixa.finalizando"
           />
-          <q-btn
-            v-else
-            flat
-            color="primary"
-            label="Gravar"
-            :loading="sBaixa.finalizando"
-            @click="gravar"
-          />
+          <!-- a integrada já confirmada que não gravou: grava de novo -->
+          <q-btn v-else flat color="primary" label="Gravar" @click="gravar" />
         </q-card-actions>
       </q-form>
     </q-card>

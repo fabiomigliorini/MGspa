@@ -2,10 +2,11 @@
 // Receber ou pagar títulos, a mesma tela no contas e no PDV: seleciona os títulos (capital,
 // multa, juros, desconto) e paga com UM pagamento (uma baixa = um pagamento, conceito do Fábio de
 // 09/10/2026). O FAB abre o diálogo com data, pessoa e observação; "Receber"/"Pagar" abre o wizard
-// com o valor do líquido travado, a forma escolhida aparece no diálogo e "Gravar" grava. Títulos
-// que se anulam não pedem forma: é o encontro de contas. Cada app informa onde busca os títulos,
-// as formas, o contexto do wizard (PDV ou contas) e para onde manda a baixa. Com `pagamento`, a
-// baixa amarra um pagamento que já existe (vindo de "Pagamentos não resolvidos").
+// com o valor do líquido travado e a forma confirmada nele grava na hora (a integrada, quando o
+// banco/maquineta confirma). Títulos que se anulam não pedem forma: é o encontro de contas. Cada
+// app informa onde busca os títulos, as formas, o contexto do wizard (PDV ou contas) e para onde
+// manda a baixa. Com `pagamento`, a baixa amarra um pagamento que já existe (vindo de "Pagamentos
+// não resolvidos").
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
@@ -195,7 +196,12 @@ const gravar = async () => {
     ...(props.comData && !props.pagamento ? { transacao: transacao.value } : {}),
     observacao: observacao.value || null,
   })
-  if (!pags) return
+  if (!pags) {
+    // não gravou: volta a escolher a forma; a integrada já confirmada (o dinheiro entrou) e o
+    // pagamento que veio para amarrar ficam para o Gravar
+    if (!sBaixa.forma?.codpagamento) sBaixa.remover()
+    return
+  }
   notificar(
     'positive',
     { Receber: 'Recebimento registrado', Pagar: 'Pagamento registrado' }[descricao.value] ??
@@ -205,6 +211,15 @@ const gravar = async () => {
   sBaixa.iniciar({ pessoa: null, titulos: [] })
   emit('finalizado', pags)
 }
+
+// a forma chegou do wizard (ou a integrada confirmada pelo banco/maquineta): grava na hora;
+// encontro de contas e amarrar pagamento seguem no Gravar
+watch(
+  () => sBaixa.forma,
+  (forma) => {
+    if (dialog.value && forma && temWizard.value) gravar()
+  },
+)
 
 onMounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
 onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
@@ -271,19 +286,6 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
                 <span v-if="sBaixa.forma.valortroco" class="text-caption">
                   troco R$ {{ formataNumero(sBaixa.forma.valortroco) }}
                 </span>
-              </q-item-section>
-              <q-item-section side>
-                <q-btn
-                  v-if="!sBaixa.forma.codpagamento"
-                  flat
-                  round
-                  size="sm"
-                  icon="close"
-                  color="grey-7"
-                  @click="sBaixa.remover()"
-                >
-                  <q-tooltip>Trocar a forma</q-tooltip>
-                </q-btn>
               </q-item-section>
             </q-item>
           </q-list>
