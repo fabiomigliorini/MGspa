@@ -158,23 +158,20 @@ export const produtoStore = defineStore('produto', {
     },
 
     async buscarBarras(barras) {
-      this.sincroniza(barras)
+      // pergunta ao backend ja de inicio: se achar offline nao espera (a resposta so'
+      // atualiza o cache), se nao achar e' a resposta do backend que vale antes de dar erro
+      const online = this.sincroniza(barras)
       let ret = await db.produto.where({ barras }).toArray()
+      if (ret.length == 0 && barras.length == 6 && !isNaN(parseInt(barras))) {
+        ret = await db.produto
+          .where({ codproduto: parseInt(barras) })
+          .filter((produto) => produto.quantidade == null)
+          .toArray()
+      }
       if (ret.length >= 1) {
         return ret
       }
-      if (barras.length != 6) {
-        return ret
-      }
-      const codproduto = parseInt(barras)
-      if (isNaN(codproduto)) {
-        return ret
-      }
-      ret = await db.produto
-        .where({ codproduto: codproduto })
-        .filter((produto) => produto.quantidade == null)
-        .toArray()
-      return ret
+      return await online
     },
 
     async sincroniza(barras) {
@@ -183,13 +180,17 @@ export const produtoStore = defineStore('produto', {
           params: {
             pdv: sSinc.pdv.uuid,
           },
+          // backend pendurado nao pode segurar o "Nao encontrei" do caixa
+          timeout: 3000,
         })
         if (data.length > 0) {
           await db.produto.bulkPut(data)
         }
+        return data
       } catch (error) {
         console.log(error)
         console.log('Impossível buscar barras ' + barras + ' no Backend!')
+        return []
       }
     },
   },

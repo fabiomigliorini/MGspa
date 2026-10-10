@@ -245,11 +245,13 @@ const adicionarPeloCodigoBarras = async (txt) => {
     }
   }
 
+  // a quantidade e' desta leitura: le antes de esperar o backend, senao um "2*"
+  // digitado pro proximo item enquanto este e' procurado online iria pra este
+  const qtd = parseFloat(quantidade.value)
+  quantidade.value = 1
   let ret = await sProduto.buscarBarras(txt)
 
   if (ret.length == 1) {
-    const qtd = parseFloat(quantidade.value)
-    quantidade.value = 1
     await sNegocio.itemAdicionar(
       ret[0].codprodutobarra,
       ret[0].barras,
