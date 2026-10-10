@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-10 01:31'
+updated_date: '2026-10-10 03:09'
 labels:
   - contas
   - negocios
@@ -103,4 +103,34 @@ Observações:
 - Pagar vale/crédito no PDV agora segue o papel (operador na gaveta), não mais 'só Gerente'.
 - Devolução parcial de uma venda no cartão faz o pagamento da venda aparecer em não resolvidos (pago − devolvido ≠ venda), pela regra 'o que vale é o saldo'.
 - Workers da fila do dev reiniciados (queue:restart) para usar o código novo.
+
+## Testes da madrugada (10/10/2026)
+
+Pedido do Fábio: testar tudo, corrigir e commitar. Feito:
+- Bateria pela API (rotas reais, token de admin e de usuária só Caixa, transação desfeita): 139 verificações, todas passando no fim. Cobre baixa, desamarrar/cancelar, lápis, encontro de contas, órfão/Já recebido, já lançado, devolver, vale, permissões por papel, PDV (baixa, vale, venda pelo sync com rascunho P, fechar, cancelar venda com PIX), alterar data, maquineta, PIX pela chave.
+- Três rodadas de teste de tela no navegador (contas e PDV): os bugs achados foram corrigidos e verificados na terceira rodada.
+
+Bugs achados e corrigidos (commits [FIX] TASK-188 desta madrugada):
+- caixas sem papel na gaveta do PDV (travaria terça) → pagamento_amarracao.sql refaz os papéis por usuário+portador;
+- compensação com valor gravava total zero;
+- PDV: recibo/detalhe de PIX do banco amarrado dava 403; não resolvidos misturava filiais e cortava em 500;
+- pagamento misto (receber+pagar) aparecia não resolvido com livre negativo; encontro e misto desamarram inteiros;
+- já lançado não achava a transferência digitada para um PIX; PIX pela chave conta como integrado;
+- recibo (contas e térmico) contava título desamarrado;
+- desconto de 100% sem caminho; título zerado virava encontro;
+- listas de cofre/banco/maquineta com número de atalho que não funcionava (levava a outro portador);
+- data: Tab do dia para a hora perdia o dia; Tab rápido saía do diálogo;
+- wizard: dinheiro digitado ficava ao trocar de forma; foco perdido após clique;
+- pessoa escolhida à mão apagada ao editar juros.
+
+Conhecido, sem mexer (componente compartilhado, só aparece em velocidade de robô): no campo de valor (MgInputValor), digitar poucos milissegundos depois do clique pode juntar os dígitos ao valor antigo. Tentei três consertos; um deles quebrou a digitação do wizard, então voltei o componente ao original.
+
+Mudanças de regra que o Fábio precisa conhecer:
+- o caixa (operador da gaveta) não altera mais a data das linhas da gaveta: alterar data é do gestor (gerente);
+- pagar vale/crédito no PDV segue o papel (operador na gaveta), não mais 'só Gerente';
+- desconto de 100% grava no portador Encontro de Contas e pede papel nele (Financeiro/Cobrança/Admin pelo SQL).
+
+Deploy: rodar api/database/pagamento_amarracao.sql (revisar a seção 2), php artisan optimize (rotas novas) e reiniciar os workers da fila (queue:restart).
+
+Dados do dev criados/alterados pelos testes de tela: pagamentos 80247775–80247881 (vários cancelados), títulos 650418–650431, PIX 80246944/80246945/80247735 amarrados em parte, rascunho de venda 4549121 no PDV 511. Tudo de valor pequeno.
 <!-- SECTION:NOTES:END -->
