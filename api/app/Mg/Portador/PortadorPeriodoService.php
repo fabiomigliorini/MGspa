@@ -340,7 +340,8 @@ class PortadorPeriodoService
     // fecha: grava o fim (sem fim, agora) e a diferenca da contagem final.
     // Dentro da tolerancia, fecha; acima, fica pendente (o mesmo fechar tenta
     // de novo depois da correcao). Recusa, sem mexer em nada, com periodo
-    // anterior por fechar ou transferencia a confirmar.
+    // anterior por fechar ou transferencia a confirmar. O ultimo com dinheiro
+    // na contagem final ja' deixa o seguinte aberto (TASK-212).
     public static function fecharCaixa(PortadorPeriodo $periodo, ?array $contagem = null, ?array $itens = null, ?string $observacoes = null, ?Carbon $fim = null, ?int $livre = null): PortadorPeriodo
     {
         $portador = $periodo->Portador;
@@ -396,6 +397,11 @@ class PortadorPeriodoService
         // negocio ainda aberto no PDV desta gaveta vai para o livro de
         // ocorrencias (TASK-205); o caixa fecha do mesmo jeito
         OcorrenciaService::esquecidos($portador->codportador);
+        // o dinheiro (cedulas, moedas, itens) fica na gaveta: o seguinte nasce
+        // aberto com a contagem final deste, mesmo pendente (a pedido, TASK-212)
+        if (!static::seguinte($periodo) && static::saldoInicialSeguinte($periodo) > 0) {
+            static::abrir($portador, static::inicioDoNovo($portador), null, null, null, $livre);
+        }
         return $periodo->fresh();
     }
 

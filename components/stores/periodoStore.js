@@ -379,19 +379,25 @@ export const periodoStore = defineStore('periodo', {
 
     // espécie: com a contagem final; dentro da tolerância fecha, acima fica pendente
     // só fecha, com a contagem final já informada. Acima da tolerância o servidor deixa pendente:
-    // é erro para quem fechou
+    // é erro para quem fechou. Com dinheiro na contagem, o servidor já abre o seguinte (TASK-212):
+    // vem nos períodos, vira aba nova e a tela continua no fechado
     async fechar() {
+      const antes = new Set(this.periodos.map((p) => p.codportadorperiodo))
       const data = await this.executar(() =>
         api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/fechar`),
       )
       if (!data) return null
       const p = data.data
+      const novo = (data.periodos || []).find((x) => !antes.has(x.codportadorperiodo))
+      const seguinte = novo
+        ? `; o seguinte já está aberto com R$ ${formataNumero(novo.saldoinicial)}`
+        : ''
       if (p.situacao === 'fechado') {
-        avisar(true, 'Período fechado')
+        avisar(true, `Período fechado${seguinte}`)
       } else {
         avisar(
           false,
-          `Diferença de R$ ${formataNumero(p.diferenca)} acima da tolerância (R$ ${formataNumero(p.tolerancia)}): o período ficou pendente até a correção`,
+          `Diferença de R$ ${formataNumero(p.diferenca)} acima da tolerância (R$ ${formataNumero(p.tolerancia)}): o período ficou pendente até a correção${seguinte}`,
         )
       }
       return data
