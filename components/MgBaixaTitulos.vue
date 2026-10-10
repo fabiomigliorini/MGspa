@@ -104,16 +104,21 @@ const aplicarPagamento = () => {
   })
 }
 
-// títulos escolhidos: a pessoa é a deles quando é uma só (várias ou nenhuma: vazia);
-// mudar a seleção recomeça a forma
+// títulos escolhidos: a pessoa é a deles quando é uma só (várias ou nenhuma: vazia), refeita só
+// quando mudam as pessoas dos títulos (editar juros ou total não apaga a escolhida à mão);
+// mudar a seleção ou os valores recomeça a forma
+let pessoasDosTitulos = ''
 watch(
   titulos,
   (lista) => {
     if (sBaixa.forma && !props.pagamento) {
       notificar('negative', 'Seleção mudou: escolha a forma de novo.')
     }
-    const pessoas = new Set(lista.map((t) => t.codpessoa).filter(Boolean))
-    codpessoa.value = pessoas.size === 1 ? [...pessoas][0] : null
+    const pessoas = [...new Set(lista.map((t) => t.codpessoa).filter(Boolean))].sort()
+    if (pessoas.join(',') !== pessoasDosTitulos) {
+      pessoasDosTitulos = pessoas.join(',')
+      codpessoa.value = pessoas.length === 1 ? pessoas[0] : null
+    }
     sBaixa.iniciar({
       pessoa: { codpessoa: codpessoa.value },
       titulos: lista.map((t) => ({ ...t })),
