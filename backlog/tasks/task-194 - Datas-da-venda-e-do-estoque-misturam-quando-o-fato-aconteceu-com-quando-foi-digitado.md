@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-02 20:54'
+updated_date: '2026-10-10 19:07'
 labels:
   - negocios
   - estoque
@@ -29,5 +30,11 @@ Fica de fora do M10, por ser usado em muitos lugares: `tblnegocio.lancamento` �
 - [ ] #1 Venda grava a data e hora do fato em transacao (tblnegocio.lancamento renomeado em API, views, MGsis, MG Lara e PDV)
 - [ ] #2 Levantamento no estoque e no resto do sistema de toda data de fato gerador com outro nome, e renomeadas para transacao
 - [ ] #3 Pagamento da venda fica com a mesma transacao do negocio, nao a hora do sync
-- [ ] #4 No PDV, receber titulo e entrega paga na volta deixam informar a data e hora em que o pagamento aconteceu
+- [x] #4 No PDV, receber titulo e entrega paga na volta deixam informar a data e hora em que o pagamento aconteceu
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Revisão do backlog com o Fábio (10/10/2026, 2ª varredura): #4 feito pela TASK-204 (783933f7b): o Receber Título do PDV tem data com hora (PagamentoTituloService.php:136), e a entrega paga na volta é um título de Entrega recebido ali. #3 só vale na venda reaberta (TASK-30, 65ae4d593, PdvNegocioPagamentoService.php:140-143); na venda normal a transacao do pagamento continua sendo a hora do sync (PagamentoService.php:151-152).
+<!-- SECTION:NOTES:END -->

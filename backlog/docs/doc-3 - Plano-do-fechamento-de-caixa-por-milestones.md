@@ -2021,8 +2021,8 @@ crédito/débito.
 (09/10/2026: a ordem de pagamento vive na tabela da integração até o banco confirmar; só então
 vira pagamento. Pagamento nunca nasce pendente.)
 
-Ordem de pagamento (PIX por chave/dados/QR, boleto, TED) como pagamento de saída em estado pendente
-até o banco confirmar; lote + item, chave própria sequencial, "aguardando liberação", devolução como
+Ordem de pagamento (PIX por chave/dados/QR, boleto, TED) na tabela da integração, virando pagamento
+de saída só quando o banco confirma; lote + item, chave própria sequencial, "aguardando liberação", devolução como
 pagamento contrário; cancelamento de cartão pela operadora e devolução de PIX pela API. Levantamento
 de 29/09/2026 (portais oficiais bloqueados; parte de memória): BB Pagamentos em Lote (lote + item,
 liberação, webhook, mTLS A1), Itaú SISPAG (pré-aprovado × pós-autorizado), Bradesco (boleto, tributo,

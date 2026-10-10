@@ -6,13 +6,13 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-01 14:36'
-updated_date: '2026-10-09 00:20'
+updated_date: '2026-10-10 18:58'
 labels:
   - negocios
 dependencies:
   - TASK-188
-priority: high
-type: feature
+priority: medium
+type: enhancement
 ordinal: 203000
 ---
 

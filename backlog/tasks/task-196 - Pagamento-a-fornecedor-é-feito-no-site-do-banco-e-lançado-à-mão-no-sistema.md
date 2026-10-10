@@ -4,6 +4,7 @@ title: Pagamento a fornecedor é feito no site do banco e lançado à mão no si
 status: To Do
 assignee: []
 created_date: '2026-10-03 15:13'
+updated_date: '2026-10-10 19:07'
 labels:
   - contas
   - api
@@ -22,8 +23,14 @@ Milestone M15 do plano do fechamento de caixa (backlog/docs/doc-3 - Plano-do-fec
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Ordem de pagamento (PIX, boleto, TED) enviada ao banco fica pendente até o banco confirmar
+- [ ] #1 Ordem de pagamento (PIX, boleto, TED) enviada ao banco fica na tabela da integração e só vira pagamento quando o banco confirma
 - [ ] #2 Pagamentos agrupados em lote, com o estado 'aguardando liberação' visível
-- [ ] #3 Devolução registrada como pagamento contrário
+- [x] #3 Devolução registrada como pagamento contrário
 - [ ] #4 Devolução de PIX e cancelamento de cartão feitos pela API da operadora/banco
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Revisão do backlog com o Fábio (10/10/2026, 2ª varredura): #3 já existe: PagamentoService::contrario com codpagamentoorigem, usado em PagamentoPendenciaService::devolver (commit 2d0904919). #1 reescrito pela decisão de 09/10 (doc-3, M15): pagamento nunca nasce pendente; corrigido também o parágrafo do M15 no doc-3.
+<!-- SECTION:NOTES:END -->

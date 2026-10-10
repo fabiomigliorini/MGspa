@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-06 19:43'
-updated_date: '2026-10-06 19:43'
+updated_date: '2026-10-10 19:06'
 labels:
   - components
 dependencies: []
@@ -42,3 +42,9 @@ Dúvida para o Fábio antes de começar: o modelo de títulos usa q-card bordere
 - [ ] #6 Diálogos do agro no modelo (título overline, linha abaixo do título e acima dos botões, explicação no corpo)
 - [ ] #7 Diálogos do @components (componentes compartilhados) no modelo (título overline, linha abaixo do título e acima dos botões, explicação no corpo)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Revisão do backlog com o Fábio (10/10/2026, 2ª varredura): contagem nova (arquivos com <q-dialog> no modelo: overline + q-separator inset): estoque 9/9, contas 28/33, pessoas 35/41, @components 10/21, negocios 1/19, notas 0/20, agro 0/23. No estoque a exceção é o detalhe do produto em conferencia/Listagem.vue (text-h6); os do estoque usam bordered flat, o que depende da dúvida aberta (bordered ou não). Em contas faltam os 4 da descrição e ocorrencia/Index.vue.
+<!-- SECTION:NOTES:END -->

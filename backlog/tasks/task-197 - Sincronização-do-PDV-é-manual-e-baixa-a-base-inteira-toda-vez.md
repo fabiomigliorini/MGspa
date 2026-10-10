@@ -4,7 +4,7 @@ title: Sincronização do PDV é manual e baixa a base inteira toda vez
 status: To Do
 assignee: []
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-05 16:04'
+updated_date: '2026-10-10 19:25'
 labels:
   - negocios
 dependencies: []
@@ -43,4 +43,6 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 
 <!-- SECTION:NOTES:BEGIN -->
 Pendência do hotfix da TASK-154 (05/10/2026): dispositivo() pede navigator.geolocation com timeout 10 s e maximumAge 10 min; sem posição, recusa a sincronização. No Chrome de dev no Linux a posição às vezes não vem e a sincronização recusa. Avaliar maximumAge Infinity (última posição conhecida) ou registrar a localização separado da sincronização.
+
+Revisão do backlog com o Fábio (10/10/2026, 2ª varredura): convivência com a TASK-46 #7 (sem login o botão Sincronizar fica desabilitado; sessão expirada só avisa): o botão manual continua pedindo usuário logado; a sincronização automática (#1/#2) usa a credencial própria do PDV, sem usuário.
 <!-- SECTION:NOTES:END -->

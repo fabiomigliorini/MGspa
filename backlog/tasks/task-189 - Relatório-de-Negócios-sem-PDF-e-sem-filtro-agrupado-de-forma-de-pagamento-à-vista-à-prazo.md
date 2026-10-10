@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-30 18:05'
-updated_date: '2026-10-10 19:26'
+updated_date: '2026-10-10 19:44'
 labels:
   - negocios
 dependencies: []
@@ -54,4 +54,6 @@ Implementação (10/10/2026):
 - PDF: GET v1/pdv/negocio/relatorio (?html=1 devolve o HTML), PdvNegocioRelatorioService + resources/views/negocio/relatorio.blade.php, cópia do MGRelatorioNegocios do MGsis (A4 retrato, 190mm, mesmas colunas e larguras, agrupado por status com Total e Total Geral, ordem status/lançamento desc/código desc). Fonte DejaVu Sans Condensed (as larguras do legado eram para helvetica). Limite de 2000 negócios (~4ms e ~0,15MB por linha no mPDF; cabe nos 15s do axios do app e nos 512MB), acima disso 422 pedindo para refinar o filtro.
 - Tela: ListagemPage no padrão da listagem de pagamentos (card, MgEmptyState, contador, FAB de impressão); drawer com FilterDrawerShell/FilterGroup e os MgSelect compartilhados; SelectPdv e SelectUsuario locais apagados (só a listagem usava).
 - MGsis (repo próprio): item 'Negócios *' comentado em protected/views/layouts/main.php, como o [DEL] Liquidacoes (6d6d7c6).
+
+- Validação (10/10): o PDF dava 500 ('Trying to access array offset on int' no Mpdf.php) porque o packTableData do mPDF quebra com célula mesclada; a linha de Total de cada grupo ficou sem colspan.
 <!-- SECTION:NOTES:END -->

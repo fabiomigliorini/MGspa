@@ -4,7 +4,7 @@ title: Trocar o PDV de setor muda o setor das vendas antigas
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-10 17:21'
+updated_date: '2026-10-10 19:09'
 labels:
   - pessoas
 dependencies: []
@@ -24,4 +24,5 @@ Origem: pessoas/todo, seção "Metas Novas" ("Campo Alocação do PDV"). Nas met
 - [ ] #1 O negócio grava o setor do PDV na venda (tblnegocio.codsetor), com carga dos negócios antigos pelo setor atual do PDV
 - [ ] #2 Listagem e detalhe do negócio e indicadores do RH leem o setor gravado no negócio (ex-TASK-27)
 - [ ] #3 A identificação do usuário no PDV mostra o setor (ex-TASK-28)
+- [ ] #4 Trocar o setor de um negócio já feito, com os indicadores do RH acompanhando (ex-TASK-87, transferência de venda entre setores)
 <!-- AC:END -->
