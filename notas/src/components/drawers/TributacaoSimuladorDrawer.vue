@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import MgInputData from '@components/MgInputData.vue'
@@ -160,7 +161,7 @@ const limparResultados = () => {
         <!-- Natureza de Operação -->
         <div class="q-mb-md">
           <div class="text-subtitle2 q-mb-xs">Natureza de Operação *</div>
-          <q-select
+          <MgSelect
             v-model="form.codnaturezaoperacao"
             outlined
             dense
@@ -176,13 +177,13 @@ const limparResultados = () => {
                 <q-item-section class="text-grey">Nenhum resultado</q-item-section>
               </q-item>
             </template>
-          </q-select>
+          </MgSelect>
         </div>
 
         <!-- Cidade Destino -->
         <div class="q-mb-md">
           <div class="text-subtitle2 q-mb-xs">Cidade Destino *</div>
-          <q-select
+          <MgSelect
             v-model="form.codcidadedestino"
             outlined
             dense
@@ -198,7 +199,7 @@ const limparResultados = () => {
                 <q-item-section class="text-grey">Nenhum resultado</q-item-section>
               </q-item>
             </template>
-          </q-select>
+          </MgSelect>
         </div>
 
         <!-- Código de Barras -->

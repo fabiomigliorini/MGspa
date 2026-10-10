@@ -8,6 +8,7 @@ import { useQuasar } from 'quasar'
 import { formataNumero, formataTimestamp, formataData } from '@components/formatters'
 import { CONDICOES, BANDEIRAS } from '@components/cobranca/pagamento.js'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectMaquineta from '@components/MgSelectMaquineta.vue'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
@@ -213,7 +214,7 @@ watch(id, carregar)
                   />
                 </div>
                 <div class="col-12 col-sm-6">
-                  <q-select
+                  <MgSelect
                     v-model="incluir.bandeira"
                     :options="OPCOES_BANDEIRA"
                     emit-value

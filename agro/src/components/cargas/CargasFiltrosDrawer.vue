@@ -11,6 +11,7 @@ import { storeToRefs } from 'pinia'
 import FilterDrawerShell from 'components/FilterDrawerShell.vue'
 import FilterGroup from 'components/FilterGroup.vue'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
@@ -94,7 +95,7 @@ onMounted(() => {
 
     <FilterGroup title="Safra e cultura">
       <div class="column q-gutter-y-sm">
-        <q-select
+        <MgSelect
           v-model="filtros.codsafra"
           :options="safras"
           option-value="codsafra"
@@ -106,7 +107,7 @@ onMounted(() => {
           :bottom-slots="false"
           label="Safra"
         />
-        <q-select
+        <MgSelect
           v-model="filtros.codcultura"
           :options="culturas"
           option-value="codcultura"
@@ -123,7 +124,7 @@ onMounted(() => {
 
     <FilterGroup title="Tipo e etapa">
       <div class="column q-gutter-y-sm">
-        <q-select
+        <MgSelect
           v-model="filtros.sentido"
           :options="SENTIDO_OPCOES"
           emit-value
@@ -133,7 +134,7 @@ onMounted(() => {
           :bottom-slots="false"
           label="Tipo de romaneio"
         />
-        <q-select
+        <MgSelect
           v-model="filtros.etapa"
           :options="ETAPA_OPCOES"
           emit-value
@@ -148,7 +149,7 @@ onMounted(() => {
 
     <FilterGroup title="Origem e destino">
       <div class="column q-gutter-y-sm">
-        <q-select
+        <MgSelect
           v-model="filtros.codunidadearmazenadora"
           :options="unidades"
           :option-label="rotuloUnidade"
@@ -160,7 +161,7 @@ onMounted(() => {
           :bottom-slots="false"
           label="Unidade armazenadora"
         />
-        <q-select
+        <MgSelect
           v-model="filtros.codplantio"
           :options="plantios"
           :option-label="rotuloPlantio"
@@ -174,7 +175,7 @@ onMounted(() => {
           clearable
           label="Talhão"
         />
-        <q-select
+        <MgSelect
           v-model="filtros.codcontrato"
           :options="contratos"
           :option-label="rotuloContrato"

@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
+import MgSelect from '@components/MgSelect.vue'
 
 // ===== Padrão LOCAL (entidade < 100 registros) =====
 // Carrega TUDO uma vez de v1/select/filial, cacheia (lista + byId no store
@@ -58,7 +59,7 @@ onMounted(() => carregar())
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     :model-value="modelValue"
     :options="opcoes"
     :label="label"
@@ -91,5 +92,5 @@ onMounted(() => carregar())
     <template v-if="$slots.before" #before><slot name="before" /></template>
     <template v-if="$slots.after" #after><slot name="after" /></template>
     <template v-if="$slots.hint" #hint><slot name="hint" /></template>
-  </q-select>
+  </MgSelect>
 </template>

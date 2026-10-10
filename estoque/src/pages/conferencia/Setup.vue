@@ -7,6 +7,7 @@ import { notifyError } from 'src/utils/notify'
 import MgSelectEstoqueLocal from '@components/MgSelectEstoqueLocal.vue'
 import MgInputData from '@components/MgInputData.vue'
 import { formataTimestampIso } from '@components/formatters'
+import MgSelect from '@components/MgSelect.vue'
 
 const router = useRouter()
 const store = useConferenciaStore()
@@ -120,7 +121,7 @@ const iniciar = () => {
               </div>
 
               <div class="col-12">
-                <q-select
+                <MgSelect
                   v-model="marcaSelecionada"
                   :options="marcaOptions"
                   use-input
@@ -136,7 +137,7 @@ const iniciar = () => {
                       <q-item-section class="text-grey">Digite para buscar</q-item-section>
                     </q-item>
                   </template>
-                </q-select>
+                </MgSelect>
               </div>
 
               <div class="col-12">

@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { computed, ref } from 'vue'
 import { useNotaFiscalStore } from 'src/stores/notaFiscalStore'
 import { getEnteIcon, getEnteColor } from 'src/composables/useTributoIcons'
@@ -218,7 +219,7 @@ const updatedValor = async (ti) => {
           <div class="row q-col-gutter-md">
             <!-- CST e Classificação -->
             <div class="col-12 col-sm-6" v-if="tributoItem.tributo?.codigo == 'CBS'">
-              <q-select
+              <MgSelect
                 v-model="tributoItem.cst"
                 :options="CBS_CST_OPTIONS"
                 label="CST"
@@ -232,7 +233,7 @@ const updatedValor = async (ti) => {
 
             <!-- CCLASSTRIB -->
             <div class="col-12 col-sm-6" v-if="tributoItem.tributo?.codigo == 'CBS'">
-              <q-select
+              <MgSelect
                 v-model="tributoItem.cclasstrib"
                 :options="CBS_CCLASSTRIB_OPTIONS"
                 label="Classificação Tributária"

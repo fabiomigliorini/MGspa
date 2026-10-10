@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -756,7 +757,7 @@ watch(
                 />
               </div>
               <div class="col-8">
-                <q-select
+                <MgSelect
                   ref="selBase"
                   outlined
                   v-model="modelRubrica.codindicador"
@@ -779,7 +780,7 @@ watch(
                       </q-item>
                     </template>
                   </template>
-                </q-select>
+                </MgSelect>
               </div>
 
               <!-- RATEIO DO SETOR: fatia do pool + quanto o setor já distribuiu -->
@@ -876,7 +877,7 @@ watch(
 
             <!-- INDICADOR DA CONDIÇÃO -->
             <div class="col-12" v-if="modelRubrica.tipocondicao">
-              <q-select
+              <MgSelect
                 ref="selCondicao"
                 outlined
                 v-model="modelRubrica.codindicadorcondicao"
@@ -899,7 +900,7 @@ watch(
                     </q-item>
                   </template>
                 </template>
-              </q-select>
+              </MgSelect>
             </div>
 
             <!-- TOGGLES -->

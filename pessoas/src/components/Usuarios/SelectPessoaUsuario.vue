@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, computed, watch } from 'vue'
 import { pessoaStore } from 'src/stores/pessoa'
+import MgSelect from '@components/MgSelect.vue'
 
 const sPessoa = pessoaStore()
 
@@ -59,7 +60,7 @@ const opcoes = ref([])
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     use-input
     outlined
     :model-value="modelcodPessoa"

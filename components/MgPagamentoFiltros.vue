@@ -4,6 +4,7 @@
 import { pagamentoListaStore } from '@components/stores/pagamentoListaStore'
 import { MEIOS } from '@components/cobranca/pagamento.js'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgSelectPdv from '@components/MgSelectPdv.vue'
@@ -38,7 +39,7 @@ const OPCOES_MEIO = Object.entries(MEIOS).map(([value, label]) => ({ value: Numb
       <MgInputData v-model="store.filtros.transacao_ate" label="Até" :bottom-slots="false" />
     </div>
     <div class="col-12">
-      <q-select
+      <MgSelect
         v-model="store.filtros.origem"
         :options="ORIGENS"
         label="Origem"
@@ -51,7 +52,7 @@ const OPCOES_MEIO = Object.entries(MEIOS).map(([value, label]) => ({ value: Numb
       />
     </div>
     <div class="col-12">
-      <q-select
+      <MgSelect
         v-model="store.filtros.estado"
         :options="ESTADOS"
         label="Estado"
@@ -97,7 +98,7 @@ const OPCOES_MEIO = Object.entries(MEIOS).map(([value, label]) => ({ value: Numb
       />
     </div>
     <div class="col-12">
-      <q-select
+      <MgSelect
         v-model="store.filtros.meio"
         :options="OPCOES_MEIO"
         label="Meio"

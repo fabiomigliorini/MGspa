@@ -5,6 +5,7 @@ import { TIPO_BAIXA } from 'src/constants/tituloBoleto'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
+import MgSelect from '@components/MgSelect.vue'
 
 const store = useBoletoStore()
 
@@ -40,7 +41,7 @@ function limpar() {
     </FilterGroup>
 
     <FilterGroup title="Tipo de Baixa">
-      <q-select
+      <MgSelect
         v-model="store.baixadosFiltros.tipobaixa"
         :options="tiposBaixa"
         label="Tipo de Baixa"

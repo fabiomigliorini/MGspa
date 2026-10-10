@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
+import MgSelect from '@components/MgSelect.vue'
 
 // ===== Padrão REMOTE (ver MgSelectPessoa.vue) =====
 // Busca no backend (?busca=, debounce) com PAGINAÇÃO 20/20 via scroll infinito;
@@ -125,7 +126,7 @@ const handleUpdate = (value) => {
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     :model-value="modelValue"
     @update:model-value="handleUpdate"
     :label="label"
@@ -167,5 +168,5 @@ const handleUpdate = (value) => {
         </q-item-section>
       </q-item>
     </template>
-  </q-select>
+  </MgSelect>
 </template>

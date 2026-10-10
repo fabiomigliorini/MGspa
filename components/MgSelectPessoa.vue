@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { formataCnpjCpf } from '@components/formatters'
+import MgSelect from '@components/MgSelect.vue'
 
 // ===== REFERÊNCIA do padrão REMOTE (entidade grande) =====
 // Busca no backend (?busca=, debounce) com PAGINAÇÃO 20/20 via scroll infinito
@@ -264,7 +265,7 @@ const handleUpdate = (value) => {
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     ref="selectRef"
     :model-value="modelValue"
     @update:model-value="handleUpdate"
@@ -290,7 +291,6 @@ const handleUpdate = (value) => {
     :class="customClass"
     :disable="disable"
     :readonly="readonly"
-    :tabindex="readonly ? -1 : undefined"
     :loading="loading"
   >
     <template v-slot:option="scope">
@@ -342,7 +342,7 @@ const handleUpdate = (value) => {
     <template v-if="$slots.append" v-slot:append>
       <slot name="append" />
     </template>
-  </q-select>
+  </MgSelect>
 </template>
 
 <!-- não-scoped: o menu é teleportado pra fora do componente -->

@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
@@ -306,7 +307,7 @@ const fecharRelatorio = () => {
             </div>
           </div>
 
-          <q-select
+          <MgSelect
             outlined
             v-model="modelEditar.notafiscal"
             label="Nota Fiscal"

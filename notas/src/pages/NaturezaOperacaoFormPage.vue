@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { formataTimestamp } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -368,7 +369,7 @@ onMounted(() => {
 
               <!-- Finalidade NFe -->
               <div class="col-12 col-sm-6">
-                <q-select
+                <MgSelect
                   v-model="form.finnfe"
                   :options="FINNFE_OPTIONS"
                   option-value="value"
@@ -383,7 +384,7 @@ onMounted(() => {
                   <template v-slot:prepend>
                     <q-icon name="description" />
                   </template>
-                </q-select>
+                </MgSelect>
               </div>
             </div>
 
@@ -404,7 +405,7 @@ onMounted(() => {
             <div class="row q-col-gutter-md">
               <!-- Natureza de Devolução -->
               <div class="col-12 col-sm-6">
-                <q-select
+                <MgSelect
                   v-model="form.codnaturezaoperacaodevolucao"
                   :options="naturezaDevolucaoOptions"
                   option-value="codnaturezaoperacao"
@@ -428,7 +429,7 @@ onMounted(() => {
                       <q-item-section class="text-grey">Digite para buscar...</q-item-section>
                     </q-item>
                   </template>
-                </q-select>
+                </MgSelect>
               </div>
 
               <!-- Tipo Título -->
@@ -462,7 +463,7 @@ onMounted(() => {
 
               <!-- Conta Contábil -->
               <div class="col-12 col-sm-6">
-                <q-select
+                <MgSelect
                   v-model="form.codcontacontabil"
                   :options="contaContabilOptions"
                   option-value="codcontacontabil"
@@ -486,12 +487,12 @@ onMounted(() => {
                       <q-item-section class="text-grey">Digite para buscar...</q-item-section>
                     </q-item>
                   </template>
-                </q-select>
+                </MgSelect>
               </div>
 
               <!-- Tipo Movimento Estoque -->
               <div class="col-12 col-sm-6">
-                <q-select
+                <MgSelect
                   v-model="form.codestoquemovimentotipo"
                   :options="estoqueMovimentoTipoOptions"
                   option-value="codestoquemovimentotipo"
@@ -515,7 +516,7 @@ onMounted(() => {
                       <q-item-section class="text-grey">Digite para buscar...</q-item-section>
                     </q-item>
                   </template>
-                </q-select>
+                </MgSelect>
               </div>
             </div>
           </q-card-section>
@@ -551,7 +552,7 @@ onMounted(() => {
                 <q-toggle v-model="form.transferencia" label="Transferência" :disable="loading" />
               </div>
               <div class="col-6 col-sm-4 col-md-3">
-                <q-select
+                <MgSelect
                   v-model="form.preco"
                   :options="PRECO_OPTIONS"
                   option-value="value"

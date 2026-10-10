@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import { useDfeDistribuicaoStore } from '../../stores/dfeDistribuicaoStore'
@@ -128,7 +129,7 @@ onMounted(() => {
 
       <!-- Filial -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="filters.codfilial"
           :options="filialOptions"
           label="Filial"
@@ -141,7 +142,7 @@ onMounted(() => {
           <template v-slot:prepend>
             <q-icon name="business" />
           </template>
-        </q-select>
+        </MgSelect>
       </div>
 
       <q-separator class="q-my-md" />

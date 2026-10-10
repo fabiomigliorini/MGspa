@@ -8,6 +8,7 @@ import SelectPdv from 'components/selects/SelectPdv.vue'
 import SelectUsuario from 'components/selects/SelectUsuario.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
+import MgSelect from '@components/MgSelect.vue'
 const sListagem = listagemStore()
 
 onMounted(() => {
@@ -47,7 +48,7 @@ onMounted(() => {
     <!-- STATUS -->
     <q-item>
       <q-item-section>
-        <q-select
+        <MgSelect
           outlined
           v-model="sListagem.filtro.codnegociostatus"
           :options="sListagem.opcoes.codnegociostatus"
@@ -166,7 +167,7 @@ onMounted(() => {
     <!-- FORMA DE PAGAMENTO -->
     <q-item>
       <q-item-section>
-        <q-select
+        <MgSelect
           outlined
           v-model="sListagem.filtro.forma"
           multiple
@@ -182,7 +183,7 @@ onMounted(() => {
     <!-- INTEGRACAO -->
     <q-item>
       <q-item-section>
-        <q-select
+        <MgSelect
           outlined
           v-model="sListagem.filtro.integracao"
           multiple

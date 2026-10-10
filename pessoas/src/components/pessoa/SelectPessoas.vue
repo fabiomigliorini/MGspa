@@ -2,6 +2,7 @@
 import { ref, onMounted } from 'vue'
 import { GrupoEconomicoStore } from 'src/stores/GrupoEconomico'
 import { useRoute } from 'vue-router'
+import MgSelect from '@components/MgSelect.vue'
 
 const grupoEconomico = GrupoEconomicoStore()
 const route = useRoute()
@@ -21,7 +22,7 @@ const opcoes = ref([])
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     outlined
     dense
     :options="opcoes"

@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -826,7 +827,7 @@ onMounted(async () => {
                   </template>
                 </MgInput>
               </form>
-              <q-select
+              <MgSelect
                 v-model="tipoProdutoSelecionado"
                 :options="tipoProdutoOptions"
                 label="Tipo Produto"

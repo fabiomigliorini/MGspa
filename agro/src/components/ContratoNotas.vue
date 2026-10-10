@@ -10,6 +10,7 @@ import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectNaturezaOperacao from '@components/MgSelectNaturezaOperacao.vue'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 
 // Card "Plano de NF". Especialista na operação triangular: sequência de notas a
 // emitir por carga, cada uma podendo referenciar a chave de outra (refNFe).
@@ -168,7 +169,7 @@ function excluirNota(nt) {
                 />
               </div>
               <div class="col-12">
-                <q-select
+                <MgSelect
                   v-model="formNota.codcontratonotapai"
                   :options="notaPaiOptions"
                   emit-value

@@ -6,6 +6,7 @@
 import { ref, computed, watch } from 'vue'
 import { BANDEIRAS } from '@components/cobranca/pagamento.js'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectMaquineta from '@components/MgSelectMaquineta.vue'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
@@ -101,7 +102,7 @@ async function salvar() {
                 <MgSelectMaquineta v-model="form.codmaquineta" label="Maquineta" />
               </div>
               <div class="col-12 col-sm-6">
-                <q-select
+                <MgSelect
                   v-model="form.bandeira"
                   :options="OPCOES_BANDEIRA"
                   emit-value

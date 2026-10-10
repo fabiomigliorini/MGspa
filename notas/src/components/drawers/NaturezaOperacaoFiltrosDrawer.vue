@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import {
   useNaturezaOperacaoStore,
@@ -125,7 +126,7 @@ onMounted(() => {
       <!-- Filtro por Operação -->
       <div class="text-grey-7 text-body2 q-mb-sm">Tipo de Operação:</div>
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="filters.codoperacao"
           :options="OPERACAO_OPTIONS"
           option-value="value"
@@ -139,13 +140,13 @@ onMounted(() => {
           <template v-slot:prepend>
             <q-icon name="compare_arrows" />
           </template>
-        </q-select>
+        </MgSelect>
       </div>
 
       <!-- Filtro por Finalidade NFe -->
       <div class="text-grey-7 text-body2 q-mb-sm">Finalidade NFe:</div>
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="filters.finnfe"
           :options="FINNFE_OPTIONS"
           option-value="value"
@@ -159,7 +160,7 @@ onMounted(() => {
           <template v-slot:prepend>
             <q-icon name="description" />
           </template>
-        </q-select>
+        </MgSelect>
       </div>
     </div>
   </div>

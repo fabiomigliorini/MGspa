@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { watch, ref, computed } from 'vue'
 import { useNotaFiscalStore } from '../../stores/notaFiscalStore'
 import { useDebounceFn } from '@vueuse/core'
@@ -100,7 +101,7 @@ watch(
 
       <!-- Status -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="notaFiscalStore.filters.status"
           :options="statusOptions"
           label="Status"
@@ -124,12 +125,12 @@ watch(
             <q-icon :name="scope.opt.icon" :color="scope.opt.color" size="xs" class="q-mr-xs" />
             {{ scope.opt.label }}
           </template>
-        </q-select>
+        </MgSelect>
       </div>
 
       <!-- Modelo -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="notaFiscalStore.filters.modelo"
           :options="modeloOptions"
           label="Modelo"
@@ -143,7 +144,7 @@ watch(
 
       <!-- Emitida -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="notaFiscalStore.filters.emitida"
           :options="emitidaOptions"
           label="Emissão"
@@ -252,7 +253,7 @@ watch(
 
       <!-- Operação -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="notaFiscalStore.filters.codoperacao"
           :options="operacaoOptions"
           label="Operação"

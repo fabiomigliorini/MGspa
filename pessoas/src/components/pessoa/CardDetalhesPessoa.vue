@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
@@ -447,7 +448,7 @@ const salvarDetalhes = async () => {
             mask="#########"
             unmasked-value
           />
-          <q-select
+          <MgSelect
             class="col-md-8 col-sm-12 col-xs-12"
             outlined
             v-model="modelPessoa.tipotransportador"

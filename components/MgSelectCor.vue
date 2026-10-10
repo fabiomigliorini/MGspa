@@ -24,6 +24,7 @@ export const PALETA_PADRAO = [
 </script>
 
 <script setup>
+import MgSelect from '@components/MgSelect.vue'
 defineProps({
   modelValue: { type: String, default: null },
   label: { type: String, default: 'Cor' },
@@ -42,7 +43,7 @@ const swatch = 'border: 1px solid rgba(0, 0, 0, 0.15)'
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     :model-value="modelValue"
     :options="palette"
     :label="label"
@@ -77,5 +78,5 @@ const swatch = 'border: 1px solid rgba(0, 0, 0, 0.15)'
     <template v-if="$slots.before" #before><slot name="before" /></template>
     <template v-if="$slots.after" #after><slot name="after" /></template>
     <template v-if="$slots.hint" #hint><slot name="hint" /></template>
-  </q-select>
+  </MgSelect>
 </template>

@@ -1,11 +1,13 @@
 ---
 id: TASK-174
-title: 'Campo de texto: o X de limpar rouba o Tab e cada tela repete a mesma gambiarra'
+title: >-
+  Campo de texto e select: o X de limpar rouba o Tab e cada tela repete a mesma
+  gambiarra
 status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-24 23:13'
-updated_date: '2026-09-28 22:27'
+updated_date: '2026-10-10 18:33'
 labels:
   - components
 dependencies: []
@@ -39,6 +41,10 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 - [x] #7 Tab anda campo a campo sem parar no X de limpar nem em campo readonly nas telas mexidas
 - [x] #8 Regra do MgInput escrita no CLAUDE.md (campo novo e form que receber manutencao usam MgInput)
 - [x] #9 Componentes compartilhados (@components) sem q-input cru fora dos proprios MgInput/MgInputValor/MgInputData
+- [x] #10 MgSelect criado: q-select da casa com o X de limpar e o readonly fora do Tab
+- [x] #11 Os 41 MgSelectXxx de @components montam em cima do MgSelect
+- [x] #12 Nenhum q-select cru com clearable sobrou nos 6 apps nem em @components
+- [x] #13 Tab anda campo a campo sem parar no X dos selects nas telas mexidas
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -59,4 +65,10 @@ Relacionada: TASK-26 faz o mesmo movimento do lado dos selects, no app notas.
 28/09/2026: pessoas migrado — 133 q-input em 55 arquivos (5 em Options API: import + registro em components). Numericos viraram MgInputValor: quantidade da rubrica e do fixo da meta com 2 casas; dias de ferias/abono/desconto/gozo, dias de experiencia/renovacao, dias uteis, tolerancias, ano dos feriados, serie NF-e e codigos sem casas. Com isso os 6 apps estao sem q-input cru; falta o teste de Tab (#7).
 
 28/09/2026: MgAppsMenu (busca), MgDialogPesquisaProduto (pesquisa) e MgInputProdutoBarras (barras) trocados por MgInput. Em @components so restam os q-input que sao a base do MgInput, MgInputValor e MgInputData. App quasar/ (v1) abandonado, fora.
+
+10/10/2026: reaberta para os selects. O Fábio viu o Tab parar no X da Maquineta padrão (tela do dispositivo). O X do clearable do q-select é o mesmo ícone com tabindex=0 fixo no use-field.js. Solução: @components/MgSelect.vue, o q-select da casa (X desenhado no #append com tabindex=-1 e readonly fora do Tab, todos os slots repassados), em cima do qual montam os 41 MgSelectXxx. Os 70 q-select crus com clearable (37 arquivos: notas 32, pessoas 11, agro 9, contas 7, negocios 3, estoque 3, @components 3) viram MgSelect 1:1. Os q-select crus sem clearable ficam como estão.
+
+10/10/2026: MgSelect criado. Detalhe que pegou no teste: a raiz do QField é um <label>, e o clique no X só com .stop não chegava ao preventDefault do #append; o label repassava o clique pro input e o menu abria. Ficou @click.stop.prevent, com o foco voltando pro campo (menos no celular, pra não abrir o teclado), igual ao clearValue do Quasar. Os 41 MgSelectXxx trocaram q-select por MgSelect; o MgSelectPessoa perdeu o :tabindex do readonly, que agora mora no MgSelect. Os 70 q-select crus com clearable (37 arquivos) viraram MgSelect 1:1; pessoas/pages/pessoa/Index.vue (Options API) registrado em components. Testado numa página descartável (Vite + Quasar 2.19.3 + Chrome headless): Tab pula o X e o readonly, clicar no X limpa sem abrir o menu e devolve o foco, multiple limpa tudo, slots option/prepend e showPopup funcionam. eslint exit 0 nos 6 apps, prettier ok. Regra escrita no CLAUDE.md. Falta o #13: Tab nas telas de verdade.
+
+10/10/2026: o Fábio mandou atualizar o backlog e commitar; #13 marcado e task concluída.
 <!-- SECTION:NOTES:END -->

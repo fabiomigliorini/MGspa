@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import {
@@ -142,7 +143,7 @@ onMounted(async () => {
       <!-- Tipo de Produto -->
       <div class="text-grey-7 text-body2">Tipo de Produto:</div>
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="filters.codtipoproduto"
           :options="TIPO_PRODUTO_OPTIONS"
           option-value="value"
@@ -156,13 +157,13 @@ onMounted(async () => {
           <template v-slot:prepend>
             <q-icon name="category" />
           </template>
-        </q-select>
+        </MgSelect>
       </div>
 
       <!-- BIT -->
       <div class="text-grey-7 text-body2">BIT:</div>
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="filters.bit"
           :options="BIT_OPTIONS"
           option-value="value"
@@ -176,7 +177,7 @@ onMounted(async () => {
           <template v-slot:prepend>
             <q-icon name="flag" />
           </template>
-        </q-select>
+        </MgSelect>
       </div>
 
       <!-- NCM -->

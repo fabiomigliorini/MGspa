@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { onMounted, watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useMaquinetaStore } from 'src/stores/maquinetaStore'
@@ -49,7 +50,7 @@ onMounted(() => store.carregarAdquirentes())
         label="Filial"
         class="q-mb-sm"
       />
-      <q-select
+      <MgSelect
         v-model="store.filters.codpessoa"
         :options="store.adquirentes"
         emit-value
@@ -60,7 +61,7 @@ onMounted(() => store.carregarAdquirentes())
         label="Adquirente"
         class="q-mb-sm"
       />
-      <q-select
+      <MgSelect
         v-model="store.filters.integracao"
         :options="MAQUINETA_INTEGRACAO_OPTIONS"
         emit-value

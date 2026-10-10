@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import RadioCultura from 'components/RadioCultura.vue'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 
 // Formulário único de safra — serve tanto pra criar quanto pra editar. Recebe o
 // objeto reativo do form (da store do domínio) e a lista de safras já
@@ -154,7 +155,7 @@ onMounted(() => {
 
     <!-- Só na criação: a fazenda quase não muda de uma safra para outra. -->
     <div v-if="isNovo" class="col-12">
-      <q-select
+      <MgSelect
         v-model="form.codsafraorigem"
         :options="opcoesOrigem"
         option-value="codsafra"

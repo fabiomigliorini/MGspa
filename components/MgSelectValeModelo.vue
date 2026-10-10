@@ -2,6 +2,7 @@
 import { ref, onMounted, watch } from 'vue'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
+import MgSelect from '@components/MgSelect.vue'
 
 // ===== Padrão REMOTE (ver MgSelectPessoa.vue), com duas diferenças =====
 // - abre já listando os primeiros 40 modelos, sem precisar digitar;
@@ -184,7 +185,7 @@ const handleUpdate = (value) => {
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     :model-value="modelValue"
     @update:model-value="handleUpdate"
     :label="label"
@@ -231,5 +232,5 @@ const handleUpdate = (value) => {
     </template>
     <template v-if="$slots.prepend" #prepend><slot name="prepend" /></template>
     <template v-if="$slots.hint" #hint><slot name="hint" /></template>
-  </q-select>
+  </MgSelect>
 </template>

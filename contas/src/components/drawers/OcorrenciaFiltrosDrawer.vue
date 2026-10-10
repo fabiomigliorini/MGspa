@@ -9,6 +9,7 @@ import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgSelectPdv from '@components/MgSelectPdv.vue'
 import MgSelectUsuario from '@components/MgSelectUsuario.vue'
 import MgInputData from '@components/MgInputData.vue'
+import MgSelect from '@components/MgSelect.vue'
 
 const store = useOcorrenciaStore()
 
@@ -72,7 +73,7 @@ const clear = () => {
     </FilterGroup>
 
     <FilterGroup title="Tipo e período">
-      <q-select
+      <MgSelect
         v-model="store.filters.tipo"
         :options="TIPO_OPTIONS"
         emit-value
