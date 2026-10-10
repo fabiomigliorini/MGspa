@@ -1,6 +1,6 @@
 <script setup>
 import { formataNumero } from '@components/formatters'
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { negocioStore } from 'stores/negocio'
 import { useRoute } from 'vue-router'
 import { produtoStore } from 'src/stores/produto'
@@ -18,6 +18,26 @@ const sProduto = produtoStore()
 
 const itensDevolucao = ref([])
 const totalDevolucao = ref(null)
+
+// o que falta no cadastro do cliente para devolver (TASK-31). Os campos sao os legados
+// do tblpessoa, que vem no negocio recarregado do servidor: sem endereco o cadastro grava
+// 'Nao Informado', e sem telefone sobra lixo como '00 0000 0000' ou '0'
+const pendencias = computed(() => {
+  const p = sNegocio.negocio?.Pessoa
+  if (!p || sNegocio.negocio.codpessoa == 1) {
+    return []
+  }
+  const ret = []
+  if (!p.cidade || !p.endereco || p.endereco == 'Nao Informado') {
+    ret.push('endereço')
+  }
+  if (![p.telefone1, p.telefone2, p.telefone3].some((t) => /[1-9]/.test(t ?? ''))) {
+    ret.push('telefone')
+  }
+  return ret
+})
+
+const urlPessoa = () => process.env.PESSOAS_URL + '/pessoa/' + sNegocio.negocio.codpessoa
 
 onMounted(() => {
   sNegocio.carregarPeloUuid(route.params.uuid).then(() => {
@@ -69,6 +89,9 @@ const marcarNenhum = () => {
 }
 
 const salvarDevolucao = async () => {
+  if (pendencias.value.length) {
+    return
+  }
   Dialog.create({
     title: 'Devolução',
     message: 'Tem certeza que deseja devolver esses produtos?',
@@ -102,6 +125,14 @@ const salvarDevolucao = async () => {
           Informe o cadastro da pessoa para fazer uma devolução!
         </q-banner>
 
+        <q-banner inline-actions class="text-white bg-red" v-if="pendencias.length">
+          Cliente sem {{ pendencias.join(' e ') }} no cadastro! Complete o cadastro para fazer a
+          devolução.
+          <template #action>
+            <q-btn flat label="Abrir cadastro" :href="urlPessoa()" target="_blank" />
+          </template>
+        </q-banner>
+
         <div class="row">
           <q-btn
             label="Marcar Todos"
@@ -123,7 +154,7 @@ const salvarDevolucao = async () => {
             color="primary"
             @click="salvarDevolucao"
             flat
-            v-if="totalDevolucao"
+            v-if="totalDevolucao && !pendencias.length"
           />
         </div>
 

@@ -787,13 +787,20 @@ onUnmounted(() => {
           color="warning"
           :to="route.params.uuid + '/devolucao/'"
           :itensDevolucao="sNegocio.negocio"
+          :disable="sNegocio.negocio.codpessoa == 1"
           v-if="
             sNegocio.itensAtivos.length > 0 &&
             sNegocio.negocio.codnegociostatus == 2 &&
             sNegocio.negocio.venda
           "
         >
-          <q-tooltip class="bg-accent">Devolução</q-tooltip>
+          <q-tooltip class="bg-accent">
+            {{
+              sNegocio.negocio.codpessoa == 1
+                ? 'Informe o cliente para fazer a devolução'
+                : 'Devolução'
+            }}
+          </q-tooltip>
         </q-btn>
       </div>
     </q-page-sticky>
