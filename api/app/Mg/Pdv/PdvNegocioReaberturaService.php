@@ -21,7 +21,7 @@ use Mg\Portador\PortadorMovimentoService;
 use Mg\Titulo\TituloService;
 
 /**
- * Venda fechada reaberta pelo gerente (TASK-30). Sem status novo: a reaberta
+ * Venda fechada (ou cancelada) reaberta pelo gerente (TASK-30). Sem status novo: a reaberta
  * e' a venda aberta com `reabertura` preenchida, e o F3 mantem lancamento,
  * codusuario e codpdv.
  *
@@ -39,26 +39,34 @@ class PdvNegocioReaberturaService
             && !empty($negocio->reabertura);
     }
 
-    // so' reabre; nao estorna nada (quem desfaz e' o F3)
+    // so' reabre; nao estorna nada (quem desfaz e' o F3). O cancelado reabre
+    // igual: o cancelamento ja' estornou tudo, e o F3 gera de novo o que
+    // ficar (titulo, credito do vale) e efetiva o pagamento reativado
     public static function reabrir(Negocio $negocio, string $justificativa): Negocio
     {
         $negocio = Negocio::lockForUpdate()->findOrFail($negocio->codnegocio);
-        if ($negocio->codnegociostatus != NegocioService::STATUS_FECHADO) {
-            abort(422, 'Só negócio fechado pode ser reaberto!');
+        if (!in_array($negocio->codnegociostatus, [NegocioService::STATUS_FECHADO, NegocioService::STATUS_CANCELADO])) {
+            abort(422, 'Só negócio fechado ou cancelado pode ser reaberto!');
         }
         if ($negocio->NegocioValeS()->whereNotNull('codvalecompra')->exists()) {
             abort(422, 'Este negócio é um Vale Compras convertido do sistema antigo e não pode ser alterado!');
         }
         ConferenciaAutorizador::autorizar($negocio->codfilial);
 
+        $antes = ['codnegociostatus' => $negocio->codnegociostatus];
         $negocio->codnegociostatus = NegocioService::STATUS_ABERTO;
         $negocio->reabertura = Carbon::now();
+        // o motivo do cancelamento fica na auditoria e na ocorrencia
+        if ($antes['codnegociostatus'] == NegocioService::STATUS_CANCELADO) {
+            $antes['justificativa'] = $negocio->justificativa;
+            $negocio->justificativa = null;
+        }
         $negocio->save();
         AuditoriaService::registrar(
             'tblnegocio',
             $negocio->codnegocio,
             AuditoriaService::TIPO_NEGOCIO_REABERTO,
-            ['codnegociostatus' => NegocioService::STATUS_FECHADO],
+            $antes,
             ['codnegociostatus' => NegocioService::STATUS_ABERTO],
             $justificativa
         );

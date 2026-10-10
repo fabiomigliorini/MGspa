@@ -125,12 +125,21 @@ class PdvNegocioValeService
      * Venda reaberta (TASK-30): o credito do vale que saiu, mudou de valor ou
      * de favorecido e' estornado; o emitirCreditos emite de novo o do vale
      * que ficou. Credito ja' usado nao volta. Sem mudanca, nao faz nada.
+     * O vale que ficou com o credito ja' estornado (o cancelado reaberto)
+     * tambem ganha credito novo, como a parcela no gerarTitulos.
      */
     public static function reconciliarCreditos(Negocio $negocio)
     {
         foreach ($negocio->NegocioValeS()->whereNotNull('codtitulo')->orderBy('codnegociovale')->get() as $vale) {
             $titulo = $vale->Titulo;
-            if (empty($titulo) || !empty($titulo->estornado)) {
+            if (empty($titulo)) {
+                continue;
+            }
+            if (!empty($titulo->estornado)) {
+                if (empty($vale->inativo)) {
+                    $vale->codtitulo = null;
+                    $vale->save();
+                }
                 continue;
             }
             $mudou = !empty($vale->inativo)

@@ -176,8 +176,10 @@ export const negocioStore = defineStore('negocio', {
       const grupos = (useAuthStore().usuario?.permissoes ?? []).map((p) => p.grupousuario)
       return ['Administrador', 'Gerente', 'Financeiro'].some((g) => grupos.includes(g))
     },
+    // fechado ou cancelado
     podeReabrir() {
-      return this.negocio?.codnegociostatus == 2 && this.podeGerenciar
+      const status = this.negocio?.codnegociostatus
+      return (status == 2 || status == 3) && this.podeGerenciar
     },
     podeEditar() {
       if (this.reaberto) {

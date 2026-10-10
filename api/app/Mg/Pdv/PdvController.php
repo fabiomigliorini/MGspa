@@ -402,7 +402,7 @@ class PdvController
         return new NegocioResource($negocio);
     }
 
-    // venda fechada reaberta pelo gerente (TASK-30): so' reabre; quem
+    // venda fechada ou cancelada reaberta pelo gerente (TASK-30): so' reabre; quem
     // reconcilia o resto e' o F3. O motivo vai para a auditoria (TASK-209)
     public function reabrirNegocio(PdvRequest $request, $codnegocio)
     {

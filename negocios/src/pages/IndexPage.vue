@@ -241,8 +241,8 @@ const cancelar = async () => {
   })
 }
 
-// venda fechada reaberta pelo gerente (TASK-30): só reabre; o F3 fecha de novo com a mesma
-// data, caixa e PDV. O motivo vai para a auditoria (TASK-209)
+// venda fechada ou cancelada reaberta pelo gerente (TASK-30): só reabre; o F3 fecha de novo
+// com a mesma data, caixa e PDV. O motivo vai para a auditoria (TASK-209)
 const reabrir = () => {
   Dialog.create({
     title: 'Justificativa da Reabertura',
