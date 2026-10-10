@@ -592,18 +592,6 @@ class PdvController
         return new NegocioResource($negocio);
     }
 
-
-    public function conferencia(PdvRequest $request)
-    {
-        PdvService::autoriza($request->pdv);
-        $request->validate([
-            'codpdv' => 'required',
-            'dia' => 'required'
-        ]);
-        $negocios = PdvService::conferencia($request->codpdv, $request->dia);
-        return response()->json($negocios, 200);
-    }
-
     public function update(PdvRequest $request, $codpdv)
     {
         Autorizador::autoriza([]);

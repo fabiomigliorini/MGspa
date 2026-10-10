@@ -444,63 +444,6 @@ class PdvService
         return $ret;
     }
 
-    public static function conferencia($codpdv, $dia)
-    {
-        $sql = '
-        with pix as (
-            select n.codnegocio, sum(p.valor) as valorpix 
-            from tblpix p
-            inner join tblpixcob pc on (pc.codpixcob = p.codpixcob)
-            inner join tblnegocio n on (n.codnegocio = pc.codnegocio)
-            group by n.codnegocio 
-        ),
-        pagarme as (
-            select ped.codnegocio, sum(ped.valorpagoliquido)  as valorpagarme
-            from tblpagarmepedido ped
-            group by ped.codnegocio
-        ),
-        tit as (
-            select np.codnegocio, sum(t.valor) filter (where t.valor > 0) as valortitulo
-            from tblnegocioparcela np
-            inner join tbltitulo t on (t.codtitulo = np.codtitulo)
-            where np.inativo is null
-            group by np.codnegocio
-        )
-        select 
-            n.codnegocio, 
-            p.fantasia,
-            n.valortotal, 
-            pix.valorpix, 
-            pagarme.valorpagarme, 
-            tit.valortitulo,
-            coalesce(n.valortotal, 0) 
-                - coalesce(pix.valorpix, 0)
-                - coalesce(pagarme.valorpagarme, 0) 
-                - coalesce(tit.valortitulo, 0) 
-                as valordiferenca
-        from tblnegocio n
-        inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
-        left join pix on (pix.codnegocio = n.codnegocio)
-        left join pagarme on (pagarme.codnegocio = n.codnegocio)
-        left join tit on (tit.codnegocio = n.codnegocio)
-        left join tblpessoa p on (p.codpessoa = n.codpessoa)
-        where n.lancamento between :dia and :dia + \'1 day\'::interval - \'1 second\'::interval
-        and n.codnegociostatus = 2
-        and nat.financeiro = true
-        and n.codpdv = :codpdv
-        order by n.valortotal desc
-        ';
-
-        $params['dia'] = $dia;
-
-        $params['codpdv'] = $codpdv;
-
-        $result = DB::select($sql, $params);
-
-        return $result;
-    }
-
-
     public static function update($pdv, $data)
     {
 

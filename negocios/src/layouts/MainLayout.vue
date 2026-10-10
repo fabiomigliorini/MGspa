@@ -39,7 +39,6 @@ const menuGroups = [
     items: [
       { label: 'Modelos de Vale', icon: 'card_giftcard', color: 'pink', to: '/vale-modelo' },
       { label: 'Comandas', icon: 'mdi-barcode', color: 'indigo', to: '/comanda-vendedor' },
-      { label: 'Conferência', icon: 'check', color: 'orange', to: '/conferencia' },
       { label: 'WOO', icon: 'mdi-list-box-outline', color: 'purple', to: '/woo/painel' },
       { label: 'Configuração', icon: 'settings', color: 'grey-8', to: '/config/padrao' },
     ],

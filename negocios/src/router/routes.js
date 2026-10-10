@@ -113,13 +113,6 @@ const routes = [
     ],
   },
 
-  // CONFERENCIA CAIXA
-  {
-    path: '/conferencia',
-    component: () => import('layouts/ConferenciaLayout.vue'),
-    children: [{ path: '', component: () => import('pages/ConferenciaPage.vue') }],
-  },
-
   // CONFISSOES
   {
     path: '/confissao',
