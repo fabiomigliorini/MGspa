@@ -97,6 +97,14 @@ const descricao = computed(() => {
   return sBaixa.entrada ? 'Receber' : 'Pagar'
 })
 
+// foco ao abrir o diálogo: sem pessoa, na pessoa; com ela, no Receber/Pagar, ou no Gravar quando
+// não há wizard (encontro de contas, amarrando pagamento) ou a forma já foi escolhida
+const temWizard = computed(() => !sBaixa.compensacao && !props.pagamento)
+const foco = computed(() => {
+  if (!codpessoa.value) return 'pessoa'
+  return temWizard.value && !sBaixa.forma ? 'wizard' : 'gravar'
+})
+
 const notificar = (type, message) =>
   Notify.create({
     type,
@@ -234,7 +242,6 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
                   default-time="keep"
                   :seconds="false"
                   label="Data"
-                  autofocus
                   :bottom-slots="false"
                 />
               </div>
@@ -242,7 +249,7 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
                 <MgSelectPessoa
                   v-model="codpessoa"
                   label="Pessoa"
-                  :autofocus="!comData || !!pagamento"
+                  :autofocus="foco === 'pessoa'"
                   :bottom-slots="false"
                 />
               </div>
@@ -291,11 +298,12 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn
-              v-if="!sBaixa.compensacao && !pagamento"
+              v-if="temWizard"
               flat
               :label="descricao"
               color="primary"
               :disable="sBaixa.finalizando"
+              :autofocus="foco === 'wizard'"
               @click="abrirWizard"
             />
             <q-btn
@@ -303,6 +311,7 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
               label="Gravar"
               type="submit"
               color="primary"
+              :autofocus="foco === 'gravar'"
               :disable="!sBaixa.pronto || !!problemaAmarracao"
               :loading="sBaixa.finalizando"
             />
