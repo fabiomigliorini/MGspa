@@ -3,11 +3,11 @@ id: TASK-201
 title: >-
   Safra nova obriga a plantar os talhões um por um, mesmo sendo os mesmos da
   safra anterior
-status: In Progress
+status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-10-07 18:37'
-updated_date: '2026-10-07 20:01'
+updated_date: '2026-10-10 16:16'
 labels:
   - agro
 dependencies: []
@@ -31,10 +31,10 @@ A decidir com quem prioriza: se a origem pode ser de cultura diferente (soja →
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No cadastro da safra nova dá para escolher 'Copiar talhões de' outra safra e os talhões dela já nascem na safra nova
-- [ ] #2 Vêm nome, desenho, cor e área do cadastro atual do talhão na fazenda; variedade e data de plantio ficam em branco
-- [ ] #3 Data de plantio deixa de ser obrigatória
-- [ ] #4 Talhão sem variedade aparece como pendente e não pode ser finalizado até ela ser informada
+- [x] #1 No cadastro da safra nova dá para escolher 'Copiar talhões de' outra safra e os talhões dela já nascem na safra nova
+- [x] #2 Vêm nome, desenho, cor e área do cadastro atual do talhão na fazenda; variedade e data de plantio ficam em branco
+- [x] #3 Data de plantio deixa de ser obrigatória
+- [x] #4 Talhão sem variedade aparece como pendente e não pode ser finalizado até ela ser informada
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -45,4 +45,6 @@ Decisões do usuário: cópia no cadastro da safra nova; origem diz QUAIS talhõ
 Backend: DDL api/database/agro_plantio_variedade_opcional.sql (codvariedade drop not null — rodado no dev, FALTA PROD); SafraStoreRequest aceita codsafraorigem; SafraController::store cria safra + PlantioService::copiarTalhoes numa transação e devolve talhoescopiados; Plantio Store/UpdateRequest com dataplantio nullable (período só se informado); PlantioController::hacolhido recusa 422 finalizar sem variedade. Pátio não é barrado.
 Frontend: SafraForm 'Copiar talhões de' (só na criação, safras ativas de qualquer cultura); aviso com nº de talhões copiados; SafraDetailPage selo 'Variedade pendente' e checkbox Encerrado desabilitado sem variedade; wizard sem data obrigatória (variedade segue obrigatória).
 Conferido em dev (transação desfeita): origem safra 1 → 22 talhões copiados = 22 distintos ativos; área/cor/geometria iguais ao cadastro; variedade e data nulas; finalizar sem variedade → 422; com variedade → finaliza.
+
+Teste ignorado pelo Fábio (10/10/2026): ele dispensou o teste manual dele e pediu para marcar e commitar. Critérios marcados com base no que está implementado e nos testes registrados nas notas acima.
 <!-- SECTION:NOTES:END -->

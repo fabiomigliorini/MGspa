@@ -1,11 +1,11 @@
 ---
 id: TASK-39
 title: Fazer tela de fechamento de caixa
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-07 23:31'
+updated_date: '2026-10-10 16:16'
 labels:
   - negocios
   - contas
@@ -57,9 +57,9 @@ Consolidou TASK-33, TASK-34, TASK-48 e TASK-84 (arquivadas).
 - [x] #19 Itens do caixa (chips, ingressos) contados no portador em espécie junto com as cédulas (como cédula, preço × quantidade): só a entrada ou a saída sem venda é lançada; vender não lança nada; cadastro de itens dinâmico, com a tela do item mostrando o saldo em cada caixa e os períodos em que mexeu
 - [x] #20 Maquineta de parceiro (Redeflex, Bilhete Agora, Rede Card), cadastrada como item do caixa, uma por maquineta: o caixa lança na tela do período o total em dinheiro do borderô do dia (negativo quando devolveu dinheiro), com a foto do borderô opcional ("sem borderô" na linha até anexar) e o valor explica o dinheiro a mais na contagem; a maquineta não entra na contagem
 - [x] #21 O financeiro vê a conta corrente de cada maquineta (borderôs dos caixas, títulos gerados e ajustes como a comissão que o parceiro desconta) e gera o título a pagar ao parceiro pelo saldo, a qualquer hora, sem depender do caixa estar fechado
-- [ ] #22 Validação de ponta a ponta na tela do período pelos roteiros Valida do doc-4 (o core, a redefinição, os itens e os parceiros): venda em dinheiro, sangria e confirmação, cancelamento, recebimento no banco, fechamento com contagem e com corte, itens do caixa (R5)
+- [x] #22 Validação de ponta a ponta na tela do período pelos roteiros Valida do doc-4 (o core, a redefinição, os itens e os parceiros): venda em dinheiro, sangria e confirmação, cancelamento, recebimento no banco, fechamento com contagem e com corte, itens do caixa (R5)
 - [x] #23 A lista de Itens do Caixa mostra o saldo de cada item sem precisar abrir um por um: quanto tem de cada chip/ingresso nos caixas e quanto devemos a cada maquineta de parceiro, com o total
-- [ ] #24 Na contagem, cada bloco (cédulas, moedas, cada item) tem um botão de copiar: a inicial copia a contagem final do período anterior; a final copia a inicial, com chips e ingressos somando as entradas e tirando as saídas do período
+- [x] #24 Na contagem, cada bloco (cédulas, moedas, cada item) tem um botão de copiar: a inicial copia a contagem final do período anterior; a final copia a inicial, com chips e ingressos somando as entradas e tirando as saídas do período
 - [x] #25 O resumo do período em espécie segue a folha Movimento do Caixa: Moedas e Cédulas numa linha cada (entrada = contado no começo, saída = no fim), Total e Diferença no pé
 - [x] #26 Saída de item só oferece o que está no caixa (saldo inicial + entradas do período), no jeito da contagem, com a quantidade limitada ao disponível
 <!-- AC:END -->
@@ -92,4 +92,6 @@ Reorganizada em 06/10/2026: critérios renumerados por assunto; os do M11 (trans
 **Virada das maquinetas** (Fábio, 07/10/2026): as maquinetas reais (parceiro, filial, conta) e o saldo inicial de cada uma (ajuste "saldo inicial" na conta corrente) são cadastrados pela tela, pelo Fábio ou pelo financeiro, depois do caixa_item_maquineta.sql; sem script.
 
 **Resumo no jeito do papel** (#25, 07/10/2026): o quadro da espécie é montado no servidor (PortadorPeriodoResource::quadro) e desenhado igual na tela do período e no borderô térmico: Moedas e Cédulas (entrada = contagem que deu o saldo inicial, saída = contagem final), cada item do caixa com Abertura e fechamento e Movimentação, as origens com as maquinetas sob Parceiros, Total e Diferença (só avisa quando passa da tolerância). A calculadora ao lado de cada valor abre a contagem só daquele bloco (quantidade × face = total, um recalcula o outro); a contagem completa saiu. Borderô com situação e impressora também no período aberto.
+
+Teste ignorado pelo Fábio (10/10/2026): ele dispensou o teste manual dele e pediu para marcar e commitar. Critérios marcados com base no que está implementado e nos testes registrados nas notas acima. O #24 (copiar bloco na contagem) está em components/portador/PeriodoCabecalho.vue e components/caixa/ContagemCaixa.vue, commit a5d39a52a.
 <!-- SECTION:NOTES:END -->

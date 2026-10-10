@@ -3,11 +3,11 @@ id: TASK-188
 title: >-
   O pagamento é guardado de três jeitos (venda, liquidação, transferência) e
   juros, multa e desconto ficam em linhas separadas
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-10 15:40'
+updated_date: '2026-10-10 16:16'
 labels:
   - contas
   - negocios
@@ -47,28 +47,28 @@ Desenho, decisões e o registro da execução de cada etapa: doc-3 (Plano do fec
 - [x] #13 A lista de tipos de título tem só os 14 que se usam, a receber e a pagar separados
 - [x] #14 O caixa do PDV abre, conta, faz sangria e reforço, lança o borderô da maquineta de parceiro e imprime o borderô; quem fecha é o gerente, no contas
 - [x] #15 Venda e recebimento em dinheiro caem no caixa aberto do PDV (sem caixa aberto, o Dinheiro fica bloqueado com o motivo) e cancelar tira do caixa
-- [ ] #16 Só Caixa da filial, Gerente ou Administrador recebe em dinheiro (não feito: hoje basta o caixa estar aberto)
+- [x] #16 Só Caixa da filial, Gerente ou Administrador recebe em dinheiro (não feito: hoje basta o caixa estar aberto)
 - [x] #17 O gerente confere o cartão de cada maquineta com o borderô na tela da maquineta e seus períodos
-- [ ] #18 Uma baixa de título (e um vale/adiantamento) = um pagamento: o wizard vem com o valor travado (só o dinheiro calcula troco); o pagamento guarda só o dinheiro e juros, multa e desconto ficam nos movimentos dos títulos
-- [ ] #19 Baixa trava os títulos e reconfere o saldo: título repetido ou duas baixas ao mesmo tempo não passam; valor com mais de 2 casas é recusado
-- [ ] #20 Encontro de contas (títulos que se anulam) e compensação gravam no portador Encontro de Contas (antigo Programação Pagamentos), também no PDV; permissão pelo papel nesse portador
-- [ ] #21 Forma 'Já recebido' no wizard (só online): amarra um pagamento sem amarração que tenha saldo livre; o título baixa na data do pagamento
-- [ ] #22 PDV: Receber Título vem com a maquininha e a conta PIX padrão do PDV
-- [ ] #23 Desamarrar (todos os títulos ou um) estorna as baixas: os títulos reabrem e o pagamento continua, sem amarração, em Pagamentos não resolvidos
-- [ ] #24 Cancelar só o pagamento manual já desamarrado (sai do razão, cancela o cheque a repassar); integrado (PIX, maquineta, Stone/SafraPay) e boleto nunca se cancelam
-- [ ] #25 Lápis do pagamento: pessoa e observação; a data só do manual; meio e portador não mudam (o servidor recusa)
-- [ ] #26 Detalhe do pagamento mostra as amarrações com o histórico (título desamarrado riscado), o saldo, o amarrado e o livre
-- [ ] #27 Cancelar a venda cancela só o pagamento manual; PIX e cartão integrado ficam efetivados e saem da venda (órfãos, em não resolvidos), com a mudança na auditoria
-- [ ] #28 'Já recebido' na venda do PDV amarra o pagamento sem amarração inteiro na venda aberta, se couber no que falta; maior que a venda é recusado com a orientação de amarrar o excedente como adiantamento
-- [ ] #29 Tela Pagamentos não resolvidos (menu do contas e botão em Pagamentos do PDV): lista o que não bate (pago − devolvido ≠ amarrado), só dos portadores em que o usuário tem papel
-- [ ] #30 Não resolvido: amarrar a títulos (abre o Receber Título com o pagamento), lançar como vale/adiantamento, 'já lançado' (fica o integrado, o digitado é cancelado como indevido e as amarrações passam) e devolver PIX/cartão
-- [ ] #31 PIX pela chave que o banco confirma vira pagamento efetivado, sem documento, no razão do banco (a partir do início do razão), com a pessoa do CPF/CNPJ do pagador; aparece em não resolvidos
-- [ ] #32 PIX QR e Stone sem venda confirmam com a pessoa da cobrança
-- [ ] #33 'PIX pela chave' sai da forma Banco do contas (é só da venda, como parcela a receber)
-- [ ] #34 Permissão do dinheiro pelo papel do usuário no portador: receber = depositante; pagar, desamarrar, cancelar, corrigir e devolver = operador; alterar data = gestor, ou operador com o período de onde sai e o para onde vai abertos (no cartão, o portador da adquirente); o PDV só pré-seleciona a gaveta (sai a gaveta livre por codpdv)
-- [ ] #35 SQL de go-live api/database/pagamento_amarracao.sql: portador Encontro de Contas e os papéis que faltam (caixa/gerente depositante em adquirentes, Carteira e bancos da filial; Cobrança como o Financeiro)
+- [x] #18 Uma baixa de título (e um vale/adiantamento) = um pagamento: o wizard vem com o valor travado (só o dinheiro calcula troco); o pagamento guarda só o dinheiro e juros, multa e desconto ficam nos movimentos dos títulos
+- [x] #19 Baixa trava os títulos e reconfere o saldo: título repetido ou duas baixas ao mesmo tempo não passam; valor com mais de 2 casas é recusado
+- [x] #20 Encontro de contas (títulos que se anulam) e compensação gravam no portador Encontro de Contas (antigo Programação Pagamentos), também no PDV; permissão pelo papel nesse portador
+- [x] #21 Forma 'Já recebido' no wizard (só online): amarra um pagamento sem amarração que tenha saldo livre; o título baixa na data do pagamento
+- [x] #22 PDV: Receber Título vem com a maquininha e a conta PIX padrão do PDV
+- [x] #23 Desamarrar (todos os títulos ou um) estorna as baixas: os títulos reabrem e o pagamento continua, sem amarração, em Pagamentos não resolvidos
+- [x] #24 Cancelar só o pagamento manual já desamarrado (sai do razão, cancela o cheque a repassar); integrado (PIX, maquineta, Stone/SafraPay) e boleto nunca se cancelam
+- [x] #25 Lápis do pagamento: pessoa e observação; a data só do manual; meio e portador não mudam (o servidor recusa)
+- [x] #26 Detalhe do pagamento mostra as amarrações com o histórico (título desamarrado riscado), o saldo, o amarrado e o livre
+- [x] #27 Cancelar a venda cancela só o pagamento manual; PIX e cartão integrado ficam efetivados e saem da venda (órfãos, em não resolvidos), com a mudança na auditoria
+- [x] #28 'Já recebido' na venda do PDV amarra o pagamento sem amarração inteiro na venda aberta, se couber no que falta; maior que a venda é recusado com a orientação de amarrar o excedente como adiantamento
+- [x] #29 Tela Pagamentos não resolvidos (menu do contas e botão em Pagamentos do PDV): lista o que não bate (pago − devolvido ≠ amarrado), só dos portadores em que o usuário tem papel
+- [x] #30 Não resolvido: amarrar a títulos (abre o Receber Título com o pagamento), lançar como vale/adiantamento, 'já lançado' (fica o integrado, o digitado é cancelado como indevido e as amarrações passam) e devolver PIX/cartão
+- [x] #31 PIX pela chave que o banco confirma vira pagamento efetivado, sem documento, no razão do banco (a partir do início do razão), com a pessoa do CPF/CNPJ do pagador; aparece em não resolvidos
+- [x] #32 PIX QR e Stone sem venda confirmam com a pessoa da cobrança
+- [x] #33 'PIX pela chave' sai da forma Banco do contas (é só da venda, como parcela a receber)
+- [x] #34 Permissão do dinheiro pelo papel do usuário no portador: receber = depositante; pagar, desamarrar, cancelar, corrigir e devolver = operador; alterar data = gestor, ou operador com o período de onde sai e o para onde vai abertos (no cartão, o portador da adquirente); o PDV só pré-seleciona a gaveta (sai a gaveta livre por codpdv)
+- [x] #35 SQL de go-live api/database/pagamento_amarracao.sql: portador Encontro de Contas e os papéis que faltam (caixa/gerente depositante em adquirentes, Carteira e bancos da filial; Cobrança como o Financeiro)
 - [x] #36 Venda com diferença no Fechamentos só mostra a diferença para consertar no negócio: sai o acerto da venda (perdoar, vale do colaborador, duplicata, crédito do cliente)
-- [ ] #37 Cartão Stone ou SafraPay de venda cancelada aparece em Não resolvidos para o caixa da filial, como entrada, com Já lançado, Devolver e Já recebido na venda; a listagem mostra a adquirente como portador e o filtro por portador acha o cartão
+- [x] #37 Cartão Stone ou SafraPay de venda cancelada aparece em Não resolvidos para o caixa da filial, como entrada, com Já lançado, Devolver e Já recebido na venda; a listagem mostra a adquirente como portador e o filtro por portador acha o cartão
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -137,4 +137,6 @@ Deploy: rodar api/database/pagamento_amarracao.sql (revisar a seção 2), php ar
 Dados do dev criados/alterados pelos testes de tela: pagamentos 80247775–80247881 (vários cancelados), títulos 650418–650431, PIX 80246944/80246945/80247735 amarrados em parte, rascunho de venda 4549121 no PDV 511. Tudo de valor pequeno.
 
 Cartão órfão da venda (10/10/2026, testes depois do go-live): o pagamento de cartão da venda nunca gravou portador (codportadordestino e codportadororigem nulos; ~1 milhão de registros, Stone e SafraPay inclusive). Tudo que decidia o sentido e o portador por esses dois campos errava no cartão: o órfão não entrava em Não resolvidos para quem não é admin (filtro pelos portadores do papel), saía como saída (sem Já lançado nem Devolver), não amarrava em venda nova e na listagem virava encontro de contas (CP). Correção na leitura, sem SQL: Pagamento::portadorDoPagamento/codportadorDoPagamento caem na adquirente da maquineta e Pagamento::entrada() trata o cartão sem portador como entrada (salvo o cancelamento); usados em PagamentoPendenciaService (listar em SQL, formatar, duplicados, jaLancado, devolver), PagamentoTituloService (baixa com Já recebido, lápis), PdvPagamentoService (carregar, amarrarVenda), TituloService (vale) e PagamentoListaService (operacao CR e filtro por portador). portadorDaMaquineta lembra a adquirente no request (listagem de 48 para 14 consultas) e relê a pessoa quando a maquineta veio parcial. Testado: bateria s11 (23 checagens) e E2E no PDV como caixa.
+
+Teste ignorado pelo Fábio (10/10/2026): ele dispensou o teste manual dele e pediu para marcar e commitar. Critérios marcados com base no que está implementado e nos testes registrados nas notas acima. O #16 (só Caixa da filial, Gerente ou Administrador recebe em dinheiro) foi superado pelo #34: a permissão do dinheiro é o papel do usuário no portador, e receber exige ser depositante na gaveta.
 <!-- SECTION:NOTES:END -->
