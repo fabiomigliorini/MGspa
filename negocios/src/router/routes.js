@@ -68,14 +68,30 @@ const routes = [
     path: '/config',
     component: () => import('layouts/ConfigLayout.vue'),
     children: [
-      { path: 'padrao/', component: () => import('pages/PadraoPage.vue') },
-      { path: 'pdv/', component: () => import('pages/PdvPage.vue') },
       { path: 'pagar-me/', component: () => import('pages/PagarMePage.vue') },
       {
         path: 'prancheta/',
         component: () => import('pages/PranchetaPage.vue'),
       },
     ],
+  },
+
+  // DISPOSITIVOS (PDVs)
+  {
+    path: '/dispositivo',
+    component: () => import('layouts/DispositivoLayout.vue'),
+    children: [{ path: '', component: () => import('pages/DispositivoPage.vue') }],
+  },
+  // Meu Dispositivo: atalho para a pagina do dispositivo deste navegador (ou o Cadastrar)
+  {
+    path: '/dispositivo/meu',
+    component: () => import('layouts/DispositivoDetalheLayout.vue'),
+    children: [{ path: '', component: () => import('pages/DispositivoDetalhePage.vue') }],
+  },
+  {
+    path: '/dispositivo/:codpdv(\\d+)',
+    component: () => import('layouts/DispositivoDetalheLayout.vue'),
+    children: [{ path: '', component: () => import('pages/DispositivoDetalhePage.vue') }],
   },
 
   // LISTAGEM NEGOCIOS

@@ -19,7 +19,8 @@ class SelectPdvController extends Controller
 
     public static function index(Request $request)
     {
-        $sql = static::SQL . ' where d.autorizado';
+        // ativo = autorizado (TASK-46)
+        $sql = static::SQL . ' where true';
         $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
         if (!$inativos) {
             $sql .= ' and d.inativo is null';

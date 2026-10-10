@@ -33,6 +33,12 @@ const menuGroups = [
       { label: 'Pagamentos', icon: 'payments', color: 'indigo', to: '/pagamento' },
       { label: 'Consulta de Preços', icon: 'price_check', color: 'teal', to: '/quiosque' },
       { label: 'Confissão de Dívida', icon: 'photo_camera', color: 'negative', to: '/confissao' },
+      {
+        label: 'Meu Dispositivo',
+        icon: 'phonelink_setup',
+        color: 'blue-grey',
+        to: '/dispositivo/meu',
+      },
     ],
   },
   {
@@ -41,7 +47,8 @@ const menuGroups = [
       { label: 'Modelos de Vale', icon: 'card_giftcard', color: 'pink', to: '/vale-modelo' },
       { label: 'Comandas', icon: 'mdi-barcode', color: 'indigo', to: '/comanda-vendedor' },
       { label: 'WOO', icon: 'mdi-list-box-outline', color: 'purple', to: '/woo/painel' },
-      { label: 'Configuração', icon: 'settings', color: 'grey-8', to: '/config/padrao' },
+      { label: 'Dispositivos', icon: 'devices', color: 'blue-grey', to: '/dispositivo' },
+      { label: 'Configuração', icon: 'settings', color: 'grey-8', to: '/config/pagar-me' },
     ],
   },
 ]

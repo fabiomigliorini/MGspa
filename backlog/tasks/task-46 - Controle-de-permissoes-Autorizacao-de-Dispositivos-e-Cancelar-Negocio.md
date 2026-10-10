@@ -1,8 +1,9 @@
 ---
 id: TASK-46
 title: 'Controle de permissoes: Autorizacao de Dispositivos e Cancelar Negocio'
-status: To Do
-assignee: []
+status: In Progress
+assignee:
+  - '@fabio'
 created_date: '2026-09-12 15:53'
 updated_date: '2026-10-10 18:07'
 labels:
@@ -21,12 +22,33 @@ Origem: negocios/todo — secao SEGURANCA. No arquivo original constava "(Allan)
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [x] #1 Sincronizar aparece em todas as telas do negócios
-- [x] #2 Ícone de sincronização não fica vermelho logo depois de sincronizar à tarde
+- [ ] #1 A configuração do PDV (local de estoque, natureza, impressora, maquineta, PIX) fica na tabela e volta na sincronização
+- [ ] #2 A 1ª sincronização migra o que estava no navegador
+- [ ] #3 Lista de Dispositivos com filtro na drawer (Admin todos, Gerente a filial)
+- [ ] #4 Página de cada dispositivo com os dados e os últimos negócios, pagamentos e ocorrências
+- [ ] #5 O PDV configura a si mesmo; nos outros só Admin/Gerente da filial; o cadastro é só Admin/Gerente
+- [ ] #6 Autorizar e inativar só Admin, também na tela
+- [ ] #7 Sincronizar no PDV sem janela dupla: sem login o botão fica desabilitado, sessão expirada só avisa, e o dispositivo novo entra pelo mesmo fluxo da página do dispositivo
+- [ ] #8 Ao abrir o negocios (PDV e quiosque), dispositivo sem cadastro ou sem autorização vai direto para o Meu Dispositivo, que tem o Cadastrar
+- [ ] #9 Um formulário só para editar o dispositivo, agrupado por contexto; o que o usuário não pode alterar fica desabilitado (e o servidor recusa)
+- [ ] #10 Autorizar e reativar recusam sem Apelido, Filial, Local de Estoque, Setor e Natureza de Operação
+- [x] #12 Sincronizar aparece em todas as telas do negócios
+- [x] #13 Ícone de sincronização não fica vermelho logo depois de sincronizar à tarde
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
+Implementação (10/10/2026): config do PDV em tblpdv (api/database/pdv_configuracao.sql, com índice idx_tblpagamento_codpdv para os últimos pagamentos). PdvAutorizador: Admin todos, Gerente a filial, o próprio PDV só a configuração. Cadastrar = POST pdv/dispositivo; sincronizar = PUT, recusa 404 sem cadastro e manda a config do navegador uma vez (legado). Página /dispositivo/:codpdv serve a lista e o Meu Dispositivo (/dispositivo/meu); o próprio se vê sem login. Guard no router redireciona sem cadastro/autorização. Sai o 'Confirme seus dados' do BtnSincronizacao.
+
+Formulário (10/10): a filial saiu da tela e passa a ser a do local de estoque (PdvService::update e na migração do legado); o próprio PDV só escolhe local da mesma filial. PIX padrão virou select (MgSelectPortador pix, com ícone do banco) e o MgSelectMaquineta mostra o logo (Stone/SafraPay/parceiro) em todos os apps.
+
+Autorizado = ativo (Fábio, 10/10): tblpdv.autorizado saiu. O dispositivo nasce inativo; ativar (DELETE dispositivo/{id}/inativo) é o que autoriza, só Admin e com os 5 campos. PdvService::podeAcessar olha inativo nulo (com uuid repetido, vale o ativo). Os pendentes viram inativos no pdv_configuracao.sql; o DROP da coluna está em pdv_autorizado_drop.sql, para depois do deploy. Nos critérios, 'autorizar' = ativar.
+
+Lentidão dos últimos registros (3,6 s no PDV 254): com só o índice em codpdv, 'order by cod desc limit' descia a PK inteira filtrando o PDV. Índices (codpdv, cod) em tblnegocio, tblpagamento e tblocorrencia no pdv_configuracao.sql (CONCURRENTLY); < 1 ms. Página mostra os 10 últimos.
+
+Revisão (Fábio): os últimos registros saem por data (lancamento/transacao/criacao desc, limit 20) e os índices compostos passaram a ser (codpdv, data): idx_tblnegocio_codpdv_lancamento, idx_tblpagamento_codpdv_transacao, idx_tblocorrencia_codpdv_criacao. Sem eles, PDV parado desde 2024 levava 2 s.
+
+
 Sincronizar em todas as telas e hora em 24h (10/10, commits f796b2a16 e 9b5c52bbf): o BtnSincronizacao saiu do OfflineLayout e foi para o MainLayout, ao lado do usuário (o quiosque segue com o dele). O ícone ficava vermelho à tarde porque o carimbo sincronizado dos endpoints v1/pdv/* saía em 12 horas (date 'Y-m-d h:i:s' no PdvService e no PdvPranchetaService): às 13:47 gravava 01:47 e passava do limite de 4 h. Virou 'H'. O mesmo carimbo decide o que a base offline apaga (below sincronizado), então o apagado no servidor também ficava no PDV até o dia seguinte. Teste: sincronizar depois das 12h e o ícone fica na cor normal; Caixa, Pagamentos, Listagem, Vales, Comandas, Confissão, Configuração, Dispositivos e Woo têm o botão, e o PDV só um.
 <!-- SECTION:NOTES:END -->

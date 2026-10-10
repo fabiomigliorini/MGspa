@@ -118,6 +118,8 @@ export const negocioStore = defineStore('negocio', {
     valeEditando: null,
     // pagamento (ou grupo de parcelas, com `condicao`) aberto no dialog de detalhe
     pagamentoDetalhe: null,
+    // configuracao do PDV: vem do backend na sincronizacao (aplicarConfiguracao) e fica
+    // persistida para funcionar offline
     padrao: {
       codestoquelocal: 101001, //Deposito
       codpessoa: 1, //Consumidor
@@ -125,10 +127,8 @@ export const negocioStore = defineStore('negocio', {
       codoperacao: 2, //Saída
       venda: true, //Saída
       impressora: null,
-      codpagarmepos: null,
-      codsauruspos: null,
-      maquineta: null,
-      codportador: null,
+      codmaquineta: null,
+      codportadorpix: null,
     },
     paginaAtual: 1,
     dialogVerificarDuplicados: false,
@@ -255,11 +255,18 @@ export const negocioStore = defineStore('negocio', {
   },
 
   actions: {
-    async salvarPadrao(padrao) {
-      this.padrao = { ...padrao }
-      const nat = await db.naturezaOperacao.get(padrao.codnaturezaoperacao)
-      this.padrao.codoperacao = nat.codoperacao
-      this.padrao.venda = nat.venda
+    // a configuracao do dispositivo (tblpdv) vira o padrao dos negocios deste PDV
+    aplicarConfiguracao(pdv) {
+      this.padrao = {
+        codestoquelocal: pdv.codestoquelocal,
+        codpessoa: 1, //Consumidor
+        codnaturezaoperacao: pdv.codnaturezaoperacao,
+        codoperacao: pdv.codoperacao,
+        venda: pdv.venda,
+        impressora: pdv.impressora,
+        codmaquineta: pdv.codmaquineta,
+        codportadorpix: pdv.codportadorpix,
+      }
     },
 
     async atualizarListagem() {

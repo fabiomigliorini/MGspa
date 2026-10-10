@@ -1,6 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
+import { logo } from '@components/cobranca/logos.js'
 
 // ===== REFERÊNCIA do padrão LOCAL (entidade < 100 registros) =====
 // Carrega TUDO uma vez de v1/select/portador, cacheia (lista + byId no store
@@ -27,6 +28,8 @@ const props = defineProps({
   papel: { type: String, default: null },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
+  // só os que recebem PIX (com chave), com o ícone do banco: o PIX padrão do PDV
+  pix: { type: Boolean, default: false },
   // Modo multiplo: v-model e Array, onde [] = sem filtro (todos). Espelha o backend,
   // que so aplica o IN quando o array vem preenchido.
   multiple: { type: Boolean, default: false },
@@ -42,8 +45,21 @@ const ENDPOINT = 'v1/select/portador'
 const opcoes = ref([])
 const carregando = ref(false)
 
+// ícone do banco (no PIX); sem logo do banco, o do PIX
+const logoBanco = (opt) => logo(`/bancos/${opt.codbanco}.svg`) ?? logo('/bancos/pix.svg')
+const selecionado = computed(() =>
+  props.pix && !props.multiple && props.modelValue
+    ? (cache.entities[ENTITY]?.items || []).find(
+        (v) => Number(v.value) === Number(props.modelValue),
+      )
+    : null,
+)
+
 const permitidos = computed(() => {
   let todos = cache.entities[ENTITY]?.items || []
+  if (props.pix) {
+    todos = todos.filter((v) => v.pixdict)
+  }
   if (props.tipos) {
     todos = todos.filter((v) => props.tipos.includes(v.tipo))
   }
@@ -144,15 +160,22 @@ onMounted(() => carregar())
         v-bind="scope.itemProps"
         :class="multiple && scope.selected ? 'bg-blue-1' : ''"
       >
+        <q-item-section v-if="pix" avatar>
+          <q-avatar><q-img :src="logoBanco(scope.opt)" /></q-avatar>
+        </q-item-section>
         <q-item-section>
           <q-item-label :class="scope.opt.inativo ? 'text-strike text-grey-6' : ''">
             {{ scope.opt.label }}
           </q-item-label>
+          <q-item-label v-if="pix && scope.opt.banco" caption>{{ scope.opt.banco }}</q-item-label>
           <q-item-label v-if="scope.opt.motivo" caption>{{ scope.opt.motivo }}</q-item-label>
         </q-item-section>
       </q-item>
     </template>
     <template v-if="$slots.prepend" #prepend><slot name="prepend" /></template>
+    <template v-else-if="selecionado" #prepend>
+      <q-avatar size="md"><q-img :src="logoBanco(selecionado)" /></q-avatar>
+    </template>
     <template v-if="$slots.before" #before><slot name="before" /></template>
     <template v-if="$slots.after" #after><slot name="after" /></template>
     <template v-if="$slots.hint" #hint><slot name="hint" /></template>

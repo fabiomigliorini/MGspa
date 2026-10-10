@@ -669,7 +669,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // PDV (público)
     Route::group(['prefix' => 'pdv'], function () {
-        // registro do dispositivo: primeiro passo da sincronizacao, sem usuario logado
+        // cadastrar o navegador como dispositivo exige usuario logado; a sincronizacao, que so'
+        // atualiza o que ele sabe de si, roda sem usuario (quiosque)
+        Route::post('dispositivo', '\Mg\Pdv\PdvController@postDispositivo');
         Route::put('dispositivo', '\Mg\Pdv\PdvController@putDispositivo')
             ->withoutMiddleware('auth:api');
         Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio')
@@ -919,11 +921,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::delete('pagar-me/pedido/{codpagarmepedido}', '\Mg\Pdv\PdvController@cancelarPagarMePedido');
         Route::post('negocio/{codnegocio}/nota-fiscal', '\Mg\Pdv\PdvController@notaFiscal');
         Route::get('dispositivo', '\Mg\Pdv\PdvController@getDispositivo');
-        Route::post('dispositivo/{codpdv}/autorizado', '\Mg\Pdv\PdvController@autorizar');
-        Route::delete('dispositivo/{codpdv}/autorizado', '\Mg\Pdv\PdvController@desautorizar');
+        // o proprio dispositivo se ve sem login (quiosque); os outros, Administrador ou Gerente
+        Route::get('dispositivo/{codpdv}', '\Mg\Pdv\PdvController@showDispositivo')
+            ->whereNumber('codpdv')->withoutMiddleware('auth:api');
+        Route::get('dispositivo/{codpdv}/registros', '\Mg\Pdv\PdvController@registrosDispositivo')
+            ->whereNumber('codpdv')->withoutMiddleware('auth:api');
         Route::post('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@inativar');
-        Route::delete('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@reativar');
-        Route::put('dispositivo/{codpdv}/editar', '\Mg\Pdv\PdvController@update');
+        Route::delete('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@ativar');
+        Route::put('dispositivo/{codpdv}', '\Mg\Pdv\PdvController@update')->whereNumber('codpdv');
         Route::get('vale/{codtitulo}', '\Mg\Pdv\PdvController@buscarVale');
 
         // consumo de vale por escopo (escola / turma), em FIFO

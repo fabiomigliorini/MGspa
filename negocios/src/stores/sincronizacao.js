@@ -5,9 +5,29 @@ import { uid } from 'quasar'
 import { Platform } from 'quasar'
 import { Notify } from 'quasar'
 
+// o negocio.js chama sincronizacaoStore() no topo do modulo: importar ele daqui de forma
+// estatica fecha um ciclo que quebra quando a sincronizacao carrega primeiro (Meu Dispositivo
+// como primeira tela). Por isso o negocio vem por import dinamico, so' na hora de usar.
+const negocio = async () => (await import('stores/negocio')).negocioStore()
+
+export const DISPOSITIVO_NAO_CADASTRADO =
+  'Este navegador não está cadastrado como dispositivo. Abra o Meu Dispositivo e clique em Cadastrar.'
+export const DISPOSITIVO_INATIVO =
+  'Dispositivo inativo. Abra o Meu Dispositivo e peça a um administrador para ativá-lo.'
+
+const erro = (message) => {
+  Notify.create({
+    type: 'negative',
+    message,
+    timeout: 0,
+    actions: [{ icon: 'close', color: 'white' }],
+  })
+  new Audio('/erro.mp3').play().catch(() => {})
+}
+
 export const sincronizacaoStore = defineStore('sincronizacao', {
   persist: {
-    pick: ['ultimaSincronizacao', 'pdv'],
+    pick: ['ultimaSincronizacao', 'pdv', 'configuracaoMigrada'],
   },
 
   state: () => ({
@@ -41,8 +61,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       navegador: null,
       versaonavegador: null,
       desktop: null,
-      // backend retorna
-      autorizado: false,
+      // backend retorna (inativo preenchido: nao vende nem sincroniza; ativar e' autorizar)
+      inativo: null,
       apelido: null,
       codfilial: null,
       filial: null,
@@ -51,6 +71,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       observacoes: null,
       setor: null,
     },
+    // a configuracao que ficava so' no navegador ja foi enviada ao backend (TASK-46)
+    configuracaoMigrada: false,
     importacao: {
       totalRegistros: null,
       totalSincronizados: null,
@@ -66,7 +88,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
   }),
 
   actions: {
-    async dispositivo() {
+    // o que o navegador sabe de si: uuid, localizacao (obrigatoria) e plataforma
+    async coletarDispositivo(acao) {
       if (!this.pdv.uuid) {
         this.pdv.uuid = uid()
       }
@@ -83,15 +106,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.pdv.longitude = pos.coords.longitude
         this.pdv.precisao = pos.coords.accuracy
       } catch (error) {
-        // localizacao e obrigatoria: sem ela o dispositivo nao sincroniza
-        Notify.create({
-          type: 'negative',
-          message: 'Sem a localização do dispositivo não é possível sincronizar: ' + error.message,
-          timeout: 0,
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-        let audio = new Audio('/erro.mp3')
-        audio.play()
+        // localizacao e obrigatoria: sem ela o dispositivo nao cadastra nem sincroniza
+        erro(`Sem a localização do dispositivo não é possível ${acao}: ${error.message}`)
         throw error
       }
 
@@ -100,7 +116,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       this.pdv.navegador = plat.name
       this.pdv.versaonavegador = plat.version
       this.pdv.desktop = plat.desktop ? 1 : 0
-      const params = {
+      return {
         uuid: this.pdv.uuid,
         latitude: this.pdv.latitude,
         longitude: this.pdv.longitude,
@@ -109,20 +125,67 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         navegador: this.pdv.navegador,
         versaonavegador: this.pdv.versaonavegador,
         plataforma: this.pdv.plataforma,
-        apelido: this.pdv.apelido,
-        codfilial: this.pdv.codfilial,
-        codsetor: this.pdv.codsetor,
-        observacoes: this.pdv.observacoes,
       }
-      let { data } = await api.put('/v1/pdv/dispositivo', params)
-      this.pdv.autorizado = data.data.autorizado
-      this.pdv.apelido = data.data.apelido
-      this.pdv.codfilial = data.data.codfilial
-      this.pdv.filial = data.data.filial
-      this.pdv.codpdv = data.data.codpdv
-      this.pdv.codsetor = data.data.codsetor
-      this.pdv.observacoes = data.data.observacoes
-      this.pdv.setor = data.data.setor
+    },
+
+    // Meu Dispositivo > Cadastrar: o navegador vira um dispositivo, que nasce inativo
+    async cadastrar() {
+      try {
+        const params = await this.coletarDispositivo('cadastrar')
+        const { data } = await api.post('/v1/pdv/dispositivo', params)
+        await this.aplicarDispositivo(data.data)
+        return true
+      } catch (error) {
+        if (error?.response) {
+          erro(error.response.data?.message || error.message)
+        }
+        return false
+      }
+    },
+
+    // sincronizacao: atualiza o que o backend sabe do navegador e traz de volta o cadastro e a
+    // configuracao; navegador nao cadastrado leva 404
+    async dispositivo() {
+      const params = await this.coletarDispositivo('sincronizar')
+      // uma vez so': o backend preenche com isto as colunas de configuracao ainda vazias
+      if (!this.configuracaoMigrada) {
+        const padrao = (await negocio()).padrao
+        params.legado = {
+          codestoquelocal: padrao.codestoquelocal,
+          codnaturezaoperacao: padrao.codnaturezaoperacao,
+          impressora: padrao.impressora,
+          codportador: padrao.codportador,
+          maquineta: padrao.maquineta,
+          codpagarmepos: padrao.codpagarmepos,
+          codsauruspos: padrao.codsauruspos,
+        }
+      }
+      try {
+        let { data } = await api.put('/v1/pdv/dispositivo', params)
+        this.configuracaoMigrada = true
+        await this.aplicarDispositivo(data.data)
+      } catch (error) {
+        erro(error?.response?.data?.message || error.message)
+        throw error
+      }
+    },
+
+    // o que o backend guarda do dispositivo: cadastro aqui, configuracao no padrao do negocio.
+    // Antes da 1a sincronizacao o padrao ainda e' o do navegador, que a sincronizacao envia
+    // como legado: nao pode ser trocado antes disso.
+    async aplicarDispositivo(pdv) {
+      this.pdv.inativo = pdv.inativo
+      this.pdv.apelido = pdv.apelido
+      this.pdv.codfilial = pdv.codfilial
+      this.pdv.filial = pdv.filial
+      this.pdv.codpdv = pdv.codpdv
+      this.pdv.codsetor = pdv.codsetor
+      this.pdv.observacoes = pdv.observacoes
+      this.pdv.setor = pdv.setor
+      if (this.configuracaoMigrada) {
+        const sNegocio = await negocio()
+        sNegocio.aplicarConfiguracao(pdv)
+      }
     },
 
     async sincronizar() {
@@ -130,7 +193,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       this.importacao.rodando = true
       this.importacao.erro = false
 
-      // verifica se PDV pode acessar API
+      // verifica se PDV pode acessar API (o dispositivo() ja avisou o erro)
       try {
         await this.dispositivo()
       } catch (error) {
@@ -138,16 +201,9 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.importacao.rodando = false
         return
       }
-      if (!this.pdv.autorizado) {
+      if (this.pdv.inativo) {
         this.importacao.rodando = false
-        Notify.create({
-          type: 'negative',
-          message: 'Solicite autorização para o dispositivo UUID: ' + this.pdv.uuid,
-          timeout: 0, // 20 minutos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-        let audio = new Audio('/erro.mp3')
-        audio.play()
+        erro(DISPOSITIVO_INATIVO)
         return
       }
 

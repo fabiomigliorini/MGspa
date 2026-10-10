@@ -91,11 +91,13 @@ const valorPadrao = computed(() => {
   if (estoque && estoque != padrao.codestoquelocal) {
     return null
   }
-  if (padrao.maquineta === 'saurus') {
-    return `saurus-${padrao.codsauruspos}`
+  // dois pinpads no mesmo PDV Saurus são uma opção só: procura na lista inteira
+  const m = maquinetas.value.find((m) => m.codmaquineta == padrao.codmaquineta)
+  if (m?.integracao === 'S') {
+    return `saurus-${m.codsauruspdv}`
   }
-  if (padrao.maquineta === 'pagarme') {
-    return `pagarme-${padrao.codpagarmepos}`
+  if (m?.integracao === 'P') {
+    return `pagarme-${m.codpagarmepos}`
   }
   return null
 })

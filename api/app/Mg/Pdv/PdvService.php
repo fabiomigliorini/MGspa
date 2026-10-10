@@ -10,10 +10,77 @@ use Mg\PagarMe\PagarMePos;
 use Mg\Saurus\SaurusPdv;
 use Mg\Saurus\SaurusPinPad;
 use Mg\Maquineta\MaquinetaService;
+use Mg\Estoque\EstoqueLocal;
+use Mg\NaturezaOperacao\NaturezaOperacao;
+use Mg\Ocorrencia\OcorrenciaService;
+use Mg\Pagamento\PagamentoService;
 
 class PdvService
 {
+    // o que so' Administrador ou Gerente da filial altera (TASK-46). A filial nao vem da tela:
+    // e' a do local de estoque
+    const CAMPOS_CADASTRO = [
+        'apelido',
+        'codsetor',
+        'codportador',
+        'monitoramento',
+        'minutosesquecido',
+        'observacoes',
+    ];
 
+    // o que o proprio PDV tambem altera: os padroes dos negocios dele
+    const CAMPOS_CONFIGURACAO = [
+        'codestoquelocal',
+        'codnaturezaoperacao',
+        'impressora',
+        'codmaquineta',
+        'codportadorpix',
+    ];
+
+    // sem estes o dispositivo nao e' ativado
+    const OBRIGATORIOS_ATIVAR = [
+        'apelido' => 'Apelido',
+        'codfilial' => 'Filial',
+        'codestoquelocal' => 'Local de Estoque',
+        'codsetor' => 'Setor',
+        'codnaturezaoperacao' => 'Natureza de Operação',
+    ];
+
+    // Cadastrar (TASK-46): o navegador vira um dispositivo, que nasce inativo; ativar e' o que o
+    // autoriza. O cadastro quem preenche e' o Administrador/Gerente, na pagina dele.
+    // Clicar duas vezes devolve o mesmo dispositivo.
+    public static function cadastrar(
+        $uuid,
+        $ip,
+        $latitude,
+        $longitude,
+        $precisao,
+        $desktop,
+        $navegador,
+        $versaonavegador,
+        $plataforma
+    ) {
+        $pdv = Pdv::where('uuid', $uuid)->first();
+        if ($pdv) {
+            return $pdv;
+        }
+        // fresh(): o minutosesquecido vem do default da tabela
+        return Pdv::create([
+            'uuid' => $uuid,
+            'inativo' => Carbon::now(),
+            'ip' => $ip,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'precisao' => $precisao,
+            'desktop' => $desktop,
+            'navegador' => $navegador,
+            'versaonavegador' => $versaonavegador,
+            'plataforma' => $plataforma,
+            'codsetor' => Setor::whereNull('inativo')->first()->codsetor,
+        ])->fresh();
+    }
+
+    // Sincronizacao: atualiza o que o navegador sabe de si; nao cadastra (isso e' o cadastrar)
     public static function dispositivo(
         $uuid,
         $ip,
@@ -24,12 +91,12 @@ class PdvService
         $navegador,
         $versaonavegador,
         $plataforma,
-        $apelido = null,
-        $codfilial = null,
-        $codsetor = null,
-        $observacoes = null
+        $legado = null
     ) {
-        $pdv = Pdv::firstOrNew(['uuid' => $uuid]);
+        $pdv = Pdv::where('uuid', $uuid)->first();
+        if (!$pdv) {
+            abort(404, 'Dispositivo não cadastrado! Abra o Meu Dispositivo e clique em Cadastrar.');
+        }
         $pdv->ip = $ip;
         $pdv->latitude = $latitude;
         $pdv->longitude = $longitude;
@@ -39,27 +106,120 @@ class PdvService
         $pdv->versaonavegador = $versaonavegador;
         $pdv->plataforma = $plataforma;
 
-        if (!$pdv->exists) {
-            $pdv->apelido = $apelido;
-            $pdv->codfilial = $codfilial;
-            $pdv->observacoes = $observacoes;
-            $pdv->codsetor = $codsetor ?? Setor::whereNull('inativo')->first()->codsetor;
+        if (!empty($legado)) {
+            static::migrarConfiguracao($pdv, $legado);
         }
 
         $pdv->save();
         return $pdv;
     }
 
+    // Uma vez por PDV (TASK-46): a configuracao que estava so' no navegador
+    // preenche as colunas ainda vazias; o que ja esta na tabela prevalece.
+    public static function migrarConfiguracao(Pdv $pdv, array $legado)
+    {
+        if (empty($pdv->codestoquelocal) && !empty($legado['codestoquelocal'])) {
+            $estoque = EstoqueLocal::find($legado['codestoquelocal']);
+            $pdv->codestoquelocal = $estoque?->codestoquelocal;
+            // sem filial ainda, fica a do local de estoque
+            if (empty($pdv->codfilial)) {
+                $pdv->codfilial = $estoque?->codfilial;
+            }
+        }
+        if (empty($pdv->codnaturezaoperacao) && !empty($legado['codnaturezaoperacao'])) {
+            $pdv->codnaturezaoperacao = NaturezaOperacao::find($legado['codnaturezaoperacao'])?->codnaturezaoperacao;
+        }
+        if (empty($pdv->impressora) && !empty($legado['impressora'])) {
+            $pdv->impressora = substr($legado['impressora'], 0, 100);
+        }
+        if (empty($pdv->codportadorpix) && !empty($legado['codportador'])) {
+            $pdv->codportadorpix = Portador::find($legado['codportador'])?->codportador;
+        }
+        if (empty($pdv->codmaquineta)) {
+            $pdv->codmaquineta = static::maquinetaLegado($legado);
+        }
+    }
+
+    // o navegador guardava o POS PagarMe ou o PDV Saurus; a maquineta e' o
+    // cadastro unificado. Saurus com mais de um pinpad no mesmo PDV fica sem.
+    public static function maquinetaLegado(array $legado)
+    {
+        $maquineta = $legado['maquineta'] ?? null;
+        if ($maquineta === 'pagarme' && !empty($legado['codpagarmepos'])) {
+            $regs = DB::select('
+                select codmaquineta from tblmaquineta
+                where codpagarmepos = :codpagarmepos and inativo is null
+            ', ['codpagarmepos' => $legado['codpagarmepos']]);
+        } elseif ($maquineta === 'saurus' && !empty($legado['codsauruspos'])) {
+            $regs = DB::select('
+                select m.codmaquineta from tblmaquineta m
+                inner join tblsauruspinpad pin on (pin.codsauruspinpad = m.codsauruspinpad)
+                where pin.codsauruspdv = :codsauruspdv and m.inativo is null
+            ', ['codsauruspdv' => $legado['codsauruspos']]);
+        } else {
+            return null;
+        }
+        return count($regs) === 1 ? $regs[0]->codmaquineta : null;
+    }
+
+    // os 20 registros mais recentes feitos no dispositivo, para a pagina dele. Rapido por causa
+    // dos indices (codpdv, data) do pdv_configuracao.sql: so' com o de codpdv o Postgres desce o
+    // indice da data inteiro filtrando o PDV
+    public static function registros(int $codpdv)
+    {
+        $negocios = DB::select('
+            select
+                n.codnegocio, n.lancamento, n.valortotal, n.codnegociostatus,
+                ns.negociostatus, nat.naturezaoperacao, p.fantasia, u.usuario
+            from tblnegocio n
+            inner join tblnegociostatus ns on (ns.codnegociostatus = n.codnegociostatus)
+            inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
+            left join tblpessoa p on (p.codpessoa = n.codpessoa)
+            left join tblusuario u on (u.codusuario = n.codusuario)
+            where n.codpdv = :codpdv
+            order by n.lancamento desc
+            limit 20
+        ', ['codpdv' => $codpdv]);
+
+        $pagamentos = DB::select('
+            select
+                pg.codpagamento, pg.transacao, pg.meio, pg.estado, pg.total, pg.valortroco,
+                pg.parcelas, pg.codpixcob, pg.codnegocio, p.fantasia
+            from tblpagamento pg
+            left join tblpessoa p on (p.codpessoa = pg.codpessoa)
+            where pg.codpdv = :codpdv
+            order by pg.transacao desc
+            limit 20
+        ', ['codpdv' => $codpdv]);
+        foreach ($pagamentos as $pag) {
+            $pag->estadodescricao = PagamentoService::ESTADOS[$pag->estado] ?? $pag->estado;
+        }
+
+        $ocorrencias = DB::select('
+            select
+                o.codocorrencia, o.criacao, o.tipo, o.descricao, o.valor, o.codnegocio,
+                o.conferencia
+            from tblocorrencia o
+            where o.codpdv = :codpdv
+            order by o.criacao desc
+            limit 20
+        ', ['codpdv' => $codpdv]);
+        foreach ($ocorrencias as $oc) {
+            $oc->tipodescricao = OcorrenciaService::TIPOS[$oc->tipo] ?? $oc->tipo;
+        }
+
+        return [
+            'negocios' => $negocios,
+            'pagamentos' => $pagamentos,
+            'ocorrencias' => $ocorrencias,
+        ];
+    }
+
+    // dispositivo ativo (inativo vazio) com este uuid; com uuid repetido, vale o ativo
     public static function podeAcessar($uuid)
     {
-        $pdv = Pdv::where('uuid', $uuid)->first();
-        if (!$pdv) {
-            return false;
-        }
-        if ($pdv->autorizado) {
-            return $pdv;
-        }
-        return false;
+        $pdv = Pdv::where('uuid', $uuid)->whereNull('inativo')->first();
+        return $pdv ?: false;
     }
 
     public static function autoriza($uuid)
@@ -70,38 +230,30 @@ class PdvService
         return $pdv;
     }
 
-    public static function autorizar(Pdv $pdv)
+    public static function exigirParaAtivar(Pdv $pdv)
     {
-        $pdv->update([
-            'autorizado' => true,
-            'inativo' => null
-        ]);
-        return $pdv;
+        $faltam = [];
+        foreach (static::OBRIGATORIOS_ATIVAR as $campo => $nome) {
+            if (blank($pdv->$campo)) {
+                $faltam[] = $nome;
+            }
+        }
+        if (!empty($faltam)) {
+            abort(422, 'Para ativar o dispositivo, preencha: ' . implode(', ', $faltam) . '.');
+        }
     }
 
-    public static function desautorizar(Pdv $pdv)
+    // ativar e' autorizar: o dispositivo passa a vender e sincronizar (TASK-46)
+    public static function ativar(Pdv $pdv)
     {
-        $pdv->update([
-            'inativo' => Carbon::now(),
-            'autorizado' => false
-        ]);
+        static::exigirParaAtivar($pdv);
+        $pdv->update(['inativo' => null]);
         return $pdv;
     }
 
     public static function inativar(Pdv $pdv)
     {
-        $pdv->update([
-            'inativo' => Carbon::now(),
-            'autorizado' => false
-        ]);
-        return $pdv;
-    }
-
-    public static function reativar(Pdv $pdv)
-    {
-        $pdv->update([
-            'inativo' => null
-        ]);
+        $pdv->update(['inativo' => Carbon::now()]);
         return $pdv;
     }
 
@@ -444,15 +596,23 @@ class PdvService
         return $ret;
     }
 
-    public static function update($pdv, $data)
+    // grava so' os campos que vieram: quem nao altera o cadastro nem manda (o controller recusa)
+    public static function update(Pdv $pdv, array $data)
     {
-
+        $data = array_intersect_key(
+            $data,
+            array_flip(array_merge(static::CAMPOS_CADASTRO, static::CAMPOS_CONFIGURACAO))
+        );
         foreach (['monitoramento', 'minutosesquecido'] as $campo) {
             if (array_key_exists($campo, $data) && $data[$campo] === '') {
                 $data[$campo] = null;
             }
         }
         $pdv->fill($data);
+        // a filial e' sempre a do local de estoque: nao tem como ficarem incoerentes
+        if (!empty($pdv->codestoquelocal)) {
+            $pdv->codfilial = EstoqueLocal::findOrFail($pdv->codestoquelocal)->codfilial;
+        }
         if ($pdv->minutosesquecido === null) {
             $pdv->minutosesquecido = 120;
         }

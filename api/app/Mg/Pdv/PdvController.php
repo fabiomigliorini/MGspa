@@ -4,6 +4,7 @@ namespace Mg\Pdv;
 
 use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Mg\Cidade\Cidade;
 use Mg\Negocio\NegocioResource;
@@ -23,6 +24,7 @@ use Mg\Titulo\TituloResource;
 use App\Rules\InscricaoEstadual;
 use Carbon\Carbon;
 use Mg\Filial\Filial;
+use Mg\Estoque\EstoqueLocal;
 use Mg\Pessoa\Pessoa;
 use Mg\Produto\ProdutoService;
 use Mg\Saurus\S2Pay\ApiService;
@@ -39,25 +41,27 @@ class PdvController
 
     public function getDispositivo(Request $request)
     {
-        Autorizador::autoriza(['Administrador']);
+        // Administrador ve todos; Gerente, os da filial dele
+        $filiais = PdvAutorizador::filiais();
+        if ($filiais === []) {
+            abort(403, 'Só Administrador ou Gerente!');
+        }
         $query = Pdv::with(['Filial', 'Setor', 'Portador'])->orderBy('criacao', 'desc');
+        if ($filiais !== null) {
+            $query->whereIn('codfilial', $filiais);
+        }
         if ($request->apelido) {
             $query->where('apelido', 'ilike', "%{$request->apelido}%");
         }
         if ($request->codfilial) {
             $query->where('codfilial', $request->codfilial);
         }
-        if ($request->status) {
-            match ($request->status) {
-                'autorizado' => $query->where('autorizado', true)->whereNull('inativo'),
-                'inativo' => $query->whereNotNull('inativo'),
-                'nao_autorizado' => $query->where(function ($q) {
-                    $q->where('autorizado', false)->orWhereNull('autorizado');
-                })->whereNull('inativo'),
-            };
-        } else {
-            $query->whereNull('inativo');
-        }
+        // sem status, so' os ativos
+        match ($request->status) {
+            'inativo' => $query->whereNotNull('inativo'),
+            'todos' => null,
+            default => $query->whereNull('inativo'),
+        };
         if ($request->ip) {
             $query->where('ip', 'ilike', "%{$request->ip}%");
         }
@@ -70,7 +74,35 @@ class PdvController
         return PdvResource::collection($query->get());
     }
 
-    public function putDispositivo(Request $request)
+    public function showDispositivo(Request $request, $codpdv)
+    {
+        $pdv = Pdv::findOrFail($codpdv);
+        // o proprio dispositivo se ve mesmo inativo (mostra o UUID para pedir a
+        // ativacao)
+        if (empty($request->pdv) || $request->pdv !== $pdv->uuid) {
+            PdvAutorizador::autorizar($pdv->codfilial);
+        }
+        // a tela so' mostra os botoes; quem garante e' cada rota. Sem login (quiosque) a
+        // pagina so' mostra: toda acao exige usuario
+        $logado = !empty(Auth::user() ?? Auth::guard('api')->user());
+        $gestor = $logado && PdvAutorizador::pode($pdv->codfilial);
+        return (new PdvResource($pdv))->additional(['pode' => [
+            'editar' => $gestor || ($logado && PdvAutorizador::proprio($pdv, $request->pdv)),
+            'cadastro' => $gestor,
+            'ativar' => $logado && Autorizador::pode([]),
+        ]]);
+    }
+
+    public function registrosDispositivo(Request $request, $codpdv)
+    {
+        $pdv = Pdv::findOrFail($codpdv);
+        if (empty($request->pdv) || $request->pdv !== $pdv->uuid) {
+            PdvAutorizador::autorizar($pdv->codfilial);
+        }
+        return response()->json(PdvService::registros($pdv->codpdv));
+    }
+
+    private function validarNavegador(Request $request)
     {
         $request->validate([
             'uuid' => 'required|uuid',
@@ -78,8 +110,29 @@ class PdvController
             'navegador' => 'required',
             'versaonavegador' => 'required',
             'plataforma' => 'required',
-            // 'codsetor' => 'required',
         ]);
+    }
+
+    public function postDispositivo(Request $request)
+    {
+        $this->validarNavegador($request);
+        $pdv = PdvService::cadastrar(
+            $request->uuid,
+            $request->ip(),
+            $request->latitude,
+            $request->longitude,
+            $request->precisao,
+            $request->desktop,
+            $request->navegador,
+            $request->versaonavegador,
+            $request->plataforma
+        );
+        return new PdvResource($pdv);
+    }
+
+    public function putDispositivo(Request $request)
+    {
+        $this->validarNavegador($request);
         $pdv = PdvService::dispositivo(
             $request->uuid,
             $request->ip(),
@@ -90,27 +143,8 @@ class PdvController
             $request->navegador,
             $request->versaonavegador,
             $request->plataforma,
-            $request->apelido,
-            $request->codfilial,
-            $request->codsetor,
-            $request->observacoes
+            is_array($request->legado) ? $request->legado : null
         );
-        return new PdvResource($pdv);
-    }
-
-    public static function autorizar($codpdv)
-    {
-        Autorizador::autoriza([]);
-        $pdv = Pdv::findOrFail($codpdv);
-        $pdv = PdvService::autorizar($pdv);
-        return new PdvResource($pdv);
-    }
-
-    public static function desautorizar($codpdv)
-    {
-        Autorizador::autoriza([]);
-        $pdv = Pdv::findOrFail($codpdv);
-        $pdv = PdvService::desautorizar($pdv);
         return new PdvResource($pdv);
     }
 
@@ -122,11 +156,12 @@ class PdvController
         return new PdvResource($pdv);
     }
 
-    public static function reativar($codpdv)
+    // ativar e' autorizar: so' Administrador
+    public static function ativar($codpdv)
     {
         Autorizador::autoriza([]);
         $pdv = Pdv::findOrFail($codpdv);
-        $pdv = PdvService::reativar($pdv);
+        $pdv = PdvService::ativar($pdv);
         return new PdvResource($pdv);
     }
 
@@ -592,18 +627,32 @@ class PdvController
         return new NegocioResource($negocio);
     }
 
-    public function update(PdvRequest $request, $codpdv)
+    // Editar o dispositivo (TASK-46): Administrador ou Gerente da filial alteram tudo; o
+    // proprio PDV, so' a configuracao (os padroes dos negocios dele)
+    public function update(PdvUpdateRequest $request, $codpdv)
     {
-        Autorizador::autoriza([]);
-        PdvService::autoriza($request->pdv);
-        $pdv =  Pdv::findOrFail($codpdv);
-        $data = $request->all();
+        $pdv = Pdv::findOrFail($codpdv);
+        $dados = $request->validated();
+        // a filial do dispositivo passa a ser a do local de estoque (PdvService::update)
+        $codfilial = EstoqueLocal::findOrFail($dados['codestoquelocal'])->codfilial;
+        if (PdvAutorizador::pode($pdv->codfilial)) {
+            // Gerente nao manda o dispositivo para filial onde nao e' gerente
+            if ($codfilial != $pdv->codfilial) {
+                PdvAutorizador::autorizar($codfilial);
+            }
+        } elseif (PdvAutorizador::proprio($pdv, $request->pdv)) {
+            if ($request->hasAny(PdvService::CAMPOS_CADASTRO)) {
+                abort(403, 'Só Administrador ou Gerente da filial altera o cadastro do dispositivo!');
+            }
+            if ($codfilial != $pdv->codfilial) {
+                abort(403, 'Local de estoque de outra filial muda a filial do dispositivo: só Administrador ou Gerente!');
+            }
+        } else {
+            abort(403, 'Só Administrador, Gerente da filial ou o próprio dispositivo!');
+        }
 
-        unset($data['pdv']);
-
-        $pdvUpdate = PdvService::update($pdv, $data);
-
-        return new PdvResource($pdvUpdate);
+        $pdv = PdvService::update($pdv, $dados);
+        return new PdvResource($pdv);
     }
 
     public function devolucao(PdvRequest $request, $codnegocio)

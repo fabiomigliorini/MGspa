@@ -2,7 +2,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
-// ===== Padrão LOCAL (autorizados, ~130) =====
+// ===== Padrão LOCAL (ativos, ~130) =====
 // Carrega TUDO uma vez de v1/select/pdv, cacheia (lista + byId no store compartilhado)
 // e filtra no FRONT ao digitar. clearable é opcional (default false).
 const props = defineProps({
