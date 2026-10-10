@@ -751,6 +751,8 @@ export const negocioStore = defineStore('negocio', {
       negocio.uuid = uuid
       negocio.codnegociostatus = 1
       negocio.justificativa = null
+      // a cópia de uma venda reaberta (TASK-30) nasce aberta, não reaberta
+      negocio.reabertura = null
       negocio.lancamento = formataTimestampIso(new Date())
       negocio.criacao = formataTimestampIso(new Date())
       negocio.alteracao = formataTimestampIso(new Date())

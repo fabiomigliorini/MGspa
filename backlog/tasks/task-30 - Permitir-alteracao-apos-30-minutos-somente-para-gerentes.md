@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-10 16:28'
+updated_date: '2026-10-10 19:46'
 labels:
   - negocios
 dependencies: []
@@ -40,6 +40,7 @@ Decisões do Fábio (09-10/10/2026), plano completo em ~/.claude/plans/precisamo
 - [x] #8 Views legadas (tblnegocioformapagamento) e leitores de parcela ignoram pagamento C e parcela inativa
 - [x] #9 Listagem do PDV filtra os Reabertos
 - [x] #10 Depois do F3 a venda fechada continua mostrando riscado o pagamento cancelado e a parcela tirada (só a venda aberta comum esconde)
+- [x] #11 Duplicar a venda reaberta gera um negócio aberto comum, não reaberto
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -56,6 +57,8 @@ Implementação (10/10/2026):
 Testado em dev pelo tinker (transação desfeita no fim): F3 sem mexer = no-op; dinheiro->cartão; reativar; crediário/PIX chave -> dinheiro e volta (título novo com sufixo); vale usado cancelado/reativado; vale vendido sem reemissão; cancelar a reaberta com C pendente.
 
 Fechada mostra o cancelado (10/10/2026): PdvNegocioPagamentoService::mostrarCancelado — pagamento C e parcela inativa só ficam escondidos na venda aberta comum; na reaberta, fechada e cancelada voltam riscados. No PDV, a decisão de emitir nota (romaneioOuNotaVendaPadrao) e o cartão do contra-vale passam a usar pagamentosAtivos/parcelasAtivas, para o cancelado não contar.
+
+Duplicar a reaberta (10/10/2026): o duplicar() do PDV (negocios/src/stores/negocio.js) copiava o negócio inteiro com a reabertura, e a cópia aparecia como reaberta. Só no aparelho — o servidor não aceita reabertura no PUT (fora do fillable) —, mas o PDV tratava a cópia como reaberta (PIX/cartão no portador e na data da venda original). Agora a cópia nasce com reabertura = null. Cópia feita antes da correção se acerta com o botão de recarregar do servidor no detalhe do negócio.
 <!-- SECTION:NOTES:END -->
 
 ## Comments
