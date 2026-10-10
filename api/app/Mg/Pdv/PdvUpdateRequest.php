@@ -33,4 +33,27 @@ class PdvUpdateRequest extends FormRequest
             'codportadorpix' => 'nullable|integer|exists:tblportador,codportador',
         ];
     }
+
+    public function messages(): array
+    {
+        return [
+            'codestoquelocal.required' => 'Informe o local de estoque.',
+            'codnaturezaoperacao.required' => 'Informe a natureza de operação.',
+            'codsetor.required' => 'Informe o setor.',
+            '*.exists' => 'Registro não encontrado: :attribute.',
+            'apelido.max' => 'O apelido tem no máximo 100 caracteres.',
+        ];
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'codsetor' => 'setor',
+            'codportador' => 'portador da gaveta de dinheiro',
+            'codestoquelocal' => 'local de estoque',
+            'codnaturezaoperacao' => 'natureza de operação',
+            'codmaquineta' => 'maquineta padrão',
+            'codportadorpix' => 'PIX padrão',
+        ];
+    }
 }

@@ -225,7 +225,7 @@ class PdvService
     public static function autoriza($uuid)
     {
         if (!$pdv = static::podeAcessar($uuid)) {
-            abort(403, 'Dispositivo Não Autorizado!');
+            abort(403, 'Dispositivo não cadastrado ou inativo! Abra o Meu Dispositivo.');
         }
         return $pdv;
     }

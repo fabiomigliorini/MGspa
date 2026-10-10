@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-10 18:07'
+updated_date: '2026-10-10 18:27'
 labels:
   - negocios
 dependencies: []
@@ -22,16 +22,16 @@ Origem: negocios/todo — secao SEGURANCA. No arquivo original constava "(Allan)
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A configuração do PDV (local de estoque, natureza, impressora, maquineta, PIX) fica na tabela e volta na sincronização
-- [ ] #2 A 1ª sincronização migra o que estava no navegador
-- [ ] #3 Lista de Dispositivos com filtro na drawer (Admin todos, Gerente a filial)
-- [ ] #4 Página de cada dispositivo com os dados e os últimos negócios, pagamentos e ocorrências
-- [ ] #5 O PDV configura a si mesmo; nos outros só Admin/Gerente da filial; o cadastro é só Admin/Gerente
-- [ ] #6 Autorizar e inativar só Admin, também na tela
-- [ ] #7 Sincronizar no PDV sem janela dupla: sem login o botão fica desabilitado, sessão expirada só avisa, e o dispositivo novo entra pelo mesmo fluxo da página do dispositivo
-- [ ] #8 Ao abrir o negocios (PDV e quiosque), dispositivo sem cadastro ou sem autorização vai direto para o Meu Dispositivo, que tem o Cadastrar
-- [ ] #9 Um formulário só para editar o dispositivo, agrupado por contexto; o que o usuário não pode alterar fica desabilitado (e o servidor recusa)
-- [ ] #10 Autorizar e reativar recusam sem Apelido, Filial, Local de Estoque, Setor e Natureza de Operação
+- [x] #1 A configuração do PDV (local de estoque, natureza, impressora, maquineta, PIX) fica na tabela e volta na sincronização
+- [x] #2 A 1ª sincronização migra o que estava no navegador
+- [x] #3 Lista de Dispositivos com filtro na drawer (Admin todos, Gerente a filial)
+- [x] #4 Página de cada dispositivo com os dados e os últimos negócios, pagamentos e ocorrências
+- [x] #5 O PDV configura a si mesmo; nos outros só Admin/Gerente da filial; o cadastro é só Admin/Gerente
+- [x] #6 Autorizar e inativar só Admin, também na tela
+- [x] #7 Sincronizar no PDV sem janela dupla: sem login o botão fica desabilitado, sessão expirada só avisa, e o dispositivo novo entra pelo mesmo fluxo da página do dispositivo
+- [x] #8 Ao abrir o negocios (PDV e quiosque), dispositivo sem cadastro ou sem autorização vai direto para o Meu Dispositivo, que tem o Cadastrar
+- [x] #9 Um formulário só para editar o dispositivo, agrupado por contexto; o que o usuário não pode alterar fica desabilitado (e o servidor recusa)
+- [x] #10 Autorizar e reativar recusam sem Apelido, Filial, Local de Estoque, Setor e Natureza de Operação
 - [x] #12 Sincronizar aparece em todas as telas do negócios
 - [x] #13 Ícone de sincronização não fica vermelho logo depois de sincronizar à tarde
 <!-- AC:END -->
@@ -49,6 +49,7 @@ Lentidão dos últimos registros (3,6 s no PDV 254): com só o índice em codpdv
 
 Revisão (Fábio): os últimos registros saem por data (lancamento/transacao/criacao desc, limit 20) e os índices compostos passaram a ser (codpdv, data): idx_tblnegocio_codpdv_lancamento, idx_tblpagamento_codpdv_transacao, idx_tblocorrencia_codpdv_criacao. Sem eles, PDV parado desde 2024 levava 2 s.
 
-
 Sincronizar em todas as telas e hora em 24h (10/10, commits f796b2a16 e 9b5c52bbf): o BtnSincronizacao saiu do OfflineLayout e foi para o MainLayout, ao lado do usuário (o quiosque segue com o dele). O ícone ficava vermelho à tarde porque o carimbo sincronizado dos endpoints v1/pdv/* saía em 12 horas (date 'Y-m-d h:i:s' no PdvService e no PdvPranchetaService): às 13:47 gravava 01:47 e passava do limite de 4 h. Virou 'H'. O mesmo carimbo decide o que a base offline apaga (below sincronizado), então o apagado no servidor também ficava no PDV até o dia seguinte. Teste: sincronizar depois das 12h e o ícone fica na cor normal; Caixa, Pagamentos, Listagem, Vales, Comandas, Confissão, Configuração, Dispositivos e Woo têm o botão, e o PDV só um.
+
+Testes (10/10, depois do c909caa71): pela API com tokens de Admin, Gerente da 103 e usuário comum (lista por papel, cadastrar/sincronizar/quiosque, ver sem login, editar por papel, ativar só Admin e com os 5 campos) e de tela no Chrome headless (navegador limpo vai para o Meu Dispositivo; Cadastrar sem login só avisa; cadastrar, editar e ativar; comum só com Negócios e Pagamento habilitados; filtros da lista). Corrigido: recusa das rotas do PDV diz 'Dispositivo não cadastrado ou inativo'; Gerente ao ativar recebe 'Só Administrador ativa ou inativa'; validação em português com nomes legíveis; salvar o próprio dispositivo pela tela encerra a migração do legado (a configuração vale na hora e a 1ª sincronização não preenche o que ficou vazio de propósito).
 <!-- SECTION:NOTES:END -->

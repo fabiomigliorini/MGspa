@@ -179,6 +179,11 @@ export const dispositivoStore = defineStore(
           pdv: sSinc.pdv.uuid,
           ...Object.fromEntries(campos.map((c) => [c, model[c] ?? null])),
         })
+        // salvo pela tela, a configuracao do servidor vale: a 1a sincronizacao nao manda mais o
+        // legado do navegador (que preencheria o que o usuario deixou vazio de proposito)
+        if (data.data.codpdv === sSinc.pdv.codpdv) {
+          sSinc.configuracaoMigrada = true
+        }
         atualizar(data.data)
         notificar('positive', 'Dispositivo salvo!')
         return true

@@ -148,9 +148,16 @@ class PdvController
         return new PdvResource($pdv);
     }
 
+    private static function somenteAdministrador()
+    {
+        if (!Autorizador::pode([])) {
+            abort(403, 'Só Administrador ativa ou inativa o dispositivo!');
+        }
+    }
+
     public static function inativar($codpdv)
     {
-        Autorizador::autoriza([]);
+        static::somenteAdministrador();
         $pdv = Pdv::findOrFail($codpdv);
         $pdv = PdvService::inativar($pdv);
         return new PdvResource($pdv);
@@ -159,7 +166,7 @@ class PdvController
     // ativar e' autorizar: so' Administrador
     public static function ativar($codpdv)
     {
-        Autorizador::autoriza([]);
+        static::somenteAdministrador();
         $pdv = Pdv::findOrFail($codpdv);
         $pdv = PdvService::ativar($pdv);
         return new PdvResource($pdv);
