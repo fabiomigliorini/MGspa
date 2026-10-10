@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-10 01:26'
+updated_date: '2026-10-10 01:31'
 labels:
   - contas
   - negocios
@@ -73,4 +73,34 @@ Desenho, decisões e o registro da execução de cada etapa: doc-3 (Plano do fec
 
 <!-- SECTION:NOTES:BEGIN -->
 Registro da execução no doc-3, seção "Registro da execução da TASK-188".
+
+## Handoff da madrugada 09→10/10/2026 (pagamento = fato, amarração = outra coisa)
+
+Conceito registrado no doc-3 (Decisões fechadas → 'Pagamento = fato, amarração = outra coisa'). Commits no master local, sem push:
+- 77c47309b uma baixa = um pagamento (wizard com valor travado, botão Gravar, encontro de contas no portador Encontro de Contas, forma Já recebido)
+- 03a28288c desamarrar ≠ cancelar; lápis só pessoa/observação (data só do manual)
+- 1e6eeca87 venda cancelada não cancela integrado; Já recebido na venda do PDV
+- 2d0904919 tela Pagamentos não resolvidos (contas: menu; PDV: botão laranja em Pagamentos)
+- 8c4fb6507 PIX pela chave vira pagamento no razão do banco
+- 44d585388 permissão pelo papel no portador
+- 3336c3b40 (TASK-204) datas: limites iguais, hora obrigatória, sem fuso
+
+SQL de go-live (depois do auditoria.sql e do ocorrencia.sql): api/database/pagamento_amarracao.sql — reativa/renomeia o 202016 como Encontro de Contas e completa os papéis (revisar a seção 2 antes de produção). Já rodado no dev.
+
+Roteiro de teste (dev):
+1. Contas /pagamento/novo: títulos → FAB → Receber → wizard (valor travado; Insert não muda; dinheiro calcula troco) → a forma aparece no diálogo → Gravar → detalhe.
+2. Detalhe: Desamarrar (todos ou um título, ícone link_off) → pagamento continua, aparece Não resolvido com saldo/livre; Cancelar (ícone block) só aparece no manual desamarrado.
+3. Menu Não Resolvidos: Amarrar a títulos (abre o Receber com o pagamento), Vale/adiantamento, Já lançado (só integrado), Devolver (PIX/cartão).
+4. PDV: venda com PIX QR, cancelar a venda → o PIX vai para não resolvidos (dinheiro da mesma venda é cancelado); nova venda → Receber → Já recebido → amarra; offline a forma some.
+5. Lápis: só pessoa e observação; data só em pagamento manual (pede justificativa; precisa ser gestor do portador).
+6. Permissão: usuário só depositante no cofre recebe mas não paga por ele; caixa recebe na gaveta do PDV.
+7. Data: digitar só o dia é recusado; ano errado (antes do início do razão) é recusado.
+8. O #80246854 do dev: desamarrar e cancelar pelo fluxo novo.
+
+Observações:
+- PIX pela chave caído ANTES do início do razão não vira pagamento: baixar esses títulos com Banco → Transferência/TED.
+- Integrado não pode ser tirado de venda aberta no PDV (a tela já não deixava); só sai pelo cancelamento da venda.
+- Pagar vale/crédito no PDV agora segue o papel (operador na gaveta), não mais 'só Gerente'.
+- Devolução parcial de uma venda no cartão faz o pagamento da venda aparecer em não resolvidos (pago − devolvido ≠ venda), pela regra 'o que vale é o saldo'.
+- Workers da fila do dev reiniciados (queue:restart) para usar o código novo.
 <!-- SECTION:NOTES:END -->

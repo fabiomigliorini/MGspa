@@ -180,6 +180,47 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 
 ## Decisões fechadas (não reabrir)
 
+### Pagamento = fato, amarração = outra coisa (Fábio, 09/10/2026 — manda sobre as decisões abaixo)
+
+- **Pagamento** (`tblpagamento`) é o fato de dinheiro confirmado: cada registro no banco, cada
+  cartão passado, cada PIX, cada dinheiro na gaveta. Lançado pelo usuário ou pela integração.
+  Move o razão do portador e o cartão na adquirente. Guarda **só o dinheiro**: meio, portador,
+  valor e os dados do cartão, PIX ou cheque. Juros, multa e desconto de título ficam no movimento
+  do título. A decisão 17 continua: juros do parcelamento e desconto por meio na venda.
+- **Estado:** P = rascunho da venda aberta (o que o caixa digitou e a venda ainda não fechou; só a
+  venda enxerga), E = fato, C = desfeito. Só o E conta para razão, pendências e relatórios.
+  Integrado nunca é P.
+- **Amarração** é o que o pagamento pagou, sempre com histórico (desfazer não apaga):
+  - **título:** o movimento do título, n:n. Um pagamento baixa vários títulos, e um título recebe
+    vários pagamentos.
+  - **venda:** `codnegocio`, no máximo uma venda e com o pagamento inteiro. PIX para duas vendas
+    passa pela parcela "PIX a receber"; excedente vira adiantamento.
+  - **vale e adiantamento:** o movimento que cria o título.
+- **Uma baixa = um pagamento** (títulos e vale/adiantamento): o wizard vem com o valor travado e
+  só calcula o troco no dinheiro. Para pagar com duas formas, fazem-se duas baixas. Na venda, o
+  pagamento dividido continua.
+- **Pendente** = o saldo (pago − devolvido) ≠ o que está amarrado (movimentos ativos + venda
+  fechada). É uma conta, não um status. Aparece em **Pagamentos não resolvidos**, no contas e no
+  PDV, para amarrar a títulos, lançar como adiantamento, casar com o digitado ("já lançado": fica
+  o integrado) ou devolver. A forma **"Já recebido"** do wizard sugere os pendentes; só online.
+- **Desamarrar ≠ cancelar.** Desamarrar estorna as baixas: os títulos reabrem e o pagamento fica.
+  Cancelar é só para o **manual** (dinheiro, cheque, cartão digitado) já desamarrado. Integrado
+  (PIX, Stone, SafraPay, boleto) **nunca se cancela**: a venda cancelada o deixa órfão, e
+  devolver é pela devolução do PIX ou pelo cancelamento no cartão.
+- **Encontro de contas:** pagamento de total zero no portador **Encontro de Contas** (o antigo
+  202016, Programação Pagamentos).
+- **PIX pela chave** confirmado pelo banco vira pagamento sem documento no razão do banco. Na
+  venda, a forma "PIX pela chave" continua (parcela a receber); na baixa de títulos e no vale, não
+  existe.
+- **Permissão = papel do usuário no portador** (doc-4):
+  - **depositante:** receber;
+  - **operador:** pagar, desamarrar, cancelar, corrigir, devolver;
+  - **gestor:** alterar data.
+
+  O PDV só pré-seleciona a gaveta. Isto substitui a decisão 23, que era por grupo.
+- **Data** = a do fato, num período aberto do portador; nunca antes do início do razão.
+- **O usuário é soberano:** o sistema sugere. Não inventar bloqueio, rastreio nem recálculo.
+
 ### Estrutura
 
 1. **Duas peças genéricas: o pagamento e o razão.** O pagamento (`tblpagamento`) é o ato: de onde
@@ -200,7 +241,8 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
    crediário, boleto, entrega, PIX/depósito a receber) fica em `tblnegocioparcela`, com vencimento,
    valor e condição, sugerido pela condição e ajustável no PDV até fechar. Ao fechar, cada parcela
    vira um título. Depois disso, mexer em vencimento é no título, pelo contas.
-6. **A liquidação desaparece.** O movimento de título aponta para o pagamento. Duas formas de
+6. **A liquidação desaparece.** (Revista em 09/10/2026: uma baixa = um pagamento; ver "Pagamento =
+   fato" acima.) O movimento de título aponta para o pagamento. Duas formas de
    pagamento viram dois pagamentos, cada um baixando a sua parte dos títulos. Encontro de contas sem
    dinheiro = pagamento de total zero, meio compensação, sem portador. Histórico de liquidações copiado
    para pagamento (código novo; o antigo guardado em coluna) e view temporária para o MG Lara.
@@ -275,13 +317,16 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
     e "mais opções" (Caixa Financeiro, bancos, `E` de outras filiais). Gaveta de origem ou destino
     sem sessão aberta → 422 (aparece desabilitada com motivo). Fechar gaveta com pendente **chegando**
     → 422; pendente saindo não trava.
-23. **Quem opera**: gaveta → Caixa da filial/Gerente/Admin; cofre/troco → Gerente da filial/Admin
+23. **Quem opera** (substituída em 09/10/2026 pelo papel do usuário no portador, doc-4; o PDV só
+    pré-seleciona a gaveta): gaveta → Caixa da filial/Gerente/Admin; cofre/troco → Gerente da filial/Admin
     (Caixa Financeiro 100 → Financeiro/Admin); banco/adquirente → Financeiro/Admin. Receber dinheiro
     no PDV exige grupo Caixa da filial do negócio e gaveta com sessão aberta (absorve TASK-48/34).
     Vale de colaborador e adiantamento a fornecedor no PDV: **o caixa lança sozinho** (fica
     registrado quem lançou). Pagar vale/crédito de cliente (dinheiro ou registro de cancelamento):
     **só Gerente/Admin**.
-24. **A loja só baixa o que se confirma na hora**: dinheiro, PIX QR (o banco confirma pela API),
+24. (Em 09/10/2026: o PIX pela chave que o banco confirma vira pagamento no razão na hora, e se
+    amarra por "Pagamentos não resolvidos"; na baixa de títulos não há forma PIX pela chave.)
+    **A loja só baixa o que se confirma na hora**: dinheiro, PIX QR (o banco confirma pela API),
     cheque, cartão integrado e cartão manual (o comprovante da maquineta é a prova). PIX por chave,
     transferência e depósito são do financeiro, no contas. **No contas não se baixa título em gaveta.**
 25. **Devolução sempre gera o crédito do cliente** (título **Crédito Cliente, 212**; até a limpeza
@@ -1978,6 +2023,9 @@ importação de extrato de adquirente e de fatura. Ligar `PortadorMovimentoServi
 crédito/débito.
 
 ## M15 — Pagamento por API de banco e integrações de cancelamento (TASK-196)
+
+(09/10/2026: a ordem de pagamento vive na tabela da integração até o banco confirmar; só então
+vira pagamento. Pagamento nunca nasce pendente.)
 
 Ordem de pagamento (PIX por chave/dados/QR, boleto, TED) como pagamento de saída em estado pendente
 até o banco confirmar; lote + item, chave própria sequencial, "aguardando liberação", devolução como

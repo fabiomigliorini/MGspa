@@ -67,6 +67,11 @@ class PagamentoListaService
     // CR entrou dinheiro, DB saiu, TR transferencia, CP encontro de contas
     public static function operacao(Pagamento $pag): string
     {
+        // encontro de contas e compensacao: no portador Encontro de Contas,
+        // sem dinheiro
+        if ((int) $pag->meio == PagamentoService::MEIO_COMPENSACAO) {
+            return 'CP';
+        }
         if (!empty($pag->codportadordestino) && !empty($pag->codportadororigem)) {
             return 'TR';
         }
