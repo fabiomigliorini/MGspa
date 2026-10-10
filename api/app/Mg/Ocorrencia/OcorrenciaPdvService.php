@@ -9,7 +9,6 @@ use Mg\Auditoria\Auditoria;
 use Mg\Auditoria\AuditoriaService;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioProdutoBarra;
-use Mg\Negocio\NegocioService;
 use Mg\Pagamento\PagamentoService;
 
 /**
@@ -77,9 +76,9 @@ class OcorrenciaPdvService
 
     // Preco praticado diferente do cadastro (ProdutoBarra::getPrecoAttribute),
     // aceitando o preco anterior a uma mudanca feita depois que o item entrou.
-    // So' venda de balcao: fica de fora negocio com vale, Mercos, Woo, que
-    // recebeu comanda, item de devolucao e item que outro usuario lancou
-    // (orcamento apropriado), onde o preco nao foi o caixa que fez.
+    // Vale para todo item, venha de comanda ou orcamento (quem operou fica
+    // na ocorrencia). Fica de fora so' onde o preco nao e' o do cadastro por
+    // natureza: negocio com vale, Mercos, Woo e item de devolucao.
     // [tipo da ocorrencia => auditorias]
     private static function precos(Negocio $negocio): array
     {
@@ -90,20 +89,11 @@ class OcorrenciaPdvService
             select
                 exists (select 1 from tblnegociovale v where v.codnegocio = :n1 and v.inativo is null)
                 or exists (select 1 from tblmercospedido m where m.codnegocio = :n2)
-                or exists (select 1 from tblwoopedidonegocio w where w.codnegocio = :n3)
-                or exists (
-                    select 1 from tblnegocio c
-                    where c.codnegociostatus = :cancelado
-                    and c.lancamento >= :desde
-                    and c.observacoes like :unificado
-                ) as fora
+                or exists (select 1 from tblwoopedidonegocio w where w.codnegocio = :n3) as fora
         ", [
             'n1' => $negocio->codnegocio,
             'n2' => $negocio->codnegocio,
             'n3' => $negocio->codnegocio,
-            'cancelado' => NegocioService::STATUS_CANCELADO,
-            'desde' => Carbon::parse($negocio->criacao)->subDays(30),
-            'unificado' => '%Unificado no negócio #' . $negocio->codnegocio . '%',
         ])->fora;
         if ($foraDoBalcao) {
             return [];
@@ -117,7 +107,6 @@ class OcorrenciaPdvService
             where i.codnegocio = :codnegocio
             and i.inativo is null
             and i.codnegocioprodutobarradevolucao is null
-            and i.codusuariocriacao = :codusuario
             and abs(i.valorunitario - coalesce(pe.preco, round(p.preco * pe.quantidade, 2), p.preco)) >= 0.005
             and not exists (
                 select 1 from tblprodutohistoricopreco h
@@ -131,7 +120,7 @@ class OcorrenciaPdvService
                 )
             )
             order by i.codnegocioprodutobarra
-        ', ['codnegocio' => $negocio->codnegocio, 'codusuario' => $negocio->codusuario]);
+        ', ['codnegocio' => $negocio->codnegocio]);
 
         $ret = [];
         foreach ($regs as $r) {
