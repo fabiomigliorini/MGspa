@@ -1,28 +1,41 @@
 ---
 id: TASK-164
-title: >-
-  Cliente marcado 'Nunca emitir' passou a receber NFC-e em venda no cartão —
-  confirmar
-status: To Do
-assignee: []
+title: Venda no cartão para cliente 'Nunca emitir' dá erro e não imprime o romaneio
+status: Done
+assignee:
+  - '@fabio'
 created_date: '2026-09-23 20:38'
-updated_date: '2026-09-23 21:02'
+updated_date: '2026-10-10 19:53'
 labels:
   - negocios
 dependencies: []
 priority: high
-type: spike
+type: bug
 ordinal: 173000
 ---
 
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Origem: revisao dos commits da TASK-151 (achado B3 do revisor). PRECISA DE DECISAO DO FABIO antes de ir para producao.
+Regra: cliente marcado 'Nunca Emitir' não quer o CPF/CNPJ dele em nota nenhuma. Mas venda paga no eletrônico (cartão, PIX, boleto, integração) precisa de documento fiscal. Então, para esse cliente, a NFC-e sai para Consumidor, sem CPF/CNPJ.
 
-A TASK-151 corrigiu o await no db.pessoa.get do romaneioOuNotaVenda (IndexPage.vue ~:419). Antes, p era uma Promise, p.notafiscal era sempre undefined e TODO cliente caia no default. Com a correcao, os cases passaram a executar de fato — inclusive o case 9, 'Nunca Emitir', que vai para romaneioOuNotaVendaPadrao(65) e, quando o pagamento e cartao/PIX/boleto, EMITE NFC-e.
+Causa: quem escolhia NF-e ou NFC-e no fechamento era o front (IndexPage.vue, romaneioOuNotaVenda), por um switch no cadastro do cliente guardado no navegador. Esse cadastro não traz o campo Nota Fiscal, então o switch sempre caía no padrão e pedia NF-e; e o backend (NotaFiscalNegocioService::gerarNotaFiscalDoNegocio) recusava qualquer nota para Nunca Emitir.
 
-Ou seja: cliente cadastrado como 'Nunca emitir' pagando no cartao passa a receber cupom. Fiscalmente defensavel (pagamento eletronico pede documento) e o comportamento esta escrito no codigo, mas nunca rodou em producao — o bug do await escondia isso desde sempre. Confirmar com quem definiu a regra se e isso mesmo; se nao for, o case 9 deve ir direto para romaneio, sem passar pelo padrao.
-
-Vale conferir quantas pessoas tem notafiscal = 9 e = 1 no cadastro antes de subir.
+Correção:
+- Front: no fechamento automático, o PDV só decide se sai nota (pagamento eletrônico) ou romaneio, como antes; manda o pedido sem modelo. Transferência continua pedindo NF-e. Botões Nova NFe/NFCe continuam forçando o modelo.
+- Backend: sem modelo, escolhe pelo cliente: Consumidor e Nunca Emitir em NFC-e, o resto em NF-e. Para Nunca Emitir a NFC-e nasce com codpessoa = Consumidor e cpf vazio; NF-e para Nunca Emitir continua recusada (não existe NF-e para Consumidor).
+- O 'Sempre' do cadastro continua sem efeito no PDV, como sempre foi (decisão do Fábio): dinheiro = só romaneio.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 Cliente Nunca Emitir pagando no eletrônico: NFC-e sai para Consumidor, sem CPF/CNPJ
+- [x] #2 Pedir NF-e (55) para cliente Nunca Emitir continua recusando
+- [x] #3 No fechamento, o PDV não escolhe NF-e/NFC-e: o backend decide pelo cadastro do cliente; os botões Nova NFe/NFCe continuam forçando
+<!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Revisão do backlog com o Fábio (10/10/2026, 2ª varredura): premissa errada: o cliente 'Nunca emitir' não recebe NFC-e. O servidor recusa qualquer nota para notafiscal = 9 (NotaFiscalNegocioService.php:56, 'Pessoa marcada para Nunca Emitir NFe!'); em 2026 não há NFC-e para essas pessoas (342 cadastradas, 212 ativas). Efeito real: o case 9 do romaneioOuNotaVenda (negocios/src/pages/IndexPage.vue:433) vai para romaneioOuNotaVendaPadrao(65); pagando no cartão/PIX/boleto chama novaNota, o caixa vê o erro vermelho e o romaneio não sai.
+<!-- SECTION:NOTES:END -->

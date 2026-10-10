@@ -597,7 +597,8 @@ class PdvController
     public function  notaFiscal(PdvRequest $request, $codnegocio)
     {
         PdvService::autoriza($request->pdv);
-        $modelo = intval($request->modelo ?? 65);
+        // sem modelo (fechamento automatico), o backend escolhe pelo cliente
+        $modelo = empty($request->modelo) ? null : intval($request->modelo);
         $negocio = Negocio::findOrFail($request->codnegocio);
         NotaFiscalNegocioService::gerarNotaFiscalDoNegocio($negocio, $modelo);
         return new NegocioResource($negocio);

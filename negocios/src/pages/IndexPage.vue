@@ -383,7 +383,7 @@ const novaNota = async (modelo) => {
   }
 }
 
-const romaneioOuNotaVendaPadrao = async (modelo) => {
+const romaneioOuNotaVenda = async () => {
   // o cancelado (riscado na fechada) não conta
   const integracao = sNegocio.pagamentosAtivos.filter((p) => p.integracao).length
   const tiposEmitir = [
@@ -407,40 +407,13 @@ const romaneioOuNotaVendaPadrao = async (modelo) => {
   const emitir = sNegocio.pagamentosAtivos.filter((p) => tiposEmitir.includes(p.meio)).length
   // boleto a prazo também emite
   const boleto = sNegocio.parcelasAtivas.filter((np) => np.condicao == 'B').length
-  // se foi pago por integracao ou por
+  // se foi pago por integracao ou por meio eletronico, emite; NF-e ou NFC-e
+  // quem escolhe e' o backend, pelo cadastro do cliente
   if (integracao > 0 || emitir > 0 || boleto > 0) {
-    novaNota(modelo)
+    novaNota()
     return
   }
   imprimirAbrirRomaneio()
-}
-
-const romaneioOuNotaVenda = async () => {
-  if (sNegocio.negocio.codpessoa == 1) {
-    // consumidor decide em outra funcao se emite cupom
-    romaneioOuNotaVendaPadrao(65)
-    return
-  } else {
-    // busca a pessoa
-    const p = await db.pessoa.get(sNegocio.negocio.codpessoa)
-
-    // age de acordo com o cadastro (pessoa fora do cache offline cai no padrao)
-    switch (p?.notafiscal) {
-      case 1: // 1 - Sempre
-        novaNota(55)
-        return
-
-      case 9: // 9 - Nunca Emitir
-        romaneioOuNotaVendaPadrao(65)
-        return
-
-      case 2: // 2 - Somente no Fechamento
-      case 0: // 0 - Padrão
-      default:
-        romaneioOuNotaVendaPadrao(55)
-        return
-    }
-  }
 }
 
 const romaneioOuNota = async () => {
