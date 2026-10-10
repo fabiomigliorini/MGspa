@@ -59,20 +59,6 @@ export const useConferenciaStore = defineStore(
       }
     }
 
-    const acertarVenda = (id, payload) =>
-      executar(async () => {
-        const { data } = await api.post(`v1/conferencia/venda/${id}/acerto`, payload)
-        venda.value = data.data
-        return venda.value
-      }, 'Diferença acertada')
-
-    const desfazerAcerto = (codnegocioacerto) =>
-      executar(async () => {
-        const { data } = await api.delete(`v1/conferencia/acerto/${codnegocioacerto}`)
-        venda.value = data.data
-        return venda.value
-      }, 'Acerto desfeito')
-
     const incluirPagamento = (id, payload) =>
       executar(async () => {
         const { data } = await api.post(`v1/conferencia/venda/${id}/pagamento`, payload)
@@ -113,8 +99,6 @@ export const useConferenciaStore = defineStore(
       buscarPendencias,
       venda,
       carregarVenda,
-      acertarVenda,
-      desfazerAcerto,
       incluirPagamento,
       corrigirPagamento,
       indevido,

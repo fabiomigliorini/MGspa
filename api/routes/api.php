@@ -1404,9 +1404,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Conferencias e fechamento do caixa (M9 doc-3): tela Fechamentos do contas
     Route::get('conferencia', '\Mg\Conferencia\ConferenciaController@index');
     Route::get('conferencia/venda/{id}', '\Mg\Conferencia\ConferenciaController@showVenda')->whereNumber('id');
-    Route::post('conferencia/venda/{id}/acerto', '\Mg\Conferencia\ConferenciaController@acertarVenda')->whereNumber('id');
     Route::post('conferencia/venda/{id}/pagamento', '\Mg\Conferencia\ConferenciaController@incluirPagamento')->whereNumber('id');
-    Route::delete('conferencia/acerto/{id}', '\Mg\Conferencia\ConferenciaController@desfazerAcerto')->whereNumber('id');
     Route::post('conferencia/pagamento/{id}/correcao', '\Mg\Conferencia\ConferenciaController@corrigirPagamento')->whereNumber('id');
     Route::post('conferencia/pagamento/{id}/indevido', '\Mg\Conferencia\ConferenciaController@indevido')->whereNumber('id');
     Route::post('conferencia/pagamento/{id}/conferir', '\Mg\Conferencia\ConferenciaController@conferirPagamento')->whereNumber('id');

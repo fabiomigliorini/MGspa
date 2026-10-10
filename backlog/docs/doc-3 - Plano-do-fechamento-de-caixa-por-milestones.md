@@ -1377,12 +1377,11 @@ no M9").
    descobre pelas câmeras que cobrou errado ou caiu num golpe), **excluir registro indevido**
    (cancela e tira do lote: não é cancelamento na maquineta) e incluir o que faltou (wizard). Total
    da venda, itens, estoque e nota **não mudam** (NFC-e autorizada não se corrige).
-6. **Venda desbalanceada vira pendência** da filial (Σ pagamentos efetivados + Σ parcelas + Σ
-   acertos ≠ total). O destino da diferença é decidido depois, pelo gerente ou pelo financeiro, e
-   gravado como **acerto da venda** (`tblnegocioacerto`): **a menos** → perdoar, vale do colaborador
-   (título 120 a receber do colaborador) ou duplicata do cliente (100); **a mais** → perdoar ou
-   crédito do cliente (212, usável no PDV como vale; o financeiro pode devolver por PIX baixando
-   contra o banco).
+6. **Venda com diferença vira pendência** da filial (Σ pagamentos efetivados + Σ parcelas ≠
+   total). **Não existe acerto da venda**: ou é pagamento ou é duplicata; o que não se paga é
+   desconto ou brinde, que já existem. O conserto é **reabrir o negócio** (ferramenta a fazer).
+   (Revisto em 10/10/2026 pelo Fábio: o "acerto da venda" — perdoar, vale do colaborador,
+   duplicata ou crédito do cliente, em `tblnegocioacerto` — foi inventado sem pedido dele e saiu.)
 7. **Devolução de venda paga no cartão**: a devolução continua gerando o crédito do cliente (212); o
    gerente registra o cancelamento do cartão **pelo lote** (pagamento contrário apontando o
    original, origem = adquirente, mesma maquineta) e o crédito é baixado por esse pagamento.
@@ -1409,9 +1408,6 @@ no M9").
 - `tblpagamentocorrecao`: `codpagamentocorrecao PK, codpagamento NN, antes jsonb, depois jsonb,
   justificativa NN, audit` (uma linha por correção). **Substituída pela `tblauditoria`** (TASK-204,
   `auditoria.sql`): tipos 3 corrigido, 4 indevido, 5 incluído.
-- `tblnegocioacerto`: `codnegocioacerto PK, codnegocio NN, valor (com sinal: positivo = faltou
-  pagar), destino char(1) P perdão / C colaborador / D duplicata do cliente / R crédito do cliente,
-  codpessoa, codtitulo, justificativa, inativo, audit`.
 - `tblportadorperiodo` (do modelo do M10) + `conferencia`, `codusuarioconferencia`,
   `valorconferido` (contado pelo gerente, às cegas). Sessão de gaveta: abre e fecha pelo caixa
   com contagem (`moedas*`, `cedulas*`); `saldofinal` = contado pelo caixa.
@@ -1421,8 +1417,6 @@ no M9").
 
 **Pontos decididos sem o Fábio, a validar** (02/10/2026, ele almoçando: "trabalha sozinho")
 
-- Perdão não gera título nem pagamento: fica só o acerto (quem, quando, justificativa).
-- Crédito do cliente na diferença a mais = 212 Crédito Cliente (não 211 Adiantamento).
 - Cheque e vale recebido: conferência marcada no pagamento.
 - Itens do caixa (chips, ingressos) continuam no M13.
 - Entrada do Caixa no negocios: a definir com o `MainLayout.vue` (estava alterado na árvore por
@@ -1482,8 +1476,8 @@ no M9").
   `MgConfissaoScanner`; PIX abre o título), `Lote.vue` (crédito e débito do borderô às cegas,
   foto, lançamentos escondidos até digitar, corrigir/indevido, reabrir, borderô × sistema e por
   caixa depois de conferido), `Sessao.vue` (dinheiro contado às cegas; depois sistema × caixa ×
-  gerente; reabrir conferência ou caixa), `Venda.vue` (pagamentos, parcelas, acertos, incluir
-  pagamento, destino da diferença); Maquinetas ganhou o botão **Lotes** (`maquineta/:id/lotes`).
+  gerente; reabrir conferência ou caixa), `Venda.vue` (pagamentos, parcelas, incluir
+  pagamento); Maquinetas ganhou o botão **Lotes** (`maquineta/:id/lotes`).
   Store `stores/conferenciaStore.js`; componentes `components/conferencia/{ListaLancamentos,
   CorrecaoPagamentoDialog}`. `@components/cobranca/pagamento.js` exporta `BANDEIRAS`.
 - **negocios**: `/caixa` (`CaixaLayout`, `CaixaPage`, `stores/caixa.js`): abrir com contagem,
@@ -2228,3 +2222,5 @@ M9.8 tela igual ao borderô (07/10/2026, com o Fábio; não validado no navegado
 Unificar no caixa (08/10/2026, com o Fábio; validado): a trava 'o anterior sem diferença (para nenhuma sumir)' foi invenção (86138ae06) e saiu, da API (PortadorPeriodoService::unificar) e do botão (PeriodoCabecalho podeUnificar). O saldo inicial do seguinte é a contagem final do anterior, então a diferença do anterior entra na do unificado (ex.: −0,10 e +7,10 → +7,00). Perde-se só em que parte a diferença aconteceu; diferenças opostas se anulam. Continua exigindo os dois não fechados. doc-4, 'Período'.
 
 M9.8 conferir em diálogo (08/10/2026): o resumo da maquineta foi para dentro do card do cabeçalho e a digitação do borderô virou o diálogo 'Conferir com o borderô' (botão na linha Borderô do resumo). Menu do contas: grupo Caixa com Portadores, Itens do Caixa e Maquinetas. doc-4, 'A tela igual ao borderô'.
+
+Acerto da venda removido (10/10/2026, pedido do Fábio): o "destino da diferença" da venda (perdoar, vale do colaborador, duplicata, crédito do cliente — `tblnegocioacerto`) foi inventado no M9 sem pedido dele. Venda não fica com diferença: ou é pagamento ou é duplicata; o que não se paga é desconto ou brinde. Saíram o model `NegocioAcerto`, a relação `Negocio::NegocioAcertoS`, `VendaConferenciaService::acertar/titulo/desfazer` (e o acerto da soma `SQL_PAGO`), as rotas `conferencia/venda/{id}/acerto` e `conferencia/acerto/{id}`, os cards Acertos e Destino da diferença da `Venda.vue` do contas; `conferencia.sql` passou a `DROP TABLE IF EXISTS tblnegocioacerto` (vazia no dev; dropada). Fica a lista Vendas com diferença no Fechamentos; o conserto vai ser reabrir o negócio (a fazer). Decisão 6 do M9 reescrita.

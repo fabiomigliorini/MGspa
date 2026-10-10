@@ -1,8 +1,7 @@
 <script setup>
 // Venda com diferença (M9 doc-3): os pagamentos não fecham com o total (correção de valor,
-// registro indevido, cartão duplicado pela API). O gerente corrige, inclui o que faltou ou dá o
-// destino da diferença: a menos → perdoar, vale do colaborador ou duplicata do cliente; a mais →
-// perdoar ou crédito do cliente. Total, itens e nota da venda não mudam.
+// registro indevido, cartão duplicado pela API). Venda não fica com diferença: ou é pagamento
+// ou é duplicata; o conserto é no próprio negócio.
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
@@ -10,7 +9,6 @@ import { formataNumero, formataTimestamp, formataData } from '@components/format
 import { CONDICOES, BANDEIRAS } from '@components/cobranca/pagamento.js'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectMaquineta from '@components/MgSelectMaquineta.vue'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
 import ListaLancamentos from 'src/components/conferencia/ListaLancamentos.vue'
@@ -27,47 +25,7 @@ const bate = computed(() => Math.abs(diferenca.value) < 0.005)
 
 const urlVenda = computed(() => `${process.env.NEGOCIOS_URL}/negocio/${id.value}`)
 
-const DESTINOS_MENOS = [
-  { value: 'P', label: 'Perdoar' },
-  { value: 'C', label: 'Vale do colaborador' },
-  { value: 'D', label: 'Duplicata do cliente' },
-]
-const DESTINOS_MAIS = [
-  { value: 'P', label: 'Perdoar' },
-  { value: 'R', label: 'Crédito do cliente' },
-]
-const destinos = computed(() => (diferenca.value > 0 ? DESTINOS_MENOS : DESTINOS_MAIS))
-
-const acerto = ref({ destino: 'P', codpessoa: null, justificativa: '' })
-const pedePessoa = computed(() => ['C', 'D', 'R'].includes(acerto.value.destino))
-
-async function carregar() {
-  await store.carregarVenda(id.value)
-  acerto.value = { destino: 'P', codpessoa: null, justificativa: '' }
-}
-
-watch(
-  () => acerto.value.destino,
-  (d) => {
-    acerto.value.codpessoa = ['D', 'R'].includes(d) ? venda.value?.codpessoa : null
-  },
-)
-
-const acertar = () =>
-  store.acertarVenda(id.value, {
-    destino: acerto.value.destino,
-    codpessoa: pedePessoa.value ? acerto.value.codpessoa : null,
-    justificativa: acerto.value.justificativa,
-  })
-
-const desfazer = (a) => {
-  $q.dialog({
-    title: 'Desfazer acerto',
-    message: 'Desfazer o acerto? O título gerado é estornado e a venda volta a ter diferença.',
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Desfazer', color: 'red-5', flat: true },
-  }).onOk(() => store.desfazerAcerto(a.codnegocioacerto))
-}
+const carregar = () => store.carregarVenda(id.value)
 
 // ---- correções ----
 const dialogCorrecao = ref(false)
@@ -210,77 +168,6 @@ watch(id, carregar)
               <q-item-section side>{{ formataNumero(p.valor) }}</q-item-section>
             </q-item>
           </q-list>
-        </q-card>
-
-        <q-card v-if="venda.acertos.length" bordered flat class="q-mb-md">
-          <q-card-section class="text-subtitle1 q-pb-sm">Acertos</q-card-section>
-          <q-list separator>
-            <q-item
-              v-for="a in venda.acertos"
-              :key="a.codnegocioacerto"
-              :class="a.inativo ? 'text-grey-6' : ''"
-            >
-              <q-item-section>
-                <q-item-label>
-                  {{ a.destinodescricao }}
-                  <template v-if="a.fantasia"> · {{ a.fantasia }}</template>
-                  <template v-if="a.numero"> · título {{ a.numero }}</template>
-                </q-item-label>
-                <q-item-label caption>
-                  {{ a.justificativa }} · {{ a.usuariocriacao }} em
-                  {{ formataTimestamp(a.criacao, 2) }}
-                  <template v-if="a.inativo"> · desfeito</template>
-                </q-item-label>
-              </q-item-section>
-              <q-item-section side>{{ formataNumero(a.valor) }}</q-item-section>
-              <q-item-section v-if="!a.inativo" side>
-                <q-btn flat round size="sm" color="grey-7" icon="undo" @click="desfazer(a)">
-                  <q-tooltip>Desfazer</q-tooltip>
-                </q-btn>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card>
-
-        <q-card v-if="!bate" bordered flat class="q-mb-md">
-          <q-card-section class="text-subtitle1 q-pb-sm">Destino da diferença</q-card-section>
-          <q-form @submit.prevent="acertar">
-            <q-card-section class="q-pt-none">
-              <div class="row q-col-gutter-md">
-                <div class="col-12">
-                  <q-option-group v-model="acerto.destino" :options="destinos" inline />
-                </div>
-                <div v-if="pedePessoa" class="col-12">
-                  <MgSelectPessoa
-                    v-model="acerto.codpessoa"
-                    :label="acerto.destino === 'C' ? 'Colaborador' : 'Cliente'"
-                    :rules="[(v) => !!v]"
-                    lazy-rules
-                  />
-                </div>
-                <div class="col-12">
-                  <MgInput
-                    v-model="acerto.justificativa"
-                    label="Justificativa"
-                    type="textarea"
-                    autogrow
-                    maxlength="300"
-                    :rules="[(v) => (v || '').trim().length >= 5]"
-                    lazy-rules
-                  />
-                </div>
-              </div>
-            </q-card-section>
-            <q-card-actions align="right">
-              <q-btn
-                unelevated
-                color="primary"
-                label="Acertar"
-                type="submit"
-                :loading="store.salvando"
-              />
-            </q-card-actions>
-          </q-form>
         </q-card>
       </template>
     </div>

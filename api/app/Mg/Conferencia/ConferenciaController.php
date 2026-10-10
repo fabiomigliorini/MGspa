@@ -6,7 +6,6 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioAcerto;
 use Mg\Pagamento\Pagamento;
 
 /**
@@ -36,31 +35,6 @@ class ConferenciaController extends Controller
     public function showVenda(int $id)
     {
         return ['data' => VendaConferenciaService::detalhe($this->negocio($id))];
-    }
-
-    public function acertarVenda(Request $request, int $id)
-    {
-        $dados = $request->validate([
-            'destino' => 'required|in:P,C,D,R',
-            'codpessoa' => 'nullable|integer|exists:tblpessoa,codpessoa',
-            'justificativa' => 'required|string|min:5|max:300',
-        ]);
-        $negocio = $this->negocio($id);
-        DB::transaction(fn () => VendaConferenciaService::acertar(
-            $negocio,
-            $dados['destino'],
-            $dados['codpessoa'] ?? null,
-            $dados['justificativa']
-        ));
-        return ['data' => VendaConferenciaService::detalhe($negocio->fresh())];
-    }
-
-    public function desfazerAcerto(int $id)
-    {
-        $acerto = NegocioAcerto::findOrFail($id);
-        $negocio = $this->negocio($acerto->codnegocio);
-        DB::transaction(fn () => VendaConferenciaService::desfazer($acerto));
-        return ['data' => VendaConferenciaService::detalhe($negocio)];
     }
 
     public function incluirPagamento(Request $request, int $id)

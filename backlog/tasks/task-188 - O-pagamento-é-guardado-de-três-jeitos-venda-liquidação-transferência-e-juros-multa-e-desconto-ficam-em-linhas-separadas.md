@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-10 15:39'
+updated_date: '2026-10-10 15:40'
 labels:
   - contas
   - negocios
@@ -67,6 +67,7 @@ Desenho, decisões e o registro da execução de cada etapa: doc-3 (Plano do fec
 - [ ] #33 'PIX pela chave' sai da forma Banco do contas (é só da venda, como parcela a receber)
 - [ ] #34 Permissão do dinheiro pelo papel do usuário no portador: receber = depositante; pagar, desamarrar, cancelar, corrigir e devolver = operador; alterar data = gestor, ou operador com o período de onde sai e o para onde vai abertos (no cartão, o portador da adquirente); o PDV só pré-seleciona a gaveta (sai a gaveta livre por codpdv)
 - [ ] #35 SQL de go-live api/database/pagamento_amarracao.sql: portador Encontro de Contas e os papéis que faltam (caixa/gerente depositante em adquirentes, Carteira e bancos da filial; Cobrança como o Financeiro)
+- [x] #36 Venda com diferença no Fechamentos só mostra a diferença para consertar no negócio: sai o acerto da venda (perdoar, vale do colaborador, duplicata, crédito do cliente)
 - [ ] #37 Cartão Stone ou SafraPay de venda cancelada aparece em Não resolvidos para o caixa da filial, como entrada, com Já lançado, Devolver e Já recebido na venda; a listagem mostra a adquirente como portador e o filtro por portador acha o cartão
 <!-- AC:END -->
 
