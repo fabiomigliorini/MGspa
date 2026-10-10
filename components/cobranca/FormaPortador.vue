@@ -1,7 +1,8 @@
 <script setup>
 // Passo do wizard no contas: de/para qual portador o dinheiro anda.
 // Dinheiro: cofre, troco ou Caixa Financeiro (o troco e o desconto já vêm calculados em `base`).
-// Banco: como andou (transferência/TED, PIX pela chave, depósito, boleto) → conta.
+// Banco: como andou (transferência/TED, depósito, boleto) → conta. PIX pela chave não: é só da
+// venda (parcela a receber); o PIX que entra chega pelo banco e se amarra pelo "Já recebido".
 // Cartão da empresa: qual cartão (portador de cartão de crédito da empresa).
 import { ref, computed } from 'vue'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
@@ -25,9 +26,8 @@ const listaRef = ref(null)
 
 const MEIOS_BANCO = [
   { tecla: 1, valor: MEIO.TRANSFERENCIA, label: 'Transferência / TED', ...VISUAL.banco },
-  { tecla: 2, valor: MEIO.PIX, label: 'PIX pela chave', ...VISUAL.pix },
-  { tecla: 3, valor: MEIO.DEPOSITO, label: 'Depósito', ...VISUAL.banco },
-  { tecla: 4, valor: MEIO.BOLETO, label: 'Boleto', ...VISUAL.boleto },
+  { tecla: 2, valor: MEIO.DEPOSITO, label: 'Depósito', ...VISUAL.banco },
+  { tecla: 3, valor: MEIO.BOLETO, label: 'Boleto', ...VISUAL.boleto },
 ]
 
 const forma = sCobranca.forma

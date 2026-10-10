@@ -414,7 +414,10 @@ class PagarMeService
             'nsu' => $nsu,
             'parcelas' => $ped->parcelas,
             'bandeira' => $bandeira,
-            'codpessoa' => empty($ped->codnegocio) ? $pag->codpessoa : config('services.pagarme.codpessoa'),
+            // sem negocio: a pessoa do pedido (consumidor 1 = sem pessoa)
+            'codpessoa' => empty($ped->codnegocio)
+                ? ($pag->codpessoa ?? (($ped->codpessoa ?? 1) != 1 ? $ped->codpessoa : null))
+                : config('services.pagarme.codpessoa'),
             'codmaquineta' => $pos ? MaquinetaService::daPagarMePos($pos)->codmaquineta : null,
         ]);
         $pag->save();

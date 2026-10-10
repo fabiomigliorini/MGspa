@@ -274,8 +274,55 @@ class PixService
 
         if (!empty($pix->codpixcob)) {
             static::processarPixCobNegocio($pix->PixCob);
+        } else {
+            static::processarPixChave($pix);
         }
         return $pix;
+    }
+
+    // Pessoa do pagador (CPF/CNPJ do PIX ou da cobranca), quando cadastrada
+    public static function pessoaDoPagador($cpf, $cnpj): ?int
+    {
+        $doc = !empty($cpf) ? $cpf : $cnpj;
+        if (empty($doc)) {
+            return null;
+        }
+        return Pessoa::where('cnpj', $doc)->whereNull('inativo')->orderBy('codpessoa')->value('codpessoa');
+    }
+
+    // PIX pela chave (sem cobranca) que o banco confirmou: e' um fato, vira
+    // pagamento efetivado, sem documento, no razao do banco (conceito do
+    // Fabio, 09/10/2026). Fica em "Pagamentos nao resolvidos" ate' alguem
+    // amarrar (titulo, venda, adiantamento) ou devolver. So' a partir do
+    // inicio do razao; uma vez criado, a importacao nao mexe nele.
+    public static function processarPixChave(Pix $pix): ?Pagamento
+    {
+        if (empty($pix->valor) || $pix->valor <= 0 || empty($pix->horario)) {
+            return null;
+        }
+        if (Carbon::parse($pix->horario)->lt(\Mg\Conferencia\ConferenciaService::inicio())) {
+            return null;
+        }
+        if (Pagamento::where('codpix', $pix->codpix)->exists()) {
+            return null;
+        }
+        $portador = Portador::find($pix->codportador);
+        return PagamentoService::criar([
+            'meio' => PagamentoService::MEIO_PIX,
+            'estado' => PagamentoService::ESTADO_EFETIVADO,
+            'principal' => (float) $pix->valor,
+            'juros' => 0,
+            'multa' => 0,
+            'desconto' => 0,
+            'transacao' => Carbon::parse($pix->horario),
+            'efetivacao' => Carbon::now(),
+            'codportadordestino' => $pix->codportador,
+            'codfilial' => $portador->codfilial ?? null,
+            'codpix' => $pix->codpix,
+            'autorizacao' => $pix->e2eid,
+            'codpessoa' => static::pessoaDoPagador($pix->cpf, $pix->cnpj),
+            'observacoes' => $pix->infopagador ? mb_substr($pix->infopagador, 0, 255) : null,
+        ]);
     }
 
     // PIX confirmado vira pagamento efetivado (o banco ja' confirmou, M4
@@ -301,7 +348,11 @@ class PixService
             'meio' => PagamentoService::MEIO_PIX,
             'principal' => $valorpagamento,
             'codportadordestino' => $cob->codportador,
-            'codpessoa' => empty($cob->codnegocio) ? $pag->codpessoa : $cob->Portador->codpessoa,
+            // sem negocio: a pessoa da cobranca (o pagador), para o orfao
+            // aparecer com nome
+            'codpessoa' => empty($cob->codnegocio)
+                ? ($pag->codpessoa ?? static::pessoaDoPagador($cob->cpf, $cob->cnpj))
+                : $cob->Portador->codpessoa,
             'codpix' => $cob->PixS[0]->codpix,
             'autorizacao' => $cob->PixS[0]->e2eid,
         ]);

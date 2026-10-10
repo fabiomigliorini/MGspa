@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-10 01:22'
+updated_date: '2026-10-10 01:23'
 labels:
   - contas
   - negocios
@@ -62,6 +62,9 @@ Desenho, decisões e o registro da execução de cada etapa: doc-3 (Plano do fec
 - [ ] #28 'Já recebido' na venda do PDV amarra o pagamento sem amarração inteiro na venda aberta, se couber no que falta; maior que a venda é recusado com a orientação de amarrar o excedente como adiantamento
 - [ ] #29 Tela Pagamentos não resolvidos (menu do contas e botão em Pagamentos do PDV): lista o que não bate (pago − devolvido ≠ amarrado), só dos portadores em que o usuário tem papel
 - [ ] #30 Não resolvido: amarrar a títulos (abre o Receber Título com o pagamento), lançar como vale/adiantamento, 'já lançado' (fica o integrado, o digitado é cancelado como indevido e as amarrações passam) e devolver PIX/cartão
+- [ ] #31 PIX pela chave que o banco confirma vira pagamento efetivado, sem documento, no razão do banco (a partir do início do razão), com a pessoa do CPF/CNPJ do pagador; aparece em não resolvidos
+- [ ] #32 PIX QR e Stone sem venda confirmam com a pessoa da cobrança
+- [ ] #33 'PIX pela chave' sai da forma Banco do contas (é só da venda, como parcela a receber)
 <!-- AC:END -->
 
 ## Implementation Notes

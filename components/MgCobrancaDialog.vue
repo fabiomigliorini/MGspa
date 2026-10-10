@@ -86,7 +86,7 @@ const FORMAS = [
   {
     valor: 'banco',
     label: 'Banco',
-    caption: 'Transferência, TED, depósito, PIX pela chave, boleto',
+    caption: 'Transferência, TED, depósito, boleto',
     ...VISUAL.banco,
     componente: FormaPortador,
   },
