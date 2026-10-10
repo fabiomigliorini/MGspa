@@ -278,9 +278,11 @@ class PagamentoTituloService
 
         // encontro de contas: total zero no portador Encontro de Contas
         if ($compensacao || $meio == PagamentoService::MEIO_COMPENSACAO) {
+            // a compensacao com valor (credito de PIS/Cofins, programacao de
+            // pagamentos) fica com o valor compensado; o encontro, com zero
             return PagamentoService::criar(array_merge($base, [
                 'meio' => PagamentoService::MEIO_COMPENSACAO,
-                'principal' => 0,
+                'principal' => $compensacao ? 0 : $total,
                 'codportadordestino' => Portador::ENCONTRO_CONTAS,
             ]));
         }
