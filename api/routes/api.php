@@ -903,6 +903,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::delete('negocio/{codnegocio}', '\Mg\Pdv\PdvController@deleteNegocio');
         Route::post('negocio/{codnegocio}/apropriar', '\Mg\Pdv\PdvController@apropriar');
         Route::post('negocio/{codnegocio}/fechar', '\Mg\Pdv\PdvController@fecharNegocio');
+        Route::post('negocio/{codnegocio}/pagamento/{codpagamento}/amarrar', '\Mg\Pdv\PdvPagamentoController@amarrarVenda')
+            ->whereNumber('codnegocio')->whereNumber('codpagamento');
         Route::post('negocio/{codnegocio}/romaneio/{impressora}', '\Mg\Pdv\PdvController@imprimirRomaneio');
         Route::post('negocio/{codnegocio}/vale/{impressora}', '\Mg\Pdv\PdvController@imprimirVale');
         Route::post('negocio/{codnegocio}/comanda/{impressora}', '\Mg\Pdv\PdvController@imprimirComanda');

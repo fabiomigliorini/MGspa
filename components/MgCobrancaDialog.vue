@@ -123,7 +123,16 @@ const FORMAS = [
 ]
 
 // formas da venda, quando o documento não diz
-const FORMAS_NEGOCIO = ['cartao', 'pix', 'dinheiro', 'entrega', 'prazo', 'vale', 'cheque']
+const FORMAS_NEGOCIO = [
+  'cartao',
+  'pix',
+  'dinheiro',
+  'entrega',
+  'prazo',
+  'vale',
+  'cheque',
+  'recebido',
+]
 
 const formaAtual = computed(() => FORMAS.find((f) => f.valor === sCobranca.forma))
 const comDesconto = computed(() => formaAtual.value?.desconto !== undefined && sCobranca.ehNegocio)

@@ -242,7 +242,12 @@ class PdvNegocioPagamentoService
             'desconto' => $pag->desconto,
             'total' => $pag->total,
             'valortroco' => $pag->valortroco,
-            'integracao' => $pag->ehIntegrado(),
+            // o PDV nao grava nem apaga: veio de integracao, ou e' um pagamento
+            // que ja' aconteceu amarrado na venda aberta ("Ja' recebido")
+            'integracao' => $pag->ehIntegrado() || (
+                $pag->estado == PagamentoService::ESTADO_EFETIVADO
+                && optional($pag->Negocio)->codnegociostatus == NegocioService::STATUS_ABERTO
+            ),
             'codpessoa' => $pag->codpessoa,
             'parceiro' => $pag->Pessoa->fantasia ?? null,
             'bandeira' => $pag->bandeira,

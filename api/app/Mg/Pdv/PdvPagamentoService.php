@@ -4,7 +4,10 @@ namespace Mg\Pdv;
 
 use Illuminate\Support\Facades\Auth;
 use Mg\Pagamento\Pagamento;
+use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioService;
 use Mg\Pagamento\PagamentoListaService;
+use Mg\Pagamento\PagamentoPendenciaService;
 use Mg\Pagamento\PagamentoService;
 use Mg\Pagamento\PagamentoTituloAutorizador;
 use Mg\Pagamento\PagamentoTituloService;
@@ -89,6 +92,44 @@ class PdvPagamentoService
             abort(403, 'Pagamento de outro PDV!');
         }
         return $pag;
+    }
+
+    // "Ja' recebido" na venda: o pagamento sem amarracao (o PIX que confirmou
+    // depois, o da venda cancelada) entra inteiro na venda aberta, se couber
+    // no que falta. Um PIX maior: amarra o excedente como adiantamento e usa
+    // o credito na venda.
+    public static function amarrarVenda(Pdv $pdv, int $codnegocio, int $codpagamento): Pagamento
+    {
+        $negocio = Negocio::lockForUpdate()->findOrFail($codnegocio);
+        if ($negocio->codnegociostatus != NegocioService::STATUS_ABERTO) {
+            abort(422, 'Só se amarra pagamento em venda aberta!');
+        }
+        if (!empty($negocio->codpdv) && $negocio->codpdv != $pdv->codpdv) {
+            abort(422, 'Venda de outro PDV!');
+        }
+        $pag = Pagamento::lockForUpdate()->findOrFail($codpagamento);
+        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO || !empty($pag->codnegocio)) {
+            abort(422, "O pagamento {$pag->codpagamento} não está livre!");
+        }
+        if (empty($pag->codportadordestino) || !empty($pag->codportadororigem)) {
+            abort(422, "O pagamento {$pag->codpagamento} não é uma entrada de dinheiro!");
+        }
+        if (PagamentoPendenciaService::movimentosAtivos($pag)->isNotEmpty()
+            || abs(PagamentoPendenciaService::livre($pag) - (float) $pag->total) > 0.005) {
+            abort(422, "O pagamento {$pag->codpagamento} já está amarrado em parte: na venda entra só o pagamento inteiro.");
+        }
+        $pagos = $negocio->PagamentoS()->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->get()
+            ->sum(fn ($p) => (float) $p->total + (float) $p->valortroco);
+        $falta = round((float) $negocio->valortotal - $pagos - (float) $negocio->NegocioParcelaS()->sum('valor'), 2);
+        if ((float) $pag->total > $falta + 0.005) {
+            abort(422, 'O pagamento é de R$ ' . number_format($pag->total, 2, ',', '.')
+                . ' e falta R$ ' . number_format($falta, 2, ',', '.')
+                . ': amarre o excedente como adiantamento e use o crédito na venda.');
+        }
+        if (empty($pag->codpessoa)) {
+            $pag->codpessoa = $negocio->codpessoa;
+        }
+        return PagamentoService::amarrarVenda($pag, $negocio->codnegocio, "Amarrado à venda #{$negocio->codnegocio} no PDV");
     }
 
     // Desamarrar (estorna as baixas; o pagamento fica) e cancelar (so' o

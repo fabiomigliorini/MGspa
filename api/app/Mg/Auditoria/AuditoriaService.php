@@ -24,6 +24,9 @@ class AuditoriaService
     const TIPO_PARCELA_APAGADA = 11;
     const TIPO_NEGOCIO_CANCELADO = 12;
     const TIPO_ESTORNADO = 13;
+    // o pagamento integrado mudou de venda (venda cancelada: fica orfao; o
+    // orfao amarrado numa venda): o codnegocio antes e depois (TASK-188)
+    const TIPO_AMARRACAO_VENDA = 14;
 
     const TIPOS = [
         self::TIPO_DATA_ALTERADA => 'Data alterada',
@@ -39,6 +42,7 @@ class AuditoriaService
         self::TIPO_PARCELA_APAGADA => 'Parcela apagada',
         self::TIPO_NEGOCIO_CANCELADO => 'Negócio cancelado',
         self::TIPO_ESTORNADO => 'Estornado',
+        self::TIPO_AMARRACAO_VENDA => 'Amarração com a venda alterada',
     ];
 
     // `antes` nulo: o registro nasceu (fica o `depois` com o que foi

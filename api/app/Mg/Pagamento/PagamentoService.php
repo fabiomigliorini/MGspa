@@ -2,6 +2,7 @@
 
 namespace Mg\Pagamento;
 
+use Mg\Auditoria\AuditoriaService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
 use Mg\Portador\PortadorMovimentoService;
@@ -199,6 +200,29 @@ class PagamentoService
         $pag->codusuarioefetivacao = Auth::user()->codusuario ?? null;
         $pag->save();
         PortadorMovimentoService::sincronizar($pag);
+        return $pag;
+    }
+
+    // O pagamento integrado (o dinheiro entrou de verdade) muda de venda:
+    // sai da venda cancelada (fica orfao, em "Pagamentos nao resolvidos") ou
+    // o orfao entra numa venda. O codnegocio antes e depois vai para a
+    // auditoria (TASK-188).
+    public static function amarrarVenda(Pagamento $pag, ?int $codnegocio, ?string $justificativa = null): Pagamento
+    {
+        $antes = $pag->codnegocio;
+        if ($antes == $codnegocio) {
+            return $pag;
+        }
+        $pag->codnegocio = $codnegocio;
+        $pag->save();
+        AuditoriaService::registrar(
+            'tblpagamento',
+            $pag->codpagamento,
+            AuditoriaService::TIPO_AMARRACAO_VENDA,
+            ['codnegocio' => $antes],
+            ['codnegocio' => $codnegocio],
+            $justificativa
+        );
         return $pag;
     }
 

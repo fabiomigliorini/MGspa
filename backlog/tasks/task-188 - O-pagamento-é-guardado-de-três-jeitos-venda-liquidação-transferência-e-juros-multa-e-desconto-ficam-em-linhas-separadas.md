@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-10 01:15'
+updated_date: '2026-10-10 01:18'
 labels:
   - contas
   - negocios
@@ -58,6 +58,8 @@ Desenho, decisões e o registro da execução de cada etapa: doc-3 (Plano do fec
 - [ ] #24 Cancelar só o pagamento manual já desamarrado (sai do razão, cancela o cheque a repassar); integrado (PIX, maquineta, Stone/SafraPay) e boleto nunca se cancelam
 - [ ] #25 Lápis do pagamento: pessoa e observação; a data só do manual; meio e portador não mudam (o servidor recusa)
 - [ ] #26 Detalhe do pagamento mostra as amarrações com o histórico (título desamarrado riscado), o saldo, o amarrado e o livre
+- [ ] #27 Cancelar a venda cancela só o pagamento manual; PIX e cartão integrado ficam efetivados e saem da venda (órfãos, em não resolvidos), com a mudança na auditoria
+- [ ] #28 'Já recebido' na venda do PDV amarra o pagamento sem amarração inteiro na venda aberta, se couber no que falta; maior que a venda é recusado com a orientação de amarrar o excedente como adiantamento
 <!-- AC:END -->
 
 ## Implementation Notes

@@ -35,6 +35,16 @@ class PdvPagamentoController
         return ['data' => PagamentoPendenciaService::formatar(PagamentoPendenciaService::listar($filtros))];
     }
 
+    // "Ja' recebido" na venda: amarra o pagamento sem amarracao na venda aberta
+    public function amarrarVenda(PdvRequest $request, int $codnegocio, int $codpagamento)
+    {
+        $pdv = PdvService::autoriza($request->pdv);
+        DB::beginTransaction();
+        $pag = PdvPagamentoService::amarrarVenda($pdv, $codnegocio, $codpagamento);
+        DB::commit();
+        return ['data' => PdvNegocioPagamentoService::pagamento($pag)];
+    }
+
     public function show(PdvRequest $request, int $id)
     {
         $pdv = PdvService::autoriza($request->pdv);

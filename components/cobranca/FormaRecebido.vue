@@ -4,8 +4,10 @@
 // deixou o PIX solto). Lista os não resolvidos no sentido do wizard, os da pessoa primeiro.
 // Com valor travado (baixa de títulos, vale/adiantamento) amarra o valor do wizard, se o
 // pagamento tiver esse tanto livre; sem trava (venda) amarra o pagamento inteiro, que precisa
-// caber no que falta. Só online: a lista vem do servidor.
+// caber no que falta: o servidor amarra na hora (a venda é preparada antes, como na cobrança
+// integrada) e a venda recarrega. Só online: a lista vem do servidor.
 import { ref, computed, onMounted } from 'vue'
+import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
 import { formataData, formataNumero } from '@components/formatters'
@@ -77,8 +79,30 @@ const opcoes = computed(() =>
   })),
 )
 
-const escolher = (opcao) => {
+const escolher = async (opcao) => {
   const p = opcao.original
+  // venda: o pagamento entra inteiro, amarrado já no servidor
+  if (sCobranca.ehNegocio) {
+    const doc = await sCobranca.prepararDocumento()
+    if (!doc?.codnegocio) {
+      return
+    }
+    try {
+      await api.post(`/v1/pdv/negocio/${doc.codnegocio}/pagamento/${p.codpagamento}/amarrar`, {
+        pdv: sCobranca.contexto?.pdv,
+      })
+      await sCobranca.depoisDeCriar('Pagamento amarrado à venda!')
+      sCobranca.fechar()
+    } catch (error) {
+      Notify.create({
+        type: 'negative',
+        message: error?.response?.data?.message ?? error?.message ?? String(error),
+        timeout: 5000,
+        actions: [{ icon: 'close', color: 'white' }],
+      })
+    }
+    return
+  }
   emit('pagamento', {
     codpagamento: p.codpagamento,
     meio: p.meio,
