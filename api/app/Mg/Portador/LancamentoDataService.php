@@ -35,12 +35,18 @@ use Mg\Titulo\MovimentoTituloService;
  */
 class LancamentoDataService
 {
-    // a data nova: nao no futuro, nem antes do razao (go-live)
-    private static function exigirData(Carbon $data): Carbon
+    // tolerancia do relogio do aparelho: ate' 5 minutos a frente vira agora
+    const TOLERANCIA_FUTURO_MIN = 5;
+
+    // nao no futuro (a mesma tolerancia em todo lugar) nem antes do razao
+    private static function exigirLimites(Carbon $data): Carbon
     {
-        $data = $data->copy()->startOfMinute();
-        if ($data->gt(Carbon::now())) {
+        $agora = Carbon::now();
+        if ($data->gt($agora->copy()->addMinutes(static::TOLERANCIA_FUTURO_MIN))) {
             abort(422, 'A data não pode ser no futuro.');
+        }
+        if ($data->gt($agora)) {
+            $data = $agora->copy();
         }
         if ($data->lt(ConferenciaService::inicio())) {
             abort(422, 'A data não pode ser antes do início do razão (' . ConferenciaService::inicio()->format('d/m/Y') . ').');
@@ -48,21 +54,23 @@ class LancamentoDataService
         return $data;
     }
 
+    // a data nova do alterar data
+    private static function exigirData(Carbon $data): Carbon
+    {
+        return static::exigirLimites($data->copy()->startOfMinute());
+    }
+
     // a data informada ao lancar (baixa de titulo, vale; contas e PDV), com
-    // hora: sem data, agora; um pouco a frente (relogio do cliente), agora;
-    // no futuro, recusa. O periodo de cada portador sai dela (a gaveta recusa
-    // sessao fechada)
+    // hora: e' a do fato. Sem data, agora; um pouco a frente (relogio do
+    // aparelho), agora; no futuro ou antes do inicio do razao, recusa. O
+    // periodo de cada portador sai dela: periodo fechado e gaveta sem sessao
+    // naquela hora tambem recusam (PortadorMovimentoService, CaixaService)
     public static function dataInformada(?string $transacao): Carbon
     {
-        $agora = Carbon::now()->startOfSecond();
         if (empty($transacao)) {
-            return $agora;
+            return Carbon::now()->startOfSecond();
         }
-        $data = Carbon::parse($transacao);
-        if ($data->gt($agora->copy()->addMinutes(5))) {
-            abort(422, 'A data não pode ser no futuro.');
-        }
-        return $data->gt($agora) ? $agora : $data;
+        return static::exigirLimites(Carbon::parse($transacao));
     }
 
     private static function justificativa(?string $justificativa): string
@@ -181,6 +189,20 @@ class LancamentoDataService
         $data = static::exigirData($data);
         if (!$autorizado) {
             static::autorizarPagamento($pag);
+        }
+        // a devolucao (cancelamento no cartao, devolucao de PIX) nao vem antes
+        // do pagamento original, nem o original depois da devolucao
+        if (!empty($pag->codpagamentoorigem)) {
+            $original = Pagamento::find($pag->codpagamentoorigem);
+            if ($original && $original->transacao && $data->lt($original->transacao->copy()->startOfMinute())) {
+                abort(422, 'A devolução não pode ser antes do pagamento original (' . $original->transacao->format('d/m/Y H:i') . ').');
+            }
+        }
+        $primeiraDevolucao = Pagamento::where('codpagamentoorigem', $pag->codpagamento)
+            ->where('estado', PagamentoService::ESTADO_EFETIVADO)
+            ->min('transacao');
+        if ($primeiraDevolucao && $data->gt(Carbon::parse($primeiraDevolucao))) {
+            abort(422, 'O pagamento não pode ficar depois da devolução dele (' . Carbon::parse($primeiraDevolucao)->format('d/m/Y H:i') . ').');
         }
         static::travar([$pag->codportadororigem, $pag->codportadordestino]);
         // o Conferir da maquineta trava a maquineta: nao entra cartao no

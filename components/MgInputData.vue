@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick } from "vue";
+import { Notify } from "quasar";
 
 const props = defineProps({
   modelValue: { type: String, default: null },
@@ -131,6 +132,9 @@ function parseDisplay(str) {
     /^(\d{2})\/(\d{2})\/(\d{2}|\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?\s*$/,
   );
   if (!m) return null;
+  // data com hora: digitar só o dia não vale (00:00 cairia fora da sessão do caixa); a hora é
+  // obrigatória (TASK-204). O calendário troca o dia mantendo a hora.
+  if (isTimestamp.value && !m[4]) return null;
   let y = +m[3];
   if (m[3].length === 2) y = expand2DigitYear(m[3]);
   return validatedDate(
@@ -344,6 +348,15 @@ function onBlur(evt) {
         emitFromDate(clamped);
       }
     } else {
+      if (isTimestamp.value && /^\d{2}\/\d{2}\/(\d{2}|\d{4})\s*$/.test(text)) {
+        Notify.create({
+          type: "negative",
+          message: "Informe a hora, além do dia.",
+          color: "red-5",
+          icon: "error",
+          timeout: 3000,
+        });
+      }
       displayRef.value = lastValid.value ? dateToDisplay(lastValid.value) : "";
     }
   }

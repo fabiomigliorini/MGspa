@@ -352,7 +352,9 @@ class PortadorPeriodoResource extends Resource
                 'tipo' => $l->tipo,
                 'codpagamento' => $l->codpagamento,
                 'valor' => (float) $l->valor,
-                'transacao' => $l->transacao,
+                // a hora de Cuiaba sem fuso (como o "era..."): a tela mostra e
+                // devolve a mesma hora, em qualquer aparelho
+                'transacao' => optional($l->transacao)->format('Y-m-d\TH:i:s'),
                 'cancelado' => !$valendo,
                 'saldo' => $valendo ? $saldo : null,
                 'estado' => $l->estado,

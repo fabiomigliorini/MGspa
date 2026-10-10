@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-08 21:59'
-updated_date: '2026-10-09 23:40'
+updated_date: '2026-10-10 01:28'
 labels:
   - contas
 dependencies: []
@@ -54,6 +54,11 @@ Notas técnicas:
 - [ ] #18 Toda correção de lançamento (data alterada, correção da conferência) fica registrada num lugar só, a auditoria
 - [ ] #19 O selo 'corrigido' na conferência e na maquininha aparece só quando o valor ou o meio foi corrigido
 - [ ] #20 A auditoria antiga da replicação entre bases sai: tabelas, funções e o usuário de banco
+- [ ] #21 Baixa e vale: data no futuro (além de 5 min do relógio) ou antes do início do razão são recusadas, com a mesma tolerância do alterar data
+- [ ] #22 Campo de data com hora: digitar só o dia é recusado (informe a hora); o calendário mantém a hora
+- [ ] #23 Hora do extrato e do lápis do pagamento vai sem fuso (hora de Cuiabá): qualquer aparelho mostra e grava a mesma hora
+- [ ] #24 Devolução (cancelamento no cartão/devolução de PIX) não fica antes do pagamento original, nem o original depois da devolução
+- [ ] #25 Editar início/fim do período da maquineta leva junto os cartões cuja hora cai na faixa nova (só períodos não conferidos)
 <!-- AC:END -->
 
 ## Implementation Notes

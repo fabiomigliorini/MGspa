@@ -99,7 +99,8 @@ class PagamentoDetalheResource extends Resource
             'motivodescricao'           => PagamentoService::MOTIVOS[$this->motivo] ?? null,
             'estado'                    => $this->estado,
             'estadodescricao'           => PagamentoService::ESTADOS[$this->estado] ?? null,
-            'transacao'                 => $this->transacao,
+            // a hora de Cuiaba sem fuso: o lapis mostra e devolve a mesma hora
+            'transacao'                 => optional($this->transacao)->format('Y-m-d\TH:i:s'),
             'efetivacao'                => $this->efetivacao,
             'criacao'                   => $this->criacao,
             'alteracao'                 => $this->alteracao,
