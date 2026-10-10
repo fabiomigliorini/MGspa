@@ -463,7 +463,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <q-page v-if="sNegocio.negocio" class="bg-grey-2">
+  <q-page v-if="sNegocio.negocio">
     <div class="q-pa-md q-col-gutter-md">
       <q-item-label header v-if="sNegocio.negocio.codnegociostatus == 2">
         Notas, Títulos e Documentos anexos

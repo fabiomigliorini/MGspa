@@ -96,7 +96,7 @@ watch(
 </script>
 
 <template>
-  <q-page class="bg-grey-2">
+  <q-page>
     <q-infinite-scroll ref="scrollRef" @load="carregarMais" :offset="250">
       <div class="q-pa-md" style="max-width: 1200px; margin: auto">
         <div class="row justify-end q-mb-sm">

@@ -109,7 +109,7 @@ const backTo = computed(() => {
       <component :is="$route.meta.rightDrawer" />
     </q-drawer>
 
-    <q-page-container>
+    <q-page-container class="bg-grey-2">
       <router-view :key="$route.fullPath" />
     </q-page-container>
 

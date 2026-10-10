@@ -598,7 +598,7 @@ const alterarCategoriaPai = (codpranchetacategorianova) => {
 }
 </script>
 <template>
-  <q-page class="bg-grey-2">
+  <q-page>
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
       <q-card flat bordered>
         <q-card-section>

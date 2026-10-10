@@ -110,7 +110,7 @@ const salvarDevolucao = async () => {
 }
 </script>
 <template>
-  <q-page class="bg-grey-2">
+  <q-page>
     <div class="flex flex-center">
       <q-card
         style="max-width: 800px"

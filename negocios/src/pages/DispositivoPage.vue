@@ -27,7 +27,7 @@ onMounted(() => sDispositivo.carregar())
 </script>
 
 <template>
-  <q-page class="q-pa-md bg-grey-2">
+  <q-page class="q-pa-md">
     <div style="max-width: 1086px; margin: auto">
       <MgEmptyState v-if="sDispositivo.erroLista" icon="block">
         {{ sDispositivo.erroLista }}

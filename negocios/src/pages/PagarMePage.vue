@@ -79,7 +79,7 @@ onMounted(() => {
 })
 </script>
 <template>
-  <q-page class="bg-grey-2">
+  <q-page>
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
       <q-btn
         @click="atualizar()"
@@ -104,9 +104,9 @@ onMounted(() => {
       </q-btn>
     </q-page-sticky>
     <div class="row q-pa-md q-pb-xl justify-center">
-      <q-list flat bordered class="rounded-borders" style="max-width: 650px">
-        <template v-for="ped in sPagarMe.pedidosPendentes" :key="ped.codpagarmepedido">
-          <q-item>
+      <q-card flat bordered class="full-width" style="max-width: 650px">
+        <q-list separator>
+          <q-item v-for="ped in sPagarMe.pedidosPendentes" :key="ped.codpagarmepedido">
             <q-item-section avatar>
               <q-avatar color="primary" text-color="white">
                 {{ ped.apelido?.charAt(0) }}
@@ -174,9 +174,8 @@ onMounted(() => {
               </div>
             </q-item-section>
           </q-item>
-          <q-separator />
-        </template>
-      </q-list>
+        </q-list>
+      </q-card>
     </div>
   </q-page>
 </template>

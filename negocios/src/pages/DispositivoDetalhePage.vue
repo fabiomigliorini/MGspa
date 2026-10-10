@@ -200,7 +200,7 @@ onMounted(carregar)
 </script>
 
 <template>
-  <q-page class="q-pa-md bg-grey-2">
+  <q-page class="q-pa-md">
     <div style="max-width: 1086px; margin: auto">
       <MgEmptyState v-if="!codpdv && !sSinc.pdv.codpdv" icon="devices">
         Este navegador ainda não está cadastrado como dispositivo.

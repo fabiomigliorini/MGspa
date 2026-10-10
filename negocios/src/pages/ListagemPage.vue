@@ -54,7 +54,7 @@ const relatorio = () =>
   )
 </script>
 <template>
-  <q-page class="bg-grey-2">
+  <q-page>
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
       <q-infinite-scroll @load="onLoad" ref="scrollRef" :offset="250">
         <q-list
