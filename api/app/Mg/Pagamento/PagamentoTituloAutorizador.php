@@ -94,12 +94,10 @@ class PagamentoTituloAutorizador
         $liquido = PagamentoTituloService::liquido($dados['titulos'] ?? []);
         $formas = array_values($dados['pagamentos'] ?? []);
         if (abs($liquido) < 0.005 || empty($formas)) {
-            return static::motivoPapel(
-                $codusuario,
-                Portador::find(Portador::ENCONTRO_CONTAS),
-                PortadorUsuario::PAPEL_OPERADOR,
-                'Encontro de contas'
-            );
+            if (PortadorAutorizador::pode(Portador::ENCONTRO_CONTAS, PortadorUsuario::PAPEL_OPERADOR, $codusuario)) {
+                return null;
+            }
+            return 'Encontro de contas: só operador ou gestor do portador Encontro de Contas.';
         }
         foreach ($formas as $f) {
             $motivo = static::motivoBloqueioForma($codusuario, $f, $liquido < 0, $pdv);

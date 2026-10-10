@@ -67,14 +67,18 @@ class PdvPagamentoService
         return PagamentoTituloService::baixar($dados, $pdv);
     }
 
-    // Pagamento da listagem do PDV: so' os dele
+    // Pagamento visto no PDV: os dele, os da gaveta dele (transferencia,
+    // M11) e os de portador em que o usuario tem papel (o PIX do banco que o
+    // caixa amarrou pela tela de nao resolvidos)
     public static function carregar(Pdv $pdv, int $codpagamento): Pagamento
     {
         $pag = PagamentoListaService::carregar($codpagamento);
-        // transferencia que chega na gaveta deste PDV (M11) tambem se ve
         $daGaveta = !empty($pdv->codportador)
             && in_array($pdv->codportador, [$pag->codportadororigem, $pag->codportadordestino]);
-        if ($pag->codpdv != $pdv->codpdv && !$daGaveta) {
+        $portador = $pag->codportadordestino ?? $pag->codportadororigem;
+        $temPapel = !empty($portador)
+            && \Mg\Portador\PortadorAutorizador::pode((int) $portador, \Mg\Portador\PortadorUsuario::PAPEL_DEPOSITANTE);
+        if ($pag->codpdv != $pdv->codpdv && !$daGaveta && !$temPapel) {
             abort(403, 'Pagamento de outro PDV!');
         }
         return $pag;

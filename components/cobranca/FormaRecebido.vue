@@ -28,7 +28,12 @@ onMounted(async () => {
   carregando.value = true
   try {
     const pdv = sCobranca.contexto?.pdv
-    const params = { sentido: sCobranca.sentido }
+    // a pessoa e a filial do caixa vêm primeiro (a lista tem limite)
+    const params = {
+      sentido: sCobranca.sentido,
+      codpessoaprimeiro: codpessoa.value,
+      codfilialprimeiro: sCobranca.contexto?.codfilial ?? null,
+    }
     const { data } = pdv
       ? await api.get('/v1/pdv/pagamento/pendentes', { params: { ...params, pdv } })
       : await api.get('/v1/pagamento/pendentes', { params })

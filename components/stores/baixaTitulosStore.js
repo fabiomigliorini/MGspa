@@ -56,8 +56,9 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
     totalLiquido() {
       return Math.abs(this.liquido)
     },
+    // títulos que se anulam (algum com valor); todos zerados não é encontro de contas
     compensacao() {
-      return this.titulos.length > 0 && this.totalLiquido < 0.005
+      return this.titulos.some((t) => (t.total || 0) > 0) && this.totalLiquido < 0.005
     },
     // pronto para gravar: a forma escolhida (ou o encontro de contas, que não tem forma)
     pronto() {

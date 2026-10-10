@@ -11,6 +11,7 @@ use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioParcelaService;
 use Mg\Caixa\CaixaService;
 use Mg\Pagamento\PagamentoService;
+use Mg\Pagamento\PagamentoTituloService;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioService;
 use Mg\Negocio\NegocioVale;
@@ -572,7 +573,7 @@ class PdvNegocioService
         // da venda e fica orfao, em "Pagamentos nao resolvidos", para amarrar
         // ou devolver (conceito do Fabio, 09/10/2026)
         foreach ($negocio->PagamentoS()->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->get() as $pag) {
-            if ($pag->ehIntegrado() && $pag->estado == PagamentoService::ESTADO_EFETIVADO) {
+            if (!PagamentoTituloService::manual($pag) && $pag->estado == PagamentoService::ESTADO_EFETIVADO) {
                 PagamentoService::amarrarVenda($pag, null, "Venda #{$negocio->codnegocio} cancelada: {$justificativa}");
                 continue;
             }

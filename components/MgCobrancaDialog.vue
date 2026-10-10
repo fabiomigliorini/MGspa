@@ -295,6 +295,8 @@ const prepararValorDinheiro = () => {
 const escolherForma = (forma) => {
   sCobranca.forma = forma.valor
   irParaForma()
+  // escolhida com o mouse, o item some: o foco volta para o card (Enter/Esc/Insert)
+  focar()
 }
 
 // passo 2 → dinheiro do PDV e formas diretas lançam; as outras seguem para as perguntas

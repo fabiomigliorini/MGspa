@@ -157,7 +157,7 @@ const confirmarDevolver = async () => {
   }
 }
 
-const podeDevolver = (p) => p.entrada && [3, 4, 17].includes(Number(p.meio))
+const podeDevolver = (p) => p.operador && p.entrada && [3, 4, 17].includes(Number(p.meio))
 </script>
 
 <template>
@@ -235,7 +235,7 @@ const podeDevolver = (p) => p.entrada && [3, 4, 17].includes(Number(p.meio))
                 <q-tooltip>Lançar como vale / adiantamento</q-tooltip>
               </q-btn>
               <q-btn
-                v-if="p.integrado"
+                v-if="p.integrado && p.operador"
                 flat
                 round
                 size="sm"

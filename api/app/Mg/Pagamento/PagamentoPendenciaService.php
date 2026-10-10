@@ -111,7 +111,13 @@ class PagamentoPendenciaService
     // Cada linha: o pagamento, saldo, amarrado e livre.
     public static function listar(array $filtros = []): array
     {
-        $binds = ['inicio' => ConferenciaService::inicio()->format('Y-m-d H:i:s')];
+        // a pessoa e a filial do contexto vem primeiro (o limite de 500 nao
+        // esconde o pagamento do cliente que esta' no caixa)
+        $binds = [
+            'inicio' => ConferenciaService::inicio()->format('Y-m-d H:i:s'),
+            'primeiropessoa' => !empty($filtros['codpessoaprimeiro']) ? (int) $filtros['codpessoaprimeiro'] : null,
+            'primeirofilial' => !empty($filtros['codfilialprimeiro']) ? (int) $filtros['codfilialprimeiro'] : null,
+        ];
         $where = [];
         if (!empty($filtros['codpessoa'])) {
             $where[] = 'p.codpessoa = :codpessoa';
@@ -170,10 +176,14 @@ class PagamentoPendenciaService
                   and coalesce(n.codnegociostatus, 0) != " . NegocioService::STATUS_ABERTO . "
                   " . (empty($where) ? '' : ' and ' . implode(' and ', $where)) . "
             )
-            select codpagamento, saldo, amarrado, round(saldo - amarrado, 2) as livre
-            from base
-            where abs(saldo - amarrado) > 0.005
-            order by codpagamento desc
+            select b.codpagamento, b.saldo, b.amarrado, round(b.saldo - b.amarrado, 2) as livre
+            from base b
+            join tblpagamento pp on (pp.codpagamento = b.codpagamento)
+            where abs(b.saldo - b.amarrado) > 0.005
+            order by
+                (coalesce(pp.codpessoa, 0) = coalesce(cast(:primeiropessoa as bigint), -1)) desc,
+                (coalesce(pp.codfilial, 0) = coalesce(cast(:primeirofilial as bigint), -1)) desc,
+                b.codpagamento desc
             limit 500
         ";
         $linhas = collect(DB::select($sql, $binds))->keyBy('codpagamento');
@@ -203,7 +213,8 @@ class PagamentoPendenciaService
                 'uuid' => $pag->uuid,
                 'meio' => $pag->meio,
                 'meiodescricao' => PagamentoService::descricao($pag),
-                'transacao' => $pag->transacao,
+                // hora de Cuiaba sem fuso, como o detalhe e o extrato
+                'transacao' => optional($pag->transacao)->format('Y-m-d\TH:i:s'),
                 'entrada' => !empty($pag->codportadordestino),
                 'total' => (float) $pag->total,
                 'saldo' => $l['saldo'],
@@ -219,7 +230,15 @@ class PagamentoPendenciaService
                 'nsu' => $pag->nsu,
                 'bandeira' => $pag->bandeira,
                 'codnegocio' => $pag->codnegocio,
-                'integrado' => $pag->ehIntegrado(),
+                // veio do banco ou da maquineta (PIX pela chave, PIX QR, Stone,
+                // SafraPay, boleto): nao se cancela; pode ser o "ja' lancado"
+                'integrado' => !PagamentoTituloService::manual($pag),
+                // o que o usuario pode fazer: amarrar (ja' filtrado: depositante)
+                // e, como operador do portador, devolver e casar com o digitado
+                'operador' => PortadorAutorizador::pode(
+                    (int) ($pag->codportadordestino ?? $pag->codportadororigem),
+                    PortadorUsuario::PAPEL_OPERADOR
+                ),
                 'codpdv' => $pag->codpdv,
                 'pdv' => optional($pag->Pdv)->apelido,
             ];

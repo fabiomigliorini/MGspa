@@ -164,7 +164,8 @@ const gravar = async () => {
   }
   const pags = await sBaixa.finalizar(props.finalizar.url, {
     ...props.finalizar.extras,
-    ...(props.comData ? { transacao: transacao.value } : {}),
+    // o pagamento que já existe tem a data dele (o fato)
+    ...(props.comData && !props.pagamento ? { transacao: transacao.value } : {}),
     observacao: observacao.value || null,
   })
   if (!pags) return
@@ -206,7 +207,7 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
           <q-separator inset />
           <q-card-section>
             <div class="row q-col-gutter-md">
-              <div class="col-xs-12 col-sm-4" v-if="comData">
+              <div class="col-xs-12 col-sm-4" v-if="comData && !pagamento">
                 <MgInputData
                   :model-value="transacao"
                   @update:model-value="mudouData"
@@ -218,11 +219,11 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
                   :bottom-slots="false"
                 />
               </div>
-              <div class="col-xs-12" :class="comData ? 'col-sm-8' : ''">
+              <div class="col-xs-12" :class="comData && !pagamento ? 'col-sm-8' : ''">
                 <MgSelectPessoa
                   v-model="codpessoa"
                   label="Pessoa"
-                  :autofocus="!comData"
+                  :autofocus="!comData || !!pagamento"
                   :bottom-slots="false"
                 />
               </div>

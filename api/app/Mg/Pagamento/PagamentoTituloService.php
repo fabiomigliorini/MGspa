@@ -234,8 +234,17 @@ class PagamentoTituloService
             abort(422, "O pagamento {$pag->codpagamento} tem R$ " . number_format($livre, 2, ',', '.')
                 . ' livre: ajuste o valor dos títulos.');
         }
+        // o fato fica como esta'; so' ganha a pessoa e a observacao que nao tinha
+        $mudou = false;
         if (empty($pag->codpessoa) && !empty($dados['codpessoa'])) {
             $pag->codpessoa = (int) $dados['codpessoa'];
+            $mudou = true;
+        }
+        if (empty($pag->observacoes) && !empty($dados['observacao'])) {
+            $pag->observacoes = mb_substr($dados['observacao'], 0, 255);
+            $mudou = true;
+        }
+        if ($mudou) {
             $pag->save();
         }
         return $pag;

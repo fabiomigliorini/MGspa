@@ -30,8 +30,10 @@ class PdvPagamentoController
     // pelo papel do usuario nos portadores
     public function pendentes(PdvRequest $request)
     {
-        PdvService::autoriza($request->pdv);
-        $filtros = $request->only(['codpessoa', 'sentido', 'codpagamento']);
+        $pdv = PdvService::autoriza($request->pdv);
+        // no PDV, so' os da loja dele (o admin tambem), o cliente primeiro
+        $filtros = $request->only(['codpessoa', 'sentido', 'codpagamento', 'codpessoaprimeiro']);
+        $filtros['codfilial'] = $pdv->codfilial;
         return ['data' => PagamentoPendenciaService::formatar(PagamentoPendenciaService::listar($filtros))];
     }
 
