@@ -3,80 +3,84 @@
 namespace Mg\Ocorrencia;
 
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Mg\Auditoria\Auditoria;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Conferencia\ConferenciaAutorizador;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioProdutoBarra;
+use Mg\Negocio\NegocioParcelaService;
 use Mg\Negocio\NegocioService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 use Mg\Pdv\Pdv;
+use Mg\Portador\PortadorMovimento;
 
 /**
  * Livro de ocorrencias (TASK-205): o que o gerente confere no fim do dia.
  *
- * Tipos < 10 nascem no PDV (com o motivo dado pelo caixa, mesmo offline) e
- * chegam na sincronizacao; tipos >= 10 nascem no servidor, uma vez so' por
- * registro (uk_tblocorrencia_servidor). Tudo so' vale para negocio de PDV
- * monitorado (tblpdv.monitoramento) criado a partir da data.
+ * Tudo nasce no servidor e so' para PDV monitorado (tblpdv.monitoramento),
+ * registro criado a partir da data. O fato (o que mudou, antes/depois,
+ * justificativa) vai para a auditoria; a ocorrencia amarra as auditorias
+ * (N:N) e guarda descricao, valor e a conferencia. Uma ocorrencia por
+ * registro e tipo (uk_tblocorrencia): as do negocio (1 a 8) juntam os itens
+ * daquele tipo; esquecido e desconto acima sao estado, sem auditoria.
+ * O que se olha no PDV esta' em OcorrenciaPdvService.
  */
 class OcorrenciaService
 {
-    // nascem no PDV
+    // do negocio, uma por tipo amarrando as auditorias dos itens
     const TIPO_ITEM_EXCLUIDO = 1;
     const TIPO_QUANTIDADE_DIMINUIDA = 2;
-    const TIPO_PRECO_DIMINUIDO = 3;
-    const TIPO_PAGAMENTO_EXCLUIDO = 4;
+    const TIPO_PRECO_ABAIXO = 3;
+    const TIPO_PRECO_ACIMA = 4;
+    const TIPO_VALE_EXCLUIDO = 5;
+    const TIPO_PAGAMENTO_APAGADO = 6;
+    const TIPO_PARCELA_APAGADA = 7;
+    const TIPO_SEM_FINANCEIRO = 8;
 
-    // nascem no servidor
     const TIPO_NEGOCIO_CANCELADO = 10;
     const TIPO_PAGAMENTO_ESTORNADO = 11;
     const TIPO_VALE_ESTORNADO = 12;
     const TIPO_DESCONTO_ACIMA = 13;
     const TIPO_NEGOCIO_ESQUECIDO = 14;
 
+    // correcoes de lancamento (TASK-204), uma por correcao
+    const TIPO_DATA_ALTERADA = 15;
+    const TIPO_DATA_CANCELAMENTO_ALTERADA = 16;
+    const TIPO_CORRIGIDO_CONFERENCIA = 17;
+    const TIPO_REGISTRO_INDEVIDO = 18;
+    const TIPO_INCLUIDO_CONFERENCIA = 19;
+
     const TIPOS = [
         self::TIPO_ITEM_EXCLUIDO => 'Item excluído',
         self::TIPO_QUANTIDADE_DIMINUIDA => 'Quantidade diminuída',
-        self::TIPO_PRECO_DIMINUIDO => 'Preço diminuído',
-        self::TIPO_PAGAMENTO_EXCLUIDO => 'Pagamento excluído',
+        self::TIPO_PRECO_ABAIXO => 'Preço abaixo do cadastro',
+        self::TIPO_PRECO_ACIMA => 'Preço acima do cadastro',
+        self::TIPO_VALE_EXCLUIDO => 'Vale compras excluído',
+        self::TIPO_PAGAMENTO_APAGADO => 'Pagamento apagado',
+        self::TIPO_PARCELA_APAGADA => 'Parcela a prazo apagada',
+        self::TIPO_SEM_FINANCEIRO => 'Saída sem financeiro',
         self::TIPO_NEGOCIO_CANCELADO => 'Negócio cancelado',
         self::TIPO_PAGAMENTO_ESTORNADO => 'Pagamento estornado',
         self::TIPO_VALE_ESTORNADO => 'Vale estornado',
         self::TIPO_DESCONTO_ACIMA => 'Desconto acima do permitido',
         self::TIPO_NEGOCIO_ESQUECIDO => 'Negócio esquecido',
+        self::TIPO_DATA_ALTERADA => 'Data alterada',
+        self::TIPO_DATA_CANCELAMENTO_ALTERADA => 'Data do cancelamento alterada',
+        self::TIPO_CORRIGIDO_CONFERENCIA => 'Corrigido na conferência',
+        self::TIPO_REGISTRO_INDEVIDO => 'Registro indevido',
+        self::TIPO_INCLUIDO_CONFERENCIA => 'Incluído na conferência',
     ];
 
-    const TIPOS_PDV = [
-        self::TIPO_ITEM_EXCLUIDO,
-        self::TIPO_QUANTIDADE_DIMINUIDA,
-        self::TIPO_PRECO_DIMINUIDO,
-        self::TIPO_PAGAMENTO_EXCLUIDO,
-    ];
-
-    const MOTIVO_OUTRO = 9;
-
-    const MOTIVOS = [
-        1 => 'Bipou errado',
-        2 => 'Cliente desistiu',
-        3 => 'Preço diferente da gôndola',
-        4 => 'Produto com defeito',
-        5 => 'Valor digitado errado',
-        6 => 'Cliente trocou a forma de pagamento',
-        self::MOTIVO_OUTRO => 'Outro',
-    ];
-
-    const MOTIVOS_ITEM = [1, 2, 3, 4, self::MOTIVO_OUTRO];
-    const MOTIVOS_PAGAMENTO = [5, 6, self::MOTIVO_OUTRO];
-
-    // desconto a vista sem autorizacao no cadastro (TASK-190 troca pela
-    // regra por forma de pagamento e categoria de cliente)
-    const DESCONTO_AVISTA = 5;
-    const MEIOS_AVISTA = [
-        PagamentoService::MEIO_DINHEIRO,
-        PagamentoService::MEIO_DEBITO,
-        PagamentoService::MEIO_PIX,
+    // tipo da auditoria da TASK-204 => tipo da ocorrencia
+    const CORRECOES = [
+        AuditoriaService::TIPO_DATA_ALTERADA => self::TIPO_DATA_ALTERADA,
+        AuditoriaService::TIPO_DATA_CANCELAMENTO_ALTERADA => self::TIPO_DATA_CANCELAMENTO_ALTERADA,
+        AuditoriaService::TIPO_CORRIGIDO_CONFERENCIA => self::TIPO_CORRIGIDO_CONFERENCIA,
+        AuditoriaService::TIPO_REGISTRO_INDEVIDO => self::TIPO_REGISTRO_INDEVIDO,
+        AuditoriaService::TIPO_INCLUIDO_CONFERENCIA => self::TIPO_INCLUIDO_CONFERENCIA,
     ];
 
     // PDV monitorado e registro criado a partir da data
@@ -91,23 +95,183 @@ class OcorrenciaService
 
     // A ocorrencia e' da loja do PDV (quem confere e' o gerente de la'),
     // mesmo quando o estoque do negocio e' de outra filial
-    private static function filial(?Pdv $pdv, $codfilial): ?int
+    public static function filial(?Pdv $pdv, $codfilial): ?int
     {
         return $pdv->codfilial ?? $codfilial;
     }
 
-    // Evento do servidor sai uma vez so' por registro
-    public static function registrar(array $dados): Ocorrencia
+    // Uma vez so' por registro e tipo; com auditorias, amarra
+    public static function registrar(array $dados, array $auditorias = []): Ocorrencia
     {
-        if ($dados['tipo'] >= 10) {
-            return Ocorrencia::firstOrCreate([
-                'tipo' => $dados['tipo'],
-                'tabela' => $dados['tabela'],
-                'codigo' => $dados['codigo'],
-            ], $dados);
-        }
-        return Ocorrencia::create($dados);
+        $oc = Ocorrencia::firstOrCreate([
+            'tipo' => $dados['tipo'],
+            'tabela' => $dados['tabela'],
+            'codigo' => $dados['codigo'],
+        ], $dados);
+        static::amarrar($oc, $auditorias);
+        return $oc;
     }
+
+    public static function amarrar(Ocorrencia $oc, array $auditorias): void
+    {
+        foreach ($auditorias as $aud) {
+            OcorrenciaAuditoria::firstOrCreate([
+                'codocorrencia' => $oc->codocorrencia,
+                'codauditoria' => $aud->codauditoria,
+            ]);
+        }
+    }
+
+    // Ocorrencia do negocio (tipos 1 a 8): amarra as auditorias e refaz
+    // descricao e valor a partir de todas as que ela tem
+    public static function doNegocio(Negocio $negocio, int $tipo, array $auditorias, ?int $codusuario): ?Ocorrencia
+    {
+        if (empty($auditorias)) {
+            return null;
+        }
+        $oc = Ocorrencia::firstOrNew([
+            'tipo' => $tipo,
+            'tabela' => 'tblnegocio',
+            'codigo' => $negocio->codnegocio,
+        ]);
+        $oc->fill([
+            'codnegocio' => $negocio->codnegocio,
+            'codpdv' => $negocio->codpdv,
+            'codfilial' => static::filial($negocio->Pdv, $negocio->codfilial),
+            'codusuario' => $codusuario,
+        ]);
+        $oc->descricao = $oc->descricao ?? static::TIPOS[$tipo];
+        $oc->save();
+        static::amarrar($oc, $auditorias);
+        static::resumir($oc);
+        return $oc;
+    }
+
+    // descricao = o que cada auditoria amarrada diz; valor = soma
+    private static function resumir(Ocorrencia $oc): void
+    {
+        $linhas = static::linhas($oc->AuditoriaS()->get());
+        $valor = round(array_sum(array_column($linhas, 'valor')), 2);
+        $descricao = implode('; ', array_column($linhas, 'texto')) . ' — R$ ' . formataNumero($valor);
+        $oc->descricao = mb_strimwidth($descricao, 0, 300, '…');
+        $oc->valor = max($valor, 0);
+        $oc->save();
+    }
+
+    // [texto, valor] de cada auditoria de item do negocio
+    private static function linhas(Collection $auds): array
+    {
+        $itens = static::itensDoNegocio(
+            $auds->where('tabela', 'tblnegocioprodutobarra')->pluck('codigo')->all()
+        );
+        $vales = static::valesDoNegocio(
+            $auds->where('tabela', 'tblnegociovale')->pluck('codigo')->all()
+        );
+        $ret = [];
+        foreach ($auds as $aud) {
+            $item = $itens[$aud->codigo] ?? null;
+            $antes = $aud->antes ?? [];
+            $depois = $aud->depois ?? [];
+            switch ($aud->tipo) {
+                case AuditoriaService::TIPO_ITEM_EXCLUIDO:
+                    $ret[] = [
+                        'texto' => static::quantidade($item->quantidade ?? 0) . '× ' . ($item->produto ?? '?'),
+                        'valor' => (float) ($item->valortotal ?? 0),
+                    ];
+                    break;
+                case AuditoriaService::TIPO_QUANTIDADE_ALTERADA:
+                    $ret[] = [
+                        'texto' => ($item->produto ?? '?') . ' de ' . static::quantidade($antes['quantidade'] ?? 0)
+                            . ' para ' . static::quantidade($depois['quantidade'] ?? 0),
+                        'valor' => (float) ($antes['valortotal'] ?? 0) - (float) ($depois['valortotal'] ?? 0),
+                    ];
+                    break;
+                case AuditoriaService::TIPO_PRECO_CADASTRO:
+                    $quantidade = (float) ($item->quantidade ?? 0);
+                    $cadastro = (float) ($antes['valorunitario'] ?? 0);
+                    $praticado = (float) ($depois['valorunitario'] ?? 0);
+                    $ret[] = [
+                        'texto' => static::quantidade($quantidade) . '× ' . ($item->produto ?? '?') . ' a R$ '
+                            . formataNumero($praticado) . ' (cadastro R$ ' . formataNumero($cadastro) . ')',
+                        'valor' => round(abs($cadastro - $praticado) * $quantidade, 2),
+                    ];
+                    break;
+                case AuditoriaService::TIPO_VALE_EXCLUIDO:
+                    $vale = $vales[$aud->codigo] ?? null;
+                    $ret[] = [
+                        'texto' => 'Vale de R$ ' . formataNumero($vale->valortotal ?? 0)
+                            . (!empty($vale->favorecido) ? " para {$vale->favorecido}" : ''),
+                        'valor' => (float) ($vale->valortotal ?? 0),
+                    ];
+                    break;
+                case AuditoriaService::TIPO_PAGAMENTO_APAGADO:
+                    $ret[] = [
+                        'texto' => 'R$ ' . formataNumero($antes['total'] ?? 0) . ' em '
+                            . (PagamentoService::MEIOS[$antes['meio'] ?? null] ?? ($antes['meio'] ?? '?')),
+                        'valor' => (float) ($antes['total'] ?? 0),
+                    ];
+                    break;
+                case AuditoriaService::TIPO_PARCELA_APAGADA:
+                    $ret[] = [
+                        'texto' => (NegocioParcelaService::CONDICOES[$antes['condicao'] ?? null] ?? ($antes['condicao'] ?? '?'))
+                            . ' ' . ($antes['numero'] ?? 1) . ' de R$ ' . formataNumero($antes['valor'] ?? 0)
+                            . (!empty($antes['vencimento']) ? ' venc. ' . Carbon::parse($antes['vencimento'])->format('d/m/Y') : ''),
+                        'valor' => (float) ($antes['valor'] ?? 0),
+                    ];
+                    break;
+            }
+        }
+        return $ret;
+    }
+
+    // nome do produto como o caixa ve' (sql com i = tblnegocioprodutobarra)
+    const SQL_PRODUTO = "
+        trim(p.produto || coalesce(' ' || pv.variacao, '')
+            || coalesce(' C/' || to_char(pe.quantidade, 'FM999999990'), ''))
+    ";
+    const SQL_JOIN_PRODUTO = '
+        inner join tblprodutobarra pb on (pb.codprodutobarra = i.codprodutobarra)
+        inner join tblprodutovariacao pv on (pv.codprodutovariacao = pb.codprodutovariacao)
+        inner join tblproduto p on (p.codproduto = pv.codproduto)
+        left join tblprodutoembalagem pe on (pe.codprodutoembalagem = pb.codprodutoembalagem)
+    ';
+
+    private static function itensDoNegocio(array $codigos): array
+    {
+        if (empty($codigos)) {
+            return [];
+        }
+        $regs = DB::select('
+            select i.codnegocioprodutobarra, i.quantidade, i.valortotal, ' . static::SQL_PRODUTO . ' as produto
+            from tblnegocioprodutobarra i
+            ' . static::SQL_JOIN_PRODUTO . '
+            where i.codnegocioprodutobarra in (' . implode(',', array_map('intval', array_unique($codigos))) . ')
+        ');
+        return collect($regs)->keyBy('codnegocioprodutobarra')->all();
+    }
+
+    private static function valesDoNegocio(array $codigos): array
+    {
+        if (empty($codigos)) {
+            return [];
+        }
+        $regs = DB::select('
+            select v.codnegociovale, v.valortotal, coalesce(v.aluno, pf.fantasia) as favorecido
+            from tblnegociovale v
+            left join tblpessoa pf on (pf.codpessoa = v.codpessoafavorecido)
+            where v.codnegociovale in (' . implode(',', array_map('intval', array_unique($codigos))) . ')
+        ');
+        return collect($regs)->keyBy('codnegociovale')->all();
+    }
+
+    // 1 un, 2,5 kg
+    public static function quantidade($q): string
+    {
+        $q = (float) $q;
+        return formataNumero($q, floor($q) == $q ? 0 : 3);
+    }
+
+    // ---- negocio cancelado, estorno ----
 
     // Antes de cancelar: o que o negocio tinha (os pagamentos sao
     // cancelados em cascata e nao geram ocorrencia propria)
@@ -139,6 +303,14 @@ class OcorrenciaService
         if ($foto['valortotal'] <= 0 && empty($foto['pagamentos'])) {
             return null;
         }
+        $aud = AuditoriaService::registrar(
+            'tblnegocio',
+            $negocio->codnegocio,
+            AuditoriaService::TIPO_NEGOCIO_CANCELADO,
+            $foto,
+            ['codnegociostatus' => $negocio->codnegociostatus],
+            $justificativa
+        );
         $status = NegocioService::CODNEGOCIOSTATUS_DESCRICAO[$foto['codnegociostatus']] ?? $foto['codnegociostatus'];
         $meios = collect($foto['pagamentos'])
             ->map(fn ($p) => PagamentoService::MEIOS[$p['meio']] ?? $p['meio'])
@@ -158,9 +330,7 @@ class OcorrenciaService
             'codusuario' => Auth::user()->codusuario ?? null,
             'descricao' => mb_substr($descricao, 0, 300),
             'valor' => $foto['valortotal'],
-            'antes' => $foto,
-            'justificativa' => mb_substr($justificativa, 0, 300),
-        ]);
+        ], [$aud]);
     }
 
     // Estorno de recebimento (titulo, vale colaborador, adiantamento). O
@@ -170,6 +340,14 @@ class OcorrenciaService
         if (!static::monitorado($pag->Pdv, $pag->criacao)) {
             return null;
         }
+        $aud = AuditoriaService::registrar(
+            'tblpagamento',
+            $pag->codpagamento,
+            AuditoriaService::TIPO_ESTORNADO,
+            ['estado' => PagamentoService::ESTADO_EFETIVADO],
+            ['estado' => $pag->estado],
+            $justificativa
+        );
         $meio = PagamentoService::MEIOS[$pag->meio] ?? $pag->meio;
         $tipo = $vale ? static::TIPO_VALE_ESTORNADO : static::TIPO_PAGAMENTO_ESTORNADO;
         $quem = $pag->Pessoa->fantasia ?? null;
@@ -181,162 +359,113 @@ class OcorrenciaService
             'tipo' => $tipo,
             'tabela' => 'tblpagamento',
             'codigo' => $pag->codpagamento,
+            'codnegocio' => $pag->codnegocio,
             'codpdv' => $pag->codpdv,
             'codfilial' => static::filial($pag->Pdv, $pag->codfilial),
             'codusuario' => Auth::user()->codusuario ?? null,
             'descricao' => mb_substr($descricao, 0, 300),
             'valor' => abs((float) $pag->total),
-            'antes' => [
-                'meio' => $pag->meio,
-                'total' => (float) $pag->total,
-                'estado' => PagamentoService::ESTADO_EFETIVADO,
-            ],
-            'justificativa' => mb_substr($justificativa, 0, 300),
-        ]);
+        ], [$aud]);
     }
 
-    // No fechamento: desconto acima do maior entre o do cadastro do cliente
-    // e 5% sobre a parte paga a vista (pix, dinheiro, debito)
-    public static function descontoNoFechamento(Negocio $negocio): ?Ocorrencia
+    // ---- correcoes de lancamento (TASK-204) ----
+
+    // Uma correcao (as auditorias que ela gravou: a transferencia grava as
+    // duas pontas) vira uma ocorrencia, se o lancamento e' de PDV monitorado
+    public static function correcao(array $auditorias): ?Ocorrencia
     {
-        if (!$negocio->NaturezaOperacao->venda || !$negocio->NaturezaOperacao->financeiro) {
+        $auditorias = array_values(array_filter($auditorias));
+        if (empty($auditorias) || !isset(static::CORRECOES[$auditorias[0]->tipo])) {
             return null;
         }
-        if (!static::monitorado($negocio->Pdv, $negocio->criacao)) {
+        foreach ($auditorias as $aud) {
+            [$pdv, $registro] = static::pdvDoLancamento($aud);
+            if ($pdv && static::monitorado($pdv, $registro->criacao)) {
+                break;
+            }
+            $pdv = null;
+        }
+        if (!$pdv) {
             return null;
         }
-        $desconto = round((float) $negocio->valordesconto, 2);
-        if ($desconto <= 0) {
-            return null;
-        }
-        $percentualPessoa = (float) ($negocio->Pessoa->desconto ?? 0);
-        $permitidoPessoa = round((float) $negocio->valorprodutos * $percentualPessoa / 100, 2);
-        // principal = valor antes do desconto do pagamento, sem troco
-        $baseAvista = (float) $negocio->PagamentoS()
-            ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
-            ->whereIn('meio', static::MEIOS_AVISTA)
-            ->sum('principal');
-        $permitidoAvista = round($baseAvista * static::DESCONTO_AVISTA / 100, 2);
-        $permitido = max($permitidoPessoa, $permitidoAvista);
-        $excesso = round($desconto - $permitido, 2);
-        if ($excesso <= 0.01) {
-            return null;
-        }
-        $percentual = $negocio->valorprodutos > 0 ? $desconto / $negocio->valorprodutos * 100 : 0;
-        $descricao = "Desconto de R$ " . formataNumero($desconto) . " (" . formataNumero($percentual, 1) . "%)"
-            . ", permitido R$ " . formataNumero($permitido);
+        $aud = $auditorias[0];
+        $ehPagamento = $registro instanceof Pagamento;
+        $valor = abs((float) ($ehPagamento ? $registro->total : $registro->valor));
         return static::registrar([
-            'tipo' => static::TIPO_DESCONTO_ACIMA,
-            'tabela' => 'tblnegocio',
-            'codigo' => $negocio->codnegocio,
-            'codnegocio' => $negocio->codnegocio,
-            'codpdv' => $negocio->codpdv,
-            'codfilial' => static::filial($negocio->Pdv, $negocio->codfilial),
-            'codusuario' => $negocio->codusuario,
-            'descricao' => $descricao,
-            'valor' => $excesso,
-            'depois' => [
-                'valordesconto' => $desconto,
-                'valorprodutos' => (float) $negocio->valorprodutos,
-                'permitido' => $permitido,
-                'percentualpessoa' => $percentualPessoa,
-                'baseavista' => round($baseAvista, 2),
-                'percentualavista' => static::DESCONTO_AVISTA,
-            ],
-        ]);
+            'tipo' => static::CORRECOES[$aud->tipo],
+            'tabela' => 'tblauditoria',
+            'codigo' => $aud->codauditoria,
+            'codnegocio' => $ehPagamento ? $registro->codnegocio : null,
+            'codpdv' => $pdv->codpdv,
+            'codfilial' => static::filial($pdv, $registro->codfilial ?? null),
+            'codusuario' => Auth::user()->codusuario ?? null,
+            'descricao' => mb_strimwidth(static::descreverCorrecao($aud, $registro, $valor), 0, 300, '…'),
+            'valor' => $valor,
+        ], $auditorias);
     }
 
-    // Ocorrencias que o PDV registrou (com o motivo do caixa). So' insere:
-    // a que ja' chegou (mesmo uuid) e' ignorada.
-    public static function importarDoPdv(Negocio $negocio, array $ocorrencias): void
+    // [Pdv, registro]: o pagamento tem o PDV; o movimento do portador cai na
+    // gaveta de um PDV
+    private static function pdvDoLancamento(Auditoria $aud): array
     {
-        foreach ($ocorrencias as $dados) {
-            if (!is_array($dados) || empty($dados['uuid']) || Ocorrencia::where('uuid', $dados['uuid'])->exists()) {
-                continue;
-            }
-            $tipo = (int) ($dados['tipo'] ?? 0);
-            if (!in_array($tipo, static::TIPOS_PDV)) {
-                abort(422, "Tipo de ocorrência inválido ({$tipo})!");
-            }
-            $motivo = (int) ($dados['motivo'] ?? 0);
-            $motivos = $tipo == static::TIPO_PAGAMENTO_EXCLUIDO ? static::MOTIVOS_PAGAMENTO : static::MOTIVOS_ITEM;
-            if (!in_array($motivo, $motivos)) {
-                abort(422, "Motivo da ocorrência inválido ({$motivo})!");
-            }
-            $justificativa = trim($dados['justificativa'] ?? '');
-            if ($motivo == static::MOTIVO_OUTRO && $justificativa === '') {
-                abort(422, 'Informe a justificativa quando o motivo for Outro!');
-            }
-
-            $tabela = 'tblnegocio';
-            $codigo = $negocio->codnegocio;
-            if ($tipo != static::TIPO_PAGAMENTO_EXCLUIDO && !empty($dados['uuidregistro'])) {
-                $npb = NegocioProdutoBarra::where('uuid', $dados['uuidregistro'])
-                    ->where('codnegocio', $negocio->codnegocio)
-                    ->first();
-                if ($npb) {
-                    $tabela = 'tblnegocioprodutobarra';
-                    $codigo = $npb->codnegocioprodutobarra;
-                }
-            }
-
-            static::registrar([
-                'uuid' => $dados['uuid'],
-                'tipo' => $tipo,
-                'tabela' => $tabela,
-                'codigo' => $codigo,
-                'codnegocio' => $negocio->codnegocio,
-                'codpdv' => $negocio->codpdv,
-                'codfilial' => static::filial($negocio->Pdv, $negocio->codfilial),
-                'codusuario' => Auth::user()->codusuario ?? null,
-                'descricao' => mb_substr($dados['descricao'] ?? static::TIPOS[$tipo], 0, 300),
-                'valor' => round(abs((float) ($dados['valor'] ?? 0)), 2),
-                'antes' => $dados['antes'] ?? null,
-                'depois' => $dados['depois'] ?? null,
-                'motivo' => $motivo,
-                'justificativa' => $justificativa === '' ? null : mb_substr($justificativa, 0, 300),
-                'criacao' => static::momento($dados['criacao'] ?? null),
-            ]);
+        if ($aud->tabela == 'tblpagamento') {
+            $pag = Pagamento::find($aud->codigo);
+            return [$pag?->Pdv, $pag];
         }
+        if ($aud->tabela == 'tblportadormovimento') {
+            $mov = PortadorMovimento::find($aud->codigo);
+            $pdv = $mov ? Pdv::where('codportador', $mov->codportador)->whereNotNull('monitoramento')->first() : null;
+            return [$pdv, $mov];
+        }
+        return [null, null];
     }
 
-    // Momento informado pelo PDV; invalido ou no futuro (relogio adiantado)
-    // vira agora, sem derrubar a sincronizacao
-    private static function momento($valor): Carbon
+    private static function descreverCorrecao(Auditoria $aud, $registro, float $valor): string
     {
-        try {
-            $momento = empty($valor) ? null : Carbon::parse($valor);
-        } catch (\Throwable $th) {
-            $momento = null;
+        $quanto = 'R$ ' . formataNumero($valor);
+        if ($registro instanceof Pagamento) {
+            $quanto .= ' em ' . (PagamentoService::MEIOS[$registro->meio] ?? $registro->meio);
         }
-        if (!$momento || $momento->isFuture()) {
-            return Carbon::now();
+        $data = fn ($v) => $v ? Carbon::parse($v)->format('d/m H:i') : '—';
+        switch ($aud->tipo) {
+            case AuditoriaService::TIPO_DATA_ALTERADA:
+                return "Data de {$quanto} de " . $data($aud->antes['transacao'] ?? null)
+                    . ' para ' . $data($aud->depois['transacao'] ?? null);
+            case AuditoriaService::TIPO_DATA_CANCELAMENTO_ALTERADA:
+                return "Data do cancelamento de {$quanto} de " . $data($aud->antes['cancelamento'] ?? null)
+                    . ' para ' . $data($aud->depois['cancelamento'] ?? null);
+            case AuditoriaService::TIPO_CORRIGIDO_CONFERENCIA:
+                $campos = collect(array_keys(($aud->antes ?? []) + ($aud->depois ?? [])))
+                    ->map(fn ($c) => "{$c} " . static::valorCampo($c, $aud->antes[$c] ?? null)
+                        . ' → ' . static::valorCampo($c, $aud->depois[$c] ?? null))
+                    ->implode(', ');
+                return "Corrigiu {$quanto}: {$campos}";
+            case AuditoriaService::TIPO_REGISTRO_INDEVIDO:
+                return "Marcou como indevido {$quanto}";
+            case AuditoriaService::TIPO_INCLUIDO_CONFERENCIA:
+                return "Incluiu {$quanto} na conferência";
         }
-        return $momento;
+        return AuditoriaService::TIPOS[$aud->tipo] ?? (string) $aud->tipo;
     }
 
-    // As do PDV, no formato do PDV (o documento do Dexie e' substituido pela
-    // resposta do servidor e nao pode perde-las)
-    public static function paraPdv(Negocio $negocio): array
+    private static function valorCampo(string $campo, $valor): string
     {
-        return Ocorrencia::where('codnegocio', $negocio->codnegocio)
-            ->whereIn('tipo', static::TIPOS_PDV)
-            ->orderBy('criacao')
-            ->orderBy('codocorrencia')
-            ->get()
-            ->map(fn ($oc) => [
-                'uuid' => $oc->uuid,
-                'tipo' => $oc->tipo,
-                'descricao' => $oc->descricao,
-                'valor' => $oc->valor,
-                'antes' => $oc->antes,
-                'depois' => $oc->depois,
-                'motivo' => $oc->motivo,
-                'justificativa' => $oc->justificativa,
-                'criacao' => $oc->criacao?->toIso8601String(),
-            ])
-            ->all();
+        if ($valor === null) {
+            return '—';
+        }
+        if ($campo == 'meio') {
+            return PagamentoService::MEIOS[$valor] ?? (string) $valor;
+        }
+        if (is_bool($valor)) {
+            return $valor ? 'sim' : 'não';
+        }
+        if (in_array($campo, ['principal', 'total'])) {
+            return formataNumero($valor);
+        }
+        return (string) $valor;
     }
+
+    // ---- negocio esquecido ----
 
     // 45 min, 3h10, 2 dias
     public static function duracao(float $minutos): string
@@ -401,7 +530,6 @@ class OcorrenciaService
                 'codusuario' => $reg->codusuario,
                 'descricao' => $descricao,
                 'valor' => (float) $reg->valortotal,
-                'antes' => ['alteracao' => Carbon::parse($reg->alteracao)->toIso8601String()],
             ]);
         }
         return count($regs);
@@ -453,8 +581,9 @@ class OcorrenciaService
         $total = DB::selectOne("select count(*) as total from tblocorrencia o where {$where}", $params)->total;
         $regs = DB::select(static::sqlLinha() . " where {$where} order by {$ordem}, o.codocorrencia desc limit {$porPagina} offset " . (($page - 1) * $porPagina), $params);
 
+        $auditorias = static::auditoriasDe(array_column($regs, 'codocorrencia'));
         return [
-            'data' => array_map(fn ($r) => static::linha($r), $regs),
+            'data' => array_map(fn ($r) => static::linha($r, $auditorias[$r->codocorrencia] ?? []), $regs),
             'meta' => [
                 'current_page' => $page,
                 'last_page' => max(1, (int) ceil($total / $porPagina)),
@@ -468,14 +597,14 @@ class OcorrenciaService
     {
         $reg = DB::selectOne(static::sqlLinha() . ' where o.codocorrencia = :id', ['id' => $codocorrencia]);
         abort_if(!$reg, 404, 'Ocorrência não encontrada!');
-        return static::linha($reg);
+        return static::linha($reg, static::auditoriasDe([$codocorrencia])[$codocorrencia] ?? []);
     }
 
     private static function sqlLinha(): string
     {
         return '
             select o.codocorrencia, o.tipo, o.tabela, o.codigo, o.codnegocio, o.codpdv, o.codfilial,
-                o.codusuario, o.descricao, o.valor, o.antes, o.depois, o.motivo, o.justificativa,
+                o.codusuario, o.descricao, o.valor,
                 o.conferencia, o.codusuarioconferencia, o.observacao, o.criacao,
                 f.filial, p.apelido as pdv, u.usuario, uc.usuario as usuarioconferencia
             from tblocorrencia o
@@ -486,7 +615,40 @@ class OcorrenciaService
         ';
     }
 
-    private static function linha($r): array
+    // as auditorias amarradas a cada ocorrencia: [codocorrencia => [...]]
+    private static function auditoriasDe(array $codocorrencias): array
+    {
+        if (empty($codocorrencias)) {
+            return [];
+        }
+        $regs = DB::select('
+            select oa.codocorrencia, a.codauditoria, a.tabela, a.codigo, a.tipo, a.antes, a.depois,
+                a.justificativa, a.criacao, u.usuario
+            from tblocorrenciaauditoria oa
+            inner join tblauditoria a on (a.codauditoria = oa.codauditoria)
+            left join tblusuario u on (u.codusuario = a.codusuariocriacao)
+            where oa.codocorrencia in (' . implode(',', array_map('intval', $codocorrencias)) . ')
+            order by a.codauditoria
+        ');
+        $ret = [];
+        foreach ($regs as $a) {
+            $ret[$a->codocorrencia][] = [
+                'codauditoria' => (int) $a->codauditoria,
+                'tabela' => $a->tabela,
+                'codigo' => (int) $a->codigo,
+                'tipo' => (int) $a->tipo,
+                'tipodescricao' => AuditoriaService::TIPOS[$a->tipo] ?? $a->tipo,
+                'antes' => $a->antes ? json_decode($a->antes, true) : null,
+                'depois' => $a->depois ? json_decode($a->depois, true) : null,
+                'justificativa' => $a->justificativa,
+                'usuario' => $a->usuario,
+                'criacao' => Carbon::parse($a->criacao)->toIso8601String(),
+            ];
+        }
+        return $ret;
+    }
+
+    private static function linha($r, array $auditorias): array
     {
         return [
             'codocorrencia' => (int) $r->codocorrencia,
@@ -503,11 +665,9 @@ class OcorrenciaService
             'usuario' => $r->usuario,
             'descricao' => $r->descricao,
             'valor' => (float) $r->valor,
-            'antes' => $r->antes ? json_decode($r->antes, true) : null,
-            'depois' => $r->depois ? json_decode($r->depois, true) : null,
-            'motivo' => $r->motivo ? (int) $r->motivo : null,
-            'motivodescricao' => $r->motivo ? (static::MOTIVOS[$r->motivo] ?? $r->motivo) : null,
-            'justificativa' => $r->justificativa,
+            // a do cancelamento, do estorno, da correcao
+            'justificativa' => collect($auditorias)->pluck('justificativa')->filter()->unique()->implode(' · ') ?: null,
+            'auditorias' => $auditorias,
             'conferencia' => $r->conferencia ? Carbon::parse($r->conferencia)->toIso8601String() : null,
             'codusuarioconferencia' => $r->codusuarioconferencia ? (int) $r->codusuarioconferencia : null,
             'usuarioconferencia' => $r->usuarioconferencia,

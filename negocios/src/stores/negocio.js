@@ -1,5 +1,4 @@
-import { formataDataIso, formataNumero, formataTimestampIso } from '@components/formatters'
-import { TIPO } from '@components/ocorrencia.js'
+import { formataDataIso, formataTimestampIso } from '@components/formatters'
 import { defineStore } from 'pinia'
 import { toRaw } from 'vue'
 import { db } from 'boot/db'
@@ -161,15 +160,6 @@ export const negocioStore = defineStore('negocio', {
     },
     podeEditar() {
       return this.negocio?.codnegociostatus == 1 && this.negocio?.codpdv == sSinc.pdv?.codpdv
-    },
-    // PDV monitorado e negocio criado a partir da data: remover, diminuir e
-    // excluir pagamento pedem motivo e vao para o livro de ocorrencias (TASK-205)
-    monitorado() {
-      const desde = sSinc.pdv?.monitoramento
-      if (!desde || !this.negocio?.criacao) {
-        return false
-      }
-      return String(this.negocio.criacao).slice(0, 10) >= String(desde).slice(0, 10)
     },
     // o que falta receber; negativo = troco (o dinheiro entregue entra inteiro: total + troco)
     valorapagar() {
@@ -457,7 +447,6 @@ export const negocioStore = defineStore('negocio', {
         vales: [],
         pagamentos: [],
         parcelas: [],
-        ocorrencias: [],
         titulos: [],
         notas: [],
         codpdv: sSinc.pdv.codpdv,
@@ -733,7 +722,6 @@ export const negocioStore = defineStore('negocio', {
       negocio.Pdv = { ...sSinc.pdv }
       negocio.pagamentos = []
       negocio.parcelas = []
-      negocio.ocorrencias = []
       negocio.titulos = []
       negocio.notas = []
       negocio.PagarMePedidoS = []
@@ -1079,7 +1067,7 @@ export const negocioStore = defineStore('negocio', {
       })
     },
 
-    async itemAdicionarQuantidade(uuid, quantidade, motivo = null) {
+    async itemAdicionarQuantidade(uuid, quantidade) {
       return comLock(this.negocio?.uuid, async () => {
         await this.recarregar()
         const item = this.negocio.itens.find(function (item) {
@@ -1092,12 +1080,8 @@ export const negocioStore = defineStore('negocio', {
         if (total <= 0) {
           return
         }
-        const antes = { quantidade: item.quantidade, valortotal: item.valortotal }
         item.quantidade = total
         this.itemRecalcularValorProdutos(item)
-        if (motivo && quantidade < 0) {
-          this.registrarOcorrenciaItem(TIPO.QUANTIDADE_DIMINUIDA, item, antes, motivo)
-        }
         // salva no IndexedDB
         await this.salvar()
       })
@@ -1115,7 +1099,6 @@ export const negocioStore = defineStore('negocio', {
       valorseguro,
       valoroutras,
       valortotal,
-      motivo = null,
     ) {
       return comLock(this.negocio?.uuid, async () => {
         await this.recarregar()
@@ -1124,11 +1107,6 @@ export const negocioStore = defineStore('negocio', {
         })
         if (!item) {
           return false
-        }
-        const antes = {
-          quantidade: item.quantidade,
-          valorunitario: item.valorunitario,
-          valortotal: item.valortotal,
         }
         item.codprodutobarra = codprodutobarra
         item.quantidade = quantidade
@@ -1142,19 +1120,12 @@ export const negocioStore = defineStore('negocio', {
         item.valorseguro = valorseguro
         item.valoroutras = valoroutras
         item.valortotal = valortotal
-        if (motivo) {
-          if (parseFloat(valorunitario) < parseFloat(antes.valorunitario)) {
-            this.registrarOcorrenciaItem(TIPO.PRECO_DIMINUIDO, item, antes, motivo)
-          } else if (parseFloat(quantidade) < parseFloat(antes.quantidade)) {
-            this.registrarOcorrenciaItem(TIPO.QUANTIDADE_DIMINUIDA, item, antes, motivo)
-          }
-        }
         this.recalcularValorTotal()
         await this.salvar()
       })
     },
 
-    async itemInativar(uuid, motivo = null) {
+    async itemInativar(uuid) {
       return comLock(this.negocio?.uuid, async () => {
         await this.recarregar()
         const inativar = this.negocio.itens.find(function (item) {
@@ -1162,67 +1133,9 @@ export const negocioStore = defineStore('negocio', {
         })
         if (inativar) {
           inativar.inativo = formataTimestampIso(new Date())
-          if (motivo) {
-            this.registrarOcorrenciaItem(TIPO.ITEM_EXCLUIDO, inativar, null, motivo)
-          }
           this.recalcularValorTotal()
           await this.salvar()
         }
-      })
-    },
-
-    // Livro de ocorrencias (TASK-205): chamado dentro do comLock, antes do
-    // salvar(); viaja no PUT do negocio e o servidor so' insere (por uuid)
-    registrarOcorrencia(ocorrencia) {
-      ;(this.negocio.ocorrencias ??= []).push({
-        uuid: uid(),
-        criacao: formataTimestampIso(new Date()),
-        ...ocorrencia,
-      })
-    },
-
-    // antes = null no item excluido (sai inteiro); senao, os campos que mudaram
-    registrarOcorrenciaItem(tipo, item, antes, { motivo, justificativa }) {
-      const nome = item.produto
-      const un = (q) => formataNumero(q, Number.isInteger(parseFloat(q)) ? 0 : 3)
-      let descricao, valor, de, para
-      if (tipo == TIPO.ITEM_EXCLUIDO) {
-        valor = item.valortotal
-        descricao = `Removeu ${un(item.quantidade)}× ${nome} — R$ ${formataNumero(valor)}`
-        de = {
-          quantidade: item.quantidade,
-          valorunitario: item.valorunitario,
-          valortotal: item.valortotal,
-        }
-        para = null
-      } else {
-        valor = Math.round((antes.valortotal - item.valortotal) * 100) / 100
-        de = {}
-        para = {}
-        for (const campo of Object.keys(antes)) {
-          if (parseFloat(antes[campo]) != parseFloat(item[campo])) {
-            de[campo] = antes[campo]
-            para[campo] = item[campo]
-          }
-        }
-        if (tipo == TIPO.PRECO_DIMINUIDO) {
-          descricao =
-            `Baixou o preço de ${nome} de R$ ${formataNumero(antes.valorunitario)}` +
-            ` para R$ ${formataNumero(item.valorunitario)}`
-        } else {
-          descricao = `Diminuiu ${nome} de ${un(antes.quantidade)} para ${un(item.quantidade)}`
-        }
-        descricao += ` — R$ ${formataNumero(valor)}`
-      }
-      this.registrarOcorrencia({
-        tipo,
-        uuidregistro: item.uuid,
-        descricao,
-        valor,
-        antes: de,
-        depois: para,
-        motivo,
-        justificativa: justificativa || null,
       })
     },
 
@@ -1847,18 +1760,6 @@ export const negocioStore = defineStore('negocio', {
       if (!forcar && respostaAtrasada(this.negocio, neg)) {
         return false
       }
-      // ocorrencia registrada aqui enquanto a resposta vinha nao se perde
-      // (TASK-205): fica e volta a ser enviada
-      if (this.negocio?.uuid == neg.uuid) {
-        const doServidor = neg.ocorrencias ?? []
-        const pendentes = (this.negocio.ocorrencias ?? []).filter(
-          (oc) => !doServidor.some((s) => s.uuid == oc.uuid),
-        )
-        if (pendentes.length) {
-          neg.ocorrencias = [...doServidor, ...pendentes]
-          neg.sincronizado = false
-        }
-      }
       this.negocio = { ...neg }
       db.negocio.put(neg)
       await this.atualizarListagem()
@@ -2058,35 +1959,14 @@ export const negocioStore = defineStore('negocio', {
       })
     },
 
-    async excluirPagamento(uuid, motivo = null) {
+    async excluirPagamento(uuid) {
       return comLock(this.negocio?.uuid, async () => {
         await this.recarregar()
         const index = this.negocio.pagamentos.findIndex(function (item) {
           return item.uuid == uuid
         })
         if (index > -1) {
-          const [pag] = this.negocio.pagamentos.splice(index, 1)
-          if (motivo) {
-            const meio = MEIOS[pag.meio] ?? pag.meio
-            this.registrarOcorrencia({
-              tipo: TIPO.PAGAMENTO_EXCLUIDO,
-              uuidregistro: pag.uuid,
-              descricao: `Excluiu pagamento de R$ ${formataNumero(pag.total)} em ${meio}`,
-              valor: pag.total,
-              antes: {
-                uuid: pag.uuid,
-                meio: pag.meio,
-                principal: pag.principal,
-                desconto: pag.desconto,
-                valortroco: pag.valortroco,
-                total: pag.total,
-                autorizacao: pag.autorizacao ?? null,
-              },
-              depois: null,
-              motivo: motivo.motivo,
-              justificativa: motivo.justificativa || null,
-            })
-          }
+          this.negocio.pagamentos.splice(index, 1)
           // recalcula total por causa dos juros
           await this.recalcularValorTotal()
         }

@@ -13,7 +13,6 @@ import {
   visualPagamento,
 } from '@components/cobranca/pagamento.js'
 import LogoPagamento from '@components/cobranca/LogoPagamento.vue'
-import OcorrenciaMotivoDialog from './OcorrenciaMotivoDialog.vue'
 
 const sNegocio = negocioStore()
 
@@ -70,22 +69,6 @@ const podeExcluir = computed(() => {
 })
 
 const excluir = () => {
-  // PDV monitorado: o caixa diz o motivo e vai para o livro de ocorrencias (TASK-205)
-  if (!ehParcelas.value && sNegocio.monitorado) {
-    Dialog.create({
-      component: OcorrenciaMotivoDialog,
-      componentProps: {
-        titulo: 'Excluir pagamento',
-        mensagem: `${titulo.value} de R$ ${formataNumero(valor.value)}`,
-        okLabel: 'Excluir',
-        contexto: 'pagamento',
-      },
-    }).onOk(async (motivo) => {
-      await sNegocio.excluirPagamento(det.value.uuid, motivo)
-      sNegocio.dialog.pagamento = false
-    })
-    return
-  }
   Dialog.create({
     title: 'Excluir pagamento',
     message: `Excluir ${titulo.value} de R$ ${formataNumero(valor.value)}?`,

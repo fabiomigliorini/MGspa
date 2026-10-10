@@ -7,6 +7,7 @@ use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioParcela;
 use Mg\Negocio\NegocioParcelaService;
 use Mg\Negocio\NegocioService;
+use Mg\Ocorrencia\OcorrenciaPdvService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 
@@ -49,10 +50,12 @@ class PdvNegocioPagamentoService
             $uuids[] = $dados['uuid'];
             static::importarPagamento($negocio, $dados);
         }
-        foreach ($negocio->PagamentoS()->whereNotIn('uuid', $uuids)->get() as $pag) {
-            if ($pag->ehIntegrado() || $pag->estado != PagamentoService::ESTADO_PENDENTE) {
-                continue;
-            }
+        $apagados = $negocio->PagamentoS()->whereNotIn('uuid', $uuids)->get()->filter(
+            fn ($pag) => !$pag->ehIntegrado() && $pag->estado == PagamentoService::ESTADO_PENDENTE
+        );
+        // vai para o gerente antes de sumir (TASK-205)
+        OcorrenciaPdvService::pagamentosApagados($negocio, $apagados);
+        foreach ($apagados as $pag) {
             $pag->delete();
         }
 
@@ -61,10 +64,14 @@ class PdvNegocioPagamentoService
             $uuids[] = $dados['uuid'];
             static::importarParcela($negocio, $dados);
         }
-        $negocio->NegocioParcelaS()
+        $apagadas = $negocio->NegocioParcelaS()
             ->whereNull('codtitulo')
             ->whereNotIn('uuid', $uuids)
-            ->delete();
+            ->get();
+        OcorrenciaPdvService::parcelasApagadas($negocio, $apagadas);
+        foreach ($apagadas as $np) {
+            $np->delete();
+        }
     }
 
     public static function importarPagamento(Negocio $negocio, array $dados): Pagamento

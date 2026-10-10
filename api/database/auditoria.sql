@@ -4,7 +4,8 @@
 --   tblauditoria  — o que mudou (so' os campos relevantes que mudaram),
 --                   em qual registro (tabela + codigo, FK generica), o
 --                   tipo, a justificativa e quem/quando. Ninguem confere:
---                   o livro de ocorrencias (TASK-205) aponta para ela.
+--                   o livro de ocorrencias (TASK-205) amarra as que o
+--                   gerente precisa ver (tblocorrenciaauditoria, N:N).
 --
 -- No lugar de:
 --   tblpagamentocorrecao          — trilha da conferencia (conferencia.sql,
@@ -65,7 +66,10 @@ CREATE TABLE IF NOT EXISTS tblauditoria (
     tabela varchar(50) NOT NULL,
     codigo bigint NOT NULL,
     -- 1 data alterada, 2 data do cancelamento alterada, 3 corrigido na
-    -- conferencia, 4 registro indevido, 5 incluido na conferencia
+    -- conferencia, 4 registro indevido, 5 incluido na conferencia;
+    -- PDV monitorado (TASK-205): 6 item excluido, 7 quantidade alterada,
+    -- 8 preco diferente do cadastro, 9 vale compras excluido, 10 pagamento
+    -- apagado, 11 parcela apagada, 12 negocio cancelado, 13 estornado
     -- (constantes em Mg\Auditoria\AuditoriaService)
     tipo smallint NOT NULL,
     -- so' os campos relevantes que mudaram; antes nulo no incluido

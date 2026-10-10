@@ -12,6 +12,7 @@ use Mg\Conferencia\ConferenciaAutorizador;
 use Mg\Conferencia\ConferenciaService;
 use Mg\Conferencia\PagamentoCorrecaoService;
 use Mg\Maquineta\MaquinetaLoteService;
+use Mg\Ocorrencia\OcorrenciaService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 use Mg\Titulo\MovimentoTituloService;
@@ -161,7 +162,9 @@ class LancamentoDataService
 
     private static function registrarPagamento(Pagamento $pag, int $tipo, array $antes, string $justificativa): void
     {
-        AuditoriaService::registrar('tblpagamento', $pag->codpagamento, $tipo, $antes, static::fotoPagamento($pag), $justificativa);
+        $aud = AuditoriaService::registrar('tblpagamento', $pag->codpagamento, $tipo, $antes, static::fotoPagamento($pag), $justificativa);
+        // em PDV monitorado vai para o gerente conferir (TASK-205)
+        OcorrenciaService::correcao([$aud]);
     }
 
     // os periodos do portador onde o pagamento tem linha (antes de mudar)
@@ -330,6 +333,7 @@ class LancamentoDataService
         $linhas = static::linhas($mov);
         static::travar(array_map(fn ($l) => $l->codportador, $linhas));
         $mexidos = collect();
+        $auditorias = [];
         foreach ($linhas as $l) {
             $l->refresh();
             if ($l->estado == PortadorMovimento::ESTADO_CANCELADO) {
@@ -354,7 +358,7 @@ class LancamentoDataService
             $l->codportadorperiodo = $destino->codportadorperiodo;
             $l->save();
             $mexidos->push($l->codportadorperiodo);
-            AuditoriaService::registrar(
+            $auditorias[] = AuditoriaService::registrar(
                 'tblportadormovimento',
                 $l->codportadormovimento,
                 AuditoriaService::TIPO_DATA_ALTERADA,
@@ -363,6 +367,8 @@ class LancamentoDataService
                 $justificativa
             );
         }
+        // as duas pontas da transferencia sao uma correcao so' (TASK-205)
+        OcorrenciaService::correcao($auditorias);
         static::recalcular($mexidos);
         if (in_array($mov->tipo, [PortadorMovimento::TIPO_ITEM, PortadorMovimento::TIPO_MAQUINETA])) {
             CaixaItemService::recalcularSaldos($mov->codportador);

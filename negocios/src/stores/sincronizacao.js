@@ -50,8 +50,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       codsetor: null,
       observacoes: null,
       setor: null,
-      // livro de ocorrencias (TASK-205): a partir de quando o PDV e' monitorado
-      monitoramento: null,
     },
     importacao: {
       totalRegistros: null,
@@ -125,7 +123,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       this.pdv.codsetor = data.data.codsetor
       this.pdv.observacoes = data.data.observacoes
       this.pdv.setor = data.data.setor
-      this.pdv.monitoramento = data.data.monitoramento ?? null
     },
 
     async sincronizar() {

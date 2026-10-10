@@ -2,6 +2,7 @@
 
 namespace Mg\Ocorrencia;
 
+use Mg\Auditoria\Auditoria;
 use Mg\Filial\Filial;
 use Mg\MgModel;
 use Mg\Negocio\Negocio;
@@ -9,10 +10,10 @@ use Mg\Pdv\Pdv;
 use Mg\Usuario\Usuario;
 
 /**
- * Livro de ocorrencias (TASK-205): eventos do PDV que o gerente confere —
- * item removido, quantidade/preco diminuidos, pagamento excluido, negocio
- * cancelado, pagamento/vale estornado, desconto acima do permitido e negocio
- * esquecido. Codigos em OcorrenciaService.
+ * Livro de ocorrencias (TASK-205): o que o gerente confere do PDV
+ * monitorado. O fato (antes/depois, justificativa) fica na auditoria; a
+ * ocorrencia amarra as auditorias (N:N, tblocorrenciaauditoria) e guarda a
+ * descricao, o valor e a conferencia. Codigos em OcorrenciaService.
  */
 class Ocorrencia extends MgModel
 {
@@ -20,7 +21,6 @@ class Ocorrencia extends MgModel
     protected $primaryKey = 'codocorrencia';
 
     protected $fillable = [
-        'antes',
         'codfilial',
         'codigo',
         'codnegocio',
@@ -29,20 +29,15 @@ class Ocorrencia extends MgModel
         'codusuarioconferencia',
         'conferencia',
         'criacao',
-        'depois',
         'descricao',
-        'justificativa',
-        'motivo',
         'observacao',
         'tabela',
         'tipo',
-        'uuid',
         'valor',
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'antes' => 'array',
         'codfilial' => 'integer',
         'codigo' => 'integer',
         'codnegocio' => 'integer',
@@ -54,13 +49,17 @@ class Ocorrencia extends MgModel
         'codusuariocriacao' => 'integer',
         'conferencia' => 'datetime',
         'criacao' => 'datetime',
-        'depois' => 'array',
-        'motivo' => 'integer',
         'tipo' => 'integer',
         'valor' => 'float',
     ];
 
     // Chaves Estrangeiras
+    public function AuditoriaS()
+    {
+        return $this->belongsToMany(Auditoria::class, 'tblocorrenciaauditoria', 'codocorrencia', 'codauditoria')
+            ->orderBy('tblauditoria.codauditoria');
+    }
+
     public function Negocio()
     {
         return $this->belongsTo(Negocio::class, 'codnegocio', 'codnegocio');

@@ -8,6 +8,7 @@ use Mg\Caixa\CaixaService;
 use Mg\Maquineta\Maquineta;
 use Mg\Maquineta\MaquinetaLoteService;
 use Mg\Negocio\Negocio;
+use Mg\Ocorrencia\OcorrenciaService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 use Mg\Portador\PortadorMovimentoService;
@@ -41,7 +42,9 @@ class PagamentoCorrecaoService
 
     private static function registrar(Pagamento $pag, int $tipo, ?array $antes, string $justificativa): void
     {
-        AuditoriaService::registrar('tblpagamento', $pag->codpagamento, $tipo, $antes, static::foto($pag), $justificativa);
+        $aud = AuditoriaService::registrar('tblpagamento', $pag->codpagamento, $tipo, $antes, static::foto($pag), $justificativa);
+        // em PDV monitorado vai para o gerente conferir (TASK-205)
+        OcorrenciaService::correcao([$aud]);
     }
 
     private static function justificativa(?string $justificativa): string

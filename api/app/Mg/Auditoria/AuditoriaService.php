@@ -4,7 +4,8 @@ namespace Mg\Auditoria;
 
 /**
  * Auditoria (TASK-204): registra o que mudou num registro qualquer. Ninguem
- * confere; o livro de ocorrencias (TASK-205) aponta para ela.
+ * confere aqui: o livro de ocorrencias (TASK-205) amarra as auditorias que o
+ * gerente precisa ver (tblocorrenciaauditoria, N:N).
  */
 class AuditoriaService
 {
@@ -14,12 +15,30 @@ class AuditoriaService
     const TIPO_REGISTRO_INDEVIDO = 4;
     const TIPO_INCLUIDO_CONFERENCIA = 5;
 
+    // PDV monitorado (TASK-205)
+    const TIPO_ITEM_EXCLUIDO = 6;
+    const TIPO_QUANTIDADE_ALTERADA = 7;
+    const TIPO_PRECO_CADASTRO = 8;
+    const TIPO_VALE_EXCLUIDO = 9;
+    const TIPO_PAGAMENTO_APAGADO = 10;
+    const TIPO_PARCELA_APAGADA = 11;
+    const TIPO_NEGOCIO_CANCELADO = 12;
+    const TIPO_ESTORNADO = 13;
+
     const TIPOS = [
         self::TIPO_DATA_ALTERADA => 'Data alterada',
         self::TIPO_DATA_CANCELAMENTO_ALTERADA => 'Data do cancelamento alterada',
         self::TIPO_CORRIGIDO_CONFERENCIA => 'Corrigido na conferência',
         self::TIPO_REGISTRO_INDEVIDO => 'Registro indevido',
         self::TIPO_INCLUIDO_CONFERENCIA => 'Incluído na conferência',
+        self::TIPO_ITEM_EXCLUIDO => 'Item excluído',
+        self::TIPO_QUANTIDADE_ALTERADA => 'Quantidade alterada',
+        self::TIPO_PRECO_CADASTRO => 'Preço diferente do cadastro',
+        self::TIPO_VALE_EXCLUIDO => 'Vale compras excluído',
+        self::TIPO_PAGAMENTO_APAGADO => 'Pagamento apagado',
+        self::TIPO_PARCELA_APAGADA => 'Parcela apagada',
+        self::TIPO_NEGOCIO_CANCELADO => 'Negócio cancelado',
+        self::TIPO_ESTORNADO => 'Estornado',
     ];
 
     // `antes` nulo: o registro nasceu (fica o `depois` com o que foi

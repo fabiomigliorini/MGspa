@@ -18,6 +18,7 @@ use Mg\Negocio\NegocioValeProdutoBarra;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalStatusService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
+use Mg\Ocorrencia\OcorrenciaPdvService;
 use Mg\Ocorrencia\OcorrenciaService;
 use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Titulo\TituloService;
@@ -216,6 +217,8 @@ class PdvNegocioService
             if (!empty($npb->codnegocio) && $npb->codnegocio != $negocio->codnegocio) {
                 throw new Exception("Tentando atualizar um item de outro negocio {$npb->codnegocio}/{$negocio->codnegocio}!", 1);
             }
+            // quantidade menor que a gravada vai para o gerente (TASK-205)
+            OcorrenciaPdvService::quantidadeAlterada($negocio, $npb, $item);
             $npb->fill($item);
             $npb->codnegocio = $negocio->codnegocio;
             $npb->save();
@@ -229,9 +232,6 @@ class PdvNegocioService
         // importa os pagamentos e as parcelas (M5 doc-3); o desconto do
         // pagamento ja' vem rateado no valordesconto dos itens e vales
         PdvNegocioPagamentoService::importar($negocio, $data['pagamentos'] ?? [], $data['parcelas'] ?? []);
-
-        // o que o caixa removeu ou diminuiu, com o motivo (TASK-205)
-        OcorrenciaService::importarDoPdv($negocio, $data['ocorrencias'] ?? []);
 
         if (!static::confereTotais($negocio)) {
             throw new Exception('Total do Negócio não bate com o Total dos Itens! Tente transmitir novamente para o servidor (Botão Roxo)!', 1);
@@ -272,9 +272,6 @@ class PdvNegocioService
         $negocio->fill($data);
         $negocio->codfilial = $negocio->EstoqueLocal->codfilial;
         $negocio->save();
-
-        // ocorrencia registrada antes de fechar que nao tinha chegado
-        OcorrenciaService::importarDoPdv($negocio, $data['ocorrencias'] ?? []);
 
         foreach (NegocioParcelaService::titulos($negocio) as $titulo) {
             $titulo->codpessoa = $negocio->codpessoa;
@@ -487,8 +484,9 @@ class PdvNegocioService
             $negocio->save();
         }
 
-        // desconto acima do permitido vai para o gerente conferir (TASK-205)
-        OcorrenciaService::descontoNoFechamento($negocio);
+        // o que o gerente confere: item e vale excluidos, preco fora do
+        // cadastro, saida sem financeiro e desconto acima (TASK-205)
+        OcorrenciaPdvService::noFechamento($negocio);
 
         // salva transacao no banco de dados
         DB::commit();
