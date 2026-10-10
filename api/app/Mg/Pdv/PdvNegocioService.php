@@ -14,6 +14,7 @@ use Mg\Pagamento\PagamentoService;
 use Mg\Pagamento\PagamentoTituloService;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioService;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Negocio\NegocioVale;
 use Mg\Negocio\NegocioValeProdutoBarra;
 use Mg\NotaFiscal\NotaFiscalService;
@@ -484,6 +485,13 @@ class PdvNegocioService
             $negocio->lancamento = Carbon::now();
         }
         $negocio->save();
+        AuditoriaService::registrar(
+            'tblnegocio',
+            $negocio->codnegocio,
+            AuditoriaService::TIPO_NEGOCIO_FECHADO,
+            ['codnegociostatus' => NegocioService::STATUS_ABERTO],
+            ['codnegociostatus' => NegocioService::STATUS_FECHADO]
+        );
 
         // gera titulos do financeiro
         if ($negocio->NaturezaOperacao->financeiro) {

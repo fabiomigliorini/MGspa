@@ -615,7 +615,7 @@ class OcorrenciaService
             )';
         }
         $regs = DB::select(
-            static::sqlLinha() . ' where ' . implode(' or ', $where) . ' order by o.criacao, o.codocorrencia',
+            static::sqlLinha() . ' where ' . implode(' or ', $where) . ' order by o.criacao desc, o.codocorrencia desc',
             ['tabela' => $tabela]
         );
         $auditorias = static::auditoriasDe(array_column($regs, 'codocorrencia'));

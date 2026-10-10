@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Exception;
 
+use Mg\Auditoria\AuditoriaService;
 use Mg\Pagamento\PagamentoService;
 use Mg\Pdv\PdvNegocioService;
 use Mg\Rh\ProcessarVendaJob;
@@ -109,6 +110,13 @@ class NegocioService
             'codusuario' => Auth::user()->codusuario??$negocio->codusuario,
             'lancamento' => Carbon::now()
         ]);
+        AuditoriaService::registrar(
+            'tblnegocio',
+            $negocio->codnegocio,
+            AuditoriaService::TIPO_NEGOCIO_FECHADO,
+            ['codnegociostatus' => static::STATUS_ABERTO],
+            ['codnegociostatus' => static::STATUS_FECHADO]
+        );
 
         // Dispara processamento de indicadores RH
         ProcessarVendaJob::dispatch($negocio->codnegocio);

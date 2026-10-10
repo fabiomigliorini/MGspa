@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-10 19:57'
-updated_date: '2026-10-10 21:06'
+updated_date: '2026-10-10 21:29'
 labels:
   - negocios
 dependencies: []
@@ -29,6 +29,11 @@ Proposta: o Reabrir pede justificativa (gravada na tblauditoria, coluna justific
 - [x] #3 No negócio, o histórico traz também a auditoria dos itens, pagamentos, parcelas e vales
 - [x] #4 Botão do histórico no PDV, visível para todos os usuários
 - [x] #5 Tela da ocorrência no contas mostra todas as auditorias amarradas a ela
+- [x] #6 Fechar o negócio (F3, fechamento automático por pagamento e devolução) grava Negócio fechado no histórico
+- [x] #7 No histórico, o quadro de Ocorrências fica em cima da Auditoria
+- [x] #8 No histórico do negócio, a ocorrência não mostra o botão de abrir o negócio
+- [x] #9 No histórico, ocorrências e auditoria da mais nova para a mais velha, e a ocorrência abre a tela dela no contas
+- [x] #10 No histórico com muita coisa, o canto do dialog continua arredondado (rola o conteúdo, não o card)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -47,4 +52,14 @@ Card da ocorrência num componente só (10/10/2026): @components/MgOcorrenciaIte
 Tela da ocorrência no contas (10/10/2026, AC #5): GET v1/ocorrencia/{id} -> OcorrenciaController@show (mesma trava de filial do conferir: ConferenciaAutorizador::autorizar) -> OcorrenciaService::carregar, que já devolvia as auditorias amarradas (tblocorrenciaauditoria). Página contas/src/pages/ocorrencia/Detalhe.vue (rota ocorrencia-detalhe, /ocorrencia/:codocorrencia): cabeçalho com voltar, #código e tipo, e as ações (abrir negócio, conferir com observação, reabrir); card da ocorrência (MgOcorrenciaItem) e card Auditoria com todas as amarradas, ou MgEmptyState para as de estado (esquecido, desconto acima, sem financeiro). Na lista /ocorrencia, clicar na linha abre a tela da ocorrência; conferir e reabrir continuam na linha. Linha da auditoria virou @components/MgAuditoriaItem.vue (tipo, usuário, data, justificativa, campo: antes → depois), usada aqui e no MgHistorico. Store: ocorrencia + carregar(); conferir/reabrir atualizam também a ocorrência aberta.
 
 Testado em dev: GET 301 (3 auditorias, pagamentos apagados) 200; 260 (desconto acima) 200 sem auditoria; 999999 404; usuário sem grupo 403. Front: prettier/eslint ok; dev server do contas (8086) compila Detalhe, Index, store, routes, MgAuditoriaItem; MgHistorico compilado pelo compiler-sfc. Tela não exercitada no navegador.
+
+Ajustes (10/10/2026, pedido do Fábio):
+- Negócio fechado no histórico: auditoria tipo 20 (AuditoriaService::TIPO_NEGOCIO_FECHADO, status 1 -> 2) em todo fechamento: F3 do PDV (PdvNegocioService::fechar, inclusive o F3 da reaberta), NegocioService::fechar (fecharSePago de PIX/LIO/PagarMe/Saurus sem PDV) e a devolução, que já nasce fechada (antes nulo). Só vale para os fechamentos daqui para frente.
+- MgHistorico: quadro de Ocorrências em cima da Auditoria.
+- MgOcorrenciaItem ganhou a prop link-negocio (padrão true); o MgHistorico desliga quando a tabela é tblnegocio (já se está no negócio).
+Testado: tipo 20 gravado e lido pelo histórico (transação desfeita). O F3 não foi rodado pelo tinker porque chama o MGLara (estoque) e dispara job do RH; testar pela tela. Front: prettier/eslint ok e Vite compila MgHistorico/MgOcorrenciaItem no negocios e no contas.
+
+Ordem e link (10/10/2026): AuditoriaService::historico e OcorrenciaService::historico ordenam por criacao desc (empate pelo código desc). No MgHistorico a ocorrência é clickable com href para CONTAS_URL/ocorrencia/{cod} (tela Detalhe do contas), em outra aba; os atributos passam direto para o q-item do MgOcorrenciaItem, como no painel. A tela da ocorrência é só de Gerente/Financeiro/Admin: quem não é cai na recusa de permissão do contas.
+
+Canto do dialog (10/10/2026, AC #10): com o histórico mais alto que a tela, quem rolava era o próprio card (.q-dialog__inner > div tem overflow auto) e a barra nativa do Chromium, retangular e fora do recorte do border-radius, deixava o canto superior direito quadrado. Agora rola a q-card-section do conteúdo (class scroll, max-height 60vh), como em CardDependentes/TransferirCaixaDialog; o título e o Fechar ficam fixos.
 <!-- SECTION:NOTES:END -->

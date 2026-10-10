@@ -1,13 +1,18 @@
 <script setup>
 // Uma ocorrência do livro (TASK-205) como linha de q-list: o que aconteceu, quem, onde, quando,
 // o valor e a conferência. É a mesma em toda tela que mostra ocorrência. Do negócio, o botão abre
-// o negócio em outra aba; outras ações de quem usa entram pelo slot `acoes`, embaixo do valor.
+// o negócio em outra aba (`:link-negocio="false"` esconde, para quem já está no negócio); outras
+// ações de quem usa entram pelo slot `acoes`, embaixo do valor.
+import { computed } from 'vue'
 import { formataNumero, formataTimestamp } from '@components/formatters'
 import { visual } from '@components/ocorrencia.js'
 
-defineProps({
+const props = defineProps({
   ocorrencia: { type: Object, required: true },
+  linkNegocio: { type: Boolean, default: true },
 })
+
+const mostraNegocio = computed(() => props.linkNegocio && !!props.ocorrencia.codnegocio)
 
 const urlNegocio = (codnegocio) => `${process.env.NEGOCIOS_URL}/negocio/${codnegocio}`
 </script>
@@ -45,9 +50,9 @@ const urlNegocio = (codnegocio) => `${process.env.NEGOCIOS_URL}/negocio/${codneg
       <q-item-label class="text-weight-bold text-grey-9">
         R$ {{ formataNumero(ocorrencia.valor) }}
       </q-item-label>
-      <div v-if="ocorrencia.codnegocio || $slots.acoes" class="q-mt-xs">
+      <div v-if="mostraNegocio || $slots.acoes" class="q-mt-xs">
         <q-btn
-          v-if="ocorrencia.codnegocio"
+          v-if="mostraNegocio"
           flat
           round
           size="sm"

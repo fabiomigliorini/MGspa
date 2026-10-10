@@ -37,6 +37,8 @@ class AuditoriaService
     const TIPO_PAGAMENTO_REATIVADO = 17;
     const TIPO_PARCELA_INATIVADA_REABERTURA = 18;
     const TIPO_PARCELA_REATIVADA = 19;
+    // todo fechamento, inclusive o da reaberta (TASK-209)
+    const TIPO_NEGOCIO_FECHADO = 20;
 
     const TIPOS = [
         self::TIPO_DATA_ALTERADA => 'Data alterada',
@@ -58,6 +60,7 @@ class AuditoriaService
         self::TIPO_PAGAMENTO_REATIVADO => 'Pagamento reativado',
         self::TIPO_PARCELA_INATIVADA_REABERTURA => 'Parcela inativada na reabertura',
         self::TIPO_PARCELA_REATIVADA => 'Parcela reativada',
+        self::TIPO_NEGOCIO_FECHADO => 'Negócio fechado',
     ];
 
     // o historico do registro traz tambem a auditoria destes filhos (TASK-209);
@@ -160,7 +163,7 @@ class AuditoriaService
                 from tblauditoria a
                 left join tblusuario u on (u.codusuario = a.codusuariocriacao)
                 where a.codauditoria in (' . implode(',', array_map('intval', array_unique($codauditorias))) . ')
-                order by a.criacao, a.codauditoria
+                order by a.criacao desc, a.codauditoria desc
             ');
         }
         return [
