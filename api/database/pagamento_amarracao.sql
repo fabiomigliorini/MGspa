@@ -10,10 +10,12 @@
 --      para ninguem travar no go-live: toda permissao do dinheiro passa a
 --      ser o papel do usuario no portador (doc-4) — receber num portador =
 --      depositante; tirar, desamarrar, cancelar, corrigir = operador; alterar
---      data = gestor. O PDV so' pre-seleciona a gaveta. Completa o que o
---      portador_movimento_tipo.sql ja' cadastrou (caixa operador na gaveta,
---      gerente gestor na especie da filial, financeiro gestor no resto). So'
---      insere o par portador+usuario que nao existe; nunca rebaixa nem apaga.
+--      data = gestor. O PDV so' pre-seleciona a gaveta. Refaz por PAR
+--      portador+usuario o que o portador_movimento_tipo.sql cadastrou (la'
+--      so' entrava portador sem ninguem, e caixas ficaram sem a gaveta):
+--      caixa operador na gaveta da filial (depositante no resto da especie),
+--      gerente gestor na especie da filial, financeiro gestor no resto. So'
+--      insere o par que nao existe; nunca rebaixa nem apaga.
 --        Caixa da filial    -> depositante nas adquirentes (cartao), na
 --                              Carteira (cheque) e nos bancos da filial (PIX QR)
 --        Gerente da filial  -> depositante nas adquirentes, na Carteira e nos
@@ -51,6 +53,15 @@ SELECT r.codportador, r.codusuario, (ARRAY['D', 'O', 'G'])[max(r.nivel)]
 FROM (
     SELECT po.codportador, guu.codusuario,
         CASE
+            -- os papeis do portador_movimento_tipo.sql, agora por par
+            -- portador+usuario (la' so' entrava portador sem ninguem): sem a
+            -- gaveta livre pelo PDV, o caixa precisa ser operador na gaveta
+            WHEN po.tipo = 'E' AND po.codportador <> 100 AND gu.grupousuario = 'Gerente'
+                AND guu.codfilial = po.codfilial THEN 3
+            WHEN po.tipo = 'E' AND po.codportador <> 100 AND gu.grupousuario = 'Caixa'
+                AND guu.codfilial = po.codfilial
+                THEN CASE WHEN EXISTS (SELECT 1 FROM tblpdv d WHERE d.codportador = po.codportador) THEN 2 ELSE 1 END
+            WHEN (po.tipo <> 'E' OR po.codportador = 100) AND gu.grupousuario = 'Financeiro' THEN 3
             -- caixa e gerente: recebem cartao, cheque e PIX QR
             WHEN gu.grupousuario IN ('Caixa', 'Gerente') AND po.tipo = 'A' THEN 1
             WHEN gu.grupousuario IN ('Caixa', 'Gerente') AND po.codportador = 999 THEN 1
