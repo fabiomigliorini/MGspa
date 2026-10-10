@@ -7,6 +7,7 @@ import { api } from 'src/boot/axios'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 
 const sProduto = produtoStore()
 const sSinc = sincronizacaoStore()
@@ -598,8 +599,8 @@ const alterarCategoriaPai = (codpranchetacategorianova) => {
 </script>
 <template>
   <q-page class="bg-grey-2">
-    <div>
-      <q-card flat bordered class="q-ma-md col-xs-11 col-sm-5 col-md-4 col-lg-3 col-xl-2">
+    <div class="q-pa-md" style="max-width: 1086px; margin: auto">
+      <q-card flat bordered>
         <q-card-section>
           <q-splitter v-model="splitterModel" style="height: 79vh">
             <template v-slot:before>
@@ -636,7 +637,7 @@ const alterarCategoriaPai = (codpranchetacategorianova) => {
                   <div class="row">
                     <div class="col" style="max-width: 350px">
                       <q-form class="q-gutter-md" v-if="categoria">
-                        <q-select
+                        <MgSelect
                           outlined
                           v-model="categoria.codpranchetacategoriapai"
                           :options="listagemCategorias"
@@ -713,7 +714,7 @@ const alterarCategoriaPai = (codpranchetacategorianova) => {
                   <div class="row">
                     <div class="col" style="max-width: 350px">
                       <q-form v-if="produto" class="q-gutter-md">
-                        <q-select
+                        <MgSelect
                           outlined
                           v-model="produto.codpranchetacategoria"
                           :options="listagemCategorias"
