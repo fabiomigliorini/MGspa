@@ -11,7 +11,6 @@ use Mg\Negocio\NegocioResource;
 use Mg\Negocio\NegocioListagemResource;
 use Mg\Negocio\NegocioComandaService;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioService;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
 use Mg\Pagamento\CobrancaService;
@@ -364,64 +363,23 @@ class PdvController
         PdvService::autoriza($request->pdv);
 
         $qry = Negocio::query();
-
-        foreach ($request->all() as $filtro => $valor) {
-            if (empty($valor)) {
-                continue;
-            }
-            switch ($filtro) {
-                case 'valor_de':
-                    $qry->where('valortotal', '>=', $valor);
-                    break;
-                case 'valor_ate':
-                    $qry->where('valortotal', '<=', $valor);
-                    break;
-                case 'lancamento_de':
-                    $qry->where('lancamento', '>=', $valor);
-                    break;
-                case 'lancamento_ate':
-                    $qry->where('lancamento', '<=', $valor);
-                    break;
-                case 'codnegocio':
-                    $qry->where('codnegocio', $valor);
-                    break;
-                case 'codestoquelocal':
-                    $qry->where('codestoquelocal', $valor);
-                    break;
-                case 'codnegociostatus':
-                    // R: a venda reaberta, aberta de novo (TASK-30)
-                    if ($valor === 'R') {
-                        $qry->where('codnegociostatus', NegocioService::STATUS_ABERTO)->whereNotNull('reabertura');
-                        break;
-                    }
-                    $qry->where('codnegociostatus', $valor);
-                    break;
-                case 'codnaturezaoperacao':
-                    $qry->where('codnaturezaoperacao', $valor);
-                    break;
-                case 'codpessoa':
-                    $qry->where('codpessoa', $valor);
-                    break;
-                case 'codpessoavendedor':
-                    $qry->where('codpessoavendedor', $valor);
-                    break;
-                case 'codpessoatransportador':
-                    $qry->where('codpessoatransportador', $valor);
-                    break;
-                case 'codpdv':
-                    $qry->where('codpdv', $valor);
-                    break;
-                case 'codusuario':
-                    $qry->where('codusuario', $valor);
-                    break;
-                case 'pdv':
-                    break;
-                default:
-                    break;
-            }
-        }
+        PdvNegocioListagemService::filtrar($qry, $request->all());
         $qry->orderBy('lancamento', 'desc')->orderBy('codnegocio', 'desc');
         return NegocioListagemResource::collection($qry->paginate(100));
+    }
+
+    // Relatorio de negocios do MGsis, com os filtros da listagem (TASK-189)
+    public function relatorioNegocios(PdvRequest $request)
+    {
+        PdvService::autoriza($request->pdv);
+        $filtros = $request->all();
+        if ($request->boolean('html')) {
+            return response(PdvNegocioRelatorioService::html($filtros), 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+        }
+        return response(PdvNegocioRelatorioService::pdf($filtros), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="negocios.pdf"',
+        ]);
     }
 
     public function getOrcamentos(PdvRequest $request)

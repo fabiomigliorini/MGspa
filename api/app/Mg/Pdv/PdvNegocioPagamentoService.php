@@ -388,4 +388,19 @@ class PdvNegocioPagamentoService
             );
         }
     }
+
+    // Integrado = pagamento de integracao (Pagamento::ehIntegrado); Manual =
+    // pagamento lancado na mao ou parcela
+    public static function filtroIntegracao($query, bool $integrado): void
+    {
+        $integracao = 'coalesce(codpixcob, codpagarmepedido, codsauruspedido, codliopedido) is not null';
+        $query->select('codnegocio')->from('tblpagamento')->whereNotNull('codnegocio')
+            ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
+            ->whereRaw($integrado ? $integracao : "not ({$integracao})");
+        if (!$integrado) {
+            $query->union(
+                \DB::table('tblnegocioparcela')->select('codnegocio')->whereNull('inativo')
+            );
+        }
+    }
 }

@@ -902,6 +902,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::put('prancheta', '\Mg\Pdv\PdvController@putPrancheta');
         Route::put('negocio', '\Mg\Pdv\PdvController@putNegocio');
         Route::get('negocio', '\Mg\Pdv\PdvController@getNegocios');
+        Route::get('negocio/relatorio', '\Mg\Pdv\PdvController@relatorioNegocios');
         Route::get('negocio/{codnegocio}', '\Mg\Pdv\PdvController@getNegocio');
         Route::delete('negocio/{codnegocio}', '\Mg\Pdv\PdvController@deleteNegocio');
         Route::post('negocio/{codnegocio}/apropriar', '\Mg\Pdv\PdvController@apropriar');
