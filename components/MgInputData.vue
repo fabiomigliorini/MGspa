@@ -289,7 +289,12 @@ function onTimeKeydown(e, part, isFirst, isLast) {
       return;
     }
     if (!e.shiftKey && isLast) {
+      // sai da hora para o próximo campo do formulário: o calendário fecha e devolveria o foco
+      // para a data (reabrindo-o); o foco vai direto ao campo seguinte
+      e.preventDefault();
+      proximoCampo.value = proximoFocavel(inputRef.value?.nativeEl);
       popupRef.value?.hide();
+      focarProximo();
     }
     return;
   }
@@ -339,8 +344,36 @@ function selectAllInput() {
   }
 }
 
+// o campo depois deste no formulário (o mesmo dialog/card), fora do calendário
+const proximoCampo = ref(null);
+function proximoFocavel(el) {
+  if (!el) return null;
+  const seletor =
+    'input:not([disabled]):not([tabindex="-1"]), textarea:not([disabled]), button:not([disabled]):not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+  const escopo = el.closest(".q-dialog__inner, form, .q-card") ?? document;
+  const todos = [...escopo.querySelectorAll(seletor)].filter(
+    (x) => x.offsetParent !== null && !x.closest(".q-menu"),
+  );
+  const i = todos.indexOf(el);
+  return i >= 0 ? (todos[i + 1] ?? null) : null;
+}
+function focarProximo() {
+  const alvo = proximoCampo.value;
+  if (!alvo) return;
+  nextTick(() => alvo.focus?.());
+  // o calendário, ao fechar, devolve o foco para a data: manda de novo para o próximo
+  setTimeout(() => {
+    if (proximoCampo.value === alvo) {
+      proximoCampo.value = null;
+      if (document.activeElement !== alvo) alvo.focus?.();
+    }
+  }, 350);
+}
+
 function onFocus() {
   if (props.readonly) return;
+  // voltou para a data só porque o calendário fechou: não reabre
+  if (proximoCampo.value) return;
   selectAllInput();
   popupOpen.value = true;
   popupRef.value?.show();

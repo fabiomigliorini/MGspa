@@ -399,7 +399,9 @@ const cancelar = () => {
                   pag.desamarravel &&
                   !m.estornado &&
                   Number(pag.meio) !== 91 &&
-                  pag.movimentos.filter((x) => !x.estornado).length > 1
+                  pag.movimentos.filter((x) => !x.estornado).length > 1 &&
+                  new Set(pag.movimentos.filter((x) => !x.estornado).map((x) => x.operacao))
+                    .size === 1
                 "
               >
                 <q-btn

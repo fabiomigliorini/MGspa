@@ -298,7 +298,7 @@ class PagamentoPendenciaService
             ->map(fn ($p) => [
                 'codpagamento' => (int) $p->codpagamento,
                 'meiodescricao' => PagamentoService::descricao($p),
-                'transacao' => $p->transacao,
+                'transacao' => optional($p->transacao)->format('Y-m-d\TH:i:s'),
                 'total' => (float) $p->total,
                 'maquineta' => optional($p->Maquineta)->apelido,
                 'autorizacao' => $p->autorizacao,

@@ -196,6 +196,11 @@ const irParaForma = () => {
 // dinheiro recebido: o operador digita o que recebeu (campo focado, vazio); demais: saldo
 const prepararValor = () => {
   editandoDesconto.value = false
+  // valor travado: ao (re)entrar numa forma volta ao valor do documento (o dinheiro digitado
+  // numa forma não fica na outra)
+  if (sCobranca.valorFixo) {
+    sCobranca.valor = saldo.value
+  }
   desconto.value = comDesconto.value
     ? arredonda((saldo.value * formaAtual.value.desconto) / 100)
     : 0

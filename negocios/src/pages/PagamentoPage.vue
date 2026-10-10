@@ -103,7 +103,7 @@ const recibo = async (pag) => {
               <q-btn
                 v-if="
                   pagamento.estado !== 'C' &&
-                  pagamento.movimentos?.length &&
+                  pagamento.movimentos?.some((m) => !m.estornado) &&
                   sNegocio.padrao.impressora
                 "
                 flat

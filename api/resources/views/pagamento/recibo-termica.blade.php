@@ -12,8 +12,10 @@
     // vale colaborador / adiantamento lancado no PDV (M8): o pagamento nasceu com o titulo
     $lancados = [];
     foreach ($pags as $pag) {
+        // a baixa desamarrada (estornada) nao entra no recibo
+        $estornadas = $pag->MovimentoTituloS->pluck('codmovimentotituloestorno')->filter()->all();
         foreach ($pag->MovimentoTituloS as $mov) {
-            if ($mov->ehEstorno() || !$mov->Titulo) {
+            if ($mov->ehEstorno() || !$mov->Titulo || in_array($mov->codmovimentotitulo, $estornadas)) {
                 continue;
             }
             if ($mov->codtipomovimentotitulo == \Mg\Titulo\MovimentoTituloService::TIPO_IMPLANTACAO) {

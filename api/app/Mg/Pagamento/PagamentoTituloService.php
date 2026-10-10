@@ -591,11 +591,12 @@ class PagamentoTituloService
             abort(422, 'Pagamento de acerto de RH: estorne pelo acerto.');
         }
         $ativos = PagamentoPendenciaService::movimentosAtivos($pag);
-        // encontro de contas e compensacao: os titulos se pagam entre si,
-        // desamarrar e' tudo ou nada
-        if ($codmovimentos !== null && $pag->meio == PagamentoService::MEIO_COMPENSACAO
-            && count(array_unique($codmovimentos)) < $ativos->count()) {
-            abort(422, 'Encontro de contas se desamarra inteiro: os títulos se pagam entre si.');
+        // encontro de contas, compensacao e pagamento de titulos a receber e a
+        // pagar juntos: os titulos se pagam entre si, desamarrar e' tudo ou nada
+        $sentidos = $ativos->map(fn ($m) => (float) $m->total < 0 ? -1 : 1)->unique()->count();
+        if ($codmovimentos !== null && count(array_unique($codmovimentos)) < $ativos->count()
+            && ($pag->meio == PagamentoService::MEIO_COMPENSACAO || $sentidos > 1)) {
+            abort(422, 'Estes títulos se pagam entre si (a receber e a pagar): desamarre todos juntos.');
         }
         if ($codmovimentos !== null) {
             $ativos = $ativos->whereIn('codmovimentotitulo', array_map('intval', $codmovimentos));
