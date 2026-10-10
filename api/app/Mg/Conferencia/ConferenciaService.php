@@ -30,9 +30,27 @@ class ConferenciaService
         return Carbon::parse(config('mg.conferencia_inicio'))->startOfDay();
     }
 
+    // venda reaberta (TASK-30): na sincronizacao o pagamento so' muda de
+    // estado; lote e sessao ficam para o F3, que reconcilia
+    private static bool $adiado = false;
+
+    public static function semVincular(callable $fn)
+    {
+        $antes = static::$adiado;
+        static::$adiado = true;
+        try {
+            return $fn();
+        } finally {
+            static::$adiado = $antes;
+        }
+    }
+
     // saving do Pagamento: cartao no lote, dinheiro na sessao da gaveta
     public static function vincular(Pagamento $pag): void
     {
+        if (static::$adiado) {
+            return;
+        }
         $transacao = $pag->transacao ? Carbon::parse($pag->transacao) : Carbon::now();
         if ($transacao->lt(static::inicio())) {
             return;
@@ -122,7 +140,7 @@ class ConferenciaService
         foreach (DB::select("
             select n.codnegocio, n.lancamento, n.valortotal, n.codfilial, f.filial, pe.fantasia, pdv.apelido as pdv,
                 (select sum(np.valor) from tblnegocioparcela np where np.codnegocio = n.codnegocio
-                    and np.condicao in ('F', 'P', 'B')) as valorprazo
+                    and np.condicao in ('F', 'P', 'B') and np.inativo is null) as valorprazo
             from tblnegocio n
             inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
             left join tblfilial f on (f.codfilial = n.codfilial)
@@ -136,6 +154,7 @@ class ConferenciaService
                 select 1 from tblnegocioparcela np
                 where np.codnegocio = n.codnegocio
                 and np.condicao in ('F', 'P', 'B')
+                and np.inativo is null
             )
             {$where}
             order by n.lancamento
@@ -179,6 +198,7 @@ class ConferenciaService
                 left join tblfilial f on (f.codfilial = t.codfilial)
                 left join tblpessoa pe on (pe.codpessoa = t.codpessoa)
                 where np.condicao = 'X'
+                and np.inativo is null
                 and t.saldo <> 0
                 and n.lancamento >= :inicio
                 {$where}

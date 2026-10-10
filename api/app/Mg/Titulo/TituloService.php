@@ -274,7 +274,9 @@ class TituloService
         }
     }
 
-    private static function aplicarSufixoNumero(Titulo $titulo): void
+    // o numero ja' usado pela pessoa ganha " (1)", " (2)"... (o titulo da
+    // venda reaberta que nasce de novo, com o estornado ainda la', TASK-30)
+    public static function aplicarSufixoNumero(Titulo $titulo): void
     {
         if (empty($titulo->numero) || empty($titulo->codpessoa)) return;
         $base = $titulo->numero;

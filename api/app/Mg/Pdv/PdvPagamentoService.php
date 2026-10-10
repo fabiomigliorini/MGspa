@@ -94,7 +94,8 @@ class PdvPagamentoService
         if ($negocio->codnegociostatus != NegocioService::STATUS_ABERTO) {
             abort(422, 'Só se amarra pagamento em venda aberta!');
         }
-        if (!empty($negocio->codpdv) && $negocio->codpdv != $pdv->codpdv) {
+        // a venda reaberta se edita de qualquer PDV (mantem o PDV original, TASK-30)
+        if (!empty($negocio->codpdv) && $negocio->codpdv != $pdv->codpdv && !PdvNegocioReaberturaService::reaberto($negocio)) {
             abort(422, 'Venda de outro PDV!');
         }
         $pag = Pagamento::lockForUpdate()->findOrFail($codpagamento);

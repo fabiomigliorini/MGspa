@@ -22,7 +22,7 @@ class VendaConferenciaService
                 then -p.total else p.total end)
             from tblpagamento p
             where p.codnegocio = n.codnegocio and p.estado = 'E'), 0)
-        + coalesce((select sum(np.valor) from tblnegocioparcela np where np.codnegocio = n.codnegocio), 0)
+        + coalesce((select sum(np.valor) from tblnegocioparcela np where np.codnegocio = n.codnegocio and np.inativo is null), 0)
     ";
 
     public static function desbalanceadas(?array $filiais): array

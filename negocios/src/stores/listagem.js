@@ -44,6 +44,11 @@ export const listagemStore = defineStore('listagem', {
           label: 'Cancelado',
           value: 3,
         },
+        // venda fechada que o gerente reabriu e ainda não fechou de novo
+        {
+          label: 'Reaberto',
+          value: 'R',
+        },
       ],
     },
     filtro: {},

@@ -182,7 +182,10 @@ class PdvValeEscopoService
      */
     public static function reconferirSaldos(Negocio $negocio)
     {
-        $nfps = PdvNegocioPrazoService::pagamentosVale($negocio);
+        // o vale que ja' tem a baixa ativa (venda reaberta, TASK-30) ja' saiu
+        // do saldo: conferir de novo contaria duas vezes
+        $nfps = PdvNegocioPrazoService::pagamentosVale($negocio)
+            ->filter(fn ($nfp) => !PdvNegocioPrazoService::amortizacaoAtiva($nfp));
 
         if ($nfps->isEmpty()) {
             return;

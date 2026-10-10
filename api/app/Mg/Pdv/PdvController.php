@@ -10,6 +10,7 @@ use Mg\Negocio\NegocioResource;
 use Mg\Negocio\NegocioListagemResource;
 use Mg\Negocio\NegocioComandaService;
 use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioService;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
 use Mg\Pagamento\CobrancaService;
@@ -335,6 +336,11 @@ class PdvController
                     $qry->where('codestoquelocal', $valor);
                     break;
                 case 'codnegociostatus':
+                    // R: a venda reaberta, aberta de novo (TASK-30)
+                    if ($valor === 'R') {
+                        $qry->where('codnegociostatus', NegocioService::STATUS_ABERTO)->whereNotNull('reabertura');
+                        break;
+                    }
                     $qry->where('codnegociostatus', $valor);
                     break;
                 case 'codnaturezaoperacao':
@@ -383,6 +389,16 @@ class PdvController
             ImprimirValesNegocioJob::dispatch($negocio->codnegocio, $request->impressora)->onQueue('high');
         }
         return new NegocioResource($negocio);
+    }
+
+    // venda fechada reaberta pelo gerente (TASK-30): so' reabre; quem
+    // reconcilia o resto e' o F3
+    public function reabrirNegocio(PdvRequest $request, $codnegocio)
+    {
+        PdvService::autoriza($request->pdv);
+        $negocio = Negocio::findOrFail($codnegocio);
+        $negocio = DB::transaction(fn () => PdvNegocioReaberturaService::reabrir($negocio));
+        return new NegocioResource($negocio->fresh());
     }
 
     public function apropriar(PdvRequest $request, $codnegocio)

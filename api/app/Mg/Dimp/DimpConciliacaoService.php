@@ -210,6 +210,7 @@ class DimpConciliacaoService
                    sum(np.valor) as valortotal,
                    null as valortroco
             from tblnegocioparcela np
+            where np.inativo is null
             group by np.codnegocio, np.condicao
         )";
     }

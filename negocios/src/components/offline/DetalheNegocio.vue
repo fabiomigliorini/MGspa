@@ -285,6 +285,9 @@ const apropriar = () => {
         <q-item-label caption>
           {{ formataTimestampCompleto(sNegocio.negocio.lancamento) }}
         </q-item-label>
+        <q-item-label caption v-if="sNegocio.reaberto" class="text-warning">
+          Reaberto em {{ formataTimestampCompleto(sNegocio.negocio.reabertura) }}
+        </q-item-label>
       </q-item-section>
     </q-item>
 
@@ -518,7 +521,8 @@ const apropriar = () => {
         v-if="
           sNegocio.negocio.codnegociostatus == 1 &&
           sNegocio.negocio.codpdv != sSinc.pdv.codpdv &&
-          sNegocio.negocio.sincronizado == true
+          sNegocio.negocio.sincronizado == true &&
+          !sNegocio.reaberto
         "
       >
         <q-btn @click="apropriar()" round color="negative" icon="mdi-transit-transfer" />

@@ -462,7 +462,8 @@ class PdvService
         tit as (
             select np.codnegocio, sum(t.valor) filter (where t.valor > 0) as valortitulo
             from tblnegocioparcela np
-            inner join tbltitulo t on (np.codnegocioparcela = t.codnegocioparcela)
+            inner join tbltitulo t on (t.codtitulo = np.codtitulo)
+            where np.inativo is null
             group by np.codnegocio
         )
         select 

@@ -13,6 +13,7 @@ use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 use Mg\Portador\PortadorMovimentoService;
 use Mg\Portador\PortadorPeriodo;
+use Mg\Portador\PortadorPeriodoService;
 
 /**
  * Correcao dos lancamentos na conferencia (M9 doc-3): o gerente acerta o
@@ -68,7 +69,10 @@ class PagamentoCorrecaoService
             MaquinetaLoteService::exigirNaoConferido($pag->MaquinetaLote);
         }
         if (!empty($pag->codportadorperiodo) && !empty($pag->PortadorPeriodo->fechamento)) {
-            abort(422, 'O caixa deste dinheiro já foi fechado: reabra a sessão antes.');
+            $periodo = $pag->PortadorPeriodo;
+            abort(422, "O caixa deste dinheiro ({$periodo->Portador->portador}, "
+                . PortadorPeriodoService::descricao($periodo)
+                . ') já foi fechado: reabra a sessão antes.');
         }
         if (!empty($pag->conferencia)) {
             abort(422, 'Este pagamento já foi conferido: reabra a conferência antes.');

@@ -326,7 +326,8 @@ const gruposCobranca = computed(() =>
 // abre em um toque para o operador poder tirar um do lote.
 const ehValeUsado = (p) => p.meio == MEIO.VALE && p.codtitulo
 
-const valesLancados = computed(() => (sNegocio.negocio?.pagamentos ?? []).filter(ehValeUsado))
+// o vale cancelado na venda reaberta fica fora do grupo, na própria linha (para reativar)
+const valesLancados = computed(() => sNegocio.pagamentosAtivos.filter(ehValeUsado))
 
 const agruparVales = computed(() => valesLancados.value.length > 1)
 
@@ -343,18 +344,24 @@ const pagamentosVisiveis = computed(() => {
   if (!agruparVales.value) {
     return pagamentos
   }
-  return pagamentos.filter((p) => !ehValeUsado(p))
+  return pagamentos.filter((p) => !ehValeUsado(p) || p.estado == 'C')
 })
 
-const grupos = computed(() => gruposParcelas(sNegocio.negocio?.parcelas))
+// a inativa (venda reaberta) vira grupo à parte, para reativar
+const grupos = computed(() => [
+  ...gruposParcelas(sNegocio.parcelasAtivas),
+  ...gruposParcelas((sNegocio.negocio?.parcelas ?? []).filter((np) => np.inativo)).map((g) => ({
+    ...g,
+    inativa: true,
+  })),
+])
 
 // desconto dado na forma de pagamento (dinheiro): está rateado no desconto dos itens, mas
 // aparece à parte do desconto digitado
 const descontoPagamentos = computed(
   () =>
-    Math.round(
-      (sNegocio.negocio?.pagamentos ?? []).reduce((soma, p) => soma + (p.desconto || 0), 0) * 100,
-    ) / 100,
+    Math.round(sNegocio.pagamentosAtivos.reduce((soma, p) => soma + (p.desconto || 0), 0) * 100) /
+    100,
 )
 
 const descontoItens = computed(
@@ -689,13 +696,18 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
         <q-item-section avatar>
           <logo-pagamento v-bind="visualPagamento(pag)" size="40px" />
         </q-item-section>
-        <q-item-section>
+        <q-item-section :class="{ 'text-strike text-grey-6': pag.estado == 'C' }">
           <q-item-label class="ellipsis">{{ tituloPagamento(pag) }}</q-item-label>
-          <q-item-label caption class="ellipsis" v-if="resumoPagamento(pag)">
+          <q-item-label caption class="ellipsis" v-if="pag.estado == 'C'">Cancelado</q-item-label>
+          <q-item-label caption class="ellipsis" v-else-if="resumoPagamento(pag)">
             {{ resumoPagamento(pag) }}
           </q-item-label>
         </q-item-section>
-        <q-item-section side class="text-subtitle1 text-weight-bold text-grey-9">
+        <q-item-section
+          side
+          class="text-subtitle1 text-weight-bold"
+          :class="pag.estado == 'C' ? 'text-strike text-grey-6' : 'text-grey-9'"
+        >
           {{ formataNumero(valorExibido(pag)) }}
         </q-item-section>
       </q-item>
@@ -703,7 +715,7 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
       <!-- PRAZO: uma linha por condição, com as datas -->
       <q-item
         v-for="grupo in grupos"
-        :key="'parcelas' + grupo.condicao"
+        :key="'parcelas' + grupo.condicao + (grupo.inativa ? 'i' : '')"
         clickable
         v-ripple
         @click="abrirParcelas(grupo)"
@@ -711,11 +723,16 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
         <q-item-section avatar>
           <logo-pagamento v-bind="visualCondicao(grupo.condicao)" size="40px" />
         </q-item-section>
-        <q-item-section>
+        <q-item-section :class="{ 'text-strike text-grey-6': grupo.inativa }">
           <q-item-label class="ellipsis">{{ CONDICOES[grupo.condicao] }}</q-item-label>
-          <q-item-label caption class="ellipsis">{{ resumoParcelas(grupo) }}</q-item-label>
+          <q-item-label caption class="ellipsis" v-if="grupo.inativa">Cancelado</q-item-label>
+          <q-item-label caption class="ellipsis" v-else>{{ resumoParcelas(grupo) }}</q-item-label>
         </q-item-section>
-        <q-item-section side class="text-subtitle1 text-weight-bold text-grey-9">
+        <q-item-section
+          side
+          class="text-subtitle1 text-weight-bold"
+          :class="grupo.inativa ? 'text-strike text-grey-6' : 'text-grey-9'"
+        >
           {{ formataNumero(grupo.valor) }}
         </q-item-section>
       </q-item>

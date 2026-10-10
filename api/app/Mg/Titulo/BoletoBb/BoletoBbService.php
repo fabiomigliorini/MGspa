@@ -190,9 +190,11 @@ class BoletoBbService
     }
 
     /**
-     * Registra boleto de todos os titulos do Negocio
+     * Registra boleto de todos os titulos do Negocio. $soNovos: so' o titulo
+     * que ainda nao tem boleto registrado (o F3 da venda reaberta roda de
+     * novo, TASK-30; registrar de novo pegaria outro nosso numero no banco)
      */
-    public static function registrarPeloNegocio(Negocio $negocio)
+    public static function registrarPeloNegocio(Negocio $negocio, bool $soNovos = false)
     {
         $tituloBoletos = collect();
         $parcelas = $negocio->NegocioParcelaS()
@@ -201,6 +203,9 @@ class BoletoBbService
             ->get();
         foreach ($parcelas as $np) {
             foreach ($np->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'ASC')->get() as $titulo) {
+                if ($soNovos && $titulo->TituloBoletoS()->whereNull('inativo')->whereNotNull('linhadigitavel')->exists()) {
+                    continue;
+                }
                 $tituloBoletos[] = static::registrar($titulo);
             }
         }

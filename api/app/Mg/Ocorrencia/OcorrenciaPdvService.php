@@ -65,6 +65,11 @@ class OcorrenciaPdvService
             )
             order by i.codnegocioprodutobarra
         ', ['codnegocio' => $negocio->codnegocio]);
+        $regs = array_values(array_filter($regs, fn ($r) => !static::jaRegistrado(
+            'tblnegocioprodutobarra',
+            $r->codnegocioprodutobarra,
+            AuditoriaService::TIPO_ITEM_EXCLUIDO
+        )));
         return array_map(fn ($r) => AuditoriaService::registrar(
             'tblnegocioprodutobarra',
             $r->codnegocioprodutobarra,
@@ -124,6 +129,14 @@ class OcorrenciaPdvService
 
         $ret = [];
         foreach ($regs as $r) {
+            if (static::jaRegistrado(
+                'tblnegocioprodutobarra',
+                $r->codnegocioprodutobarra,
+                AuditoriaService::TIPO_PRECO_CADASTRO,
+                round((float) $r->valorunitario, 2)
+            )) {
+                continue;
+            }
             $tipo = $r->valorunitario < $r->cadastro
                 ? OcorrenciaService::TIPO_PRECO_ABAIXO
                 : OcorrenciaService::TIPO_PRECO_ACIMA;
@@ -144,6 +157,11 @@ class OcorrenciaPdvService
             ->whereNotNull('inativo')
             ->orderBy('codnegociovale')
             ->get()
+            ->reject(fn ($nv) => static::jaRegistrado(
+                'tblnegociovale',
+                $nv->codnegociovale,
+                AuditoriaService::TIPO_VALE_EXCLUIDO
+            ))
             ->map(fn ($nv) => AuditoriaService::registrar(
                 'tblnegociovale',
                 $nv->codnegociovale,
@@ -152,6 +170,20 @@ class OcorrenciaPdvService
                 ['inativo' => $nv->getRawOriginal('inativo')]
             ))
             ->all();
+    }
+
+    // O F3 da venda reaberta olha o negocio de novo (TASK-30): o que ja' foi
+    // registrado no primeiro fechamento nao duplica (nem dobra o valor da
+    // ocorrencia). No preco, o mesmo item com outro preco e' fato novo.
+    private static function jaRegistrado(string $tabela, int $codigo, int $tipo, ?float $valorunitario = null): bool
+    {
+        $q = Auditoria::where('tabela', $tabela)
+            ->where('codigo', $codigo)
+            ->where('tipo', $tipo);
+        if ($valorunitario !== null) {
+            $q->whereRaw("round((depois->>'valorunitario')::numeric, 2) = ?", [$valorunitario]);
+        }
+        return $q->exists();
     }
 
     // Saida que nao gera financeiro fechada no caixa (uso e consumo, perda,

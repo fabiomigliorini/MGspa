@@ -34,6 +34,7 @@ class NegocioParcela extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
+        'inativo' => 'datetime',
         'juros' => 'float',
         'numero' => 'integer',
         'valor' => 'float',

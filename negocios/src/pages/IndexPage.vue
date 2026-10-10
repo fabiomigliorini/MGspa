@@ -241,6 +241,20 @@ const cancelar = async () => {
   })
 }
 
+// venda fechada reaberta pelo gerente (TASK-30): só reabre; o F3 fecha de novo com a mesma
+// data, caixa e PDV
+const reabrir = () => {
+  Dialog.create({
+    title: 'Reabrir',
+    message: 'Reabrir este negócio? O F3 fecha de novo com a mesma data, caixa e PDV.',
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Reabrir', color: 'primary', flat: true },
+  }).onOk(async () => {
+    await sNegocio.reabrir()
+    emitter.emit('negocioAlterado')
+  })
+}
+
 const receber = async () => {
   if (!sNegocio.podeEditar) {
     return
@@ -370,7 +384,8 @@ const novaNota = async (modelo) => {
 }
 
 const romaneioOuNotaVendaPadrao = async (modelo) => {
-  const integracao = sNegocio.negocio.pagamentos.filter((p) => p.integracao).length
+  // o cancelado (riscado na fechada) não conta
+  const integracao = sNegocio.pagamentosAtivos.filter((p) => p.integracao).length
   const tiposEmitir = [
     //1, //Dinheiro
     //2, //Cheque
@@ -389,9 +404,9 @@ const romaneioOuNotaVendaPadrao = async (modelo) => {
     //90= Sem pagamento
     //99=Outros
   ]
-  const emitir = sNegocio.negocio.pagamentos.filter((p) => tiposEmitir.includes(p.meio)).length
+  const emitir = sNegocio.pagamentosAtivos.filter((p) => tiposEmitir.includes(p.meio)).length
   // boleto a prazo também emite
-  const boleto = (sNegocio.negocio.parcelas ?? []).filter((np) => np.condicao == 'B').length
+  const boleto = sNegocio.parcelasAtivas.filter((np) => np.condicao == 'B').length
   // se foi pago por integracao ou por
   if (integracao > 0 || emitir > 0 || boleto > 0) {
     novaNota(modelo)
@@ -551,7 +566,7 @@ onUnmounted(() => {
         />
         <template v-if="sNegocio.negocio.codnegociostatus == 2">
           <listagem-contra-vale
-            v-for="pagamento in sNegocio.negocio.pagamentos.filter((p) => p.valenumero)"
+            v-for="pagamento in sNegocio.pagamentosAtivos.filter((p) => p.valenumero)"
             :key="pagamento.uuid"
             :pagamento="pagamento"
           />
@@ -742,6 +757,17 @@ onUnmounted(() => {
           v-if="sNegocio.itensAtivos.length > 0 && sNegocio.podeEditar"
         >
           <q-tooltip class="bg-accent">Fechar (F3)</q-tooltip>
+        </q-btn>
+
+        <!-- REABRIR -->
+        <q-btn
+          fab
+          icon="lock_open"
+          color="secondary"
+          @click="reabrir()"
+          v-if="sNegocio.podeReabrir"
+        >
+          <q-tooltip class="bg-accent">Reabrir Negócio</q-tooltip>
         </q-btn>
 
         <!-- CANCELAR -->

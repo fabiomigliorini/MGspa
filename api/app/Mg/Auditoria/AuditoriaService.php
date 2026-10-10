@@ -27,6 +27,12 @@ class AuditoriaService
     // o pagamento integrado mudou de venda (venda cancelada: fica orfao; o
     // orfao amarrado numa venda): o codnegocio antes e depois (TASK-188)
     const TIPO_AMARRACAO_VENDA = 14;
+    // venda fechada reaberta pelo gerente e o que muda dentro dela (TASK-30)
+    const TIPO_NEGOCIO_REABERTO = 15;
+    const TIPO_PAGAMENTO_CANCELADO_REABERTURA = 16;
+    const TIPO_PAGAMENTO_REATIVADO = 17;
+    const TIPO_PARCELA_INATIVADA_REABERTURA = 18;
+    const TIPO_PARCELA_REATIVADA = 19;
 
     const TIPOS = [
         self::TIPO_DATA_ALTERADA => 'Data alterada',
@@ -43,6 +49,11 @@ class AuditoriaService
         self::TIPO_NEGOCIO_CANCELADO => 'Negócio cancelado',
         self::TIPO_ESTORNADO => 'Estornado',
         self::TIPO_AMARRACAO_VENDA => 'Amarração com a venda alterada',
+        self::TIPO_NEGOCIO_REABERTO => 'Negócio reaberto',
+        self::TIPO_PAGAMENTO_CANCELADO_REABERTURA => 'Pagamento cancelado na reabertura',
+        self::TIPO_PAGAMENTO_REATIVADO => 'Pagamento reativado',
+        self::TIPO_PARCELA_INATIVADA_REABERTURA => 'Parcela inativada na reabertura',
+        self::TIPO_PARCELA_REATIVADA => 'Parcela reativada',
     ];
 
     // `antes` nulo: o registro nasceu (fica o `depois` com o que foi

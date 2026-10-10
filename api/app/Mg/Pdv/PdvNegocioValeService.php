@@ -115,9 +115,40 @@ class PdvNegocioValeService
         // sem portador, como o vale compras do MGLara sempre nasceu: o credito
         // nao esta em lugar nenhum ate ser resgatado
         $titulo->codportador = null;
+        TituloService::aplicarSufixoNumero($titulo);
         TituloService::implantar($titulo);
 
         return $titulo;
+    }
+
+    /**
+     * Venda reaberta (TASK-30): o credito do vale que saiu, mudou de valor ou
+     * de favorecido e' estornado; o emitirCreditos emite de novo o do vale
+     * que ficou. Credito ja' usado nao volta. Sem mudanca, nao faz nada.
+     */
+    public static function reconciliarCreditos(Negocio $negocio)
+    {
+        foreach ($negocio->NegocioValeS()->whereNotNull('codtitulo')->orderBy('codnegociovale')->get() as $vale) {
+            $titulo = $vale->Titulo;
+            if (empty($titulo) || !empty($titulo->estornado)) {
+                continue;
+            }
+            $mudou = !empty($vale->inativo)
+                || round(abs((float) $titulo->valor), 2) != round((float) $vale->valorvale, 2)
+                || $titulo->codpessoa != $vale->codpessoafavorecido;
+            if (!$mudou) {
+                continue;
+            }
+            if (static::foiMovimentado($titulo)) {
+                $usado = formataNumero(abs((float) $titulo->valor) - abs((float) $titulo->saldo), 2);
+                throw new Exception("O Vale #{$titulo->codtitulo} já foi usado em compras (R$ {$usado}): ele não pode sair nem mudar!", 1);
+            }
+            TituloService::estornar($titulo, "Vale alterado na reabertura da venda #{$negocio->codnegocio}");
+            if (empty($vale->inativo)) {
+                $vale->codtitulo = null;
+                $vale->save();
+            }
+        }
     }
 
     /**

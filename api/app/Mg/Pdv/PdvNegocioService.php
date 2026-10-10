@@ -36,6 +36,9 @@ class PdvNegocioService
 
         // Verifica se o Status do Front e Backend conferem
         if ($negocio->exists && $negocio->codnegociostatus != $data['codnegociostatus']) {
+            if (PdvNegocioReaberturaService::reaberto($negocio)) {
+                throw new Exception('Este negócio foi reaberto pelo gerente: recarregue (Botão Roxo)!');
+            }
             $back = NegocioService::CODNEGOCIOSTATUS_DESCRICAO[$negocio->codnegociostatus] ?? $negocio->codnegociostatus;
             $front = NegocioService::CODNEGOCIOSTATUS_DESCRICAO[$data['codnegociostatus']] ?? $data['codnegociostatus'];
             throw new Exception("Negocio consta como {$back} no Servidor, mas {$front} no PDV. Verifique com o suporte!");
@@ -205,11 +208,22 @@ class PdvNegocioService
             unset($data['codnegociostatus']);
         }
 
+        // venda reaberta (TASK-30): o fechamento original fica (data, caixa
+        // e PDV), e a natureza nao troca de lado (os titulos e pagamentos
+        // que ja' existem ficariam errados)
+        $reaberta = PdvNegocioReaberturaService::reaberto($negocio);
+        if ($reaberta) {
+            static::exigirMesmaNatureza($negocio, $data);
+            unset($data['codusuario'], $data['lancamento'], $data['codpdv']);
+        }
+
         // importa os dados do negocio
         $negocio->fill($data);
-        $negocio->codpdv = $pdv->codpdv;
+        if (!$reaberta) {
+            $negocio->codpdv = $pdv->codpdv;
+            $negocio->codusuario = Auth::user()->codusuario;
+        }
         $negocio->codfilial = $negocio->EstoqueLocal->codfilial;
-        $negocio->codusuario = Auth::user()->codusuario;
         $negocio->save();
 
         // importa os itens
@@ -252,14 +266,7 @@ class PdvNegocioService
         if ($negocio->valortotal != $data['valortotal']) {
             throw new Exception("Não é permitido alterar os valores de um negocio Fechado ou Cancelado {$negocio->codnegocio} {$negocio->valortotal} != {$data['valortotal']}!", 1);
         }
-        if ($negocio->NaturezaOperacao->financeiro != $data['financeiro']) {
-            throw new Exception("Não é permitido alterar de uma Natureza que não gera financeiro para outra que gera, ou vice-versa {$negocio->codnegocio}!", 1);
-        }
-
-        $natNova = NaturezaOperacao::findOrFail($data['codnaturezaoperacao']);
-        if ($negocio->NaturezaOperacao->codoperacao !== $natNova->codoperacao) {
-            throw new Exception("Não é permitido alterar de uma Natureza de Saída para outra de Entrada ou vice-versa {$negocio->codnegocio}!", 1);
-        }
+        $natNova = static::exigirMesmaNatureza($negocio, $data);
 
         // Ignorar do front:
         // Usuario
@@ -287,6 +294,19 @@ class PdvNegocioService
         return $negocio;
     }
 
+
+    // a natureza nova nao troca de lado: com/sem financeiro, saida/entrada
+    private static function exigirMesmaNatureza(Negocio $negocio, $data): NaturezaOperacao
+    {
+        if ($negocio->NaturezaOperacao->financeiro != $data['financeiro']) {
+            throw new Exception("Não é permitido alterar de uma Natureza que não gera financeiro para outra que gera, ou vice-versa {$negocio->codnegocio}!", 1);
+        }
+        $natNova = NaturezaOperacao::findOrFail($data['codnaturezaoperacao']);
+        if ($negocio->NaturezaOperacao->codoperacao !== $natNova->codoperacao) {
+            throw new Exception("Não é permitido alterar de uma Natureza de Saída para outra de Entrada ou vice-versa {$negocio->codnegocio}!", 1);
+        }
+        return $natNova;
+    }
 
     public static function movimentarEstoque(Negocio $negocio)
     {
@@ -319,6 +339,11 @@ class PdvNegocioService
         if ($negocio->codnegociostatus != NegocioService::STATUS_ABERTO) {
             throw new Exception('O Status do Negócio não permite Fechamento!', 1);
         }
+
+        // venda reaberta (TASK-30): as mesmas validacoes, mas o que ja' foi
+        // validado e gerado no primeiro fechamento nao se valida de novo; e o
+        // fechamento original (data, caixa, PDV) fica
+        $reaberta = PdvNegocioReaberturaService::reaberto($negocio);
 
         // validacao de itens informados
         //
@@ -360,15 +385,17 @@ class PdvNegocioService
             $valorJuros = 0;
             $valorLimiteCredito = 0;
 
-            // 2. Validações de cada pagamento
+            // 2. Validações de cada pagamento (o efetivado ja' foi validado)
             foreach ($pagamentos as $pag) {
+                $novo = $pag->estado == PagamentoService::ESTADO_PENDENTE;
+
                 // cartão manual sempre com a maquineta (M3 doc-3)
-                if (in_array($pag->meio, PagamentoService::MEIOS_CARTAO) && !$pag->ehIntegrado() && empty($pag->codmaquineta)) {
+                if ($novo && in_array($pag->meio, PagamentoService::MEIOS_CARTAO) && !$pag->ehIntegrado() && empty($pag->codmaquineta)) {
                     abort(422, 'Cartão manual sem maquineta! Exclua o pagamento e lance de novo escolhendo a maquininha.');
                 }
 
                 // cheque: cliente identificado, sem troco, CMC7 válido
-                if (PdvNegocioChequeService::ehCheque($pag)) {
+                if ($novo && PdvNegocioChequeService::ehCheque($pag)) {
                     PdvNegocioChequeService::validar($negocio, $pag);
                 }
 
@@ -395,7 +422,10 @@ class PdvNegocioService
                 }
                 $valorPagamentosPrazo += $np->valor;
                 $valorJuros += $np->juros;
-                if (!in_array($np->condicao, [NegocioParcelaService::CONDICAO_ENTREGA, NegocioParcelaService::CONDICAO_PIX])) {
+                // so' o que vai virar titulo em aberto agora: o titulo vivo
+                // ja' esta' no saldo da pessoa (venda reaberta)
+                $tituloVivo = !empty($np->codtitulo) && empty(optional($np->Titulo)->estornado);
+                if (!$tituloVivo && !in_array($np->condicao, [NegocioParcelaService::CONDICAO_ENTREGA, NegocioParcelaService::CONDICAO_PIX])) {
                     $valorLimiteCredito += $np->valor - $np->juros;
                 }
             }
@@ -444,26 +474,44 @@ class PdvNegocioService
             }
         }
 
-        // marca negocio como fechado
+        // marca negocio como fechado (a reaberta mantem o fechamento original)
         $negocio->codnegociostatus = NegocioService::STATUS_FECHADO;
-        if ($usuario = Auth::user()) {
-            $negocio->codusuario = $usuario->codusuario;
+        if (!$reaberta) {
+            if ($usuario = Auth::user()) {
+                $negocio->codusuario = $usuario->codusuario;
+            }
+            $negocio->codpdv = $pdv->codpdv;
+            $negocio->lancamento = Carbon::now();
         }
-        $negocio->codpdv = $pdv->codpdv;
-        $negocio->lancamento = Carbon::now();
         $negocio->save();
 
         // gera titulos do financeiro
         if ($negocio->NaturezaOperacao->financeiro) {
+            // venda reaberta: o que foi cancelado sai do razao, do lote, da
+            // baixa do vale, do cheque; a parcela tirada tem o titulo estornado
+            if ($reaberta) {
+                PdvNegocioReaberturaService::desfazerCancelados($negocio);
+            }
             // os pagamentos pendentes se efetivam com a venda; o dinheiro vai
-            // para a gaveta do PDV, na sessao aberta (M9 doc-3)
+            // para a gaveta do PDV, na sessao aberta (M9 doc-3). Na reaberta
+            // o novo e' da data da venda, no dinheiro e no lote daquela data
             foreach ($negocio->PagamentoS()->where('estado', PagamentoService::ESTADO_PENDENTE)->get() as $pag) {
                 if ($pag->meio == PagamentoService::MEIO_DINHEIRO && empty($pag->codportadordestino)) {
-                    $pag->codportadordestino = CaixaService::gavetaAberta($pdv)->codportador;
+                    $pag->codportadordestino = $reaberta
+                        ? (PdvNegocioReaberturaService::portadorDinheiro($negocio)
+                            ?? abort(422, 'O PDV desta venda não tem gaveta: não há onde receber o dinheiro.'))
+                        : CaixaService::gavetaAberta($pdv)->codportador;
                 }
-                PagamentoService::efetivar($pag, $negocio->lancamento);
+                if ($reaberta) {
+                    PdvNegocioReaberturaService::loteDaData($pag);
+                    PdvNegocioChequeService::reativarDoPagamento($pag);
+                }
+                PagamentoService::efetivar($pag, $reaberta ? null : $negocio->lancamento);
             }
             $prazo = NegocioParcelaService::gerarTitulos($negocio);
+            if ($reaberta) {
+                NegocioParcelaService::sincronizarTitulos($negocio);
+            }
             $negocio->valoraprazo = $prazo;
             $negocio->valoravista = $negocio->valortotal - $prazo;
             $negocio->save();
@@ -477,7 +525,11 @@ class PdvNegocioService
             // emite o credito de cada vale VENDIDO neste negocio (titulo
             // tipo 3 / conta 83 em nome do favorecido). Vem depois do
             // baixarVales de proposito: aquele consome vale ANTIGO como
-            // forma de pagamento, este cria o vale NOVO.
+            // forma de pagamento, este cria o vale NOVO. Na reaberta, antes
+            // estorna o credito do vale que saiu ou mudou.
+            if ($reaberta) {
+                PdvNegocioValeService::reconciliarCreditos($negocio);
+            }
             PdvNegocioValeService::emitirCreditos($negocio);
         } else {
             $negocio->valoraprazo = 0;
@@ -498,9 +550,10 @@ class PdvNegocioService
         // busca dados atualizados no banco de dados
         $negocio = $negocio->fresh();
 
-        // registra boletos se houver
+        // registra boletos se houver (so' os ainda nao registrados: o F3 da
+        // venda reaberta passa aqui de novo)
         try {
-            BoletoBbService::registrarPeloNegocio($negocio);
+            BoletoBbService::registrarPeloNegocio($negocio, true);
         } catch (\Throwable $th) {
         }
 
@@ -519,6 +572,11 @@ class PdvNegocioService
 
         if ($negocio->codpdv == $pdv->codpdv) {
             throw new Exception("Este negócio já está vinculado à este PDV!", 1);
+        }
+
+        // a reaberta mantem o PDV e a data do fechamento original (TASK-30)
+        if (PdvNegocioReaberturaService::reaberto($negocio)) {
+            throw new Exception("Venda reaberta não muda de PDV!", 1);
         }
 
         $negocio->codpdv = $pdv->codpdv;
@@ -548,14 +606,21 @@ class PdvNegocioService
             }
         }
 
-        foreach (NegocioParcelaService::titulos($negocio) as $tit) {
-            if ($tit->valor != $tit->saldo) {
-                throw new Exception("O Título {$tit->numero} já foi movimentado. Impossível cancelar!", 1);
-            }
+        // todas as parcelas: a inativa da venda reaberta ainda pode ter o
+        // titulo vivo (o F3 e' que estornaria)
+        foreach (NegocioParcelaService::titulos($negocio, true) as $tit) {
             if (!empty($tit->estornado)) {
                 continue;
             }
+            if ($tit->valor != $tit->saldo) {
+                throw new Exception("O Título {$tit->numero} já foi movimentado. Impossível cancelar!", 1);
+            }
             TituloService::estornar($tit);
+        }
+        // venda reaberta: o pagamento cancelado e ainda sem F3 continua no
+        // razao, no lote, na baixa do vale e no cheque (TASK-30)
+        foreach ($negocio->PagamentoS()->where('estado', PagamentoService::ESTADO_CANCELADO)->where('indevido', true)->get() as $pag) {
+            PdvNegocioReaberturaService::desfazerPagamento($pag);
         }
         PdvNegocioPrazoService::estornarBaixaVales($negocio);
         // o credito emitido por ESTE negocio e' titulo solto: so'

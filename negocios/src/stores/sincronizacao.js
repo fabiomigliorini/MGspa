@@ -749,6 +749,29 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
     },
 
+    // venda fechada reaberta pelo gerente (TASK-30)
+    async reabrirNegocio(codnegocio) {
+      try {
+        const { data } = await api.post('/v1/pdv/negocio/' + codnegocio + '/reabrir', {
+          pdv: this.pdv.uuid,
+        })
+        return data.data
+      } catch (error) {
+        console.log(error)
+        var message = error?.response?.data?.message
+        if (!message) {
+          message = error?.message
+        }
+        Notify.create({
+          type: 'negative',
+          message: message,
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
+      }
+    },
+
     async cancelarNegocio(codnegocio, justificativa) {
       try {
         const { data } = await api.delete('/v1/pdv/negocio/' + codnegocio, {
