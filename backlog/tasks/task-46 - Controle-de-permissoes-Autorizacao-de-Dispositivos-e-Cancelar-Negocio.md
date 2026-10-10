@@ -1,11 +1,11 @@
 ---
 id: TASK-46
-title: 'Controle de permissoes: Autorizacao de Dispositivos e Cancelar Negocio'
-status: In Progress
+title: 'Controle de permissoes: Autorizacao de Dispositivos'
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-10 18:47'
+updated_date: '2026-10-10 18:53'
 labels:
   - negocios
 dependencies: []
@@ -59,4 +59,6 @@ Testes (10/10, depois do c909caa71): pela API com tokens de Admin, Gerente da 10
 Cadastrar sem login (Fábio, 10/10): além do aviso, abre o dialog de login (useAuth().login); depois de entrar, o Cadastrar é outro clique. O aviso deixou de ser fixo (timeout 0), para não ficar na tela depois do login.
 
 Testes do histórico (10/10, depois do 7628c55a9): API com token de Admin e sem login (cadastrar grava 1 linha e o clique duplo não duplica; mesmo lugar soma, IP ou posição nova abre linha, sem posição também; sincronizacao-completa 200/422/403 e recusa dispositivo inativo; lista com ip e filtro no histórico; página e registros do próprio sem login) e tela no Chrome headless (navegador limpo cadastra, sincroniza e manda a completa; mudar de lugar abre linha nova; cards dois por linha e um embaixo do outro no celular; lista mostra 'sincronizado há'). Corrigido: período no mesmo minuto mostrava '14:46 → 14:46'. Observação: o coletarDispositivo aceita posição de até 10 min (maximumAge), então sincronizar logo depois de mudar de lugar ainda grava a posição anterior.
+
+Cancelar Negócio (Fábio, 10/10): saiu do título. Fica coberto pela TASK-205 — o cancelamento vira ocorrência para o gerente (quem, quando, justificativa e pagamentos) em vez de bloquear o caixa. Não há restrição por papel no cancelamento (PdvController::deleteNegocio só exige justificativa de 15+ caracteres).
 <!-- SECTION:NOTES:END -->
