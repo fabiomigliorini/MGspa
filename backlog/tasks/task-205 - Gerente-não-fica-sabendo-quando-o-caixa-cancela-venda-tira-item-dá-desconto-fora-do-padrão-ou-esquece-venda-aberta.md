@@ -67,5 +67,11 @@ Código:
 
 Esquecido não aparecia no teste porque nenhum negócio aberto do PDV 508 tinha sido criado depois de 01/10.
 
-Bateria no dev com rollback (script PHP no container, fila fake): exclusão (juntado não conta), diminuir 3→2→1, volta 1→3 (fica, R$ 0), preço abaixo/acima, preço antigo aceito, vale excluído, pagamento e parcela apagados, desconto 20%, uso e consumo, cancelamento com justificativa na auditoria, correção de data → tipo 15 amarrado, PDV não monitorado → nada, esquecido 1 e depois 0, reenvio sem duplicar. Listagem devolve auditorias e justificativa. Teste de tela no navegador: pendente (o container reiniciou no meio).
+Bateria no dev com rollback (script PHP no container, fila fake): exclusão (juntado não conta), diminuir 3→2→1, volta 1→3 (fica, R$ 0), preço abaixo/acima, preço antigo aceito, vale excluído, pagamento e parcela apagados, desconto 20%, uso e consumo, cancelamento com justificativa na auditoria, correção de data → tipo 15 amarrado, PDV não monitorado → nada, esquecido 1 e depois 0, reenvio sem duplicar. Listagem devolve auditorias e justificativa. Teste de tela no navegador (09/10 à noite, PDV 508 online, headless, só a tela gravou): os 8 casos bateram.
+- Venda A 4549105: tipo 1 só o item excluído (aud 6), tipo 2 com 3→2 e 2→1 (aud 7,7), tipos 3 e 4 (aud 8), tipo 6 pagamento apagado (aud 10).
+- Juntar 4549109 com a comanda 4549108: nada nasce (juntar e '+' silenciosos). A tela soma bipe repetido na mesma linha; duas linhas do mesmo produto só vêm de comanda.
+- Volta da quantidade 4549110: tipo 2 com R$ 0,00 (aud 7,7). Desconto 25% 4549111: tipo 13 sem auditoria. Uso e consumo 4549112: tipo 8. Cancelado 4549113: tipo 10 com aud 12 e a justificativa.
+- Esquecido 4549104: o agendador gerou o tipo 14 aos 31 min (negócio aberto sem item não entra). O 4549104 continua aberto no dev.
+- Contas /ocorrencia: ícones, justificativa do cancelamento, filtro por tipo, ordem por valor, conferir com observação ok, sem erro no console.
+- PDV não pede motivo em nenhuma ação.
 <!-- SECTION:NOTES:END -->
