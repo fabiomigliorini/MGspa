@@ -50,7 +50,7 @@ const CAMPOS_CONFIGURACAO = [
   'codportadorpix',
 ]
 
-const registrosVazios = () => ({ negocios: [], pagamentos: [], ocorrencias: [] })
+const registrosVazios = () => ({ negocios: [], pagamentos: [], ocorrencias: [], localizacoes: [] })
 
 export const dispositivoStore = defineStore(
   'dispositivo',

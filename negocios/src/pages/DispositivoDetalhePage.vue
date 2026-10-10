@@ -5,7 +5,14 @@ import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import { formataCodigo, formataData, formataNumero, formataTimestamp } from '@components/formatters'
+import {
+  formataCodigo,
+  formataData,
+  formataHora,
+  formataNumero,
+  formataTimestamp,
+  tempoRelativo,
+} from '@components/formatters'
 import { tituloPagamento } from '@components/cobranca/pagamento.js'
 import { dispositivoStore } from 'stores/dispositivo'
 import { sincronizacaoStore } from 'stores/sincronizacao'
@@ -15,7 +22,8 @@ import DialogDispositivo from 'components/pdv/DialogDispositivo.vue'
 
 // Página do dispositivo (TASK-46): status e ações no cabeçalho; os cards com os mesmos grupos, a
 // mesma ordem e os mesmos nomes do formulário (DialogDispositivo) — dispositivo, negócios,
-// pagamento e monitoramento —; e os últimos negócios, pagamentos e ocorrências. Serve a lista
+// pagamento e monitoramento —; e os últimos negócios, pagamentos, ocorrências e localizações
+// (IP e posição de cada sincronização). Serve a lista
 // (/dispositivo/:codpdv) e o "Meu Dispositivo" (/dispositivo/meu), atalho para o deste
 // navegador; sem cadastro, ele mostra o Cadastrar. O servidor diz o que o usuário pode fazer
 // aqui (`pode`); a tela só mostra os botões. Sem login (quiosque) a página só mostra.
@@ -35,11 +43,21 @@ const dialogEditar = ref(false)
 
 const vazio = (valor) => valor ?? '—'
 
-const mapa = computed(() =>
-  d.value?.latitude
-    ? `https://maps.google.com/maps?q=${d.value.latitude},${d.value.longitude}`
-    : null,
-)
+const mapa = (l) =>
+  l.latitude ? `https://maps.google.com/maps?q=${l.latitude},${l.longitude}` : undefined
+
+// cada linha do histórico é um período no mesmo IP e posição: da 1ª à última sincronização
+const periodo = (l) => {
+  const inicio = formataTimestamp(l.criacao)
+  if (l.sincronizacoes <= 1) {
+    return inicio
+  }
+  const fim =
+    formataData(l.alteracao) === formataData(l.criacao)
+      ? formataHora(l.alteracao)
+      : formataTimestamp(l.alteracao)
+  return `${inicio} → ${fim}`
+}
 
 // os mesmos grupos, a mesma ordem e os mesmos nomes do formulário (DialogDispositivo); no
 // dispositivo, depois do que se edita, o que o navegador informou na última sincronização
@@ -58,16 +76,12 @@ const grupos = computed(() => [
         valor: `${d.value.plataforma} ${d.value.navegador} ${d.value.versaonavegador}`,
         icone: d.value.desktop ? 'desktop_windows' : 'smartphone',
       },
-      { label: 'IP', valor: vazio(d.value.ip), icone: 'lan' },
       {
-        label: 'Localização',
-        valor: mapa.value ? `${d.value.latitude}, ${d.value.longitude}` : '—',
-        legenda:
-          mapa.value && d.value.precisao
-            ? `Precisão de ${formataNumero(d.value.precisao, 0)} m`
-            : null,
-        icone: 'place',
-        href: mapa.value,
+        label: 'Última sincronização completa',
+        valor: d.value.sincronizacaocompleta
+          ? `${formataTimestamp(d.value.sincronizacaocompleta)} · ${tempoRelativo(d.value.sincronizacaocompleta)}`
+          : '—',
+        icone: 'sync',
       },
     ],
   },
@@ -296,130 +310,185 @@ onMounted(carregar)
           </div>
         </div>
 
-        <!-- ÚLTIMOS NEGÓCIOS -->
-        <q-card flat bordered class="q-mb-md">
-          <q-item>
-            <q-item-section avatar>
-              <q-avatar color="indigo-1" text-color="indigo-8" icon="receipt_long" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-subtitle1 text-weight-medium"
-                >Últimos negócios</q-item-label
-              >
-            </q-item-section>
-          </q-item>
-          <q-separator />
-          <MgEmptyState v-if="!registros.negocios.length" plain icon="receipt_long">
-            Nenhum negócio neste dispositivo.
-          </MgEmptyState>
-          <q-list v-else separator>
-            <q-item
-              v-for="n in registros.negocios"
-              :key="n.codnegocio"
-              clickable
-              :to="`/negocio/${n.codnegocio}`"
-            >
-              <q-item-section>
-                <q-item-label class="ellipsis">
-                  {{ n.naturezaoperacao }} · {{ n.fantasia || 'Sem pessoa' }}
-                </q-item-label>
-                <q-item-label caption class="ellipsis">
-                  {{ formataCodigo(n.codnegocio) }} · {{ formataTimestamp(n.lancamento) }} ·
-                  {{ n.usuario }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-item-label :class="{ 'text-strike': n.codnegociostatus == 3 }">
-                  {{ formataNumero(n.valortotal) }}
-                </q-item-label>
-                <q-item-label caption>{{ n.negociostatus }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card>
-
-        <!-- ÚLTIMOS PAGAMENTOS -->
-        <q-card flat bordered class="q-mb-md">
-          <q-item>
-            <q-item-section avatar>
-              <q-avatar color="green-1" text-color="green-8" icon="payments" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-subtitle1 text-weight-medium">
-                Últimos pagamentos
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator />
-          <MgEmptyState v-if="!registros.pagamentos.length" plain icon="payments">
-            Nenhum pagamento neste dispositivo.
-          </MgEmptyState>
-          <q-list v-else separator>
-            <q-item
-              v-for="p in registros.pagamentos"
-              :key="p.codpagamento"
-              clickable
-              :href="linkPagamento(p)"
-              target="_blank"
-            >
-              <q-item-section>
-                <q-item-label class="ellipsis">
-                  {{ tituloPagamento(p) }}
-                  <template v-if="p.fantasia"> · {{ p.fantasia }}</template>
-                </q-item-label>
-                <q-item-label caption class="ellipsis">
-                  {{ formataTimestamp(p.transacao) }}
-                  <template v-if="p.codnegocio">
-                    · Negócio {{ formataCodigo(p.codnegocio) }}</template
+        <!-- últimos registros, dois por linha: localizações e ocorrências; pagamentos e negócios -->
+        <div class="row q-col-gutter-md">
+          <div class="col-12 col-md-6">
+            <!-- LOCALIZAÇÕES: o que o navegador informou em cada sincronização. Desktop sem GPS é
+            localizado pelo IP público (cidade, não a loja): a precisão diz o quanto confiar -->
+            <q-card flat bordered class="full-height">
+              <q-item>
+                <q-item-section avatar>
+                  <q-avatar color="blue-grey-1" text-color="blue-grey-8" icon="place" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-subtitle1 text-weight-medium"
+                    >Localizações</q-item-label
                   >
-                </q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-item-label :class="{ 'text-strike': p.estado === 'C' }">
-                  {{ formataNumero(p.total) }}
-                </q-item-label>
-                <q-item-label caption>{{ p.estadodescricao }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card>
-
-        <!-- ÚLTIMAS OCORRÊNCIAS -->
-        <q-card flat bordered>
-          <q-item>
-            <q-item-section avatar>
-              <q-avatar color="orange-1" text-color="orange-8" icon="report" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label class="text-subtitle1 text-weight-medium">
-                Últimas ocorrências
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-separator />
-          <MgEmptyState v-if="!registros.ocorrencias.length" plain icon="report">
-            Nenhuma ocorrência neste dispositivo.
-          </MgEmptyState>
-          <q-list v-else separator>
-            <q-item
-              v-for="o in registros.ocorrencias"
-              :key="o.codocorrencia"
-              :clickable="!!o.codnegocio"
-              :to="o.codnegocio ? `/negocio/${o.codnegocio}` : undefined"
-            >
-              <q-item-section>
-                <q-item-label class="ellipsis">{{ o.tipodescricao }}</q-item-label>
-                <q-item-label caption class="ellipsis">
-                  {{ formataTimestamp(o.criacao) }} · {{ o.descricao }}
-                </q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-item-label>{{ formataNumero(o.valor) }}</q-item-label>
-                <q-item-label caption>{{ o.conferencia ? 'Conferida' : 'Pendente' }}</q-item-label>
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </q-card>
+                  <q-item-label caption>Linha nova quando muda o IP ou a posição</q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator />
+              <MgEmptyState v-if="!registros.localizacoes.length" plain icon="place">
+                Nenhuma sincronização registrada.
+              </MgEmptyState>
+              <q-list v-else separator>
+                <q-item
+                  v-for="l in registros.localizacoes"
+                  :key="l.codpdvlocalizacao"
+                  :clickable="!!mapa(l)"
+                  :href="mapa(l)"
+                  target="_blank"
+                >
+                  <q-item-section>
+                    <q-item-label class="ellipsis">{{ periodo(l) }}</q-item-label>
+                    <q-item-label caption class="ellipsis">
+                      {{ l.ip || 'Sem IP' }} ·
+                      {{ l.latitude ? `${l.latitude}, ${l.longitude}` : 'Sem localização' }}
+                    </q-item-label>
+                    <q-item-label caption>
+                      {{ l.sincronizacoes }}
+                      {{ l.sincronizacoes == 1 ? 'sincronização' : 'sincronizações' }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section v-if="l.precisao" side>
+                    <q-item-label>± {{ formataNumero(l.precisao, 0) }} m</q-item-label>
+                    <q-item-label caption>Precisão</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card>
+          </div>
+          <div class="col-12 col-md-6">
+            <!-- ÚLTIMAS OCORRÊNCIAS -->
+            <q-card flat bordered class="full-height">
+              <q-item>
+                <q-item-section avatar>
+                  <q-avatar color="orange-1" text-color="orange-8" icon="report" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-subtitle1 text-weight-medium">
+                    Últimas ocorrências
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator />
+              <MgEmptyState v-if="!registros.ocorrencias.length" plain icon="report">
+                Nenhuma ocorrência neste dispositivo.
+              </MgEmptyState>
+              <q-list v-else separator>
+                <q-item
+                  v-for="o in registros.ocorrencias"
+                  :key="o.codocorrencia"
+                  :clickable="!!o.codnegocio"
+                  :to="o.codnegocio ? `/negocio/${o.codnegocio}` : undefined"
+                >
+                  <q-item-section>
+                    <q-item-label class="ellipsis">{{ o.tipodescricao }}</q-item-label>
+                    <q-item-label caption class="ellipsis">
+                      {{ formataTimestamp(o.criacao) }} · {{ o.descricao }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-item-label>{{ formataNumero(o.valor) }}</q-item-label>
+                    <q-item-label caption>{{
+                      o.conferencia ? 'Conferida' : 'Pendente'
+                    }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card>
+          </div>
+          <div class="col-12 col-md-6">
+            <!-- ÚLTIMOS PAGAMENTOS -->
+            <q-card flat bordered class="full-height">
+              <q-item>
+                <q-item-section avatar>
+                  <q-avatar color="green-1" text-color="green-8" icon="payments" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-subtitle1 text-weight-medium">
+                    Últimos pagamentos
+                  </q-item-label>
+                </q-item-section>
+              </q-item>
+              <q-separator />
+              <MgEmptyState v-if="!registros.pagamentos.length" plain icon="payments">
+                Nenhum pagamento neste dispositivo.
+              </MgEmptyState>
+              <q-list v-else separator>
+                <q-item
+                  v-for="p in registros.pagamentos"
+                  :key="p.codpagamento"
+                  clickable
+                  :href="linkPagamento(p)"
+                  target="_blank"
+                >
+                  <q-item-section>
+                    <q-item-label class="ellipsis">
+                      {{ tituloPagamento(p) }}
+                      <template v-if="p.fantasia"> · {{ p.fantasia }}</template>
+                    </q-item-label>
+                    <q-item-label caption class="ellipsis">
+                      {{ formataTimestamp(p.transacao) }}
+                      <template v-if="p.codnegocio">
+                        · Negócio {{ formataCodigo(p.codnegocio) }}</template
+                      >
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-item-label :class="{ 'text-strike': p.estado === 'C' }">
+                      {{ formataNumero(p.total) }}
+                    </q-item-label>
+                    <q-item-label caption>{{ p.estadodescricao }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card>
+          </div>
+          <div class="col-12 col-md-6">
+            <!-- ÚLTIMOS NEGÓCIOS -->
+            <q-card flat bordered class="full-height">
+              <q-item>
+                <q-item-section avatar>
+                  <q-avatar color="indigo-1" text-color="indigo-8" icon="receipt_long" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label class="text-subtitle1 text-weight-medium"
+                    >Últimos negócios</q-item-label
+                  >
+                </q-item-section>
+              </q-item>
+              <q-separator />
+              <MgEmptyState v-if="!registros.negocios.length" plain icon="receipt_long">
+                Nenhum negócio neste dispositivo.
+              </MgEmptyState>
+              <q-list v-else separator>
+                <q-item
+                  v-for="n in registros.negocios"
+                  :key="n.codnegocio"
+                  clickable
+                  :to="`/negocio/${n.codnegocio}`"
+                >
+                  <q-item-section>
+                    <q-item-label class="ellipsis">
+                      {{ n.naturezaoperacao }} · {{ n.fantasia || 'Sem pessoa' }}
+                    </q-item-label>
+                    <q-item-label caption class="ellipsis">
+                      {{ formataCodigo(n.codnegocio) }} · {{ formataTimestamp(n.lancamento) }} ·
+                      {{ n.usuario }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-item-label :class="{ 'text-strike': n.codnegociostatus == 3 }">
+                      {{ formataNumero(n.valortotal) }}
+                    </q-item-label>
+                    <q-item-label caption>{{ n.negociostatus }}</q-item-label>
+                  </q-item-section>
+                </q-item>
+              </q-list>
+            </q-card>
+          </div>
+        </div>
       </template>
     </div>
 

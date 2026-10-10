@@ -39,15 +39,11 @@ class Pdv extends MgModel
         'desktop',
         'impressora',
         'inativo',
-        'ip',
-        'latitude',
-        'longitude',
         'minutosesquecido',
         'monitoramento',
         'navegador',
         'observacoes',
         'plataforma',
-        'precisao',
         'uuid',
         'versaonavegador'
     ];
@@ -67,11 +63,9 @@ class Pdv extends MgModel
         'criacao' => 'datetime',
         'desktop' => 'boolean',
         'inativo' => 'datetime',
-        'latitude' => 'float',
-        'longitude' => 'float',
+        'sincronizacaocompleta' => 'datetime',
         'minutosesquecido' => 'integer',
-        'monitoramento' => 'date:Y-m-d',
-        'precisao' => 'float'
+        'monitoramento' => 'date:Y-m-d'
     ];
 
 
@@ -147,6 +141,17 @@ class Pdv extends MgModel
     public function PixCobS()
     {
         return $this->hasMany(PixCob::class, 'codpdv', 'codpdv');
+    }
+
+    // IP e localizacao de cada sincronizacao; o atual e' a ultima
+    public function PdvLocalizacaoS()
+    {
+        return $this->hasMany(PdvLocalizacao::class, 'codpdv', 'codpdv');
+    }
+
+    public function UltimaLocalizacao()
+    {
+        return $this->hasOne(PdvLocalizacao::class, 'codpdv', 'codpdv')->latestOfMany('codpdvlocalizacao');
     }
 
 }

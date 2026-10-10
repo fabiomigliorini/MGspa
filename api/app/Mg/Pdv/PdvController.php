@@ -46,7 +46,7 @@ class PdvController
         if ($filiais === []) {
             abort(403, 'Só Administrador ou Gerente!');
         }
-        $query = Pdv::with(['Filial', 'Setor', 'Portador'])->orderBy('criacao', 'desc');
+        $query = Pdv::with(['Filial', 'Setor', 'Portador', 'UltimaLocalizacao'])->orderBy('criacao', 'desc');
         if ($filiais !== null) {
             $query->whereIn('codfilial', $filiais);
         }
@@ -62,8 +62,9 @@ class PdvController
             'todos' => null,
             default => $query->whereNull('inativo'),
         };
+        // no historico: acha tambem quem ja usou o IP
         if ($request->ip) {
-            $query->where('ip', 'ilike', "%{$request->ip}%");
+            $query->whereHas('PdvLocalizacaoS', fn ($q) => $q->whereRaw('host(ip) ilike ?', ["%{$request->ip}%"]));
         }
         if ($request->uuid) {
             $query->where('uuid', 'ilike', "%{$request->uuid}%");
@@ -116,7 +117,8 @@ class PdvController
     public function postDispositivo(Request $request)
     {
         $this->validarNavegador($request);
-        $pdv = PdvService::cadastrar(
+        // o dispositivo e a 1a linha do historico de localizacao juntos
+        $pdv = DB::transaction(fn () => PdvService::cadastrar(
             $request->uuid,
             $request->ip(),
             $request->latitude,
@@ -126,14 +128,14 @@ class PdvController
             $request->navegador,
             $request->versaonavegador,
             $request->plataforma
-        );
+        ));
         return new PdvResource($pdv);
     }
 
     public function putDispositivo(Request $request)
     {
         $this->validarNavegador($request);
-        $pdv = PdvService::dispositivo(
+        $pdv = DB::transaction(fn () => PdvService::dispositivo(
             $request->uuid,
             $request->ip(),
             $request->latitude,
@@ -144,7 +146,16 @@ class PdvController
             $request->versaonavegador,
             $request->plataforma,
             is_array($request->legado) ? $request->legado : null
-        );
+        ));
+        return new PdvResource($pdv);
+    }
+
+    // fim da sincronizacao: sem usuario (quiosque), autoriza pelo uuid do dispositivo
+    public function putSincronizacaoCompleta(Request $request)
+    {
+        $request->validate(['completa' => 'required|date']);
+        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = PdvService::sincronizacaoCompleta($pdv, $request->completa);
         return new PdvResource($pdv);
     }
 

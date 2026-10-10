@@ -64,20 +64,18 @@ class PdvService
         if ($pdv) {
             return $pdv;
         }
-        // fresh(): o minutosesquecido vem do default da tabela
-        return Pdv::create([
+        $pdv = Pdv::create([
             'uuid' => $uuid,
             'inativo' => Carbon::now(),
-            'ip' => $ip,
-            'latitude' => $latitude,
-            'longitude' => $longitude,
-            'precisao' => $precisao,
             'desktop' => $desktop,
             'navegador' => $navegador,
             'versaonavegador' => $versaonavegador,
             'plataforma' => $plataforma,
             'codsetor' => Setor::whereNull('inativo')->first()->codsetor,
-        ])->fresh();
+        ]);
+        static::registrarLocalizacao($pdv, $ip, $latitude, $longitude, $precisao);
+        // fresh(): o minutosesquecido vem do default da tabela
+        return $pdv->fresh();
     }
 
     // Sincronizacao: atualiza o que o navegador sabe de si; nao cadastra (isso e' o cadastrar)
@@ -97,10 +95,6 @@ class PdvService
         if (!$pdv) {
             abort(404, 'Dispositivo não cadastrado! Abra o Meu Dispositivo e clique em Cadastrar.');
         }
-        $pdv->ip = $ip;
-        $pdv->latitude = $latitude;
-        $pdv->longitude = $longitude;
-        $pdv->precisao = $precisao;
         $pdv->desktop = $desktop;
         $pdv->navegador = $navegador;
         $pdv->versaonavegador = $versaonavegador;
@@ -110,6 +104,43 @@ class PdvService
             static::migrarConfiguracao($pdv, $legado);
         }
 
+        $pdv->save();
+        static::registrarLocalizacao($pdv, $ip, $latitude, $longitude, $precisao);
+        return $pdv;
+    }
+
+    // Historico (TASK-46): uma linha por periodo no mesmo lugar. Com o mesmo IP e a mesma posicao
+    // da ultima linha, so' conta mais uma sincronizacao nela (a alteracao vira a da ultima);
+    // mudou qualquer um, linha nova
+    public static function registrarLocalizacao(Pdv $pdv, $ip, $latitude, $longitude, $precisao)
+    {
+        $latitude = is_null($latitude) ? null : (float) $latitude;
+        $longitude = is_null($longitude) ? null : (float) $longitude;
+        $ultima = $pdv->UltimaLocalizacao()->first();
+        if (
+            $ultima
+            && $ultima->ip === $ip
+            && $ultima->latitude === $latitude
+            && $ultima->longitude === $longitude
+        ) {
+            $ultima->sincronizacoes++;
+            $ultima->save();
+            return $ultima;
+        }
+        return PdvLocalizacao::create([
+            'codpdv' => $pdv->codpdv,
+            'ip' => $ip,
+            'latitude' => $latitude,
+            'longitude' => $longitude,
+            'precisao' => $precisao,
+        ]);
+    }
+
+    // O PDV avisa no fim da sincronizacao a data da completa: a mais antiga entre as de cada
+    // cadastro baixado (pessoas, produtos, pranchetas...), a mesma que o botao Sincronizar mostra
+    public static function sincronizacaoCompleta(Pdv $pdv, $completa)
+    {
+        $pdv->sincronizacaocompleta = $completa;
         $pdv->save();
         return $pdv;
     }
@@ -208,10 +239,21 @@ class PdvService
             $oc->tipodescricao = OcorrenciaService::TIPOS[$oc->tipo] ?? $oc->tipo;
         }
 
+        $localizacoes = DB::select('
+            select
+                l.codpdvlocalizacao, l.criacao, l.alteracao, l.sincronizacoes, host(l.ip) as ip,
+                l.latitude, l.longitude, l.precisao
+            from tblpdvlocalizacao l
+            where l.codpdv = :codpdv
+            order by l.codpdvlocalizacao desc
+            limit 20
+        ', ['codpdv' => $codpdv]);
+
         return [
             'negocios' => $negocios,
             'pagamentos' => $pagamentos,
             'ocorrencias' => $ocorrencias,
+            'localizacoes' => $localizacoes,
         ];
     }
 

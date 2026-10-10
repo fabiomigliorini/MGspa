@@ -674,6 +674,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('dispositivo', '\Mg\Pdv\PdvController@postDispositivo');
         Route::put('dispositivo', '\Mg\Pdv\PdvController@putDispositivo')
             ->withoutMiddleware('auth:api');
+        Route::put('dispositivo/sincronizacao-completa', '\Mg\Pdv\PdvController@putSincronizacaoCompleta')
+            ->withoutMiddleware('auth:api');
         Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio')
             ->name('pdv.negocio.romaneio')
             ->withoutMiddleware('auth:api')->middleware('auth_or_signed');

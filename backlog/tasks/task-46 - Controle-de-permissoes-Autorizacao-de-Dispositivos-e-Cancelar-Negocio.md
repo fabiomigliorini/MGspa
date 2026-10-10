@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-10 18:27'
+updated_date: '2026-10-10 18:28'
 labels:
   - negocios
 dependencies: []
@@ -32,6 +32,7 @@ Origem: negocios/todo — secao SEGURANCA. No arquivo original constava "(Allan)
 - [x] #8 Ao abrir o negocios (PDV e quiosque), dispositivo sem cadastro ou sem autorização vai direto para o Meu Dispositivo, que tem o Cadastrar
 - [x] #9 Um formulário só para editar o dispositivo, agrupado por contexto; o que o usuário não pode alterar fica desabilitado (e o servidor recusa)
 - [x] #10 Autorizar e reativar recusam sem Apelido, Filial, Local de Estoque, Setor e Natureza de Operação
+- [ ] #11 A página do dispositivo mostra o histórico de IP e localização (uma linha por período no mesmo lugar, com quantas sincronizações) e a data da última sincronização completa
 - [x] #12 Sincronizar aparece em todas as telas do negócios
 - [x] #13 Ícone de sincronização não fica vermelho logo depois de sincronizar à tarde
 <!-- AC:END -->
@@ -48,6 +49,8 @@ Autorizado = ativo (Fábio, 10/10): tblpdv.autorizado saiu. O dispositivo nasce 
 Lentidão dos últimos registros (3,6 s no PDV 254): com só o índice em codpdv, 'order by cod desc limit' descia a PK inteira filtrando o PDV. Índices (codpdv, cod) em tblnegocio, tblpagamento e tblocorrencia no pdv_configuracao.sql (CONCURRENTLY); < 1 ms. Página mostra os 10 últimos.
 
 Revisão (Fábio): os últimos registros saem por data (lancamento/transacao/criacao desc, limit 20) e os índices compostos passaram a ser (codpdv, data): idx_tblnegocio_codpdv_lancamento, idx_tblpagamento_codpdv_transacao, idx_tblocorrencia_codpdv_criacao. Sem eles, PDV parado desde 2024 levava 2 s.
+
+Histórico de IP e localização (Fábio, 10/10): tblpdvlocalizacao, uma linha por período no mesmo lugar (PdvService::registrarLocalizacao, na mesma transação): com o mesmo IP, latitude e longitude da última linha só soma em sincronizacoes e a alteracao vira a da última; mudou, linha nova. O atual é a última linha (Pdv::UltimaLocalizacao); o PdvResource manda o ip dela, para a lista e o SelectPdv. Filtro IP da lista procura no histórico (quem já usou o IP). Página do dispositivo: card Localizações (20 últimas, link do mapa, precisão) no lugar dos campos IP/Localização. Saiu o IP do PDV do detalhe do negócio (era o de hoje, não o da venda). DDL: tabela + carga inicial no pdv_configuracao.sql; ip, latitude, longitude e precisao saem do tblpdv no pdv_autorizado_drop.sql, depois do deploy. Desktop sem GPS vem pelo IP público (cidade, 1–4 km); precisão de 1 m é localização forçada no navegador. Sincronização completa: tblpdv.sincronizacaocompleta, a mesma data que o botão Sincronizar mostra (a mais antiga entre os cadastros baixados); o PDV manda no fim de cada sincronização (PUT pdv/dispositivo/sincronizacao-completa, sem login, pelo uuid). Página e lista de dispositivos mostram.
 
 Sincronizar em todas as telas e hora em 24h (10/10, commits f796b2a16 e 9b5c52bbf): o BtnSincronizacao saiu do OfflineLayout e foi para o MainLayout, ao lado do usuário (o quiosque segue com o dele). O ícone ficava vermelho à tarde porque o carimbo sincronizado dos endpoints v1/pdv/* saía em 12 horas (date 'Y-m-d h:i:s' no PdvService e no PdvPranchetaService): às 13:47 gravava 01:47 e passava do limite de 4 h. Virou 'H'. O mesmo carimbo decide o que a base offline apaga (below sincronizado), então o apagado no servidor também ficava no PDV até o dia seguinte. Teste: sincronizar depois das 12h e o ícone fica na cor normal; Caixa, Pagamentos, Listagem, Vales, Comandas, Confissão, Configuração, Dispositivos e Woo têm o botão, e o PDV só um.
 

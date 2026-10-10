@@ -239,6 +239,23 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       if (manterAberta) {
         this.importacao.dialog = true
       }
+      await this.avisarSincronizacaoCompleta()
+    },
+
+    // a pagina do dispositivo mostra a mesma data que o botao Sincronizar (a completa: a mais
+    // antiga entre os cadastros baixados). Falhar aqui nao desfaz a sincronizacao
+    async avisarSincronizacaoCompleta() {
+      if (!this.ultimaSincronizacao.completa) {
+        return
+      }
+      try {
+        await api.put('/v1/pdv/dispositivo/sincronizacao-completa', {
+          pdv: this.pdv.uuid,
+          completa: this.ultimaSincronizacao.completa,
+        })
+      } catch (error) {
+        console.log(error)
+      }
     },
 
     async inicializaVars() {

@@ -22,6 +22,9 @@ class PdvResource extends JsonResource
         $ret['setor'] = $this->Setor?->setor ?? null;
         $ret['portador'] = $this->Portador?->portador ?? null;
 
+        // da ultima sincronizacao; o historico vem nos registros da pagina do dispositivo
+        $ret['ip'] = $this->UltimaLocalizacao?->ip;
+
         // Configuracao: o PDV usa offline, sem consultar o IndexedDB
         $ret['estoquelocal'] = $this->EstoqueLocal?->estoquelocal ?? null;
         $ret['naturezaoperacao'] = $this->NaturezaOperacao?->naturezaoperacao ?? null;

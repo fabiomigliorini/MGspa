@@ -1,7 +1,7 @@
 <script setup>
 import { computed, onMounted } from 'vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
-import { formataCodigo } from '@components/formatters'
+import { formataCodigo, tempoRelativo } from '@components/formatters'
 import { dispositivoStore } from 'stores/dispositivo'
 import { statusDispositivo } from 'src/utils/dispositivo'
 
@@ -70,6 +70,9 @@ onMounted(() => sDispositivo.carregar())
                 <q-icon :name="d.desktop ? 'desktop_windows' : 'smartphone'" />
                 {{ d.plataforma }} {{ d.navegador }} {{ d.versaonavegador }}
                 <template v-if="d.ip"> · {{ d.ip }}</template>
+                <template v-if="d.sincronizacaocompleta">
+                  · sincronizado {{ tempoRelativo(d.sincronizacaocompleta) }}
+                </template>
               </q-item-label>
             </q-item-section>
             <q-item-section side class="gt-xs">

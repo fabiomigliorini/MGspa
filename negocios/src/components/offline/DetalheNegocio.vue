@@ -502,9 +502,6 @@ const apropriar = () => {
             <q-item-label caption>
               {{ sNegocio.negocio.Pdv.uuid }}
             </q-item-label>
-            <q-item-label caption>
-              {{ sNegocio.negocio.Pdv.ip }}
-            </q-item-label>
             <q-item-label caption v-if="sNegocio.negocio.Pdv.setor">
               {{ sNegocio.negocio.Pdv.setor }}
             </q-item-label>
