@@ -124,6 +124,12 @@ watch(() => route.fullPath, carregar)
         v-if="pag"
         :pode-estornar="podeMutar"
         :to-titulo="(codtitulo) => ({ name: 'titulo-detalhe', params: { codtitulo } })"
+        :to-portador="
+          (codportador, codportadorperiodo) => ({
+            name: 'portador-detalhe',
+            params: { codportador, codportadorperiodo: codportadorperiodo || undefined },
+          })
+        "
       >
         <template #acoes>
           <q-btn

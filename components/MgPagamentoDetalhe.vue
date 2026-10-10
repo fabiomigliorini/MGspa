@@ -23,6 +23,11 @@ defineProps({
     type: Function,
     default: null,
   },
+  // rota do portador no período (página do contas); sem ela, link para o contas
+  toPortador: {
+    type: Function,
+    default: null,
+  },
 })
 
 const emit = defineEmits(['estornado'])
@@ -43,6 +48,7 @@ const COR_TOTAL = { CR: 'text-green-8', DB: 'text-red-8', TR: 'text-blue-8', CP:
 const urlPessoa = (cod) => (cod ? `${process.env.PESSOAS_URL}/pessoa/${cod}` : null)
 const urlVenda = (cod) => `${process.env.NEGOCIOS_URL}/negocio/${cod}`
 const urlTitulo = (cod) => `${process.env.CONTAS_URL}/titulo/${cod}`
+const urlPortador = (cod, per) => `${process.env.CONTAS_URL}/portador/${cod}${per ? `/${per}` : ''}`
 
 const erro = (e, padrao) =>
   $q.notify({
@@ -423,7 +429,13 @@ const cancelar = () => {
         <q-card bordered flat v-if="pag.razao?.length" class="q-mb-md">
           <q-card-section class="text-grey-9 text-overline">RAZÃO</q-card-section>
           <q-list separator>
-            <q-item v-for="r in pag.razao" :key="r.codportadormovimento">
+            <q-item
+              v-for="r in pag.razao"
+              :key="r.codportadormovimento"
+              :to="toPortador ? toPortador(r.codportador, r.codportadorperiodo) : undefined"
+              :href="toPortador ? undefined : urlPortador(r.codportador, r.codportadorperiodo)"
+              :target="toPortador ? undefined : '_blank'"
+            >
               <q-item-section>
                 <q-item-label :class="r.inativo ? 'text-strike text-grey-6' : ''">
                   {{ r.portador }}
