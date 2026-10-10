@@ -111,12 +111,14 @@ class TituloService
         $tipoTitulo = TipoTitulo::findOrFail($dados['codtipotitulo'] ?? $titulo->codtipotitulo);
 
         $geradoAuto = $titulo->geradoAutomaticamente();
+        // vale/adiantamento: valor e datas são do pagamento (TASK-214)
+        $travado = $geradoAuto || $titulo->nasceuDePagamento();
         $zerado = (float)$titulo->saldo == 0 && !empty($titulo->codtitulo);
 
-        // valor: bloqueado se gerado auto ou já zerado
+        // valor: bloqueado se gerado auto, nascido de pagamento ou já zerado
         $valorAntigo = (float)$titulo->valor;
         $valorNovo = (float)($dados['valor'] ?? abs($valorAntigo));
-        if (!$geradoAuto && !$zerado) {
+        if (!$travado && !$zerado) {
             if ($valorNovo <= 0) {
                 throw new \InvalidArgumentException('Valor deve ser maior que zero!');
             }
@@ -145,18 +147,21 @@ class TituloService
         // vencimento (data prática): sempre editável até liquidar
         $titulo->vencimento = $dados['vencimento'] ?? $titulo->vencimento;
 
-        // numero, emissao, transacao, vencimentooriginal: travados se gerado automaticamente
-        if (!$geradoAuto) {
+        // numero, emissao, transacao: travados se gerado automaticamente ou nascido de pagamento
+        if (!$travado) {
             if (array_key_exists('numero', $dados)) {
                 $titulo->numero = !empty($dados['numero']) ? $dados['numero'] : $titulo->codtitulo;
             }
-            $titulo->vencimentooriginal = $dados['vencimentooriginal'] ?? $titulo->vencimentooriginal;
             $titulo->emissao = $dados['emissao'] ?? $titulo->emissao;
             $titulo->transacao = $dados['transacao'] ?? $titulo->transacao;
         }
+        // vencimentooriginal: travado se gerado automaticamente
+        if (!$geradoAuto) {
+            $titulo->vencimentooriginal = $dados['vencimentooriginal'] ?? $titulo->vencimentooriginal;
+        }
 
-        // valor: travado se gerado automaticamente ou já zerado
-        if (!$geradoAuto && !$zerado) {
+        // valor: travado se gerado automaticamente, nascido de pagamento ou já zerado
+        if (!$travado && !$zerado) {
             $titulo->valor = $tipoTitulo->ehReceber() ? $valorNovo : -$valorNovo;
         }
 

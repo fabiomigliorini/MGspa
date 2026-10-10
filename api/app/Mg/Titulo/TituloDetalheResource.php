@@ -174,6 +174,8 @@ class TituloDetalheResource extends Resource
             // gerado pela conta corrente da maquineta de parceiro
             'codcaixaitem'     => optional($this->CaixaItemAcerto)->codcaixaitem,
             'caixaitem'        => optional(optional($this->CaixaItemAcerto)->CaixaItem)->item,
+            // vale/adiantamento: valor e datas são do pagamento (TASK-214)
+            'nasceudepagamento' => $this->nasceuDePagamento(),
             'codusuariocriacao' => $this->codusuariocriacao ? (int)$this->codusuariocriacao : null,
             'codusuarioalteracao' => $this->codusuarioalteracao ? (int)$this->codusuarioalteracao : null,
             'emissao'          => $this->emissao,

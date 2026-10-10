@@ -127,6 +127,17 @@ class Titulo extends MgModel
             || $this->CaixaItemAcerto()->exists();
     }
 
+    // nasceu com o dinheiro (vale colaborador, adiantamento): a implantacao
+    // e' ligada ao pagamento, que e' o dono do valor e das datas. O estorno
+    // continua aqui (devolve o dinheiro e cancela o pagamento, TASK-214)
+    public function nasceuDePagamento(): bool
+    {
+        return $this->MovimentoTituloS()
+            ->where('codtipomovimentotitulo', MovimentoTituloService::TIPO_IMPLANTACAO)
+            ->whereNotNull('codpagamento')
+            ->exists();
+    }
+
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');

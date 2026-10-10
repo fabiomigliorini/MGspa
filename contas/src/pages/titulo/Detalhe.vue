@@ -64,6 +64,10 @@ const automatico = computed(
     ),
 )
 const geradoAuto = computed(() => !duplicando.value && automatico.value)
+// vale/adiantamento: valor e datas são do pagamento, mas o estorno continua aqui (TASK-214)
+const travado = computed(
+  () => geradoAuto.value || (!duplicando.value && !!titulo.value?.nasceudepagamento),
+)
 // Quando o título foi LIQUIDADO por um agrupamento, o vínculo está no movimento
 // (não em titulo.codtituloagrupamento, que indica que ele foi GERADO por agrupamento).
 // const codtituloagrupamentoLiquidacao = computed(() => {
@@ -981,8 +985,8 @@ watch(() => route.fullPath, carregar)
                   outlined
                   label="Número"
                   maxlength="20"
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
@@ -998,8 +1002,8 @@ watch(() => route.fullPath, carregar)
                   v-model="model.valor"
                   label="Valor"
                   prefix="R$"
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto || liquidado"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado || liquidado"
                   :rules="[(v) => (v && Number(v) > 0) || 'Obrigatório']"
                 />
               </div>
@@ -1011,8 +1015,8 @@ watch(() => route.fullPath, carregar)
                   type="date"
                   label="Emissão"
                   stack-label
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
@@ -1024,8 +1028,8 @@ watch(() => route.fullPath, carregar)
                   type="date"
                   label="Transação"
                   stack-label
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
