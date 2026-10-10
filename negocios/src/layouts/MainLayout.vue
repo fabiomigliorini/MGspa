@@ -16,32 +16,44 @@ const menuGroups = [
       { label: 'PDV', icon: 'point_of_sale', color: 'secondary', to: '/' },
       { label: 'Pagamentos', icon: 'payments', color: 'indigo', to: '/pagamento' },
       { label: 'Caixa', icon: 'savings', color: 'green-8', to: '/caixa' },
-      { label: 'Confissão de Dívida', icon: 'photo_camera', color: 'negative', to: '/confissao' },
+      { label: 'Consulta de Preços', icon: 'price_check', color: 'teal', to: '/quiosque' },
+    ],
+  },
+  {
+    label: 'Movimento',
+    items: [
+      { label: 'Escanear Confissão', icon: 'photo_camera', color: 'negative', to: '/confissao' },
+      {
+        label: 'Cobranças PagarMe',
+        icon: 'mdi-printer-pos-outline',
+        color: 'primary',
+        to: '/pagar-me',
+      },
+      { label: 'Imprimir Comandas', icon: 'mdi-barcode', color: 'indigo', to: '/comanda-vendedor' },
+      // { label: 'WOO', icon: 'mdi-list-box-outline', color: 'purple', to: '/woo/painel' },
+    ],
+  },
+  {
+    label: 'Configuração',
+    items: [
       {
         label: 'Meu Dispositivo',
         icon: 'phonelink_setup',
         color: 'blue-grey',
         to: '/dispositivo/meu',
       },
-    ],
-  },
-  {
-    label: 'Consultas',
-    items: [{ label: 'Consulta de Preços', icon: 'price_check', color: 'teal', to: '/quiosque' }],
-  },
-  {
-    label: 'Administração',
-    items: [
-      { label: 'Modelos de Vale', icon: 'card_giftcard', color: 'pink', to: '/vale-modelo' },
-      { label: 'Comandas', icon: 'mdi-barcode', color: 'indigo', to: '/comanda-vendedor' },
-      { label: 'WOO', icon: 'mdi-list-box-outline', color: 'purple', to: '/woo/painel' },
-      { label: 'Dispositivos', icon: 'devices', color: 'blue-grey', to: '/dispositivo' },
-      { label: 'PagarMe', icon: 'mdi-printer-pos-outline', color: 'primary', to: '/pagar-me' },
+      { label: 'Outros Dispositivos', icon: 'devices', color: 'blue-grey', to: '/dispositivo' },
       {
         label: 'Prancheta',
         icon: 'mdi-clipboard-text-outline',
         color: 'primary',
         to: '/prancheta',
+      },
+      {
+        label: 'Modelos de Vale Compras',
+        icon: 'card_giftcard',
+        color: 'pink',
+        to: '/vale-modelo',
       },
     ],
   },
