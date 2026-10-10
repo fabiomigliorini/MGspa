@@ -78,3 +78,10 @@
   max-width: 95vw;
   height: 60vh;
 }
+
+// O hover/foco do q-item é um retângulo: sem cortar, vaza pelos cantos arredondados
+// do card ou da lista. Card de dialog não é afetado (.q-dialog__inner > div ganha).
+.q-card,
+.q-list.rounded-borders {
+  overflow: hidden;
+}
