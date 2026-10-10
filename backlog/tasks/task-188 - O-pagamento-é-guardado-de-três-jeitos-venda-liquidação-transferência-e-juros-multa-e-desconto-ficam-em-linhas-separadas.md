@@ -19,7 +19,7 @@ documentation:
   - backlog/docs/doc-4 - Refatoração-das-telas-do-dinheiro-portador-e-período.md
 priority: high
 type: chore
-ordinal: 201000
+ordinal: 203000
 ---
 
 ## Description
