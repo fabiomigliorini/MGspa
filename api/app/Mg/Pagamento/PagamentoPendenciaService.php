@@ -2,7 +2,9 @@
 
 namespace Mg\Pagamento;
 
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Conferencia\ConferenciaService;
 use Mg\Negocio\NegocioService;
 use Mg\Portador\PortadorAutorizador;
@@ -222,5 +224,149 @@ class PagamentoPendenciaService
                 'pdv' => optional($pag->Pdv)->apelido,
             ];
         }, $linhas);
+    }
+
+    // ---- dar destino ao pagamento nao resolvido ----
+
+    // quem da' destino: operador (ou gestor) do portador do pagamento
+    public static function autorizar(Pagamento $pag, string $acao): void
+    {
+        $portador = $pag->portadorDoPagamento();
+        if ($portador) {
+            PortadorAutorizador::autorizar($portador, PortadorUsuario::PAPEL_OPERADOR, $acao);
+        }
+    }
+
+    // "Ja' lancado": o digitado que casa com o integrado (a adquirente
+    // atrasou, o caixa digitou pelo comprovante): mesmo sentido e valor,
+    // manual, efetivado, ate' 3 dias de diferenca; no cartao, a mesma
+    // autorizacao quando os dois tem
+    public static function duplicados(Pagamento $integrado): array
+    {
+        $entrada = !empty($integrado->codportadordestino);
+        $dia = $integrado->transacao->copy();
+        $q = Pagamento::with(['Maquineta:codmaquineta,apelido', 'Pessoa:codpessoa,fantasia', 'Negocio:codnegocio,codnegociostatus'])
+            ->where('estado', PagamentoService::ESTADO_EFETIVADO)
+            ->where('codpagamento', '!=', $integrado->codpagamento)
+            ->whereBetween('total', [(float) $integrado->total - 0.005, (float) $integrado->total + 0.005])
+            ->whereBetween('transacao', [$dia->copy()->subDays(3), $dia->copy()->addDays(3)])
+            ->whereNull('codpixcob')->whereNull('codpix')->whereNull('codpagarmepedido')
+            ->whereNull('codsauruspedido')->whereNull('codliopedido')
+            ->whereNull('codpagamentoorigem');
+        $q->whereNotNull($entrada ? 'codportadordestino' : 'codportadororigem');
+        if (in_array((int) $integrado->meio, PagamentoService::MEIOS_CARTAO)) {
+            $q->whereIn('meio', PagamentoService::MEIOS_CARTAO);
+            if (!empty($integrado->autorizacao)) {
+                $q->where(fn ($w) => $w->whereNull('autorizacao')->orWhere('autorizacao', $integrado->autorizacao));
+            }
+        } else {
+            $q->where('meio', $integrado->meio);
+        }
+        return $q->orderByRaw('abs(extract(epoch from transacao - ?))', [$dia])->limit(20)->get()
+            ->filter(fn ($p) => PagamentoTituloService::manual($p))
+            ->map(fn ($p) => [
+                'codpagamento' => (int) $p->codpagamento,
+                'meiodescricao' => PagamentoService::descricao($p),
+                'transacao' => $p->transacao,
+                'total' => (float) $p->total,
+                'maquineta' => optional($p->Maquineta)->apelido,
+                'autorizacao' => $p->autorizacao,
+                'pessoa' => optional($p->Pessoa)->fantasia,
+                'codnegocio' => $p->codnegocio,
+                'titulos' => static::movimentosAtivos($p)->count(),
+            ])->values()->all();
+    }
+
+    // O integrado e o digitado sao o mesmo dinheiro: fica o integrado (o fato
+    // confirmado), as amarracoes do digitado (titulos e venda) passam para
+    // ele, e o digitado e' cancelado como registro indevido (auditoria).
+    public static function jaLancado(Pagamento $integrado, Pagamento $digitado, string $justificativa): Pagamento
+    {
+        $integrado = Pagamento::lockForUpdate()->findOrFail($integrado->codpagamento);
+        $digitado = Pagamento::lockForUpdate()->findOrFail($digitado->codpagamento);
+        if ($integrado->estado != PagamentoService::ESTADO_EFETIVADO || $digitado->estado != PagamentoService::ESTADO_EFETIVADO) {
+            abort(422, 'Os dois pagamentos precisam estar efetivados!');
+        }
+        if (PagamentoTituloService::manual($integrado)) {
+            abort(422, "O pagamento {$integrado->codpagamento} não é integrado: cancele o que foi digitado errado.");
+        }
+        if (!PagamentoTituloService::manual($digitado)) {
+            abort(422, "O pagamento {$digitado->codpagamento} também é integrado!");
+        }
+        if (abs((float) $integrado->total - (float) $digitado->total) > 0.005
+            || empty($integrado->codportadordestino) != empty($digitado->codportadordestino)) {
+            abort(422, 'Os pagamentos não têm o mesmo valor e sentido!');
+        }
+        if (static::amarrado($integrado) > 0.005 || !empty($integrado->codnegocio)) {
+            abort(422, "O pagamento {$integrado->codpagamento} já está amarrado!");
+        }
+        // o lote da maquineta e o caixa do digitado ainda abertos
+        \Mg\Conferencia\PagamentoCorrecaoService::exigirAberta($digitado);
+
+        $portador = $integrado->codportadordestino ?? $integrado->codportadororigem;
+        foreach (static::movimentosAtivos($digitado) as $mov) {
+            $mov->codpagamento = $integrado->codpagamento;
+            $mov->codportador = $portador;
+            $mov->save();
+        }
+        if (!empty($digitado->codnegocio)) {
+            $codnegocio = $digitado->codnegocio;
+            PagamentoService::amarrarVenda($digitado, null, "É o mesmo que o pagamento {$integrado->codpagamento}");
+            PagamentoService::amarrarVenda($integrado, $codnegocio, "Era o pagamento {$digitado->codpagamento}, digitado");
+        }
+        if (empty($integrado->codpessoa) && !empty($digitado->codpessoa)) {
+            $integrado->codpessoa = $digitado->codpessoa;
+            $integrado->save();
+        }
+        $antes = ['estado' => $digitado->estado, 'indevido' => (bool) $digitado->indevido];
+        $digitado->indevido = true;
+        PagamentoService::cancelar($digitado, "Registro indevido: é o mesmo que o pagamento {$integrado->codpagamento}. {$justificativa}");
+        AuditoriaService::registrar(
+            'tblpagamento',
+            $digitado->codpagamento,
+            AuditoriaService::TIPO_REGISTRO_INDEVIDO,
+            $antes,
+            ['estado' => $digitado->estado, 'indevido' => true, 'codpagamentointegrado' => $integrado->codpagamento],
+            $justificativa
+        );
+        return PagamentoListaService::carregar($integrado->codpagamento);
+    }
+
+    // Devolver: o PIX ou o cartao entrou por engano; registra a devolucao do
+    // PIX / o cancelamento no cartao (pagamento contrario, sai do banco ou da
+    // adquirente), no valor que esta' livre ou menos
+    public static function devolver(Pagamento $pag, float $valor, string $justificativa): Pagamento
+    {
+        $pag = Pagamento::lockForUpdate()->findOrFail($pag->codpagamento);
+        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO || empty($pag->codportadordestino)) {
+            abort(422, 'Só se devolve um recebimento efetivado!');
+        }
+        if (!in_array((int) $pag->meio, [PagamentoService::MEIO_CREDITO, PagamentoService::MEIO_DEBITO, PagamentoService::MEIO_PIX])) {
+            abort(422, 'Devolver é para PIX e cartão; o resto se cancela.');
+        }
+        PagamentoTituloService::exigirCentavos($valor);
+        $livre = static::livre($pag);
+        if ($valor <= 0 || $valor > $livre + 0.005) {
+            abort(422, 'Só dá para devolver o que está livre: R$ ' . number_format($livre, 2, ',', '.'));
+        }
+        $origem = ($pag->meio == PagamentoService::MEIO_PIX)
+            ? $pag->codportadordestino
+            : (PagamentoTituloService::portadorDaMaquineta($pag->Maquineta)->codportador ?? $pag->codportadordestino);
+        $dev = PagamentoService::contrario($pag, [
+            'estado' => PagamentoService::ESTADO_EFETIVADO,
+            'transacao' => Carbon::now(),
+            'efetivacao' => Carbon::now(),
+            'codusuarioefetivacao' => auth()->user()->codusuario ?? null,
+            'principal' => round($valor, 2),
+            'juros' => 0,
+            'multa' => 0,
+            'desconto' => 0,
+            'codnegocio' => null,
+            'codportadororigem' => $origem,
+            'codportadordestino' => null,
+            'parcelas' => null,
+            'observacoes' => $justificativa,
+        ]);
+        return PagamentoListaService::carregar($dev->codpagamento);
     }
 }

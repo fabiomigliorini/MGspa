@@ -62,6 +62,9 @@ const recibo = async (pag) => {
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
       <div class="row q-gutter-sm items-end">
+        <q-btn fab-mini color="orange-8" icon="link_off" to="/pagamento/pendentes">
+          <q-tooltip anchor="top middle" self="bottom middle">Pagamentos não resolvidos</q-tooltip>
+        </q-btn>
         <q-btn
           fab-mini
           color="deep-purple-4"

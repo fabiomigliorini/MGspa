@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-10 01:18'
+updated_date: '2026-10-10 01:22'
 labels:
   - contas
   - negocios
@@ -60,6 +60,8 @@ Desenho, decisões e o registro da execução de cada etapa: doc-3 (Plano do fec
 - [ ] #26 Detalhe do pagamento mostra as amarrações com o histórico (título desamarrado riscado), o saldo, o amarrado e o livre
 - [ ] #27 Cancelar a venda cancela só o pagamento manual; PIX e cartão integrado ficam efetivados e saem da venda (órfãos, em não resolvidos), com a mudança na auditoria
 - [ ] #28 'Já recebido' na venda do PDV amarra o pagamento sem amarração inteiro na venda aberta, se couber no que falta; maior que a venda é recusado com a orientação de amarrar o excedente como adiantamento
+- [ ] #29 Tela Pagamentos não resolvidos (menu do contas e botão em Pagamentos do PDV): lista o que não bate (pago − devolvido ≠ amarrado), só dos portadores em que o usuário tem papel
+- [ ] #30 Não resolvido: amarrar a títulos (abre o Receber Título com o pagamento), lançar como vale/adiantamento, 'já lançado' (fica o integrado, o digitado é cancelado como indevido e as amarrações passam) e devolver PIX/cartão
 <!-- AC:END -->
 
 ## Implementation Notes

@@ -354,6 +354,22 @@ const routes = [
         },
       },
       {
+        path: 'pagamento/pendentes',
+        name: 'pagamento-pendentes',
+        component: () => import('pages/pagamento/Pendentes.vue'),
+        meta: {
+          auth: true,
+          title: 'Pagamentos não resolvidos',
+          permissions: [
+            PERMISSOES.ADMINISTRADOR,
+            PERMISSOES.FINANCEIRO,
+            PERMISSOES.COBRANCA,
+            PERMISSOES.GERENTE,
+            PERMISSOES.CAIXA,
+          ],
+        },
+      },
+      {
         path: 'pagamento/novo',
         name: 'pagamento-novo',
         component: () => import('pages/pagamento/Nova.vue'),

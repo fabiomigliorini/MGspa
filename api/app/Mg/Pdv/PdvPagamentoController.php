@@ -45,6 +45,47 @@ class PdvPagamentoController
         return ['data' => PdvNegocioPagamentoService::pagamento($pag)];
     }
 
+    // "Ja' lancado": os digitados que casam com este integrado
+    public function duplicados(PdvRequest $request, int $id)
+    {
+        PdvService::autoriza($request->pdv);
+        return ['data' => PagamentoPendenciaService::duplicados(\Mg\Pagamento\Pagamento::findOrFail($id))];
+    }
+
+    // "Ja' lancado": fica este (o integrado), o digitado e' cancelado como
+    // registro indevido e as amarracoes dele passam para este
+    public function jaLancado(PdvRequest $request, int $id)
+    {
+        PdvService::autoriza($request->pdv);
+        $request->validate([
+            'codpagamento' => 'required|integer|exists:tblpagamento,codpagamento',
+            'justificativa' => 'required|string|min:5|max:300',
+        ]);
+        DB::beginTransaction();
+        $integrado = \Mg\Pagamento\Pagamento::findOrFail($id);
+        $digitado = \Mg\Pagamento\Pagamento::findOrFail($request->codpagamento);
+        PagamentoPendenciaService::autorizar($digitado, 'Cancelar o digitado');
+        $pag = PagamentoPendenciaService::jaLancado($integrado, $digitado, $request->justificativa);
+        DB::commit();
+        return new PagamentoDetalheResource($pag);
+    }
+
+    // devolver o PIX ou o cartao que entrou por engano (o que esta' livre)
+    public function devolver(PdvRequest $request, int $id)
+    {
+        PdvService::autoriza($request->pdv);
+        $request->validate([
+            'valor' => 'required|numeric|min:0.01',
+            'justificativa' => 'required|string|min:5|max:300',
+        ]);
+        DB::beginTransaction();
+        $pag = \Mg\Pagamento\Pagamento::findOrFail($id);
+        PagamentoPendenciaService::autorizar($pag, 'Devolver');
+        $dev = PagamentoPendenciaService::devolver($pag, (float) $request->valor, $request->justificativa);
+        DB::commit();
+        return new PagamentoDetalheResource($dev);
+    }
+
     public function show(PdvRequest $request, int $id)
     {
         $pdv = PdvService::autoriza($request->pdv);

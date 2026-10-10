@@ -148,6 +148,11 @@ const routes = [
     component: () => import('layouts/PagamentoReceberLayout.vue'),
     children: [{ path: '', component: () => import('pages/PagamentoReceberPage.vue') }],
   },
+  {
+    path: '/pagamento/pendentes',
+    component: () => import('layouts/PagamentoPendentesLayout.vue'),
+    children: [{ path: '', component: () => import('pages/PagamentoPendentesPage.vue') }],
+  },
 
   // Always leave this as last one,
   // but you can also remove it
