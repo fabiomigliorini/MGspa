@@ -118,10 +118,12 @@ class LancamentoDataService
             ->each(fn ($p) => PortadorPeriodoService::recalcular($p));
     }
 
-    // gestor de cada portador cuja ponta muda (a gaveta do PDV, o proprio
-    // PDV): quem administra so' um lado nao mexe no outro
+    // o papel em cada portador cuja ponta muda: quem administra so' um lado
+    // nao mexe no outro. Gestor altera com o periodo aberto ou pendente;
+    // operador so' com o periodo de onde sai e o para onde vai abertos (Fabio,
+    // 10/10/2026). Fechado, ninguem.
     // `$livre`: a gaveta do PDV ja' resolvida (0 = nenhuma; null = do request)
-    private static function podePortadores(array $codportadores, ?int $livre = null): bool
+    private static function podePortadores(array $codportadores, ?int $livre = null, string $papel = PortadorUsuario::PAPEL_GESTOR): bool
     {
         $cods = array_unique(array_filter($codportadores));
         if (empty($cods)) {
@@ -129,30 +131,100 @@ class LancamentoDataService
         }
         $livre ??= PortadorAutorizador::livre();
         foreach ($cods as $cod) {
-            if ($cod != $livre && !PortadorAutorizador::pode((int) $cod, PortadorUsuario::PAPEL_GESTOR)) {
+            if ($cod != $livre && !PortadorAutorizador::pode((int) $cod, $papel)) {
                 return false;
             }
         }
         return true;
     }
 
+    // periodo do portador ou da maquineta sem fim (aberto, nao pendente)
+    private static function aberto($periodo): bool
+    {
+        return $periodo !== null && $periodo->aberto();
+    }
+
+    const MOTIVO_OPERADOR = 'Alterar a data: o operador só altera com o período de onde sai e o para onde vai abertos; com período pendente, só o gestor.';
+
     // ==== pagamento ====
 
-    // o gestor de cada portador do pagamento; no cartao (que nao entra no
-    // razao do portador), o gestor do portador da adquirente da maquineta
-    public static function podePagamento(Pagamento $pag, ?int $livre = null): bool
+    // os portadores do pagamento; no cartao (que nao entra no razao do
+    // portador), o da adquirente da maquineta
+    private static function portadoresDoPagamento(Pagamento $pag): array
     {
         $portadores = [$pag->codportadororigem, $pag->codportadordestino];
         if (!empty($pag->codmaquineta)) {
             $portadores[] = optional(\Mg\Pagamento\PagamentoTituloService::portadorDaMaquineta($pag->Maquineta))->codportador;
         }
-        return static::podePortadores(array_values(array_filter($portadores)), $livre);
+        return array_values(array_filter($portadores));
     }
 
-    private static function autorizarPagamento(Pagamento $pag): void
+    // os periodos em que o pagamento esta' hoje: as linhas do razao, a sessao
+    // da gaveta e o periodo da maquineta (o do cancelamento, no cancelamento)
+    private static function periodosAtuaisDoPagamento(Pagamento $pag, bool $cancelamento = false): array
     {
-        if (!static::podePagamento($pag)) {
-            abort(403, 'Alterar a data: só o gestor de cada portador do pagamento (no cartão, o da adquirente).');
+        if ($cancelamento) {
+            return [$pag->MaquinetaLoteCancelamento];
+        }
+        $ret = PortadorPeriodo::whereIn('codportadorperiodo', static::periodosDoPagamento($pag))->get()->all();
+        if (!empty($pag->codportadorperiodo)) {
+            $ret[] = PortadorPeriodo::find($pag->codportadorperiodo);
+        }
+        if (!empty($pag->codmaquinetalote)) {
+            $ret[] = $pag->MaquinetaLote;
+        }
+        return $ret;
+    }
+
+    // os periodos para onde o pagamento iria na data nova
+    private static function periodosNaData(Pagamento $pag, Carbon $data, bool $cancelamento = false): array
+    {
+        if ($cancelamento) {
+            return [MaquinetaLoteService::daData($pag->codmaquineta, $data)];
+        }
+        $ret = [];
+        foreach (array_filter([$pag->codportadororigem, $pag->codportadordestino]) as $cod) {
+            if (in_array((int) $pag->meio, PortadorMovimentoService::MEIOS)) {
+                $ret[] = static::periodoDaData(Portador::findOrFail($cod), $data);
+            }
+        }
+        if (!empty($pag->codportadorperiodo)) {
+            $ret[] = CaixaService::sessaoDoMomento(PortadorPeriodo::findOrFail($pag->codportadorperiodo)->Portador, $data);
+        }
+        if (!empty($pag->codmaquinetalote) && !empty($pag->codmaquineta)) {
+            $ret[] = MaquinetaLoteService::daData($pag->codmaquineta, $data);
+        }
+        return $ret;
+    }
+
+    // pode alterar a data (o botao na tela): gestor; ou operador com os
+    // periodos em que o pagamento esta' abertos (o destino confere ao gravar)
+    public static function podePagamento(Pagamento $pag, ?int $livre = null): bool
+    {
+        $portadores = static::portadoresDoPagamento($pag);
+        if (static::podePortadores($portadores, $livre)) {
+            return true;
+        }
+        return static::podePortadores($portadores, $livre, PortadorUsuario::PAPEL_OPERADOR)
+            && collect(static::periodosAtuaisDoPagamento($pag))->every(fn ($p) => static::aberto($p));
+    }
+
+    // ao gravar: gestor; ou operador com a origem e o destino abertos
+    private static function autorizarPagamento(Pagamento $pag, Carbon $data, bool $cancelamento = false): void
+    {
+        $portadores = static::portadoresDoPagamento($pag);
+        if (static::podePortadores($portadores)) {
+            return;
+        }
+        if (!static::podePortadores($portadores, null, PortadorUsuario::PAPEL_OPERADOR)) {
+            abort(403, 'Alterar a data: só o operador ou o gestor de cada portador do pagamento (no cartão, o da adquirente).');
+        }
+        $periodos = array_merge(
+            static::periodosAtuaisDoPagamento($pag, $cancelamento),
+            static::periodosNaData($pag, $data, $cancelamento)
+        );
+        if (!collect($periodos)->every(fn ($p) => static::aberto($p))) {
+            abort(403, static::MOTIVO_OPERADOR);
         }
     }
 
@@ -188,7 +260,7 @@ class LancamentoDataService
         $justificativa = static::justificativa($justificativa);
         $data = static::exigirData($data);
         if (!$autorizado) {
-            static::autorizarPagamento($pag);
+            static::autorizarPagamento($pag, $data);
         }
         // a devolucao (cancelamento no cartao, devolucao de PIX) nao vem antes
         // do pagamento original, nem o original depois da devolucao
@@ -277,7 +349,7 @@ class LancamentoDataService
     {
         $justificativa = static::justificativa($justificativa);
         $data = static::exigirData($data);
-        static::autorizarPagamento($pag);
+        static::autorizarPagamento($pag, $data, true);
         if (!empty($pag->codmaquineta)) {
             MaquinetaLoteService::travar($pag->codmaquineta);
         }
@@ -326,6 +398,8 @@ class LancamentoDataService
         }
     }
 
+    // pode alterar a data (o botao na tela): gestor; ou operador com os
+    // periodos das linhas abertos (o destino confere ao gravar)
     public static function podeMovimento(PortadorMovimento $mov, ?int $livre = null): bool
     {
         if ($mov->tipo == PortadorMovimento::TIPO_PAGAMENTO) {
@@ -335,7 +409,11 @@ class LancamentoDataService
         if ($mov->tipo == PortadorMovimento::TIPO_TRANSFERENCIA) {
             $cods[] = optional($mov->Par)->codportador;
         }
-        return static::podePortadores($cods, $livre);
+        if (static::podePortadores($cods, $livre)) {
+            return true;
+        }
+        return static::podePortadores($cods, $livre, PortadorUsuario::PAPEL_OPERADOR)
+            && collect(static::linhas($mov))->every(fn ($l) => static::aberto($l->PortadorPeriodo));
     }
 
     // devolve os codportadorperiodo mexidos (de onde saiu e para onde foi)
@@ -349,10 +427,19 @@ class LancamentoDataService
         }
         $justificativa = static::justificativa($justificativa);
         $data = static::exigirData($data);
-        if (!static::podeMovimento($mov)) {
-            abort(403, 'Alterar a data: só o gestor do portador.');
-        }
         $linhas = static::linhas($mov);
+        // gestor; ou operador com o periodo de onde sai e o para onde vai abertos
+        $cods = array_map(fn ($l) => $l->codportador, $linhas);
+        if (!static::podePortadores($cods)) {
+            if (!static::podePortadores($cods, null, PortadorUsuario::PAPEL_OPERADOR)) {
+                abort(403, 'Alterar a data: só o operador ou o gestor do portador.');
+            }
+            foreach ($linhas as $l) {
+                if (!static::aberto($l->PortadorPeriodo) || !static::aberto(static::periodoDaData($l->Portador, $data))) {
+                    abort(403, static::MOTIVO_OPERADOR);
+                }
+            }
+        }
         static::travar(array_map(fn ($l) => $l->codportador, $linhas));
         $mexidos = collect();
         $auditorias = [];

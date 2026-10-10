@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-08 21:59'
-updated_date: '2026-10-10 01:28'
+updated_date: '2026-10-10 15:40'
 labels:
   - contas
 dependencies: []
@@ -46,7 +46,7 @@ Notas técnicas:
 - [ ] #10 Pagamento de acerto do RH também tem a data alterável no extrato
 - [ ] #11 Maquineta: a data manda no período; o mover para outro período sem data deixa de existir
 - [ ] #12 Cancelamento de cartão tem data própria editável; o período do cancelamento segue essa data, sem mexer na venda
-- [ ] #13 Alterar a data pede justificativa e grava o antes/depois, mostrado na linha; só o gestor do portador (no PDV, quem já lança ali)
+- [ ] #13 Alterar a data pede justificativa e grava o antes/depois, mostrado na linha; o gestor do portador altera em período aberto ou pendente; o operador, só quando o período de onde sai e o para onde vai estão abertos
 - [ ] #14 Mudar de mês é permitido, com aviso de que pode afetar DIMP e relatórios já apurados
 - [ ] #15 Juros, multa, desconto e total não mudam ao alterar a data
 - [ ] #16 O caixa pendente não fecha sozinho depois da alteração: fecha pelo botão Fechar
@@ -112,4 +112,6 @@ Riscos que ficam (não tratados)
 - Mover uma ENTRADA de item para outro período não confere as saídas que dependiam dela.
 - O número do vale gerado pela data de emissão (AAAA-MM-DD) não muda junto.
 - O codpdv do request não é validado pelo dispositivo (padrão que já existia em sangria e cancelamento); com a regra por portador, o alcance fica na gaveta do próprio PDV.
+
+Operador altera a data (10/10/2026, pedido do Fábio: 'desde que tanto a origem quanto o destino estejam com o período em aberto'). LancamentoDataService: o gestor do portador continua alterando em período aberto ou pendente; o operador só quando o período de onde a linha sai e o para onde vai estão abertos (sem fim) — no pagamento, as linhas do razão, a sessão da gaveta e o período da maquineta (no cartão, o papel no portador da adquirente); na transferência, as duas pontas, com papel de operador nos dois portadores. Com período pendente a recusa diz que só o gestor; fechado, ninguém. O botão do extrato (podeAlterarData) segue a mesma regra. Achado no teste: o lápis do cartão autorizava pela adquirente errada (a maquineta da listagem vinha sem a pessoa e casava a primeira adquirente sem pessoa, Cielo Super Link); corrigido em PagamentoTituloService::portadorDaMaquineta (commit da TASK-188). Testado: baterias s9 e s10 (32 checagens) e E2E no caixa do PDV (sessão aberta grava com auditoria; sessão fechada recusa).
 <!-- SECTION:NOTES:END -->
