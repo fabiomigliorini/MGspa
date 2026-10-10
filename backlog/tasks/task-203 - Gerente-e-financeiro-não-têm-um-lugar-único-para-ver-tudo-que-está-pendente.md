@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-07 19:27'
-updated_date: '2026-10-09 23:25'
+updated_date: '2026-10-10 21:00'
 labels:
   - contas
 dependencies: []
@@ -28,3 +28,11 @@ Pedido do Fábio (07/10/2026): uma dashboard que resume todas as pendências (pe
 - [ ] #4 Definir quem pode ver o painel de qual filial
 - [ ] #5 Eliminar a tela Fechamentos depois do painel validado
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Período aberto não é pendência no painel (10/10/2026): a maquineta só conta período encerrado pendente ou sem borderô; o caixa só conta período com diferença a resolver ou transferência a confirmar. Caixa aberto, com ou sem lançamento, não aparece (PainelService::caixas).
+
+Layout (10/10/2026): filial em abas (uma por filial ativa, link /painel/{codfilial}) no lugar do select; cards em duas colunas a partir de 1024px (col-12 col-md-6); PIX e depósitos antes das confissões. 'Ver todas' das ocorrências abre o livro filtrado pela filial e A conferir (a tela de ocorrências aceita os filtros na URL e parte do padrão).
+<!-- SECTION:NOTES:END -->

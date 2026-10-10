@@ -2,6 +2,7 @@
 // Livro de ocorrências (TASK-205): o que o caixa cancelou, removeu, diminuiu, descontou ou
 // esqueceu aberto nos PDVs monitorados. O gerente lê, conversa com o caixa e marca conferida.
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { useOcorrenciaStore } from 'src/stores/ocorrenciaStore'
 import { formataNumero, formataTimestamp } from '@components/formatters'
 import { TIPO } from '@components/ocorrencia.js'
@@ -9,6 +10,7 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInput from '@components/MgInput.vue'
 
 const store = useOcorrenciaStore()
+const route = useRoute()
 
 const VISUAL = {
   [TIPO.ITEM_EXCLUIDO]: { icone: 'remove_shopping_cart', cor: 'orange-8' },
@@ -56,7 +58,17 @@ const conferir = async () => {
   }
 }
 
-onMounted(() => store.fetchItems(true))
+// filtro vindo na URL (ex.: o painel da filial) parte do padrão, para a lista bater com a contagem
+onMounted(() => {
+  const chaves = Object.keys(store.filters).filter((k) => route.query[k] !== undefined)
+  if (chaves.length) {
+    store.clearFilters()
+    chaves.forEach((k) => {
+      store.filters[k] = /^cod/.test(k) ? Number(route.query[k]) : route.query[k]
+    })
+  }
+  store.fetchItems(true)
+})
 </script>
 
 <template>

@@ -30,13 +30,13 @@ class PainelService
         ];
     }
 
-    // gaveta aberta, periodo com diferenca a resolver ou transferencia a confirmar
+    // periodo com diferenca a resolver ou transferencia a confirmar; o
+    // periodo aberto nao e' pendencia (como na maquineta)
     private static function caixas(int $codfilial): array
     {
         return array_values(array_filter(
             PortadorService::painel($codfilial, false, false),
-            fn ($p) => ($p['sessao']['aberta'] ?? false)
-                || $p['pendentes'] > 0
+            fn ($p) => $p['pendentes'] > 0
                 || $p['chegando']['quantidade'] > 0
                 || $p['saindo']['quantidade'] > 0
         ));

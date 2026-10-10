@@ -5,13 +5,17 @@
 import { computed, onMounted, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { usePainelStore } from 'src/stores/painelStore'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { formataNumero, formataTimestamp, tempoRelativo } from '@components/formatters'
-import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
 
 const store = usePainelStore()
+const cache = useSelectCacheStore()
 const route = useRoute()
 const router = useRouter()
+
+// uma aba por filial ativa, na ordem do select de filial
+const filiais = computed(() => cache.entities.filial?.items || [])
 
 const urlNegocio = (codnegocio) => `${process.env.NEGOCIOS_URL}/negocio/${codnegocio}`
 
@@ -32,6 +36,12 @@ const situacaoCaixa = (p) => {
   }
   return partes.join(' · ')
 }
+
+// as ocorrências pendentes da filial, no livro de ocorrências
+const ocorrenciasDaFilial = () => ({
+  name: 'ocorrencia',
+  query: { codfilial: store.codfilial, situacao: 'pendente' },
+})
 
 const conferencia = (tipo) => (store.dados?.conferencia || []).filter((p) => p.tipo === tipo)
 
@@ -82,14 +92,14 @@ const blocos = computed(() => {
           chave: o.codocorrencia,
           titulo: o.descricao,
           subtitulo: [o.pdv, o.usuario, formataTimestamp(o.criacao, 0)].filter(Boolean).join(' · '),
-          to: { name: 'ocorrencia' },
+          to: ocorrenciasDaFilial(),
         })),
         ...(d.ocorrencias.total > d.ocorrencias.maiores.length
           ? [
               {
                 chave: 'todas',
                 titulo: `Ver todas as ${d.ocorrencias.total}`,
-                to: { name: 'ocorrencia' },
+                to: ocorrenciasDaFilial(),
               },
             ]
           : []),
@@ -111,9 +121,9 @@ const blocos = computed(() => {
       })),
     },
     ...[
+      { tipo: 'pix', label: 'PIX e depósitos a confirmar', icone: 'pix', cor: 'cyan-8' },
       { tipo: 'duplicata', label: 'Confissões de dívida faltando', icone: 'draw', cor: 'indigo-6' },
       { tipo: 'venda', label: 'Vendas com diferença', icone: 'report_problem', cor: 'red-6' },
-      { tipo: 'pix', label: 'PIX e depósitos a confirmar', icone: 'pix', cor: 'cyan-8' },
     ].map((g) => {
       const itens = conferencia(g.tipo)
       return {
@@ -153,6 +163,7 @@ watch(
 )
 
 onMounted(() => {
+  cache.loadList('filial', 'v1/select/filial').catch(() => {})
   if (!filialDaRota() && store.codfilial) {
     trocarFilial(store.codfilial)
     return
@@ -166,12 +177,26 @@ onMounted(() => {
   <q-page>
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
       <div class="row q-col-gutter-md items-center q-mb-md">
-        <div class="col-grow">
-          <MgSelectFilial
-            :model-value="store.codfilial"
-            label="Filial"
-            @update:model-value="trocarFilial"
-          />
+        <div class="col">
+          <q-card flat bordered>
+            <q-tabs
+              align="left"
+              outside-arrows
+              mobile-arrows
+              no-caps
+              active-color="primary"
+              indicator-color="primary"
+              class="text-grey-8"
+            >
+              <q-route-tab
+                v-for="f in filiais"
+                :key="f.value"
+                :to="{ name: 'painel', params: { codfilial: f.value } }"
+                exact
+                :label="f.label"
+              />
+            </q-tabs>
+          </q-card>
         </div>
         <div class="col-auto">
           <q-btn
@@ -189,33 +214,37 @@ onMounted(() => {
         </div>
       </div>
 
-      <q-card v-for="b in blocos" :key="b.chave" bordered flat class="q-mb-md">
-        <q-card-section class="row items-center q-pb-sm">
-          <q-icon :name="b.icone" :color="b.cor" size="sm" class="q-mr-sm" />
-          <div class="text-subtitle1 col">{{ b.label }}</div>
-          <q-badge :color="b.cor" :label="b.total" />
-        </q-card-section>
-        <q-list separator>
-          <q-item
-            v-for="i in b.itens"
-            :key="i.chave"
-            clickable
-            :to="i.to"
-            :href="i.href"
-            :target="i.href ? '_blank' : undefined"
-          >
-            <q-item-section>
-              <q-item-label class="ellipsis">{{ i.titulo }}</q-item-label>
-              <q-item-label v-if="i.subtitulo" caption class="ellipsis">
-                {{ i.subtitulo }}
-              </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-icon :name="i.href ? 'open_in_new' : 'chevron_right'" color="grey-6" />
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-card>
+      <div v-if="blocos.length" class="row q-col-gutter-md">
+        <div v-for="b in blocos" :key="b.chave" class="col-12 col-md-6">
+          <q-card bordered flat>
+            <q-card-section class="row items-center q-pb-sm">
+              <q-icon :name="b.icone" :color="b.cor" size="sm" class="q-mr-sm" />
+              <div class="text-subtitle1 col">{{ b.label }}</div>
+              <q-badge :color="b.cor" :label="b.total" />
+            </q-card-section>
+            <q-list separator>
+              <q-item
+                v-for="i in b.itens"
+                :key="i.chave"
+                clickable
+                :to="i.to"
+                :href="i.href"
+                :target="i.href ? '_blank' : undefined"
+              >
+                <q-item-section>
+                  <q-item-label class="ellipsis">{{ i.titulo }}</q-item-label>
+                  <q-item-label v-if="i.subtitulo" caption class="ellipsis">
+                    {{ i.subtitulo }}
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-icon :name="i.href ? 'open_in_new' : 'chevron_right'" color="grey-6" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card>
+        </div>
+      </div>
 
       <MgEmptyState v-if="!store.codfilial" icon="store"> Escolha a filial. </MgEmptyState>
       <MgEmptyState v-else-if="!store.carregando && store.dados && !blocos.length" icon="task_alt">
