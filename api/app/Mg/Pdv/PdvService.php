@@ -118,7 +118,7 @@ class PdvService
 
     public static function produto($codprodutobarra, $limite)
     {
-        $sincronizado = date('Y-m-d h:i:s');
+        $sincronizado = date('Y-m-d H:i:s');
         $sql = '
             select
             	pb.codprodutobarra,
@@ -202,7 +202,7 @@ class PdvService
 
     public static function pessoa($codpessoa, $cnpj, $limite)
     {
-        $sincronizado = date('Y-m-d h:i:s');
+        $sincronizado = date('Y-m-d H:i:s');
         $params = [
             'sincronizado' => $sincronizado,
             'limite' => $limite,
@@ -266,7 +266,7 @@ class PdvService
 
     public static function naturezaOperacao()
     {
-        $sincronizado = date('Y-m-d h:i:s');
+        $sincronizado = date('Y-m-d H:i:s');
         $sql = '
             select 
                 nat.codnaturezaoperacao, 
@@ -292,7 +292,7 @@ class PdvService
 
     public static function estoqueLocal()
     {
-        $sincronizado = date('Y-m-d h:i:s');
+        $sincronizado = date('Y-m-d H:i:s');
         $sql = '
             select 
                 t.codestoquelocal,
@@ -342,7 +342,7 @@ class PdvService
 
     public static function formaPagamento()
     {
-        $sincronizado = date('Y-m-d h:i:s');
+        $sincronizado = date('Y-m-d H:i:s');
         $sql = '
             select 
                 fp.codformapagamento,
@@ -383,7 +383,7 @@ class PdvService
      */
     public static function valeModelo()
     {
-        $sincronizado = date('Y-m-d h:i:s');
+        $sincronizado = date('Y-m-d H:i:s');
         $sql = '
             select
                 vm.codvalemodelo,
@@ -430,7 +430,7 @@ class PdvService
     {
         $printers = json_decode(file_get_contents(base_path('printers.json')), true);
         $ret = [];
-        $sincronizado = date('Y-m-d h:i:s');
+        $sincronizado = date('Y-m-d H:i:s');
         $codimpressora = 0;
         foreach ($printers as $impressora => $nome) {
             $codimpressora++;

@@ -61,7 +61,7 @@ class PdvPranchetaService
     public static function getPrancheta()
     {
 
-        $sincronizado = date('Y-m-d h:i:s');
+        $sincronizado = date('Y-m-d H:i:s');
         $sql = '
             select 
                 cat.*,
