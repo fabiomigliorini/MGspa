@@ -1,7 +1,6 @@
 import { boot } from 'quasar/wrappers'
 import axios from 'axios'
 import { useAuthStore } from 'stores/auth'
-const sAuth = useAuthStore()
 
 // timeout: sem ele, um socket HTTP/2 morto reaproveitado pendura a request por minutos.
 const api = axios.create({ baseURL: process.env.API_URL, timeout: 15000 })
@@ -32,7 +31,8 @@ api.defaults.adapter = (config) => {
 
 api.interceptors.request.use(
   (config) => {
-    // Autorizacao
+    // Autorizacao (o store e' pego aqui, nao no topo: o modulo pode ser importado antes do Pinia)
+    const sAuth = useAuthStore()
     let tokenCookie = document.cookie.split(';').find((c) => c.trim().startsWith('access_token='))
     if (tokenCookie) {
       sAuth.token.access_token = tokenCookie.split('=')[1]
@@ -60,6 +60,7 @@ api.interceptors.response.use(
       document.cookie = 'access_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
 
       // Limpa o token e o usuario no store
+      const sAuth = useAuthStore()
       sAuth.usuario = {}
       sAuth.token = {}
 

@@ -4,7 +4,7 @@
 // pagamentos avulsos do caixa: Receber Título / Pagar Vale (página própria) e Vale / Adiantamento
 // (M8, dialog). A tela do PDV fica só com a venda.
 import { Notify } from 'quasar'
-import { pagamentoListaStore } from '@components/stores/pagamentoListaStore'
+import { configurarPagamentoLista } from 'src/utils/pagamentoLista'
 import { pagamentoStore, FORMAS_ADIANTAMENTO } from 'stores/pagamento'
 import { negocioStore } from 'stores/negocio'
 import MgPagamentoLista from '@components/MgPagamentoLista.vue'
@@ -16,7 +16,7 @@ import SaurusPedidoDialog from '@components/cobranca/SaurusPedidoDialog.vue'
 import MgAdiantamentoDialog from '@components/MgAdiantamentoDialog.vue'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 
-const store = pagamentoListaStore()
+const store = configurarPagamentoLista()
 const sPagamento = pagamentoStore()
 const sNegocio = negocioStore()
 const pdv = sincronizacaoStore().pdv.uuid

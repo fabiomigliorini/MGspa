@@ -6,6 +6,7 @@ import {
   createWebHashHistory,
 } from 'vue-router'
 import routes from './routes'
+import { sincronizacaoStore } from 'stores/sincronizacao'
 
 /*
  * If not building with SSR mode, you can
@@ -37,10 +38,7 @@ export default route(function ({ store }) {
   // dispositivos: o Meu Dispositivo mostra o status, tem o Cadastrar e e' onde o Administrador
   // ativa
   // (TASK-46). A checagem e' local, vale offline; a pagina do proprio dispositivo atualiza.
-  // Import dinamico: o store puxa o boot/axios, que usa o Pinia ainda inexistente quando o
-  // router e' criado.
-  Router.beforeEach(async (to) => {
-    const { sincronizacaoStore } = await import('stores/sincronizacao')
+  Router.beforeEach((to) => {
     const { pdv } = sincronizacaoStore(store)
     if ((pdv.codpdv && !pdv.inativo) || to.path.startsWith('/dispositivo')) {
       return true

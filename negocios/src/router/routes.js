@@ -1,166 +1,191 @@
-const routes = [
-  // WOOCOMMERCE
-  {
-    path: '/woo',
-    component: () => import('layouts/WooLayout.vue'),
-    children: [{ path: '', component: () => import('pages/WooPage.vue') }],
-  },
-  {
-    path: '/woo/painel',
-    component: () => import('layouts/WooPainelLayout.vue'),
-    children: [{ path: '', component: () => import('pages/WooPainelPage.vue') }],
-  },
+import { defineAsyncComponent } from 'vue'
+import { sincronizacaoStore } from 'stores/sincronizacao'
 
-  // OFFLINE
+const drawer = {
+  offlineEsquerdo: defineAsyncComponent(() => import('components/drawers/OfflineLeftDrawer.vue')),
+  offlineDireito: defineAsyncComponent(() => import('components/drawers/OfflineRightDrawer.vue')),
+  dispositivo: defineAsyncComponent(() => import('components/drawers/DispositivoLeftDrawer.vue')),
+  listagem: defineAsyncComponent(() => import('components/drawers/ListagemLeftDrawer.vue')),
+  valeModelo: defineAsyncComponent(() => import('components/drawers/ValeModeloLeftDrawer.vue')),
+  valeEmitidos: defineAsyncComponent(() => import('components/drawers/ValeEmitidosLeftDrawer.vue')),
+  confissao: defineAsyncComponent(() => import('components/drawers/ConfissaoLeftDrawer.vue')),
+  pagamento: defineAsyncComponent(() => import('components/drawers/PagamentoLeftDrawer.vue')),
+  woo: defineAsyncComponent(() => import('components/drawers/WooLeftDrawer.vue')),
+}
+
+const pdv = {
+  title: 'PDV',
+  leftDrawer: drawer.offlineEsquerdo,
+  rightDrawer: drawer.offlineDireito,
+}
+
+const routes = [
   {
     path: '/',
-    component: () => import('layouts/OfflineLayout.vue'),
+    component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') },
+      // OFFLINE
+      { path: '', component: () => import('pages/IndexPage.vue'), meta: pdv },
       {
         path: '/offline/:uuid',
         name: 'offline',
         component: () => import('pages/IndexPage.vue'),
+        meta: pdv,
       },
       {
         path: '/negocio/:codnegocio',
         name: 'negocio',
         component: () => import('pages/IndexPage.vue'),
+        meta: pdv,
+      },
+
+      // DEVOLUCAO
+      {
+        path: '/offline/:uuid/devolucao',
+        component: () => import('pages/DevolucaoPage.vue'),
+        meta: { title: 'Devolução', backTo: (route) => '/offline/' + route.params.uuid },
+      },
+
+      // COMANDAS VENDEDOR
+      {
+        path: '/comanda-vendedor',
+        component: () => import('pages/ComandaPage.vue'),
+        meta: { title: 'Comanda de Vendedor', backTo: '/' },
+      },
+
+      // PAGARME
+      {
+        path: '/pagar-me',
+        component: () => import('pages/PagarMePage.vue'),
+        meta: { title: 'PagarMe', backTo: '/' },
+      },
+
+      // PRANCHETA
+      {
+        path: '/prancheta',
+        component: () => import('pages/PranchetaPage.vue'),
+        meta: { title: 'Prancheta', backTo: '/' },
+      },
+
+      // DISPOSITIVOS (PDVs)
+      {
+        path: '/dispositivo',
+        component: () => import('pages/DispositivoPage.vue'),
+        meta: { title: 'Dispositivos', leftDrawer: drawer.dispositivo },
+      },
+      // Meu Dispositivo: atalho para a pagina do dispositivo deste navegador (ou o Cadastrar)
+      {
+        path: '/dispositivo/meu',
+        component: () => import('pages/DispositivoDetalhePage.vue'),
+        meta: { title: 'Dispositivo', backTo: '/' },
+      },
+      {
+        path: '/dispositivo/:codpdv(\\d+)',
+        component: () => import('pages/DispositivoDetalhePage.vue'),
+        meta: {
+          title: 'Dispositivo',
+          // o proprio dispositivo (Meu Dispositivo) volta para o PDV; os outros, para a lista
+          backTo: (route) =>
+            Number(route.params.codpdv) === sincronizacaoStore().pdv.codpdv ? '/' : '/dispositivo',
+        },
+      },
+
+      // LISTAGEM NEGOCIOS
+      {
+        path: '/listagem',
+        component: () => import('pages/ListagemPage.vue'),
+        meta: { title: 'Listagem de Negócios', leftDrawer: drawer.listagem },
+      },
+
+      // MODELOS DE VALE COMPRAS
+      {
+        path: '/vale-modelo',
+        component: () => import('pages/ValeModeloPage.vue'),
+        meta: { title: 'Modelos de Vale', backTo: '/', leftDrawer: drawer.valeModelo },
+      },
+      {
+        path: '/vale-modelo/emitidos',
+        component: () => import('pages/ValeEmitidosPage.vue'),
+        meta: { title: 'Vales Emitidos', backTo: '/vale-modelo', leftDrawer: drawer.valeEmitidos },
+      },
+      {
+        path: '/vale-modelo/novo',
+        name: 'valeModeloNovo',
+        component: () => import('pages/ValeModeloFormPage.vue'),
+        meta: { title: 'Modelo de Vale', backTo: '/vale-modelo' },
+      },
+      {
+        path: '/vale-modelo/:codvalemodelo',
+        name: 'valeModeloEditar',
+        component: () => import('pages/ValeModeloFormPage.vue'),
+        meta: { title: 'Modelo de Vale', backTo: '/vale-modelo' },
+      },
+
+      // CONFISSOES
+      {
+        path: '/confissao',
+        component: () => import('pages/ConfissaoPage.vue'),
+        meta: { title: 'Conferência das Confissões de Dívida', leftDrawer: drawer.confissao },
+      },
+      {
+        path: '/confissao/faltando',
+        component: () => import('pages/ConfissaoFaltandoPage.vue'),
+        meta: { title: 'Conferência das Confissões de Dívida', leftDrawer: drawer.confissao },
+      },
+
+      // PAGAMENTOS
+      {
+        path: '/pagamento',
+        component: () => import('pages/PagamentoPage.vue'),
+        meta: { title: 'Pagamentos', backTo: '/', leftDrawer: drawer.pagamento },
+      },
+      {
+        path: '/pagamento/receber',
+        component: () => import('pages/PagamentoReceberPage.vue'),
+        meta: { title: 'Receber Título / Pagar Vale', backTo: '/pagamento' },
+      },
+      {
+        path: '/pagamento/pendentes',
+        component: () => import('pages/PagamentoPendentesPage.vue'),
+        meta: { title: 'Pagamentos não resolvidos', backTo: '/pagamento' },
+      },
+
+      // CAIXA
+      {
+        path: '/caixa',
+        component: () => import('pages/CaixaPage.vue'),
+        meta: { title: 'Caixa', backTo: '/' },
+      },
+
+      // WOOCOMMERCE
+      {
+        path: '/woo',
+        component: () => import('pages/WooPage.vue'),
+        meta: { title: 'Woo', backTo: '/woo/painel', leftDrawer: drawer.woo },
+      },
+      {
+        path: '/woo/painel',
+        component: () => import('pages/WooPainelPage.vue'),
+        meta: { title: 'Woo' },
       },
     ],
   },
 
-  // DEVOLUCAO
-  {
-    path: '/offline/:uuid/devolucao',
-    component: () => import('layouts/DevolucaoLayout.vue'),
-    children: [{ path: '', component: () => import('pages/DevolucaoPage.vue') }],
-  },
-
-  // QUIOSQUE CONSULTA DE PRECOS
+  // QUIOSQUE CONSULTA DE PRECOS: tela cheia, sem cabecalho
   {
     path: '/quiosque',
     component: () => import('layouts/QuiosqueLayout.vue'),
     children: [{ path: '', name: 'quiosque', component: () => import('pages/QuiosquePage.vue') }],
   },
 
-  // COMANDAS VENDEDOR
-  {
-    path: '/comanda-vendedor',
-    component: () => import('layouts/ComandaLayout.vue'),
-    children: [{ path: '', component: () => import('pages/ComandaPage.vue') }],
-  },
-
-  // ORCAMENTOS
+  // ORCAMENTOS: impressao, sem layout
   {
     path: '/offline/:uuid/orcamento',
-    // component: () => import("layouts/OrcamentoLayout.vue"),
     children: [{ path: '', component: () => import('pages/OrcamentoPage.vue') }],
   },
   {
     path: '/offline/:uuid/orcamento-termica',
-    // component: () => import("layouts/OrcamentoLayout.vue"),
     children: [{ path: '', component: () => import('pages/OrcamentoTermicaPage.vue') }],
-  },
-
-  // CONFIG
-  {
-    path: '/config',
-    component: () => import('layouts/ConfigLayout.vue'),
-    children: [
-      { path: 'pagar-me/', component: () => import('pages/PagarMePage.vue') },
-      {
-        path: 'prancheta/',
-        component: () => import('pages/PranchetaPage.vue'),
-      },
-    ],
-  },
-
-  // DISPOSITIVOS (PDVs)
-  {
-    path: '/dispositivo',
-    component: () => import('layouts/DispositivoLayout.vue'),
-    children: [{ path: '', component: () => import('pages/DispositivoPage.vue') }],
-  },
-  // Meu Dispositivo: atalho para a pagina do dispositivo deste navegador (ou o Cadastrar)
-  {
-    path: '/dispositivo/meu',
-    component: () => import('layouts/DispositivoDetalheLayout.vue'),
-    children: [{ path: '', component: () => import('pages/DispositivoDetalhePage.vue') }],
-  },
-  {
-    path: '/dispositivo/:codpdv(\\d+)',
-    component: () => import('layouts/DispositivoDetalheLayout.vue'),
-    children: [{ path: '', component: () => import('pages/DispositivoDetalhePage.vue') }],
-  },
-
-  // LISTAGEM NEGOCIOS
-  {
-    path: '/listagem',
-    component: () => import('layouts/ListagemLayout.vue'),
-    children: [{ path: '', component: () => import('pages/ListagemPage.vue') }],
-  },
-
-  // MODELOS DE VALE COMPRAS
-  {
-    path: '/vale-modelo',
-    component: () => import('layouts/ValeModeloLayout.vue'),
-    children: [{ path: '', component: () => import('pages/ValeModeloPage.vue') }],
-  },
-  {
-    path: '/vale-modelo/emitidos',
-    component: () => import('layouts/ValeEmitidosLayout.vue'),
-    children: [{ path: '', component: () => import('pages/ValeEmitidosPage.vue') }],
-  },
-  {
-    path: '/vale-modelo',
-    component: () => import('layouts/ValeModeloFormLayout.vue'),
-    children: [
-      {
-        path: 'novo',
-        name: 'valeModeloNovo',
-        component: () => import('pages/ValeModeloFormPage.vue'),
-      },
-      {
-        path: ':codvalemodelo',
-        name: 'valeModeloEditar',
-        component: () => import('pages/ValeModeloFormPage.vue'),
-      },
-    ],
-  },
-
-  // CONFISSOES
-  {
-    path: '/confissao',
-    component: () => import('layouts/ConfissaoLayout.vue'),
-    children: [
-      { path: '', component: () => import('pages/ConfissaoPage.vue') },
-      {
-        path: 'faltando',
-        component: () => import('pages/ConfissaoFaltandoPage.vue'),
-      },
-    ],
-  },
-
-  {
-    path: '/pagamento',
-    component: () => import('layouts/PagamentoLayout.vue'),
-    children: [{ path: '', component: () => import('pages/PagamentoPage.vue') }],
-  },
-  {
-    path: '/caixa',
-    component: () => import('layouts/CaixaLayout.vue'),
-    children: [{ path: '', component: () => import('pages/CaixaPage.vue') }],
-  },
-  {
-    path: '/pagamento/receber',
-    component: () => import('layouts/PagamentoReceberLayout.vue'),
-    children: [{ path: '', component: () => import('pages/PagamentoReceberPage.vue') }],
-  },
-  {
-    path: '/pagamento/pendentes',
-    component: () => import('layouts/PagamentoPendentesLayout.vue'),
-    children: [{ path: '', component: () => import('pages/PagamentoPendentesPage.vue') }],
   },
 
   // Always leave this as last one,
