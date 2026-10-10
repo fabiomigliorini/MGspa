@@ -83,7 +83,34 @@ class PagamentoController extends Controller
         return new PagamentoDetalheResource($pag);
     }
 
+    // desamarrar: estorna as baixas (todas ou as linhas escolhidas); o
+    // pagamento continua, sem amarracao. "estornar" e' o nome antigo.
+    public function desamarrar(Request $request, int $id)
+    {
+        Autorizador::autoriza(self::GRUPOS_MUTACAO);
+        $request->validate([
+            'justificativa' => 'required|string|min:5|max:300',
+            'codmovimentos' => 'nullable|array',
+            'codmovimentos.*' => 'integer',
+        ]);
+        DB::beginTransaction();
+        $pag = PagamentoListaService::carregar($id);
+        $bloqueio = PagamentoTituloAutorizador::motivoBloqueioEstorno($pag, Auth::user()->codusuario);
+        if ($bloqueio !== null) {
+            abort(403, $bloqueio);
+        }
+        $pag = PagamentoTituloService::desamarrar($pag, $request->justificativa, $request->codmovimentos);
+        DB::commit();
+        return new PagamentoDetalheResource($pag);
+    }
+
     public function estornar(Request $request, int $id)
+    {
+        return $this->desamarrar($request, $id);
+    }
+
+    // cancelar: o fato nao existiu (manual digitado errado, ja' desamarrado)
+    public function cancelar(Request $request, int $id)
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);
         $request->validate(['justificativa' => 'required|string|min:5|max:300']);
@@ -93,7 +120,7 @@ class PagamentoController extends Controller
         if ($bloqueio !== null) {
             abort(403, $bloqueio);
         }
-        $pag = PagamentoTituloService::estornar($pag, $request->justificativa);
+        $pag = PagamentoTituloService::cancelar($pag, $request->justificativa);
         DB::commit();
         return new PagamentoDetalheResource($pag);
     }

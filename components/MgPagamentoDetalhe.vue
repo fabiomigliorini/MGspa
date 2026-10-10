@@ -1,8 +1,9 @@
 <script setup>
-// Detalhe de um pagamento (M6.1 doc-3): documento (venda, títulos movimentados, transferência,
-// avulso), meio, maquineta, portadores, estado, pagamento original e contrários; estornar
-// (baixa de título feita à mão). O pagamento vem do pagamentoListaStore; ações próprias do app
-// (recibo, editar) entram no slot `acoes`.
+// Detalhe de um pagamento: o fato (meio, maquineta, portadores, estado, original e contrários) e
+// as amarrações (venda, títulos, com o histórico das desfeitas), o saldo e o que sobra livre.
+// Desamarrar (todos ou um título) estorna as baixas e o pagamento continua; cancelar é só do
+// manual já desamarrado (conceito do Fábio, 09/10/2026). O pagamento vem do pagamentoListaStore;
+// ações próprias do app (recibo, editar) entram no slot `acoes`.
 import { computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { pagamentoListaStore } from '@components/stores/pagamentoListaStore'
@@ -12,7 +13,7 @@ import LogoPagamento from '@components/cobranca/LogoPagamento.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 defineProps({
-  // o app diz se o usuário pode estornar (grupos); o servidor confere de novo
+  // o app diz se o usuário pode desamarrar e cancelar (grupos); o servidor confere de novo
   podeEstornar: {
     type: Boolean,
     default: false,
@@ -51,30 +52,57 @@ const erro = (e, padrao) =>
     icon: 'error',
   })
 
-const estornar = () => {
+const pedirMotivo = (titulo, mensagem, rotulo) =>
   $q.dialog({
-    title: 'Estornar',
-    message: 'Estornar desfaz a baixa de todos os títulos deste pagamento. Informe o motivo:',
+    title: titulo,
+    message: mensagem,
     prompt: {
       model: '',
       type: 'text',
       outlined: true,
       isValid: (v) => (v || '').trim().length >= 5,
     },
-    ok: { label: 'Estornar', color: 'negative', flat: true },
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-  }).onOk(async (justificativa) => {
+    ok: { label: rotulo, color: 'negative', flat: true },
+    cancel: { label: 'Voltar', color: 'grey-8', flat: true },
+  })
+
+// desamarrar: os títulos (todos, ou o escolhido) reabrem; o pagamento continua
+const desamarrar = (mov = null) => {
+  pedirMotivo(
+    'Desamarrar',
+    (mov
+      ? `O título ${mov.titulo?.numero ?? ''} reabre`
+      : 'Todos os títulos deste pagamento reabrem') +
+      '. O pagamento continua e fica para amarrar de novo. Informe o motivo:',
+    'Desamarrar',
+  ).onOk(async (justificativa) => {
     try {
-      await store.estornar(pag.value.codpagamento, justificativa)
-      $q.notify({ type: 'positive', message: 'Estornado', color: 'green-5', icon: 'done' })
+      await store.desamarrar(
+        pag.value.codpagamento,
+        justificativa,
+        mov ? [mov.codmovimentotitulo] : null,
+      )
+      $q.notify({ type: 'positive', message: 'Desamarrado', color: 'green-5', icon: 'done' })
       emit('estornado', store.pagamento)
     } catch (e) {
-      $q.notify({
-        type: 'negative',
-        message: e?.response?.data?.message ?? e?.message ?? 'Erro ao estornar',
-        color: 'red-5',
-        icon: 'error',
-      })
+      erro(e, 'Erro ao desamarrar')
+    }
+  })
+}
+
+// cancelar: o pagamento não aconteceu (digitado errado); sai do razão
+const cancelar = () => {
+  pedirMotivo(
+    'Cancelar pagamento',
+    'Cancelar diz que este pagamento não aconteceu: ele sai do caixa/banco. Informe o motivo:',
+    'Cancelar pagamento',
+  ).onOk(async (justificativa) => {
+    try {
+      await store.cancelar(pag.value.codpagamento, justificativa)
+      $q.notify({ type: 'positive', message: 'Cancelado', color: 'green-5', icon: 'done' })
+      emit('estornado', store.pagamento)
+    } catch (e) {
+      erro(e, 'Erro ao cancelar')
     }
   })
 }
@@ -154,19 +182,42 @@ const estornar = () => {
             <q-space />
             <slot name="acoes" :pagamento="pag" />
             <q-btn
-              v-if="podeEstornar && pag.estornavel"
+              v-if="podeEstornar && pag.desamarravel"
               flat
               round
               size="sm"
-              icon="undo"
+              icon="link_off"
               color="grey-7"
-              @click="estornar"
+              @click="desamarrar()"
             >
-              <q-tooltip>Estornar</q-tooltip>
+              <q-tooltip>Desamarrar todos os títulos</q-tooltip>
+            </q-btn>
+            <q-btn
+              v-if="podeEstornar && pag.cancelavel"
+              flat
+              round
+              size="sm"
+              icon="block"
+              color="grey-7"
+              @click="cancelar"
+            >
+              <q-tooltip>Cancelar pagamento</q-tooltip>
             </q-btn>
             <MgInfoCriacao :registro="pag" />
           </q-card-section>
           <q-list separator>
+            <q-item v-if="pag.pendente">
+              <q-item-section avatar>
+                <q-icon name="link_off" color="orange-8" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label class="text-orange-9">Não resolvido</q-item-label>
+                <q-item-label caption>
+                  Saldo R$ {{ formataNumero(pag.saldo) }} · amarrado R$
+                  {{ formataNumero(pag.amarrado) }} · livre R$ {{ formataNumero(pag.livre) }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
             <q-item>
               <q-item-section>
                 <q-item-label caption>{{ pag.origemdescricao }}</q-item-label>
@@ -295,8 +346,14 @@ const estornar = () => {
               :target="toTitulo ? undefined : '_blank'"
             >
               <q-item-section>
-                <q-item-label class="text-weight-medium text-primary">
+                <q-item-label
+                  class="text-weight-medium"
+                  :class="m.estornado ? 'text-strike text-grey-6' : 'text-primary'"
+                >
                   {{ m.titulo?.numero }}
+                </q-item-label>
+                <q-item-label caption v-if="m.estornado" class="text-grey-6">
+                  desamarrado
                 </q-item-label>
                 <q-item-label caption v-if="m.titulo?.codpessoa != pag.codpessoa">
                   {{ m.titulo?.fantasia }}
@@ -330,6 +387,21 @@ const estornar = () => {
                 </template>
                 <q-item-label caption>{{ m.tipomovimentotitulo }}</q-item-label>
                 <q-item-label caption>vence {{ formataData(m.titulo?.vencimento) }}</q-item-label>
+              </q-item-section>
+              <q-item-section
+                side
+                v-if="podeEstornar && pag.desamarravel && !m.estornado && pag.movimentos.length > 1"
+              >
+                <q-btn
+                  flat
+                  round
+                  size="sm"
+                  icon="link_off"
+                  color="grey-7"
+                  @click.prevent.stop="desamarrar(m)"
+                >
+                  <q-tooltip>Desamarrar este título</q-tooltip>
+                </q-btn>
               </q-item-section>
             </q-item>
           </q-list>

@@ -41,19 +41,6 @@ class PagamentoTituloService
         202053 => PagamentoService::MEIO_COMPENSACAO, // Cred Pis/Cofins
     ];
 
-    // meios que a edicao do contas pode escolher
-    const MEIOS_CONTAS = [
-        PagamentoService::MEIO_DINHEIRO,
-        PagamentoService::MEIO_CHEQUE,
-        PagamentoService::MEIO_CREDITO,
-        PagamentoService::MEIO_DEBITO,
-        PagamentoService::MEIO_BOLETO,
-        PagamentoService::MEIO_DEPOSITO,
-        PagamentoService::MEIO_PIX,
-        PagamentoService::MEIO_TRANSFERENCIA,
-        PagamentoService::MEIO_OUTROS,
-    ];
-
     // meios que andam por conta de banco (so' no contas)
     const MEIOS_BANCO = [
         PagamentoService::MEIO_BOLETO,
@@ -501,15 +488,14 @@ class PagamentoTituloService
         return $pag;
     }
 
-    // Corrige pessoa, portador, meio, data e observacao, como a liquidacao
-    // permitia (decisao do Fabio, 01/10/2026: excecao a regra de o pagamento
-    // nao mudar). Valores e titulos nao mudam: para isso, estorna e lanca de
-    // novo. O portador vai junto para as linhas do movimento; a data, pelo
-    // LancamentoDataService (com justificativa, TASK-204).
+    // O lapis do pagamento: pessoa e observacao; a data so' do pagamento
+    // manual (a do integrado e' a do banco/maquineta), pelo alterar data
+    // (periodo, razao, titulos, com justificativa na auditoria, TASK-204).
+    // Meio e portador nao mudam: sao o fato; errou, desamarra e lanca de novo.
     public static function atualizar(Pagamento $pag, array $dados): Pagamento
     {
-        if ($pag->estado == PagamentoService::ESTADO_CANCELADO) {
-            abort(422, 'Pagamento estornado não pode ser alterado!');
+        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
+            abort(422, 'Só pagamento efetivado é alterado!');
         }
         if (!empty($pag->codnegocio)) {
             abort(422, 'Pagamento de venda: altere pelo negócio.');
@@ -517,72 +503,79 @@ class PagamentoTituloService
         if (!empty($pag->codperiodocolaboradoracerto)) {
             abort(422, 'Pagamento de acerto de RH: altere pelo acerto.');
         }
-        if (!$pag->MovimentoTituloS()->exists()) {
-            abort(422, 'Pagamento sem título não é alterado aqui.');
+        $atual = $pag->codportadordestino ?? $pag->codportadororigem;
+        if ((!empty($dados['meio']) && (int) $dados['meio'] != $pag->meio)
+            || (!empty($dados['codportador']) && (int) $dados['codportador'] != $atual)) {
+            abort(422, 'Meio e portador não mudam: desamarre os títulos, cancele e lance de novo.');
         }
-        foreach ($pag->MovimentoTituloS as $mov) {
-            if (!empty($mov->codtituloboleto) || !empty($mov->codboletoretorno)) {
-                abort(422, 'Baixa de boleto pelo banco não é alterada aqui.');
-            }
-        }
-        // a data com hora (TASK-204): mudou, vai primeiro pelo alterar data
-        // (periodo, razao, titulos e a trilha, com justificativa), com a
-        // permissao do lapis; depois o portador, ja' na data nova
-        $transacao = Carbon::parse($dados['transacao'])->startOfMinute();
-        if ($pag->transacao->format('Y-m-d H:i') != $transacao->format('Y-m-d H:i')) {
-            LancamentoDataService::alterarPagamento($pag, $transacao, $dados['justificativa'] ?? null, true);
-            $pag->refresh();
-        }
-
-        // compensacao (sem dinheiro) continua sem portador
-        $codportador = null;
-        if ($pag->meio != PagamentoService::MEIO_COMPENSACAO || !empty($pag->codportadororigem) || !empty($pag->codportadordestino)) {
-            if (empty($dados['codportador'])) {
-                abort(422, 'Informe o portador!');
-            }
-            $portador = Portador::findOrFail((int) $dados['codportador']);
-            $atual = $pag->codportadordestino ?? $pag->codportadororigem;
-            if ($portador->codportador != $atual) {
-                if (!empty($portador->inativo)) {
-                    abort(422, "Portador {$portador->portador} inativo!");
+        if (!empty($dados['transacao'])) {
+            $transacao = Carbon::parse($dados['transacao'])->startOfMinute();
+            if ($pag->transacao->format('Y-m-d H:i') != $transacao->format('Y-m-d H:i')) {
+                if (!static::manual($pag)) {
+                    abort(422, 'A data do pagamento integrado é a do banco ou da maquineta.');
                 }
-                if ($portador->ehGaveta()) {
-                    abort(422, 'No contas não se baixa título em gaveta de caixa: escolha cofre ou banco.');
-                }
+                LancamentoDataService::alterarPagamento($pag, $transacao, $dados['justificativa'] ?? null, true);
+                $pag->refresh();
             }
-            $codportador = $portador->codportador;
-            $meio = !empty($dados['meio']) ? (int) $dados['meio'] : ($portador->codportador != $atual ? static::meioDoPortador($portador) : $pag->meio);
-            if ($meio != $pag->meio && !in_array($meio, static::MEIOS_CONTAS)) {
-                abort(422, "Meio de pagamento {$meio} não pode ser escolhido aqui!");
-            }
-            $pag->meio = $meio;
-            if (!empty($pag->codportadordestino)) {
-                $pag->codportadordestino = $codportador;
-            } else {
-                $pag->codportadororigem = $codportador;
-            }
-            $pag->codfilial = $portador->codfilial ?? $pag->codfilial;
         }
-        $pag->codpessoa = (int) $dados['codpessoa'];
+        $pag->codpessoa = !empty($dados['codpessoa']) ? (int) $dados['codpessoa'] : $pag->codpessoa;
         $pag->observacoes = $dados['observacao'] ?? null;
-        PagamentoService::validar($pag);
         $pag->save();
-        PortadorMovimentoService::sincronizar($pag);
-
-        foreach ($pag->MovimentoTituloS as $mov) {
-            $mov->codportador = $codportador;
-            $mov->save();
-        }
         return PagamentoListaService::carregar($pag->codpagamento);
     }
 
-    // Estornar desfaz o pagamento inteiro: estorna cada linha de baixa,
-    // cancela o cheque ainda a repassar e cancela o pagamento (com
-    // justificativa)
-    public static function estornar(Pagamento $pag, string $justificativa): Pagamento
+    // Desamarrar desfaz a baixa dos titulos (todas, ou so' as linhas
+    // escolhidas): os movimentos sao estornados e os titulos reabrem; o vale
+    // e o adiantamento que nasceram com o pagamento sao estornados. O
+    // PAGAMENTO CONTINUA: e' o fato (o dinheiro andou) e fica sem amarracao,
+    // em "Pagamentos nao resolvidos", para amarrar de novo ou cancelar (so' o
+    // manual). Venda pelo negocio, acerto pelo acerto.
+    public static function desamarrar(Pagamento $pag, string $justificativa, ?array $codmovimentos = null): Pagamento
     {
+        $pag = Pagamento::lockForUpdate()->findOrFail($pag->codpagamento);
+        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
+            abort(422, 'Só pagamento efetivado tem amarração para desfazer!');
+        }
+        if (!empty($pag->codnegocio)) {
+            abort(422, 'Pagamento de venda: altere pelo negócio.');
+        }
+        if (!empty($pag->codperiodocolaboradoracerto)) {
+            abort(422, 'Pagamento de acerto de RH: estorne pelo acerto.');
+        }
+        $ativos = PagamentoPendenciaService::movimentosAtivos($pag);
+        if ($codmovimentos !== null) {
+            $ativos = $ativos->whereIn('codmovimentotitulo', array_map('intval', $codmovimentos));
+        }
+        if ($ativos->isEmpty()) {
+            abort(422, 'Nada amarrado para desfazer!');
+        }
+        $vale = $pag->meio == PagamentoService::MEIO_VALE;
+        foreach ($ativos as $mov) {
+            // vale colaborador / adiantamento: o titulo nasceu com o
+            // pagamento; desamarrar e' estornar o titulo (so' se nao
+            // movimentado), sem cancelar o pagamento
+            if ($mov->codtipomovimentotitulo == MovimentoTituloService::TIPO_IMPLANTACAO) {
+                $vale = true;
+                TituloService::estornar($mov->Titulo, $justificativa, false);
+                continue;
+            }
+            MovimentoTituloService::estornar($mov);
+        }
+        $pag->refresh();
+        OcorrenciaService::pagamentoEstornado($pag, $vale, $justificativa);
+        return PagamentoListaService::carregar($pag->codpagamento);
+    }
+
+    // Cancelar = o fato nao existiu (foi digitado errado): so' o pagamento
+    // manual e ja' desamarrado. Integrado (PIX, cartao da maquineta, Stone,
+    // SafraPay) e boleto nunca se cancelam: o dinheiro entrou de verdade;
+    // devolver e' pela devolucao do PIX / cancelamento no cartao. O cheque a
+    // repassar e' cancelado junto. Sai do razao do portador.
+    public static function cancelar(Pagamento $pag, string $justificativa): Pagamento
+    {
+        $pag = Pagamento::lockForUpdate()->findOrFail($pag->codpagamento);
         if ($pag->estado == PagamentoService::ESTADO_CANCELADO) {
-            abort(422, 'Pagamento já estornado!');
+            abort(422, 'Pagamento já cancelado!');
         }
         if (!empty($pag->codnegocio)) {
             abort(422, 'Pagamento de venda: cancele pelo negócio.');
@@ -590,39 +583,33 @@ class PagamentoTituloService
         if (!empty($pag->codperiodocolaboradoracerto)) {
             abort(422, 'Pagamento de acerto de RH: estorne pelo acerto.');
         }
-        if (!$pag->MovimentoTituloS()->exists()) {
-            abort(422, 'Pagamento sem título não é estornado aqui.');
+        if (!static::manual($pag)) {
+            abort(422, 'Pagamento integrado (banco, maquineta, boleto) não se cancela: o dinheiro entrou de verdade. Para devolver, registre a devolução do PIX ou o cancelamento no cartão.');
         }
-        foreach ($pag->MovimentoTituloS as $mov) {
-            if (!empty($mov->codtituloboleto)) {
-                abort(422, 'Baixa de boleto pelo banco não é estornada aqui.');
-            }
+        if (PagamentoPendenciaService::movimentosAtivos($pag)->isNotEmpty()) {
+            abort(422, 'Desamarre os títulos antes de cancelar o pagamento.');
         }
         foreach (Cheque::where('codpagamento', $pag->codpagamento)->whereNull('cancelamento')->get() as $cheque) {
             if ($cheque->indstatus != 1) {
-                abort(422, "O cheque {$cheque->numero} já foi repassado. Impossível estornar!");
+                abort(422, "O cheque {$cheque->numero} já foi repassado. Impossível cancelar!");
             }
             $cheque->cancelamento = Carbon::now();
             $cheque->save();
         }
-        $vale = $pag->meio == PagamentoService::MEIO_VALE;
-        foreach ($pag->MovimentoTituloS as $mov) {
-            if ($mov->ehEstorno() || $mov->MovimentoTituloEstornoS()->exists()) {
-                continue;
-            }
-            // vale colaborador / adiantamento: o pagamento nasceu com o
-            // titulo, estornar e' desfazer o titulo (so' se nao movimentado)
-            if ($mov->codtipomovimentotitulo == MovimentoTituloService::TIPO_IMPLANTACAO) {
-                $vale = true;
-                TituloService::estornar($mov->Titulo, $justificativa);
-                continue;
-            }
-            MovimentoTituloService::estornar($mov);
-        }
-        $pag->refresh();
         PagamentoService::cancelar($pag, $justificativa);
-        OcorrenciaService::pagamentoEstornado($pag, $vale, $justificativa);
         return PagamentoListaService::carregar($pag->codpagamento);
+    }
+
+    // Lancado a mao (dinheiro, cheque, cartao digitado, banco digitado):
+    // nao veio de integracao nem de baixa do banco
+    public static function manual(Pagamento $pag): bool
+    {
+        if ($pag->ehIntegrado() || !empty($pag->codpix)) {
+            return false;
+        }
+        return !MovimentoTitulo::where('codpagamento', $pag->codpagamento)
+            ->where(fn ($q) => $q->whereNotNull('codtituloboleto')->orWhereNotNull('codboletoretorno'))
+            ->exists();
     }
 
     // Linhas de baixa (sem os estornos)

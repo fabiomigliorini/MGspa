@@ -41,8 +41,11 @@ class PagamentoPendenciaService
     // foram estornados
     public static function movimentosAtivos(Pagamento $pag)
     {
+        // a linha de estorno tem o tipo da original: quem diz que e' estorno
+        // e' o codmovimentotituloestorno
         return MovimentoTitulo::where('codpagamento', $pag->codpagamento)
             ->where('codtipomovimentotitulo', '<', 900)
+            ->whereNull('codmovimentotituloestorno')
             ->whereNotExists(fn ($q) => $q->selectRaw(1)->from('tblmovimentotitulo as e')
                 ->whereColumn('e.codmovimentotituloestorno', 'tblmovimentotitulo.codmovimentotitulo'))
             ->get();
@@ -145,6 +148,7 @@ class PagamentoPendenciaService
                         select sum(abs(m.total)) from tblmovimentotitulo m
                         where m.codpagamento = p.codpagamento
                           and m.codtipomovimentotitulo < 900
+                          and m.codmovimentotituloestorno is null
                           and not exists (
                               select 1 from tblmovimentotitulo e
                               where e.codmovimentotituloestorno = m.codmovimentotitulo

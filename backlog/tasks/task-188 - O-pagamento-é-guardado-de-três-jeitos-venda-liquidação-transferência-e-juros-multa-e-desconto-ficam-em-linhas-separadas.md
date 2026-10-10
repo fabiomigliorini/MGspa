@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-10 01:12'
+updated_date: '2026-10-10 01:15'
 labels:
   - contas
   - negocios
@@ -54,6 +54,10 @@ Desenho, decisões e o registro da execução de cada etapa: doc-3 (Plano do fec
 - [ ] #20 Encontro de contas (títulos que se anulam) e compensação gravam no portador Encontro de Contas (antigo Programação Pagamentos), também no PDV; permissão pelo papel nesse portador
 - [ ] #21 Forma 'Já recebido' no wizard (só online): amarra um pagamento sem amarração que tenha saldo livre; o título baixa na data do pagamento
 - [ ] #22 PDV: Receber Título vem com a maquininha e a conta PIX padrão do PDV
+- [ ] #23 Desamarrar (todos os títulos ou um) estorna as baixas: os títulos reabrem e o pagamento continua, sem amarração, em Pagamentos não resolvidos
+- [ ] #24 Cancelar só o pagamento manual já desamarrado (sai do razão, cancela o cheque a repassar); integrado (PIX, maquineta, Stone/SafraPay) e boleto nunca se cancelam
+- [ ] #25 Lápis do pagamento: pessoa e observação; a data só do manual; meio e portador não mudam (o servidor recusa)
+- [ ] #26 Detalhe do pagamento mostra as amarrações com o histórico (título desamarrado riscado), o saldo, o amarrado e o livre
 <!-- AC:END -->
 
 ## Implementation Notes

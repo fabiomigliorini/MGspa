@@ -72,12 +72,34 @@ class PdvPagamentoController
         return PagamentoDetalheResource::collection($pags);
     }
 
+    // desamarrar: estorna as baixas (todas ou as linhas escolhidas); o
+    // pagamento continua. "estornar" e' o nome antigo da mesma rota.
+    public function desamarrar(PdvRequest $request, int $id)
+    {
+        $pdv = PdvService::autoriza($request->pdv);
+        $request->validate([
+            'justificativa' => 'required|string|min:5|max:300',
+            'codmovimentos' => 'nullable|array',
+            'codmovimentos.*' => 'integer',
+        ]);
+        DB::beginTransaction();
+        $pag = PdvPagamentoService::desamarrar($pdv, $id, $request->justificativa, $request->codmovimentos);
+        DB::commit();
+        return new PagamentoDetalheResource($pag);
+    }
+
     public function estornar(PdvRequest $request, int $id)
+    {
+        return $this->desamarrar($request, $id);
+    }
+
+    // cancelar: so' o pagamento manual ja' desamarrado
+    public function cancelar(PdvRequest $request, int $id)
     {
         $pdv = PdvService::autoriza($request->pdv);
         $request->validate(['justificativa' => 'required|string|min:5|max:300']);
         DB::beginTransaction();
-        $pag = PdvPagamentoService::estornar($pdv, $id, $request->justificativa);
+        $pag = PdvPagamentoService::cancelar($pdv, $id, $request->justificativa);
         DB::commit();
         return new PagamentoDetalheResource($pag);
     }
