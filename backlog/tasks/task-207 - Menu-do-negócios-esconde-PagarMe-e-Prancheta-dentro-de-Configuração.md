@@ -1,11 +1,11 @@
 ---
 id: TASK-207
 title: Menu do negócios esconde PagarMe e Prancheta dentro de Configuração
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-10 18:31'
-updated_date: '2026-10-10 18:40'
+updated_date: '2026-10-10 18:42'
 labels:
   - negocios
 dependencies: []
@@ -26,7 +26,7 @@ Junto: o negócios tinha 19 layouts que eram cópia do MainLayout mudando só t�
 <!-- AC:BEGIN -->
 - [x] #1 PagarMe e Prancheta como itens do menu (Administração), /config removido
 - [x] #2 Layouts do negócios unificados no MainLayout por route.meta (sobram MainLayout e QuiosqueLayout)
-- [ ] #3 Tela PagarMe não quebra (nem trava a navegação) com pedido pendente sem maquininha vinculada
+- [x] #3 Tela PagarMe não quebra (nem trava a navegação) com pedido pendente sem maquininha vinculada
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -41,4 +41,6 @@ Implementação:
 - boot/axios.js pegava o useAuthStore() no topo do módulo: qualquer import dele antes do Pinia (ex.: routes.js -> stores/sincronizacao) derrubava o app inteiro. Passou pra dentro dos interceptors; com isso o import dinâmico de contorno no beforeEach do router/index.js virou import normal.
 
 Teste: smoke em Chrome headless passando por todas as rotas — título, voltar e drawers conferem; /config/pagar-me cai no 404; quiosque sem cabeçalho.
+
+PagarMe: pedido pendente sem maquininha vinculada vem com apelido nulo (no dev: os da filial 103 de fev/mar); o ped.apelido.charAt(0) do avatar quebrava o render no meio da lista e travava a navegação para fora da tela (Cannot destructure property 'type' of 'vnode'). Teste com a API interceptada: sem o conserto a lista para no 2º item e a navegação não sai do PagarMe; com o conserto os 4 aparecem e a navegação funciona.
 <!-- SECTION:NOTES:END -->

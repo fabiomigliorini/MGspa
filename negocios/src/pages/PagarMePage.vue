@@ -94,7 +94,7 @@ onMounted(() => {
           <q-item>
             <q-item-section avatar>
               <q-avatar color="primary" text-color="white">
-                {{ ped.apelido.charAt(0) }}
+                {{ ped.apelido?.charAt(0) }}
               </q-avatar>
             </q-item-section>
 
