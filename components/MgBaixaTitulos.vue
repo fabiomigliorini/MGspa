@@ -4,6 +4,8 @@
 // pagamento. Quando as formas fecham o líquido, grava. Cada app informa onde busca os títulos,
 // as formas, o contexto do wizard (PDV ou contas) e para onde manda a baixa. A data tem hora
 // (TASK-204: a data manda no período do portador); sem mexer nela, vai vazia e o servidor usa agora.
+// O FAB abre o diálogo com data, pessoa e observação; o botão dele abre o wizard por cima, e o
+// diálogo mostra o que já foi lançado e quanto falta.
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
@@ -61,6 +63,8 @@ const codpessoa = ref(null)
 const transacaoAbertura = formataTimestampIso(new Date()).slice(0, 16)
 const transacao = ref(transacaoAbertura)
 const observacao = ref('')
+// data, pessoa e observação ficam no diálogo do FAB, à vista com a lista rolada
+const dialog = ref(false)
 
 const lancou = computed(() => sBaixa.pagamentos.length > 0)
 const descricao = computed(() => {
@@ -160,67 +164,87 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
       @update:codpessoa="(v) => (codpessoaFiltro = v)"
     />
 
-    <q-card v-if="titulos.length" bordered flat class="q-mb-md">
-      <q-card-section class="text-grey-9 text-overline row items-center">
-        {{ descricao.toUpperCase() }}
-        <q-space />
-        <span class="text-h6">R$ {{ formataNumero(sBaixa.totalLiquido) }}</span>
-      </q-card-section>
-      <q-separator inset />
-      <q-card-section>
-        <div class="row q-col-gutter-md">
-          <div class="col-xs-12 col-sm-4" v-if="comData">
-            <MgInputData
-              v-model="transacao"
-              type="timestamp"
-              default-time="keep"
-              :seconds="false"
-              label="Data"
-              :bottom-slots="false"
-            />
-          </div>
-          <div class="col-xs-12" :class="comData ? 'col-sm-8' : ''">
-            <MgSelectPessoa v-model="codpessoa" label="Pessoa" :bottom-slots="false" />
-          </div>
-          <div class="col-12">
-            <MgInput
-              v-model="observacao"
-              type="textarea"
-              label="Observação"
-              maxlength="300"
-              autogrow
-              :bottom-slots="false"
-            />
-          </div>
-        </div>
-      </q-card-section>
-      <q-list v-if="lancou" separator>
-        <q-item v-for="(p, i) in sBaixa.pagamentos" :key="i">
-          <q-item-section>{{ p.descricao }}</q-item-section>
-          <q-item-section side>R$ {{ formataNumero(p.total) }}</q-item-section>
-          <q-item-section side>
+    <q-dialog v-model="dialog">
+      <q-card flat style="width: 600px; max-width: 90vw">
+        <q-form @submit.prevent="abrirWizard">
+          <q-card-section class="text-grey-9 text-overline row items-center">
+            {{ descricao.toUpperCase() }}
+            <q-space />
+            <span class="text-h6">R$ {{ formataNumero(sBaixa.totalLiquido) }}</span>
+          </q-card-section>
+          <q-separator inset />
+          <q-card-section>
+            <div class="row q-col-gutter-md">
+              <div class="col-xs-12 col-sm-4" v-if="comData">
+                <MgInputData
+                  v-model="transacao"
+                  type="timestamp"
+                  default-time="keep"
+                  :seconds="false"
+                  label="Data"
+                  :bottom-slots="false"
+                />
+              </div>
+              <div class="col-xs-12" :class="comData ? 'col-sm-8' : ''">
+                <MgSelectPessoa
+                  v-model="codpessoa"
+                  label="Pessoa"
+                  autofocus
+                  :bottom-slots="false"
+                />
+              </div>
+              <div class="col-12">
+                <MgInput
+                  v-model="observacao"
+                  type="textarea"
+                  label="Observação"
+                  maxlength="300"
+                  autogrow
+                  :bottom-slots="false"
+                />
+              </div>
+            </div>
+          </q-card-section>
+          <q-list v-if="lancou" separator>
+            <q-item v-for="(p, i) in sBaixa.pagamentos" :key="i">
+              <q-item-section>{{ p.descricao }}</q-item-section>
+              <q-item-section side>R$ {{ formataNumero(p.total) }}</q-item-section>
+              <q-item-section side>
+                <q-btn
+                  v-if="!p.codpagamento"
+                  flat
+                  round
+                  size="sm"
+                  icon="close"
+                  color="grey-7"
+                  @click="sBaixa.remover(i)"
+                >
+                  <q-tooltip>Tirar esta forma</q-tooltip>
+                </q-btn>
+              </q-item-section>
+            </q-item>
+            <q-item>
+              <q-item-section class="text-orange-10">Falta</q-item-section>
+              <q-item-section side class="text-orange-10 text-weight-bold">
+                R$ {{ formataNumero(sBaixa.saldo) }}
+              </q-item-section>
+              <q-item-section side style="width: 40px" />
+            </q-item>
+          </q-list>
+          <q-separator inset />
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn
-              v-if="!p.codpagamento"
               flat
-              round
-              size="sm"
-              icon="close"
-              color="grey-7"
-              @click="sBaixa.remover(i)"
-            >
-              <q-tooltip>Tirar esta forma</q-tooltip>
-            </q-btn>
-          </q-item-section>
-        </q-item>
-        <q-item>
-          <q-item-section class="text-orange-10">Falta</q-item-section>
-          <q-item-section side class="text-orange-10 text-weight-bold">
-            R$ {{ formataNumero(sBaixa.saldo) }}
-          </q-item-section>
-          <q-item-section side style="width: 40px" />
-        </q-item>
-      </q-list>
-    </q-card>
+              :label="descricao"
+              type="submit"
+              color="primary"
+              :loading="sBaixa.finalizando"
+            />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
       <q-btn
@@ -229,7 +253,7 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
         color="primary"
         :disable="!titulos.length || sBaixa.finalizando"
         :loading="sBaixa.finalizando"
-        @click="abrirWizard"
+        @click="dialog = true"
       >
         <q-tooltip>{{ descricao }}</q-tooltip>
       </q-btn>

@@ -50,6 +50,7 @@ Notas técnicas:
 - [ ] #14 Mudar de mês é permitido, com aviso de que pode afetar DIMP e relatórios já apurados
 - [ ] #15 Juros, multa, desconto e total não mudam ao alterar a data
 - [ ] #16 O caixa pendente não fecha sozinho depois da alteração: fecha pelo botão Fechar
+- [ ] #17 Receber ou Pagar Títulos (contas e PDV): data, pessoa e observação num diálogo aberto pelo FAB, à vista mesmo com a lista rolada
 - [ ] #18 Toda correção de lançamento (data alterada, correção da conferência) fica registrada num lugar só, a auditoria
 - [ ] #19 O selo 'corrigido' na conferência e na maquininha aparece só quando o valor ou o meio foi corrigido
 - [ ] #20 A auditoria antiga da replicação entre bases sai: tabelas, funções e o usuário de banco
