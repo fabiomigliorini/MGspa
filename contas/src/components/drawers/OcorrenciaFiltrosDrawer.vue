@@ -4,7 +4,6 @@ import { useDebounceFn } from '@vueuse/core'
 import { useOcorrenciaStore } from 'src/stores/ocorrenciaStore'
 import { TIPOS } from '@components/ocorrencia.js'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
-import FilterGroup from 'src/components/FilterGroup.vue'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgSelectPdv from '@components/MgSelectPdv.vue'
 import MgSelectUsuario from '@components/MgSelectUsuario.vue'
@@ -40,57 +39,57 @@ const clear = () => {
 
 <template>
   <FilterDrawerShell :active-count="store.activeFiltersCount" @clear="clear">
-    <FilterGroup title="Situação" first>
-      <q-option-group v-model="store.filters.situacao" :options="SITUACAO_OPTIONS" type="radio" />
-    </FilterGroup>
-
-    <FilterGroup title="Ordem">
-      <q-option-group v-model="store.filters.ordem" :options="ORDEM_OPTIONS" type="radio" />
-    </FilterGroup>
-
-    <FilterGroup title="Onde e quem">
-      <MgSelectFilial
-        v-model="store.filters.codfilial"
-        clearable
-        :bottom-slots="false"
-        label="Filial"
-        class="q-mb-sm"
-      />
-      <MgSelectPdv
-        v-model="store.filters.codpdv"
-        :codfilial="store.filters.codfilial"
-        clearable
-        :bottom-slots="false"
-        label="PDV"
-        class="q-mb-sm"
-      />
-      <MgSelectUsuario
-        v-model="store.filters.codusuario"
-        clearable
-        :bottom-slots="false"
-        label="Usuário"
-      />
-    </FilterGroup>
-
-    <FilterGroup title="Tipo e período">
-      <MgSelect
-        v-model="store.filters.tipo"
-        :options="TIPO_OPTIONS"
-        emit-value
-        map-options
-        outlined
-        clearable
-        :bottom-slots="false"
-        label="Tipo"
-        class="q-mb-sm"
-      />
-      <MgInputData
-        v-model="store.filters.data_de"
-        :bottom-slots="false"
-        label="De"
-        class="q-mb-sm"
-      />
-      <MgInputData v-model="store.filters.data_ate" :bottom-slots="false" label="Até" />
-    </FilterGroup>
+    <div class="row q-col-gutter-md">
+      <div class="col-12">
+        <div class="text-caption text-grey-7 q-mb-xs">Situação</div>
+        <q-option-group v-model="store.filters.situacao" :options="SITUACAO_OPTIONS" type="radio" />
+      </div>
+      <div class="col-12">
+        <div class="text-caption text-grey-7 q-mb-xs">Ordem</div>
+        <q-option-group v-model="store.filters.ordem" :options="ORDEM_OPTIONS" type="radio" />
+      </div>
+      <div class="col-12">
+        <MgSelectFilial
+          v-model="store.filters.codfilial"
+          clearable
+          :bottom-slots="false"
+          label="Filial"
+        />
+      </div>
+      <div class="col-12">
+        <MgSelectPdv
+          v-model="store.filters.codpdv"
+          :codfilial="store.filters.codfilial"
+          clearable
+          :bottom-slots="false"
+          label="PDV"
+        />
+      </div>
+      <div class="col-12">
+        <MgSelectUsuario
+          v-model="store.filters.codusuario"
+          clearable
+          :bottom-slots="false"
+          label="Usuário"
+        />
+      </div>
+      <div class="col-12">
+        <MgSelect
+          v-model="store.filters.tipo"
+          :options="TIPO_OPTIONS"
+          emit-value
+          map-options
+          clearable
+          :bottom-slots="false"
+          label="Tipo"
+        />
+      </div>
+      <div class="col-6">
+        <MgInputData v-model="store.filters.data_de" :bottom-slots="false" label="De" />
+      </div>
+      <div class="col-6">
+        <MgInputData v-model="store.filters.data_ate" :bottom-slots="false" label="Até" />
+      </div>
+    </div>
   </FilterDrawerShell>
 </template>
