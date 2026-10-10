@@ -99,7 +99,7 @@ watch(id, carregar)
         flat
         round
         icon="arrow_back"
-        :to="{ name: 'fechamento' }"
+        :to="{ name: 'painel' }"
         aria-label="Voltar"
         class="q-mb-sm"
       />

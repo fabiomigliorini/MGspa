@@ -178,16 +178,6 @@ const routes = [
         },
       },
       {
-        path: 'fechamento',
-        name: 'fechamento',
-        component: () => import('pages/fechamento/Index.vue'),
-        meta: {
-          auth: true,
-          title: 'Fechamentos',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
-        },
-      },
-      {
         path: 'ocorrencia',
         name: 'ocorrencia',
         component: () => import('pages/ocorrencia/Index.vue'),

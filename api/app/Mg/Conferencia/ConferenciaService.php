@@ -59,20 +59,6 @@ class ConferenciaService
         CaixaService::vincular($pag);
     }
 
-    // filtro de filial: a pedida (se pode) ou as que o usuario confere
-    private static function filiais(?int $codfilial): ?array
-    {
-        if (!empty($codfilial)) {
-            ConferenciaAutorizador::autorizar($codfilial);
-            return [$codfilial];
-        }
-        $filiais = ConferenciaAutorizador::filiais();
-        if ($filiais !== null && empty($filiais)) {
-            abort(403, 'Só Financeiro, Administrador ou Gerente!');
-        }
-        return $filiais;
-    }
-
     private static function whereFilial(string $coluna, ?array $filiais, array &$params, string $nome = 'f'): string
     {
         if ($filiais === null) {
@@ -86,16 +72,9 @@ class ConferenciaService
         return " and {$coluna} in (" . implode(',', $marcas) . ')';
     }
 
-    // tudo que esta' pendente de conferencia na filial (ou nas filiais do
-    // usuario). Valores do sistema nao vao para a lista: a conferencia e'
-    // as cegas.
-    public static function pendencias(?int $codfilial): array
-    {
-        return static::consultar(static::filiais($codfilial), ConferenciaAutorizador::irrestrito());
-    }
-
     // as pendencias das filiais pedidas (null = todas), sem olhar o usuario:
-    // quem autoriza e' quem chama. $comPix: PIX e deposito a confirmar
+    // quem autoriza e' quem chama. $comPix: PIX e deposito a confirmar.
+    // Valores do sistema nao vao para a lista: a conferencia e' as cegas.
     public static function consultar(?array $filiais, bool $comPix): array
     {
         $inicio = static::inicio()->format('Y-m-d H:i:s');

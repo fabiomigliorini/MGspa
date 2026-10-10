@@ -22,12 +22,6 @@ const menuGroups = [
         to: { name: 'painel' },
       },
       {
-        label: 'Fechamentos',
-        icon: 'fact_check',
-        color: 'green-8',
-        to: { name: 'fechamento' },
-      },
-      {
         label: 'Ocorrências',
         icon: 'policy',
         color: 'red-7',

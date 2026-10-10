@@ -9,20 +9,14 @@ use Mg\Negocio\Negocio;
 use Mg\Pagamento\Pagamento;
 
 /**
- * Tela Fechamentos do contas (M9 doc-3): pendencias da filial e a
- * conferencia de cada uma (cheque, vale, venda desbalanceada), com as
- * correcoes. Rotas v1/conferencia. A sessao da gaveta fecha na tela do
- * caixa (v1/caixa, M13); o periodo da maquineta, na tela da maquineta
+ * Conferencia do que o caixa movimentou (M9 doc-3): venda desbalanceada,
+ * cheque e vale, com as correcoes. Rotas v1/conferencia. As pendencias
+ * aparecem no painel da filial (TASK-203). A sessao da gaveta fecha na tela
+ * do caixa (v1/caixa, M13); o periodo da maquineta, na tela da maquineta
  * (MaquinetaPeriodoController, M9.8).
  */
 class ConferenciaController extends Controller
 {
-    public function index(Request $request)
-    {
-        $request->validate(['codfilial' => 'nullable|integer']);
-        return ['data' => ConferenciaService::pendencias($request->codfilial ? (int) $request->codfilial : null)];
-    }
-
     // ---- venda desbalanceada ----
 
     private function negocio(int $id): Negocio
