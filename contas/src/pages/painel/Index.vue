@@ -1,21 +1,24 @@
 <script setup>
-// Painel da filial (TASK-203): tudo que está pendente na filial — caixas, maquinetas,
-// ocorrências, negócios esquecidos abertos, confissões, vendas com diferença e PIX a confirmar —
-// de qualquer usuário. Só mostra: cada item leva à tela que resolve. Pensada no celular.
+// Painel (TASK-203). Sem filial na URL: as filiais que o usuário vê (Financeiro e Administrador,
+// todas; Gerente, as dele), um card por empresa, com o total de pendências de cada filial. Com filial: tudo que está
+// pendente nela — caixas, maquinetas, ocorrências, negócios esquecidos abertos, confissões, vendas
+// com diferença e PIX a confirmar — de qualquer usuário. Só mostra: cada item leva à tela que
+// resolve. Pensada no celular.
 import { computed, onMounted, watch } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { usePainelStore } from 'src/stores/painelStore'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { formataNumero, formataTimestamp, tempoRelativo } from '@components/formatters'
 import MgEmptyState from '@components/MgEmptyState.vue'
+import MgOcorrenciaItem from '@components/MgOcorrenciaItem.vue'
 
 const store = usePainelStore()
 const cache = useSelectCacheStore()
 const route = useRoute()
-const router = useRouter()
 
-// uma aba por filial ativa, na ordem do select de filial
-const filiais = computed(() => cache.entities.filial?.items || [])
+const nomeFilial = computed(
+  () => (cache.entities.filial?.items || []).find((f) => f.value === store.codfilial)?.label,
+)
 
 const urlNegocio = (codnegocio) => `${process.env.NEGOCIOS_URL}/negocio/${codnegocio}`
 
@@ -90,9 +93,8 @@ const blocos = computed(() => {
       itens: [
         ...d.ocorrencias.maiores.map((o) => ({
           chave: o.codocorrencia,
-          titulo: o.descricao,
-          subtitulo: [o.pdv, o.usuario, formataTimestamp(o.criacao, 0)].filter(Boolean).join(' · '),
-          to: ocorrenciasDaFilial(),
+          ocorrencia: o,
+          to: { name: 'ocorrencia-detalhe', params: { codocorrencia: o.codocorrencia } },
         })),
         ...(d.ocorrencias.total > d.ocorrencias.maiores.length
           ? [
@@ -147,56 +149,34 @@ const blocos = computed(() => {
   ].filter((b) => b.total)
 })
 
-// a filial vem da URL; sem ela, a última aberta
+// a filial vem da URL; sem ela, a lista das filiais
 const filialDaRota = () => (route.params.codfilial ? Number(route.params.codfilial) : null)
 
-const trocarFilial = (codfilial) => {
-  router.replace({ name: 'painel', params: { codfilial: codfilial || undefined } })
+const abrir = () => {
+  // não mostra o painel da filial anterior enquanto carrega o da nova
+  if (store.codfilial !== filialDaRota()) store.dados = null
+  store.codfilial = filialDaRota()
+  store.buscar()
 }
 
-watch(
-  () => route.params.codfilial,
-  () => {
-    store.codfilial = filialDaRota()
-    store.buscar()
-  },
-)
+watch(() => route.params.codfilial, abrir)
 
 onMounted(() => {
   cache.loadList('filial', 'v1/select/filial').catch(() => {})
-  if (!filialDaRota() && store.codfilial) {
-    trocarFilial(store.codfilial)
-    return
-  }
-  store.codfilial = filialDaRota()
-  store.buscar()
+  abrir()
 })
 </script>
 
 <template>
   <q-page>
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
-      <div class="row q-col-gutter-md items-center q-mb-md">
-        <div class="col">
-          <q-card flat bordered>
-            <q-tabs
-              align="left"
-              outside-arrows
-              mobile-arrows
-              no-caps
-              active-color="primary"
-              indicator-color="primary"
-              class="text-grey-8"
-            >
-              <q-route-tab
-                v-for="f in filiais"
-                :key="f.value"
-                :to="{ name: 'painel', params: { codfilial: f.value } }"
-                exact
-                :label="f.label"
-              />
-            </q-tabs>
-          </q-card>
+      <div class="row items-center q-col-gutter-x-sm q-mb-md">
+        <div v-if="store.codfilial" class="col-auto">
+          <q-btn flat round icon="arrow_back" color="grey-7" :to="{ name: 'painel' }" />
+        </div>
+        <div class="col" style="min-width: 0">
+          <div v-if="store.codfilial" class="text-h5 text-grey-9 ellipsis">{{ nomeFilial }}</div>
+          <div v-else class="text-subtitle1 text-grey-8">Pendências por filial</div>
         </div>
         <div class="col-auto">
           <q-btn
@@ -206,7 +186,6 @@ onMounted(() => {
             color="primary"
             icon="refresh"
             :loading="store.carregando"
-            :disable="!store.codfilial"
             @click="store.buscar"
           >
             <q-tooltip>Atualizar</q-tooltip>
@@ -214,7 +193,38 @@ onMounted(() => {
         </div>
       </div>
 
-      <div v-if="blocos.length" class="row q-col-gutter-md">
+      <div v-if="!store.codfilial" class="row q-col-gutter-md">
+        <div v-for="e in store.filiais" :key="e.codempresa" class="col-12 col-sm-6 col-md-4">
+          <q-card flat bordered class="full-height">
+            <q-item>
+              <q-item-section>
+                <q-item-label class="text-subtitle1 text-weight-medium">{{
+                  e.empresa
+                }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-separator />
+            <q-list separator>
+              <q-item
+                v-for="f in e.filiais"
+                :key="f.codfilial"
+                clickable
+                :to="{ name: 'painel', params: { codfilial: f.codfilial } }"
+              >
+                <q-item-section>
+                  <q-item-label class="ellipsis">{{ f.filial }}</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-badge v-if="f.total" color="red-7" :label="f.total" />
+                  <q-icon v-else name="task_alt" color="green-6" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card>
+        </div>
+      </div>
+
+      <div v-if="store.codfilial && blocos.length" class="row q-col-gutter-md">
         <div v-for="b in blocos" :key="b.chave" class="col-12 col-md-6">
           <q-card bordered flat>
             <q-card-section class="row items-center q-pb-sm">
@@ -223,31 +233,40 @@ onMounted(() => {
               <q-badge :color="b.cor" :label="b.total" />
             </q-card-section>
             <q-list separator>
-              <q-item
-                v-for="i in b.itens"
-                :key="i.chave"
-                clickable
-                :to="i.to"
-                :href="i.href"
-                :target="i.href ? '_blank' : undefined"
-              >
-                <q-item-section>
-                  <q-item-label class="ellipsis">{{ i.titulo }}</q-item-label>
-                  <q-item-label v-if="i.subtitulo" caption class="ellipsis">
-                    {{ i.subtitulo }}
-                  </q-item-label>
-                </q-item-section>
-                <q-item-section side>
-                  <q-icon :name="i.href ? 'open_in_new' : 'chevron_right'" color="grey-6" />
-                </q-item-section>
-              </q-item>
+              <template v-for="i in b.itens" :key="i.chave">
+                <MgOcorrenciaItem
+                  v-if="i.ocorrencia"
+                  :ocorrencia="i.ocorrencia"
+                  clickable
+                  :to="i.to"
+                />
+                <q-item
+                  v-else
+                  clickable
+                  :to="i.to"
+                  :href="i.href"
+                  :target="i.href ? '_blank' : undefined"
+                >
+                  <q-item-section>
+                    <q-item-label class="ellipsis">{{ i.titulo }}</q-item-label>
+                    <q-item-label v-if="i.subtitulo" caption class="ellipsis">
+                      {{ i.subtitulo }}
+                    </q-item-label>
+                  </q-item-section>
+                  <q-item-section side>
+                    <q-icon :name="i.href ? 'open_in_new' : 'chevron_right'" color="grey-6" />
+                  </q-item-section>
+                </q-item>
+              </template>
             </q-list>
           </q-card>
         </div>
       </div>
 
-      <MgEmptyState v-if="!store.codfilial" icon="store"> Escolha a filial. </MgEmptyState>
-      <MgEmptyState v-else-if="!store.carregando && store.dados && !blocos.length" icon="task_alt">
+      <MgEmptyState
+        v-if="store.codfilial && !store.carregando && store.dados && !blocos.length"
+        icon="task_alt"
+      >
         Nada pendente na filial.
       </MgEmptyState>
     </div>

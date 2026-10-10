@@ -622,6 +622,15 @@ class OcorrenciaService
         return array_map(fn ($r) => static::linha($r, $auditorias[$r->codocorrencia] ?? []), $regs);
     }
 
+    // algumas ocorrencias fora do livro (painel da filial, pagina do
+    // dispositivo), na mesma linha do livro (MgOcorrenciaItem)
+    public static function listar(string $where, array $params, string $ordem, int $limite): array
+    {
+        $regs = DB::select(static::sqlLinha() . " where {$where} order by {$ordem} limit {$limite}", $params);
+        $auditorias = static::auditoriasDe(array_column($regs, 'codocorrencia'));
+        return array_map(fn ($r) => static::linha($r, $auditorias[$r->codocorrencia] ?? []), $regs);
+    }
+
     private static function sqlLinha(): string
     {
         return '

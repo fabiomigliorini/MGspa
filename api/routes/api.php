@@ -1429,6 +1429,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         ->whereNumber('codigo');
 
     // Painel da filial (TASK-203): tudo pendente na filial, leva 'a tela que resolve
+    Route::get('painel', '\Mg\Painel\PainelController@index');
     Route::get('filial/{codfilial}/painel', '\Mg\Painel\PainelController@show')->whereNumber('codfilial');
 
     // Mercos

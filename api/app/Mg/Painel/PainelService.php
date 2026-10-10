@@ -4,9 +4,11 @@ namespace Mg\Painel;
 
 use Illuminate\Support\Facades\DB;
 use Mg\Conferencia\ConferenciaService;
+use Mg\Filial\Filial;
 use Mg\Maquineta\MaquinetaLoteService;
 use Mg\Maquineta\MaquinetaService;
 use Mg\Negocio\NegocioService;
+use Mg\Ocorrencia\OcorrenciaService;
 use Mg\Portador\PortadorService;
 
 /**
@@ -15,6 +17,37 @@ use Mg\Portador\PortadorService;
  */
 class PainelService
 {
+    // as filiais ativas (todas, ou so' as de $codfiliais), agrupadas por
+    // empresa, com o total de pendencias de cada uma: a soma dos cards do
+    // painel da filial
+    public static function filiais(?array $codfiliais): array
+    {
+        $filiais = Filial::ativo()
+            ->with('Empresa:codempresa,empresa')
+            ->when($codfiliais !== null, fn ($q) => $q->whereIn('codfilial', $codfiliais))
+            ->orderBy('codempresa')
+            ->orderBy('codfilial')
+            ->get(['codfilial', 'filial', 'codempresa']);
+        return $filiais->groupBy('codempresa')->map(fn ($fs) => [
+            'codempresa' => $fs->first()->codempresa,
+            'empresa' => $fs->first()->Empresa?->empresa,
+            'filiais' => $fs->map(fn ($f) => [
+                'codfilial' => $f->codfilial,
+                'filial' => $f->filial,
+                'total' => static::total(static::filial($f->codfilial)),
+            ])->values()->all(),
+        ])->values()->all();
+    }
+
+    private static function total(array $painel): int
+    {
+        return count($painel['caixas'])
+            + count($painel['maquinetas'])
+            + $painel['ocorrencias']['total']
+            + count($painel['negocios'])
+            + count($painel['conferencia']);
+    }
+
     public static function filial(int $codfilial): array
     {
         return [
@@ -72,16 +105,12 @@ class PainelService
             where o.codfilial = :codfilial
             and o.conferencia is null
         ', ['codfilial' => $codfilial])->total;
-        $maiores = DB::select('
-            select o.codocorrencia, o.descricao, o.valor, o.criacao, p.apelido as pdv, u.usuario
-            from tblocorrencia o
-            left join tblpdv p on (p.codpdv = o.codpdv)
-            left join tblusuario u on (u.codusuario = o.codusuario)
-            where o.codfilial = :codfilial
-            and o.conferencia is null
-            order by o.valor desc nulls last, o.criacao desc
-            limit 5
-        ', ['codfilial' => $codfilial]);
+        $maiores = OcorrenciaService::listar(
+            'o.codfilial = :codfilial and o.conferencia is null',
+            ['codfilial' => $codfilial],
+            'o.valor desc nulls last, o.criacao desc',
+            5
+        );
         return ['total' => (int) $total, 'maiores' => $maiores];
     }
 

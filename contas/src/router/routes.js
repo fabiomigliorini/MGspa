@@ -167,7 +167,8 @@ const routes = [
         },
       },
       {
-        // painel da filial (TASK-203): tudo pendente na filial, leva à tela que resolve
+        // painel (TASK-203): sem filial, as filiais com o total de pendências; com filial, tudo
+        // pendente nela, cada item levando à tela que resolve
         path: 'painel/:codfilial(\\d+)?',
         name: 'painel',
         component: () => import('pages/painel/Index.vue'),
