@@ -49,13 +49,13 @@ const mapa = (l) =>
 // cada linha do histórico é um período no mesmo IP e posição: da 1ª à última sincronização
 const periodo = (l) => {
   const inicio = formataTimestamp(l.criacao)
-  if (l.sincronizacoes <= 1) {
+  const ultima = formataTimestamp(l.alteracao)
+  // no mesmo minuto, "14:46 → 14:46" não diz nada
+  if (l.sincronizacoes <= 1 || !l.alteracao || ultima === inicio) {
     return inicio
   }
   const fim =
-    formataData(l.alteracao) === formataData(l.criacao)
-      ? formataHora(l.alteracao)
-      : formataTimestamp(l.alteracao)
+    formataData(l.alteracao) === formataData(l.criacao) ? formataHora(l.alteracao) : ultima
   return `${inicio} → ${fim}`
 }
 

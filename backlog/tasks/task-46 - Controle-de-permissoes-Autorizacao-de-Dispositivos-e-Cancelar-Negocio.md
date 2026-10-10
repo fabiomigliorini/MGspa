@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-10 18:28'
+updated_date: '2026-10-10 18:47'
 labels:
   - negocios
 dependencies: []
@@ -32,7 +32,7 @@ Origem: negocios/todo — secao SEGURANCA. No arquivo original constava "(Allan)
 - [x] #8 Ao abrir o negocios (PDV e quiosque), dispositivo sem cadastro ou sem autorização vai direto para o Meu Dispositivo, que tem o Cadastrar
 - [x] #9 Um formulário só para editar o dispositivo, agrupado por contexto; o que o usuário não pode alterar fica desabilitado (e o servidor recusa)
 - [x] #10 Autorizar e reativar recusam sem Apelido, Filial, Local de Estoque, Setor e Natureza de Operação
-- [ ] #11 A página do dispositivo mostra o histórico de IP e localização (uma linha por período no mesmo lugar, com quantas sincronizações) e a data da última sincronização completa
+- [x] #11 A página do dispositivo mostra o histórico de IP e localização (uma linha por período no mesmo lugar, com quantas sincronizações) e a data da última sincronização completa
 - [x] #12 Sincronizar aparece em todas as telas do negócios
 - [x] #13 Ícone de sincronização não fica vermelho logo depois de sincronizar à tarde
 <!-- AC:END -->
@@ -57,4 +57,6 @@ Sincronizar em todas as telas e hora em 24h (10/10, commits f796b2a16 e 9b5c52bb
 Testes (10/10, depois do c909caa71): pela API com tokens de Admin, Gerente da 103 e usuário comum (lista por papel, cadastrar/sincronizar/quiosque, ver sem login, editar por papel, ativar só Admin e com os 5 campos) e de tela no Chrome headless (navegador limpo vai para o Meu Dispositivo; Cadastrar sem login só avisa; cadastrar, editar e ativar; comum só com Negócios e Pagamento habilitados; filtros da lista). Corrigido: recusa das rotas do PDV diz 'Dispositivo não cadastrado ou inativo'; Gerente ao ativar recebe 'Só Administrador ativa ou inativa'; validação em português com nomes legíveis; salvar o próprio dispositivo pela tela encerra a migração do legado (a configuração vale na hora e a 1ª sincronização não preenche o que ficou vazio de propósito).
 
 Cadastrar sem login (Fábio, 10/10): além do aviso, abre o dialog de login (useAuth().login); depois de entrar, o Cadastrar é outro clique. O aviso deixou de ser fixo (timeout 0), para não ficar na tela depois do login.
+
+Testes do histórico (10/10, depois do 7628c55a9): API com token de Admin e sem login (cadastrar grava 1 linha e o clique duplo não duplica; mesmo lugar soma, IP ou posição nova abre linha, sem posição também; sincronizacao-completa 200/422/403 e recusa dispositivo inativo; lista com ip e filtro no histórico; página e registros do próprio sem login) e tela no Chrome headless (navegador limpo cadastra, sincroniza e manda a completa; mudar de lugar abre linha nova; cards dois por linha e um embaixo do outro no celular; lista mostra 'sincronizado há'). Corrigido: período no mesmo minuto mostrava '14:46 → 14:46'. Observação: o coletarDispositivo aceita posição de até 10 min (maximumAge), então sincronizar logo depois de mudar de lugar ainda grava a posição anterior.
 <!-- SECTION:NOTES:END -->
