@@ -149,14 +149,18 @@ const prepararBaixa = () => {
 }
 
 const cobrar = async () => {
+  if (sBaixa.finalizando) return
   prepararBaixa()
-  // o pagamento que veio para amarrar é a forma, com o valor do formulário
+  // o pagamento que veio para amarrar é a forma, com o valor do formulário: não há o que cobrar,
+  // grava direto; não gravou, volta a editar
   if (props.pagamento) {
     sBaixa.adicionar({
       codpagamento: props.pagamento.codpagamento,
       total: sBaixa.totalLiquido,
       descricao: props.pagamento.descricao,
     })
+    await gravar()
+    if (lancou.value) sBaixa.remover()
     return
   }
   sBaixa.abrirWizard({
@@ -291,13 +295,18 @@ const gravar = async () => {
           </div>
         </q-card-section>
 
-        <q-list v-if="lancou" separator>
+        <q-card-section v-if="pagamento" class="text-caption text-grey-7">
+          Amarrando o pagamento {{ pagamento.descricao }} (livre R$
+          {{ formataNumero(pagamento.livre) }})
+        </q-card-section>
+
+        <q-list v-else-if="lancou" separator>
           <q-item>
             <q-item-section>{{ sBaixa.forma.descricao }}</q-item-section>
             <q-item-section side>R$ {{ formataNumero(sBaixa.forma.total) }}</q-item-section>
             <q-item-section side>
               <q-btn
-                v-if="!sBaixa.forma.codpagamento || pagamento"
+                v-if="!sBaixa.forma.codpagamento"
                 flat
                 round
                 size="sm"
@@ -314,7 +323,7 @@ const gravar = async () => {
         <q-card-actions align="right">
           <q-btn flat color="grey-8" label="Cancelar" v-close-popup tabindex="-1" />
           <q-btn
-            v-if="!lancou"
+            v-if="pagamento || !lancou"
             flat
             color="primary"
             :label="pagamento ? 'Amarrar' : verbo"
