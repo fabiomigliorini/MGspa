@@ -72,29 +72,8 @@ const pedirMotivo = (titulo, mensagem, rotulo) =>
     cancel: { label: 'Voltar', color: 'grey-8', flat: true },
   })
 
-// desamarrar: os títulos (todos, ou o escolhido) reabrem; o pagamento continua
-const desamarrar = (mov = null) => {
-  pedirMotivo(
-    'Desamarrar',
-    (mov
-      ? `O título ${mov.titulo?.numero ?? ''} reabre`
-      : 'Todos os títulos deste pagamento reabrem') +
-      '. O pagamento continua e fica para amarrar de novo. Informe o motivo:',
-    'Desamarrar',
-  ).onOk(async (justificativa) => {
-    try {
-      await store.desamarrar(
-        pag.value.codpagamento,
-        justificativa,
-        mov ? [mov.codmovimentotitulo] : null,
-      )
-      $q.notify({ type: 'positive', message: 'Desamarrado', color: 'green-5', icon: 'done' })
-      emit('estornado', store.pagamento)
-    } catch (e) {
-      erro(e, 'Erro ao desamarrar')
-    }
-  })
-}
+// desamarrar (todos ou um título) está desligado por enquanto (TASK-218): a tela não oferece e o
+// servidor recusa
 
 // cancelar: o pagamento não aconteceu (digitado errado); sai do razão
 const cancelar = () => {
@@ -187,17 +166,6 @@ const cancelar = () => {
             DETALHES
             <q-space />
             <slot name="acoes" :pagamento="pag" />
-            <q-btn
-              v-if="podeEstornar && pag.desamarravel"
-              flat
-              round
-              size="sm"
-              icon="link_off"
-              color="grey-7"
-              @click="desamarrar()"
-            >
-              <q-tooltip>Desamarrar todos os títulos</q-tooltip>
-            </q-btn>
             <q-btn
               v-if="podeEstornar && pag.cancelavel"
               flat
@@ -397,29 +365,6 @@ const cancelar = () => {
                 </template>
                 <q-item-label caption>{{ m.tipomovimentotitulo }}</q-item-label>
                 <q-item-label caption>vence {{ formataData(m.titulo?.vencimento) }}</q-item-label>
-              </q-item-section>
-              <q-item-section
-                side
-                v-if="
-                  podeEstornar &&
-                  pag.desamarravel &&
-                  !m.estornado &&
-                  Number(pag.meio) !== 91 &&
-                  pag.movimentos.filter((x) => !x.estornado).length > 1 &&
-                  new Set(pag.movimentos.filter((x) => !x.estornado).map((x) => x.operacao))
-                    .size === 1
-                "
-              >
-                <q-btn
-                  flat
-                  round
-                  size="sm"
-                  icon="link_off"
-                  color="grey-7"
-                  @click.prevent.stop="desamarrar(m)"
-                >
-                  <q-tooltip>Desamarrar este título</q-tooltip>
-                </q-btn>
               </q-item-section>
             </q-item>
           </q-list>

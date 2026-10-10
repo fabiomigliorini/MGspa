@@ -134,8 +134,9 @@ class PagamentoDetalheResource extends Resource
             ])->values()->all(),
             // o que a tela pode fazer (venda pelo negocio, acerto pelo acerto):
             // desamarrar o que esta' amarrado; cancelar so' o manual ja'
-            // desamarrado; editar (pessoa, observacao; data so' do manual)
-            'desamarravel'              => $efetivado && $documento && $ativos > 0,
+            // desamarrado; editar (pessoa, observacao; data so' do manual).
+            // Desamarrar desligado por enquanto (TASK-218)
+            'desamarravel'              => false,
             'cancelavel'                => $efetivado && $documento && $ativos == 0 && $manual,
             'editavel'                  => $efetivado && $documento,
             'manual'                    => $manual,

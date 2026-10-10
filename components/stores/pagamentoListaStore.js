@@ -129,18 +129,6 @@ export const pagamentoListaStore = defineStore('pagamentoLista', {
       return this.pagamento
     },
 
-    // desamarrar: estorna as baixas (todas, ou as linhas escolhidas); o pagamento continua
-    async desamarrar(id, justificativa, codmovimentos = null) {
-      const { data } = await api.post(`${this.endpoint}/${id}/desamarrar`, {
-        ...this.fixos,
-        justificativa,
-        codmovimentos,
-      })
-      this.pagamento = data.data
-      this.atualizarLinha(data.data)
-      return this.pagamento
-    },
-
     // cancelar: só o manual já desamarrado (o pagamento não aconteceu)
     async cancelar(id, justificativa) {
       const { data } = await api.post(`${this.endpoint}/${id}/cancelar`, {

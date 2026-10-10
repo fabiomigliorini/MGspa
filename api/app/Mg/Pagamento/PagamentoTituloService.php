@@ -592,8 +592,11 @@ class PagamentoTituloService
     // PAGAMENTO CONTINUA: e' o fato (o dinheiro andou) e fica sem amarracao,
     // em "Pagamentos nao resolvidos", para amarrar de novo ou cancelar (so' o
     // manual). Venda pelo negocio, acerto pelo acerto.
+    // Desligado por enquanto (TASK-218): avaliar se amarrar/desamarrar precisa
+    // existir. As duas rotas (contas e PDV) passam por aqui e recusam.
     public static function desamarrar(Pagamento $pag, string $justificativa, ?array $codmovimentos = null): Pagamento
     {
+        abort(422, 'Desamarrar títulos do pagamento está desabilitado por enquanto.');
         $pag = Pagamento::lockForUpdate()->findOrFail($pag->codpagamento);
         if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
             abort(422, 'Só pagamento efetivado tem amarração para desfazer!');
