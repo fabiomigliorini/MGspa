@@ -3,11 +3,11 @@ id: TASK-212
 title: >-
   Gerente fecha o caixa com dinheiro na gaveta e tem que abrir o dia seguinte à
   mão
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-10 20:41'
-updated_date: '2026-10-10 20:42'
+updated_date: '2026-10-10 20:54'
 labels:
   - contas
 dependencies: []
@@ -27,7 +27,7 @@ A pedido do Fábio (10/10/2026): ao fechar o período em espécie que tem saldo 
 - [x] #1 Fechar o último período com contagem final maior que zero abre o seguinte (início no segundo seguinte ao fim, contagem inicial copiada da final)
 - [x] #2 Fechamento que fica pendente (diferença acima da tolerância) também abre o seguinte: o dinheiro continua na gaveta
 - [x] #3 Contagem final zerada não abre o seguinte
-- [ ] #4 A resposta do fechar já traz o período novo e a tela mostra a aba nova e avisa, continuando no período fechado
+- [x] #4 A resposta do fechar já traz o período novo e a tela mostra a aba nova e avisa, continuando no período fechado
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -39,7 +39,9 @@ Front: periodoStore.fechar() guarda os períodos de antes e, se veio um novo, co
 
 Efeito: reabrir o fechado depois que o seguinte nasceu deixa ele pendente (não é mais o último), não aberto; para voltar a vender nele, unificar o novo (vazio) com ele.
 
-Conferido (tinker, transação com rollback, Gaveta Dev Fabio #47, saldo 303,90): contando 303,90 fecha e nasce #119 aberto com 303,90 e a contagem inicial igual à final; contando 253,90 fica pendente (dif -50) e nasce o seguinte com 253,90; contagem zerada fica pendente e não abre nada. Falta ver na tela (AC 4).
+Conferido (tinker, transação com rollback, Gaveta Dev Fabio #47, saldo 303,90): contando 303,90 fecha e nasce #119 aberto com 303,90 e a contagem inicial igual à final; contando 253,90 fica pendente (dif -50) e nasce o seguinte com 253,90; contagem zerada fica pendente e não abre nada. Tela conferida (AC 4).
 
 Testar: contas → /portador/{gaveta}/{período aberto} → contar o final pelo resumo → Fechar (cadeado). Deve aparecer a aba nova 'aberto' com o saldo e o aviso 'Período fechado; o seguinte já está aberto com R$ X', sem recarregar.
+
+Tela aprovada pelo Fábio (10/10/2026).
 <!-- SECTION:NOTES:END -->
