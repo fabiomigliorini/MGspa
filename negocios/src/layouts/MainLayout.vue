@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import MgAppFooter from '@components/MgAppFooter.vue'
 import MgAppsMenu from '@components/MgAppsMenu.vue'
 import MgPageTitle from '@components/MgPageTitle.vue'
+import BtnSincronizacao from 'components/offline/BtnSincronizacao.vue'
 
 defineProps({
   backTo: {
@@ -69,6 +70,9 @@ const toggleRightDrawer = () => {
 
         <!-- BOTOES ADICIONAIS -->
         <slot name="botoes" />
+
+        <!-- SINCRONIZACAO: em todas as telas -->
+        <btn-sincronizacao />
 
         <!-- USUARIO  -->
         <slot name="usuario" />

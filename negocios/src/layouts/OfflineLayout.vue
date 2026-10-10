@@ -3,13 +3,9 @@ import MainLayout from 'layouts/MainLayout.vue'
 import OfflineLeftDrawer from 'components/drawers/OfflineLeftDrawer.vue'
 import OfflineRightDrawer from 'components/drawers/OfflineRightDrawer.vue'
 import UsuarioConectado from 'components/UsuarioConectado.vue'
-import BtnSincronizacao from 'components/offline/BtnSincronizacao.vue'
 </script>
 <template>
   <main-layout title="PDV" left-drawer right-drawer>
-    <template #botoes>
-      <btn-sincronizacao />
-    </template>
     <template #usuario>
       <!-- USUARIO  -->
       <usuario-conectado />
