@@ -105,7 +105,7 @@ class PagamentoController extends Controller
         return PagamentoDetalheResource::collection($pags);
     }
 
-    // corrige pessoa, portador, meio, data e observacao
+    // o lapis: pessoa e observacao; a data so' do manual
     public function update(PagamentoTituloUpdateRequest $request, int $id)
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);
@@ -115,9 +115,6 @@ class PagamentoController extends Controller
         $bloqueio = PagamentoTituloAutorizador::motivoBloqueioEdicao($pag, Auth::user()->codusuario);
         if ($bloqueio !== null) {
             abort(403, $bloqueio);
-        }
-        if (!empty($dados['codportador']) && !PagamentoTituloAutorizador::podeCriar(Auth::user()->codusuario, (int) $dados['codportador'])) {
-            abort(403, 'Portador não pertence à sua filial.');
         }
         $pag = PagamentoTituloService::atualizar($pag, $dados);
         DB::commit();

@@ -8,7 +8,6 @@ use Mg\Auditoria\AuditoriaService;
 use Mg\Caixa\CaixaItemService;
 use Mg\Caixa\CaixaService;
 use Mg\Cheque\Cheque;
-use Mg\Conferencia\ConferenciaAutorizador;
 use Mg\Conferencia\ConferenciaService;
 use Mg\Conferencia\PagamentoCorrecaoService;
 use Mg\Maquineta\MaquinetaLoteService;
@@ -131,20 +130,21 @@ class LancamentoDataService
 
     // ==== pagamento ====
 
-    // cartao: quem confere a maquineta (o cartao nao entra no razao do
-    // portador); o resto, o gestor de cada portador do pagamento
+    // o gestor de cada portador do pagamento; no cartao (que nao entra no
+    // razao do portador), o gestor do portador da adquirente da maquineta
     public static function podePagamento(Pagamento $pag, ?int $livre = null): bool
     {
-        if (!empty($pag->codmaquineta) && ConferenciaAutorizador::pode(ConferenciaService::filialDoPagamento($pag))) {
-            return true;
+        $portadores = [$pag->codportadororigem, $pag->codportadordestino];
+        if (!empty($pag->codmaquineta)) {
+            $portadores[] = optional(\Mg\Pagamento\PagamentoTituloService::portadorDaMaquineta($pag->Maquineta))->codportador;
         }
-        return static::podePortadores([$pag->codportadororigem, $pag->codportadordestino], $livre);
+        return static::podePortadores(array_values(array_filter($portadores)), $livre);
     }
 
     private static function autorizarPagamento(Pagamento $pag): void
     {
         if (!static::podePagamento($pag)) {
-            abort(403, 'Alterar a data: só o gestor de cada portador do pagamento (no cartão, quem confere a maquineta).');
+            abort(403, 'Alterar a data: só o gestor de cada portador do pagamento (no cartão, o da adquirente).');
         }
     }
 

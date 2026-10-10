@@ -9,7 +9,6 @@ use Mg\Pagamento\PagamentoService;
 use Mg\Pagamento\PagamentoTituloService;
 use Mg\Pdv\Pdv;
 use Mg\Portador\LancamentoDataService;
-use Mg\Usuario\Autorizador;
 
 /**
  * Vale colaborador e adiantamentos (M8 do plano doc-3), o mesmo no contas e
@@ -20,8 +19,8 @@ use Mg\Usuario\Autorizador;
  * a receber (vale, adiantamento a fornecedor) = sai dinheiro; a pagar
  * (adiantamento/credito de cliente) = entra.
  *
- * No PDV: dinheiro na gaveta, filial do PDV, o caixa lanca sozinho
- * (Caixa/Gerente da filial) e a saida e' so' em dinheiro. No contas: banco,
+ * No PDV: dinheiro na gaveta (pre-selecionada), filial do PDV e a saida
+ * e' so' em dinheiro. Quem pode: o papel no portador (o controller confere). No contas: banco,
  * cofre, cartao da empresa, cheque, cartao e PIX QR, com a filial escolhida
  * (quem pode, o controller confere). Nos dois, a data com hora (TASK-204;
  * sem data, agora): a gaveta recusa sessao fechada.
@@ -38,9 +37,6 @@ class TituloAdiantamentoService
      */
     public static function lancar(array $dados, ?Pdv $pdv = null): array
     {
-        if ($pdv && !Autorizador::pode([]) && !Autorizador::pode(['Caixa', 'Gerente'], $pdv->codfilial)) {
-            abort(403, 'Vale e adiantamento só Caixa da filial, Gerente ou Administrador!');
-        }
         $tipo = TipoTitulo::findOrFail((int) $dados['codtipotitulo']);
         if (!$tipo->movimentaportador || !empty($tipo->inativo)) {
             abort(422, "Tipo {$tipo->tipotitulo} não nasce com pagamento!");

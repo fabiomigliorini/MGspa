@@ -11,7 +11,6 @@ use Mg\Pagamento\PagamentoPendenciaService;
 use Mg\Pagamento\PagamentoService;
 use Mg\Pagamento\PagamentoTituloAutorizador;
 use Mg\Pagamento\PagamentoTituloService;
-use Mg\Usuario\Autorizador;
 
 /**
  * Receber titulo e pagar vale/credito do cliente no PDV (M7 do plano doc-3,
@@ -56,27 +55,14 @@ class PdvPagamentoService
         })->filter(fn($p) => $p['disponivel'] > 0)->values()->all();
     }
 
-    // Baixa pelo PDV: receber e' de quem opera o caixa; pagar vale/credito
-    // (sai dinheiro) so' Gerente da filial ou Administrador
+    // Baixa pelo PDV: pelo papel do usuario no portador da forma (o
+    // dinheiro entra = depositante; sai = operador); a gaveta do PDV so' vem
+    // pre-selecionada
     public static function baixar(Pdv $pdv, array $dados): array
     {
-        $bloqueio = PagamentoTituloAutorizador::motivoBloqueioBaixa(Auth::user()->codusuario, $dados);
-        if ($bloqueio !== null && str_starts_with($bloqueio, 'Encontro de contas')) {
+        $bloqueio = PagamentoTituloAutorizador::motivoBloqueioBaixa(Auth::user()->codusuario, $dados, $pdv);
+        if ($bloqueio !== null) {
             abort(403, $bloqueio);
-        }
-        if (PagamentoTituloService::liquido($dados['titulos'] ?? []) > 0) {
-            if (!Autorizador::pode([]) && !Autorizador::pode(['Gerente'], $pdv->codfilial)) {
-                abort(403, 'Pagar vale ou crédito do cliente só Gerente ou Administrador!');
-            }
-        }
-        foreach ($dados['pagamentos'] ?? [] as $f) {
-            if (empty($f['codpagamento'])) {
-                continue;
-            }
-            $pag = Pagamento::findOrFail($f['codpagamento']);
-            if (!empty($pag->codpdv) && $pag->codpdv != $pdv->codpdv) {
-                abort(422, "O pagamento {$pag->codpagamento} é de outro PDV!");
-            }
         }
         return PagamentoTituloService::baixar($dados, $pdv);
     }

@@ -14,7 +14,7 @@ use Mg\Usuario\Autorizador;
  *   ser destino de transferencia: depositante
  *   confirmar transferencia chegando, reabrir, datas, dividir, unificar,
  *   a lista de usuarios: gestor
- * O PDV nao passa por aqui: quem esta' na gaveta trabalha nela (livre).
+ * O PDV tambem passa por aqui: o caixa precisa do papel na gaveta.
  */
 class PortadorAutorizador
 {
@@ -33,12 +33,12 @@ class PortadorAutorizador
         return $codusuario ?? (Auth::user()->codusuario ?? null);
     }
 
-    // a gaveta do PDV que pede (codpdv no request): o PDV nao valida o papel
-    // nela. null fora do PDV
+    // Era a gaveta do PDV que pedia (codpdv no request), livre de papel. Saiu
+    // (Fabio, 09/10/2026): toda permissao e' o papel do usuario no portador; o
+    // PDV so' pre-seleciona a gaveta. Fica null para os chamadores.
     public static function livre(): ?int
     {
-        $codpdv = request()->input('codpdv');
-        return $codpdv ? optional(Pdv::find((int) $codpdv))->codportador : null;
+        return null;
     }
 
     public static function admin(?int $codusuario = null): bool

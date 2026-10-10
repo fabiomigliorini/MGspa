@@ -338,9 +338,45 @@ class PagamentoTituloService
         return PagamentoService::criar(array_merge($base, $campos));
     }
 
-    // Portador da forma: dinheiro na gaveta do PDV (no contas, cofre/troco/
-    // Caixa Financeiro escolhido); cheque recebido na Carteira; cartao na
-    // adquirente da maquineta; banco e cartao da empresa escolhidos no contas
+    // O portador em que a forma vai mexer, para conferir o papel do usuario
+    // antes de gravar (PagamentoTituloAutorizador). Sem validar a forma.
+    public static function portadorPrevisto(array $forma, bool $entrada, ?Pdv $pdv): ?Portador
+    {
+        if (!empty($forma['codpagamento'])) {
+            return optional(Pagamento::find((int) $forma['codpagamento']))->portadorDoPagamento();
+        }
+        $meio = (int) ($forma['meio'] ?? 0);
+        if ($meio == PagamentoService::MEIO_COMPENSACAO) {
+            return Portador::find(Portador::ENCONTRO_CONTAS);
+        }
+        if (!empty($forma['codpagamentoorigem'])) {
+            $original = Pagamento::find((int) $forma['codpagamentoorigem']);
+            if (!$original) {
+                return null;
+            }
+            return ($original->meio == PagamentoService::MEIO_PIX)
+                ? Portador::find($original->codportadordestino)
+                : (static::portadorDaMaquineta($original->Maquineta) ?? Portador::find($original->codportadordestino));
+        }
+        if (!empty($forma['codportador'])) {
+            return Portador::find((int) $forma['codportador']);
+        }
+        if (in_array($meio, PagamentoService::MEIOS_CARTAO) && $entrada && !empty($forma['codmaquineta'])) {
+            return static::portadorDaMaquineta(Maquineta::find((int) $forma['codmaquineta']));
+        }
+        if ($meio == PagamentoService::MEIO_DINHEIRO && $pdv && !empty($pdv->codportador)) {
+            return Portador::find($pdv->codportador);
+        }
+        if ($meio == PagamentoService::MEIO_CHEQUE && $entrada) {
+            return Portador::find(Portador::CARTEIRA);
+        }
+        return null;
+    }
+
+    // Portador da forma: dinheiro no portador de especie escolhido (no PDV, a
+    // gaveta dele vem pre-selecionada: sem escolha, e' ela); cheque recebido
+    // na Carteira; cartao na adquirente da maquineta; banco e cartao da
+    // empresa escolhidos no contas
     protected static function portadorDaForma(array $forma, int $meio, bool $entrada, ?Pdv $pdv): ?Portador
     {
         $escolhido = !empty($forma['codportador']) ? Portador::findOrFail((int) $forma['codportador']) : null;
@@ -353,7 +389,7 @@ class PagamentoTituloService
 
         switch ($meio) {
             case PagamentoService::MEIO_DINHEIRO:
-                if ($pdv) {
+                if ($pdv && !$escolhido) {
                     if (empty($pdv->codportador)) {
                         abort(422, 'PDV sem gaveta: vincule o portador em Config → PDV.');
                     }
@@ -514,7 +550,8 @@ class PagamentoTituloService
                 if (!static::manual($pag)) {
                     abort(422, 'A data do pagamento integrado é a do banco ou da maquineta.');
                 }
-                LancamentoDataService::alterarPagamento($pag, $transacao, $dados['justificativa'] ?? null, true);
+                // a permissao da data e' a do alterar data: gestor do portador
+                LancamentoDataService::alterarPagamento($pag, $transacao, $dados['justificativa'] ?? null);
                 $pag->refresh();
             }
         }

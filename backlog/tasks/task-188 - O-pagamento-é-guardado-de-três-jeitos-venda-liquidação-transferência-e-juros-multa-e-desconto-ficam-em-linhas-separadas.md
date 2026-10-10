@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-10 01:23'
+updated_date: '2026-10-10 01:26'
 labels:
   - contas
   - negocios
@@ -65,6 +65,8 @@ Desenho, decisões e o registro da execução de cada etapa: doc-3 (Plano do fec
 - [ ] #31 PIX pela chave que o banco confirma vira pagamento efetivado, sem documento, no razão do banco (a partir do início do razão), com a pessoa do CPF/CNPJ do pagador; aparece em não resolvidos
 - [ ] #32 PIX QR e Stone sem venda confirmam com a pessoa da cobrança
 - [ ] #33 'PIX pela chave' sai da forma Banco do contas (é só da venda, como parcela a receber)
+- [ ] #34 Permissão do dinheiro pelo papel do usuário no portador: receber = depositante; pagar, desamarrar, cancelar, corrigir e devolver = operador; alterar data = gestor (no cartão, o portador da adquirente); o PDV só pré-seleciona a gaveta (sai a gaveta livre por codpdv)
+- [ ] #35 SQL de go-live api/database/pagamento_amarracao.sql: portador Encontro de Contas e os papéis que faltam (caixa/gerente depositante em adquirentes, Carteira e bancos da filial; Cobrança como o Financeiro)
 <!-- AC:END -->
 
 ## Implementation Notes
