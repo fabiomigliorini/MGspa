@@ -54,9 +54,7 @@ const notaBloqueada = computed(() => {
 
 const form = ref(null)
 
-// Options (serão carregadas via API)
-const operacoesOptions = ref([])
-
+// Options
 const modeloOptions = [
   { label: 'NF-e (55)', value: '55' },
   { label: 'NFC-e (65)', value: '65' },
@@ -175,15 +173,6 @@ const loadFormData = async () => {
     pesoliquido: null,
     observacoes: null,
   }
-}
-
-const loadOptions = async () => {
-  // TODO: Implementar carregamento das opções via API
-  // Por enquanto, deixar vazio para não bloquear o desenvolvimento
-  operacoesOptions.value = [
-    { label: 'Entrada', value: 1 },
-    { label: 'Saída', value: 2 },
-  ]
 }
 
 const handleSubmit = async () => {
@@ -319,7 +308,6 @@ const notaValorTotal = computed(() => {
 // Lifecycle
 onMounted(() => {
   loadFormData()
-  loadOptions()
 })
 </script>
 

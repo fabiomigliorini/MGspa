@@ -18,8 +18,6 @@ class NotaFiscalProdutoBarraController extends Controller
     {
         $nota = NotaFiscal::findOrFail($codnotafiscal);
 
-        // TODO: Fazer o backend entender que se tiver embalagem, 
-        // precisa buscar a Unidade da Embalagem
         $query = $nota->NotaFiscalProdutoBarraS()
             ->with([
                 'ProdutoBarra.Produto',

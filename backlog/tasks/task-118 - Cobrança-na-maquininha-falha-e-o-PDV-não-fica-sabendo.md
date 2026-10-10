@@ -4,7 +4,7 @@ title: Cobrança na maquininha falha e o PDV não fica sabendo
 status: To Do
 assignee: []
 created_date: '2026-09-18 20:59'
-updated_date: '2026-09-23 21:02'
+updated_date: '2026-10-10 17:22'
 labels:
   - negocios
 dependencies: []
@@ -22,3 +22,15 @@ Causa: PdvController::criarSaurusPedido faz tudo numa requisicao so: cancelarPed
 
 Proposta: dois passos. (1) backend cria o pedido local e devolve o negocio atualizado (sempre commitado); (2) chamada separada envia/reenvia para a Saurus, com erro explicito ao PDV e status do pedido refletindo a falha. Front atualiza a listagem apos o passo 1 independente do resultado do envio, e o SaurusPedidoDialog oferece reenviar. Avaliar o mesmo padrao para PagarMe (criarPagarMePedido) e PIX (criarPixCob). Ja existe reenviarSaurusPedido no PdvController, aproveitar.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [x] #1 Erro ao criar a cobrança aparece no PDV
+- [ ] #2 Envio que falha aparece como falha na lista de cobranças, com Reenviar
+<!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Revisão do backlog com o Fábio (10/10/2026): o #1 foi feito na TASK-188 (commit c12254f04, components/stores/cobrancaStore.js). O servidor continua igual: SaurusService::criarPedido grava o pedido e engole o erro do envio, devolvendo 200 com pedido sem id.
+<!-- SECTION:NOTES:END -->

@@ -341,15 +341,6 @@ class BoletoBbService
      */
     public static function liquidar(TituloBoleto $tituloBoleto)
     {
-
-        /*
-        // TODO: Decidir o que fazer com esses 4 campos
-        if ($tituloBoleto->valorpagamentoparcial > 0) { }
-        if ($tituloBoleto->valorabatimento > 0) { }
-        if ($tituloBoleto->valorreajuste > 0) { }
-        if ($tituloBoleto->valoroutro > 0) { }
-        */
-
         $titulo = Titulo::findOrFail($tituloBoleto->codtitulo);
         $vinculos = [
             'codtituloboleto' => $tituloBoleto->codtituloboleto,

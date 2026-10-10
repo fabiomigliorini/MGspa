@@ -1,13 +1,16 @@
 ---
 id: TASK-175
-title: Conferir o valor de saida do estoque em venda com desconto
+title: >-
+  Compra com desconto lançada pelo negócio pode entrar no estoque com o custo
+  errado
 status: To Do
 assignee: []
 created_date: '2026-09-25 15:49'
+updated_date: '2026-10-10 17:22'
 labels:
   - estoque
 dependencies: []
-priority: medium
+priority: low
 type: task
 ordinal: 189000
 ---
@@ -37,3 +40,9 @@ desconto -- silenciosamente, so aparecendo no custo medio e na margem.
 
 O job inteiro sera refatorado depois; esta task e' so a conferencia da mudanca.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Revisão do backlog com o Fábio (10/10/2026): a premissa da venda estava errada. A venda (tipo 3001, preco=2) sai pelo custo médio; nas 18 vendas com desconto desde 25/09 a saída está no custo médio, como deve. A mudança do MGLara (commit 29135a9) só vale para movimento com preço informado, que no negócio é só a Compra (2001): 16 em 30 dias, nenhuma com desconto. Conferir na primeira compra com desconto lançada pelo negócio: entradavalor = valorprodutos - valordesconto do item.
+<!-- SECTION:NOTES:END -->
