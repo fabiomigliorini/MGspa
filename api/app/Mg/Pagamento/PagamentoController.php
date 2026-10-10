@@ -44,7 +44,7 @@ class PagamentoController extends Controller
     public function pendentes(Request $request)
     {
         Autorizador::autoriza(self::GRUPOS_LEITURA);
-        $filtros = $request->only(['codpessoa', 'codfilial', 'sentido', 'codpagamento', 'codpessoaprimeiro', 'codfilialprimeiro']);
+        $filtros = $request->only(['codpessoa', 'codfilial', 'codportador', 'sentido', 'codpagamento', 'codpessoaprimeiro', 'codfilialprimeiro']);
         return ['data' => PagamentoPendenciaService::formatar(PagamentoPendenciaService::listar($filtros))];
     }
 

@@ -7,7 +7,7 @@
 // coisa: amarrar a títulos (abre o Receber Título com o pagamento), adiantamento (o mesmo
 // diálogo do vale), "já lançado" (o digitado é o mesmo dinheiro: fica o integrado) e devolver
 // (PIX e cartão). Só os portadores em que o usuário tem papel.
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { formataNumero, formataData, formataTimestamp } from '@components/formatters'
@@ -17,6 +17,8 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgAdiantamentoDialog from '@components/MgAdiantamentoDialog.vue'
+import MgSelectPessoa from '@components/MgSelectPessoa.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 
 const props = defineProps({
   // 'v1/pagamento' (contas) ou 'v1/pdv/pagamento' (PDV)
@@ -36,6 +38,10 @@ const $q = useQuasar()
 
 const carregando = ref(false)
 const pendentes = ref([])
+// filtros (a lista vem limitada aos 500 mais recentes)
+const LIMITE = 500
+const codpessoa = ref(null)
+const codportador = ref(null)
 
 const notificar = (type, message) =>
   $q.notify({
@@ -50,7 +56,13 @@ const erro = (e, padrao) =>
 const carregar = async () => {
   carregando.value = true
   try {
-    const { data } = await api.get(`${props.endpoint}/pendentes`, { params: props.fixos })
+    const { data } = await api.get(`${props.endpoint}/pendentes`, {
+      params: {
+        ...props.fixos,
+        codpessoa: codpessoa.value || undefined,
+        codportador: codportador.value || undefined,
+      },
+    })
     pendentes.value = data.data ?? []
   } catch (e) {
     erro(e, 'Erro ao carregar')
@@ -60,6 +72,7 @@ const carregar = async () => {
 }
 
 onMounted(carregar)
+watch([codpessoa, codportador], carregar)
 
 const descricao = (p) => `${p.meiodescricao} #${p.codpagamento}`
 
@@ -76,10 +89,8 @@ const abrirAdiantamento = (p) => {
   }
   dialogAdiantamento.value = true
 }
-const adiantamentoLancado = () => {
-  notificar('positive', 'Adiantamento lançado')
-  carregar()
-}
+// o diálogo já avisa que lançou
+const adiantamentoLancado = () => carregar()
 
 // ---- já lançado ----
 const dialogDuplicado = ref(false)
@@ -169,6 +180,25 @@ const podeDevolver = (p) => p.operador && p.entrada && [3, 4, 17].includes(Numbe
         <q-btn flat round size="sm" icon="refresh" color="grey-7" @click="carregar">
           <q-tooltip>Atualizar</q-tooltip>
         </q-btn>
+      </q-card-section>
+      <q-card-section class="q-pt-none">
+        <div class="row q-col-gutter-md">
+          <div class="col-12 col-sm-6">
+            <MgSelectPessoa v-model="codpessoa" label="Pessoa" clearable :bottom-slots="false" />
+          </div>
+          <div class="col-12 col-sm-6">
+            <MgSelectPortador
+              v-model="codportador"
+              label="Portador"
+              papel="D"
+              clearable
+              :bottom-slots="false"
+            />
+          </div>
+        </div>
+        <div v-if="pendentes.length >= LIMITE" class="text-caption text-orange-9 q-mt-sm">
+          Mostrando os {{ LIMITE }} mais recentes: filtre por pessoa ou portador para ver os outros.
+        </div>
       </q-card-section>
       <MgEmptyState v-if="!carregando && !pendentes.length" plain icon="task_alt">
         Nenhum pagamento sem amarração
@@ -355,7 +385,11 @@ const podeDevolver = (p) => p.operador && p.entrada && [3, 4, 17].includes(Numbe
                   prefix="R$"
                   :min="0.01"
                   autofocus
-                  :rules="[(v) => v > 0 && v <= devolvendo.livre]"
+                  :rules="[
+                    (v) =>
+                      (v > 0 && v <= devolvendo.livre) ||
+                      `De R$ 0,01 até R$ ${formataNumero(devolvendo.livre)}`,
+                  ]"
                 />
               </div>
               <div class="col-12">

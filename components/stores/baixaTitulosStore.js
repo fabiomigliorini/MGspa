@@ -56,9 +56,13 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
     totalLiquido() {
       return Math.abs(this.liquido)
     },
-    // títulos que se anulam (algum com valor); todos zerados não é encontro de contas
+    // títulos que se anulam, ou quitados só com desconto (100%): baixa sem dinheiro, no
+    // Encontro de Contas. Todos zerados, sem desconto, não é nada a gravar
     compensacao() {
-      return this.titulos.some((t) => (t.total || 0) > 0) && this.totalLiquido < 0.005
+      return (
+        this.titulos.some((t) => (t.total || 0) > 0 || (t.desconto || 0) > 0) &&
+        this.totalLiquido < 0.005
+      )
     },
     // pronto para gravar: a forma escolhida (ou o encontro de contas, que não tem forma)
     pronto() {
@@ -80,7 +84,16 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
 
     // abre o wizard com o valor do líquido, travado; formas = { entrada: [...], saida: [...] }
     abrirWizard({ contexto, formas, padrao = {} }) {
-      if (this.compensacao || this.totalLiquido <= 0) {
+      if (this.compensacao) {
+        return
+      }
+      if (this.totalLiquido <= 0) {
+        Notify.create({
+          type: 'negative',
+          message: 'Informe o valor dos títulos!',
+          timeout: 3000,
+          actions: [{ icon: 'close', color: 'white' }],
+        })
         return
       }
       cobrancaStore().abrir({

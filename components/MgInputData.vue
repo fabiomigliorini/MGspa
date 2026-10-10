@@ -265,6 +265,21 @@ function setTimePart(part, val) {
   emitFromDate(clampToRange(base));
 }
 
+// só o dia digitado (dd/mm/aaaa), mantendo a hora que já estava: usado ao ir do campo para a hora
+function aplicarDiaDigitado() {
+  const m = (displayRef.value || "").match(/^(\d{2})\/(\d{2})\/(\d{4}|\d{2})(?!\d)/);
+  if (!m) return;
+  let y = +m[3];
+  if (m[3].length === 2) y = expand2DigitYear(m[3]);
+  const base = lastValid.value ? new Date(lastValid.value) : new Date();
+  const dia = validatedDate(y, +m[2], +m[1], base.getHours(), base.getMinutes(), base.getSeconds());
+  if (!dia) return;
+  const clamped = clampToRange(dia);
+  if (lastValid.value?.getTime() !== clamped.getTime()) {
+    emitFromDate(clamped);
+  }
+}
+
 function onTimeKeydown(e, part, isFirst, isLast) {
   if (e.key === "Tab") {
     if (e.shiftKey && isFirst) {
@@ -434,6 +449,8 @@ function onKeydown(e) {
       const el = hourRef.value?.nativeEl;
       if (el) {
         e.preventDefault();
+        // o dia digitado vale antes de ir para a hora (senão a hora entra no dia antigo)
+        aplicarDiaDigitado();
         el.focus();
         el.select();
         return;

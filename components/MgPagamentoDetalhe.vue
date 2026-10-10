@@ -249,7 +249,11 @@ const cancelar = () => {
             </q-item>
             <q-item v-if="pag.maquineta || pag.autorizacao">
               <q-item-section>
-                <q-item-label caption>Cartão</q-item-label>
+                <q-item-label caption>
+                  {{
+                    [3, 4].includes(Number(pag.meio)) || pag.maquineta ? 'Cartão' : 'Autorização'
+                  }}
+                </q-item-label>
                 <q-item-label>
                   {{
                     [
@@ -390,7 +394,13 @@ const cancelar = () => {
               </q-item-section>
               <q-item-section
                 side
-                v-if="podeEstornar && pag.desamarravel && !m.estornado && pag.movimentos.length > 1"
+                v-if="
+                  podeEstornar &&
+                  pag.desamarravel &&
+                  !m.estornado &&
+                  Number(pag.meio) !== 91 &&
+                  pag.movimentos.filter((x) => !x.estornado).length > 1
+                "
               >
                 <q-btn
                   flat

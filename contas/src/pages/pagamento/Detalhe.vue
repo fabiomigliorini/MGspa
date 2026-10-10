@@ -137,7 +137,8 @@ watch(() => route.fullPath, carregar)
           >
             <q-tooltip>Editar</q-tooltip>
           </q-btn>
-          <template v-if="pag.estado !== 'C' && pag.movimentos?.length">
+          <!-- recibo só com título amarrado (o desamarrado não conta) -->
+          <template v-if="pag.estado !== 'C' && pag.movimentos?.some((m) => !m.estornado)">
             <q-btn
               flat
               round

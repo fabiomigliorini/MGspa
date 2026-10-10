@@ -32,7 +32,7 @@ class PdvPagamentoController
     {
         $pdv = PdvService::autoriza($request->pdv);
         // no PDV, so' os da loja dele (o admin tambem), o cliente primeiro
-        $filtros = $request->only(['codpessoa', 'sentido', 'codpagamento', 'codpessoaprimeiro']);
+        $filtros = $request->only(['codpessoa', 'codportador', 'sentido', 'codpagamento', 'codpessoaprimeiro']);
         $filtros['codfilial'] = $pdv->codfilial;
         return ['data' => PagamentoPendenciaService::formatar(PagamentoPendenciaService::listar($filtros))];
     }

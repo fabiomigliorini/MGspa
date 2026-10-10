@@ -65,7 +65,9 @@ class PagamentoPendenciaService
     // o que esta' amarrado: titulos + a venda fechada
     public static function amarrado(Pagamento $pag): float
     {
-        $titulos = static::movimentosAtivos($pag)->sum(fn ($m) => abs((float) $m->total));
+        // a soma com sinal: receber e pagar no mesmo pagamento se compensam
+        // (o pagamento e' o liquido deles)
+        $titulos = abs(static::movimentosAtivos($pag)->sum(fn ($m) => (float) $m->total));
         $venda = 0;
         if (!empty($pag->codnegocio) && optional($pag->Negocio)->codnegociostatus == NegocioService::STATUS_FECHADO) {
             $venda = abs((float) $pag->total);
@@ -127,6 +129,10 @@ class PagamentoPendenciaService
             $where[] = 'p.codfilial = :codfilial';
             $binds['codfilial'] = (int) $filtros['codfilial'];
         }
+        if (!empty($filtros['codportador'])) {
+            $where[] = 'coalesce(p.codportadordestino, p.codportadororigem) = :codportador';
+            $binds['codportador'] = (int) $filtros['codportador'];
+        }
         if (!empty($filtros['codpagamento'])) {
             $where[] = 'p.codpagamento = :codpagamento';
             $binds['codpagamento'] = (int) $filtros['codpagamento'];
@@ -152,8 +158,8 @@ class PagamentoPendenciaService
                         select abs(sum(d.total)) from tblpagamento d
                         where d.codpagamentoorigem = p.codpagamento and d.estado = 'E'
                     ), 0) as saldo,
-                    coalesce((
-                        select sum(abs(m.total)) from tblmovimentotitulo m
+                    abs(coalesce((
+                        select sum(m.total) from tblmovimentotitulo m
                         where m.codpagamento = p.codpagamento
                           and m.codtipomovimentotitulo < 900
                           and m.codmovimentotituloestorno is null
@@ -161,7 +167,7 @@ class PagamentoPendenciaService
                               select 1 from tblmovimentotitulo e
                               where e.codmovimentotituloestorno = m.codmovimentotitulo
                           )
-                    ), 0)
+                    ), 0))
                     + case when n.codnegociostatus = " . NegocioService::STATUS_FECHADO . " then abs(p.total) else 0 end
                     as amarrado
                 from tblpagamento p
@@ -278,6 +284,12 @@ class PagamentoPendenciaService
             if (!empty($integrado->autorizacao)) {
                 $q->where(fn ($w) => $w->whereNull('autorizacao')->orWhere('autorizacao', $integrado->autorizacao));
             }
+        } elseif (in_array((int) $integrado->meio, PagamentoTituloService::MEIOS_BANCO)) {
+            // no banco o digitado e' transferencia, deposito, PIX ou boleto, na
+            // mesma conta
+            $q->whereIn('meio', PagamentoTituloService::MEIOS_BANCO);
+            $portador = $integrado->codportadordestino ?? $integrado->codportadororigem;
+            $q->where(fn ($w) => $w->where('codportadordestino', $portador)->orWhere('codportadororigem', $portador));
         } else {
             $q->where('meio', $integrado->meio);
         }

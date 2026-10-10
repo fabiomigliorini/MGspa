@@ -20,12 +20,16 @@ const emit = defineEmits(['escolher'])
 const listaRef = ref(null)
 const filtro = ref('')
 
+// aqui os dígitos vão para o filtro: a lista não mostra número de atalho (mostrar e não
+// funcionar levava a escolher outro portador)
+const semAtalho = computed(() => props.opcoes.map((o) => ({ ...o, tecla: null })))
+
 const filtradas = computed(() => {
   const texto = filtro.value.trim().toLowerCase()
   if (!texto) {
-    return props.opcoes
+    return semAtalho.value
   }
-  return props.opcoes.filter((o) =>
+  return semAtalho.value.filter((o) =>
     [o.label, o.caption, o.serial, o.filial].some(
       (c) => c && String(c).toLowerCase().includes(texto),
     ),

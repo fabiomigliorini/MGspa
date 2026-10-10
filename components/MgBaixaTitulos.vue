@@ -78,6 +78,20 @@ const observacao = ref('')
 // data, pessoa e observação ficam no diálogo do FAB, à vista com a lista rolada
 const dialog = ref(false)
 
+// amarrando um pagamento que já existe: os títulos têm de caber no livre e ser do sentido dele
+const problemaAmarracao = computed(() => {
+  if (!props.pagamento || !titulos.value.length || sBaixa.compensacao) return null
+  if (props.pagamento.entrada !== undefined && !!props.pagamento.entrada !== sBaixa.entrada) {
+    return props.pagamento.entrada
+      ? 'Este pagamento é uma entrada de dinheiro: selecione títulos a receber.'
+      : 'Este pagamento é uma saída de dinheiro: selecione títulos a pagar.'
+  }
+  if (sBaixa.totalLiquido > (props.pagamento.livre ?? 0) + 0.005) {
+    return `Os títulos somam R$ ${formataNumero(sBaixa.totalLiquido)} e o pagamento tem R$ ${formataNumero(props.pagamento.livre)} livre.`
+  }
+  return null
+})
+
 const descricao = computed(() => {
   if (sBaixa.compensacao) return 'Encontro de contas'
   return sBaixa.entrada ? 'Receber' : 'Pagar'
@@ -112,7 +126,12 @@ watch(
   titulos,
   (lista) => {
     if (sBaixa.forma && !props.pagamento) {
-      notificar('negative', 'Seleção mudou: escolha a forma de novo.')
+      Notify.create({
+        message: 'Seleção mudou: escolha a forma de novo.',
+        color: 'grey-8',
+        icon: 'info',
+        timeout: 3000,
+      })
     }
     const pessoas = [...new Set(lista.map((t) => t.codpessoa).filter(Boolean))].sort()
     if (pessoas.join(',') !== pessoasDosTitulos) {
@@ -261,6 +280,9 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
               </q-item-section>
             </q-item>
           </q-list>
+          <q-card-section v-if="problemaAmarracao" class="text-caption text-negative">
+            {{ problemaAmarracao }}
+          </q-card-section>
           <q-card-section v-if="pagamento" class="text-caption text-grey-7">
             Amarrando o pagamento #{{ pagamento.codpagamento }} (livre R$
             {{ formataNumero(pagamento.livre) }})
@@ -281,7 +303,7 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
               label="Gravar"
               type="submit"
               color="primary"
-              :disable="!sBaixa.pronto"
+              :disable="!sBaixa.pronto || !!problemaAmarracao"
               :loading="sBaixa.finalizando"
             />
           </q-card-actions>

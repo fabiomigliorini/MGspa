@@ -609,7 +609,8 @@ const tecla = (e) => {
             </div>
             <div class="text-subtitle1 text-orange-10">Falta</div>
           </div>
-          <div class="text-right" v-else>
+          <!-- troco só onde há troco (dinheiro recebido); valor travado sem troco não mostra -->
+          <div class="text-right" v-else-if="temTroco || (formaAtual.dinheiro && entrada)">
             <div class="text-h2 text-weight-bold text-green-9">
               R$ {{ formataNumero(diferenca) }}
             </div>

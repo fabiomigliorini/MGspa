@@ -591,6 +591,12 @@ class PagamentoTituloService
             abort(422, 'Pagamento de acerto de RH: estorne pelo acerto.');
         }
         $ativos = PagamentoPendenciaService::movimentosAtivos($pag);
+        // encontro de contas e compensacao: os titulos se pagam entre si,
+        // desamarrar e' tudo ou nada
+        if ($codmovimentos !== null && $pag->meio == PagamentoService::MEIO_COMPENSACAO
+            && count(array_unique($codmovimentos)) < $ativos->count()) {
+            abort(422, 'Encontro de contas se desamarra inteiro: os títulos se pagam entre si.');
+        }
         if ($codmovimentos !== null) {
             $ativos = $ativos->whereIn('codmovimentotitulo', array_map('intval', $codmovimentos));
         }
@@ -663,8 +669,12 @@ class PagamentoTituloService
     // Linhas de baixa (sem os estornos)
     public static function baixas(Pagamento $pag)
     {
+        // a que foi estornada (desamarrada) tambem sai
+        $estornadas = $pag->MovimentoTituloS->pluck('codmovimentotituloestorno')->filter()->all();
         return $pag->MovimentoTituloS
-            ->filter(fn(MovimentoTitulo $m) => !$m->ehEstorno() && (int) $m->codtipomovimentotitulo < 900);
+            ->filter(fn(MovimentoTitulo $m) => !$m->ehEstorno()
+                && (int) $m->codtipomovimentotitulo < 900
+                && !in_array($m->codmovimentotitulo, $estornadas));
     }
 
     // Baixou titulo a receber? (principal negativo)

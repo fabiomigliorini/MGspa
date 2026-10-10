@@ -31,6 +31,7 @@ onMounted(async () => {
         livre: p.livre,
         descricao: `${p.meiodescricao} #${p.codpagamento}`,
         codpessoa: p.codpessoa,
+        entrada: p.entrada,
       }
     } else {
       Notify.create({
