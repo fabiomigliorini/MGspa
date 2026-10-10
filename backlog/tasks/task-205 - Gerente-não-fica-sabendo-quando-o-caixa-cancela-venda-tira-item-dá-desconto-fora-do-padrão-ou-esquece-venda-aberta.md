@@ -3,11 +3,11 @@ id: TASK-205
 title: >-
   Gerente não fica sabendo quando o caixa cancela venda, tira item, dá desconto
   fora do padrão ou esquece venda aberta
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-09 00:20'
-updated_date: '2026-10-10 00:44'
+updated_date: '2026-10-10 02:50'
 labels:
   - negocios
 dependencies: []
@@ -30,19 +30,19 @@ Painel de caixas/maquinetas ficou na TASK-203. Parecer por LLM na TASK-206.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Tabela tblocorrencia + tblocorrenciaauditoria (N:N com a tblauditoria) + colunas monitoramento/minutosesquecido no PDV (api/database/ocorrencia.sql, idempotente)
-- [ ] #2 O fato (o que mudou, antes/depois, justificativa) fica só na auditoria; a ocorrência amarra N auditorias e uma auditoria pode estar em N ocorrências
-- [ ] #3 Negócio cancelado vira ocorrência com quem, quando, justificativa e pagamentos que tinha
-- [ ] #4 Pagamento e vale estornados viram ocorrência (sem duplicar com o cancelamento do negócio)
-- [ ] #5 Desconto acima do permitido (maior entre desconto do cadastro e 5% sobre a parte à vista pix/dinheiro/débito) vira ocorrência no fechamento
-- [ ] #6 No fechamento: item excluído, vale compras excluído, preço abaixo ou acima do cadastro e saída sem financeiro (uso e consumo, perda, brinde) viram ocorrência, uma por negócio e tipo
-- [ ] #7 Juntar bipes repetidos, aumentar quantidade, preço antigo de mudança recente no cadastro e transferência entre filiais não geram ocorrência
-- [ ] #8 Na sincronização do PDV: quantidade diminuída, pagamento apagado e parcela a prazo apagada viram ocorrência; a quantidade que volta também aparece na mesma ocorrência
-- [ ] #9 Correções de lançamento da TASK-204 (data alterada, data do cancelamento, corrigido, indevido, incluído) em PDV monitorado viram uma ocorrência por correção
-- [ ] #10 Negócio aberto com itens parado além do tempo do PDV vira ocorrência 'esquecido' (agendado); ao fechar o caixa, o que ainda estiver aberto vira ocorrência e o caixa fecha
-- [ ] #11 Cadastro do PDV permite marcar a data de monitoramento e os minutos para esquecido
-- [ ] #12 Tela Ocorrências no contas: gerente vê as da filial dele, filtra, ordena por valor e confere com observação
-- [ ] #13 PDV sem nada de monitoramento: sem pedir motivo ao caixa
+- [x] #1 Tabela tblocorrencia + tblocorrenciaauditoria (N:N com a tblauditoria) + colunas monitoramento/minutosesquecido no PDV (api/database/ocorrencia.sql, idempotente)
+- [x] #2 O fato (o que mudou, antes/depois, justificativa) fica só na auditoria; a ocorrência amarra N auditorias e uma auditoria pode estar em N ocorrências
+- [x] #3 Negócio cancelado vira ocorrência com quem, quando, justificativa e pagamentos que tinha
+- [x] #4 Pagamento e vale estornados viram ocorrência (sem duplicar com o cancelamento do negócio)
+- [x] #5 Desconto acima do permitido (maior entre desconto do cadastro e 5% sobre a parte à vista pix/dinheiro/débito) vira ocorrência no fechamento
+- [x] #6 No fechamento: item excluído, vale compras excluído, preço abaixo ou acima do cadastro e saída sem financeiro (uso e consumo, perda, brinde) viram ocorrência, uma por negócio e tipo
+- [x] #7 Juntar bipes repetidos, aumentar quantidade, preço antigo de mudança recente no cadastro e transferência entre filiais não geram ocorrência
+- [x] #8 Na sincronização do PDV: quantidade diminuída, pagamento apagado e parcela a prazo apagada viram ocorrência; a quantidade que volta também aparece na mesma ocorrência
+- [x] #9 Correções de lançamento da TASK-204 (data alterada, data do cancelamento, corrigido, indevido, incluído) em PDV monitorado viram uma ocorrência por correção
+- [x] #10 Negócio aberto com itens parado além do tempo do PDV vira ocorrência 'esquecido' (agendado); ao fechar o caixa, o que ainda estiver aberto vira ocorrência e o caixa fecha
+- [x] #11 Cadastro do PDV permite marcar a data de monitoramento e os minutos para esquecido
+- [x] #12 Tela Ocorrências no contas: gerente vê as da filial dele, filtra, ordena por valor e confere com observação
+- [x] #13 PDV sem nada de monitoramento: sem pedir motivo ao caixa
 <!-- AC:END -->
 
 ## Implementation Notes
