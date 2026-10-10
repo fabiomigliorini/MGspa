@@ -23,7 +23,7 @@ import DialogDispositivo from 'components/pdv/DialogDispositivo.vue'
 const $q = useQuasar()
 const route = useRoute()
 const router = useRouter()
-const { estaAutenticado, expiresAt } = useAuth()
+const { estaAutenticado, expiresAt, login } = useAuth()
 const sDispositivo = dispositivoStore()
 const sSinc = sincronizacaoStore()
 const { dispositivo: d, pode, registros, erro } = storeToRefs(sDispositivo)
@@ -146,7 +146,8 @@ const inativar = () =>
 
 const cadastrando = ref(false)
 
-// cadastrar exige usuário logado: sem ele (ou com a sessão vencida) só avisa
+// cadastrar exige usuário logado: sem ele (ou com a sessão vencida) avisa e abre o login; depois
+// de entrar, o Cadastrar é outro clique
 async function cadastrar() {
   const vencida = expiresAt.value && new Date(expiresAt.value) < new Date()
   if (!estaAutenticado.value || vencida) {
@@ -155,9 +156,8 @@ async function cadastrar() {
       message: vencida
         ? 'Sua sessão expirou. Entre de novo para cadastrar o dispositivo.'
         : 'Entre com seu usuário para cadastrar o dispositivo.',
-      timeout: 0,
-      actions: [{ icon: 'close', color: 'white' }],
     })
+    login()
     return
   }
   cadastrando.value = true
