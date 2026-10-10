@@ -161,7 +161,13 @@ const excluir = () => {
           </q-item-section>
           <q-item-section side class="text-grey-9">
             {{ formataNumero(np.valor) }}
-            <a v-if="np.codtitulo" :href="urlTitulo(np.codtitulo)" target="_blank">
+            <a
+              v-if="np.codtitulo"
+              :href="urlTitulo(np.codtitulo)"
+              target="_blank"
+              class="text-primary"
+              style="text-decoration: none"
+            >
               {{ np.titulonumero ?? np.codtitulo }}
             </a>
           </q-item-section>
