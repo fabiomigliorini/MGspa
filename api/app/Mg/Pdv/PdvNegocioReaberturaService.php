@@ -40,7 +40,7 @@ class PdvNegocioReaberturaService
     }
 
     // so' reabre; nao estorna nada (quem desfaz e' o F3)
-    public static function reabrir(Negocio $negocio): Negocio
+    public static function reabrir(Negocio $negocio, string $justificativa): Negocio
     {
         $negocio = Negocio::lockForUpdate()->findOrFail($negocio->codnegocio);
         if ($negocio->codnegociostatus != NegocioService::STATUS_FECHADO) {
@@ -59,7 +59,8 @@ class PdvNegocioReaberturaService
             $negocio->codnegocio,
             AuditoriaService::TIPO_NEGOCIO_REABERTO,
             ['codnegociostatus' => NegocioService::STATUS_FECHADO],
-            ['codnegociostatus' => NegocioService::STATUS_ABERTO]
+            ['codnegociostatus' => NegocioService::STATUS_ABERTO],
+            $justificativa
         );
         return $negocio;
     }

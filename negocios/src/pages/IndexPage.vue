@@ -242,15 +242,23 @@ const cancelar = async () => {
 }
 
 // venda fechada reaberta pelo gerente (TASK-30): só reabre; o F3 fecha de novo com a mesma
-// data, caixa e PDV
+// data, caixa e PDV. O motivo vai para a auditoria (TASK-209)
 const reabrir = () => {
   Dialog.create({
-    title: 'Reabrir',
-    message: 'Reabrir este negócio? O F3 fecha de novo com a mesma data, caixa e PDV.',
+    title: 'Justificativa da Reabertura',
+    message:
+      'Descreva o motivo da reabertura, com no mínimo 15 caracteres. O F3 fecha de novo com a mesma data, caixa e PDV.',
+    prompt: {
+      model: '',
+      isValid: (val) => val.trim().length > 14,
+      outlined: true,
+      type: 'text',
+      placeholder: 'Justificativa da Reabertura...',
+    },
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'Reabrir', color: 'primary', flat: true },
-  }).onOk(async () => {
-    await sNegocio.reabrir()
+  }).onOk(async (justificativa) => {
+    await sNegocio.reabrir(justificativa)
     emitter.emit('negocioAlterado')
   })
 }

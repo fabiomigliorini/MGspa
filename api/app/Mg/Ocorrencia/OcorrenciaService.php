@@ -600,6 +600,28 @@ class OcorrenciaService
         return static::linha($reg, static::auditoriasDe([$codocorrencia])[$codocorrencia] ?? []);
     }
 
+    // Historico de um registro (TASK-209): as ocorrencias dele, as do negocio
+    // e as que amarram alguma das auditorias dele
+    public static function historico(string $tabela, int $codigo, array $codauditorias): array
+    {
+        $where = ["(o.tabela = :tabela and o.codigo = {$codigo})"];
+        if ($tabela == 'tblnegocio') {
+            $where[] = "o.codnegocio = {$codigo}";
+        }
+        if (!empty($codauditorias)) {
+            $where[] = 'o.codocorrencia in (
+                select oa.codocorrencia from tblocorrenciaauditoria oa
+                where oa.codauditoria in (' . implode(',', array_map('intval', $codauditorias)) . ')
+            )';
+        }
+        $regs = DB::select(
+            static::sqlLinha() . ' where ' . implode(' or ', $where) . ' order by o.criacao, o.codocorrencia',
+            ['tabela' => $tabela]
+        );
+        $auditorias = static::auditoriasDe(array_column($regs, 'codocorrencia'));
+        return array_map(fn ($r) => static::linha($r, $auditorias[$r->codocorrencia] ?? []), $regs);
+    }
+
     private static function sqlLinha(): string
     {
         return '
@@ -632,18 +654,7 @@ class OcorrenciaService
         ');
         $ret = [];
         foreach ($regs as $a) {
-            $ret[$a->codocorrencia][] = [
-                'codauditoria' => (int) $a->codauditoria,
-                'tabela' => $a->tabela,
-                'codigo' => (int) $a->codigo,
-                'tipo' => (int) $a->tipo,
-                'tipodescricao' => AuditoriaService::TIPOS[$a->tipo] ?? $a->tipo,
-                'antes' => $a->antes ? json_decode($a->antes, true) : null,
-                'depois' => $a->depois ? json_decode($a->depois, true) : null,
-                'justificativa' => $a->justificativa,
-                'usuario' => $a->usuario,
-                'criacao' => Carbon::parse($a->criacao)->toIso8601String(),
-            ];
+            $ret[$a->codocorrencia][] = AuditoriaService::linha($a);
         }
         return $ret;
     }

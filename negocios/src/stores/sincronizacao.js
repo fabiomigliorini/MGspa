@@ -822,11 +822,12 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
     },
 
-    // venda fechada reaberta pelo gerente (TASK-30)
-    async reabrirNegocio(codnegocio) {
+    // venda fechada reaberta pelo gerente (TASK-30), com o motivo (TASK-209)
+    async reabrirNegocio(codnegocio, justificativa) {
       try {
         const { data } = await api.post('/v1/pdv/negocio/' + codnegocio + '/reabrir', {
           pdv: this.pdv.uuid,
+          justificativa,
         })
         return data.data
       } catch (error) {

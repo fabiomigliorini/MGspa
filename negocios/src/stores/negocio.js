@@ -2132,9 +2132,9 @@ export const negocioStore = defineStore('negocio', {
 
     // venda fechada reaberta pelo gerente (TASK-30): o servidor volta o status para 1 e a
     // resposta vale mesmo "andando para trás" (forcar)
-    async reabrir() {
+    async reabrir(justificativa) {
       try {
-        const ret = await sSinc.reabrirNegocio(this.negocio.codnegocio)
+        const ret = await sSinc.reabrirNegocio(this.negocio.codnegocio, justificativa)
         if (ret.codnegocio) {
           Notify.create({
             type: 'positive',

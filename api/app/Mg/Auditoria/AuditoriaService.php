@@ -2,6 +2,10 @@
 
 namespace Mg\Auditoria;
 
+use Carbon\Carbon;
+use Illuminate\Support\Facades\DB;
+use Mg\Ocorrencia\OcorrenciaService;
+
 /**
  * Auditoria (TASK-204): registra o que mudou num registro qualquer. Ninguem
  * confere aqui: o livro de ocorrencias (TASK-205) amarra as auditorias que o
@@ -54,6 +58,18 @@ class AuditoriaService
         self::TIPO_PAGAMENTO_REATIVADO => 'Pagamento reativado',
         self::TIPO_PARCELA_INATIVADA_REABERTURA => 'Parcela inativada na reabertura',
         self::TIPO_PARCELA_REATIVADA => 'Parcela reativada',
+    ];
+
+    // o historico do registro traz tambem a auditoria destes filhos (TASK-209);
+    // chave do filho e FK para o pai pela convencao: tblpagamento.codpagamento,
+    // tblpagamento.codnegocio
+    const FILHOS = [
+        'tblnegocio' => [
+            'tblnegocioprodutobarra',
+            'tblpagamento',
+            'tblnegocioparcela',
+            'tblnegociovale',
+        ],
     ];
 
     // `antes` nulo: o registro nasceu (fica o `depois` com o que foi
@@ -113,5 +129,60 @@ class AuditoriaService
             ->get()
             ->keyBy('codigo')
             ->all();
+    }
+
+    // Historico de um registro (TASK-209, MgHistorico): as auditorias dele e
+    // dos filhos, e as ocorrencias que o citam. O filho apagado nao tem mais
+    // linha: a auditoria dele entra pela ocorrencia que a amarrou.
+    public static function historico(string $tabela, int $codigo): array
+    {
+        $where = ["(a.tabela = :tabela and a.codigo = {$codigo})"];
+        $fk = 'cod' . substr($tabela, 3);
+        foreach (static::FILHOS[$tabela] ?? [] as $filho) {
+            $pk = 'cod' . substr($filho, 3);
+            $where[] = "(a.tabela = '{$filho}' and a.codigo in (select {$pk} from {$filho} where {$fk} = {$codigo}))";
+        }
+        $codauditorias = array_column(DB::select(
+            'select a.codauditoria from tblauditoria a where ' . implode(' or ', $where),
+            ['tabela' => $tabela]
+        ), 'codauditoria');
+
+        $ocorrencias = OcorrenciaService::historico($tabela, $codigo, $codauditorias);
+        foreach ($ocorrencias as $oc) {
+            $codauditorias = array_merge($codauditorias, array_column($oc['auditorias'], 'codauditoria'));
+        }
+
+        $auditorias = [];
+        if (!empty($codauditorias)) {
+            $auditorias = DB::select('
+                select a.codauditoria, a.tabela, a.codigo, a.tipo, a.antes, a.depois,
+                    a.justificativa, a.criacao, u.usuario
+                from tblauditoria a
+                left join tblusuario u on (u.codusuario = a.codusuariocriacao)
+                where a.codauditoria in (' . implode(',', array_map('intval', array_unique($codauditorias))) . ')
+                order by a.criacao, a.codauditoria
+            ');
+        }
+        return [
+            'auditorias' => array_map(fn ($a) => static::linha($a), $auditorias),
+            'ocorrencias' => $ocorrencias,
+        ];
+    }
+
+    // a auditoria como o front le (sql com u.usuario de quem fez)
+    public static function linha($a): array
+    {
+        return [
+            'codauditoria' => (int) $a->codauditoria,
+            'tabela' => $a->tabela,
+            'codigo' => (int) $a->codigo,
+            'tipo' => (int) $a->tipo,
+            'tipodescricao' => static::TIPOS[$a->tipo] ?? $a->tipo,
+            'antes' => $a->antes ? json_decode($a->antes, true) : null,
+            'depois' => $a->depois ? json_decode($a->depois, true) : null,
+            'justificativa' => $a->justificativa,
+            'usuario' => $a->usuario,
+            'criacao' => Carbon::parse($a->criacao)->toIso8601String(),
+        ];
     }
 }

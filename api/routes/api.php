@@ -1420,8 +1420,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // Livro de ocorrencias (TASK-205): tela Ocorrencias do contas
     Route::get('ocorrencia', '\Mg\Ocorrencia\OcorrenciaController@index');
+    Route::get('ocorrencia/{id}', '\Mg\Ocorrencia\OcorrenciaController@show')->whereNumber('id');
     Route::post('ocorrencia/{id}/conferir', '\Mg\Ocorrencia\OcorrenciaController@conferir')->whereNumber('id');
     Route::delete('ocorrencia/{id}/conferir', '\Mg\Ocorrencia\OcorrenciaController@reabrir')->whereNumber('id');
+
+    // Historico de um registro, auditoria e ocorrencias (TASK-209): MgHistorico
+    Route::get('auditoria/{tabela}/{codigo}', '\Mg\Auditoria\AuditoriaController@historico')
+        ->where('tabela', 'tbl[a-z]+')
+        ->whereNumber('codigo');
 
     // Painel da filial (TASK-203): tudo pendente na filial, leva 'a tela que resolve
     Route::get('filial/{codfilial}/painel', '\Mg\Painel\PainelController@show')->whereNumber('codfilial');

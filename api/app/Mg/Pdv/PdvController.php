@@ -403,12 +403,19 @@ class PdvController
     }
 
     // venda fechada reaberta pelo gerente (TASK-30): so' reabre; quem
-    // reconcilia o resto e' o F3
+    // reconcilia o resto e' o F3. O motivo vai para a auditoria (TASK-209)
     public function reabrirNegocio(PdvRequest $request, $codnegocio)
     {
+        $request->validate([
+            'justificativa' => [
+                'required',
+                'string',
+                'min:15',
+            ]
+        ]);
         PdvService::autoriza($request->pdv);
         $negocio = Negocio::findOrFail($codnegocio);
-        $negocio = DB::transaction(fn () => PdvNegocioReaberturaService::reabrir($negocio));
+        $negocio = DB::transaction(fn () => PdvNegocioReaberturaService::reabrir($negocio, $request->justificativa));
         return new NegocioResource($negocio->fresh());
     }
 

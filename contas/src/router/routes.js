@@ -201,6 +201,17 @@ const routes = [
         },
       },
       {
+        // a ocorrência e as auditorias amarradas a ela (TASK-209)
+        path: 'ocorrencia/:codocorrencia(\\d+)',
+        name: 'ocorrencia-detalhe',
+        component: () => import('pages/ocorrencia/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Ocorrência',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+        },
+      },
+      {
         path: 'fechamento/venda/:id(\\d+)',
         name: 'fechamento-venda',
         component: () => import('pages/fechamento/Venda.vue'),
