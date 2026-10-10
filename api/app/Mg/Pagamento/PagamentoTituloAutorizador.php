@@ -4,6 +4,8 @@ namespace Mg\Pagamento;
 
 use Carbon\Carbon;
 use Mg\Portador\Portador;
+use Mg\Portador\PortadorAutorizador;
+use Mg\Portador\PortadorUsuario;
 use Mg\Usuario\UsuarioService;
 
 // Quem ve, cria e estorna recebimento/pagamento de titulo no contas
@@ -69,23 +71,26 @@ class PagamentoTituloAutorizador
     }
 
     // Baixa pelo wizard do contas: cada forma com portador precisa ser da
-    // filial do usuario (sem portador, a filial e' a do titulo); encontro de
-    // contas e compensacao so' para irrestritos
+    // filial do usuario (sem portador, a filial e' a do titulo). Encontro de
+    // contas e compensacao: papel no portador Encontro de Contas.
     public static function motivoBloqueioBaixa(int $codusuario, array $dados): ?string
     {
+        $formas = $dados['pagamentos'] ?? [];
+        $compensacao = empty($formas) || collect($formas)->contains(
+            fn ($f) => (int) ($f['meio'] ?? 0) == PagamentoService::MEIO_COMPENSACAO
+        );
+        if ($compensacao && !PortadorAutorizador::pode(Portador::ENCONTRO_CONTAS, PortadorUsuario::PAPEL_OPERADOR, $codusuario)) {
+            return 'Encontro de contas: só quem tem papel no portador Encontro de Contas.';
+        }
         if (self::temAcessoIrrestrito($codusuario)) {
             return null;
         }
         $filiais = self::filiaisRestritas($codusuario);
         $codtitulo = $dados['titulos'][0]['codtitulo'] ?? null;
         $codfilialTitulo = $codtitulo ? \Mg\Titulo\Titulo::find($codtitulo)->codfilial ?? null : null;
-        $formas = $dados['pagamentos'] ?? [];
-        if (empty($formas)) {
-            return 'Encontro de contas só pelo Financeiro.';
-        }
         foreach ($formas as $f) {
             if ((int) ($f['meio'] ?? 0) == PagamentoService::MEIO_COMPENSACAO) {
-                return 'Compensação só pelo Financeiro.';
+                continue;
             }
             $portador = !empty($f['codportador']) ? Portador::find($f['codportador']) : null;
             $codfilial = $portador->codfilial ?? $codfilialTitulo;

@@ -1,11 +1,11 @@
 <script setup>
-// Receber ou pagar títulos, a mesma tela no contas e no PDV (M6.1 do plano doc-3): seleciona os
-// títulos (capital, multa, juros, desconto) e paga pelo wizard de cobrança, uma forma por
-// pagamento. Quando as formas fecham o líquido, grava. Cada app informa onde busca os títulos,
-// as formas, o contexto do wizard (PDV ou contas) e para onde manda a baixa. A data tem hora
-// (TASK-204: a data manda no período do portador); sem mexer nela, vai vazia e o servidor usa agora.
-// O FAB abre o diálogo com data, pessoa e observação; o botão dele abre o wizard por cima, e o
-// diálogo mostra o que já foi lançado e quanto falta.
+// Receber ou pagar títulos, a mesma tela no contas e no PDV: seleciona os títulos (capital,
+// multa, juros, desconto) e paga com UM pagamento (uma baixa = um pagamento, conceito do Fábio de
+// 09/10/2026). O FAB abre o diálogo com data, pessoa e observação; "Receber"/"Pagar" abre o wizard
+// com o valor do líquido travado, a forma escolhida aparece no diálogo e "Gravar" grava. Títulos
+// que se anulam não pedem forma: é o encontro de contas. Cada app informa onde busca os títulos,
+// as formas, o contexto do wizard (PDV ou contas) e para onde manda a baixa. Com `pagamento`, a
+// baixa amarra um pagamento que já existe (vindo de "Pagamentos não resolvidos").
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
@@ -35,12 +35,17 @@ const props = defineProps({
     type: Function,
     required: true,
   },
+  // configuração do PDV: maquineta e conta PIX padrão
+  padrao: {
+    type: Object,
+    default: () => ({}),
+  },
   // para onde vai a baixa: { url, extras }
   finalizar: {
     type: Object,
     required: true,
   },
-  // data e hora da baixa (sem ela, agora)
+  // data e hora da baixa
   comData: {
     type: Boolean,
     default: false,
@@ -50,23 +55,29 @@ const props = defineProps({
     type: String,
     default: null,
   },
+  // pagamento que já existe, para amarrar: { codpagamento, livre, descricao, codpessoa }
+  pagamento: {
+    type: Object,
+    default: null,
+  },
 })
 
 const emit = defineEmits(['finalizado'])
 
 const sBaixa = baixaTitulosStore()
 
+const agora = () => formataTimestampIso(new Date()).slice(0, 16)
+
 const titulos = ref([])
-const codpessoaFiltro = ref(null)
+const codpessoaFiltro = ref(props.pagamento?.codpessoa ?? null)
 const codpessoa = ref(null)
-// a data de quando abriu a tela; sem mexer, vai vazia (agora, no servidor)
-const transacaoAbertura = formataTimestampIso(new Date()).slice(0, 16)
-const transacao = ref(transacaoAbertura)
+const transacao = ref(agora())
+// a data só fica parada se a pessoa mexeu nela
+const transacaoMexida = ref(false)
 const observacao = ref('')
 // data, pessoa e observação ficam no diálogo do FAB, à vista com a lista rolada
 const dialog = ref(false)
 
-const lancou = computed(() => sBaixa.pagamentos.length > 0)
 const descricao = computed(() => {
   if (sBaixa.compensacao) return 'Encontro de contas'
   return sBaixa.entrada ? 'Receber' : 'Pagar'
@@ -81,21 +92,33 @@ const notificar = (type, message) =>
     timeout: 3000,
   })
 
-// títulos escolhidos: a pessoa sugerida é a deles, se for uma só; mudar a seleção recomeça
+// o pagamento que veio para ser amarrado vira a forma, com o valor do líquido
+const aplicarPagamento = () => {
+  if (!props.pagamento || sBaixa.compensacao || !titulos.value.length) {
+    return
+  }
+  sBaixa.adicionar({
+    codpagamento: props.pagamento.codpagamento,
+    total: sBaixa.totalLiquido,
+    descricao: props.pagamento.descricao,
+  })
+}
+
+// títulos escolhidos: a pessoa é a deles quando é uma só (várias ou nenhuma: vazia);
+// mudar a seleção recomeça a forma
 watch(
   titulos,
   (lista) => {
-    if (lancou.value) {
-      notificar('negative', 'Seleção mudou: as formas lançadas foram descartadas.')
+    if (sBaixa.forma && !props.pagamento) {
+      notificar('negative', 'Seleção mudou: escolha a forma de novo.')
     }
     const pessoas = new Set(lista.map((t) => t.codpessoa).filter(Boolean))
-    if (pessoas.size === 1) {
-      codpessoa.value = [...pessoas][0]
-    }
+    codpessoa.value = pessoas.size === 1 ? [...pessoas][0] : null
     sBaixa.iniciar({
       pessoa: { codpessoa: codpessoa.value },
       titulos: lista.map((t) => ({ ...t })),
     })
+    aplicarPagamento()
   },
   { deep: true },
 )
@@ -104,27 +127,39 @@ watch(codpessoa, (v) => {
   if (sBaixa.pessoa) sBaixa.pessoa.codpessoa = v
 })
 
+// abre o diálogo com a hora de agora, se ninguém mexeu na data
+const abrirDialog = () => {
+  if (!transacaoMexida.value) {
+    transacao.value = agora()
+  }
+  dialog.value = true
+}
+
+const mudouData = (v) => {
+  transacao.value = v
+  transacaoMexida.value = true
+}
+
 const abrirWizard = async () => {
   if (!codpessoa.value) {
     notificar('negative', 'Selecione a pessoa!')
     return
   }
-  if (sBaixa.compensacao) {
-    await gravar()
-    return
-  }
   sBaixa.abrirWizard({
     formas: props.formas,
     contexto: await props.contexto(titulos.value[0]?.codfilial ?? null),
+    padrao: props.padrao,
   })
 }
 
 const gravar = async () => {
+  if (!codpessoa.value) {
+    notificar('negative', 'Selecione a pessoa!')
+    return
+  }
   const pags = await sBaixa.finalizar(props.finalizar.url, {
     ...props.finalizar.extras,
-    ...(props.comData && transacao.value !== transacaoAbertura
-      ? { transacao: transacao.value }
-      : {}),
+    ...(props.comData ? { transacao: transacao.value } : {}),
     observacao: observacao.value || null,
   })
   if (!pags) return
@@ -133,19 +168,10 @@ const gravar = async () => {
     { Receber: 'Recebimento registrado', Pagar: 'Pagamento registrado' }[descricao.value] ??
       'Encontro de contas registrado',
   )
+  dialog.value = false
   sBaixa.iniciar({ pessoa: null, titulos: [] })
   emit('finalizado', pags)
 }
-
-// lançou tudo: grava sozinho
-watch(
-  () => [sBaixa.saldo, sBaixa.pagamentos.length],
-  ([saldo, lancados]) => {
-    if (lancados > 0 && Math.abs(saldo) < 0.005) {
-      gravar()
-    }
-  },
-)
 
 onMounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
 onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
@@ -166,7 +192,7 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
 
     <q-dialog v-model="dialog">
       <q-card flat style="width: 600px; max-width: 90vw">
-        <q-form @submit.prevent="abrirWizard">
+        <q-form @submit.prevent="gravar">
           <q-card-section class="text-grey-9 text-overline row items-center">
             {{ descricao.toUpperCase() }}
             <q-space />
@@ -177,11 +203,13 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
             <div class="row q-col-gutter-md">
               <div class="col-xs-12 col-sm-4" v-if="comData">
                 <MgInputData
-                  v-model="transacao"
+                  :model-value="transacao"
+                  @update:model-value="mudouData"
                   type="timestamp"
                   default-time="keep"
                   :seconds="false"
                   label="Data"
+                  autofocus
                   :bottom-slots="false"
                 />
               </div>
@@ -189,56 +217,65 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
                 <MgSelectPessoa
                   v-model="codpessoa"
                   label="Pessoa"
-                  autofocus
+                  :autofocus="!comData"
                   :bottom-slots="false"
                 />
               </div>
               <div class="col-12">
                 <MgInput
                   v-model="observacao"
-                  type="textarea"
                   label="Observação"
                   maxlength="300"
-                  autogrow
                   :bottom-slots="false"
                 />
               </div>
             </div>
           </q-card-section>
-          <q-list v-if="lancou" separator>
-            <q-item v-for="(p, i) in sBaixa.pagamentos" :key="i">
-              <q-item-section>{{ p.descricao }}</q-item-section>
-              <q-item-section side>R$ {{ formataNumero(p.total) }}</q-item-section>
+          <q-list v-if="sBaixa.forma" separator>
+            <q-item>
+              <q-item-section>{{ sBaixa.forma.descricao }}</q-item-section>
+              <q-item-section side>
+                R$ {{ formataNumero(sBaixa.forma.total) }}
+                <span v-if="sBaixa.forma.valortroco" class="text-caption">
+                  troco R$ {{ formataNumero(sBaixa.forma.valortroco) }}
+                </span>
+              </q-item-section>
               <q-item-section side>
                 <q-btn
-                  v-if="!p.codpagamento"
+                  v-if="!sBaixa.forma.codpagamento"
                   flat
                   round
                   size="sm"
                   icon="close"
                   color="grey-7"
-                  @click="sBaixa.remover(i)"
+                  @click="sBaixa.remover()"
                 >
-                  <q-tooltip>Tirar esta forma</q-tooltip>
+                  <q-tooltip>Trocar a forma</q-tooltip>
                 </q-btn>
               </q-item-section>
             </q-item>
-            <q-item>
-              <q-item-section class="text-orange-10">Falta</q-item-section>
-              <q-item-section side class="text-orange-10 text-weight-bold">
-                R$ {{ formataNumero(sBaixa.saldo) }}
-              </q-item-section>
-              <q-item-section side style="width: 40px" />
-            </q-item>
           </q-list>
+          <q-card-section v-if="pagamento" class="text-caption text-grey-7">
+            Amarrando o pagamento #{{ pagamento.codpagamento }} (livre R$
+            {{ formataNumero(pagamento.livre) }})
+          </q-card-section>
           <q-separator inset />
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
             <q-btn
+              v-if="!sBaixa.compensacao && !pagamento"
               flat
               :label="descricao"
+              color="primary"
+              :disable="sBaixa.finalizando"
+              @click="abrirWizard"
+            />
+            <q-btn
+              flat
+              label="Gravar"
               type="submit"
               color="primary"
+              :disable="!sBaixa.pronto"
               :loading="sBaixa.finalizando"
             />
           </q-card-actions>
@@ -253,7 +290,7 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
         color="primary"
         :disable="!titulos.length || sBaixa.finalizando"
         :loading="sBaixa.finalizando"
-        @click="dialog = true"
+        @click="abrirDialog"
       >
         <q-tooltip>{{ descricao }}</q-tooltip>
       </q-btn>

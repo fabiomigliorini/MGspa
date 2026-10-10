@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Mg\Pagamento\PagamentoDetalheResource;
 use Mg\Pagamento\PagamentoListaResource;
 use Mg\Pagamento\PagamentoListaService;
+use Mg\Pagamento\PagamentoPendenciaService;
 use Mg\Pagamento\PagamentoTituloStoreRequest;
 use Mg\Titulo\TituloAbertosFechamentoService;
 
@@ -23,6 +24,15 @@ class PdvPagamentoController
         $filtros['codpdv'] = $pdv->codpdv;
         unset($filtros['codfilial']);
         return PagamentoListaResource::collection(PagamentoListaService::listar($filtros));
+    }
+
+    // pagamentos nao resolvidos (a forma "Ja' recebido" do wizard e a tela),
+    // pelo papel do usuario nos portadores
+    public function pendentes(PdvRequest $request)
+    {
+        PdvService::autoriza($request->pdv);
+        $filtros = $request->only(['codpessoa', 'sentido', 'codpagamento']);
+        return ['data' => PagamentoPendenciaService::formatar(PagamentoPendenciaService::listar($filtros))];
     }
 
     public function show(PdvRequest $request, int $id)

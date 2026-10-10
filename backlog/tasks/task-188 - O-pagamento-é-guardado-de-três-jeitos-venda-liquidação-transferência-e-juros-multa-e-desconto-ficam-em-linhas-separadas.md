@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-30 02:24'
-updated_date: '2026-10-08 21:55'
+updated_date: '2026-10-10 01:12'
 labels:
   - contas
   - negocios
@@ -49,6 +49,11 @@ Desenho, decisões e o registro da execução de cada etapa: doc-3 (Plano do fec
 - [x] #15 Venda e recebimento em dinheiro caem no caixa aberto do PDV (sem caixa aberto, o Dinheiro fica bloqueado com o motivo) e cancelar tira do caixa
 - [ ] #16 Só Caixa da filial, Gerente ou Administrador recebe em dinheiro (não feito: hoje basta o caixa estar aberto)
 - [x] #17 O gerente confere o cartão de cada maquineta com o borderô na tela da maquineta e seus períodos
+- [ ] #18 Uma baixa de título (e um vale/adiantamento) = um pagamento: o wizard vem com o valor travado (só o dinheiro calcula troco); o pagamento guarda só o dinheiro e juros, multa e desconto ficam nos movimentos dos títulos
+- [ ] #19 Baixa trava os títulos e reconfere o saldo: título repetido ou duas baixas ao mesmo tempo não passam; valor com mais de 2 casas é recusado
+- [ ] #20 Encontro de contas (títulos que se anulam) e compensação gravam no portador Encontro de Contas (antigo Programação Pagamentos), também no PDV; permissão pelo papel nesse portador
+- [ ] #21 Forma 'Já recebido' no wizard (só online): amarra um pagamento sem amarração que tenha saldo livre; o título baixa na data do pagamento
+- [ ] #22 PDV: Receber Título vem com a maquininha e a conta PIX padrão do PDV
 <!-- AC:END -->
 
 ## Implementation Notes

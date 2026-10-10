@@ -85,7 +85,10 @@ const maquinetasEnvio = computed(() => {
 
 const valorPadrao = computed(() => {
   const padrao = sCobranca.padrao
-  if (sCobranca.documento?.codestoquelocal != padrao.codestoquelocal) {
+  // venda de outro estoque local não usa a maquineta padrão deste PDV; título e vale (sem
+  // estoque) usam
+  const estoque = sCobranca.documento?.codestoquelocal
+  if (estoque && estoque != padrao.codestoquelocal) {
     return null
   }
   if (padrao.maquineta === 'saurus') {

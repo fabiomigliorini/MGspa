@@ -57,6 +57,10 @@ class PdvPagamentoService
     // (sai dinheiro) so' Gerente da filial ou Administrador
     public static function baixar(Pdv $pdv, array $dados): array
     {
+        $bloqueio = PagamentoTituloAutorizador::motivoBloqueioBaixa(Auth::user()->codusuario, $dados);
+        if ($bloqueio !== null && str_starts_with($bloqueio, 'Encontro de contas')) {
+            abort(403, $bloqueio);
+        }
         if (PagamentoTituloService::liquido($dados['titulos'] ?? []) > 0) {
             if (!Autorizador::pode([]) && !Autorizador::pode(['Gerente'], $pdv->codfilial)) {
                 abort(403, 'Pagar vale ou crédito do cliente só Gerente ou Administrador!');

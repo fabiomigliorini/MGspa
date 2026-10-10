@@ -39,6 +39,7 @@ const finalizado = async (pags) => {
         :finalizar="{ url: 'v1/pdv/pagamento', extras: { pdv } }"
         com-data
         :impressora="sNegocio.padrao.impressora"
+        :padrao="sNegocio.padrao"
         @finalizado="finalizado"
       />
     </div>

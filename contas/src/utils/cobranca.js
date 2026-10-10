@@ -8,15 +8,16 @@ import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 // loja).
 
 // o financeiro não usa gaveta
+// "recebido": pagamento que já aconteceu e está sem amarração (só online)
 export const FORMAS_TITULOS = {
-  entrada: ['cartao', 'pix', 'dinheiro', 'cheque', 'banco', 'compensacao'],
-  saida: ['banco', 'dinheiro', 'cartaoEmpresa', 'cheque', 'compensacao'],
+  entrada: ['cartao', 'pix', 'dinheiro', 'cheque', 'banco', 'recebido', 'compensacao'],
+  saida: ['banco', 'dinheiro', 'cartaoEmpresa', 'cheque', 'recebido', 'compensacao'],
 }
 
 // vale e adiantamento nascem com dinheiro: sem compensação
 export const FORMAS_ADIANTAMENTO = {
-  entrada: ['cartao', 'pix', 'dinheiro', 'cheque', 'banco'],
-  saida: ['banco', 'dinheiro', 'cartaoEmpresa', 'cheque'],
+  entrada: ['cartao', 'pix', 'dinheiro', 'cheque', 'banco', 'recebido'],
+  saida: ['banco', 'dinheiro', 'cartaoEmpresa', 'cheque', 'recebido'],
 }
 
 const portadores = async () => {

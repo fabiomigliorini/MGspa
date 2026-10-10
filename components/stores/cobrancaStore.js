@@ -1,7 +1,7 @@
 // Wizard de cobrança (MgCobrancaDialog), o mesmo no PDV e no contas (M5/M6.1 do plano doc-3).
 //
-// Quem abre informa { valor, total, saldo, sentido, pessoa, formasPermitidas, documento,
-// contexto } e recebe de volta, pelos eventos do MgCobrancaDialog, um `pagamento` (meio,
+// Quem abre informa { valor, total, saldo, sentido, valorFixo, pessoa, formasPermitidas,
+// documento, contexto } e recebe de volta, pelos eventos do MgCobrancaDialog, um `pagamento` (meio,
 // valores, troco, portador, maquineta, dados de cheque…), `parcelas` (condição, vencimento e
 // valor) ou `cobranca` (integrada criada: PIX QR, Stone/PagarMe, SafraPay/Saurus). O pagamento
 // da integrada nasce no servidor quando o banco/maquineta confirma.
@@ -50,7 +50,10 @@ export const cobrancaStore = defineStore('cobranca', {
   state: () => ({
     dialog: false,
     // o que o documento informou ao abrir
-    valor: null, // valor deste pagamento (editável no passo 2)
+    valor: null, // valor deste pagamento (editável no passo 2, salvo com valorFixo)
+    // valor travado: baixa de títulos e vale/adiantamento (uma baixa = um pagamento); o dinheiro
+    // ainda calcula o troco. Sem trava (venda): o pagamento pode ser dividido
+    valorFixo: false,
     total: 0, // total do documento
     saldo: 0, // o que falta receber (ou pagar) do documento
     sentido: 'entrada', // entrada = receber; saida = pagar
@@ -91,6 +94,7 @@ export const cobrancaStore = defineStore('cobranca', {
       total,
       saldo,
       sentido = 'entrada',
+      valorFixo = false,
       pessoa = null,
       formasPermitidas = null,
       documento,
@@ -103,6 +107,7 @@ export const cobrancaStore = defineStore('cobranca', {
       this.total = total
       this.saldo = saldo
       this.sentido = sentido
+      this.valorFixo = valorFixo
       this.pessoa = pessoa
       this.formasPermitidas = formasPermitidas
       this.documento = documento
@@ -205,7 +210,9 @@ export const cobrancaStore = defineStore('cobranca', {
     },
 
     descricao(codnegocio) {
-      return codnegocio ? 'Negocio ' + codnegocio : 'Titulos ' + (this.pessoa?.fantasia ?? '')
+      return codnegocio
+        ? 'Negocio ' + codnegocio
+        : 'Titulos ' + (this.pessoa?.fantasia ?? this.pessoa?.codpessoa ?? '')
     },
 
     async criarPixCob(valor, codportador) {

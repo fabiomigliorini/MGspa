@@ -34,6 +34,9 @@ const props = defineProps({
   filialPadrao: { type: Number, default: null },
   // configuração do PDV para o wizard (maquineta, conta PIX, impressora)
   padrao: { type: Object, default: () => ({}) },
+  // pagamento que já existe, para amarrar (vindo de "Pagamentos não resolvidos"):
+  // { codpagamento, livre, descricao, codpessoa, entrada }
+  pagamento: { type: Object, default: null },
 })
 
 const emit = defineEmits(['update:modelValue', 'finalizado'])
@@ -55,14 +58,14 @@ const trocaMes = computed(
   () => !!form.value.transacao && form.value.transacao.slice(0, 7) !== agora().slice(0, 7),
 )
 
-// a data de quando abriu; sem mexer, vai vazia (agora, no servidor)
+// a data de quando abriu; o que está no campo é o que vai
 const agora = () => formataTimestampIso(new Date()).slice(0, 16)
 const transacaoAbertura = ref(agora())
 
 const vazio = () => ({
   codtipotitulo: null,
-  codpessoa: null,
-  valor: null,
+  codpessoa: props.pagamento?.codpessoa ?? null,
+  valor: props.pagamento?.livre ?? null,
   vencimento: daquiA30Dias(),
   codcontacontabil: null,
   codfilial: props.filialPadrao,
@@ -73,7 +76,8 @@ const vazio = () => ({
 const form = ref(vazio())
 const tipos = ref([])
 
-const lancou = computed(() => sBaixa.pagamentos.length > 0)
+// uma forma: um vale/adiantamento = um pagamento
+const lancou = computed(() => !!sBaixa.forma)
 const tipo = computed(() => tipos.value.find((t) => t.value === form.value.codtipotitulo))
 // título a pagar (adiantamento/crédito de cliente) = entra dinheiro
 const entrada = computed(() => tipo.value?.natureza === 'P')
@@ -114,6 +118,10 @@ watch(
     form.value = vazio()
     sBaixa.iniciar({ pessoa: null, titulos: [] })
     await carregarTipos()
+    // o pagamento que veio para amarrar decide o sentido (entrada = adiantamento/crédito)
+    if (props.pagamento) {
+      tipos.value = tipos.value.filter((t) => (t.natureza === 'P') === !!props.pagamento.entrada)
+    }
     const padrao = tipos.value.find((t) => t.value === TIPO_PADRAO) ?? tipos.value[0]
     if (padrao) trocarTipo(padrao.value)
   },
@@ -121,24 +129,35 @@ watch(
 )
 
 // o título ainda não existe: entra na baixa como uma linha só, no sentido do tipo, para o
-// wizard e as cobranças integradas funcionarem como na baixa de títulos
+// wizard e as cobranças integradas funcionarem como na baixa de títulos (valor travado)
+const prepararBaixa = () => {
+  const valor = Math.round((parseFloat(form.value.valor) || 0) * 100) / 100
+  sBaixa.iniciar({
+    pessoa: { codpessoa: form.value.codpessoa },
+    titulos: [
+      {
+        codtitulo: null,
+        operacao: entrada.value ? 'DB' : 'CR',
+        saldo: valor,
+        juros: 0,
+        multa: 0,
+        desconto: 0,
+        total: valor,
+      },
+    ],
+  })
+}
+
 const cobrar = async () => {
-  if (!lancou.value) {
-    const valor = Math.round((parseFloat(form.value.valor) || 0) * 100) / 100
-    sBaixa.iniciar({
-      pessoa: { codpessoa: form.value.codpessoa },
-      titulos: [
-        {
-          codtitulo: null,
-          operacao: entrada.value ? 'DB' : 'CR',
-          saldo: valor,
-          juros: 0,
-          multa: 0,
-          desconto: 0,
-          total: valor,
-        },
-      ],
+  prepararBaixa()
+  // o pagamento que veio para amarrar é a forma, com o valor do formulário
+  if (props.pagamento) {
+    sBaixa.adicionar({
+      codpagamento: props.pagamento.codpagamento,
+      total: sBaixa.totalLiquido,
+      descricao: props.pagamento.descricao,
     })
+    return
   }
   sBaixa.abrirWizard({
     formas: props.formas,
@@ -147,11 +166,12 @@ const cobrar = async () => {
   })
 }
 
-// um título por forma lançada; pagou menos (cobrança integrada de parte), lança o que pagou
 const gravar = async () => {
   if (sBaixa.finalizando || !lancou.value) return
   sBaixa.finalizando = true
   try {
+    const forma = { ...sBaixa.forma }
+    delete forma.descricao
     const { data } = await api.post(props.finalizar.url, {
       ...props.finalizar.extras,
       codtipotitulo: form.value.codtipotitulo,
@@ -159,15 +179,9 @@ const gravar = async () => {
       codcontacontabil: form.value.codcontacontabil,
       vencimento: form.value.vencimento,
       observacao: form.value.observacao,
-      ...(props.comData && form.value.transacao !== transacaoAbertura.value
-        ? { transacao: form.value.transacao }
-        : {}),
+      ...(props.comData ? { transacao: form.value.transacao } : {}),
       ...(props.comFilial ? { codfilial: form.value.codfilial } : {}),
-      pagamentos: sBaixa.pagamentos.map((p) => {
-        const forma = { ...p }
-        delete forma.descricao
-        return forma
-      }),
+      pagamentos: [forma],
     })
     notificar('positive', `${tipo.value?.label ?? 'Título'} lançado!`)
     sBaixa.iniciar({ pessoa: null, titulos: [] })
@@ -179,16 +193,6 @@ const gravar = async () => {
     sBaixa.finalizando = false
   }
 }
-
-// lançou tudo: grava sozinho
-watch(
-  () => [sBaixa.saldo, sBaixa.pagamentos.length],
-  ([saldo, lancados]) => {
-    if (props.modelValue && lancados > 0 && Math.abs(saldo) < 0.005) {
-      gravar()
-    }
-  },
-)
 </script>
 
 <template>
@@ -288,43 +292,43 @@ watch(
         </q-card-section>
 
         <q-list v-if="lancou" separator>
-          <q-item v-for="(p, i) in sBaixa.pagamentos" :key="i">
-            <q-item-section>{{ p.descricao }}</q-item-section>
-            <q-item-section side>R$ {{ formataNumero(p.total) }}</q-item-section>
+          <q-item>
+            <q-item-section>{{ sBaixa.forma.descricao }}</q-item-section>
+            <q-item-section side>R$ {{ formataNumero(sBaixa.forma.total) }}</q-item-section>
             <q-item-section side>
               <q-btn
-                v-if="!p.codpagamento"
+                v-if="!sBaixa.forma.codpagamento || pagamento"
                 flat
                 round
                 size="sm"
                 icon="close"
                 color="grey-7"
-                @click="sBaixa.remover(i)"
+                @click="sBaixa.remover()"
               >
-                <q-tooltip>Tirar esta forma</q-tooltip>
+                <q-tooltip>Trocar a forma</q-tooltip>
               </q-btn>
             </q-item-section>
-          </q-item>
-          <q-item>
-            <q-item-section class="text-orange-10">Falta</q-item-section>
-            <q-item-section side class="text-orange-10 text-weight-bold">
-              R$ {{ formataNumero(sBaixa.saldo) }}
-            </q-item-section>
-            <q-item-section side style="width: 40px" />
           </q-item>
         </q-list>
 
         <q-card-actions align="right">
-          <q-btn flat color="grey-8" label="Cancelar" v-close-popup />
+          <q-btn flat color="grey-8" label="Cancelar" v-close-popup tabindex="-1" />
           <q-btn
-            v-if="lancou && sBaixa.saldo > 0"
+            v-if="!lancou"
             flat
             color="primary"
-            label="Lançar o que foi pago"
+            :label="pagamento ? 'Amarrar' : verbo"
+            type="submit"
+            :loading="sBaixa.finalizando"
+          />
+          <q-btn
+            v-else
+            flat
+            color="primary"
+            label="Gravar"
             :loading="sBaixa.finalizando"
             @click="gravar"
           />
-          <q-btn flat color="primary" :label="verbo" type="submit" :loading="sBaixa.finalizando" />
         </q-card-actions>
       </q-form>
     </q-card>

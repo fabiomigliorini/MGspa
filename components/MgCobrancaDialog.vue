@@ -23,6 +23,7 @@ import FormaPix from './cobranca/FormaPix.vue'
 import FormaCheque from './cobranca/FormaCheque.vue'
 import FormaPortador from './cobranca/FormaPortador.vue'
 import FormaEstorno from './cobranca/FormaEstorno.vue'
+import FormaRecebido from './cobranca/FormaRecebido.vue'
 import { CONDICAO, MEIO, VISUAL } from './cobranca/pagamento.js'
 
 const emit = defineEmits(['pagamento', 'parcelas', 'cobranca'])
@@ -102,6 +103,16 @@ const FORMAS = [
     ...VISUAL.estorno,
     componente: FormaEstorno,
   },
+  // pagamento que já aconteceu e está sem amarração (só online: a lista vem do servidor)
+  {
+    valor: 'recebido',
+    label: 'Já recebido',
+    caption: 'PIX ou cartão que já entrou e está sem amarração',
+    ...VISUAL.pix,
+    componente: FormaRecebido,
+    pulaValor: true,
+    online: true,
+  },
   {
     valor: 'compensacao',
     label: 'Compensação',
@@ -124,8 +135,9 @@ const componenteAtual = computed(() =>
 // prazo e cheque recebido exigem cliente identificado
 const PRECISA_CLIENTE = ['prazo', 'cheque']
 const opcoesFormas = computed(() =>
-  FORMAS.filter((f) => (sCobranca.formasPermitidas ?? FORMAS_NEGOCIO).includes(f.valor)).map(
-    (f, i) => {
+  FORMAS.filter((f) => (sCobranca.formasPermitidas ?? FORMAS_NEGOCIO).includes(f.valor))
+    .filter((f) => !f.online || navigator.onLine)
+    .map((f, i) => {
       const opcao = { ...f, tecla: i < 9 ? i + 1 : null }
       if (PRECISA_CLIENTE.includes(f.valor) && sCobranca.consumidor) {
         return { ...opcao, desabilitado: true, motivo: 'Informe o cliente (F10)' }
@@ -135,8 +147,7 @@ const opcoesFormas = computed(() =>
         return { ...opcao, desabilitado: true, motivo: sCobranca.contexto.bloqueioDinheiro }
       }
       return opcao
-    },
-  ),
+    }),
 )
 
 const verbo = computed(() => (entrada.value ? 'Receber' : 'Pagar'))
@@ -200,8 +211,16 @@ const notificar = (message) => {
   })
 }
 
+// valor travado (baixa de títulos, vale): só o dinheiro recebido se digita, para o troco
+const podeEditar = computed(
+  () => !sCobranca.valorFixo || (formaAtual.value?.dinheiro && entrada.value),
+)
+
 // ---- edição do valor (Insert) ----
 const editar = () => {
+  if (!podeEditar.value) {
+    return
+  }
   valorEdicao.value = valor.value
   editando.value = true
 }
@@ -210,6 +229,12 @@ const aplicarEdicao = () => {
   const v = parseFloat(valorEdicao.value)
   if (!v || v <= 0) {
     notificar('Informe o valor!')
+    return
+  }
+  if (sCobranca.valorFixo && arredonda(v) < aPagar.value) {
+    notificar(
+      `O valor é R$ ${formataNumero(aPagar.value)}: para pagar uma parte, ajuste os títulos.`,
+    )
     return
   }
   sCobranca.valor = arredonda(v)
@@ -267,6 +292,12 @@ const escolherForma = (forma) => {
 const continuar = async () => {
   if (!valor.value || valor.value <= 0) {
     editar()
+    return
+  }
+  if (sCobranca.valorFixo && temFalta.value) {
+    notificar(
+      `O valor é R$ ${formataNumero(aPagar.value)}: para pagar uma parte, ajuste os títulos.`,
+    )
     return
   }
   if (temTroco.value && !(formaAtual.value.dinheiro && entrada.value)) {
@@ -496,9 +527,13 @@ const tecla = (e) => {
 
           <div class="q-mb-md text-right">
             <template v-if="!editando">
-              <div class="text-h2 text-weight-bold text-primary cursor-pointer" @click="editar">
+              <div
+                class="text-h2 text-weight-bold text-primary"
+                :class="{ 'cursor-pointer': podeEditar }"
+                @click="editar"
+              >
                 R$ {{ formataNumero(valor) }}
-                <q-tooltip class="bg-accent">Alterar valor (Insert)</q-tooltip>
+                <q-tooltip v-if="podeEditar" class="bg-accent">Alterar valor (Insert)</q-tooltip>
               </div>
               <div class="row items-center justify-end text-subtitle1 text-grey-7">
                 <q-icon
@@ -510,7 +545,10 @@ const tecla = (e) => {
                 {{ formaAtual.dinheiro && entrada ? 'Recebido em' : verbo + ' em' }}
                 {{ formaAtual.label }}
               </div>
-              <div class="row items-center justify-end text-subtitle1 text-grey-7">
+              <div
+                v-if="podeEditar"
+                class="row items-center justify-end text-subtitle1 text-grey-7"
+              >
                 <span class="text-grey-5 q-ml-sm"> Tecla Insert altera o valor </span>
               </div>
             </template>

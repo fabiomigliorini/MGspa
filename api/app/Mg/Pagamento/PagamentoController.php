@@ -38,6 +38,16 @@ class PagamentoController extends Controller
         return new PagamentoDetalheResource($pag);
     }
 
+    // pagamentos nao resolvidos: o saldo (pago - devolvido) nao bate com o
+    // que esta' amarrado (tela "Pagamentos nao resolvidos" e a forma "Ja'
+    // recebido" do wizard); so' os portadores em que o usuario tem papel
+    public function pendentes(Request $request)
+    {
+        Autorizador::autoriza(self::GRUPOS_LEITURA);
+        $filtros = $request->only(['codpessoa', 'codfilial', 'sentido', 'codpagamento']);
+        return ['data' => PagamentoPendenciaService::formatar(PagamentoPendenciaService::listar($filtros))];
+    }
+
     // baixa os titulos com as formas do wizard (um pagamento por forma;
     // recebimento ou pagamento conforme o liquido dos titulos)
     public function store(PagamentoTituloStoreRequest $request)

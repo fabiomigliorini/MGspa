@@ -7,17 +7,17 @@ import { api } from 'boot/axios'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import { negocioStore } from 'stores/negocio'
 
-// formas que o caixa usa: recebe o que se confirma na hora; paga vale em dinheiro ou
-// registrando a devolução no cartão/PIX (só Gerente, o servidor confere)
+// formas que o caixa usa: recebe o que se confirma na hora (ou o que já entrou e está sem
+// amarração); paga vale em dinheiro ou registrando a devolução no cartão/PIX
 export const FORMAS_RECEBER = {
-  entrada: ['cartao', 'pix', 'dinheiro', 'cheque'],
+  entrada: ['cartao', 'pix', 'dinheiro', 'cheque', 'recebido'],
   saida: ['dinheiro', 'estorno'],
 }
 
 // vale colaborador e adiantamentos: o que entra, como no Receber título; o que sai, só dinheiro
 // da gaveta (a loja só baixa o que se confirma na hora)
 export const FORMAS_ADIANTAMENTO = {
-  entrada: ['cartao', 'pix', 'dinheiro', 'cheque'],
+  entrada: ['cartao', 'pix', 'dinheiro', 'cheque', 'recebido'],
   saida: ['dinheiro'],
 }
 
