@@ -37,6 +37,8 @@ class PagamentoDetalheResource extends Resource
                     'titulo' => $m->Titulo ? [
                         'codtitulo'   => (int) $m->Titulo->codtitulo,
                         'numero'      => $m->Titulo->numero,
+                        // negativo = credito com saldo: tem vale (Vale Compras / Contra Vale)
+                        'saldo'       => (float) $m->Titulo->saldo,
                         'fatura'      => $m->Titulo->fatura,
                         'vencimento'  => $m->Titulo->vencimento,
                         'gerencial'   => (bool) $m->Titulo->gerencial,

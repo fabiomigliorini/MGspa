@@ -18,6 +18,7 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { abrirPdf } from '@components/abrirPdf'
+import { abrirVale } from '@components/abrirVale'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
@@ -233,6 +234,12 @@ function bbBaixar(b) {
       notifyError(e, 'Erro ao baixar boleto')
     }
   })
+}
+
+// título de crédito com saldo (vale, adiantamento, crédito do cliente): o vale que o caixa bipa,
+// o mesmo da venda e do pagamento (TASK-216)
+function abrirValeTitulo() {
+  abrirVale(api, codtitulo.value)
 }
 
 async function bbAbrirPdf(b) {
@@ -457,6 +464,18 @@ watch(() => route.fullPath, carregar)
           <q-card-section class="text-grey-9 text-overline row items-center">
             DETALHES DO TÍTULO
             <q-space />
+            <q-btn
+              v-if="Number(titulo.saldo) < 0"
+              flat
+              round
+              dense
+              icon="confirmation_number"
+              size="sm"
+              color="grey-7"
+              @click="abrirValeTitulo"
+            >
+              <q-tooltip>Vale</q-tooltip>
+            </q-btn>
             <q-btn
               v-if="podeEditar"
               flat

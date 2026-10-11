@@ -443,6 +443,12 @@ class PdvController
         ValeService::imprimir($codnegocio, $impressora, $request->uuid, $request->codtitulo);
     }
 
+    // o vale de credito de um titulo na termica, fora da venda (TituloValeService)
+    public function imprimirValeTitulo(int $codtitulo, string $impressora)
+    {
+        \Mg\Titulo\TituloValeService::imprimir($codtitulo, $impressora);
+    }
+
     public function vale(Request $request, $codnegocio)
     {
         $negocio = Negocio::findOrFail($codnegocio);

@@ -10,6 +10,7 @@ import { computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
+import { abrirVale } from '@components/abrirVale'
 import { pagamentoListaStore } from '@components/stores/pagamentoListaStore'
 import { formataNumero, formataData, formataTimestamp, formataCodigo } from '@components/formatters'
 import { visualPagamento } from '@components/cobranca/pagamento.js'
@@ -34,6 +35,11 @@ const props = defineProps({
   },
   // o app que tem térmica (PDV) manda o cupom do recibo para ela; sem isto, o cupom só abre
   imprimirTermica: {
+    type: Function,
+    default: null,
+  },
+  // idem para o vale de crédito de um título (recebe o codtitulo)
+  imprimirVale: {
     type: Function,
     default: null,
   },
@@ -73,6 +79,10 @@ const abrirReciboTermica = () =>
       onImprimir: props.imprimirTermica ? () => props.imprimirTermica(pag.value) : null,
     },
   )
+
+// o vale de crédito do título (Vale Compras / Contra Vale), o mesmo da venda e da tela do título
+const abrirValeTitulo = (codtitulo) =>
+  abrirVale(api, codtitulo, props.imprimirVale ? () => props.imprimirVale(codtitulo) : null)
 
 const erro = (e, padrao) =>
   $q.notify({
@@ -401,6 +411,19 @@ const cancelar = () => {
                 </template>
                 <q-item-label caption>{{ m.tipomovimentotitulo }}</q-item-label>
                 <q-item-label caption>vence {{ formataData(m.titulo?.vencimento) }}</q-item-label>
+              </q-item-section>
+              <!-- título de crédito com saldo (vale, adiantamento, crédito do cliente): o vale -->
+              <q-item-section side v-if="!m.estornado && m.titulo?.saldo < 0">
+                <q-btn
+                  flat
+                  round
+                  size="sm"
+                  icon="confirmation_number"
+                  color="grey-7"
+                  @click.stop.prevent="abrirValeTitulo(m.codtitulo)"
+                >
+                  <q-tooltip>Vale</q-tooltip>
+                </q-btn>
               </q-item-section>
             </q-item>
           </q-list>

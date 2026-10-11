@@ -82,6 +82,15 @@ class TituloController extends MgController
         return new TituloDetalheResource($titulo);
     }
 
+    // o vale de credito (Vale Compras / Contra Vale); sem usuario quando aberto pela termica (rota assinada)
+    public function vale(int $codtitulo)
+    {
+        return response()->make(TituloValeService::pdfTitulos([$codtitulo]), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="Vale' . $codtitulo . '.pdf"',
+        ]);
+    }
+
     public function store(TituloStoreRequest $request)
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);

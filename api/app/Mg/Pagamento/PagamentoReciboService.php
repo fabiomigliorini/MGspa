@@ -121,6 +121,11 @@ class PagamentoReciboService
         $vale = $soLancamento && $codtipotitulo == TipoTituloService::TIPO_VALE_COLABORADOR;
         $fornecedor = $soLancamento && $codtipotitulo == TipoTituloService::TIPO_ADIANTAMENTO_FORNECEDOR;
         $adiantamento = $vale || $fornecedor;
+        // adiantamento de cliente: o papel dele e' o vale de credito do titulo (o caixa bipa para
+        // usar), enquanto tiver saldo; usado todo, sai o recibo
+        $valeCredito = $soLancamento && $codtipotitulo == TipoTituloService::TIPO_ADIANTAMENTO_CLIENTE
+            && (float) ($linhas[0]['titulo']->saldo ?? 0) < 0
+            ? (int) $linhas[0]['titulo']->codtitulo : null;
         $referente = $adiantamento ? null : (implode(' · ', array_filter([
             $baixa
                 ? ($entrada ? 'Recebimento' : 'Pagamento') . ($baixados > 1 ? ' dos títulos abaixo' : ' do título abaixo')
@@ -152,6 +157,7 @@ class PagamentoReciboService
             'primeiro' => $primeiro,
             'vale' => $vale,
             'adiantamento' => $adiantamento,
+            'valeCredito' => $valeCredito,
             'baixa' => $baixa,
             'titulo' => $vale ? 'VALE' : ($fornecedor ? 'ADIANTAMENTO' : 'RECIBO'),
             'vencimento' => $vencimento?->format('d/m/Y'),
@@ -267,6 +273,9 @@ class PagamentoReciboService
     public static function pdf(int $codpagamento): string
     {
         $r = static::montar(static::carregar([$codpagamento]));
+        if ($r['valeCredito']) {
+            return \Mg\Titulo\TituloValeService::pdfTitulos([$r['valeCredito']]);
+        }
         // vale e adiantamento a fornecedor tem o layout deles (o vale com a promissoria, A5 em pe)
         return static::render(view($r['adiantamento'] ? 'pagamento.adiantamento' : 'pagamento.recibo', compact('r'))->render());
     }
@@ -275,6 +284,9 @@ class PagamentoReciboService
     public static function pdfTermica(array $codpagamentos): string
     {
         $r = static::montar(static::carregar($codpagamentos));
+        if ($r['valeCredito']) {
+            return \Mg\Titulo\TituloValeService::pdfTitulos([$r['valeCredito']]);
+        }
         $view = $r['adiantamento'] ? 'pagamento.adiantamento-termica' : 'pagamento.recibo-termica';
         return static::render(view($view, compact('r'))->render(), [0.0, 0.0, 226.77, 841.89]);
     }

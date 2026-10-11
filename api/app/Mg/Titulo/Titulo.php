@@ -14,6 +14,7 @@ use Mg\Cobranca\Cobranca;
 use Mg\Cobranca\CobrancaHistoricoTitulo;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Negocio\NegocioParcela;
+use Mg\Negocio\NegocioVale;
 use Mg\Pagamento\Pagamento;
 use Mg\NfeTerceiro\NfeTerceiroDuplicata;
 use Mg\Rh\PeriodoColaborador;
@@ -151,6 +152,12 @@ class Titulo extends MgModel
     public function TipoTitulo()
     {
         return $this->belongsTo(TipoTitulo::class, 'codtipotitulo', 'codtipotitulo');
+    }
+
+    // o vale compras vendido que gerou este titulo de credito (escola, aluno, turma e o kit)
+    public function NegocioVale()
+    {
+        return $this->hasOne(NegocioVale::class, 'codtitulo', 'codtitulo')->whereNull('inativo');
     }
 
     public function TituloAgrupamento()

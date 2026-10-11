@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-10 21:18'
-updated_date: '2026-10-11 01:17'
+updated_date: '2026-10-11 01:35'
 labels:
   - negocios
   - contas
@@ -36,6 +36,7 @@ No PDV (negócios), o detalhe do pagamento escondia o botão do recibo térmico 
 - [x] #9 Vale do colaborador: confissão de dívida com quem pagou (empresa e CNPJ da filial do pagamento), desconto autorizado em qualquer empresa do grupo (CLT ou terceirizado) e nota promissória com beneficiário em branco, vale e promissória na mesma folha A5 retrato com a mesma régua; no cupom também
 - [x] #10 Campo 'Referente a' no pagamento (texto livre que sai no recibo/vale), preenchido no Receber/Pagar títulos e no Vale/Adiantamento e alterável pelo lápis; a observação fica interna e não sai no recibo
 - [x] #11 Adiantamento a fornecedor: mesmo padrão do vale sem promissória (A5 paisagem e cupom), fornecedor declara e assina, texto de produto ou serviço abatido no que a loja ou o grupo dever e devolução se não houver o fornecimento; singular para pessoa física
+- [x] #12 Vale de crédito (Vale Compras / Contra Vale, com o código VAL… para bipar no caixa) sai do título, desacoplado da venda: o mesmo papel na venda, na tela do título (contas) e na do pagamento; o recibo do adiantamento de cliente é esse vale; no PDV o card do título volta a ter o botão do vale
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -80,4 +81,8 @@ Adiantamento a fornecedor (11/10): layouts do vale renomeados para pagamento/adi
 Adiantamento a fornecedor em A5 paisagem (pedido do Fábio: sem promissória não precisa de retrato): @page pelo $r['promissoria'], classe .inteira com os mesmos campos maiores (título 22pt, valor 12pt, texto 10pt); vale segue em retrato (.meia).
 
 Adiantamento de cliente NÃO ganha recibo próprio (decisão do Fábio, 11/10): o documento dele é o vale de crédito do caixa (Vale Compras / Contra Vale, saldo do título e código de barras para bipar no PDV). Variante 'cliente' desfeita. Ficaram dois ajustes gerais: autorização do pagamento numa linha miúda embaixo da forma (o E2E do PIX é comprido) e CPF/CNPJ sem quebrar no hífen; e o layout de adiantamento só quando o pagamento inteiro é o lançamento (sem baixa junto e sem sobra livre), senão recibo com a tabela.
+
+Vale de crédito desacoplado (11/10): TituloValeService (titulos/pdf/pdfTitulos/imprimir), blade titulo/vale.blade.php (era negocio/vale) recebendo só títulos, um vale por título (nunca soma saldo); o blade decide pelo título: saldo usado em parte = Contra Vale; ligado a venda de vale compras (Titulo::NegocioVale) = Vale Compras; senão Adiantamento; itens do kit só com saldo nunca usado. Rotas GET v1/titulo/{cod}/vale (titulo.vale, auth_or_signed) e POST v1/pdv/titulo/{cod}/vale/{impressora}. Pdv\ValeService::pdf delega (a venda passa os títulos dela). Recibo do adiantamento de cliente com saldo = o vale. Front: @components/abrirVale, botão Vale no detalhe do pagamento (títulos com saldo de crédito; Imprimir na térmica no PDV), na tela do título (contas) e nos cards do PDV (ListagemTitulos voltou a mostrar: testava o tipo 3, que não existe desde a renumeração; ListagemContraVale). Testado: 650457 adiantamento, 650176 vale compras com itens, 650177 contra vale sem itens, 650085/649974 crédito, venda 4541457, rota assinada 200 / sem login 401 / sem crédito 422.
+
+Vale de crédito: crédito de devolução (tipo 212 Crédito Cliente) sai como 'Vale Devolução' quando nunca usado; usado em parte, Contra Vale (pedido do Fábio).
 <!-- SECTION:NOTES:END -->

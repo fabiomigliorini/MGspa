@@ -954,6 +954,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('pagamento/recibo/{impressora}', '\Mg\Pdv\PdvPagamentoController@imprimirRecibo');
         // vale colaborador e adiantamentos (M8 doc-3)
         Route::post('titulo', '\Mg\Pdv\PdvTituloController@store');
+        Route::post('titulo/{codtitulo}/vale/{impressora}', '\Mg\Pdv\PdvController@imprimirValeTitulo')->where('codtitulo', '[0-9]+');
         // caixa: a gaveta do PDV e se esta' aberta (M9; a tela do caixa usa
         // as rotas v1/caixa desde o M13 doc-3)
         Route::get('caixa', '\Mg\Caixa\CaixaController@status');
@@ -1279,6 +1280,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // vale colaborador e adiantamentos (M8 doc-3; o PDV usa v1/pdv/titulo)
     Route::post('titulo/adiantamento', '\Mg\Titulo\TituloAdiantamentoController@store');
     Route::get('titulo/{codtitulo}', '\Mg\Titulo\TituloController@show')->where('codtitulo', '[0-9]+');
+    // o vale de credito do titulo (Vale Compras / Contra Vale, TASK-216); assinada para a termica
+    Route::get('titulo/{codtitulo}/vale', '\Mg\Titulo\TituloController@vale')->where('codtitulo', '[0-9]+')
+        ->name('titulo.vale')->withoutMiddleware('auth:api')->middleware('auth_or_signed');
     Route::put('titulo/{codtitulo}', '\Mg\Titulo\TituloController@update')->where('codtitulo', '[0-9]+');
     Route::post('titulo/{codtitulo}/estornar', '\Mg\Titulo\TituloController@estornar')->where('codtitulo', '[0-9]+');
 

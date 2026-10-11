@@ -1,4 +1,10 @@
 <?php
+// O vale de credito impresso (TituloValeService): um vale por titulo (nunca soma saldos, senao nao
+// da' para bipar), o mesmo papel na venda, na tela do titulo e na do pagamento. O codigo de barras
+// VAL{codtitulo} e' o que o caixa bipa no Receber. O cabecalho sai do titulo: saldo ja' usado em
+// parte, Contra Vale; de uma venda de vale compras, Vale Compras; credito de devolucao (tipo Credito
+// Cliente), Vale Devolucao; senao, Adiantamento. Os itens do vale compras so' saem enquanto o saldo
+// nunca foi usado.
 
 use Illuminate\Support\Carbon;
 ?>
@@ -59,9 +65,9 @@ use Illuminate\Support\Carbon;
 
 <body>
 
-    @foreach ($comprovantes as $comp)
-    @php($tit = $comp['titulo'])
-    @php($vale = $comp['vale'])
+    @foreach ($titulos as $tit)
+    @php($vale = $tit->NegocioVale)
+    @php($usado = round(abs($tit->saldo), 2) != round(abs($tit->valor), 2))
 
     <!-- CABECALHO -->
     <div id="header">
@@ -97,7 +103,8 @@ use Illuminate\Support\Carbon;
 
     <h2>
         {{-- ja' usado em parte: o papel vale so' o que sobrou --}}
-        {{ round(abs($tit->saldo), 2) != round(abs($tit->valor), 2) ? 'Contra Vale' : 'Vale Compras' }}
+        {{ $usado ? 'Contra Vale' : ($vale ? 'Vale Compras'
+            : ($tit->codtipotitulo == \Mg\Titulo\TituloService::TIPO_CREDITO_CLIENTE ? 'Vale Devolução' : 'Adiantamento')) }}
         {{$tit->numero}}
         <br>
         {{formataCodigo($tit->codtitulo)}}
@@ -128,7 +135,9 @@ use Illuminate\Support\Carbon;
         @endif
     </div>
 
-    @php($itens = $vale->NegocioValeProdutoBarraS->whereNull('inativo'))
+    {{-- os itens do vale compras (com que a familia retira o material) so' enquanto o saldo nunca
+         foi usado; no Contra Vale, nao --}}
+    @php($itens = $usado ? collect() : $vale->NegocioValeProdutoBarraS->whereNull('inativo'))
     @if($itens->count())
     <br>
     <table style="width: 100%; border-collapse: collapse;">
@@ -161,10 +170,10 @@ use Illuminate\Support\Carbon;
     </table>
     @endif
 
-    @if($vale->valoravulso > 0)
+    @if(!$usado && $vale->valoravulso > 0)
     <br>
     <div>Valor avulso: R$ {{ formataNumero($vale->valoravulso) }}</div>
-    @elseif($vale->valoravulso < 0)
+    @elseif(!$usado && $vale->valoravulso < 0)
     {{-- vale do sistema antigo: o desconto da venda foi convertido em avulso negativo --}}
     <br>
     <div>Desconto: R$ {{ formataNumero(abs($vale->valoravulso)) }}</div>

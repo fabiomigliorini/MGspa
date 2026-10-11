@@ -108,7 +108,11 @@ const recibo = async (pag) => {
     <q-dialog v-model="store.dialogDetalhe">
       <q-card flat style="width: 1000px; max-width: 95vw">
         <q-card-section>
-          <MgPagamentoDetalhe pode-estornar :imprimir-termica="recibo" />
+          <MgPagamentoDetalhe
+            pode-estornar
+            :imprimir-termica="recibo"
+            :imprimir-vale="sPagamento.imprimirVale"
+          />
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Fechar" color="primary" v-close-popup />
