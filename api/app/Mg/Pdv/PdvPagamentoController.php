@@ -6,7 +6,6 @@ use Illuminate\Support\Facades\DB;
 use Mg\Pagamento\PagamentoDetalheResource;
 use Mg\Pagamento\PagamentoListaResource;
 use Mg\Pagamento\PagamentoListaService;
-use Mg\Pagamento\PagamentoPendenciaService;
 use Mg\Pagamento\PagamentoTituloStoreRequest;
 use Mg\Titulo\TituloAbertosFechamentoService;
 
@@ -24,68 +23,6 @@ class PdvPagamentoController
         $filtros['codpdv'] = $pdv->codpdv;
         unset($filtros['codfilial']);
         return PagamentoListaResource::collection(PagamentoListaService::listar($filtros));
-    }
-
-    // pagamentos nao resolvidos (a forma "Ja' recebido" do wizard e a tela),
-    // pelo papel do usuario nos portadores
-    public function pendentes(PdvRequest $request)
-    {
-        $pdv = PdvService::autoriza($request->pdv);
-        // no PDV, so' os da loja dele (o admin tambem), o cliente primeiro
-        $filtros = $request->only(['codpessoa', 'codportador', 'sentido', 'codpagamento', 'codpessoaprimeiro']);
-        $filtros['codfilial'] = $pdv->codfilial;
-        return ['data' => PagamentoPendenciaService::formatar(PagamentoPendenciaService::listar($filtros))];
-    }
-
-    // "Ja' recebido" na venda: amarra o pagamento sem amarracao na venda aberta
-    public function amarrarVenda(PdvRequest $request, int $codnegocio, int $codpagamento)
-    {
-        $pdv = PdvService::autoriza($request->pdv);
-        DB::beginTransaction();
-        $pag = PdvPagamentoService::amarrarVenda($pdv, $codnegocio, $codpagamento);
-        DB::commit();
-        return ['data' => PdvNegocioPagamentoService::pagamento($pag)];
-    }
-
-    // "Ja' lancado": os digitados que casam com este integrado
-    public function duplicados(PdvRequest $request, int $id)
-    {
-        PdvService::autoriza($request->pdv);
-        return ['data' => PagamentoPendenciaService::duplicados(\Mg\Pagamento\Pagamento::findOrFail($id))];
-    }
-
-    // "Ja' lancado": fica este (o integrado), o digitado e' cancelado como
-    // registro indevido e as amarracoes dele passam para este
-    public function jaLancado(PdvRequest $request, int $id)
-    {
-        PdvService::autoriza($request->pdv);
-        $request->validate([
-            'codpagamento' => 'required|integer|exists:tblpagamento,codpagamento',
-            'justificativa' => 'required|string|min:5|max:300',
-        ]);
-        DB::beginTransaction();
-        $integrado = \Mg\Pagamento\Pagamento::findOrFail($id);
-        $digitado = \Mg\Pagamento\Pagamento::findOrFail($request->codpagamento);
-        PagamentoPendenciaService::autorizar($digitado, 'Cancelar o digitado');
-        $pag = PagamentoPendenciaService::jaLancado($integrado, $digitado, $request->justificativa);
-        DB::commit();
-        return new PagamentoDetalheResource($pag);
-    }
-
-    // devolver o PIX ou o cartao que entrou por engano (o que esta' livre)
-    public function devolver(PdvRequest $request, int $id)
-    {
-        PdvService::autoriza($request->pdv);
-        $request->validate([
-            'valor' => 'required|numeric|min:0.01',
-            'justificativa' => 'required|string|min:5|max:300',
-        ]);
-        DB::beginTransaction();
-        $pag = \Mg\Pagamento\Pagamento::findOrFail($id);
-        PagamentoPendenciaService::autorizar($pag, 'Devolver');
-        $dev = PagamentoPendenciaService::devolver($pag, (float) $request->valor, $request->justificativa);
-        DB::commit();
-        return new PagamentoDetalheResource($dev);
     }
 
     public function show(PdvRequest $request, int $id)

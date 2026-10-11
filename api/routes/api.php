@@ -908,8 +908,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('negocio/{codnegocio}/apropriar', '\Mg\Pdv\PdvController@apropriar');
         Route::post('negocio/{codnegocio}/fechar', '\Mg\Pdv\PdvController@fecharNegocio');
         Route::post('negocio/{codnegocio}/reabrir', '\Mg\Pdv\PdvController@reabrirNegocio');
-        Route::post('negocio/{codnegocio}/pagamento/{codpagamento}/amarrar', '\Mg\Pdv\PdvPagamentoController@amarrarVenda')
-            ->whereNumber('codnegocio')->whereNumber('codpagamento');
         Route::post('negocio/{codnegocio}/romaneio/{impressora}', '\Mg\Pdv\PdvController@imprimirRomaneio');
         Route::post('negocio/{codnegocio}/vale/{impressora}', '\Mg\Pdv\PdvController@imprimirVale');
         Route::post('negocio/{codnegocio}/comanda/{impressora}', '\Mg\Pdv\PdvController@imprimirComanda');
@@ -942,10 +940,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('pagamento', '\Mg\Pdv\PdvPagamentoController@index');
         Route::get('pagamento/titulos', '\Mg\Pdv\PdvPagamentoController@titulos');
         Route::get('pagamento/originais', '\Mg\Pdv\PdvPagamentoController@originais');
-        Route::get('pagamento/pendentes', '\Mg\Pdv\PdvPagamentoController@pendentes');
-        Route::get('pagamento/{id}/duplicados', '\Mg\Pdv\PdvPagamentoController@duplicados')->whereNumber('id');
-        Route::post('pagamento/{id}/ja-lancado', '\Mg\Pdv\PdvPagamentoController@jaLancado')->whereNumber('id');
-        Route::post('pagamento/{id}/devolver', '\Mg\Pdv\PdvPagamentoController@devolver')->whereNumber('id');
         Route::get('pagamento/{id}', '\Mg\Pdv\PdvPagamentoController@show')->whereNumber('id');
         Route::post('pagamento', '\Mg\Pdv\PdvPagamentoController@store');
         Route::post('pagamento/{id}/estornar', '\Mg\Pdv\PdvPagamentoController@estornar')->whereNumber('id');
@@ -1289,10 +1283,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Pagamentos: listagem unica e baixa de titulos (M6/M6.1 doc-3; era liquidacao-titulo)
     Route::get('pagamento', '\Mg\Pagamento\PagamentoController@index');
     Route::get('pagamento/relatorio', '\Mg\Pagamento\PagamentoController@relatorio');
-    Route::get('pagamento/pendentes', '\Mg\Pagamento\PagamentoController@pendentes');
-    Route::get('pagamento/{id}/duplicados', '\Mg\Pagamento\PagamentoController@duplicados')->where('id', '[0-9]+');
-    Route::post('pagamento/{id}/ja-lancado', '\Mg\Pagamento\PagamentoController@jaLancado')->where('id', '[0-9]+');
-    Route::post('pagamento/{id}/devolver', '\Mg\Pagamento\PagamentoController@devolver')->where('id', '[0-9]+');
     Route::get('pagamento/{id}', '\Mg\Pagamento\PagamentoController@show')->where('id', '[0-9]+');
     Route::post('pagamento', '\Mg\Pagamento\PagamentoController@store');
     Route::put('pagamento/{id}', '\Mg\Pagamento\PagamentoController@update')->where('id', '[0-9]+');

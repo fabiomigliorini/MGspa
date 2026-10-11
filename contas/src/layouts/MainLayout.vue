@@ -35,12 +35,6 @@ const menuGroups = [
         to: { name: 'pagamento' },
       },
       {
-        label: 'Não Resolvidos',
-        icon: 'link_off',
-        color: 'orange-8',
-        to: { name: 'pagamento-pendentes' },
-      },
-      {
         label: 'Agrupamentos',
         icon: 'receipt_long',
         color: 'amber-8',

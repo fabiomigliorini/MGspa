@@ -220,18 +220,6 @@ const cancelar = () => {
             <MgInfoCriacao :registro="pag" />
           </q-card-section>
           <q-list separator>
-            <q-item v-if="pag.pendente">
-              <q-item-section avatar>
-                <q-icon name="link_off" color="orange-8" />
-              </q-item-section>
-              <q-item-section>
-                <q-item-label class="text-orange-9">Não resolvido</q-item-label>
-                <q-item-label caption>
-                  Saldo R$ {{ formataNumero(pag.saldo) }} · amarrado R$
-                  {{ formataNumero(pag.amarrado) }} · livre R$ {{ formataNumero(pag.livre) }}
-                </q-item-label>
-              </q-item-section>
-            </q-item>
             <q-item>
               <q-item-section>
                 <q-item-label caption>{{ pag.origemdescricao }}</q-item-label>

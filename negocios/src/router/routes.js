@@ -144,11 +144,6 @@ const routes = [
         component: () => import('pages/PagamentoReceberPage.vue'),
         meta: { title: 'Receber Título / Pagar Vale', backTo: '/pagamento' },
       },
-      {
-        path: '/pagamento/pendentes',
-        component: () => import('pages/PagamentoPendentesPage.vue'),
-        meta: { title: 'Pagamentos não resolvidos', backTo: '/pagamento' },
-      },
 
       // CAIXA
       {

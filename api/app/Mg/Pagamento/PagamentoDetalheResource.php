@@ -149,7 +149,6 @@ class PagamentoDetalheResource extends Resource
             'saldo'                     => $efetivado ? PagamentoPendenciaService::saldo($this->resource) : 0,
             'amarrado'                  => $efetivado ? PagamentoPendenciaService::amarrado($this->resource) : 0,
             'livre'                     => $efetivado ? PagamentoPendenciaService::livre($this->resource) : 0,
-            'pendente'                  => PagamentoPendenciaService::pendente($this->resource),
             'baixabanco'                => $baixabanco,
             'movimentos'                => $movimentos,
             // razao (M10 doc-3): o que caiu em cada portador; inativas =

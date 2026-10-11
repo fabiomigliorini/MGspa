@@ -5,9 +5,8 @@
 // com o valor do líquido travado e a forma confirmada nele grava na hora (a integrada, quando o
 // banco/maquineta confirma). Títulos que se anulam não pedem forma: é o encontro de contas. Cada
 // app informa onde busca os títulos, as formas, o contexto do wizard (PDV ou contas) e para onde
-// manda a baixa. Com `pagamento`, a baixa amarra um pagamento que já existe (vindo de "Pagamentos
-// não resolvidos") ou usa o PIX que caiu na conta (vindo da tela PIX, TASK-219: inteiro, na data
-// e na conta dele).
+// manda a baixa. Com `pix` (vindo da tela PIX, TASK-219), a baixa usa o PIX que caiu na conta:
+// inteiro, na data e na conta dele.
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
@@ -57,9 +56,8 @@ const props = defineProps({
     type: String,
     default: null,
   },
-  // pagamento que já existe, para amarrar: { codpagamento, livre, descricao, codpessoa }; ou o
-  // PIX sem uso: { codpix, livre (o valor do PIX), descricao, codpessoa, entrada }
-  pagamento: {
+  // o PIX sem uso (vindo da tela PIX): { codpix, valor, descricao, codpessoa }
+  pix: {
     type: Object,
     default: null,
   },
@@ -72,7 +70,7 @@ const sBaixa = baixaTitulosStore()
 const agora = () => formataTimestampIso(new Date()).slice(0, 16)
 
 const titulos = ref([])
-const codpessoaFiltro = ref(props.pagamento?.codpessoa ?? null)
+const codpessoaFiltro = ref(props.pix?.codpessoa ?? null)
 const codpessoa = ref(null)
 const transacao = ref(agora())
 // a data só fica parada se a pessoa mexeu nela
@@ -82,20 +80,15 @@ const observacao = ref('')
 // data, pessoa, "referente a" e observação ficam no diálogo do FAB, à vista com a lista rolada
 const dialog = ref(false)
 
-// amarrando um pagamento que já existe: os títulos têm de caber no livre e ser do sentido dele
-const problemaAmarracao = computed(() => {
-  if (!props.pagamento || !titulos.value.length || sBaixa.compensacao) return null
-  if (props.pagamento.entrada !== undefined && !!props.pagamento.entrada !== sBaixa.entrada) {
-    return props.pagamento.entrada
-      ? 'Este pagamento é uma entrada de dinheiro: selecione títulos a receber.'
-      : 'Este pagamento é uma saída de dinheiro: selecione títulos a pagar.'
+// usando o PIX: títulos a receber somando o valor dele (o PIX entra inteiro; maior que os
+// títulos, lança como adiantamento)
+const problemaPix = computed(() => {
+  if (!props.pix || !titulos.value.length || sBaixa.compensacao) return null
+  if (!sBaixa.entrada) {
+    return 'O PIX é uma entrada de dinheiro: selecione títulos a receber.'
   }
-  // o PIX entra inteiro: maior que os títulos, lança como adiantamento
-  if (props.pagamento.codpix && Math.abs(sBaixa.totalLiquido - props.pagamento.livre) > 0.005) {
-    return `Os títulos somam R$ ${formataNumero(sBaixa.totalLiquido)} e o PIX é de R$ ${formataNumero(props.pagamento.livre)}: precisam somar o valor dele. Se ele for maior, lance como adiantamento.`
-  }
-  if (sBaixa.totalLiquido > (props.pagamento.livre ?? 0) + 0.005) {
-    return `Os títulos somam R$ ${formataNumero(sBaixa.totalLiquido)} e o pagamento tem R$ ${formataNumero(props.pagamento.livre)} livre.`
+  if (Math.abs(sBaixa.totalLiquido - props.pix.valor) > 0.005) {
+    return `Os títulos somam R$ ${formataNumero(sBaixa.totalLiquido)} e o PIX é de R$ ${formataNumero(props.pix.valor)}: precisam somar o valor dele. Se ele for maior, lance como adiantamento.`
   }
   return null
 })
@@ -103,8 +96,8 @@ const problemaAmarracao = computed(() => {
 // usando o PIX: quanto falta (positivo) ou passou (negativo) para os títulos somarem o valor
 // dele; à vista ao lado do FAB, que só habilita quando bate
 const faltaPix = computed(() => {
-  if (!props.pagamento?.codpix) return null
-  return Math.round((props.pagamento.livre - sBaixa.liquido) * 100) / 100
+  if (!props.pix) return null
+  return Math.round((props.pix.valor - sBaixa.liquido) * 100) / 100
 })
 const situacaoPix = computed(() => {
   if (faltaPix.value === null) return null
@@ -124,8 +117,8 @@ const descricao = computed(() => {
 })
 
 // foco ao abrir o diálogo: sem pessoa, na pessoa; com ela, no Receber/Pagar, ou no Gravar quando
-// não há wizard (encontro de contas, amarrando pagamento) ou a forma já foi escolhida
-const temWizard = computed(() => !sBaixa.compensacao && !props.pagamento)
+// não há wizard (encontro de contas, PIX) ou a forma já foi escolhida
+const temWizard = computed(() => !sBaixa.compensacao && !props.pix)
 const foco = computed(() => {
   if (!codpessoa.value) return 'pessoa'
   return temWizard.value && !sBaixa.forma ? 'wizard' : 'gravar'
@@ -140,16 +133,15 @@ const notificar = (type, message) =>
     timeout: 3000,
   })
 
-// o pagamento que veio para ser amarrado vira a forma, com o valor do líquido
-const aplicarPagamento = () => {
-  if (!props.pagamento || sBaixa.compensacao || !titulos.value.length) {
+// o PIX vira a forma, com o valor do líquido
+const aplicarPix = () => {
+  if (!props.pix || sBaixa.compensacao || !titulos.value.length) {
     return
   }
   sBaixa.adicionar({
-    codpagamento: props.pagamento.codpagamento ?? null,
-    codpix: props.pagamento.codpix ?? null,
+    codpix: props.pix.codpix,
     total: sBaixa.totalLiquido,
-    descricao: props.pagamento.descricao,
+    descricao: props.pix.descricao,
   })
 }
 
@@ -160,7 +152,7 @@ let pessoasDosTitulos = ''
 watch(
   titulos,
   (lista) => {
-    if (sBaixa.forma && !props.pagamento) {
+    if (sBaixa.forma && !props.pix) {
       Notify.create({
         message: 'Seleção mudou: escolha a forma de novo.',
         color: 'grey-8',
@@ -177,7 +169,7 @@ watch(
       pessoa: { codpessoa: codpessoa.value },
       titulos: lista.map((t) => ({ ...t })),
     })
-    aplicarPagamento()
+    aplicarPix()
   },
   { deep: true },
 )
@@ -218,15 +210,15 @@ const gravar = async () => {
   }
   const pags = await sBaixa.finalizar(props.finalizar.url, {
     ...props.finalizar.extras,
-    // o pagamento que já existe tem a data dele (o fato)
-    ...(props.comData && !props.pagamento ? { transacao: transacao.value } : {}),
+    // o PIX tem a data dele (o fato)
+    ...(props.comData && !props.pix ? { transacao: transacao.value } : {}),
     referente: referente.value || null,
     observacao: observacao.value || null,
   })
   if (!pags) {
-    // não gravou: volta a escolher a forma; a integrada já confirmada (o dinheiro entrou), o
-    // pagamento que veio para amarrar e o PIX ficam para o Gravar
-    if (!sBaixa.forma?.codpagamento && !sBaixa.forma?.codpix) sBaixa.remover()
+    // não gravou: volta a escolher a forma; o dinheiro que já entrou (o PIX, o cartão confirmado
+    // na maquininha) fica para o Gravar
+    if (!sBaixa.formaConfirmada) sBaixa.remover()
     return
   }
   notificar(
@@ -240,7 +232,7 @@ const gravar = async () => {
 }
 
 // a forma chegou do wizard (ou a integrada confirmada pelo banco/maquineta): grava na hora;
-// encontro de contas e amarrar pagamento seguem no Gravar
+// encontro de contas e o PIX seguem no Gravar
 watch(
   () => sBaixa.forma,
   (forma) => {
@@ -276,7 +268,7 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
           <q-separator inset />
           <q-card-section>
             <div class="row q-col-gutter-md">
-              <div class="col-xs-12 col-sm-4" v-if="comData && !pagamento">
+              <div class="col-xs-12 col-sm-4" v-if="comData && !pix">
                 <MgInputData
                   :model-value="transacao"
                   @update:model-value="mudouData"
@@ -287,7 +279,7 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
                   :bottom-slots="false"
                 />
               </div>
-              <div class="col-xs-12" :class="comData && !pagamento ? 'col-sm-8' : ''">
+              <div class="col-xs-12" :class="comData && !pix ? 'col-sm-8' : ''">
                 <MgSelectPessoa
                   v-model="codpessoa"
                   label="Pessoa"
@@ -324,13 +316,8 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
               </q-item-section>
             </q-item>
           </q-list>
-          <q-card-section v-if="problemaAmarracao" class="text-caption text-negative">
-            {{ problemaAmarracao }}
-          </q-card-section>
-          <!-- o PIX já aparece na linha da forma -->
-          <q-card-section v-if="pagamento && !pagamento.codpix" class="text-caption text-grey-7">
-            Amarrando o pagamento #{{ pagamento.codpagamento }} (livre R$
-            {{ formataNumero(pagamento.livre) }})
+          <q-card-section v-if="problemaPix" class="text-caption text-negative">
+            {{ problemaPix }}
           </q-card-section>
           <q-separator inset />
           <q-card-actions align="right">
@@ -350,7 +337,7 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
               type="submit"
               color="primary"
               :autofocus="foco === 'gravar'"
-              :disable="!sBaixa.pronto || !!problemaAmarracao"
+              :disable="!sBaixa.pronto || !!problemaPix"
               :loading="sBaixa.finalizando"
             />
           </q-card-actions>

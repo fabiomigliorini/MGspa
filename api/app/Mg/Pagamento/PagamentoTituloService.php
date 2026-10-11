@@ -9,12 +9,16 @@ use Mg\Cheque\Cheque;
 use Mg\Cheque\ChequeService;
 use Mg\Cheque\Cmc7\Cmc7;
 use Mg\Maquineta\Maquineta;
+use Mg\PagarMe\PagarMePedido;
+use Mg\PagarMe\PagarMeService;
 use Mg\Pdv\Pdv;
 use Mg\Pix\Pix;
 use Mg\Pix\PixUsoService;
 use Mg\Portador\LancamentoDataService;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorMovimentoService;
+use Mg\Saurus\SaurusPedido;
+use Mg\Saurus\SaurusService;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloHelper;
 use Mg\Titulo\MovimentoTituloService;
@@ -120,9 +124,9 @@ class PagamentoTituloService
      * $dados: codpessoa, transacao (com hora), observacao, titulos[] (codtitulo,
      * saldo, juros, multa, desconto, total) e pagamentos[] com UMA forma
      * (meio, total, codportador, codmaquineta, bandeira, autorizacao,
-     * parcelas, cheque; codpagamento = pagamento que ja' existe, com saldo
-     * livre: cobranca integrada, orfao; codpix = o PIX que caiu na conta,
-     * usado inteiro; codpagamentoorigem =
+     * parcelas, cheque; codpix = o PIX que caiu na conta, usado inteiro;
+     * codpagarmepedido / codsauruspedido = o cartao cobrado na maquininha
+     * integrada; codpagamentoorigem =
      * cancelamento no cartao / devolucao de PIX). Titulos que se anulam nao
      * levam forma: viram um encontro de contas (total zero no portador
      * Encontro de Contas).
@@ -228,51 +232,8 @@ class PagamentoTituloService
         }
     }
 
-    // Pagamento que ja' existe usado como forma (cobranca integrada que
-    // confirmou, PIX, orfao): efetivado, sem venda, no mesmo sentido e com
-    // saldo livre para o valor. Fica como esta' (e' o fato); so' ganha a
-    // pessoa se nao tinha.
-    public static function pagamentoExistente(int $codpagamento, float $valor, bool $entrada, array $dados): Pagamento
-    {
-        $pag = Pagamento::lockForUpdate()->findOrFail($codpagamento);
-        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
-            abort(422, "O pagamento {$pag->codpagamento} não está efetivado!");
-        }
-        if (!empty($pag->codnegocio)) {
-            abort(422, "O pagamento {$pag->codpagamento} está amarrado à venda #{$pag->codnegocio}!");
-        }
-        if ($entrada != $pag->entrada()) {
-            abort(422, $entrada
-                ? "O pagamento {$pag->codpagamento} é uma saída de dinheiro!"
-                : "O pagamento {$pag->codpagamento} é uma entrada de dinheiro!");
-        }
-        $livre = PagamentoPendenciaService::livre($pag);
-        if ($valor > $livre + 0.005) {
-            abort(422, "O pagamento {$pag->codpagamento} tem R$ " . number_format($livre, 2, ',', '.')
-                . ' livre: ajuste o valor dos títulos.');
-        }
-        // o fato fica como esta'; so' ganha a pessoa, a observacao e o "referente a" que nao tinha
-        $mudou = false;
-        if (empty($pag->codpessoa) && !empty($dados['codpessoa'])) {
-            $pag->codpessoa = (int) $dados['codpessoa'];
-            $mudou = true;
-        }
-        if (empty($pag->observacoes) && !empty($dados['observacao'])) {
-            $pag->observacoes = mb_substr($dados['observacao'], 0, 255);
-            $mudou = true;
-        }
-        if (empty($pag->referente) && !empty($dados['referente'])) {
-            $pag->referente = $dados['referente'];
-            $mudou = true;
-        }
-        if ($mudou) {
-            $pag->save();
-        }
-        return $pag;
-    }
-
-    // Cria o pagamento da forma (ou usa o que ja' existe), com origem e
-    // destino pelo meio e por onde aconteceu. So' o dinheiro: principal =
+    // Cria o pagamento da forma, com origem e destino pelo meio e por onde
+    // aconteceu. So' o dinheiro: principal =
     // total. Usado tambem pelo vale/adiantamento (TituloAdiantamentoService).
     public static function pagamentoDaForma(
         array $forma,
@@ -285,8 +246,22 @@ class PagamentoTituloService
     ): Pagamento {
         $total = round((float) ($forma['total'] ?? 0), 2);
 
-        if (!empty($forma['codpagamento'])) {
-            return static::pagamentoExistente((int) $forma['codpagamento'], $total, $entrada, $dados);
+        // o cartao cobrado na maquininha integrada (Stone, SafraPay): o
+        // pagamento nasce com o pedido, quando a tela grava (TASK-220)
+        if (!empty($forma['codpagarmepedido']) || !empty($forma['codsauruspedido'])) {
+            if (!$entrada) {
+                abort(422, 'O cartão cobrado na maquininha só recebe!');
+            }
+            $campos = [
+                'codpessoa' => (int) $dados['codpessoa'],
+                'observacoes' => $dados['observacao'] ?? null,
+                'referente' => $dados['referente'] ?? null,
+                'codpdv' => $pdv->codpdv ?? null,
+                'codfilial' => $pdv->codfilial ?? null,
+            ];
+            return !empty($forma['codpagarmepedido'])
+                ? PagarMeService::pagar((int) $forma['codpagarmepedido'], $total, $campos)
+                : SaurusService::pagar((int) $forma['codsauruspedido'], $total, $campos);
         }
 
         // o PIX que caiu na conta (tela PIX, PIX QR do wizard): o pagamento
@@ -390,8 +365,13 @@ class PagamentoTituloService
     // antes de gravar (PagamentoTituloAutorizador). Sem validar a forma.
     public static function portadorPrevisto(array $forma, bool $entrada, ?Pdv $pdv): ?Portador
     {
-        if (!empty($forma['codpagamento'])) {
-            return optional(Pagamento::find((int) $forma['codpagamento']))->portadorDoPagamento();
+        if (!empty($forma['codpagarmepedido'])) {
+            $ped = PagarMePedido::find((int) $forma['codpagarmepedido']);
+            return $ped ? static::portadorDaMaquineta(PagarMeService::maquinetaDoPedido($ped)) : null;
+        }
+        if (!empty($forma['codsauruspedido'])) {
+            $ped = SaurusPedido::find((int) $forma['codsauruspedido']);
+            return $ped ? static::portadorDaMaquineta(SaurusService::maquinetaDoPedido($ped)) : null;
         }
         if (!empty($forma['codpix'])) {
             return optional(Pix::find((int) $forma['codpix']))->Portador;
@@ -617,8 +597,7 @@ class PagamentoTituloService
     // escolhidas): os movimentos sao estornados e os titulos reabrem; o vale
     // e o adiantamento que nasceram com o pagamento sao estornados. O
     // PAGAMENTO CONTINUA: e' o fato (o dinheiro andou) e fica sem amarracao,
-    // em "Pagamentos nao resolvidos", para amarrar de novo ou cancelar (so' o
-    // manual). Venda pelo negocio, acerto pelo acerto.
+    // para cancelar (so' o manual). Venda pelo negocio, acerto pelo acerto.
     // Desligado por enquanto (TASK-218): avaliar se amarrar/desamarrar precisa
     // existir. As duas rotas (contas e PDV) passam por aqui e recusam.
     public static function desamarrar(Pagamento $pag, string $justificativa, ?array $codmovimentos = null): Pagamento

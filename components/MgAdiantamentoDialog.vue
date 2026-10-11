@@ -6,7 +6,8 @@
 // integrada, quando o banco/maquineta confirma). Cada app informa as formas, o contexto do wizard
 // (PDV ou contas) e para onde manda. O wizard e os dialogs PIX/Stone/SafraPay ficam na página que
 // usa. A data tem hora (TASK-204: a data manda no período do portador; no PDV, a sessão da gaveta
-// daquela hora); sem mexer nela, vai vazia e o servidor usa agora.
+// daquela hora); sem mexer nela, vai vazia e o servidor usa agora. Com `pix` (vindo da tela PIX,
+// TASK-219), o adiantamento de cliente usa o PIX inteiro, na data dele.
 import { ref, computed, watch } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
@@ -34,11 +35,8 @@ const props = defineProps({
   filialPadrao: { type: Number, default: null },
   // configuração do PDV para o wizard (maquineta, conta PIX, impressora)
   padrao: { type: Object, default: () => ({}) },
-  // pagamento que já existe, para amarrar (vindo de "Pagamentos não resolvidos"):
-  // { codpagamento, livre, descricao, codpessoa, entrada }; ou o PIX sem uso (vindo da tela PIX,
-  // TASK-219), que entra inteiro, na data dele: { codpix, livre (o valor), descricao, codpessoa,
-  // entrada }
-  pagamento: { type: Object, default: null },
+  // o PIX sem uso (vindo da tela PIX): { codpix, valor, descricao, codpessoa }
+  pix: { type: Object, default: null },
 })
 
 const emit = defineEmits(['update:modelValue', 'finalizado'])
@@ -66,8 +64,8 @@ const transacaoAbertura = ref(agora())
 
 const vazio = () => ({
   codtipotitulo: null,
-  codpessoa: props.pagamento?.codpessoa ?? null,
-  valor: props.pagamento?.livre ?? null,
+  codpessoa: props.pix?.codpessoa ?? null,
+  valor: props.pix?.valor ?? null,
   vencimento: daquiA30Dias(),
   codcontacontabil: null,
   codfilial: props.filialPadrao,
@@ -121,9 +119,9 @@ watch(
     form.value = vazio()
     sBaixa.iniciar({ pessoa: null, titulos: [] })
     await carregarTipos()
-    // o pagamento que veio para amarrar decide o sentido (entrada = adiantamento/crédito)
-    if (props.pagamento) {
-      tipos.value = tipos.value.filter((t) => (t.natureza === 'P') === !!props.pagamento.entrada)
+    // o PIX é entrada de dinheiro: adiantamento/crédito de cliente
+    if (props.pix) {
+      tipos.value = tipos.value.filter((t) => t.natureza === 'P')
     }
     const padrao = tipos.value.find((t) => t.value === TIPO_PADRAO) ?? tipos.value[0]
     if (padrao) trocarTipo(padrao.value)
@@ -154,13 +152,12 @@ const prepararBaixa = () => {
 const cobrar = async () => {
   if (sBaixa.finalizando) return
   prepararBaixa()
-  // o pagamento que veio para amarrar é a forma, com o valor do formulário: não há o que cobrar
-  if (props.pagamento) {
+  // o PIX é a forma, com o valor dele: não há o que cobrar
+  if (props.pix) {
     sBaixa.adicionar({
-      codpagamento: props.pagamento.codpagamento ?? null,
-      codpix: props.pagamento.codpix ?? null,
+      codpix: props.pix.codpix,
       total: sBaixa.totalLiquido,
-      descricao: props.pagamento.descricao,
+      descricao: props.pix.descricao,
     })
     return
   }
@@ -196,7 +193,7 @@ const gravar = async () => {
   } catch (error) {
     notificar('negative', error?.response?.data?.message ?? error?.message ?? 'Erro ao lançar')
     // não gravou: volta a editar; a integrada já confirmada (o dinheiro entrou) fica para o Gravar
-    if (props.pagamento || (!sBaixa.forma?.codpagamento && !sBaixa.forma?.codpix)) {
+    if (props.pix || !sBaixa.formaConfirmada) {
       sBaixa.remover()
     }
   } finally {
@@ -204,8 +201,8 @@ const gravar = async () => {
   }
 }
 
-// a forma chegou (confirmada no wizard, a integrada confirmada pelo banco/maquineta ou o
-// pagamento do Amarrar): grava na hora
+// a forma chegou (confirmada no wizard, a integrada confirmada pelo banco/maquineta ou o PIX):
+// grava na hora
 watch(
   () => sBaixa.forma,
   (forma) => {
@@ -233,7 +230,7 @@ watch(
                 @update:model-value="trocarTipo"
               />
             </div>
-            <div class="col-12 col-sm-5" v-if="comData && !pagamento?.codpix">
+            <div class="col-12 col-sm-5" v-if="comData && !pix">
               <MgInputData
                 v-model="form.transacao"
                 type="timestamp"
@@ -255,7 +252,7 @@ watch(
               />
             </div>
             <div
-              v-if="comData && !pagamento?.codpix && trocaMes"
+              v-if="comData && !pix && trocaMes"
               class="col-12 text-caption text-orange-9 row no-wrap items-center"
             >
               <q-icon name="warning" size="xs" class="q-mr-xs" />
@@ -277,7 +274,7 @@ watch(
                 label="Valor"
                 prefix="R$"
                 :min="0.01"
-                :disable="lancou || !!pagamento?.codpix"
+                :disable="lancou || !!pix"
                 :rules="[(v) => v > 0]"
                 lazy-rules
               />
@@ -318,12 +315,8 @@ watch(
           </div>
         </q-card-section>
 
-        <q-card-section v-if="pagamento?.codpix" class="text-caption text-grey-7">
-          Usando o {{ pagamento.descricao }}
-        </q-card-section>
-        <q-card-section v-else-if="pagamento" class="text-caption text-grey-7">
-          Amarrando o pagamento {{ pagamento.descricao }} (livre R$
-          {{ formataNumero(pagamento.livre) }})
+        <q-card-section v-if="pix" class="text-caption text-grey-7">
+          Usando o {{ pix.descricao }}
         </q-card-section>
 
         <q-list v-else-if="lancou" separator>
@@ -339,7 +332,7 @@ watch(
             v-if="!lancou || sBaixa.finalizando"
             flat
             color="primary"
-            :label="pagamento && !pagamento.codpix ? 'Amarrar' : verbo"
+            :label="verbo"
             type="submit"
             :loading="sBaixa.finalizando"
           />

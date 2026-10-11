@@ -69,7 +69,7 @@ class TituloAdiantamentoService
         if ($meio == PagamentoService::MEIO_COMPENSACAO || !empty($forma['codpagamentoorigem'])) {
             abort(422, "{$tipo->tipotitulo} nasce com dinheiro: compensação e devolução não se aplicam!");
         }
-        if ($pdv && !$entrada && ($meio != PagamentoService::MEIO_DINHEIRO || !empty($forma['codpagamento']))) {
+        if ($pdv && !$entrada && $meio != PagamentoService::MEIO_DINHEIRO) {
             abort(422, "{$tipo->tipotitulo} no PDV sai só em dinheiro!");
         }
 

@@ -40,10 +40,9 @@ const abrirAdiantamento = async (item) => {
     }
     pixAdiantamento.value = {
       codpix: pix.codpix,
-      livre: pix.valor,
+      valor: pix.valor,
       descricao: descricaoPix(pix),
       codpessoa: pix.codpessoa,
-      entrada: true,
     }
     dialogAdiantamento.value = true
   } catch (error) {
@@ -346,7 +345,7 @@ onMounted(() => {
       com-data
       com-filial
       :filial-padrao="auth.usuario?.codfilial ?? null"
-      :pagamento="pixAdiantamento"
+      :pix="pixAdiantamento"
       @finalizado="adiantamentoLancado"
     />
 

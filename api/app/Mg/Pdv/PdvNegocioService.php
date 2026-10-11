@@ -11,7 +11,6 @@ use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioParcelaService;
 use Mg\Caixa\CaixaService;
 use Mg\Pagamento\PagamentoService;
-use Mg\Pagamento\PagamentoTituloService;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioService;
 use Mg\Auditoria\AuditoriaService;
@@ -640,19 +639,10 @@ class PdvNegocioService
         // o que o negocio tinha, para o livro de ocorrencias (TASK-205)
         $foto = OcorrenciaService::fotoCancelamento($negocio);
 
-        // pagamentos da venda: o manual (dinheiro, cheque, cartao digitado,
-        // vale) e' cancelado junto (o dinheiro voltou na hora); o PIX tambem:
-        // o PIX volta a ficar sem uso, na tela PIX (TASK-219). O cartao
-        // integrado (Stone, SafraPay) nunca: o dinheiro entrou de verdade, ele
-        // sai da venda e fica orfao, em "Pagamentos nao resolvidos", para
-        // amarrar ou devolver (conceito do Fabio, 09/10/2026)
+        // pagamentos da venda: todos cancelados junto. O PIX volta a ficar sem
+        // uso, na tela PIX (TASK-219); o estorno do cartao na maquininha e' 'a
+        // mao (TASK-220)
         foreach ($negocio->PagamentoS()->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->get() as $pag) {
-            if ($pag->meio != PagamentoService::MEIO_PIX
-                && !PagamentoTituloService::manual($pag)
-                && $pag->estado == PagamentoService::ESTADO_EFETIVADO) {
-                PagamentoService::amarrarVenda($pag, null, "Venda #{$negocio->codnegocio} cancelada: {$justificativa}");
-                continue;
-            }
             PagamentoService::cancelar($pag, $justificativa);
         }
 

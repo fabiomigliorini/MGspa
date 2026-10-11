@@ -23,7 +23,6 @@ import FormaPix from './cobranca/FormaPix.vue'
 import FormaCheque from './cobranca/FormaCheque.vue'
 import FormaPortador from './cobranca/FormaPortador.vue'
 import FormaEstorno from './cobranca/FormaEstorno.vue'
-import FormaRecebido from './cobranca/FormaRecebido.vue'
 import { CONDICAO, MEIO, VISUAL } from './cobranca/pagamento.js'
 
 const emit = defineEmits(['pagamento', 'parcelas', 'cobranca'])
@@ -103,16 +102,6 @@ const FORMAS = [
     ...VISUAL.estorno,
     componente: FormaEstorno,
   },
-  // pagamento que já aconteceu e está sem amarração (só online: a lista vem do servidor)
-  {
-    valor: 'recebido',
-    label: 'Já recebido',
-    caption: 'PIX ou cartão que já entrou e está sem amarração',
-    ...VISUAL.pix,
-    componente: FormaRecebido,
-    pulaValor: true,
-    online: true,
-  },
   {
     valor: 'compensacao',
     label: 'Compensação',
@@ -123,16 +112,7 @@ const FORMAS = [
 ]
 
 // formas da venda, quando o documento não diz
-const FORMAS_NEGOCIO = [
-  'cartao',
-  'pix',
-  'dinheiro',
-  'entrega',
-  'prazo',
-  'vale',
-  'cheque',
-  'recebido',
-]
+const FORMAS_NEGOCIO = ['cartao', 'pix', 'dinheiro', 'entrega', 'prazo', 'vale', 'cheque']
 
 const formaAtual = computed(() => FORMAS.find((f) => f.valor === sCobranca.forma))
 const comDesconto = computed(() => formaAtual.value?.desconto !== undefined && sCobranca.ehNegocio)
@@ -144,9 +124,8 @@ const componenteAtual = computed(() =>
 // prazo e cheque recebido exigem cliente identificado
 const PRECISA_CLIENTE = ['prazo', 'cheque']
 const opcoesFormas = computed(() =>
-  FORMAS.filter((f) => (sCobranca.formasPermitidas ?? FORMAS_NEGOCIO).includes(f.valor))
-    .filter((f) => !f.online || navigator.onLine)
-    .map((f, i) => {
+  FORMAS.filter((f) => (sCobranca.formasPermitidas ?? FORMAS_NEGOCIO).includes(f.valor)).map(
+    (f, i) => {
       const opcao = { ...f, tecla: i < 9 ? i + 1 : null }
       if (PRECISA_CLIENTE.includes(f.valor) && sCobranca.consumidor) {
         return { ...opcao, desabilitado: true, motivo: 'Informe o cliente (F10)' }
@@ -156,7 +135,8 @@ const opcoesFormas = computed(() =>
         return { ...opcao, desabilitado: true, motivo: sCobranca.contexto.bloqueioDinheiro }
       }
       return opcao
-    }),
+    },
+  ),
 )
 
 const verbo = computed(() => (entrada.value ? 'Receber' : 'Pagar'))
