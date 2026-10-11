@@ -299,10 +299,8 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
           <q-card-section v-if="problemaAmarracao" class="text-caption text-negative">
             {{ problemaAmarracao }}
           </q-card-section>
-          <q-card-section v-if="pagamento?.codpix" class="text-caption text-grey-7">
-            Usando o {{ pagamento.descricao }}
-          </q-card-section>
-          <q-card-section v-else-if="pagamento" class="text-caption text-grey-7">
+          <!-- o PIX já aparece na linha da forma -->
+          <q-card-section v-if="pagamento && !pagamento.codpix" class="text-caption text-grey-7">
             Amarrando o pagamento #{{ pagamento.codpagamento }} (livre R$
             {{ formataNumero(pagamento.livre) }})
           </q-card-section>

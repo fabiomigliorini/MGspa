@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-11 00:33'
-updated_date: '2026-10-11 00:46'
+updated_date: '2026-10-11 00:54'
 labels:
   - contas
   - api
@@ -31,13 +31,13 @@ Campos no PIX (tblpix), no padrão de criacao/alteracao: utilizacao (quando foi 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 A importação do PIX não cria pagamento; só o PIX QR de venda paga a venda
-- [ ] #2 PIX que pagou boleto nosso (txid do QR do boleto) entra marcado como usado e ganha o link do pagamento quando a baixa do boleto chega: não duplica com o retorno
-- [ ] #3 Tela PIX do contas: filtro sem uso / usados / todos; a linha mostra a cobrança de origem (quem gerou, PDV, quando) e o link do pagamento que usou o PIX
-- [ ] #4 PIX sem uso: Baixar títulos abre o Receber Títulos com o PIX (data e conta travadas, títulos somando o valor do PIX); Adiantamento abre o adiantamento com o valor do PIX
-- [ ] #5 Marcar como usado e Desmarcar à mão, só no PIX sem pagamento ligado
-- [ ] #6 Wizard com PIX QR fora de venda: a confirmação do banco não cria pagamento; o pagamento nasce ao gravar e, se o wizard fechar antes, o PIX fica sem uso na tela PIX
-- [ ] #7 Cancelar um pagamento com PIX (inclusive pelo cancelamento da venda) devolve o PIX para a lista de sem uso
+- [x] #1 A importação do PIX não cria pagamento; só o PIX QR de venda paga a venda
+- [x] #2 PIX que pagou boleto nosso (txid do QR do boleto) entra marcado como usado e ganha o link do pagamento quando a baixa do boleto chega: não duplica com o retorno
+- [x] #3 Tela PIX do contas: filtro sem uso / usados / todos; a linha mostra a cobrança de origem (quem gerou, PDV, quando) e o link do pagamento que usou o PIX
+- [x] #4 PIX sem uso: Baixar títulos abre o Receber Títulos com o PIX (data e conta travadas, títulos somando o valor do PIX); Adiantamento abre o adiantamento com o valor do PIX
+- [x] #5 Marcar como usado e Desmarcar à mão, só no PIX sem pagamento ligado
+- [x] #6 Wizard com PIX QR fora de venda: a confirmação do banco não cria pagamento; o pagamento nasce ao gravar e, se o wizard fechar antes, o PIX fica sem uso na tela PIX
+- [x] #7 Cancelar um pagamento com PIX (inclusive pelo cancelamento da venda) devolve o PIX para a lista de sem uso
 - [ ] #8 SQL de go-live com os campos novos marcando os PIX antigos como usados; no dev, os pagamentos avulsos criados pela importação apagados
 <!-- AC:END -->
 
@@ -54,8 +54,11 @@ Campos no PIX (tblpix), no padrão de criacao/alteracao: utilizacao (quando foi 
 - **Rotas**: `GET v1/pix/{codpix}`, `POST|DELETE v1/pix/{codpix}/utilizacao`; a listagem aceita `uso=sem|usado|todos` e traz a cobrança de origem (usuário, PDV, data).
 - **Front**: tela PIX (filtro Uso; Baixar títulos → `/pagamento/novo?codpix=`; Adiantamento no MgAdiantamentoDialog; Marcar/Desmarcar), `Nova.vue`, `MgBaixaTitulos` e `MgAdiantamentoDialog` aceitam o PIX (data travada, valor do PIX).
 
-## Testado (tinker, transação desfeita)
-pagar com valor diferente recusa; pagar marca o PIX e lança no razão do banco; usar duas vezes recusa; desmarcar o usado por pagamento recusa; cancelar o pagamento devolve o PIX; marcar/desmarcar à mão; PIX de boleto 264526 entra usado e ligado ao pagamento do boleto 80246846; baixa de título com o PIX (título baixa na data do PIX); adiantamento com o PIX. Não testado ponta a ponta: as telas no navegador, o PIX QR no wizard e o cancelamento de venda com PIX QR.
+## Testes (10/10/2026)
+- **Serviço** (tinker, transação desfeita): pagar com valor diferente recusa; pagar marca o PIX e lança no razão do banco; usar duas vezes recusa; desmarcar o usado por pagamento recusa; cancelar o pagamento devolve o PIX; marcar/desmarcar à mão; PIX de boleto 264526 entra usado e ligado ao pagamento do boleto 80246846; baixa de título e adiantamento com o PIX; PIX QR sem venda (cobrança e PIX simulados) não cria pagamento e o PixCobResource devolve o codpix; venda 4541351 cancelada cancela o pagamento PIX 4478814 e o PIX 259149 volta a ficar sem uso.
+- **Tela** (Chrome headless no contas-dev): tela PIX desmarca/marca/desmarca (PIX 264017, que ficou sem uso para teste); Adiantamento com o PIX 264036 (R$ 10.500, pessoa 214 preenchida pelo CNPJ) gravou o pagamento 80248435 e a linha passou a mostrar o link; Baixar títulos com o PIX 264039 (R$ 2.254, título N04321369-1/1 parcial) gravou o pagamento 80248436 na data do PIX, na Bb Matriz, com o razão +2.254; títulos somando diferente do PIX desabilitam o Gravar com o aviso; PIX já usado na URL avisa.
+- **Corrigido nos testes**: o diálogo da baixa mostrava o PIX duas vezes; o filtro Uso quebrava a linha.
+- **Não testado**: o PIX QR pago de verdade no wizard, porque no dev não dá para pagar um QR.
 
 ## Pendente no dev
 A limpeza dos pagamentos avulsos que a importação criou foi bloqueada pela permissão do Claude: o SQL está com o Fábio.

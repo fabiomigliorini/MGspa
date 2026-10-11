@@ -106,7 +106,7 @@ const sortOptions = [
     </FilterGroup>
 
     <FilterGroup title="Uso">
-      <q-option-group v-model="store.filters.uso" :options="usoOptions" inline />
+      <q-option-group v-model="store.filters.uso" :options="usoOptions" />
     </FilterGroup>
 
     <FilterGroup title="Vínculo com Negócio">
