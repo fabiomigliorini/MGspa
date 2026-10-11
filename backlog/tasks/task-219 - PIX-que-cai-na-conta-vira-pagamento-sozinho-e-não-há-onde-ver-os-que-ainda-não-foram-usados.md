@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-11 00:33'
-updated_date: '2026-10-11 00:54'
+updated_date: '2026-10-11 00:59'
 labels:
   - contas
   - api
@@ -39,6 +39,7 @@ Campos no PIX (tblpix), no padrão de criacao/alteracao: utilizacao (quando foi 
 - [x] #6 Wizard com PIX QR fora de venda: a confirmação do banco não cria pagamento; o pagamento nasce ao gravar e, se o wizard fechar antes, o PIX fica sem uso na tela PIX
 - [x] #7 Cancelar um pagamento com PIX (inclusive pelo cancelamento da venda) devolve o PIX para a lista de sem uso
 - [ ] #8 SQL de go-live com os campos novos marcando os PIX antigos como usados; no dev, os pagamentos avulsos criados pela importação apagados
+- [x] #9 Receber Títulos com o PIX: mostra quanto falta (ou quanto passou) do valor do PIX enquanto se escolhem os títulos, e o botão de gravar só habilita quando bate
 <!-- AC:END -->
 
 ## Implementation Notes
