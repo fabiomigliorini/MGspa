@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-10 21:18'
-updated_date: '2026-10-11 00:59'
+updated_date: '2026-10-11 01:09'
 labels:
   - negocios
   - contas
@@ -35,6 +35,7 @@ No PDV (negócios), o detalhe do pagamento escondia o botão do recibo térmico 
 - [ ] #8 Recebimento/pagamento de título: os títulos entram no recibo (A5 e cupom) com principal, juros, multa, desconto e total, e a linha de total
 - [x] #9 Vale do colaborador: confissão de dívida com quem pagou (empresa e CNPJ da filial do pagamento), desconto autorizado em qualquer empresa do grupo (CLT ou terceirizado) e nota promissória com beneficiário em branco, vale e promissória na mesma folha A5 retrato com a mesma régua; no cupom também
 - [x] #10 Campo 'Referente a' no pagamento (texto livre que sai no recibo/vale), preenchido no Receber/Pagar títulos e no Vale/Adiantamento e alterável pelo lápis; a observação fica interna e não sai no recibo
+- [x] #11 Adiantamento a fornecedor: mesmo padrão do vale sem promissória (A5 paisagem e cupom), fornecedor declara e assina, texto de produto ou serviço abatido no que a loja ou o grupo dever e devolução se não houver o fornecimento; singular para pessoa física
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -73,4 +74,8 @@ Referente a (11/10): coluna tblpagamento.referente varchar(255) (api/database/pa
 Promissória: 'a ____' numa linha própria com o branco até a borda (95% no A5, 92% no cupom) e 'CPF/CNPJ ____' na linha de baixo (pedido do Fábio). Conferido com data e valor por extenso compridos.
 
 Promissória: o branco do beneficiário volta para a linha do 'NOTA PROMISSÓRIA a' e vai até o fim dela (PagamentoReciboService::brancoDaLinha mede o texto com as métricas do Dompdf, Helvetica; A5 379pt/8pt, cupom 200pt/8,5pt; se sobrar pouco, o branco vai inteiro na linha de baixo); CPF/CNPJ na linha de baixo. Conferido com 4 datas. Vale A5 sem a borda grande de fora (pedido do Fábio).
+
+Adiantamento a fornecedor (11/10): layouts do vale renomeados para pagamento/adiantamento e adiantamento-termica (servem vale e fornecedor; título, rótulo e vencimento vêm do service). Sem promissória (sugestão aceita pelo Fábio). Fornecedor com endereço na caixa. Conferido: #80248399 (PF, singular) e simulação PJ em memória (plural).
+
+Adiantamento a fornecedor em A5 paisagem (pedido do Fábio: sem promissória não precisa de retrato): @page pelo $r['promissoria'], classe .inteira com os mesmos campos maiores (título 22pt, valor 12pt, texto 10pt); vale segue em retrato (.meia).
 <!-- SECTION:NOTES:END -->

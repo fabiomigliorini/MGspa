@@ -1,6 +1,6 @@
-{{-- $r: PagamentoReciboService::montar. O VALE do colaborador e a NOTA PROMISSORIA na bobina de 80mm:
-     os mesmos campos e a mesma ordem do A5 (pagamento/vale), um embaixo do outro, com a linha de
-     corte entre os dois. --}}
+{{-- $r: PagamentoReciboService::montar. O VALE (com a NOTA PROMISSORIA) e o ADIANTAMENTO a
+     fornecedor na bobina de 80mm: os mesmos campos e a mesma ordem do A5 (pagamento/adiantamento),
+     um embaixo do outro, com a linha de corte antes da promissoria. --}}
 <!DOCTYPE html>
 <html>
 
@@ -101,7 +101,7 @@
         $assinante = $r['assinante'] ?? [];
     @endphp
 
-    <div class="titulo">VALE</div>
+    <div class="titulo">{{ $r['titulo'] }}</div>
     <table>
         <tr>
             <td style="width: 32%">
@@ -113,7 +113,7 @@
             <td style="width: 30%">
                 <div class="campo">
                     <div class="rotulo">Vencimento</div>
-                    <div class="valor">{{ $np['vencimento'] ?? '—' }}</div>
+                    <div class="valor">{{ $r['vencimento'] ?? '—' }}</div>
                 </div>
             </td>
             <td style="width: 38%">
@@ -126,10 +126,13 @@
     </table>
 
     <div class="campo">
-        <div class="rotulo">Nome</div>
+        <div class="rotulo">{{ $r['rotuloDe'] }}</div>
         <div class="valor"><b>{{ $r['de']['nome'] ?? '' }}</b></div>
         @if ($r['de']['documento'] ?? null)
             <div class="miudo">{{ $r['de']['documento'] }}</div>
+        @endif
+        @if (!$r['vale'] && ($r['de']['endereco'] ?? null))
+            <div class="miudo">{{ $r['de']['endereco'] }}</div>
         @endif
     </div>
 
@@ -159,7 +162,7 @@
         <div class="rotulo">Declaração</div>
         <div class="texto">
             {{-- o Dompdf quebra a linha no hifen do "comprometo-me" e do "devolve-lo" --}}
-            {!! preg_replace('/(comprometo-me|devolvê-lo)/u', '<span style="white-space: nowrap">$1</span>', e($r['declaracao'])) !!}
+            {!! preg_replace('/(comprometo-me|comprometemo-nos|devolvê-lo)/u', '<span style="white-space: nowrap">$1</span>', e($r['declaracao'])) !!}
             @if ($np)
                 Em garantia, emito a nota promissória abaixo.
             @endif

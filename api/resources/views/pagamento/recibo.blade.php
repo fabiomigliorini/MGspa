@@ -1,5 +1,5 @@
-{{-- $r: PagamentoReciboService::montar. O RECIBO no jeito do bloco de papel, A5 deitado (o vale
-     do colaborador tem o layout dele, pagamento/vale).
+{{-- $r: PagamentoReciboService::montar. O RECIBO no jeito do bloco de papel, A5 deitado (vale e
+     adiantamento a fornecedor tem o deles, pagamento/adiantamento).
      Baixa de titulos: os titulos (principal, juros, multa, desconto, total) entram no formulario;
      muitos titulos continuam na pagina seguinte. --}}
 <!DOCTYPE html>

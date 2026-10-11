@@ -1,5 +1,5 @@
 {{-- $r: PagamentoReciboService::montar. O mesmo RECIBO do A5, na bobina de 80mm (o vale tem o
-     dele, pagamento/vale-termica):
+     dele, pagamento/adiantamento-termica):
      os campos do bloco um embaixo do outro; titulos e forma miudos no fim. --}}
 <!DOCTYPE html>
 <html>

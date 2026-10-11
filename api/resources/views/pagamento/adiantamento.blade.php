@@ -1,12 +1,14 @@
-{{-- $r: PagamentoReciboService::montar. O VALE do colaborador e a NOTA PROMISSORIA que o garante
-     dividem uma folha A5 em pe, uma em cada metade, com a mesma regua (fonte, tamanhos, caixas). --}}
+{{-- $r: PagamentoReciboService::montar. O que a contraparte assina: o VALE do colaborador com a NOTA
+     PROMISSORIA que o garante, numa folha A5 em pe (uma em cada metade, com a mesma regua: fonte,
+     tamanhos, caixas), e o ADIANTAMENTO a fornecedor, sem promissoria, na A5 deitada (mesmos campos,
+     letra e caixas maiores para encher a folha). --}}
 <!DOCTYPE html>
 <html>
 <head>
     <meta charset="utf-8">
     <style>
         @page {
-            size: A5 portrait;
+            size: {{ $r['promissoria'] ? 'A5 portrait' : 'A5 landscape' }};
             margin: 4mm 6mm;
         }
         body {
@@ -14,8 +16,8 @@
             color: #000;
             margin: 0;
         }
-        .form {
-            /* metades iguais: o corte cai no meio da folha */
+        /* metades iguais: o corte cai no meio da folha */
+        .meia .form {
             height: 97mm;
         }
         .corte {
@@ -83,9 +85,43 @@
             font-size: 7pt;
             padding-top: 0.4mm;
         }
+        /* A5 deitada, sem promissoria: os mesmos campos maiores */
+        .inteira table.linha td {
+            padding-top: 1.6mm;
+        }
+        .inteira table.linha td + td {
+            padding-left: 2mm;
+        }
+        .inteira .campo {
+            padding: 0.6mm 2mm 1.4mm 2mm;
+        }
+        .inteira .rotulo {
+            font-size: 7pt;
+        }
+        .inteira .valor {
+            font-size: 12pt;
+        }
+        .inteira .miudo {
+            font-size: 8pt;
+        }
+        .inteira .grande {
+            font-size: 15pt;
+        }
+        .inteira .titulo {
+            font-size: 22pt;
+            padding-top: 2mm;
+        }
+        .inteira .texto {
+            font-size: 10pt;
+            line-height: 1.45;
+        }
+        .inteira .traco {
+            margin-top: 10mm;
+            font-size: 8.5pt;
+        }
     </style>
 </head>
-<body>
+<body class="{{ $r['promissoria'] ? 'meia' : 'inteira' }}">
     @php
         $np = $r['promissoria'];
         $assinante = $r['assinante'] ?? [];
@@ -94,7 +130,7 @@
     <div class="form">
         <table class="linha">
             <tr>
-                <td style="width: 39%"><div class="titulo">VALE</div></td>
+                <td style="width: 39%"><div class="titulo">{{ $r['titulo'] }}</div></td>
                 <td style="width: 17%">
                     <div class="campo">
                         <div class="rotulo">Nº</div>
@@ -104,7 +140,7 @@
                 <td style="width: 20%">
                     <div class="campo">
                         <div class="rotulo">Vencimento</div>
-                        <div class="valor">{{ $np['vencimento'] ?? '—' }}</div>
+                        <div class="valor">{{ $r['vencimento'] ?? '—' }}</div>
                     </div>
                 </td>
                 <td style="width: 24%">
@@ -120,12 +156,15 @@
             <tr>
                 <td>
                     <div class="campo">
-                        <div class="rotulo">Nome</div>
+                        <div class="rotulo">{{ $r['rotuloDe'] }}</div>
                         <div class="valor"><b>{{ $r['de']['nome'] ?? '' }}</b>
                             @if ($r['de']['documento'] ?? null)
                                 <span class="miudo">· {{ $r['de']['documento'] }}</span>
                             @endif
                         </div>
+                        @if (!$r['vale'] && ($r['de']['endereco'] ?? null))
+                            <div class="miudo">{{ $r['de']['endereco'] }}</div>
+                        @endif
                     </div>
                 </td>
             </tr>
@@ -182,7 +221,7 @@
                         <div class="rotulo">Declaração</div>
                         <div class="texto">
                             {{-- o Dompdf quebra a linha no hifen do "comprometo-me" e do "devolve-lo" --}}
-                            {!! preg_replace('/(comprometo-me|devolvê-lo)/u', '<span style="white-space: nowrap">$1</span>', e($r['declaracao'])) !!}
+                            {!! preg_replace('/(comprometo-me|comprometemo-nos|devolvê-lo)/u', '<span style="white-space: nowrap">$1</span>', e($r['declaracao'])) !!}
                             @if ($np)
                                 Em garantia, emito a nota promissória abaixo.
                             @endif
