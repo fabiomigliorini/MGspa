@@ -116,11 +116,17 @@ class PagamentoReciboService
         // o que entrou e nao esta amarrado a titulo: o detalhe fecha com o valor do recibo
         $livre = $linhas ? round($total - collect($linhas)->sum('total'), 2) : 0;
         // o pagamento inteiro e' o lancamento (sem baixa de titulo junto, sem sobra livre): layout
-        // pagamento/adiantamento; senao, o recibo com a tabela
+        // pagamento/documento; senao, o recibo com a tabela
         $soLancamento = !$baixa && $livre == 0;
         $vale = $soLancamento && $codtipotitulo == TipoTituloService::TIPO_VALE_COLABORADOR;
         $fornecedor = $soLancamento && $codtipotitulo == TipoTituloService::TIPO_ADIANTAMENTO_FORNECEDOR;
         $adiantamento = $vale || $fornecedor;
+        // pagamento de titulos: a loja pagou, todos no mesmo sentido (titulo a receber junto e'
+        // encontro de contas, outro modelo); quem recebeu declara a quitacao e assina
+        $pagamentoTitulos = $baixa && !$entrada && !$lancados
+            && collect($linhas)->every(fn($l) => $l['total'] > 0);
+        // o que alguem assina no layout pagamento/documento (A5 e cupom)
+        $documento = $adiantamento || $pagamentoTitulos;
         // adiantamento de cliente: o papel dele e' o vale de credito do titulo (o caixa bipa para
         // usar), enquanto tiver saldo; usado todo, sai o recibo
         $valeCredito = $soLancamento && $codtipotitulo == TipoTituloService::TIPO_ADIANTAMENTO_CLIENTE
@@ -141,8 +147,9 @@ class PagamentoReciboService
         $cidade = $empresa?->Cidade;
         $vencimento = $adiantamento ? ($linhas[0]['titulo']->vencimento ?? null) : null;
         $ate = $vencimento ? ' até ' . $vencimento->format('d/m/Y') : '';
-        // o fornecedor pessoa fisica fala no singular
+        // o fornecedor (ou o favorecido) pessoa fisica fala no singular
         $singular = (bool) ($pessoa->fisica ?? false);
+        $umTitulo = count($linhas) == 1;
         $formas = $pags->map(fn($p) => implode(' · ', array_filter([
             PagamentoService::descricao($p),
             $p->Maquineta?->apelido,
@@ -157,6 +164,7 @@ class PagamentoReciboService
             'primeiro' => $primeiro,
             'vale' => $vale,
             'adiantamento' => $adiantamento,
+            'documento' => $documento,
             'valeCredito' => $valeCredito,
             'baixa' => $baixa,
             'titulo' => $vale ? 'VALE' : ($fornecedor ? 'ADIANTAMENTO' : 'RECIBO'),
@@ -164,9 +172,10 @@ class PagamentoReciboService
             'numero' => formataCodigo($primeiro->codpagamento),
             'total' => $total,
             'extenso' => formataValorPorExtenso((float) $total, true),
-            // RECIBO: quem pagou; VALE e ADIANTAMENTO: quem recebeu e assina
-            'rotuloDe' => $vale ? 'Nome' : ($fornecedor ? 'Fornecedor' : ($entrada ? 'Recebemos de' : 'Recebi(emos) de')),
-            'de' => static::parte($adiantamento || $entrada ? $pessoa : $empresa, $entrada),
+            // RECIBO: quem pagou; VALE, ADIANTAMENTO e pagamento de titulos: quem recebeu e assina
+            'rotuloDe' => $vale ? 'Nome' : ($fornecedor ? 'Fornecedor' : ($pagamentoTitulos ? 'Favorecido'
+                : ($entrada ? 'Recebemos de' : 'Recebi(emos) de'))),
+            'de' => static::parte($documento || $entrada ? $pessoa : $empresa, $entrada),
             'referente' => $referente,
             'referentes' => $referentes,
             // vale: confissao de divida e desconto em qualquer empresa do grupo (o colaborador pode
@@ -189,7 +198,14 @@ class PagamentoReciboService
                         . ' forem devidos por esses fornecimentos ou serviços, por esta empresa ou por empresas do'
                         . ' mesmo grupo econômico. Não havendo o fornecimento ou o serviço, '
                         . ($singular ? 'comprometo-me' : 'comprometemo-nos') . ' a devolver o valor' . $ate . '.'
-                    : null),
+                    : ($pagamentoTitulos
+                        // pagamento de titulos: quem recebeu declara a quitacao do que recebeu
+                        ? ($singular ? 'Recebi de ' : 'Recebemos de ') . ($empresa->pessoa ?? '')
+                            . (($d = static::documento($empresa)) ? ', ' . $d : '')
+                            . ', a importância acima, referente ao pagamento '
+                            . ($umTitulo ? 'do título abaixo' : 'dos títulos abaixo') . ', pelo que '
+                            . ($singular ? 'dou' : 'damos') . ' quitação do valor recebido.'
+                        : null)),
             // a garantia do vale, no A5 e no cupom
             'promissoria' => $vale && $vencimento ? [
                 'vencimento' => $vencimento->format('d/m/Y'),
@@ -276,8 +292,9 @@ class PagamentoReciboService
         if ($r['valeCredito']) {
             return \Mg\Titulo\TituloValeService::pdfTitulos([$r['valeCredito']]);
         }
-        // vale e adiantamento a fornecedor tem o layout deles (o vale com a promissoria, A5 em pe)
-        return static::render(view($r['adiantamento'] ? 'pagamento.adiantamento' : 'pagamento.recibo', compact('r'))->render());
+        // vale, adiantamento a fornecedor e pagamento de titulos: pagamento/documento (o vale com a
+        // promissoria, A5 em pe)
+        return static::render(view($r['documento'] ? 'pagamento.documento' : 'pagamento.recibo', compact('r'))->render());
     }
 
     // bobina 80mm
@@ -287,7 +304,7 @@ class PagamentoReciboService
         if ($r['valeCredito']) {
             return \Mg\Titulo\TituloValeService::pdfTitulos([$r['valeCredito']]);
         }
-        $view = $r['adiantamento'] ? 'pagamento.adiantamento-termica' : 'pagamento.recibo-termica';
+        $view = $r['documento'] ? 'pagamento.documento-termica' : 'pagamento.recibo-termica';
         return static::render(view($view, compact('r'))->render(), [0.0, 0.0, 226.77, 841.89]);
     }
 

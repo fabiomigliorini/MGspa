@@ -1,7 +1,8 @@
-{{-- $r: PagamentoReciboService::montar. O que a contraparte assina: o VALE do colaborador com a NOTA
-     PROMISSORIA que o garante, numa folha A5 em pe (uma em cada metade, com a mesma regua: fonte,
-     tamanhos, caixas), e o ADIANTAMENTO a fornecedor, sem promissoria, na A5 deitada (mesmos campos,
-     letra e caixas maiores para encher a folha). --}}
+{{-- $r: PagamentoReciboService::montar. O documento do pagamento que alguem assina: o VALE do
+     colaborador com a NOTA PROMISSORIA que o garante, numa folha A5 em pe (uma em cada metade, com a
+     mesma regua: fonte, tamanhos, caixas); o ADIANTAMENTO a fornecedor e o RECIBO do pagamento de
+     titulos (com a tabela dos titulos), sem promissoria, na A5 deitada (mesmos campos, letra e caixas
+     maiores para encher a folha). --}}
 <!DOCTYPE html>
 <html>
 <head>
@@ -87,7 +88,7 @@
         }
         /* A5 deitada, sem promissoria: os mesmos campos maiores */
         .inteira table.linha td {
-            padding-top: 1.6mm;
+            padding-top: 1.2mm;
         }
         .inteira table.linha td + td {
             padding-left: 2mm;
@@ -116,8 +117,40 @@
             line-height: 1.45;
         }
         .inteira .traco {
-            margin-top: 10mm;
+            margin-top: 8mm;
             font-size: 8.5pt;
+        }
+        table.titulos {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0.4mm;
+            font-size: 9.5pt;
+        }
+        table.titulos th {
+            font-size: 7pt;
+            font-weight: normal;
+            color: #444;
+            text-align: left;
+            border-bottom: 0.6pt solid #555;
+            padding: 0.3mm 1mm;
+        }
+        table.titulos td {
+            border-bottom: 0.3pt solid #bbb;
+            padding: 0.6mm 1mm;
+        }
+        table.titulos tr.total td {
+            border-bottom: none;
+            border-top: 0.8pt solid #000;
+            font-weight: bold;
+        }
+        table.titulos .r {
+            text-align: right;
+        }
+        .inteira table.titulos {
+            font-size: 10pt;
+        }
+        .inteira table.titulos td {
+            padding: 0.4mm 1mm;
         }
     </style>
 </head>
@@ -130,19 +163,22 @@
     <div class="form">
         <table class="linha">
             <tr>
-                <td style="width: 39%"><div class="titulo">{{ $r['titulo'] }}</div></td>
+                {{-- sem prazo (pagamento de titulos), sem a caixa Vencimento --}}
+                <td style="width: {{ $r['vencimento'] ? 39 : 59 }}%"><div class="titulo">{{ $r['titulo'] }}</div></td>
                 <td style="width: 17%">
                     <div class="campo">
                         <div class="rotulo">Nº</div>
                         <div class="valor">{{ $r['numero'] }}</div>
                     </div>
                 </td>
-                <td style="width: 20%">
-                    <div class="campo">
-                        <div class="rotulo">Vencimento</div>
-                        <div class="valor">{{ $r['vencimento'] ?? '—' }}</div>
-                    </div>
-                </td>
+                @if ($r['vencimento'])
+                    <td style="width: 20%">
+                        <div class="campo">
+                            <div class="rotulo">Vencimento</div>
+                            <div class="valor">{{ $r['vencimento'] }}</div>
+                        </div>
+                    </td>
+                @endif
                 <td style="width: 24%">
                     <div class="campo">
                         <div class="rotulo">Valor</div>
@@ -196,6 +232,60 @@
                 </td>
             </tr>
         </table>
+
+        @if ($r['baixa'])
+            {{-- os titulos pagos, sempre com principal, juros, multa, desconto e total; fora da
+                 table.linha: tabela dentro de celula o Dompdf nao quebra entre paginas. A linha de
+                 total so' com mais de uma linha --}}
+            @php
+                $l = collect($r['linhas']);
+                $cols = ['juros' => 'Juros', 'multa' => 'Multa', 'desconto' => 'Desconto'];
+                $comTotal = $l->count() > 1 || $r['livre'] != 0;
+            @endphp
+            <div class="campo" style="margin-top: 1.6mm">
+                <div class="rotulo">{{ $l->count() > 1 ? 'Títulos' : 'Título' }}</div>
+                <table class="titulos">
+                    <thead>
+                        <tr>
+                            <th>Título</th>
+                            <th>Vencimento</th>
+                            <th class="r">Principal</th>
+                            @foreach ($cols as $c)
+                                <th class="r">{{ $c }}</th>
+                            @endforeach
+                            <th class="r">Total</th>
+                        </tr>
+                    </thead>
+                    @foreach ($l as $t)
+                        <tr>
+                            <td>{{ $t['titulo']->numero }}</td>
+                            <td>{{ $t['titulo']->vencimento?->format('d/m/Y') }}</td>
+                            <td class="r">{{ formataNumero($t['principal']) }}</td>
+                            @foreach ($cols as $k => $c)
+                                <td class="r">{{ formataNumero($t[$k]) }}</td>
+                            @endforeach
+                            <td class="r">{{ formataNumero($t['total']) }}</td>
+                        </tr>
+                    @endforeach
+                    @if ($r['livre'] != 0)
+                        <tr>
+                            <td colspan="6">Não amarrado</td>
+                            <td class="r">{{ formataNumero($r['livre']) }}</td>
+                        </tr>
+                    @endif
+                    @if ($comTotal)
+                        <tr class="total">
+                            <td colspan="2">Total</td>
+                            <td class="r">{{ formataNumero($l->sum('principal')) }}</td>
+                            @foreach ($cols as $k => $c)
+                                <td class="r">{{ formataNumero($l->sum($k)) }}</td>
+                            @endforeach
+                            <td class="r">{{ formataNumero($r['total']) }}</td>
+                        </tr>
+                    @endif
+                </table>
+            </div>
+        @endif
 
         <table class="linha">
             <tr>

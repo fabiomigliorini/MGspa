@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-10 21:18'
-updated_date: '2026-10-11 01:35'
+updated_date: '2026-10-11 01:44'
 labels:
   - negocios
   - contas
@@ -37,6 +37,7 @@ No PDV (negócios), o detalhe do pagamento escondia o botão do recibo térmico 
 - [x] #10 Campo 'Referente a' no pagamento (texto livre que sai no recibo/vale), preenchido no Receber/Pagar títulos e no Vale/Adiantamento e alterável pelo lápis; a observação fica interna e não sai no recibo
 - [x] #11 Adiantamento a fornecedor: mesmo padrão do vale sem promissória (A5 paisagem e cupom), fornecedor declara e assina, texto de produto ou serviço abatido no que a loja ou o grupo dever e devolução se não houver o fornecimento; singular para pessoa física
 - [x] #12 Vale de crédito (Vale Compras / Contra Vale, com o código VAL… para bipar no caixa) sai do título, desacoplado da venda: o mesmo papel na venda, na tela do título (contas) e na do pagamento; o recibo do adiantamento de cliente é esse vale; no PDV o card do título volta a ter o botão do vale
+- [x] #13 Pagamento de títulos: recibo no mesmo layout do vale e dos adiantamentos (A5 paisagem e cupom), favorecido declara a quitação e assina, tabela sempre com principal, juros, multa, desconto e total (total só com mais de um título)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -85,4 +86,10 @@ Adiantamento de cliente NÃO ganha recibo próprio (decisão do Fábio, 11/10): 
 Vale de crédito desacoplado (11/10): TituloValeService (titulos/pdf/pdfTitulos/imprimir), blade titulo/vale.blade.php (era negocio/vale) recebendo só títulos, um vale por título (nunca soma saldo); o blade decide pelo título: saldo usado em parte = Contra Vale; ligado a venda de vale compras (Titulo::NegocioVale) = Vale Compras; senão Adiantamento; itens do kit só com saldo nunca usado. Rotas GET v1/titulo/{cod}/vale (titulo.vale, auth_or_signed) e POST v1/pdv/titulo/{cod}/vale/{impressora}. Pdv\ValeService::pdf delega (a venda passa os títulos dela). Recibo do adiantamento de cliente com saldo = o vale. Front: @components/abrirVale, botão Vale no detalhe do pagamento (títulos com saldo de crédito; Imprimir na térmica no PDV), na tela do título (contas) e nos cards do PDV (ListagemTitulos voltou a mostrar: testava o tipo 3, que não existe desde a renumeração; ListagemContraVale). Testado: 650457 adiantamento, 650176 vale compras com itens, 650177 contra vale sem itens, 650085/649974 crédito, venda 4541457, rota assinada 200 / sem login 401 / sem crédito 422.
 
 Vale de crédito: crédito de devolução (tipo 212 Crédito Cliente) sai como 'Vale Devolução' quando nunca usado; usado em parte, Contra Vale (pedido do Fábio).
+
+Pagamento de títulos (11/10): layouts renomeados para pagamento/documento e documento-termica (vale, adiantamento a fornecedor, pagamento de títulos). Modelo: saída com baixa, todos os títulos no mesmo sentido, sem lançamento junto. Favorecido (doc + endereço), caixa Títulos (fora da table.linha, quebra página), Juros/Multa/Desconto só se houver, total só com >1 linha, sem rodapé; declaração de quitação do favorecido (singular PF). Vencimento condicional no cabeçalho. Conferido: 80151336, 80151648, 80174828, 80155421 (7 títulos, 2 páginas); vale e fornecedor sem mudança.
+
+Pagamento de títulos: tabela sempre com Principal, Juros, Multa, Desconto e Total, mesmo zerados (pedido do Fábio); no cupom, mini-tabela: número e vencimento numa linha, os cinco valores na de baixo.
+
+Folha deitada apertada (padding 1,2mm, tabela 10pt, traço 8mm): com Referente a + 4 títulos a assinatura caía na página 2; agora cabe. Fornecedor, um título e sem juros conferidos em 1 página.
 <!-- SECTION:NOTES:END -->

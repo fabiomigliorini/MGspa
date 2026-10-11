@@ -1,6 +1,7 @@
-{{-- $r: PagamentoReciboService::montar. O VALE (com a NOTA PROMISSORIA) e o ADIANTAMENTO a
-     fornecedor na bobina de 80mm: os mesmos campos e a mesma ordem do A5 (pagamento/adiantamento),
-     um embaixo do outro, com a linha de corte antes da promissoria. --}}
+{{-- $r: PagamentoReciboService::montar. O documento do pagamento que alguem assina na bobina de 80mm
+     (o VALE com a NOTA PROMISSORIA, o ADIANTAMENTO a fornecedor e o RECIBO do pagamento de titulos):
+     os mesmos campos e a mesma ordem do A5 (pagamento/documento), um embaixo do outro, com a linha
+     de corte antes da promissoria. --}}
 <!DOCTYPE html>
 <html>
 
@@ -92,6 +93,35 @@
             border-top: 1px dashed #000;
             margin: 10px 0 8px 0;
         }
+        table.titulos {
+            margin-top: 1px;
+        }
+
+        table.titulos th {
+            font-weight: normal;
+            font-size: 6.5pt;
+            color: #333;
+            text-align: right;
+            border-bottom: 0.6pt solid #000;
+        }
+
+        table.titulos td {
+            font-size: 7.5pt;
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        table.titulos td.numero {
+            font-size: 9pt;
+            text-align: left;
+            padding-top: 3px;
+            white-space: normal;
+        }
+
+        table.titulos tr.total td {
+            border-top: 0.8pt solid #000;
+            font-weight: bold;
+        }
     </style>
 </head>
 
@@ -104,19 +134,22 @@
     <div class="titulo">{{ $r['titulo'] }}</div>
     <table>
         <tr>
-            <td style="width: 32%">
+            {{-- sem prazo (pagamento de titulos), sem a caixa Vencimento --}}
+            <td style="width: {{ $r['vencimento'] ? 32 : 45 }}%">
                 <div class="campo">
                     <div class="rotulo">Nº</div>
                     <div class="valor">{{ $r['numero'] }}</div>
                 </div>
             </td>
-            <td style="width: 30%">
-                <div class="campo">
-                    <div class="rotulo">Vencimento</div>
-                    <div class="valor">{{ $r['vencimento'] ?? '—' }}</div>
-                </div>
-            </td>
-            <td style="width: 38%">
+            @if ($r['vencimento'])
+                <td style="width: 30%">
+                    <div class="campo">
+                        <div class="rotulo">Vencimento</div>
+                        <div class="valor">{{ $r['vencimento'] }}</div>
+                    </div>
+                </td>
+            @endif
+            <td style="width: {{ $r['vencimento'] ? 38 : 55 }}%">
                 <div class="campo">
                     <div class="rotulo">Valor</div>
                     <div class="grande">R$ {{ formataNumero($r['total']) }}</div>
@@ -147,6 +180,54 @@
         <div class="rotulo">Valor por extenso</div>
         <div class="valor"><b>{{ $r['extenso'] }}</b></div>
     </div>
+
+    @if ($r['baixa'])
+        {{-- os titulos pagos, sempre com principal, juros, multa, desconto e total (o numero e o
+             vencimento numa linha, os valores na de baixo); o total so' com mais de uma linha --}}
+        @php
+            $l = collect($r['linhas']);
+            $cols = ['principal', 'juros', 'multa', 'desconto'];
+        @endphp
+        <div class="campo">
+            <div class="rotulo">{{ $l->count() > 1 ? 'Títulos' : 'Título' }}</div>
+            <table class="titulos">
+                <tr>
+                    <th>Principal</th>
+                    <th>Juros</th>
+                    <th>Multa</th>
+                    <th>Desc.</th>
+                    <th>Total</th>
+                </tr>
+                @foreach ($l as $t)
+                    <tr>
+                        <td colspan="5" class="numero">
+                            {{ $t['titulo']->numero }} · vence {{ $t['titulo']->vencimento?->format('d/m/Y') }}
+                        </td>
+                    </tr>
+                    <tr>
+                        @foreach ($cols as $k)
+                            <td>{{ formataNumero($t[$k]) }}</td>
+                        @endforeach
+                        <td><b>{{ formataNumero($t['total']) }}</b></td>
+                    </tr>
+                @endforeach
+                @if ($r['livre'] != 0)
+                    <tr>
+                        <td colspan="4" class="numero">Não amarrado</td>
+                        <td>{{ formataNumero($r['livre']) }}</td>
+                    </tr>
+                @endif
+                @if ($l->count() > 1 || $r['livre'] != 0)
+                    <tr class="total">
+                        @foreach ($cols as $k)
+                            <td>{{ formataNumero($l->sum($k)) }}</td>
+                        @endforeach
+                        <td>{{ formataNumero($r['total']) }}</td>
+                    </tr>
+                @endif
+            </table>
+        </div>
+    @endif
 
     <div class="campo">
         <div class="rotulo">Pagamento em</div>
