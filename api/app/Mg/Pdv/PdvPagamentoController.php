@@ -172,7 +172,7 @@ class PdvPagamentoController
     public function recibo(string $codpagamentos)
     {
         $cods = array_filter(array_map('intval', explode(',', $codpagamentos)));
-        return response()->make(PdvPagamentoService::reciboPdf($cods), 200, [
+        return response()->make(\Mg\Pagamento\PagamentoReciboService::pdfTermica($cods), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="Recibo' . implode('-', $cods) . '.pdf"',
         ]);

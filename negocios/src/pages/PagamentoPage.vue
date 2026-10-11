@@ -43,7 +43,17 @@ const adiantamentoLancado = async (pags) => {
   store.buscar(true)
 }
 
+// Imprimir do cupom do recibo: manda para a térmica do PDV
 const recibo = async (pag) => {
+  if (!sNegocio.padrao.impressora) {
+    Notify.create({
+      type: 'negative',
+      message: 'Nenhuma impressora térmica selecionada!',
+      timeout: 3000,
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+    return
+  }
   await sPagamento.imprimirRecibo([pag.codpagamento])
   Notify.create({
     type: 'positive',
@@ -98,25 +108,7 @@ const recibo = async (pag) => {
     <q-dialog v-model="store.dialogDetalhe">
       <q-card flat style="width: 1000px; max-width: 95vw">
         <q-card-section>
-          <MgPagamentoDetalhe pode-estornar>
-            <template #acoes="{ pagamento }">
-              <q-btn
-                v-if="
-                  pagamento.estado !== 'C' &&
-                  pagamento.movimentos?.some((m) => !m.estornado) &&
-                  sNegocio.padrao.impressora
-                "
-                flat
-                round
-                size="sm"
-                icon="print"
-                color="grey-7"
-                @click="recibo(pagamento)"
-              >
-                <q-tooltip>Recibo na térmica</q-tooltip>
-              </q-btn>
-            </template>
-          </MgPagamentoDetalhe>
+          <MgPagamentoDetalhe pode-estornar :imprimir-termica="recibo" />
         </q-card-section>
         <q-card-actions align="right">
           <q-btn flat label="Fechar" color="primary" v-close-popup />

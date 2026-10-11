@@ -2,17 +2,21 @@
 // Detalhe de um pagamento: o fato (meio, maquineta, portadores, estado, original e contrários) e
 // as amarrações (venda, títulos, com o histórico das desfeitas), o saldo e o que sobra livre.
 // Desamarrar (todos ou um título) estorna as baixas e o pagamento continua; cancelar é só do
-// manual já desamarrado (conceito do Fábio, 09/10/2026). O pagamento vem do pagamentoListaStore;
-// ações próprias do app (recibo, editar) entram no slot `acoes`.
+// manual já desamarrado (conceito do Fábio, 09/10/2026). O pagamento vem do pagamentoListaStore.
+// Os recibos ficam sempre à mostra nos dois apps (TASK-216): o A5 e o cupom da térmica, o mesmo
+// recibo (PagamentoReciboService); o que não se aplica, o servidor recusa com a mensagem. Ações
+// próprias do app (editar) entram no slot `acoes`.
 import { computed } from 'vue'
 import { useQuasar } from 'quasar'
+import { api } from 'src/services/api'
+import { abrirPdf } from '@components/abrirPdf'
 import { pagamentoListaStore } from '@components/stores/pagamentoListaStore'
 import { formataNumero, formataData, formataTimestamp, formataCodigo } from '@components/formatters'
 import { visualPagamento } from '@components/cobranca/pagamento.js'
 import LogoPagamento from '@components/cobranca/LogoPagamento.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
-defineProps({
+const props = defineProps({
   // o app diz se o usuário pode desamarrar e cancelar (grupos); o servidor confere de novo
   podeEstornar: {
     type: Boolean,
@@ -25,6 +29,11 @@ defineProps({
   },
   // rota do portador no período (página do contas); sem ela, link para o contas
   toPortador: {
+    type: Function,
+    default: null,
+  },
+  // o app que tem térmica (PDV) manda o cupom do recibo para ela; sem isto, o cupom só abre
+  imprimirTermica: {
     type: Function,
     default: null,
   },
@@ -49,6 +58,21 @@ const urlPessoa = (cod) => (cod ? `${process.env.PESSOAS_URL}/pessoa/${cod}` : n
 const urlVenda = (cod) => `${process.env.NEGOCIOS_URL}/negocio/${cod}`
 const urlTitulo = (cod) => `${process.env.CONTAS_URL}/titulo/${cod}`
 const urlPortador = (cod, per) => `${process.env.CONTAS_URL}/portador/${cod}${per ? `/${per}` : ''}`
+
+const abrirRecibo = () =>
+  abrirPdf(api, `v1/pagamento/${pag.value.codpagamento}/recibo`, {}, { title: 'Recibo' })
+
+const abrirReciboTermica = () =>
+  abrirPdf(
+    api,
+    `v1/pdv/pagamento/recibo/${pag.value.codpagamento}`,
+    {},
+    {
+      title: 'Recibo térmica',
+      size: 'cupom',
+      onImprimir: props.imprimirTermica ? () => props.imprimirTermica(pag.value) : null,
+    },
+  )
 
 const erro = (e, padrao) =>
   $q.notify({
@@ -166,6 +190,12 @@ const cancelar = () => {
             DETALHES
             <q-space />
             <slot name="acoes" :pagamento="pag" />
+            <q-btn flat round size="sm" icon="receipt" color="grey-7" @click="abrirRecibo">
+              <q-tooltip>Recibo</q-tooltip>
+            </q-btn>
+            <q-btn flat round size="sm" icon="print" color="grey-7" @click="abrirReciboTermica">
+              <q-tooltip>Recibo térmica</q-tooltip>
+            </q-btn>
             <q-btn
               v-if="podeEstornar && pag.cancelavel"
               flat
@@ -260,6 +290,12 @@ const cancelar = () => {
                   {{ formataNumero(pag.pagamentoorigem.total) }} de
                   {{ formataData(pag.pagamentoorigem.transacao) }}
                 </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="pag.referente">
+              <q-item-section>
+                <q-item-label caption>Referente a (sai no recibo)</q-item-label>
+                <q-item-label>{{ pag.referente }}</q-item-label>
               </q-item-section>
             </q-item>
             <q-item v-for="c in pag.contrarios" :key="c.codpagamento">

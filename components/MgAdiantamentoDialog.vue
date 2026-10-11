@@ -72,6 +72,7 @@ const vazio = () => ({
   codcontacontabil: null,
   codfilial: props.filialPadrao,
   transacao: transacaoAbertura.value,
+  referente: null,
   observacao: null,
 })
 
@@ -182,6 +183,7 @@ const gravar = async () => {
       codpessoa: form.value.codpessoa,
       codcontacontabil: form.value.codcontacontabil,
       vencimento: form.value.vencimento,
+      referente: form.value.referente || null,
       observacao: form.value.observacao,
       ...(props.comData ? { transacao: form.value.transacao } : {}),
       ...(props.comFilial ? { codfilial: form.value.codfilial } : {}),
@@ -299,8 +301,16 @@ watch(
             </div>
             <div class="col-12">
               <MgInput
+                v-model="form.referente"
+                label="Referente a (sai no recibo)"
+                maxlength="255"
+                :disable="lancou"
+              />
+            </div>
+            <div class="col-12">
+              <MgInput
                 v-model="form.observacao"
-                label="Observação"
+                label="Observação (interna)"
                 maxlength="255"
                 :disable="lancou"
               />

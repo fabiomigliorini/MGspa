@@ -20,6 +20,7 @@ class PagamentoTituloStoreRequest extends FormRequest
             'codpessoa'                       => 'required|integer|exists:tblpessoa,codpessoa',
             'transacao'                       => 'nullable|date',
             'observacao'                      => 'nullable|string|max:300',
+            'referente'                       => 'nullable|string|max:255',
             'titulos'                         => 'required|array|min:1',
             'titulos.*.codtitulo'             => 'required|integer|exists:tbltitulo,codtitulo',
             'titulos.*.saldo'                 => 'required|numeric|min:0',

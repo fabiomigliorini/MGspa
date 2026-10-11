@@ -51,6 +51,7 @@ class PixUsoService
             'autorizacao' => $pix->e2eid,
             'codpessoa' => $campos['codpessoa'] ?? PixService::pessoaDoPagador($pix->cpf, $pix->cnpj),
             'observacoes' => $campos['observacoes'] ?? null,
+            'referente' => $campos['referente'] ?? null,
         ]);
         static::usar($pix, $pag);
         return $pag;

@@ -108,6 +108,7 @@ class PagamentoDetalheResource extends Resource
             'justificativa'             => $this->justificativa,
             'codperiodocolaboradoracerto' => $this->codperiodocolaboradoracerto,
             'observacoes'               => $this->observacoes,
+            'referente'                 => $this->referente,
             'codusuariocriacao'         => $this->codusuariocriacao,
             'codusuarioalteracao'       => $this->codusuarioalteracao,
             'codusuariocancelamento'    => $this->codusuariocancelamento,
@@ -148,8 +149,6 @@ class PagamentoDetalheResource extends Resource
             'livre'                     => $efetivado ? PagamentoPendenciaService::livre($this->resource) : 0,
             'pendente'                  => PagamentoPendenciaService::pendente($this->resource),
             'baixabanco'                => $baixabanco,
-            'recebimento'               => PagamentoTituloService::temRecebimento($this->resource),
-            'pagamento'                 => PagamentoTituloService::temPagamento($this->resource),
             'movimentos'                => $movimentos,
             // razao (M10 doc-3): o que caiu em cada portador; inativas =
             // desfeitas por estorno, cancelamento ou correcao

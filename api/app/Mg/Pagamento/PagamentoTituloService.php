@@ -251,7 +251,7 @@ class PagamentoTituloService
             abort(422, "O pagamento {$pag->codpagamento} tem R$ " . number_format($livre, 2, ',', '.')
                 . ' livre: ajuste o valor dos títulos.');
         }
-        // o fato fica como esta'; so' ganha a pessoa e a observacao que nao tinha
+        // o fato fica como esta'; so' ganha a pessoa, a observacao e o "referente a" que nao tinha
         $mudou = false;
         if (empty($pag->codpessoa) && !empty($dados['codpessoa'])) {
             $pag->codpessoa = (int) $dados['codpessoa'];
@@ -259,6 +259,10 @@ class PagamentoTituloService
         }
         if (empty($pag->observacoes) && !empty($dados['observacao'])) {
             $pag->observacoes = mb_substr($dados['observacao'], 0, 255);
+            $mudou = true;
+        }
+        if (empty($pag->referente) && !empty($dados['referente'])) {
+            $pag->referente = $dados['referente'];
             $mudou = true;
         }
         if ($mudou) {
@@ -294,6 +298,7 @@ class PagamentoTituloService
             return PixUsoService::pagar((int) $forma['codpix'], $total, [
                 'codpessoa' => (int) $dados['codpessoa'],
                 'observacoes' => $dados['observacao'] ?? null,
+                'referente' => $dados['referente'] ?? null,
                 'codpdv' => $pdv->codpdv ?? null,
                 'codfilial' => $pdv->codfilial ?? null,
             ]);
@@ -303,6 +308,7 @@ class PagamentoTituloService
         $base = [
             'codpessoa' => (int) $dados['codpessoa'],
             'observacoes' => $dados['observacao'] ?? null,
+            'referente' => $dados['referente'] ?? null,
             'principal' => $total,
             'juros' => 0,
             'multa' => 0,
@@ -569,7 +575,7 @@ class PagamentoTituloService
         return $pag;
     }
 
-    // O lapis do pagamento: pessoa e observacao; a data so' do pagamento
+    // O lapis do pagamento: pessoa, observacao e "referente a"; a data so' do pagamento
     // manual (a do integrado e' a do banco/maquineta), pelo alterar data
     // (periodo, razao, titulos, com justificativa na auditoria, TASK-204).
     // Meio e portador nao mudam: sao o fato; errou, desamarra e lanca de novo.
@@ -602,6 +608,7 @@ class PagamentoTituloService
         }
         $pag->codpessoa = !empty($dados['codpessoa']) ? (int) $dados['codpessoa'] : $pag->codpessoa;
         $pag->observacoes = $dados['observacao'] ?? null;
+        $pag->referente = $dados['referente'] ?? null;
         $pag->save();
         return PagamentoListaService::carregar($pag->codpagamento);
     }
@@ -713,18 +720,6 @@ class PagamentoTituloService
             ->filter(fn(MovimentoTitulo $m) => !$m->ehEstorno()
                 && (int) $m->codtipomovimentotitulo < 900
                 && !in_array($m->codmovimentotitulo, $estornadas));
-    }
-
-    // Baixou titulo a receber? (principal negativo)
-    public static function temRecebimento(Pagamento $pag): bool
-    {
-        return static::baixas($pag)->contains(fn($m) => (float) $m->principal < 0);
-    }
-
-    // Baixou titulo a pagar? (principal positivo)
-    public static function temPagamento(Pagamento $pag): bool
-    {
-        return static::baixas($pag)->contains(fn($m) => (float) $m->principal > 0);
     }
 
     // Total com o sinal do movimento, como a liquidacao antiga: negativo =

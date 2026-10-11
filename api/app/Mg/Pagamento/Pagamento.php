@@ -78,6 +78,7 @@ class Pagamento extends MgModel
         'chequecnpj',
         'chequeemitente',
         'observacoes',
+        'referente',
         'codmaquinetalote',
         'codmaquinetalotecancelamento',
         'indevido',

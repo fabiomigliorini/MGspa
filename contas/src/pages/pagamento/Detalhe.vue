@@ -1,6 +1,6 @@
 <script setup>
-// Pagamento: o detalhe compartilhado (MgPagamentoDetalhe) com o que é do contas: recibos em PDF e
-// o lápis. O lápis corrige pessoa e observação; a data só do pagamento manual (a do integrado é a
+// Pagamento: o detalhe compartilhado (MgPagamentoDetalhe, com os recibos) e o que é do contas: o
+// lápis. O lápis corrige pessoa, "referente a" (sai no recibo) e observação (interna); a data só do pagamento manual (a do integrado é a
 // do banco/maquineta) e, se muda, pede justificativa (TASK-204). Meio e portador são o fato e não
 // mudam: errou, desamarra e lança de novo.
 import { ref, computed, onMounted, watch } from 'vue'
@@ -8,7 +8,6 @@ import { useRoute } from 'vue-router'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
-import { abrirPdf } from 'src/utils/abrirPdf'
 import { configurarPagamentoLista } from 'src/utils/pagamentoLista'
 import { formataTimestampIso } from '@components/formatters'
 import MgPagamentoDetalhe from '@components/MgPagamentoDetalhe.vue'
@@ -50,15 +49,6 @@ async function carregar() {
   }
 }
 
-function abrirRecibo(rota) {
-  const titulos = {
-    recibo: 'Recibo',
-    'recibo-recebimento': 'Recibo de Recebimento',
-    'recibo-pagamento': 'Recibo de Pagamento',
-  }
-  abrirPdf(`v1/pagamento/${id.value}/${rota}`, {}, { title: titulos[rota] || 'Recibo' })
-}
-
 const dialogEditar = ref(false)
 const salvandoEdicao = ref(false)
 const editar = ref({})
@@ -67,6 +57,7 @@ function abrirDialogEditar() {
   editar.value = {
     codpessoa: pag.value.codpessoa,
     transacao: formataTimestampIso(pag.value.transacao).slice(0, 16),
+    referente: pag.value.referente ?? '',
     observacao: pag.value.observacoes ?? '',
     justificativa: '',
   }
@@ -93,6 +84,7 @@ async function salvarEdicao() {
   try {
     await store.atualizar(id.value, {
       ...editar.value,
+      referente: editar.value.referente || null,
       observacao: editar.value.observacao || null,
       justificativa: dataMudou.value ? editar.value.justificativa : null,
     })
@@ -143,41 +135,6 @@ watch(() => route.fullPath, carregar)
           >
             <q-tooltip>Editar</q-tooltip>
           </q-btn>
-          <!-- recibo só com título amarrado (o desamarrado não conta) -->
-          <template v-if="pag.estado !== 'C' && pag.movimentos?.some((m) => !m.estornado)">
-            <q-btn
-              flat
-              round
-              size="sm"
-              icon="receipt"
-              color="grey-7"
-              @click="abrirRecibo('recibo')"
-            >
-              <q-tooltip>Recibo</q-tooltip>
-            </q-btn>
-            <q-btn
-              v-if="pag.recebimento"
-              flat
-              round
-              size="sm"
-              icon="south_west"
-              color="grey-7"
-              @click="abrirRecibo('recibo-recebimento')"
-            >
-              <q-tooltip>Recibo Recebimento</q-tooltip>
-            </q-btn>
-            <q-btn
-              v-if="pag.pagamento"
-              flat
-              round
-              size="sm"
-              icon="north_east"
-              color="grey-7"
-              @click="abrirRecibo('recibo-pagamento')"
-            >
-              <q-tooltip>Recibo Pagamento</q-tooltip>
-            </q-btn>
-          </template>
         </template>
       </MgPagamentoDetalhe>
     </div>
@@ -233,9 +190,16 @@ watch(() => route.fullPath, carregar)
               </div>
               <div class="col-12">
                 <MgInput
+                  v-model="editar.referente"
+                  label="Referente a (sai no recibo)"
+                  maxlength="255"
+                />
+              </div>
+              <div class="col-12">
+                <MgInput
                   v-model="editar.observacao"
                   type="textarea"
-                  label="Observações"
+                  label="Observações (internas)"
                   autogrow
                   maxlength="300"
                 />

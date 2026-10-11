@@ -25,6 +25,7 @@ class TituloAdiantamentoStoreRequest extends FormRequest
             'codcontacontabil'                => 'required|integer|exists:tblcontacontabil,codcontacontabil',
             'vencimento'                      => 'required|date',
             'observacao'                      => 'nullable|string|max:255',
+            'referente'                       => 'nullable|string|max:255',
             'pagamentos'                      => 'required|array|min:1',
             'pagamentos.*.meio'               => 'nullable|integer',
             'pagamentos.*.total'              => 'required|numeric|min:0.01',

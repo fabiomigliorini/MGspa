@@ -147,30 +147,6 @@ class PdvPagamentoService
     }
 
     // Recibo termico (80mm) de um ou mais pagamentos do mesmo recebimento
-    public static function reciboPdf(array $codpagamentos): string
-    {
-        $pags = Pagamento::with([
-            'Pessoa',
-            'Filial.Pessoa',
-            'PortadorDestino:codportador,portador',
-            'PortadorOrigem:codportador,portador',
-            'Maquineta:codmaquineta,apelido',
-            'UsuarioCriacao:codusuario,usuario',
-            'MovimentoTituloS.Titulo:codtitulo,numero,vencimento,codtipotitulo,observacao',
-            'MovimentoTituloS.Titulo.TipoTitulo:codtipotitulo,tipotitulo',
-        ])->whereIn('codpagamento', $codpagamentos)->orderBy('codpagamento')->get();
-        if ($pags->isEmpty()) {
-            abort(404, 'Pagamento não encontrado!');
-        }
-        $html = view('pagamento.recibo-termica', compact('pags'))->render();
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html, 'UTF-8');
-        // bobina 80mm
-        $dompdf->setPaper([0.0, 0.0, 226.77, 841.89], 'portrait');
-        $dompdf->render();
-        return $dompdf->output();
-    }
-
     public static function imprimirRecibo(array $codpagamentos, string $impressora): void
     {
         $url = \URL::temporarySignedRoute('pdv.pagamento.recibo', now()->addMinutes(10), ['codpagamentos' => implode(',', $codpagamentos)]);

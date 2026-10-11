@@ -77,8 +77,9 @@ const codpessoa = ref(null)
 const transacao = ref(agora())
 // a data só fica parada se a pessoa mexeu nela
 const transacaoMexida = ref(false)
+const referente = ref('')
 const observacao = ref('')
-// data, pessoa e observação ficam no diálogo do FAB, à vista com a lista rolada
+// data, pessoa, "referente a" e observação ficam no diálogo do FAB, à vista com a lista rolada
 const dialog = ref(false)
 
 // amarrando um pagamento que já existe: os títulos têm de caber no livre e ser do sentido dele
@@ -98,6 +99,24 @@ const problemaAmarracao = computed(() => {
   }
   return null
 })
+
+// usando o PIX: quanto falta (positivo) ou passou (negativo) para os títulos somarem o valor
+// dele; à vista ao lado do FAB, que só habilita quando bate
+const faltaPix = computed(() => {
+  if (!props.pagamento?.codpix) return null
+  return Math.round((props.pagamento.livre - sBaixa.liquido) * 100) / 100
+})
+const situacaoPix = computed(() => {
+  if (faltaPix.value === null) return null
+  if (faltaPix.value > 0.005) {
+    return { cor: 'orange-8', texto: `Falta R$ ${formataNumero(faltaPix.value)} do PIX` }
+  }
+  if (faltaPix.value < -0.005) {
+    return { cor: 'red-5', texto: `Passou R$ ${formataNumero(-faltaPix.value)} do PIX` }
+  }
+  return { cor: 'green-5', texto: 'Bate com o PIX' }
+})
+const pixNaoBate = computed(() => faltaPix.value !== null && Math.abs(faltaPix.value) > 0.005)
 
 const descricao = computed(() => {
   if (sBaixa.compensacao) return 'Encontro de contas'
@@ -201,6 +220,7 @@ const gravar = async () => {
     ...props.finalizar.extras,
     // o pagamento que já existe tem a data dele (o fato)
     ...(props.comData && !props.pagamento ? { transacao: transacao.value } : {}),
+    referente: referente.value || null,
     observacao: observacao.value || null,
   })
   if (!pags) {
@@ -277,8 +297,16 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
               </div>
               <div class="col-12">
                 <MgInput
+                  v-model="referente"
+                  label="Referente a (sai no recibo)"
+                  maxlength="255"
+                  :bottom-slots="false"
+                />
+              </div>
+              <div class="col-12">
+                <MgInput
                   v-model="observacao"
-                  label="Observação"
+                  label="Observação (interna)"
                   maxlength="300"
                   :bottom-slots="false"
                 />
@@ -331,16 +359,21 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
     </q-dialog>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <q-btn
-        fab
-        :icon="sBaixa.compensacao ? 'sync_alt' : 'payments'"
-        color="primary"
-        :disable="!titulos.length || sBaixa.finalizando"
-        :loading="sBaixa.finalizando"
-        @click="abrirDialog"
-      >
-        <q-tooltip>{{ descricao }}</q-tooltip>
-      </q-btn>
+      <div class="row items-center no-wrap">
+        <q-chip v-if="situacaoPix" :color="situacaoPix.cor" text-color="white" class="q-mr-sm">
+          {{ situacaoPix.texto }}
+        </q-chip>
+        <q-btn
+          fab
+          :icon="sBaixa.compensacao ? 'sync_alt' : 'payments'"
+          color="primary"
+          :disable="!titulos.length || sBaixa.finalizando || pixNaoBate"
+          :loading="sBaixa.finalizando"
+          @click="abrirDialog"
+        >
+          <q-tooltip>{{ descricao }}</q-tooltip>
+        </q-btn>
+      </div>
     </q-page-sticky>
 
     <MgCobrancaDialog />
