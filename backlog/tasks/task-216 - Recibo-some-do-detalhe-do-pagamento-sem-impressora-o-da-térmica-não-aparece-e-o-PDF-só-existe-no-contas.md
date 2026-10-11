@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-10 21:18'
-updated_date: '2026-10-11 01:09'
+updated_date: '2026-10-11 01:17'
 labels:
   - negocios
   - contas
@@ -78,4 +78,6 @@ Promissória: o branco do beneficiário volta para a linha do 'NOTA PROMISSÓRIA
 Adiantamento a fornecedor (11/10): layouts do vale renomeados para pagamento/adiantamento e adiantamento-termica (servem vale e fornecedor; título, rótulo e vencimento vêm do service). Sem promissória (sugestão aceita pelo Fábio). Fornecedor com endereço na caixa. Conferido: #80248399 (PF, singular) e simulação PJ em memória (plural).
 
 Adiantamento a fornecedor em A5 paisagem (pedido do Fábio: sem promissória não precisa de retrato): @page pelo $r['promissoria'], classe .inteira com os mesmos campos maiores (título 22pt, valor 12pt, texto 10pt); vale segue em retrato (.meia).
+
+Adiantamento de cliente NÃO ganha recibo próprio (decisão do Fábio, 11/10): o documento dele é o vale de crédito do caixa (Vale Compras / Contra Vale, saldo do título e código de barras para bipar no PDV). Variante 'cliente' desfeita. Ficaram dois ajustes gerais: autorização do pagamento numa linha miúda embaixo da forma (o E2E do PIX é comprido) e CPF/CNPJ sem quebrar no hífen; e o layout de adiantamento só quando o pagamento inteiro é o lançamento (sem baixa junto e sem sobra livre), senão recibo com a tabela.
 <!-- SECTION:NOTES:END -->

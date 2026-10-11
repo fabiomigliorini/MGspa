@@ -108,14 +108,19 @@ class PagamentoReciboService
         $empresa = $primeiro->Filial?->Pessoa;
         $pessoa = $primeiro->Pessoa ?? $primeiro->Negocio?->Pessoa;
 
-        $vale = $codtipotitulo == TipoTituloService::TIPO_VALE_COLABORADOR;
-        $fornecedor = $codtipotitulo == TipoTituloService::TIPO_ADIANTAMENTO_FORNECEDOR;
-        // o que a contraparte assina (vale e adiantamento a fornecedor): layout pagamento/adiantamento
-        $adiantamento = $vale || $fornecedor;
         // baixa de titulos: a tabela (principal, juros, multa, desconto, total) entra no recibo;
         // so' o vale/adiantamento lancado, o titulo e' o proprio lancamento e fica no rodape
         $baixados = collect($linhas)->whereNull('lancado')->count();
         $baixa = $baixados > 0;
+        $total = $pags->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->sum('total');
+        // o que entrou e nao esta amarrado a titulo: o detalhe fecha com o valor do recibo
+        $livre = $linhas ? round($total - collect($linhas)->sum('total'), 2) : 0;
+        // o pagamento inteiro e' o lancamento (sem baixa de titulo junto, sem sobra livre): layout
+        // pagamento/adiantamento; senao, o recibo com a tabela
+        $soLancamento = !$baixa && $livre == 0;
+        $vale = $soLancamento && $codtipotitulo == TipoTituloService::TIPO_VALE_COLABORADOR;
+        $fornecedor = $soLancamento && $codtipotitulo == TipoTituloService::TIPO_ADIANTAMENTO_FORNECEDOR;
+        $adiantamento = $vale || $fornecedor;
         $referente = $adiantamento ? null : (implode(' · ', array_filter([
             $baixa
                 ? ($entrada ? 'Recebimento' : 'Pagamento') . ($baixados > 1 ? ' dos títulos abaixo' : ' do título abaixo')
@@ -133,15 +138,14 @@ class PagamentoReciboService
         $ate = $vencimento ? ' até ' . $vencimento->format('d/m/Y') : '';
         // o fornecedor pessoa fisica fala no singular
         $singular = (bool) ($pessoa->fisica ?? false);
-        $total = $pags->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->sum('total');
-
         $formas = $pags->map(fn($p) => implode(' · ', array_filter([
             PagamentoService::descricao($p),
             $p->Maquineta?->apelido,
             $p->parcelas > 1 ? $p->parcelas . 'x' : null,
-            $p->autorizacao ? 'aut. ' . $p->autorizacao : null,
             $p->estado == PagamentoService::ESTADO_CANCELADO ? 'ESTORNADO' : null,
         ])) . ($pags->count() > 1 ? ' R$ ' . formataNumero($p->total) : ''))->all();
+        // a autorizacao vai miuda, embaixo da forma (o E2E do PIX e' comprido)
+        $autorizacoes = $pags->pluck('autorizacao')->filter()->map(fn($a) => 'aut. ' . $a)->values()->all();
 
         return [
             'pags' => $pags,
@@ -190,9 +194,9 @@ class PagamentoReciboService
                 'pagavel' => $cidade ? $cidade->cidade . '/' . ($cidade->Estado->sigla ?? '') : '',
             ] : null,
             'formas' => $formas,
+            'autorizacoes' => $autorizacoes,
             'assinante' => static::parte($entrada ? $empresa : $pessoa, false),
-            // o que entrou e nao esta amarrado a titulo: o detalhe fecha com o valor do recibo
-            'livre' => $linhas ? round($total - collect($linhas)->sum('total'), 2) : 0,
+            'livre' => $livre,
             'linhas' => $linhas,
             'transacao' => $primeiro->transacao,
             'localData' => ($cidade ? $cidade->cidade . '/' . ($cidade->Estado->sigla ?? '') . ', ' : '')
@@ -263,7 +267,7 @@ class PagamentoReciboService
     public static function pdf(int $codpagamento): string
     {
         $r = static::montar(static::carregar([$codpagamento]));
-        // vale e adiantamento a fornecedor tem o layout deles: A5 em pe (o vale com a promissoria)
+        // vale e adiantamento a fornecedor tem o layout deles (o vale com a promissoria, A5 em pe)
         return static::render(view($r['adiantamento'] ? 'pagamento.adiantamento' : 'pagamento.recibo', compact('r'))->render());
     }
 

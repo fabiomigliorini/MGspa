@@ -185,6 +185,9 @@
     <div class="campo">
         <div class="rotulo">Pagamento em</div>
         <div class="valor">{{ implode(' + ', $r['formas']) }}</div>
+        @if ($r['autorizacoes'])
+            <div class="miudo">{{ implode(' · ', $r['autorizacoes']) }}</div>
+        @endif
     </div>
 
     <div class="campo">

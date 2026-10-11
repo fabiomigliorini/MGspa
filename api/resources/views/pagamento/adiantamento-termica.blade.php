@@ -151,6 +151,9 @@
     <div class="campo">
         <div class="rotulo">Pagamento em</div>
         <div class="valor">{{ implode(' + ', $r['formas']) }}</div>
+        @if ($r['autorizacoes'])
+            <div class="miudo">{{ implode(' · ', $r['autorizacoes']) }}</div>
+        @endif
     </div>
 
     <div class="campo">
@@ -161,8 +164,8 @@
     <div class="campo">
         <div class="rotulo">Declaração</div>
         <div class="texto">
-            {{-- o Dompdf quebra a linha no hifen do "comprometo-me" e do "devolve-lo" --}}
-            {!! preg_replace('/(comprometo-me|comprometemo-nos|devolvê-lo)/u', '<span style="white-space: nowrap">$1</span>', e($r['declaracao'])) !!}
+            {{-- o Dompdf quebra a linha no hifen do "comprometo-me", do "devolve-lo" e do CPF/CNPJ --}}
+            {!! preg_replace('/(comprometo-me|comprometemo-nos|devolvê-lo|\d[\d.\/]*-\d{2})/u', '<span style="white-space: nowrap">$1</span>', e($r['declaracao'])) !!}
             @if ($np)
                 Em garantia, emito a nota promissória abaixo.
             @endif
