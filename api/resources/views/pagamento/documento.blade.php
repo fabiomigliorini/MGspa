@@ -194,6 +194,9 @@
                     <div class="campo">
                         <div class="rotulo">{{ $r['rotuloDe'] }}</div>
                         <div class="valor"><b>{{ $r['de']['nome'] ?? '' }}</b>
+                            @if ($r['de']['codigo'] ?? null)
+                                <span class="miudo">{{ $r['de']['codigo'] }}</span>
+                            @endif
                             @if ($r['de']['documento'] ?? null)
                                 <span class="miudo">· {{ $r['de']['documento'] }}</span>
                             @endif

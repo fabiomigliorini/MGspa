@@ -160,7 +160,11 @@
 
     <div class="campo">
         <div class="rotulo">{{ $r['rotuloDe'] }}</div>
-        <div class="valor"><b>{{ $r['de']['nome'] ?? '' }}</b></div>
+        <div class="valor"><b>{{ $r['de']['nome'] ?? '' }}</b>
+            @if ($r['de']['codigo'] ?? null)
+                <span class="miudo">{{ $r['de']['codigo'] }}</span>
+            @endif
+        </div>
         @if ($r['de']['documento'] ?? null)
             <div class="miudo">{{ $r['de']['documento'] }}</div>
         @endif

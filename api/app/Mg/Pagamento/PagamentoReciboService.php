@@ -17,12 +17,6 @@ use Mg\Titulo\TipoTituloService;
  */
 class PagamentoReciboService
 {
-    // o "Referente a" dos adiantamentos, pelo tipo do titulo lancado com o pagamento
-    const REFERENTE_TIPO = [
-        TipoTituloService::TIPO_ADIANTAMENTO_FORNECEDOR => 'Adiantamento, a ser abatido em fornecimentos futuros',
-        TipoTituloService::TIPO_ADIANTAMENTO_CLIENTE => 'Adiantamento, a ser abatido em compras futuras',
-    ];
-
     const MESES = [1 => 'janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto',
         'setembro', 'outubro', 'novembro', 'dezembro'];
 
@@ -125,22 +119,18 @@ class PagamentoReciboService
         // encontro de contas, outro modelo); quem recebeu declara a quitacao e assina
         $pagamentoTitulos = $baixa && !$entrada && !$lancados
             && collect($linhas)->every(fn($l) => $l['total'] > 0);
+        // recebimento de titulos: o cliente pagou; a loja declara a quitacao e assina
+        $recebimentoTitulos = $baixa && $entrada && !$lancados
+            && collect($linhas)->every(fn($l) => $l['total'] > 0);
         // o que alguem assina no layout pagamento/documento (A5 e cupom)
-        $documento = $adiantamento || $pagamentoTitulos;
+        $documento = $adiantamento || $pagamentoTitulos || $recebimentoTitulos;
         // adiantamento de cliente: o papel dele e' o vale de credito do titulo (o caixa bipa para
         // usar), enquanto tiver saldo; usado todo, sai o recibo
         $valeCredito = $soLancamento && $codtipotitulo == TipoTituloService::TIPO_ADIANTAMENTO_CLIENTE
             && (float) ($linhas[0]['titulo']->saldo ?? 0) < 0
             ? (int) $linhas[0]['titulo']->codtitulo : null;
-        $referente = $adiantamento ? null : (implode(' · ', array_filter([
-            $baixa
-                ? ($entrada ? 'Recebimento' : 'Pagamento') . ($baixados > 1 ? ' dos títulos abaixo' : ' do título abaixo')
-                : null,
-            $lancados ? (static::REFERENTE_TIPO[$codtipotitulo] ?? implode(' / ', array_keys($lancados))) : null,
-            !$linhas && !empty($primeiro->codnegocio) ? 'Venda ' . formataCodigo($primeiro->codnegocio) : null,
-        ])) ?: null);
-
-        // o "Referente a" escrito no pagamento (a observacao e' interna e nao sai no recibo)
+        // o "Referente a" e' o que esta' escrito no pagamento, como esta'; vazio, nao sai (a
+        // observacao e' interna e nao sai no recibo)
         $referentes = $pags->pluck('referente')->map(fn($o) => trim((string) $o))
             ->filter()->unique()->values()->all();
 
@@ -174,9 +164,8 @@ class PagamentoReciboService
             'extenso' => formataValorPorExtenso((float) $total, true),
             // RECIBO: quem pagou; VALE, ADIANTAMENTO e pagamento de titulos: quem recebeu e assina
             'rotuloDe' => $vale ? 'Nome' : ($fornecedor ? 'Fornecedor' : ($pagamentoTitulos ? 'Favorecido'
-                : ($entrada ? 'Recebemos de' : 'Recebi(emos) de'))),
+                : ($recebimentoTitulos ? 'Cliente' : ($entrada ? 'Recebemos de' : 'Recebi(emos) de')))),
             'de' => static::parte($documento || $entrada ? $pessoa : $empresa, $entrada),
-            'referente' => $referente,
             'referentes' => $referentes,
             // vale: confissao de divida e desconto em qualquer empresa do grupo (o colaborador pode
             // ser registrado num CNPJ e pegar o vale em outro, ou ser terceirizado)
@@ -205,7 +194,14 @@ class PagamentoReciboService
                             . ', a importância acima, referente ao pagamento '
                             . ($umTitulo ? 'do título abaixo' : 'dos títulos abaixo') . ', pelo que '
                             . ($singular ? 'dou' : 'damos') . ' quitação do valor recebido.'
-                        : null)),
+                        : ($recebimentoTitulos
+                            // recebimento de titulos: a loja recebeu, declara a quitacao e assina
+                            ? 'Recebemos de ' . ($pessoa->pessoa ?? '')
+                                . (($d = static::documento($pessoa)) ? ', ' . $d : '')
+                                . ', a importância acima, referente ao pagamento '
+                                . ($umTitulo ? 'do título abaixo' : 'dos títulos abaixo')
+                                . ', pelo que damos quitação do valor recebido.'
+                            : null))),
             // a garantia do vale, no A5 e no cupom
             'promissoria' => $vale && $vencimento ? [
                 'vencimento' => $vencimento->format('d/m/Y'),
@@ -292,8 +288,8 @@ class PagamentoReciboService
         if ($r['valeCredito']) {
             return \Mg\Titulo\TituloValeService::pdfTitulos([$r['valeCredito']]);
         }
-        // vale, adiantamento a fornecedor e pagamento de titulos: pagamento/documento (o vale com a
-        // promissoria, A5 em pe)
+        // vale, adiantamento a fornecedor, pagamento e recebimento de titulos: pagamento/documento (o
+        // vale com a promissoria, A5 em pe)
         return static::render(view($r['documento'] ? 'pagamento.documento' : 'pagamento.recibo', compact('r'))->render());
     }
 

@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-10 21:18'
-updated_date: '2026-10-11 01:44'
+updated_date: '2026-10-11 22:57'
 labels:
   - negocios
   - contas
@@ -38,6 +38,7 @@ No PDV (negócios), o detalhe do pagamento escondia o botão do recibo térmico 
 - [x] #11 Adiantamento a fornecedor: mesmo padrão do vale sem promissória (A5 paisagem e cupom), fornecedor declara e assina, texto de produto ou serviço abatido no que a loja ou o grupo dever e devolução se não houver o fornecimento; singular para pessoa física
 - [x] #12 Vale de crédito (Vale Compras / Contra Vale, com o código VAL… para bipar no caixa) sai do título, desacoplado da venda: o mesmo papel na venda, na tela do título (contas) e na do pagamento; o recibo do adiantamento de cliente é esse vale; no PDV o card do título volta a ter o botão do vale
 - [x] #13 Pagamento de títulos: recibo no mesmo layout do vale e dos adiantamentos (A5 paisagem e cupom), favorecido declara a quitação e assina, tabela sempre com principal, juros, multa, desconto e total (total só com mais de um título)
+- [x] #14 Recebimento de títulos: recibo no mesmo layout, cliente com código, documento e endereço, a loja declara a quitação e assina; 'Referente a' sai como está no campo e, vazio, não sai em nenhum documento
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -92,4 +93,8 @@ Pagamento de títulos (11/10): layouts renomeados para pagamento/documento e doc
 Pagamento de títulos: tabela sempre com Principal, Juros, Multa, Desconto e Total, mesmo zerados (pedido do Fábio); no cupom, mini-tabela: número e vencimento numa linha, os cinco valores na de baixo.
 
 Folha deitada apertada (padding 1,2mm, tabela 10pt, traço 8mm): com Referente a + 4 títulos a assinatura caía na página 2; agora cabe. Fornecedor, um título e sem juros conferidos em 1 página.
+
+Recebimento de títulos (11/10): entrada com baixa, todos no mesmo sentido, sem lançamento junto; caixa Cliente (código, doc, endereço — o código passou a aparecer na caixa do documento), declaração 'Recebemos de {cliente}, {doc}, a importância acima, referente ao pagamento do(s) título(s) abaixo, pelo que damos quitação do valor recebido', assinatura da loja. Recebimento + adiantamento de cliente junto (ex. 80247795) segue no recibo antigo. Conferido 80248436, 80248409, 80246812.
+
+Referente a simples (pedido do Fábio, 11/10): sai exatamente o texto do campo; vazio, a caixa não aparece, em todos os layouts. Saiu o texto automático do recibo antigo (Recebimento/Pagamento do título abaixo, Adiantamento…, Venda #…) e o '—' (REFERENTE_TIPO e $r['referente'] removidos).
 <!-- SECTION:NOTES:END -->

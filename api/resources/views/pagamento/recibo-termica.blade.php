@@ -134,10 +134,12 @@
         <div class="valor"><b>{{ $r['extenso'] }}</b></div>
     </div>
 
-    <div class="campo">
-        <div class="rotulo">Referente a</div>
-        <div class="valor">{{ implode(' · ', array_filter([$r['referente'], ...$r['referentes']])) ?: '—' }}</div>
-    </div>
+    @if ($r['referentes'])
+        <div class="campo">
+            <div class="rotulo">Referente a</div>
+            <div class="valor">{{ implode(' · ', $r['referentes']) }}</div>
+        </div>
+    @endif
 
     @if ($r['baixa'])
         @php $soma = collect($r['linhas']); @endphp

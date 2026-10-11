@@ -158,18 +158,18 @@
             </tr>
         </table>
 
-        <table class="linha">
-            <tr>
-                <td>
-                    <div class="campo">
-                        <div class="rotulo">Referente a</div>
-                        <div class="valor">
-                            {{ implode(' · ', array_filter([$r['referente'], ...$r['referentes']])) ?: '—' }}
+        @if ($r['referentes'])
+            <table class="linha">
+                <tr>
+                    <td>
+                        <div class="campo">
+                            <div class="rotulo">Referente a</div>
+                            <div class="valor">{{ implode(' · ', $r['referentes']) }}</div>
                         </div>
-                    </div>
-                </td>
-            </tr>
-        </table>
+                    </td>
+                </tr>
+            </table>
+        @endif
 
         @if ($r['baixa'])
             @php $soma = collect($r['linhas']); @endphp
