@@ -3,11 +3,11 @@ id: TASK-219
 title: >-
   PIX que cai na conta vira pagamento sozinho e não há onde ver os que ainda não
   foram usados
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-11 00:33'
-updated_date: '2026-10-11 00:59'
+updated_date: '2026-10-11 01:16'
 labels:
   - contas
   - api
@@ -38,7 +38,7 @@ Campos no PIX (tblpix), no padrão de criacao/alteracao: utilizacao (quando foi 
 - [x] #5 Marcar como usado e Desmarcar à mão, só no PIX sem pagamento ligado
 - [x] #6 Wizard com PIX QR fora de venda: a confirmação do banco não cria pagamento; o pagamento nasce ao gravar e, se o wizard fechar antes, o PIX fica sem uso na tela PIX
 - [x] #7 Cancelar um pagamento com PIX (inclusive pelo cancelamento da venda) devolve o PIX para a lista de sem uso
-- [ ] #8 SQL de go-live com os campos novos marcando os PIX antigos como usados; no dev, os pagamentos avulsos criados pela importação apagados
+- [x] #8 SQL de go-live com os campos novos marcando os PIX antigos como usados; no dev, os pagamentos avulsos criados pela importação apagados
 - [x] #9 Receber Títulos com o PIX: mostra quanto falta (ou quanto passou) do valor do PIX enquanto se escolhem os títulos, e o botão de gravar só habilita quando bate
 <!-- AC:END -->
 
@@ -66,4 +66,6 @@ A limpeza dos pagamentos avulsos que a importação criou foi bloqueada pela per
 
 ## Atenção no dev
 O banco do dev não tem as cobranças da produção. Os PIX QR das vendas da produção que o dev importa do Sicredi (~400/dia) aparecem como sem uso no dev. Em produção eles acham a cobrança e pagam a venda.
+
+Limpeza do dev feita em 10/10/2026: 1.182 pagamentos avulsos apagados, com as linhas deles no razão; os 4 que os testes amarraram ficaram. Os PIX deles continuam usados, sem pagamento. O saldo dos períodos abertos foi recalculado (8 períodos).
 <!-- SECTION:NOTES:END -->
