@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-11 01:37'
-updated_date: '2026-10-11 22:37'
+updated_date: '2026-10-11 22:51'
 labels:
   - contas
   - negocios
@@ -57,4 +57,11 @@ Prioridade alta: mesma frente do go-live do caixa que a TASK-219.
 Ficaram, como pagamentos comuns, os dois Stone avulsos (80248307, 80248308) que o código antigo criou e duas sobras de teste (80247735 PIX R$ 1, 80247875 dinheiro R$ 3).
 
 Limpeza do dev (11/10/2026): cancelados os Stone 80248307 e 80248308 e o PIX 80247735 (o PIX 264901 voltou a ficar sem uso). O 80247875 (dinheiro R$ 3, teste) ficou: está no período fechado do Caixa Atacado (10/10 16:53) e cancelar exige reabrir o período.
+
+## Bateria de regressão antes do go-live (11/10/2026)
+- **Serviço**, 13 de 13 ok (tinker, transação desfeita): baixa em dinheiro no cofre, por transferência e por compensação; forma antiga com codpagamento recusada; adiantamento em dinheiro; vale colaborador; PIX QR de venda (cria o pagamento e marca o PIX); Stone e SafraPay de venda reprocessados mantêm o pagamento; devolução no cartão; autorizador com PIX e Stone; detalhe e listagem de pagamentos; listagem PIX por uso.
+- **API**: PIX já usado e pedido Stone de venda recusados com a mensagem, sem gravar nada; PIX inexistente barrado na validação; rotas removidas respondem 404.
+- **Telas** do contas (pagamentos, detalhes, Receber Títulos, PIX, títulos) e do PDV (pagamentos, Receber Título): sem erro de console nem de API.
+- **Lint**: completo no contas e no negocios, sem erro.
+- **Corrigido**: dois comentários que ainda citavam o Já recebido (FormaPortador e PdvNegocioPagamentoService).
 <!-- SECTION:NOTES:END -->

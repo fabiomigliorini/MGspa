@@ -288,8 +288,8 @@ class PdvNegocioPagamentoService
             'total' => $pag->total,
             'valortroco' => $pag->valortroco,
             // o PDV nao grava nem apaga: veio de integracao, ou e' um pagamento
-            // que ja' aconteceu amarrado na venda aberta ("Ja' recebido"). Na
-            // venda reaberta o manual muda pelo estado (TASK-30)
+            // ja' efetivado na venda aberta. Na venda reaberta o manual muda
+            // pelo estado (TASK-30)
             'integracao' => $pag->ehIntegrado() || (
                 $pag->estado == PagamentoService::ESTADO_EFETIVADO
                 && optional($pag->Negocio)->codnegociostatus == NegocioService::STATUS_ABERTO

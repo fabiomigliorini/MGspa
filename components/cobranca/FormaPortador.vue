@@ -2,7 +2,7 @@
 // Passo do wizard no contas: de/para qual portador o dinheiro anda.
 // Dinheiro: cofre, troco ou Caixa Financeiro (o troco e o desconto já vêm calculados em `base`).
 // Banco: como andou (transferência/TED, depósito, boleto) → conta. PIX pela chave não: é só da
-// venda (parcela a receber); o PIX que entra chega pelo banco e se amarra pelo "Já recebido".
+// venda (parcela a receber); o PIX que entra chega pelo banco e se usa pela tela PIX.
 // Cartão da empresa: qual cartão (portador de cartão de crédito da empresa).
 import { ref, computed } from 'vue'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
