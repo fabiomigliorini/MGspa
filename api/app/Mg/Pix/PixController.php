@@ -3,6 +3,7 @@
 namespace Mg\Pix;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 use Carbon\Carbon;
@@ -209,9 +210,56 @@ class PixController
             $valorinicial,
             $valorfinal,
             $horarioinicial,
-            $horariofinal
+            $horariofinal,
+            $request->uso ?? 'todos'
         );
         return response()->json($res, 200);
+    }
+
+    // o PIX para usar (Receber Titulos, adiantamento): valor, data, conta, a
+    // pessoa do CPF/CNPJ do pagador e se ja' foi usado (TASK-219)
+    public function pix(Request $request, int $codpix)
+    {
+        Autorizador::autoriza(['Administrador', 'Financeiro', 'Caixa']);
+        return ['data' => static::uso(Pix::findOrFail($codpix))];
+    }
+
+    // marcar e desmarcar 'a mao, no PIX sem pagamento ligado
+    public function marcar(Request $request, int $codpix)
+    {
+        Autorizador::autoriza(['Administrador', 'Financeiro', 'Caixa']);
+        DB::beginTransaction();
+        $pix = PixUsoService::marcar($codpix);
+        DB::commit();
+        return ['data' => static::uso($pix->fresh())];
+    }
+
+    public function desmarcar(Request $request, int $codpix)
+    {
+        Autorizador::autoriza(['Administrador', 'Financeiro', 'Caixa']);
+        DB::beginTransaction();
+        $pix = PixUsoService::desmarcar($codpix);
+        DB::commit();
+        return ['data' => static::uso($pix->fresh())];
+    }
+
+    private static function uso(Pix $pix): array
+    {
+        $codpessoa = PixService::pessoaDoPagador($pix->cpf, $pix->cnpj);
+        return [
+            'codpix' => $pix->codpix,
+            'valor' => (float) $pix->valor,
+            'horario' => optional($pix->horario)->format('Y-m-d\TH:i:s'),
+            'nome' => $pix->nome,
+            'cpf' => $pix->cpf,
+            'cnpj' => $pix->cnpj,
+            'codportador' => $pix->codportador,
+            'portador' => optional($pix->Portador)->portador,
+            'codpessoa' => $codpessoa,
+            'utilizacao' => optional($pix->utilizacao)->format('Y-m-d\TH:i:s'),
+            'usuarioutilizacao' => optional($pix->UsuarioUtilizacao)->usuario,
+            'codpagamento' => $pix->codpagamento,
+        ];
     }
 
 

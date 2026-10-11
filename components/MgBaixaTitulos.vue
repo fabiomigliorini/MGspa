@@ -6,7 +6,8 @@
 // banco/maquineta confirma). Títulos que se anulam não pedem forma: é o encontro de contas. Cada
 // app informa onde busca os títulos, as formas, o contexto do wizard (PDV ou contas) e para onde
 // manda a baixa. Com `pagamento`, a baixa amarra um pagamento que já existe (vindo de "Pagamentos
-// não resolvidos").
+// não resolvidos") ou usa o PIX que caiu na conta (vindo da tela PIX, TASK-219: inteiro, na data
+// e na conta dele).
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
@@ -56,7 +57,8 @@ const props = defineProps({
     type: String,
     default: null,
   },
-  // pagamento que já existe, para amarrar: { codpagamento, livre, descricao, codpessoa }
+  // pagamento que já existe, para amarrar: { codpagamento, livre, descricao, codpessoa }; ou o
+  // PIX sem uso: { codpix, livre (o valor do PIX), descricao, codpessoa, entrada }
   pagamento: {
     type: Object,
     default: null,
@@ -86,6 +88,10 @@ const problemaAmarracao = computed(() => {
     return props.pagamento.entrada
       ? 'Este pagamento é uma entrada de dinheiro: selecione títulos a receber.'
       : 'Este pagamento é uma saída de dinheiro: selecione títulos a pagar.'
+  }
+  // o PIX entra inteiro: maior que os títulos, lança como adiantamento
+  if (props.pagamento.codpix && Math.abs(sBaixa.totalLiquido - props.pagamento.livre) > 0.005) {
+    return `Os títulos somam R$ ${formataNumero(sBaixa.totalLiquido)} e o PIX é de R$ ${formataNumero(props.pagamento.livre)}: precisam somar o valor dele. Se ele for maior, lance como adiantamento.`
   }
   if (sBaixa.totalLiquido > (props.pagamento.livre ?? 0) + 0.005) {
     return `Os títulos somam R$ ${formataNumero(sBaixa.totalLiquido)} e o pagamento tem R$ ${formataNumero(props.pagamento.livre)} livre.`
@@ -121,7 +127,8 @@ const aplicarPagamento = () => {
     return
   }
   sBaixa.adicionar({
-    codpagamento: props.pagamento.codpagamento,
+    codpagamento: props.pagamento.codpagamento ?? null,
+    codpix: props.pagamento.codpix ?? null,
     total: sBaixa.totalLiquido,
     descricao: props.pagamento.descricao,
   })
@@ -197,9 +204,9 @@ const gravar = async () => {
     observacao: observacao.value || null,
   })
   if (!pags) {
-    // não gravou: volta a escolher a forma; a integrada já confirmada (o dinheiro entrou) e o
-    // pagamento que veio para amarrar ficam para o Gravar
-    if (!sBaixa.forma?.codpagamento) sBaixa.remover()
+    // não gravou: volta a escolher a forma; a integrada já confirmada (o dinheiro entrou), o
+    // pagamento que veio para amarrar e o PIX ficam para o Gravar
+    if (!sBaixa.forma?.codpagamento && !sBaixa.forma?.codpix) sBaixa.remover()
     return
   }
   notificar(
@@ -292,7 +299,10 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
           <q-card-section v-if="problemaAmarracao" class="text-caption text-negative">
             {{ problemaAmarracao }}
           </q-card-section>
-          <q-card-section v-if="pagamento" class="text-caption text-grey-7">
+          <q-card-section v-if="pagamento?.codpix" class="text-caption text-grey-7">
+            Usando o {{ pagamento.descricao }}
+          </q-card-section>
+          <q-card-section v-else-if="pagamento" class="text-caption text-grey-7">
             Amarrando o pagamento #{{ pagamento.codpagamento }} (livre R$
             {{ formataNumero(pagamento.livre) }})
           </q-card-section>

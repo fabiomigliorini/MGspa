@@ -10,6 +10,8 @@ use Mg\Cheque\ChequeService;
 use Mg\Cheque\Cmc7\Cmc7;
 use Mg\Maquineta\Maquineta;
 use Mg\Pdv\Pdv;
+use Mg\Pix\Pix;
+use Mg\Pix\PixUsoService;
 use Mg\Portador\LancamentoDataService;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorMovimentoService;
@@ -119,7 +121,8 @@ class PagamentoTituloService
      * saldo, juros, multa, desconto, total) e pagamentos[] com UMA forma
      * (meio, total, codportador, codmaquineta, bandeira, autorizacao,
      * parcelas, cheque; codpagamento = pagamento que ja' existe, com saldo
-     * livre: cobranca integrada, PIX, orfao; codpagamentoorigem =
+     * livre: cobranca integrada, orfao; codpix = o PIX que caiu na conta,
+     * usado inteiro; codpagamentoorigem =
      * cancelamento no cartao / devolucao de PIX). Titulos que se anulam nao
      * levam forma: viram um encontro de contas (total zero no portador
      * Encontro de Contas).
@@ -282,6 +285,20 @@ class PagamentoTituloService
             return static::pagamentoExistente((int) $forma['codpagamento'], $total, $entrada, $dados);
         }
 
+        // o PIX que caiu na conta (tela PIX, PIX QR do wizard): o pagamento
+        // nasce com ele, inteiro, na data e na conta dele (TASK-219)
+        if (!empty($forma['codpix'])) {
+            if (!$entrada) {
+                abort(422, 'O PIX recebido só paga título a receber ou adiantamento de cliente!');
+            }
+            return PixUsoService::pagar((int) $forma['codpix'], $total, [
+                'codpessoa' => (int) $dados['codpessoa'],
+                'observacoes' => $dados['observacao'] ?? null,
+                'codpdv' => $pdv->codpdv ?? null,
+                'codfilial' => $pdv->codfilial ?? null,
+            ]);
+        }
+
         $meio = (int) ($forma['meio'] ?? 0);
         $base = [
             'codpessoa' => (int) $dados['codpessoa'],
@@ -369,6 +386,9 @@ class PagamentoTituloService
     {
         if (!empty($forma['codpagamento'])) {
             return optional(Pagamento::find((int) $forma['codpagamento']))->portadorDoPagamento();
+        }
+        if (!empty($forma['codpix'])) {
+            return optional(Pix::find((int) $forma['codpix']))->Portador;
         }
         $meio = (int) ($forma['meio'] ?? 0);
         if ($meio == PagamentoService::MEIO_COMPENSACAO) {

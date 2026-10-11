@@ -641,12 +641,15 @@ class PdvNegocioService
         $foto = OcorrenciaService::fotoCancelamento($negocio);
 
         // pagamentos da venda: o manual (dinheiro, cheque, cartao digitado,
-        // vale) e' cancelado junto (o dinheiro voltou na hora); o integrado
-        // (PIX, Stone, SafraPay) nunca: o dinheiro entrou de verdade, ele sai
-        // da venda e fica orfao, em "Pagamentos nao resolvidos", para amarrar
-        // ou devolver (conceito do Fabio, 09/10/2026)
+        // vale) e' cancelado junto (o dinheiro voltou na hora); o PIX tambem:
+        // o PIX volta a ficar sem uso, na tela PIX (TASK-219). O cartao
+        // integrado (Stone, SafraPay) nunca: o dinheiro entrou de verdade, ele
+        // sai da venda e fica orfao, em "Pagamentos nao resolvidos", para
+        // amarrar ou devolver (conceito do Fabio, 09/10/2026)
         foreach ($negocio->PagamentoS()->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->get() as $pag) {
-            if (!PagamentoTituloService::manual($pag) && $pag->estado == PagamentoService::ESTADO_EFETIVADO) {
+            if ($pag->meio != PagamentoService::MEIO_PIX
+                && !PagamentoTituloService::manual($pag)
+                && $pag->estado == PagamentoService::ESTADO_EFETIVADO) {
                 PagamentoService::amarrarVenda($pag, null, "Venda #{$negocio->codnegocio} cancelada: {$justificativa}");
                 continue;
             }

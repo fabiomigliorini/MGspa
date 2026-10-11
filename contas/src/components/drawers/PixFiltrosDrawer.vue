@@ -24,6 +24,12 @@ const negocioOptions = [
   { label: 'Todos', value: 'todos' },
 ]
 
+const usoOptions = [
+  { label: 'Sem uso', value: 'sem' },
+  { label: 'Usados', value: 'usado' },
+  { label: 'Todos', value: 'todos' },
+]
+
 const sortOptions = [
   { label: 'Data', value: 'horario' },
   { label: 'Valor', value: 'valor' },
@@ -97,6 +103,10 @@ const sortOptions = [
         :bottom-slots="false"
         label="Até"
       />
+    </FilterGroup>
+
+    <FilterGroup title="Uso">
+      <q-option-group v-model="store.filters.uso" :options="usoOptions" inline />
     </FilterGroup>
 
     <FilterGroup title="Vínculo com Negócio">

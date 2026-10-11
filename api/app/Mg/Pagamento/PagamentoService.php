@@ -5,6 +5,7 @@ namespace Mg\Pagamento;
 use Mg\Auditoria\AuditoriaService;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Auth;
+use Mg\Pix\PixUsoService;
 use Mg\Portador\PortadorMovimentoService;
 
 /**
@@ -241,6 +242,8 @@ class PagamentoService
         $pag->justificativa = mb_substr($justificativa, 0, 300);
         $pag->save();
         PortadorMovimentoService::sincronizar($pag);
+        // o PIX que ele usava volta a ficar sem uso (TASK-219)
+        PixUsoService::pagamentoCancelado($pag);
         return $pag;
     }
 

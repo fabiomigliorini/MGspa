@@ -4,6 +4,7 @@ namespace Mg\Titulo\BoletoBb;
 
 use Mg\Pagamento\PagamentoService;
 use Mg\Pagamento\PagamentoTituloService;
+use Mg\Pix\PixUsoService;
 
 use Illuminate\Support\Facades\Log;
 
@@ -376,6 +377,8 @@ class BoletoBbService
             $codmovimentotitulos[] = $mov->codmovimentotitulo;
             // o dinheiro entrou no banco do boleto: pagamento da baixa (M6 doc-3)
             PagamentoTituloService::daBaixa($mov, PagamentoService::MEIO_BOLETO, $tituloBoleto->codportador, $tituloBoleto->datarecebimento);
+            // pago pelo QR: o PIX dele aponta para este pagamento (TASK-219)
+            PixUsoService::boletoBaixado($tituloBoleto);
         }
 
         // apaga movimentos que sobraram

@@ -1,0 +1,65 @@
+---
+id: TASK-219
+title: >-
+  PIX que cai na conta vira pagamento sozinho e não há onde ver os que ainda não
+  foram usados
+status: In Progress
+assignee:
+  - '@fabio'
+created_date: '2026-10-11 00:33'
+updated_date: '2026-10-11 00:46'
+labels:
+  - contas
+  - api
+dependencies: []
+priority: high
+type: bug
+ordinal: 230000
+---
+
+## Description
+
+<!-- SECTION:DESCRIPTION:BEGIN -->
+Na TASK-188 (critério #31) todo PIX recebido pela chave virou pagamento avulso, sem documento, na hora da importação do banco. Na listagem de pagamentos do dev apareceram centenas de PIX 'Avulso · Sem documento' (1.186 desde 09/10), e o boleto pago por PIX entrava duas vezes no banco (o pagamento do retorno do boleto e o PIX avulso). O Fábio rejeitou o modelo (10/10/2026): 'era pra ser uma coisa simples'.
+
+Regra nova: PIX que ninguém usou fica na tela PIX. Usar o PIX = gravar um pagamento com ele (baixa de títulos ou adiantamento, sempre o PIX inteiro; PIX maior que os títulos vira adiantamento e depois encontro de contas). Cancelou o pagamento, o PIX volta para a lista.
+
+Prioridade alta: bloqueia o go-live do caixa (sem isso o pessoal não tem onde ver os PIX que caíram e não foram baixados).
+
+Campos no PIX (tblpix), no padrão de criacao/alteracao: utilizacao (quando foi usado; vazio = sem uso), codusuarioutilizacao (quem) e codpagamento (o pagamento que usou; vazio quando marcado à mão). Nada do modelo novo está em produção: o SQL de go-live marca todos os PIX antigos como usados.
+<!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 A importação do PIX não cria pagamento; só o PIX QR de venda paga a venda
+- [ ] #2 PIX que pagou boleto nosso (txid do QR do boleto) entra marcado como usado e ganha o link do pagamento quando a baixa do boleto chega: não duplica com o retorno
+- [ ] #3 Tela PIX do contas: filtro sem uso / usados / todos; a linha mostra a cobrança de origem (quem gerou, PDV, quando) e o link do pagamento que usou o PIX
+- [ ] #4 PIX sem uso: Baixar títulos abre o Receber Títulos com o PIX (data e conta travadas, títulos somando o valor do PIX); Adiantamento abre o adiantamento com o valor do PIX
+- [ ] #5 Marcar como usado e Desmarcar à mão, só no PIX sem pagamento ligado
+- [ ] #6 Wizard com PIX QR fora de venda: a confirmação do banco não cria pagamento; o pagamento nasce ao gravar e, se o wizard fechar antes, o PIX fica sem uso na tela PIX
+- [ ] #7 Cancelar um pagamento com PIX (inclusive pelo cancelamento da venda) devolve o PIX para a lista de sem uso
+- [ ] #8 SQL de go-live com os campos novos marcando os PIX antigos como usados; no dev, os pagamentos avulsos criados pela importação apagados
+<!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+## Implementação (10/10/2026)
+
+- **Banco** (`api/database/pix_utilizacao.sql`, já rodado no dev): `tblpix.utilizacao`, `codusuarioutilizacao` e `codpagamento` com FKs. Índice parcial dos sem uso (`where utilizacao is null`), índice do codpagamento e do txid, e `tbltituloboleto.qrcodetxid`. A marcação dos PIX antigos como usados (com o pagamento ligado, por `codpix` ou pela cobrança) só roda na execução que cria as colunas.
+- **`Mg\Pix\PixUsoService`**: `pagar` (o PIX inteiro, na data e na conta dele, e marca), `usar`, `pagamentoCancelado` (chamado por `PagamentoService::cancelar`, o único lugar que desmarca), `boleto`/`boletoBaixado` (txid = `tbltituloboleto.qrcodetxid`; a baixa do boleto pela API do BB liga o pagamento), `marcar`/`desmarcar` à mão (operador da conta do PIX; desmarcar só sem pagamento).
+- **Importação** (`PixService::importarPix`): sai o `processarPixChave`. O PIX QR sem venda não cria mais pagamento (`processarPixCobNegocio` só trata a cobrança com venda e marca o PIX).
+- **Baixa e adiantamento**: forma com `codpix` em `PagamentoTituloService::pagamentoDaForma`/`portadorPrevisto`; `codpix` nos dois FormRequests. `PixCobResource` devolve `codpix` e o wizard usa esse campo para o PIX QR (`baixaTitulosStore`).
+- **Venda cancelada** (`PdvNegocioService::cancelar`): o pagamento PIX é cancelado junto, e o cartão integrado continua órfão como antes.
+- **Rotas**: `GET v1/pix/{codpix}`, `POST|DELETE v1/pix/{codpix}/utilizacao`; a listagem aceita `uso=sem|usado|todos` e traz a cobrança de origem (usuário, PDV, data).
+- **Front**: tela PIX (filtro Uso; Baixar títulos → `/pagamento/novo?codpix=`; Adiantamento no MgAdiantamentoDialog; Marcar/Desmarcar), `Nova.vue`, `MgBaixaTitulos` e `MgAdiantamentoDialog` aceitam o PIX (data travada, valor do PIX).
+
+## Testado (tinker, transação desfeita)
+pagar com valor diferente recusa; pagar marca o PIX e lança no razão do banco; usar duas vezes recusa; desmarcar o usado por pagamento recusa; cancelar o pagamento devolve o PIX; marcar/desmarcar à mão; PIX de boleto 264526 entra usado e ligado ao pagamento do boleto 80246846; baixa de título com o PIX (título baixa na data do PIX); adiantamento com o PIX. Não testado ponta a ponta: as telas no navegador, o PIX QR no wizard e o cancelamento de venda com PIX QR.
+
+## Pendente no dev
+A limpeza dos pagamentos avulsos que a importação criou foi bloqueada pela permissão do Claude: o SQL está com o Fábio.
+
+## Atenção no dev
+O banco do dev não tem as cobranças da produção. Os PIX QR das vendas da produção que o dev importa do Sicredi (~400/dia) aparecem como sem uso no dev. Em produção eles acham a cobrança e pagam a venda.
+<!-- SECTION:NOTES:END -->

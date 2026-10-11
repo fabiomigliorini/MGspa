@@ -35,7 +35,9 @@ const props = defineProps({
   // configuração do PDV para o wizard (maquineta, conta PIX, impressora)
   padrao: { type: Object, default: () => ({}) },
   // pagamento que já existe, para amarrar (vindo de "Pagamentos não resolvidos"):
-  // { codpagamento, livre, descricao, codpessoa, entrada }
+  // { codpagamento, livre, descricao, codpessoa, entrada }; ou o PIX sem uso (vindo da tela PIX,
+  // TASK-219), que entra inteiro, na data dele: { codpix, livre (o valor), descricao, codpessoa,
+  // entrada }
   pagamento: { type: Object, default: null },
 })
 
@@ -154,7 +156,8 @@ const cobrar = async () => {
   // o pagamento que veio para amarrar é a forma, com o valor do formulário: não há o que cobrar
   if (props.pagamento) {
     sBaixa.adicionar({
-      codpagamento: props.pagamento.codpagamento,
+      codpagamento: props.pagamento.codpagamento ?? null,
+      codpix: props.pagamento.codpix ?? null,
       total: sBaixa.totalLiquido,
       descricao: props.pagamento.descricao,
     })
@@ -191,7 +194,9 @@ const gravar = async () => {
   } catch (error) {
     notificar('negative', error?.response?.data?.message ?? error?.message ?? 'Erro ao lançar')
     // não gravou: volta a editar; a integrada já confirmada (o dinheiro entrou) fica para o Gravar
-    if (props.pagamento || !sBaixa.forma?.codpagamento) sBaixa.remover()
+    if (props.pagamento || (!sBaixa.forma?.codpagamento && !sBaixa.forma?.codpix)) {
+      sBaixa.remover()
+    }
   } finally {
     sBaixa.finalizando = false
   }
@@ -226,7 +231,7 @@ watch(
                 @update:model-value="trocarTipo"
               />
             </div>
-            <div class="col-12 col-sm-5" v-if="comData">
+            <div class="col-12 col-sm-5" v-if="comData && !pagamento?.codpix">
               <MgInputData
                 v-model="form.transacao"
                 type="timestamp"
@@ -248,7 +253,7 @@ watch(
               />
             </div>
             <div
-              v-if="comData && trocaMes"
+              v-if="comData && !pagamento?.codpix && trocaMes"
               class="col-12 text-caption text-orange-9 row no-wrap items-center"
             >
               <q-icon name="warning" size="xs" class="q-mr-xs" />
@@ -270,7 +275,7 @@ watch(
                 label="Valor"
                 prefix="R$"
                 :min="0.01"
-                :disable="lancou"
+                :disable="lancou || !!pagamento?.codpix"
                 :rules="[(v) => v > 0]"
                 lazy-rules
               />
@@ -303,7 +308,10 @@ watch(
           </div>
         </q-card-section>
 
-        <q-card-section v-if="pagamento" class="text-caption text-grey-7">
+        <q-card-section v-if="pagamento?.codpix" class="text-caption text-grey-7">
+          Usando o {{ pagamento.descricao }}
+        </q-card-section>
+        <q-card-section v-else-if="pagamento" class="text-caption text-grey-7">
           Amarrando o pagamento {{ pagamento.descricao }} (livre R$
           {{ formataNumero(pagamento.livre) }})
         </q-card-section>
@@ -321,7 +329,7 @@ watch(
             v-if="!lancou || sBaixa.finalizando"
             flat
             color="primary"
-            :label="pagamento ? 'Amarrar' : verbo"
+            :label="pagamento && !pagamento.codpix ? 'Amarrar' : verbo"
             type="submit"
             :loading="sBaixa.finalizando"
           />

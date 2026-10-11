@@ -1262,6 +1262,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('pix/{codportador}/consultar', '\Mg\Pix\PixController@consultarPix');
     Route::get('pix/', '\Mg\Pix\PixController@index');
     Route::get('pix/descobre-nome', '\Mg\Pix\PixController@descobreNome');
+    // PIX usado ou sem uso (TASK-219)
+    Route::get('pix/{codpix}', '\Mg\Pix\PixController@pix')->whereNumber('codpix');
+    Route::post('pix/{codpix}/utilizacao', '\Mg\Pix\PixController@marcar')->whereNumber('codpix');
+    Route::delete('pix/{codpix}/utilizacao', '\Mg\Pix\PixController@desmarcar')->whereNumber('codpix');
 
     // TituloBoleto + Titulo CRUD + Pagamento + Agrupamento
     Route::get('titulo/boleto/abertos/resumo', '\Mg\Titulo\TituloBoletoController@abertosResumo');

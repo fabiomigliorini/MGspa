@@ -7,9 +7,11 @@
 // ou sai), a forma escolhida no wizard (uma só, com o valor do líquido) e a finalização, que
 // manda tudo de uma vez para o servidor. Para pagar com duas formas, faz duas baixas.
 //
-// Cobrança integrada (PIX QR, Stone, SafraPay) vira a forma quando o banco/maquineta confirma: o
-// servidor já criou o pagamento e a finalização só o amarra aos títulos. Pagamento que já
-// existia (o "Já recebido" do wizard) entra do mesmo jeito, pelo codpagamento.
+// Cobrança integrada (Stone, SafraPay) vira a forma quando a maquineta confirma: o servidor já
+// criou o pagamento e a finalização só o amarra aos títulos. Pagamento que já existia (o "Já
+// recebido" do wizard) entra do mesmo jeito, pelo codpagamento. O PIX QR confirmado não é
+// pagamento ainda (TASK-219): vira a forma pelo codpix e o pagamento nasce na finalização, com o
+// PIX inteiro; fechado antes, o PIX fica sem uso na tela PIX.
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
@@ -120,9 +122,10 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
 
     // forma escolhida no wizard: o total é o que andou (sem troco)
     adicionar(pag) {
-      const total = pag.codpagamento
-        ? arredonda(pag.total ?? pag.principal)
-        : arredonda((pag.principal || 0) + (pag.juros || 0) - (pag.desconto || 0))
+      const total =
+        pag.codpagamento || pag.codpix
+          ? arredonda(pag.total ?? pag.principal)
+          : arredonda((pag.principal || 0) + (pag.juros || 0) - (pag.desconto || 0))
       this.forma = {
         meio: pag.meio ?? null,
         total,
@@ -137,6 +140,7 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
         chequecnpj: pag.chequecnpj ?? null,
         chequeemitente: pag.chequeemitente ?? null,
         codpagamento: pag.codpagamento ?? null,
+        codpix: pag.codpix ?? null,
         codpagamentoorigem: pag.codpagamentoorigem ?? null,
         descricao:
           pag.descricao ??
@@ -165,7 +169,9 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
       if (!p || p.tipo !== tipo || p.id != dados?.[ID_COBRANCA[tipo]]) {
         return
       }
-      if (!dados.codpagamento) {
+      // o PIX QR vem pelo PIX que pagou; Stone e SafraPay, pelo pagamento já criado
+      const pix = tipo === 'pix'
+      if (pix ? !dados.codpix : !dados.codpagamento) {
         Notify.create({
           type: 'negative',
           message: 'O pagamento da cobrança ainda não foi registrado: consulte de novo!',
@@ -176,7 +182,8 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
       }
       this.pendente = null
       this.adicionar({
-        codpagamento: dados.codpagamento,
+        codpix: pix ? dados.codpix : null,
+        codpagamento: pix ? null : dados.codpagamento,
         total: p.valor,
         descricao: DESCRICAO_COBRANCA[tipo],
       })

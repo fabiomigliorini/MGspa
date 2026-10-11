@@ -32,6 +32,7 @@ class PagamentoTituloStoreRequest extends FormRequest
             'pagamentos.*.total'              => 'required|numeric|min:0.01',
             'pagamentos.*.valortroco'         => 'nullable|numeric|min:0',
             'pagamentos.*.codpagamento'       => 'nullable|integer|exists:tblpagamento,codpagamento',
+            'pagamentos.*.codpix'             => 'nullable|integer|exists:tblpix,codpix',
             'pagamentos.*.codpagamentoorigem' => 'nullable|integer|exists:tblpagamento,codpagamento',
             'pagamentos.*.codportador'        => 'nullable|integer|exists:tblportador,codportador',
             'pagamentos.*.codmaquineta'       => 'nullable|integer|exists:tblmaquineta,codmaquineta',
