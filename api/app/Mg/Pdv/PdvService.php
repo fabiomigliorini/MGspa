@@ -226,18 +226,12 @@ class PdvService
             $pag->estadodescricao = PagamentoService::ESTADOS[$pag->estado] ?? $pag->estado;
         }
 
-        $ocorrencias = DB::select('
-            select
-                o.codocorrencia, o.criacao, o.tipo, o.descricao, o.valor, o.codnegocio,
-                o.conferencia
-            from tblocorrencia o
-            where o.codpdv = :codpdv
-            order by o.criacao desc
-            limit 20
-        ', ['codpdv' => $codpdv]);
-        foreach ($ocorrencias as $oc) {
-            $oc->tipodescricao = OcorrenciaService::TIPOS[$oc->tipo] ?? $oc->tipo;
-        }
+        $ocorrencias = OcorrenciaService::listar(
+            'o.codpdv = :codpdv',
+            ['codpdv' => $codpdv],
+            'o.criacao desc',
+            20
+        );
 
         $localizacoes = DB::select('
             select

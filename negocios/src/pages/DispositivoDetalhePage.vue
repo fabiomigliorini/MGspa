@@ -5,6 +5,7 @@ import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgOcorrenciaItem from '@components/MgOcorrenciaItem.vue'
 import {
   formataCodigo,
   formataData,
@@ -376,25 +377,11 @@ onMounted(carregar)
                 Nenhuma ocorrência neste dispositivo.
               </MgEmptyState>
               <q-list v-else separator>
-                <q-item
+                <MgOcorrenciaItem
                   v-for="o in registros.ocorrencias"
                   :key="o.codocorrencia"
-                  :clickable="!!o.codnegocio"
-                  :to="o.codnegocio ? `/negocio/${o.codnegocio}` : undefined"
-                >
-                  <q-item-section>
-                    <q-item-label class="ellipsis">{{ o.tipodescricao }}</q-item-label>
-                    <q-item-label caption class="ellipsis">
-                      {{ formataTimestamp(o.criacao) }} · {{ o.descricao }}
-                    </q-item-label>
-                  </q-item-section>
-                  <q-item-section side>
-                    <q-item-label>{{ formataNumero(o.valor) }}</q-item-label>
-                    <q-item-label caption>{{
-                      o.conferencia ? 'Conferida' : 'Pendente'
-                    }}</q-item-label>
-                  </q-item-section>
-                </q-item>
+                  :ocorrencia="o"
+                />
               </q-list>
             </q-card>
           </div>

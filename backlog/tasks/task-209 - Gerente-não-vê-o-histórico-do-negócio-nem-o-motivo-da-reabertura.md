@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-10 19:57'
-updated_date: '2026-10-10 21:29'
+updated_date: '2026-10-12 13:30'
 labels:
   - negocios
 dependencies: []
@@ -62,4 +62,6 @@ Testado: tipo 20 gravado e lido pelo histórico (transação desfeita). O F3 nã
 Ordem e link (10/10/2026): AuditoriaService::historico e OcorrenciaService::historico ordenam por criacao desc (empate pelo código desc). No MgHistorico a ocorrência é clickable com href para CONTAS_URL/ocorrencia/{cod} (tela Detalhe do contas), em outra aba; os atributos passam direto para o q-item do MgOcorrenciaItem, como no painel. A tela da ocorrência é só de Gerente/Financeiro/Admin: quem não é cai na recusa de permissão do contas.
 
 Canto do dialog (10/10/2026, AC #10): com o histórico mais alto que a tela, quem rolava era o próprio card (.q-dialog__inner > div tem overflow auto) e a barra nativa do Chromium, retangular e fora do recorte do border-radius, deixava o canto superior direito quadrado. Agora rola a q-card-section do conteúdo (class scroll, max-height 60vh), como em CardDependentes/TransferirCaixaDialog; o título e o Fechar ficam fixos.
+
+Página do dispositivo no PDV (12/10/2026, decisão do Fábio: muda a de 10/10): as Últimas ocorrências passam a usar o card compartilhado (@components/MgOcorrenciaItem), as mesmas do contas e do histórico, em vez do resumo compacto. O backend lista pelo OcorrenciaService::listar (o mesmo do painel), as 20 mais recentes do PDV. Testado na tela (Chrome headless, dispositivo 508): 20 ocorrências com ícone, conferência e link, sem erro de console; lint completo do negocios.
 <!-- SECTION:NOTES:END -->
