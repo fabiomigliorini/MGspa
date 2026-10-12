@@ -3,11 +3,11 @@ id: TASK-216
 title: >-
   Recibo some do detalhe do pagamento: sem impressora o da térmica não aparece e
   o PDF só existe no contas
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-10 21:18'
-updated_date: '2026-10-11 22:57'
+updated_date: '2026-10-12 01:37'
 labels:
   - negocios
   - contas
@@ -30,15 +30,21 @@ No PDV (negócios), o detalhe do pagamento escondia o botão do recibo térmico 
 - [x] #3 Recibo que não se aplica (cancelado, sem título, sem recebimento/pagamento) recusa com a mensagem do servidor em vez de sumir
 - [x] #4 Número do título na parcela do diálogo de pagamento do negócio sai como link da casa (azul, sem sublinhado), não roxo e sublinhado do navegador
 - [x] #5 Cupom da térmica: quem recebe o dinheiro declara e assina (cliente pagou: a loja; a loja pagou: a contraparte), com texto próprio de vale colaborador e de adiantamento (cliente e fornecedor)
-- [ ] #6 Recibo A5 do contas/PDV é um só (sai Recibo Recebimento e Recibo Pagamento) e diz o mesmo que o cupom: cabeçalho com o que é (vale, adiantamento, recebimento, pagamento), quem recebe declara e assina, forma de pagamento, venda quando não tem título e o não amarrado
-- [ ] #7 Recibo no jeito do bloco de papel (VALE / RECIBO grande, Nº, Valor, Nome ou Recebi(emos) de, A importância de, Referente a, Local/Data, Assinatura), A5 e cupom; observação do pagamento/título sai no Referente a; vale com 'autorizo o desconto em folha'; títulos e forma miúdos embaixo
-- [ ] #8 Recebimento/pagamento de título: os títulos entram no recibo (A5 e cupom) com principal, juros, multa, desconto e total, e a linha de total
+- [x] #6 Recibo é um só no contas, no PDV e no RH (A5 e cupom dizem o mesmo): o cabeçalho diz o que é (VALE, ADIANTAMENTO, RECIBO, ENCONTRO DE CONTAS), quem recebe o dinheiro declara e assina, com a forma de pagamento, a venda quando não tem título e o não amarrado
+- [x] #7 Recibo no jeito do bloco de papel (título grande, Nº, Valor, Nome, valor por extenso, Referente a, Pagamento em, Local/Data, Declaração, Assinatura), A5 e cupom; o Referente a vem do campo próprio (a observação é interna); o vale com confissão de dívida, desconto autorizado e nota promissória
+- [x] #8 Recebimento/pagamento de título: os títulos entram no recibo (A5 e cupom) com principal, juros, multa, desconto e total; a linha de total só com mais de um título
 - [x] #9 Vale do colaborador: confissão de dívida com quem pagou (empresa e CNPJ da filial do pagamento), desconto autorizado em qualquer empresa do grupo (CLT ou terceirizado) e nota promissória com beneficiário em branco, vale e promissória na mesma folha A5 retrato com a mesma régua; no cupom também
 - [x] #10 Campo 'Referente a' no pagamento (texto livre que sai no recibo/vale), preenchido no Receber/Pagar títulos e no Vale/Adiantamento e alterável pelo lápis; a observação fica interna e não sai no recibo
 - [x] #11 Adiantamento a fornecedor: mesmo padrão do vale sem promissória (A5 paisagem e cupom), fornecedor declara e assina, texto de produto ou serviço abatido no que a loja ou o grupo dever e devolução se não houver o fornecimento; singular para pessoa física
 - [x] #12 Vale de crédito (Vale Compras / Contra Vale, com o código VAL… para bipar no caixa) sai do título, desacoplado da venda: o mesmo papel na venda, na tela do título (contas) e na do pagamento; o recibo do adiantamento de cliente é esse vale; no PDV o card do título volta a ter o botão do vale
 - [x] #13 Pagamento de títulos: recibo no mesmo layout do vale e dos adiantamentos (A5 paisagem e cupom), favorecido declara a quitação e assina, tabela sempre com principal, juros, multa, desconto e total (total só com mais de um título)
 - [x] #14 Recebimento de títulos: recibo no mesmo layout, cliente com código, documento e endereço, a loja declara a quitação e assina; 'Referente a' sai como está no campo e, vazio, não sai em nenhum documento
+- [x] #15 Referente a editável em todo pagamento efetivado (inclusive venda e acerto de RH), no contas e no PDV, por uma ação própria no detalhe do pagamento
+- [x] #16 Detalhe do pagamento no PDV vira página com endereço próprio (/pagamento/{código}), como no contas; a lista só navega
+- [x] #17 Encontro de contas: título ENCONTRO DE CONTAS, cabeçalho com Compensado e Diferença paga, duas tabelas (a receber e a pagar) com subtotal e saldo, declaração conjunta e duas assinaturas (loja e contraparte)
+- [x] #18 Pagamento de venda: recibo no layout novo, sem tabela, declaração 'referente à venda #…', a loja assina
+- [x] #19 Pagamento sem modelo (sobra livre, devolução de pagamento): recibo genérico no layout novo; o recibo antigo é apagado
+- [x] #20 Recibo do acerto de RH é o recibo do pagamento do acerto (mesmo layout e serviço, rubricas detalhando o título da folha); os botões de recibo do RH (período, colaborador, acerto) geram esse documento, um por acerto
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -97,4 +103,10 @@ Folha deitada apertada (padding 1,2mm, tabela 10pt, traço 8mm): com Referente a
 Recebimento de títulos (11/10): entrada com baixa, todos no mesmo sentido, sem lançamento junto; caixa Cliente (código, doc, endereço — o código passou a aparecer na caixa do documento), declaração 'Recebemos de {cliente}, {doc}, a importância acima, referente ao pagamento do(s) título(s) abaixo, pelo que damos quitação do valor recebido', assinatura da loja. Recebimento + adiantamento de cliente junto (ex. 80247795) segue no recibo antigo. Conferido 80248436, 80248409, 80246812.
 
 Referente a simples (pedido do Fábio, 11/10): sai exatamente o texto do campo; vazio, a caixa não aparece, em todos os layouts. Saiu o texto automático do recibo antigo (Recebimento/Pagamento do título abaixo, Adiantamento…, Venda #…) e o '—' (REFERENTE_TIPO e $r['referente'] removidos).
+
+Decisões do Fábio (11/10): Referente a liberado em todo lugar — PUT v1/pagamento/{id}/referente e v1/pdv/pagamento/{id}/referente (PagamentoTituloService::alterarReferente, só efetivado; espaços viram vazio), item sempre visível no MgPagamentoDetalhe com lápis próprio e dialog; saiu do lápis do contas (atualizar não mexe mais nele). PDV: PagamentoDetalhePage em /pagamento/:id (name pagamento-detalhe, backTo /pagamento), PagamentoPage sem o dialog; dialogDetalhe saiu do store.
+
+Decisões do Fábio (11/10), uma a uma: 1) Encontro: título ENCONTRO DE CONTAS; 2) cabeçalho com as duas caixas, Compensado e Diferença paga; 3) declaração conjunta ('As partes compensam entre si os títulos abaixo, no valor de R$ X; a diferença de R$ Y foi paga por A a B, e cada parte dá quitação dos títulos que recebeu') com duas assinaturas; 4) pagamento de venda: recibo no layout novo; 5) recibo do acerto de RH unificado com o do pagamento (um pagamento por acerto; acerto com desconto = encontro de contas; rubricas detalhando o título da folha; botões do RH geram o mesmo documento); 6) assinatura da loja só empresa e CNPJ, sem operador; 7) sem modelo: recibo genérico no layout novo. Sobra de recebimento virando adiantamento no mesmo pagamento não acontece mais (caminho de Pagamentos não resolvidos saiu na TASK-220; PIX e cartão entram inteiros e uma vez só); 80247795/80247875 são QA de 09/10.
+
+Encontro de contas, venda, genérico e RH (11/10): PagamentoReciboService::montar escolhe o modelo (vale, adiantamento, pagamento, recebimento, encontro, venda, genérico) e todos saem em pagamento/documento e documento-termica; apagados pagamento/recibo e recibo-termica. Encontro: ENCONTRO DE CONTAS, Compensado + Diferença paga, tabelas A receber / A pagar (subtotal só com mais de uma linha), saldo, declaração conjunta e duas assinaturas; folha mais compacta. Acerto de RH: montarAcerto pelos totais do acerto (benefício com as rubricas, títulos pelo líquido dos movimentos); só pagar = pagamento (colaborador assina), só receber = recebimento (loja assina), os dois = encontro; acerto sem valor = 422. AcertoReciboPdf manda os pagamentos efetivados dos acertos para pdfLote; apagados rh/acerto-recibos e os dois parciais. Testes: matriz de 400+ pagamentos em A5 e cupom (recebimento 187, venda 183, vale 6, adiantamento 1, encontro 3, pagamento 5, genérico 7, vale de crédito 7; só os 422 esperados); HTTP com rollback (recibo, vale, PUT referente no contas e no PDV, 256 caracteres = 422, recibos do RH por período e acerto); tela no navegador: contas (editar Referente a, recibo A5 e cupom com o texto) e PDV (lista navega para /pagamento/{código}, endereço direto, Referente a, recibo A5 e cupom), sem erro no console; dado de teste desfeito. Go-live: api/database/pagamento_referente.sql.
 <!-- SECTION:NOTES:END -->

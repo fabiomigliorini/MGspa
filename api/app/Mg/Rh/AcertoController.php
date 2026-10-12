@@ -154,7 +154,7 @@ class AcertoController extends Controller
         $pdf = AcertoReciboPdf::gerarPorAcerto($codperiodocolaboradoracerto, $tipo);
 
         if ($pdf === '') {
-            abort(404, 'Acerto inativo ou nao encontrado.');
+            abort(404, 'Acerto inativo, não encontrado ou sem valores: não tem recibo.');
         }
 
         return response($pdf, 200, [
