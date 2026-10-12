@@ -189,6 +189,9 @@
         .inteira .compacta .traco {
             margin-top: 7mm;
         }
+        .fim {
+            page-break-inside: avoid;
+        }
         .saldo {
             text-align: right;
             font-size: 9pt;
@@ -369,6 +372,9 @@
             </tr>
         </table>
 
+        {{-- a declaracao e as assinaturas nao se separam: se nao cabem, vao juntas para a folha
+             seguinte (assinatura sozinha numa folha nao diz o que assinou) --}}
+        <div class="fim">
         <table class="linha">
             <tr>
                 <td>
@@ -404,6 +410,7 @@
                 @endforeach
             </tr>
         </table>
+        </div>
     </div>
 
     @if ($np)

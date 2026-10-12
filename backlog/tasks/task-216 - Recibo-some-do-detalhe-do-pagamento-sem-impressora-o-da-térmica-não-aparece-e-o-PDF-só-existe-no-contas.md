@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-10 21:18'
-updated_date: '2026-10-12 01:37'
+updated_date: '2026-10-12 01:41'
 labels:
   - negocios
   - contas
@@ -109,4 +109,6 @@ Decisões do Fábio (11/10): Referente a liberado em todo lugar — PUT v1/pagam
 Decisões do Fábio (11/10), uma a uma: 1) Encontro: título ENCONTRO DE CONTAS; 2) cabeçalho com as duas caixas, Compensado e Diferença paga; 3) declaração conjunta ('As partes compensam entre si os títulos abaixo, no valor de R$ X; a diferença de R$ Y foi paga por A a B, e cada parte dá quitação dos títulos que recebeu') com duas assinaturas; 4) pagamento de venda: recibo no layout novo; 5) recibo do acerto de RH unificado com o do pagamento (um pagamento por acerto; acerto com desconto = encontro de contas; rubricas detalhando o título da folha; botões do RH geram o mesmo documento); 6) assinatura da loja só empresa e CNPJ, sem operador; 7) sem modelo: recibo genérico no layout novo. Sobra de recebimento virando adiantamento no mesmo pagamento não acontece mais (caminho de Pagamentos não resolvidos saiu na TASK-220; PIX e cartão entram inteiros e uma vez só); 80247795/80247875 são QA de 09/10.
 
 Encontro de contas, venda, genérico e RH (11/10): PagamentoReciboService::montar escolhe o modelo (vale, adiantamento, pagamento, recebimento, encontro, venda, genérico) e todos saem em pagamento/documento e documento-termica; apagados pagamento/recibo e recibo-termica. Encontro: ENCONTRO DE CONTAS, Compensado + Diferença paga, tabelas A receber / A pagar (subtotal só com mais de uma linha), saldo, declaração conjunta e duas assinaturas; folha mais compacta. Acerto de RH: montarAcerto pelos totais do acerto (benefício com as rubricas, títulos pelo líquido dos movimentos); só pagar = pagamento (colaborador assina), só receber = recebimento (loja assina), os dois = encontro; acerto sem valor = 422. AcertoReciboPdf manda os pagamentos efetivados dos acertos para pdfLote; apagados rh/acerto-recibos e os dois parciais. Testes: matriz de 400+ pagamentos em A5 e cupom (recebimento 187, venda 183, vale 6, adiantamento 1, encontro 3, pagamento 5, genérico 7, vale de crédito 7; só os 422 esperados); HTTP com rollback (recibo, vale, PUT referente no contas e no PDV, 256 caracteres = 422, recibos do RH por período e acerto); tela no navegador: contas (editar Referente a, recibo A5 e cupom com o texto) e PDV (lista navega para /pagamento/{código}, endereço direto, Referente a, recibo A5 e cupom), sem erro no console; dado de teste desfeito. Go-live: api/database/pagamento_referente.sql.
+
+Teste final (11/10): no A5 a Declaração e as Assinaturas não se separam mais (page-break-inside: avoid); quando não cabem, vão juntas para a folha seguinte em vez da assinatura sair sozinha (o encontro do acerto 80246615 com 5 títulos + benefício). Matriz de novo: só os recibos longos (80016998, 80155421, 80246615) têm mais de uma folha; os de uma folha continuam com uma.
 <!-- SECTION:NOTES:END -->
