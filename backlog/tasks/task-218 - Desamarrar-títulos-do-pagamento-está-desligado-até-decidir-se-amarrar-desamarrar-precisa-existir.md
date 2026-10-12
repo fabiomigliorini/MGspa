@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-10 21:30'
-updated_date: '2026-10-12 12:55'
+updated_date: '2026-10-12 12:57'
 labels:
   - contas
   - negocios
@@ -90,4 +90,11 @@ No dev, teste do script com rollback: 1.216.225 vendas que não fecham; troco em
 - **Tela** (Chrome headless): rolagem 200 → 600 linhas; data de 01/09 a 30/09/2026 → 2 divergências; filial Deposito → 1; caso Pagamento em venda cancelada → lista vazia com a mensagem; o filtro fica gravado; venda abre a Venda com diferença; painel (lista e filial 101) sem erro.
 - **Script** duas vezes na mesma transação (ROLLBACK): a segunda passada não muda nada (troco 0, repetido 0, vale 0) e sobram as mesmas 29.404.
 - Nenhum defeito achado.
+
+## Bateria independente (12/10/2026, sessão da TASK-216)
+- **Estático**: php -l nos arquivos do commit, todas as rotas resolvem (as 10 quebradas são antigas: permissão, estatística de estoque, imagem), nada aponta para o que saiu (PagamentoPendenciaService, desamarrar, saldo/amarrado/livre), lint completo do contas e do negocios e do MgPagamentoDetalhe/pagamentoListaStore.
+- **Cancelar** (tinker, cada caso com transação desfeita): recebimento com juros e multa (80248436: o título volta ao saldo de antes da baixa); vale colaborador 80248397 e adiantamento a fornecedor 80248399 (título estornado, saldo 0); adiantamento de cliente já usado em parte recusa ('título movimentado') sem mexer em nada; cheque em carteira 80246692 cancelado junto; venda, acerto de RH e já cancelado recusam; encontro 80247799 recusado pelo período do Caixa Atacado já fechado (regra do caixa). Depois de cancelar, recibo e vale de crédito recusam (TASK-216). HTTP: contas e PDV 200, sem justificativa 422, desamarrar 404.
+- **Divergências** (HTTP): os cinco casos, caso e data inválidos 422; gerente só a filial dele, outra filial 403, sem papel 403.
+- **Telas** (Chrome headless): botão Divergências na lista, lista carregada, clique abre o detalhe; Cancelar com o texto novo; detalhe sem Saldo/Amarrado/Livre; sem erro de console nem de API.
+- **Recibos** (TASK-216) de novo sobre este código: mesmos modelos e páginas de antes.
 <!-- SECTION:NOTES:END -->
