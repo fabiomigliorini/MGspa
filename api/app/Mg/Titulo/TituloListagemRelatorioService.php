@@ -66,7 +66,7 @@ class TituloListagemRelatorioService
                 ];
             }
 
-            $original = (float)$t->debito - (float)$t->credito;
+            $original = (float)$t->valor;
             $saldo = (float)$t->saldo;
             $atualizacao = TituloService::calcularAtualizacao($saldo, $t->vencimento);
             $multa = $atualizacao['multa'];

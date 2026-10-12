@@ -8,12 +8,10 @@ use \Exception;
 
 use Mg\Pessoa\Pessoa;
 use Mg\Negocio\Negocio;
-use Mg\Titulo\Titulo;
-use Mg\Portador\Portador;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloService;
-use Mg\Titulo\TipoTituloService;
-use Mg\Negocio\NegocioFormaPagamentoService;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 
 class PdvNegocioPrazoService
 {
@@ -58,7 +56,7 @@ class PdvNegocioPrazoService
             FROM tbltitulo
             WHERE codpessoa = :codpessoa
             AND saldo <> 0
-            AND debito > 0
+            AND valor > 0
         ';
         $tot = DB::select($sql, [
             'codpessoa' => $pessoa->codpessoa
@@ -67,166 +65,93 @@ class PdvNegocioPrazoService
     }
 
 
-    public static function gerarTitulos(Negocio $negocio)
+    // vales consumidos como pagamento (meio vale com o titulo do vale)
+    public static function pagamentosVale(Negocio $negocio)
     {
-        // busca pagamentos a prazo
-        $nfps = $negocio
-            ->NegocioFormaPagamentos()
-            ->where('avista', false)
-            ->orderBy('codnegocioformapagamento')
+        return $negocio->PagamentoS()
+            ->whereNotNull('codtitulo')
+            ->where('meio', PagamentoService::MEIO_VALE)
+            ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
             ->get();
-
-        // verifica se precisa de sufixo
-        // quando tem mais de um pagamento a Prazo
-        $qtdPrazo = $nfps->count();
-        if ($qtdPrazo > 1) {
-            $sufixo = '-A';
-        } else {
-            $sufixo = '';
-        }
-        $sufixos = [$sufixo];
-
-        $totalTitulos = 0;
-        // Percorre todas as formas
-        foreach ($nfps as $nfp) {
-
-            // inicializa um acumulador para controlar quanto deve ser a diferenca da ultima parcela
-            $total = 0;
-            $parcelas = ($nfp->parcelas > 0) ? $nfp->parcelas : 1;
-
-            // data atual para calcular vencimentos
-            $dataInicial = Carbon::now();
-            if ($nfp->FormaPagamento->fechamento) {
-                $dataInicial->startOfMonth();
-            }
-
-            // faz um looping para gerar duplicatas
-            for ($i = 1; $i <= $parcelas; $i++) {
-
-                // usa o valor da parcela informado ou 
-                // joga diferença do total no último titulo gerado
-                if ($i == $parcelas) {
-                    $valor = $nfp->valortotal - $total;
-                } else {
-                    $valor = $nfp->valorparcela;
-                }
-                $total += $valor;
-                $totalTitulos += $valor;
-
-                // calcula data de vencimento
-                if ($nfp->FormaPagamento->fechamento) {
-                    $vencimento = (clone $dataInicial)->addMonths($i)->endOfMonth();
-                } elseif ($nfp->dias == 30) {
-                    $vencimento = (clone $dataInicial)->addMonths($i);
-                } else {
-                    $vencimento = (clone $dataInicial)->addDays($nfp->dias * $i);
-                }
-
-                // calcula o tipo de titulo
-                if ($nfp->FormaPagamento->pix) {
-                    if ($nfp->Negocio->codoperacao == 2) {
-                        $tipo = TipoTituloService::TIPO_PIX_RECEBER;
-                    } else {
-                        $tipo = TipoTituloService::TIPO_PIX_PAGAR;
-                    }
-                } elseif ($nfp->FormaPagamento->entrega) {
-                    if ($nfp->Negocio->codoperacao == 2) {
-                        $tipo = TipoTituloService::TIPO_ENTREGA_RECEBER;
-                    } else {
-                        $tipo = TipoTituloService::TIPO_ENTREGA_PAGAR;
-                    }
-                } else {
-                    $tipo = $nfp->Negocio->NaturezaOperacao->codtipotitulo;
-                }
-
-                // Cria Registro de Titulo
-                $titulo = new Titulo();
-                $titulo->codnegocioformapagamento = $nfp->codnegocioformapagamento;
-                $titulo->codfilial = $nfp->Negocio->codfilial;
-                $titulo->codtipotitulo = $tipo;
-                $titulo->codcontacontabil = $nfp->Negocio->NaturezaOperacao->codcontacontabil;
-                if ($nfp->Negocio->codoperacao == 2) {
-                    $titulo->debito = $valor;
-                } else {
-                    $titulo->credito = $valor;
-                }
-                $titulo->boleto = false;
-                $titulo->codpessoa = $nfp->Negocio->codpessoa;
-                $titulo->numero = "N" . str_pad($nfp->codnegocio, 8, "0", STR_PAD_LEFT) . "$sufixo-$i/{$parcelas}";
-                $titulo->emissao = Carbon::now();
-                $titulo->transacao = $titulo->emissao;
-                $titulo->sistema = $titulo->emissao;
-                $titulo->vencimento = $vencimento;
-                $titulo->vencimentooriginal = $titulo->vencimento;
-                $titulo->gerencial = true;
-                $titulo->codportador = Portador::CARTEIRA;
-
-                //se deu erro ao salvar titulo aborta
-                if (!$titulo->save()) {
-                    throw new Exception('Falha ao Gerar Títulos do Negócio!', 1);
-                }
-            }
-
-            // monta sufixo da proxima forma de pagamento
-            if ($qtdPrazo > 1) {
-                $sufixo = '-' . chr(ord(substr($sufixo, -1)) + 1);
-                $sufixos[] = $sufixo;
-            }
-        }
-
-        return $totalTitulos;
     }
 
+    // Idempotente (TASK-30): o vale que ja' tem a baixa ativa fica como esta';
+    // o reativado na venda reaberta (baixa estornada) ganha baixa nova
     public static function baixarVales(Negocio $negocio)
     {
-        $nfps = $negocio->NegocioFormaPagamentoS()
-            ->whereNotNull('codtitulo')
-            ->where('codformapagamento', NegocioFormaPagamentoService::CODFORMAPAGAMENTO_VALE)
-            ->get();
-        foreach ($nfps as $nfp) {
-            $debito = null;
-            $credito = null;
-            if ($negocio->codoperacao == 2) {
-                $debito = $nfp->valorpagamento;
-            } else {
-                $credito = $nfp->valorpagamento;
+        foreach (static::pagamentosVale($negocio) as $pag) {
+            if (static::amortizacaoAtiva($pag)) {
+                continue;
             }
-            MovimentoTitulo::updateOrCreate([
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_AMORTIZACAO,
-                'codtitulo' => $nfp->codtitulo,
-                'codnegocioformapagamento' => $nfp->codnegocioformapagamento
-
-            ], [
-                'codportador' => $nfp->Titulo->codportador,
-                'debito' => $debito,
-                'credito' => $credito,
-                'transacao' => $negocio->lancamento,
-                'sistema' => $negocio->lancamento,
-            ]);
+            MovimentoTituloService::lancar(
+                $pag->Titulo,
+                MovimentoTituloService::TIPO_AMORTIZACAO,
+                ($negocio->codoperacao == 2) ? $pag->principal : -$pag->principal,
+                [],
+                [
+                    'codtitulo' => $pag->codtitulo,
+                    'codpagamento' => $pag->codpagamento,
+                    'codportador' => $pag->Titulo->codportador,
+                    'transacao' => $negocio->lancamento,
+                ]
+            );
         }
     }
 
+    // a baixa do vale por este pagamento que ainda nao foi estornada
+    public static function amortizacaoAtiva(Pagamento $pag): ?MovimentoTitulo
+    {
+        return static::amortizacoesAtivas($pag)->first();
+    }
+
+    private static function amortizacoesAtivas(Pagamento $pag)
+    {
+        if (empty($pag->codtitulo) || $pag->meio != PagamentoService::MEIO_VALE) {
+            return collect();
+        }
+        return MovimentoTitulo::where('codpagamento', $pag->codpagamento)
+            ->where('codtitulo', $pag->codtitulo)
+            ->where('codtipomovimentotitulo', MovimentoTituloService::TIPO_AMORTIZACAO)
+            ->whereNotExists(function ($q) {
+                $q->select(DB::raw(1))
+                    ->from('tblmovimentotitulo as e')
+                    ->whereColumn('e.codmovimentotituloestorno', 'tblmovimentotitulo.codmovimentotitulo');
+            })
+            ->orderBy('codmovimentotitulo')
+            ->get();
+    }
+
+    // roda antes de cancelar os pagamentos: por isso le' todos os do vale
     public static function estornarBaixaVales(Negocio $negocio)
     {
-        $nfps = $negocio->NegocioFormaPagamentoS()
+        $pags = $negocio->PagamentoS()
             ->whereNotNull('codtitulo')
-            ->where('codformapagamento', NegocioFormaPagamentoService::CODFORMAPAGAMENTO_VALE)
+            ->where('meio', PagamentoService::MEIO_VALE)
             ->get();
-        foreach ($nfps as $nfp) {
-            foreach ($nfp->MovimentoTituloS as $movOriginal) {
-                MovimentoTitulo::updateOrCreate([
-                    'codtipomovimentotitulo' => MovimentoTituloService::TIPO_ESTORNO_AMORTIZACAO,
-                    'codtitulo' => $nfp->codtitulo,
-                    'codnegocioformapagamento' => $nfp->codnegocioformapagamento
+        foreach ($pags as $pag) {
+            static::estornarBaixaVale($pag);
+        }
+    }
 
-                ], [
+    // estorna a baixa ativa do vale deste pagamento (idempotente: o estorno
+    // e' unico por baixa estornada)
+    public static function estornarBaixaVale(Pagamento $pag)
+    {
+        foreach (static::amortizacoesAtivas($pag) as $movOriginal) {
+            MovimentoTituloService::lancar(
+                $pag->Titulo,
+                MovimentoTituloService::TIPO_ESTORNO_AMORTIZACAO,
+                -1 * (float) $movOriginal->principal,
+                ['total' => -1 * (float) $movOriginal->total],
+                [
+                    'codtitulo' => $pag->codtitulo,
+                    'codpagamento' => $pag->codpagamento,
+                    'codmovimentotituloestorno' => $movOriginal->codmovimentotitulo,
                     'codportador' => $movOriginal->codportador,
-                    'debito' => $movOriginal->credito,
-                    'credito' => $movOriginal->debito,
                     'transacao' => $movOriginal->transacao,
-                    'sistema' => Carbon::now(),
-                ]);
-            }
+                ],
+                ['codmovimentotituloestorno']
+            );
         }
     }
 }

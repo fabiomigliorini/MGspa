@@ -7,6 +7,7 @@ use App\Http\Requests\Mg\Fazenda\PlantioUpdateRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
+use Mg\Usuario\Autorizador;
 
 /**
  * Plantio e aninhado na safra: safra/{codsafra}/plantio/{codplantio}.
@@ -14,10 +15,14 @@ use Mg\MgController;
  */
 class PlantioController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     const WITH = ['Safra.Cultura', 'Fazenda', 'Variedade'];
 
     public function index(Request $request, $codsafra)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         [$filter, $sort, $fields] = $this->filtros($request);
         $filter['codsafra'] = $codsafra;
         $res = PlantioService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
@@ -26,6 +31,8 @@ class PlantioController extends MgController
 
     public function store(PlantioStoreRequest $request, $codsafra)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = new Plantio();
         $model->fill($request->validated());
         $model->codsafra = $codsafra;
@@ -36,28 +43,61 @@ class PlantioController extends MgController
 
     public function show(Request $request, $codsafra, $codplantio)
     {
-        return new PlantioResource($this->buscar($codsafra, $codplantio, static::WITH));
+        Autorizador::autoriza(self::GRUPOS);
+
+        $plantio = $this->buscar($codsafra, $codplantio, static::WITH);
+
+        // Card "Cargas deste plantio": o extrato do talhão, com o MESMO recorte do
+        // KPI Colhido (SafraService::comercial) — ativos e da safra —, senão a soma
+        // da lista não bate com o número do topo. Só no show: a listagem de
+        // plantios da safra não carrega extrato.
+        $plantio->load([
+            'MovimentoGraoS' => fn ($q) => $q
+                ->whereNull('inativo')
+                ->where('codsafra', $codsafra)
+                ->orderByDesc('data')
+                ->orderByDesc('codmovimentograo'),
+            'MovimentoGraoS.Carga.CargaPontoS.UnidadeArmazenadora',
+            'MovimentoGraoS.Carga.CargaPontoS.Contrato.Pessoa',
+            'MovimentoGraoS.Carga.CargaPontoS.Plantio.Variedade',
+        ]);
+
+        return new PlantioResource($plantio);
     }
 
     public function update(PlantioUpdateRequest $request, $codsafra, $codplantio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = $this->buscar($codsafra, $codplantio);
+        $eraFinalizado = PlantioService::finalizado($model);
 
         $model->fill($request->validated());
         $model->codsafra = $codsafra;
+        // Finalizado = hacolhido ≥ área: mudar a área na edição não pode
+        // "desfinalizar" o talhão (nem finalizar um que não estava).
+        $model->hacolhido = $eraFinalizado ? $model->areaplantada : 0;
         $model->update();
 
         return new PlantioResource($model->fresh(static::WITH));
     }
 
     /**
-     * Grava só o `hacolhido` (ha já colhidos) — usado pelo slider do card, sem
-     * passar pela validação do plantio inteiro. Dirige produtividade e produção.
+     * Grava só o `hacolhido` — usado pelo check "Talhão finalizado?" (manda a
+     * área inteira ou 0), sem passar pela validação do plantio inteiro. Decide a
+     * produção estimada e o progresso da colheita (SafraService).
      */
     public function hacolhido(Request $request, $codsafra, $codplantio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $request->validate(['hacolhido' => ['nullable', 'numeric', 'gte:0']]);
         $model = $this->buscar($codsafra, $codplantio);
+        // Plantio copiado de outra safra nasce sem variedade (TASK-201): ela pode
+        // ser dita depois, mas antes de fechar o talhão.
+        if ((float) $request->input('hacolhido') > 0 && !$model->codvariedade) {
+            abort(422, 'Informe a variedade do talhão antes de finalizá-lo.');
+        }
         $model->hacolhido = $request->input('hacolhido');
         $model->save();
         return new PlantioResource($model->fresh(static::WITH));
@@ -65,6 +105,8 @@ class PlantioController extends MgController
 
     public function destroy($codsafra, $codplantio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $plantio = $this->buscar($codsafra, $codplantio);
         try {
             $plantio->delete();
@@ -84,6 +126,8 @@ class PlantioController extends MgController
 
     public function inativar(Request $request, $codsafra, $codplantio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = $this->buscar($codsafra, $codplantio);
         PlantioService::inativar($model);
         return new PlantioResource($model->fresh(static::WITH));
@@ -91,6 +135,8 @@ class PlantioController extends MgController
 
     public function ativar(Request $request, $codsafra, $codplantio)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = $this->buscar($codsafra, $codplantio);
         PlantioService::ativar($model);
         return new PlantioResource($model->fresh(static::WITH));

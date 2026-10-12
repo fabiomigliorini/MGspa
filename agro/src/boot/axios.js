@@ -40,6 +40,10 @@ export default boot(({ app }) => {
       }
 
       const authStore = useAuthStore()
+      // skipNotify: quem chamou avisa o operador do seu jeito (ex.: a store de
+      // sincronizacao, uma vez so, em vez de um toast por requisicao do ciclo
+      // automatico). A sessao expirada (401) e tratada sempre.
+      const avisar = !error.config?.skipNotify
 
       if (error.response) {
         const status = error.response.status
@@ -64,6 +68,7 @@ export default boot(({ app }) => {
           }
 
           case 403:
+            if (!avisar) break
             Notify.create({
               type: 'negative',
               message: 'Você não tem permissão para esta ação',
@@ -79,12 +84,15 @@ export default boot(({ app }) => {
             break
 
           case 500:
+            if (!avisar) break
             Notify.create({
               type: 'negative',
               message: 'Erro no servidor. Tente novamente em instantes.',
             })
             break
         }
+      } else if (!avisar) {
+        // silencioso: falha de rede tratada por quem chamou
       } else if (error.code === 'ECONNABORTED') {
         Notify.create({
           type: 'negative',

@@ -44,8 +44,8 @@ const ordemOptions = [
 
 const operacaoOptions = [
   { label: 'Todos', value: null },
-  { label: 'Crédito', value: 1 },
-  { label: 'Débito', value: 2 },
+  { label: 'Crédito', value: 'P' },
+  { label: 'Débito', value: 'R' },
 ]
 
 const gerencialOptions = [
@@ -261,33 +261,15 @@ const pagarReceberOptions = [
       <div class="row q-col-gutter-md q-mb-md">
         <div class="col-6">
           <MgInputValor
-            v-model="store.filters.debito_de"
+            v-model="store.filters.valor_de"
             :bottom-slots="false"
-            label="Débito"
+            label="Valor"
             stack-label
           />
         </div>
         <div class="col-6">
           <MgInputValor
-            v-model="store.filters.debito_ate"
-            :bottom-slots="false"
-            label="Até"
-            stack-label
-          />
-        </div>
-      </div>
-      <div class="row q-col-gutter-md q-mb-md">
-        <div class="col-6">
-          <MgInputValor
-            v-model="store.filters.credito_de"
-            :bottom-slots="false"
-            label="Crédito"
-            stack-label
-          />
-        </div>
-        <div class="col-6">
-          <MgInputValor
-            v-model="store.filters.credito_ate"
+            v-model="store.filters.valor_ate"
             :bottom-slots="false"
             label="Até"
             stack-label
@@ -327,7 +309,7 @@ const pagarReceberOptions = [
       />
 
       <q-select
-        v-model="store.filters.credito"
+        v-model="store.filters.natureza"
         :options="operacaoOptions"
         emit-value
         map-options

@@ -1,10 +1,14 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
+import { date } from 'quasar'
 import MgUserMenu from '@components/MgUserMenu.vue'
 import MgAppFooter from '@components/MgAppFooter.vue'
 import MgAppsMenu from '@components/MgAppsMenu.vue'
 import MgPageTitle from '@components/MgPageTitle.vue'
 import { useAuth } from 'src/composables/useAuth'
+import { useSincronizacaoAutomatica } from 'src/composables/useSincronizacaoAutomatica'
+import { useCargaStore } from 'src/stores/carga'
+import { useSincronizacaoStore } from 'src/stores/sincronizacao'
 
 const leftDrawerOpen = ref(false)
 const rightDrawerOpen = ref(false)
@@ -21,6 +25,32 @@ const scrollAreaFit = {
 }
 
 const auth = useAuth()
+
+// Sincronização do pátio: roda sozinha (a cada minuto e quando a rede volta) e o
+// estado fica sempre à vista aqui no header. Clique = sincronizar agora,
+// ignorando o cache dos cadastros.
+useSincronizacaoAutomatica()
+const carga = useCargaStore()
+const sinc = useSincronizacaoStore()
+const estadoSync = computed(() => {
+  const hora = sinc.ultimoCiclo ? ` Última: ${date.formatDate(sinc.ultimoCiclo, 'HH:mm')}.` : ''
+  if (sinc.sincronizando) return { icon: 'cloud_sync', color: 'white', dica: 'Sincronizando…' }
+  if (!sinc.online) {
+    return {
+      icon: 'cloud_off',
+      color: 'orange-4',
+      dica: `Sem conexão: as cargas ficam no aparelho e sobem sozinhas quando a internet voltar.${hora}`,
+    }
+  }
+  if (sinc.erro) {
+    return {
+      icon: 'sync_problem',
+      color: 'amber-4',
+      dica: `Falha ao sincronizar: ${sinc.erro}. A tela mostra os cadastros já baixados.${hora}`,
+    }
+  }
+  return { icon: 'cloud_done', color: 'white', dica: `Sincronizado.${hora}` }
+})
 
 // Menu de telas internas do app (padrão do contas/estoque).
 const menuGroups = [
@@ -73,6 +103,17 @@ const menuGroups = [
         />
 
         <MgPageTitle app-name="Agro" :home-route="{ name: 'home' }" />
+
+        <q-btn
+          dense
+          flat
+          round
+          :icon="estadoSync.icon"
+          :color="estadoSync.color"
+          @click="carga.sincronizar({ force: true })"
+        >
+          <q-tooltip>{{ estadoSync.dica }}</q-tooltip>
+        </q-btn>
 
         <MgUserMenu :auth="auth" />
         <MgAppsMenu :groups="menuGroups" />

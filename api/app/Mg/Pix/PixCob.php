@@ -7,7 +7,7 @@
 namespace Mg\Pix;
 
 use Mg\MgModel;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
 use Mg\Pix\Pix;
 use Mg\Negocio\Negocio;
 use Mg\Pix\PixCobStatus;
@@ -89,9 +89,9 @@ class PixCob extends MgModel
 
 
     // Tabelas Filhas
-    public function NegocioFormaPagamentoS()
+    public function PagamentoS()
     {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codpixcob', 'codpixcob');
+        return $this->hasMany(Pagamento::class, 'codpixcob', 'codpixcob');
     }
 
     public function PixS()

@@ -1,8 +1,20 @@
 <script setup>
 // Bloco "Operação": o que a carga É (tipo de romaneio + safra) e a ficha do
-// caminhão. O card só exibe; tudo se edita no modal do `+`/lápis — 6 campos em
-// 2 linhas de 3. Trocar a operação depois da 1ª pesagem pede confirmação, e
-// quem decide isso é o CargaForm (`trocarOperacao`), não este bloco.
+// caminhão. O card só exibe; tudo se edita no modal do `+`/lápis, numa ÚNICA
+// grade (`row`) que sempre fecha as linhas em 12 — nunca sobra nem falta
+// coluna, então nada empurra, nem espreme, nem deixa vazio:
+//   Operação(4) Safra(4) Chegada(4)                          = 12
+//   SAIDA:     Placa(4) Reboque1(4) Reboque2(4)               = 12
+//              Motorista(12, sozinho — o que vem depois (CPF…) começa do zero)
+//   demais:    Placa(6) Motorista(6)                          = 12
+//   sempre:    CPF(4) Nome(8) | Telefone(4) Endereço(8) | Bairro(4) CEP(4) Cidade(4)
+// (as larguras do CargaMotoristaCampos já fecham 12 sozinhas — só dependem de
+// começar do zero, o que as contas acima garantem). Largura de Placa/Motorista
+// muda com `mostrarReboque`: dá pra trocar a Operação no próprio modal e a
+// grade realinha sozinha. Reboque é coisa de caminhão saindo (bitrem/rodotrem)
+// — some do formulário e é zerado ao salvar quando a operação não é SAIDA.
+// Trocar a operação depois da 1ª pesagem pede confirmação, e quem decide isso
+// é o CargaForm (`trocarOperacao`), não este bloco.
 //
 // Placa e motorista podem estar cadastrados ou não (como o CPF na nota do
 // /negocios): placa sem cadastro fica só em texto; motorista sem cadastro
@@ -23,6 +35,7 @@ import {
   CAMPOS_MOTORISTA_SEM_CADASTRO,
 } from 'src/utils/carga'
 import { cadastrarMotorista } from 'src/utils/motorista'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { formataTimestamp, formataCpf, formataTelefone } from '@components/formatters'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -35,6 +48,9 @@ const props = defineProps({
   carga: { type: Object, required: true },
   novo: { type: Boolean, default: false },
 })
+// `fechado(salvou)`: o modal fechou — pelo Salvar (true) ou por ESC, clique fora
+// ou Cancelar (false). O CargaForm usa pra desistir da carga nova no 1º passo.
+const emit = defineEmits(['fechado'])
 
 const $q = useQuasar()
 const store = useCargaStore()
@@ -48,6 +64,8 @@ const persistirBloco = inject('persistirBloco')
 // Troca do tipo de romaneio — a confirmação mora LÁ (CargaForm), não aqui: a
 // guarda não pode depender de quem chama. Devolve se aplicou.
 const trocarOperacao = inject('trocarOperacao')
+// Salvou: o CargaForm abre o próximo modal que falta (Origem/Destino, balança).
+const proximoPasso = inject('proximoPasso')
 
 // Indireção (padrão ContratoForm/SafraForm): muta o objeto reativo compartilhado
 // sem disparar vue/no-mutating-props — `carga` é a MESMA referência que o
@@ -64,8 +82,20 @@ const finalizada = computed(() => cargaFinalizada(carga.value))
 // Nada do caminhão informado: o botão do bloco é o + de "informar", não o lápis.
 // Operação e chegada não contam — nascem preenchidas com a carga.
 const temDados = computed(
-  () => !!(carga.value.placa || carga.value.placacarreta || carga.value.motorista),
+  () =>
+    !!(
+      carga.value.placa ||
+      carga.value.placacarreta ||
+      carga.value.placacarreta2 ||
+      carga.value.motorista
+    ),
 )
+// "REB1234 / REB5678" — só o(s) que existir(em); "—" se nenhum.
+const reboques = computed(() =>
+  [carga.value.placacarreta, carga.value.placacarreta2].filter(Boolean).join(' / '),
+)
+// Reboque só existe na Expedição (bitrem/rodotrem saindo da fazenda).
+const ehExpedicao = computed(() => carga.value.sentido === 'SAIDA')
 
 const sentido = computed(() => sentidoMeta(carga.value.sentido))
 const nomeSafra = (codsafra) => safras.value.find((s) => s.codsafra === codsafra)?.safra || null
@@ -86,12 +116,41 @@ const legendaMotorista = computed(() =>
 // ---- Modal ----
 const dialogAberto = ref(false)
 const salvando = ref(false)
+const salvou = ref(false)
 const edicao = ref({})
 // 'pesquisa' = select de pessoa; 'novo' = motorista sem cadastro ou a cadastrar
 // (CPF, nome, telefone, endereço — CargaMotoristaCampos).
 const modoMotorista = ref('pesquisa')
+const formRef = ref(null)
+const safraRef = ref(null)
 const camposMotoristaRef = ref(null)
-const carretaRef = ref(null)
+const placaRef = ref(null)
+const reboque1Ref = ref(null)
+
+// Qualquer q-select deste modal (Operação, Safra, Placa, Motorista), com a
+// lista FECHADA: Enter salva o modal em vez do padrão do Quasar (reabrir a
+// lista ou reprocessar o texto digitado como "novo valor" — o Quasar SEMPRE
+// intercepta e para a propagação do Enter, então um listener lá fora do campo
+// nunca pegaria essa tecla; tem que ser aqui, no próprio select). `qKeyEvent`
+// faz o Quasar pular o tratamento dele — o emit do keydown vem antes; mesmo
+// truque do MgInputData. Com a lista ABERTA, sai sem mexer: Enter continua
+// escolhendo a opção destacada (busca da Placa, "usar sem cadastro" etc.).
+// `sel` (só Safra) também abre a lista no ↑, como o ↓ do Quasar já faz.
+function tecladoSelect(e, sel) {
+  if (e.target?.getAttribute('aria-expanded') === 'true') return
+  if (e.key === 'ArrowUp' && sel) {
+    e.qKeyEvent = true
+    e.preventDefault()
+    sel.showPopup()
+  } else if (e.key === 'Enter') {
+    e.qKeyEvent = true
+    formRef.value?.submit(e)
+  }
+}
+// A busca de pessoa falhou por rede mesmo com `online` ainda true (o flag só
+// muda no ciclo de sync): trata como offline dali em diante neste modal.
+const semConexao = ref(false)
+const offline = computed(() => !online.value || semConexao.value)
 
 const placaOptions = ref([])
 const placaBusca = ref('')
@@ -105,24 +164,45 @@ function abrir() {
     sentido: carga.value.sentido,
     codsafra: carga.value.codsafra,
     data: carga.value.data,
-    placa: carga.value.placa,
+    // Placa antiga pode ter sido gravada com hífen ("ABC-1234"): a máscara
+    // mostraria limpa e a regra reprovaria um valor que parece certo.
+    placa: normalizarPlaca(carga.value.placa),
     codveiculo: carga.value.codveiculo,
-    placacarreta: carga.value.placacarreta,
+    placacarreta: normalizarPlaca(carga.value.placacarreta),
+    placacarreta2: normalizarPlaca(carga.value.placacarreta2),
     codpessoamotorista: carga.value.codpessoamotorista,
     motorista: carga.value.motorista,
     ...Object.fromEntries(CAMPOS_MOTORISTA_SEM_CADASTRO.map((c) => [c, carga.value[c] ?? null])),
     cadastrarMotorista: false,
   }
-  // Nome digitado sem cadastro (ou offline, sem busca de pessoa) abre direto
-  // nos campos do motorista novo; carga antiga sem CPF/telefone/endereço passa
-  // a pedir o que falta aqui.
+  // Motorista já gravado sem cadastro abre direto nos campos dele (carga antiga
+  // sem CPF/telefone/endereço passa a pedir o que falta). Sem motorista, abre
+  // na busca — mesmo offline: motorista não é obrigatório, e a busca que falha
+  // oferece "usar sem cadastro".
   modoMotorista.value =
-    !edicao.value.codpessoamotorista && (edicao.value.motorista || !online.value)
-      ? 'novo'
-      : 'pesquisa'
+    !edicao.value.codpessoamotorista && edicao.value.motorista ? 'novo' : 'pesquisa'
+  // Offline o select não consegue buscar o nome do motorista cadastrado pelo
+  // id — sem isto o campo abriria vazio. Semeia o cache com o nome da carga.
+  const cache = useSelectCacheStore()
+  if (
+    !online.value &&
+    edicao.value.codpessoamotorista &&
+    edicao.value.motorista &&
+    !cache.getById('pessoa', edicao.value.codpessoamotorista)
+  ) {
+    cache.mergeById('pessoa', [
+      { value: edicao.value.codpessoamotorista, label: edicao.value.motorista },
+    ])
+  }
+  semConexao.value = false
+  inativoAvisado = null
   placaBusca.value = edicao.value.placa || ''
+  salvou.value = false
   dialogAberto.value = true
 }
+// Reativo ao sentido EM EDIÇÃO (não ao já salvo): trocar pra Expedição no
+// próprio modal já revela os campos, sem precisar salvar e reabrir.
+const mostrarReboque = computed(() => edicao.value.sentido === 'SAIDA')
 // O CargaForm abre este modal quando o Registrar esbarra na safra em branco.
 defineExpose({ abrir })
 
@@ -207,24 +287,30 @@ function resolverPlaca(placa) {
   // por cima da placa escolhida na lista ("QCJ8I48").
   placaBusca.value = p || ''
 }
-// Placa escolhida (clique ou Enter): o foco segue pra Carreta quando o menu
-// fecha — o operador já decidiu, não precisa de outro clique.
-let focarCarreta = false
+// Placa escolhida (clique ou Enter): o foco segue pra Carreta — o operador já
+// decidiu, não precisa de outro clique. Só se o foco ainda estiver na placa:
+// com Tab o navegador já leva pra Carreta sozinho, e focar de novo aqui faria o
+// Tab pular um campo.
 function onPlacaEscolhida(val) {
   if (val === ACAO_PLACA.cadastrar) {
     cadastroCaminhao.value = true
     return
   }
   resolverPlaca(val === ACAO_PLACA.semcadastro ? placaBusca.value : val)
-  focarCarreta = !!edicao.value.placa
+  if (!edicao.value.placa) return
+  setTimeout(() => {
+    if (placaRef.value?.$el?.contains(document.activeElement)) reboque1Ref.value?.focus()
+  })
 }
-function onPlacaPopupHide() {
-  if (!focarCarreta) return
-  focarCarreta = false
-  nextTick(() => carretaRef.value?.focus())
-}
+// Saiu do campo sem escolher na lista: vale o que está ESCRITO nele (não o
+// último termo filtrado — depois de um Esc o Quasar volta o texto pra placa
+// atual, e o termo cancelado não pode trocar a placa).
 function onPlacaBlur() {
-  if (placaBusca.value && placaBusca.value !== edicao.value.placa) resolverPlaca(placaBusca.value)
+  const texto = normalizarPlaca(placaRef.value?.$el?.querySelector('input')?.value)
+  if (texto && texto !== edicao.value.placa) resolverPlaca(texto)
+}
+function limparPlaca() {
+  resolverPlaca(null)
 }
 async function onCaminhaoCriado(veiculo) {
   await store.adicionarVeiculo(veiculo)
@@ -242,12 +328,13 @@ function onMotoristaClear() {
   edicao.value.motorista = null
 }
 // Busca sem resultado: as duas saídas viram opções do select (setas + Enter).
-function acoesMotorista(busca) {
+// Busca que FALHOU (sem rede) só oferece o "sem cadastro".
+function acoesMotorista(busca, { erro = false } = {}) {
   if ((busca || '').length < 2) return []
   const acoes = [
     { acao: 'semcadastro', label: `Usar “${busca}” sem cadastro, só nesta carga`, icon: 'edit_note' },
   ]
-  if (online.value) {
+  if (!offline.value && !erro) {
     acoes.push({
       acao: 'cadastrar',
       label: `Cadastrar “${busca}” como motorista`,
@@ -264,7 +351,8 @@ function separarBusca(busca) {
     ? { cpfmotorista: b.replace(/\D/g, ''), motorista: null }
     : { cpfmotorista: null, motorista: b || null }
 }
-async function onAcaoMotorista(acao, busca) {
+async function onAcaoMotorista(acao, busca, { erro = false } = {}) {
+  if (erro) semConexao.value = true
   Object.assign(edicao.value, {
     codpessoamotorista: null,
     ...semCadastroVazio(),
@@ -295,9 +383,26 @@ function selecionarPessoa(p) {
   })
   modoMotorista.value = 'pesquisa'
 }
+// CPF de quem já está no cadastro. Ativo: usa a pessoa. Inativo: não dá pra
+// escolher no select nem cadastrar de novo — segue sem cadastro, avisando.
+// A verificação pode chegar duas vezes (blur + Salvar): avisa uma só.
+let inativoAvisado = null
 function onMotoristaExistente(p) {
+  const nome = p.fantasia || p.pessoa
+  if (p.inativo) {
+    edicao.value.cadastrarMotorista = false
+    if (inativoAvisado === p.codpessoa) return
+    inativoAvisado = p.codpessoa
+    $q.notify({
+      type: 'warning',
+      message: `CPF de ${nome}, que está INATIVO no cadastro.`,
+      caption: 'O motorista fica sem cadastro nesta carga. Para usar o cadastro, reative no app Pessoas.',
+    })
+    return
+  }
+  if (modoMotorista.value === 'pesquisa' && edicao.value.codpessoamotorista === p.codpessoa) return
   selecionarPessoa(p)
-  $q.notify({ type: 'info', message: `CPF já cadastrado: ${p.fantasia || p.pessoa} — selecionado.` })
+  $q.notify({ type: 'info', message: `CPF já cadastrado: ${nome} — selecionado.` })
 }
 async function cadastrarNoServidor() {
   try {
@@ -315,6 +420,13 @@ async function cadastrarNoServidor() {
 async function salvar() {
   salvando.value = true
   try {
+    // CPF digitado por último: a checagem do blur pode não ter voltado (ou nem
+    // ter rodado, com Enter). Confere aqui antes de gravar "sem cadastro" ou
+    // tentar cadastrar alguém que já existe.
+    if (modoMotorista.value === 'novo') {
+      const existente = await camposMotoristaRef.value?.verificarCpf()
+      if (existente) onMotoristaExistente(existente)
+    }
     // Cadastro do motorista antes de tudo: se o servidor recusar (CPF já
     // cadastrado, sem conexão), nada da carga foi mexido e o modal fica aberto.
     if (modoMotorista.value === 'novo' && edicao.value.cadastrarMotorista) {
@@ -328,7 +440,11 @@ async function salvar() {
       data: edicao.value.data,
       placa: edicao.value.placa,
       codveiculo: edicao.value.codveiculo,
-      placacarreta: edicao.value.placacarreta,
+      // Reboque só é coisa de Expedição — some do formulário e não grava se a
+      // operação salva não for SAIDA (mesmo que o campo tenha ficado com texto
+      // de antes de trocar o tipo de romaneio no próprio modal).
+      placacarreta: mostrarReboque.value ? edicao.value.placacarreta : null,
+      placacarreta2: mostrarReboque.value ? edicao.value.placacarreta2 : null,
       codpessoamotorista: semCadastro ? null : edicao.value.codpessoamotorista,
       motorista: edicao.value.motorista,
       ...Object.fromEntries(
@@ -339,7 +455,9 @@ async function salvar() {
     // comum logo depois de trocar a operação): o aviso já saiu e a correção é
     // no bloco de Origem/Destino, não aqui; a gravação vem junto com ela.
     await persistirBloco()
+    salvou.value = true
     dialogAberto.value = false
+    proximoPasso('operacao')
   } catch {
     // erro já notificado por quem persiste (CargaPage) — mantém o dialog aberto
   } finally {
@@ -352,7 +470,7 @@ async function salvar() {
   <q-card flat bordered>
     <q-card-section>
       <div class="row items-center q-mb-sm">
-        <div class="text-subtitle2 text-grey-8">Operação</div>
+        <div class="text-subtitle1 text-grey-8">Operação</div>
         <q-space />
         <q-btn
           flat
@@ -367,50 +485,50 @@ async function salvar() {
 
       <div class="row q-col-gutter-md">
         <div class="col-6 col-sm-4">
-          <div class="text-caption text-grey-6">Operação</div>
+          <div class="text-body2 text-grey-6">Operação</div>
           <div class="row items-center no-wrap">
             <q-icon :name="sentido.icon" :color="sentido.color" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium">{{ sentido.label }}</span>
+            <span class="text-h6 text-weight-medium">{{ sentido.label }}</span>
           </div>
         </div>
         <div class="col-6 col-sm-4">
-          <div class="text-caption text-grey-6">Safra</div>
+          <div class="text-body2 text-grey-6">Safra</div>
           <div class="row items-center no-wrap">
             <q-icon name="eco" color="light-green-8" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium ellipsis">
+            <span class="text-h6 text-weight-medium ellipsis">
               {{ nomeSafra(carga.codsafra) || '—' }}
             </span>
           </div>
         </div>
         <div class="col-12 col-sm-4">
-          <div class="text-caption text-grey-6">Chegada</div>
+          <div class="text-body2 text-grey-6">Chegada</div>
           <div class="row items-center no-wrap">
             <q-icon name="schedule" color="blue-grey-6" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium">
+            <span class="text-h6 text-weight-medium">
               {{ carga.data ? formataTimestamp(carga.data) : '—' }}
             </span>
           </div>
         </div>
 
         <div class="col-6 col-sm-4">
-          <div class="text-caption text-grey-6">Placa</div>
+          <div class="text-body2 text-grey-6">Placa</div>
           <div class="row items-center no-wrap">
             <q-icon name="local_shipping" color="blue-grey-6" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium">{{ carga.placa || '—' }}</span>
+            <span class="text-h6 text-weight-medium">{{ carga.placa || '—' }}</span>
           </div>
         </div>
-        <div class="col-6 col-sm-4">
-          <div class="text-caption text-grey-6">Carreta</div>
+        <div v-if="ehExpedicao" class="col-6 col-sm-4">
+          <div class="text-body2 text-grey-6">Reboque</div>
           <div class="row items-center no-wrap">
             <q-icon name="link" color="blue-grey-6" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium">{{ carga.placacarreta || '—' }}</span>
+            <span class="text-h6 text-weight-medium">{{ reboques || '—' }}</span>
           </div>
         </div>
         <div class="col-12 col-sm-4">
-          <div class="text-caption text-grey-6">Motorista</div>
+          <div class="text-body2 text-grey-6">Motorista</div>
           <div class="row items-center no-wrap">
             <q-icon name="person" color="blue-grey-6" size="20px" class="q-mr-sm" />
-            <span class="text-body1 text-weight-medium ellipsis">{{ carga.motorista || '—' }}</span>
+            <span class="text-h6 text-weight-medium ellipsis">{{ carga.motorista || '—' }}</span>
           </div>
           <div v-if="motoristaSemCadastro" class="text-caption text-grey-6">
             {{ legendaMotorista }}
@@ -420,9 +538,19 @@ async function salvar() {
     </q-card-section>
   </q-card>
 
-  <q-dialog v-model="dialogAberto" :maximized="$q.screen.lt.sm">
-    <q-card flat class="column no-wrap" :class="{ 'carga-dialog': !$q.screen.lt.sm }">
-      <q-form class="col column no-wrap" @submit="salvar">
+  <q-dialog
+    v-model="dialogAberto"
+    :maximized="$q.screen.lt.sm"
+    @hide="emit('fechado', salvou)"
+  >
+    <!-- F3 aqui confirma ESTE dialog; o .stop segura o F3 da página. -->
+    <q-card
+      flat
+      class="column no-wrap"
+      :class="{ 'carga-dialog': !$q.screen.lt.sm }"
+      @keydown.f3.prevent.stop="formRef.submit($event)"
+    >
+      <q-form ref="formRef" class="col column no-wrap" @submit="salvar">
         <q-card-section class="col scroll">
           <div class="text-subtitle1 q-mb-md">Operação</div>
           <div class="row q-col-gutter-x-md">
@@ -433,8 +561,12 @@ async function salvar() {
               :disable="finalizada"
               bottom-slots
               class="col-12 col-sm-4"
+              @keydown="tecladoSelect($event, null)"
             />
+            <!-- Cursor nasce aqui: a safra é o 1º dado da carga nova. Desabilitado
+                 (finalizada) o select não tem alvo de foco. -->
             <q-select
+              ref="safraRef"
               v-model="edicao.codsafra"
               :options="opcoesSafra"
               option-value="codsafra"
@@ -444,9 +576,11 @@ async function salvar() {
               outlined
               label="Safra"
               :disable="finalizada"
+              :autofocus="!finalizada"
               class="col-12 col-sm-4"
               lazy-rules
               :rules="[regraSafra]"
+              @keydown="tecladoSelect($event, safraRef)"
             />
             <MgInputData
               v-model="edicao.data"
@@ -456,7 +590,11 @@ async function salvar() {
               class="col-12 col-sm-4"
             />
 
+            <!-- Sem `clearable`: o X do Quasar entra na ordem do Tab (tabindex 0 fixo)
+                 e o Tab pararia nele em vez de ir pra Carreta — X próprio no #append,
+                 como o MgInput faz. -->
             <q-select
+              ref="placaRef"
               :model-value="edicao.placa"
               :options="placaOptions"
               label="Placa"
@@ -464,22 +602,29 @@ async function salvar() {
               use-input
               fill-input
               hide-selected
-              clearable
               input-debounce="200"
               new-value-mode="add-unique"
               option-label="label"
               option-value="value"
               emit-value
               map-options
-              class="col-12 col-sm-4"
-              autofocus
+              class="col-12"
+              :class="mostrarReboque ? 'col-sm-4' : 'col-sm-6'"
               lazy-rules
               :rules="[() => !!edicao.placa || 'Informe a placa.', () => regraPlaca(edicao.placa)]"
               @filter="filtrarPlaca"
               @update:model-value="onPlacaEscolhida"
-              @popup-hide="onPlacaPopupHide"
               @blur="onPlacaBlur"
+              @keydown="tecladoSelect($event, null)"
             >
+              <template v-if="edicao.placa" #append>
+                <q-icon
+                  name="cancel"
+                  class="cursor-pointer"
+                  tabindex="-1"
+                  @click.stop="limparPlaca"
+                />
+              </template>
               <template #option="{ opt, itemProps }">
                 <q-item v-bind="itemProps">
                   <q-item-section avatar>
@@ -502,16 +647,35 @@ async function salvar() {
               </template>
             </q-select>
 
-            <MgInput
-              ref="carretaRef"
-              v-model="edicao.placacarreta"
-              label="Carreta"
-              mask="AAA#X##"
-              class="col-12 col-sm-4"
-              lazy-rules
-              :rules="[regraPlaca]"
-            />
+            <!-- Reboque: só na Expedição (bitrem/rodotrem saindo da fazenda) —
+                 Recebimento e Transferência não mostram. Quando aparece, são 2
+                 (nenhum obrigatório — regraPlaca aceita vazio), sempre lado a
+                 lado, mesmo no celular: placa cabe fácil em meia largura. -->
+            <template v-if="mostrarReboque">
+              <MgInput
+                ref="reboque1Ref"
+                v-model="edicao.placacarreta"
+                label="Reboque 1"
+                mask="AAA#X##"
+                class="col-6 col-sm-4"
+                lazy-rules
+                :rules="[regraPlaca]"
+              />
+              <MgInput
+                v-model="edicao.placacarreta2"
+                label="Reboque 2"
+                mask="AAA#X##"
+                class="col-6 col-sm-4"
+                lazy-rules
+                :rules="[regraPlaca]"
+              />
+            </template>
 
+            <!-- Motorista: na Expedição a linha da Placa já fechou os 12
+                 sozinha (Placa+Reboque1+Reboque2), então o Motorista ocupa a
+                 SUA linha inteira (12) — garante que o que vem depois (CPF…)
+                 também comece do zero, sem sobra pra disputar. Nos outros
+                 tipos, Placa é col-6 e o Motorista fecha o par (6+6=12). -->
             <MgSelectPessoa
               v-if="modoMotorista === 'pesquisa'"
               v-model="edicao.codpessoamotorista"
@@ -519,10 +683,12 @@ async function salvar() {
               placeholder="Nome ou CPF"
               clearable
               :acoes-sem-resultado="acoesMotorista"
-              class="col-12 col-sm-4"
+              class="col-12"
+              :class="mostrarReboque ? '' : 'col-sm-6'"
               @select="onMotoristaSelect"
               @clear="onMotoristaClear"
               @acao="onAcaoMotorista"
+              @keydown="tecladoSelect($event, null)"
             />
             <MgInput
               v-else
@@ -530,9 +696,10 @@ async function salvar() {
               label="Motorista"
               readonly
               bottom-slots
-              class="col-12 col-sm-4"
+              class="col-12"
+              :class="mostrarReboque ? '' : 'col-sm-6'"
             >
-              <template v-if="online" #append>
+              <template #append>
                 <q-icon name="close" class="cursor-pointer" tabindex="-1" @click="voltarPesquisa">
                   <q-tooltip>Pesquisar no cadastro</q-tooltip>
                 </q-icon>
@@ -543,7 +710,7 @@ async function salvar() {
               v-if="modoMotorista === 'novo'"
               ref="camposMotoristaRef"
               :dados="edicao"
-              :online="online"
+              :online="!offline"
               @existente="onMotoristaExistente"
             />
           </div>
@@ -551,9 +718,21 @@ async function salvar() {
             Romaneio finalizado — a operação e a safra não mudam mais.
           </div>
         </q-card-section>
-        <q-card-actions align="right" class="col-auto">
-          <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
-          <q-btn label="Salvar" type="submit" flat color="primary" :loading="salvando" />
+        <q-card-actions class="col-auto">
+          <!-- Cadastrar ou não é decisão de quem salva: fica no rodapé, junto do
+               Salvar. Offline não há como cadastrar — o motorista fica só nesta
+               carga (o tooltip vai num span: botão desabilitado não recebe hover). -->
+          <span v-if="modoMotorista === 'novo'">
+            <q-toggle
+              v-model="edicao.cadastrarMotorista"
+              :disable="offline"
+              label="Cadastrar motorista no sistema"
+            />
+            <q-tooltip v-if="offline">Sem conexão: o motorista fica só nesta carga.</q-tooltip>
+          </span>
+          <q-space />
+          <q-btn label="Cancelar (Esc)" flat color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn label="Salvar (Enter)" type="submit" flat color="primary" :loading="salvando" />
         </q-card-actions>
       </q-form>
     </q-card>

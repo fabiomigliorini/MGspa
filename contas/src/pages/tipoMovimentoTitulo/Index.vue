@@ -13,27 +13,10 @@ const dialog = ref(false)
 const isNovo = ref(true)
 const saving = ref(false)
 
-const FLAGS = [
-  { key: 'implantacao', label: 'Implantação' },
-  { key: 'ajuste', label: 'Ajuste' },
-  { key: 'armotizacao', label: 'Amortização' },
-  { key: 'juros', label: 'Juros' },
-  { key: 'desconto', label: 'Desconto' },
-  { key: 'pagamento', label: 'Pagamento' },
-  { key: 'estorno', label: 'Estorno' },
-]
-
 const emptyModel = () => ({
   codtipomovimentotitulo: null,
   tipomovimentotitulo: '',
   observacao: '',
-  implantacao: false,
-  ajuste: false,
-  armotizacao: false,
-  juros: false,
-  desconto: false,
-  pagamento: false,
-  estorno: false,
 })
 
 const model = ref(emptyModel())
@@ -47,13 +30,10 @@ const columns = [
     format: (v) => '#' + String(v).padStart(8, '0'),
   },
   { name: 'tipomovimentotitulo', label: 'Descrição', field: 'tipomovimentotitulo', align: 'left' },
-  { name: 'flags', label: 'Flags', field: 'flags', align: 'left' },
   { name: 'observacao', label: 'Observação', field: 'observacao', align: 'left' },
   { name: 'inativo', label: 'Status', field: 'inativo', align: 'center' },
   { name: 'acoes', label: '', field: 'acoes', align: 'right' },
 ]
-
-const flagsAtivos = (row) => FLAGS.filter((f) => row[f.key])
 
 const abrirNovo = () => {
   isNovo.value = true
@@ -67,13 +47,6 @@ const abrirEditar = (row) => {
     codtipomovimentotitulo: row.codtipomovimentotitulo,
     tipomovimentotitulo: row.tipomovimentotitulo,
     observacao: row.observacao || '',
-    implantacao: !!row.implantacao,
-    ajuste: !!row.ajuste,
-    armotizacao: !!row.armotizacao,
-    juros: !!row.juros,
-    desconto: !!row.desconto,
-    pagamento: !!row.pagamento,
-    estorno: !!row.estorno,
   }
   dialog.value = true
 }
@@ -81,13 +54,6 @@ const abrirEditar = (row) => {
 const payload = () => ({
   tipomovimentotitulo: model.value.tipomovimentotitulo,
   observacao: model.value.observacao,
-  implantacao: model.value.implantacao,
-  ajuste: model.value.ajuste,
-  armotizacao: model.value.armotizacao,
-  juros: model.value.juros,
-  desconto: model.value.desconto,
-  pagamento: model.value.pagamento,
-  estorno: model.value.estorno,
 })
 
 const submit = () => (isNovo.value ? criar() : atualizar())
@@ -191,22 +157,6 @@ onMounted(() => store.fetchItems(true))
             </q-td>
           </template>
 
-          <template #body-cell-flags="props">
-            <q-td
-              :props="props"
-              style="white-space: normal; word-break: break-word; max-width: 10vw"
-            >
-              <q-badge
-                v-for="f in flagsAtivos(props.row)"
-                :key="f.key"
-                color="blue-grey-6"
-                class="q-mr-xs"
-              >
-                {{ f.label }}
-              </q-badge>
-            </q-td>
-          </template>
-
           <template #body-cell-inativo="props">
             <q-td :props="props">
               <q-badge v-if="props.row.inativo" color="orange-7">Inativo</q-badge>
@@ -295,9 +245,6 @@ onMounted(() => store.fetchItems(true))
                   type="textarea"
                   autogrow
                 />
-              </div>
-              <div v-for="f in FLAGS" :key="f.key" class="col-6">
-                <q-checkbox v-model="model[f.key]" :label="f.label" />
               </div>
             </div>
           </q-card-section>

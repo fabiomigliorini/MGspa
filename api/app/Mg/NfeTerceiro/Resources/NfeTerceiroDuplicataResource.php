@@ -15,7 +15,7 @@ class NfeTerceiroDuplicataResource extends JsonResource
             'dvenc' => $this->dvenc,
             'vdup' => $this->vdup,
             'codtitulo' => $this->codtitulo,
-            'titulo' => $this->Titulo?->only(['codtitulo', 'titulo', 'vencimento', 'valor', 'saldo']),
+            'titulo' => $this->Titulo?->only(['codtitulo', 'numero', 'vencimento', 'valor', 'saldo']),
         ];
     }
 }

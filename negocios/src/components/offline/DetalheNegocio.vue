@@ -18,6 +18,7 @@ import { iconeNegocio, corIconeNegocio } from 'src/utils/iconeNegocio.js'
 import emitter from 'src/utils/emitter'
 import moment from 'moment/min/moment-with-locales'
 import MgInput from '@components/MgInput.vue'
+import MgHistorico from '@components/MgHistorico.vue'
 moment.locale('pt-br')
 
 const sNegocio = negocioStore()
@@ -285,6 +286,14 @@ const apropriar = () => {
         <q-item-label caption>
           {{ formataTimestampCompleto(sNegocio.negocio.lancamento) }}
         </q-item-label>
+        <q-item-label caption v-if="sNegocio.reaberto" class="text-warning">
+          Reaberto em {{ formataTimestampCompleto(sNegocio.negocio.reabertura) }}
+        </q-item-label>
+      </q-item-section>
+
+      <!-- auditoria e ocorrências (TASK-209): só o que já está no servidor -->
+      <q-item-section side top v-if="sNegocio.negocio.codnegocio">
+        <MgHistorico tabela="tblnegocio" :codigo="sNegocio.negocio.codnegocio" />
       </q-item-section>
     </q-item>
 
@@ -499,9 +508,6 @@ const apropriar = () => {
             <q-item-label caption>
               {{ sNegocio.negocio.Pdv.uuid }}
             </q-item-label>
-            <q-item-label caption>
-              {{ sNegocio.negocio.Pdv.ip }}
-            </q-item-label>
             <q-item-label caption v-if="sNegocio.negocio.Pdv.setor">
               {{ sNegocio.negocio.Pdv.setor }}
             </q-item-label>
@@ -518,7 +524,8 @@ const apropriar = () => {
         v-if="
           sNegocio.negocio.codnegociostatus == 1 &&
           sNegocio.negocio.codpdv != sSinc.pdv.codpdv &&
-          sNegocio.negocio.sincronizado == true
+          sNegocio.negocio.sincronizado == true &&
+          !sNegocio.reaberto
         "
       >
         <q-btn @click="apropriar()" round color="negative" icon="mdi-transit-transfer" />

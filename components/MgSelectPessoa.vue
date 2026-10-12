@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { formataCnpjCpf } from '@components/formatters'
+import MgSelect from '@components/MgSelect.vue'
 
 // ===== REFERÊNCIA do padrão REMOTE (entidade grande) =====
 // Busca no backend (?busca=, debounce) com PAGINAÇÃO 20/20 via scroll infinito
@@ -21,9 +22,10 @@ const props = defineProps({
   clearable: { type: Boolean, default: false },
   // Quando setado (>= 11 dígitos), busca automática e abre o popup.
   searchCnpj: { type: String, default: null },
-  // Busca sem resultado: (busca) => [{ acao, label, icon?, color? }]. Viram
-  // OPÇÕES da lista (as setas e o Enter chegam nelas, o que um slot não
-  // permite); escolher uma emite `acao` (acao, busca) em vez de mudar o valor.
+  // Busca sem resultado: (busca, { erro }) => [{ acao, label, icon?, color? }].
+  // Viram OPÇÕES da lista (as setas e o Enter chegam nelas, o que um slot não
+  // permite); escolher uma emite `acao` (acao, busca, { erro }) em vez de mudar
+  // o valor. `erro` = a busca falhou (sem rede) em vez de voltar vazia.
   acoesSemResultado: { type: Function, default: null },
 })
 
@@ -169,11 +171,12 @@ const onPopupHide = () => {
 
 // Prefixo do value das opções de ação — nunca colide com codpessoa (número).
 const PREFIXO_ACAO = '__acao:'
-function opcoesDeAcao(busca) {
-  return (props.acoesSemResultado?.(busca) || []).map((a) => ({
+function opcoesDeAcao(busca, { erro = false } = {}) {
+  return (props.acoesSemResultado?.(busca, { erro }) || []).map((a) => ({
     ...a,
     value: PREFIXO_ACAO + a.acao,
     busca,
+    erro,
   }))
 }
 
@@ -205,7 +208,7 @@ const filterPessoa = (val, update) => {
     .catch((error) => {
       console.error('Erro ao buscar pessoa:', error)
       update(() => {
-        options.value = []
+        options.value = opcoesDeAcao(val.trim(), { erro: true })
       })
     })
     .finally(() => {
@@ -234,10 +237,20 @@ const onScroll = async ({ index }) => {
   }
 }
 
+// Rótulo usado pelo Quasar pra ecoar a opção destacada DENTRO do campo (seta
+// com `fill-input`). Nas ações ("Usar sem cadastro"/"Cadastrar") isso faria a
+// frase inteira substituir o texto digitado enquanto o operador só está
+// navegando — aqui devolve o texto ORIGINAL da busca, então passar por cima
+// da ação não muda visualmente o campo. O rótulo bonito (ícone + frase) segue
+// só no slot #option, que não usa isto.
+function optionLabelFn(opt) {
+  return opt?.acao ? opt.busca : opt?.label
+}
+
 const handleUpdate = (value) => {
   if (typeof value === 'string' && value.startsWith(PREFIXO_ACAO)) {
     const opcao = options.value.find((o) => o.value === value)
-    if (opcao) emit('acao', opcao.acao, opcao.busca)
+    if (opcao) emit('acao', opcao.acao, opcao.busca, { erro: opcao.erro })
     return
   }
   emit('update:modelValue', value)
@@ -252,7 +265,7 @@ const handleUpdate = (value) => {
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     ref="selectRef"
     :model-value="modelValue"
     @update:model-value="handleUpdate"
@@ -261,7 +274,7 @@ const handleUpdate = (value) => {
     :clearable="clearable"
     :options="options"
     option-value="value"
-    option-label="label"
+    :option-label="optionLabelFn"
     emit-value
     map-options
     use-input
@@ -278,7 +291,6 @@ const handleUpdate = (value) => {
     :class="customClass"
     :disable="disable"
     :readonly="readonly"
-    :tabindex="readonly ? -1 : undefined"
     :loading="loading"
   >
     <template v-slot:option="scope">
@@ -330,7 +342,7 @@ const handleUpdate = (value) => {
     <template v-if="$slots.append" v-slot:append>
       <slot name="append" />
     </template>
-  </q-select>
+  </MgSelect>
 </template>
 
 <!-- não-scoped: o menu é teleportado pra fora do componente -->

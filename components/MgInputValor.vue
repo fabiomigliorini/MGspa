@@ -1,11 +1,13 @@
 <script setup>
-import { ref, computed, watch } from "vue";
+import { ref, computed, watch, nextTick } from "vue";
 
 const props = defineProps({
   modelValue: { type: [Number, String], default: null },
   decimals: { type: Number, default: 2 },
   min: { type: Number, default: null },
   max: { type: Number, default: null },
+  // passo das setas (shift ×10, ctrl ×100); ex.: 0.10 no total de uma moeda
+  step: { type: Number, default: 1 },
   // separador de milhar (desligar p/ ano, código, etc.)
   grouping: { type: Boolean, default: true },
   // alinhamento do texto: right (valores) | left (ano/código) | center
@@ -174,16 +176,32 @@ function onBlur() {
   if (text === "" || text === null) {
     if (lastValid.value !== null) emitFromNumber(null);
     else displayRef.value = "";
-    return;
-  }
-  const parsed = parseValor(text);
-  if (parsed === null) {
-    displayRef.value = formatNumber(lastValid.value);
-  } else if (parsed !== lastValid.value) {
-    emitFromNumber(parsed);
   } else {
-    displayRef.value = formatNumber(lastValid.value);
+    const parsed = parseValor(text);
+    if (parsed === null) {
+      displayRef.value = formatNumber(lastValid.value);
+    } else if (parsed !== lastValid.value) {
+      emitFromNumber(parsed);
+    } else {
+      displayRef.value = formatNumber(lastValid.value);
+    }
   }
+  sincronizar();
+}
+
+// fora do campo, vale o modelValue: quem usa pode ter ajustado o que foi digitado (ex.: o total
+// de uma moeda arredondado para múltiplo dela) sem o modelValue mudar, e o watch não dispara
+function sincronizar() {
+  nextTick(() => {
+    if (focused.value) return;
+    const val = props.modelValue;
+    const n = val === null || val === undefined || val === "" ? null : Number(val);
+    const m = n === null || isNaN(n) ? null : n;
+    if (m !== lastValid.value) {
+      lastValid.value = m;
+      displayRef.value = formatNumber(m);
+    }
+  });
 }
 
 function onTyped(val) {
@@ -221,9 +239,9 @@ function onPaste(e) {
 
 function applyArrow(e) {
   dirtied.value = true;
-  let step = 1;
-  if (e.ctrlKey || e.metaKey) step = 100;
-  else if (e.shiftKey) step = 10;
+  let step = props.step;
+  if (e.ctrlKey || e.metaKey) step *= 100;
+  else if (e.shiftKey) step *= 10;
   const sign = e.key === "ArrowUp" ? +1 : -1;
   const current = parseValor(displayRef.value) ?? lastValid.value ?? 0;
   emitFromNumber(current + sign * step);
@@ -244,7 +262,7 @@ function onKeydown(e) {
   <q-input
     ref="inputRef"
     :model-value="displayRef"
-    :label="label"
+    :label="label || undefined"
     :prefix="prefix"
     :suffix="suffix"
     :outlined="outlined"
@@ -268,6 +286,7 @@ function onKeydown(e) {
     @update:model-value="onTyped"
   >
     <template v-if="$slots.prepend" #prepend><slot name="prepend" /></template>
+    <template v-if="$slots.hint" #hint><slot name="hint" /></template>
     <template v-if="clearable && lastValid !== null && !readonly" #append>
       <q-icon
         name="cancel"
@@ -276,5 +295,6 @@ function onKeydown(e) {
         @click.stop="emitFromNumber(null)"
       />
     </template>
+    <template v-else-if="$slots.append" #append><slot name="append" /></template>
   </q-input>
 </template>

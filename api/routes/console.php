@@ -29,6 +29,8 @@ Schedule::command('nfe-php:dist-dfe')->everyThirtyMinutes();
 Schedule::command('estoque:calcular-minimo-maximo --enviar-mail-faltando')->dailyAt('00:01');
 Schedule::command('boleto-bb:consultar-liquidados')->twiceDaily(4, 13);
 Schedule::command('pix:consultar --horas=36')->everyTenMinutes();
+// Livro de ocorrencias (TASK-205): negocio aberto parado alem do tempo do PDV
+Schedule::command('ocorrencia:negocio-esquecido')->everyTenMinutes()->withoutOverlapping();
 Schedule::command('aniversariantes:individual')->dailyAt('08:00');
 Schedule::command('aniversariantes:geral')->dailyAt('08:00');
 Schedule::command('ranking-produto:refresh')

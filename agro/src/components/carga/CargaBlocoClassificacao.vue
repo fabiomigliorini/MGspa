@@ -12,6 +12,7 @@ const props = defineProps({
 // Providos pelo CargaForm.vue.
 const persistirBloco = inject('persistirBloco')
 const concluirEtapa = inject('concluirEtapa')
+const proximoPasso = inject('proximoPasso')
 const calc = inject('calc')
 const itensCarga = inject('itensCarga')
 const avisoClassificacao = inject('avisoClassificacao')
@@ -59,6 +60,7 @@ function foraTolerancia(item, leitura) {
 }
 
 const dialogAberto = ref(false)
+const formRef = ref(null)
 const edicao = ref({ classificacao: [] })
 // Aberto pelo botão "Classificar": toda leitura é obrigatória (0 quando o grão
 // não tem aquele defeito) e confirmar AVANÇA a carga (concluirEtapa). Pelo lápis
@@ -103,7 +105,10 @@ async function salvar() {
   }
   try {
     const ok = etapaAtual.value ? await concluirEtapa() : await persistirBloco()
-    if (ok) dialogAberto.value = false
+    if (ok) {
+      dialogAberto.value = false
+      proximoPasso('classificacao')
+    }
   } catch {
     // erro já notificado por quem persiste (CargaPage) — mantém o dialog aberto
   }
@@ -120,7 +125,7 @@ async function salvar() {
           size="20px"
           class="q-mr-sm"
         />
-        <div class="text-subtitle2 text-grey-8">Classificação</div>
+        <div class="text-subtitle1 text-grey-8">Classificação</div>
         <q-space />
         <q-btn
           flat
@@ -143,10 +148,10 @@ async function salvar() {
           :key="item.codparametroclassificacao"
           class="col-6 col-sm-4 col-md-3"
         >
-          <div class="text-caption text-grey-6 ellipsis">
+          <div class="text-body2 text-grey-6 ellipsis">
             {{ item.ordem }}. {{ item.parametroclassificacao }}
           </div>
-          <div class="text-body1 text-weight-medium">
+          <div class="text-h6 text-weight-medium">
             <template v-if="linhaDe(item.codparametroclassificacao).leitura != null">
               {{ fmt(linhaDe(item.codparametroclassificacao).leitura, 1) }}%
             </template>
@@ -167,8 +172,14 @@ async function salvar() {
   </q-card>
 
   <q-dialog v-model="dialogAberto" :maximized="$q.screen.lt.sm">
-    <q-card flat class="column no-wrap" :class="{ 'carga-dialog': !$q.screen.lt.sm }">
-      <q-form class="col column no-wrap" @submit="salvar">
+    <!-- F3 aqui confirma ESTE dialog; o .stop segura o F3 da página. -->
+    <q-card
+      flat
+      class="column no-wrap"
+      :class="{ 'carga-dialog': !$q.screen.lt.sm }"
+      @keydown.f3.prevent.stop="formRef.submit($event)"
+    >
+      <q-form ref="formRef" class="col column no-wrap" @submit="salvar">
         <q-card-section class="col scroll">
           <div class="row items-center text-subtitle1 q-mb-md">
             <q-icon
@@ -196,6 +207,12 @@ async function salvar() {
                 suffix="%"
                 :label="`${item.ordem}. ${item.parametroclassificacao}`"
                 :hint="hintItem(item)"
+                class="q-field--auto-height"
+                :input-class="`text-h4 text-weight-bold ${
+                  foraTolerancia(item, linhaEdicao(item.codparametroclassificacao).leitura)
+                    ? 'text-orange-9'
+                    : 'text-primary'
+                }`"
                 :autofocus="i === 0"
                 lazy-rules
                 :rules="[
@@ -219,9 +236,9 @@ async function salvar() {
           </div>
         </q-card-section>
         <q-card-actions align="right" class="col-auto">
-          <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn label="Cancelar (Esc)" flat color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
-            :label="rotuloConfirmar"
+            :label="`${rotuloConfirmar} (Enter)`"
             type="submit"
             :flat="!etapaAtual"
             :unelevated="!!etapaAtual"

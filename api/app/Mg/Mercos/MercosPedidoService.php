@@ -8,7 +8,8 @@ use Illuminate\Support\Facades\DB;
 use Exception;
 
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Pdv\Pdv;
 
@@ -168,16 +169,20 @@ class MercosPedidoService
             case 1567559: // Cartão 11x 
             case 1567560: // Cartão 12x 
             case 1193916: // PIX
-                $nfp = NegocioFormaPagamento::firstOrNew([
+                // Mercos Pay: meio outros (tPag 99), destino = portador Mercos
+                // Pay; fica pendente ate' o negocio fechar
+                $pag = Pagamento::where('codnegocio', $n->codnegocio)
+                    ->where('codportadordestino', PagamentoService::CODPORTADOR_MERCOSPAY)
+                    ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
+                    ->first() ?? new Pagamento();
+                PagamentoService::preencher($pag, [
                     'codnegocio' => $n->codnegocio,
-                    'codformapagamento' => config('services.mercos.codformapagamento_mercospay')
+                    'codfilial' => $n->codfilial,
+                    'meio' => PagamentoService::MEIO_OUTROS,
+                    'principal' => $n->valortotal,
+                    'codportadordestino' => PagamentoService::CODPORTADOR_MERCOSPAY,
                 ]);
-                $nfp->valorpagamento = $n->valortotal;
-                $nfp->valortotal = $n->valortotal;
-                $nfp->tipo = 99; // tpag 99 = Outros
-                $nfp->avista = true;
-                $nfp->integracao = false;
-                $nfp->save();
+                $pag->save();
                 break;
 
             case 1127747: // Prazo

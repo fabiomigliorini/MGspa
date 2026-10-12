@@ -7,10 +7,9 @@
 namespace Mg\Pix;
 
 use Mg\MgModel;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Pix\PixDevolucao;
-use Mg\Portador\PortadorMovimento;
 use Mg\Pix\PixCob;
+use Mg\Pagamento\Pagamento;
 use Mg\Portador\Portador;
 use Mg\Usuario\Usuario;
 use Mg\Pdv\Pdv;
@@ -23,6 +22,7 @@ class Pix extends MgModel
 
     protected $fillable = [
         'cnpj',
+        'codpagamento',
         'codpdv',
         'codpixcob',
         'codportador',
@@ -32,26 +32,37 @@ class Pix extends MgModel
         'infopagador',
         'nome',
         'txid',
+        'utilizacao',
+        'codusuarioutilizacao',
         'valor'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
         'cnpj' => 'float',
+        'codpagamento' => 'integer',
         'codpdv' => 'integer',
         'codpix' => 'integer',
         'codpixcob' => 'integer',
         'codportador' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
+        'codusuarioutilizacao' => 'integer',
         'cpf' => 'float',
         'criacao' => 'datetime',
         'horario' => 'datetime',
+        'utilizacao' => 'datetime',
         'valor' => 'float'
     ];
 
 
     // Chaves Estrangeiras
+    // o pagamento que usou o PIX (TASK-219)
+    public function Pagamento()
+    {
+        return $this->belongsTo(Pagamento::class, 'codpagamento', 'codpagamento');
+    }
+
     public function Pdv()
     {
         return $this->belongsTo(Pdv::class, 'codpdv', 'codpdv');
@@ -77,21 +88,17 @@ class Pix extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+    public function UsuarioUtilizacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioutilizacao', 'codusuario');
+    }
+
 
     // Tabelas Filhas
-    public function LiquidacaoTituloS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codpix', 'codpix');
-    }
 
     public function PixDevolucaoS()
     {
         return $this->hasMany(PixDevolucao::class, 'codpix', 'codpix');
-    }
-
-    public function PortadorMovimentoS()
-    {
-        return $this->hasMany(PortadorMovimento::class, 'codpix', 'codpix');
     }
 
 }

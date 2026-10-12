@@ -4,7 +4,6 @@ namespace Mg\Grao;
 
 use Mg\MgService;
 use Mg\Safra\Safra;
-use Mg\Contrato\Contrato;
 use Mg\Classificacao\ParametroClassificacao;
 use Mg\Classificacao\ParametroClassificacaoService;
 use Mg\Veiculo\Veiculo;
@@ -121,7 +120,7 @@ class CargaService extends MgService
         if (!empty($filter['codpessoamotorista'])) {
             $qry->where('codpessoamotorista', $filter['codpessoamotorista']);
         }
-        foreach (['placa', 'placacarreta', 'motorista'] as $col) {
+        foreach (['placa', 'placacarreta', 'placacarreta2', 'motorista'] as $col) {
             if (!empty($filter[$col])) {
                 $qry->where($col, 'ilike', '%' . $filter[$col] . '%');
             }
@@ -185,26 +184,59 @@ class CargaService extends MgService
      * load e sem ordem. E o que a barra de totais da listagem mostra: quem
      * filtrou "setembro" quer o liquido de setembro, nao o das 50 primeiras.
      *
-     * `sacas` fica de fora: depende do pesosaca da cultura, que varia por safra;
-     * somar sacas de soja com milho nao significa nada. O front soma por linha
-     * quando o recorte tem uma cultura so.
+     * `sacas` e calculada carga a carga — liquido / pesosaca da cultura da
+     * safra DAQUELA carga (60 quando vazio ou zero, como o front) — e so depois
+     * somada: assim o total fecha com a soma da coluna Sacas da listagem mesmo
+     * com culturas misturadas.
+     *
+     * `sentidos` separa recebido, expedido e transferido SEMPRE sem as
+     * canceladas, mesmo com "Cancelados"/"Todos" no filtro: somar kg de
+     * romaneio cancelado no total do que entrou mentiria o estoque. O `qtd` do
+     * topo continua contando o recorte inteiro (a guarda de linhas do
+     * CargaRelatorioService depende dele).
      */
     public static function totais(?array $filter = null): array
     {
-        $qry = static::qryFiltros(Carga::query(), $filter);
+        // Subquery correlacionada, nao join: qryFiltros usa whereHas e um join
+        // aqui deixaria ambigua a coluna codsafra.
+        $pesosaca = '(select nullif(c.pesosaca, 0) from tblsafra s'
+            . ' join tblcultura c on c.codcultura = s.codcultura'
+            . ' where s.codsafra = tblcarga.codsafra)';
 
-        $row = $qry->selectRaw(
-            'count(*) as qtd'
+        $soma = 'count(*) as qtd'
             . ', coalesce(sum(bruto), 0) as bruto'
             . ', coalesce(sum(desconto), 0) as desconto'
             . ', coalesce(sum(liquido), 0) as liquido'
-        )->first();
+            . ", coalesce(sum(liquido / coalesce({$pesosaca}, 60)), 0) as sacas";
+
+        $row = static::qryFiltros(Carga::query(), $filter)->selectRaw($soma)->first();
+
+        $ativas = array_merge($filter ?? [], ['inativo' => 1]);
+        $porSentido = static::qryFiltros(Carga::query(), $ativas)
+            ->selectRaw('sentido, ' . $soma)
+            ->groupBy('sentido')
+            ->get()
+            ->keyBy('sentido');
+
+        $sentidos = [];
+        foreach (static::SENTIDOS as $sentido) {
+            $s = $porSentido->get($sentido);
+            $sentidos[$sentido] = [
+                'qtd' => (int) ($s->qtd ?? 0),
+                'bruto' => (float) ($s->bruto ?? 0),
+                'desconto' => (float) ($s->desconto ?? 0),
+                'liquido' => (float) ($s->liquido ?? 0),
+                'sacas' => (float) ($s->sacas ?? 0),
+            ];
+        }
 
         return [
             'qtd' => (int) ($row->qtd ?? 0),
             'bruto' => (float) ($row->bruto ?? 0),
             'desconto' => (float) ($row->desconto ?? 0),
             'liquido' => (float) ($row->liquido ?? 0),
+            'sacas' => (float) ($row->sacas ?? 0),
+            'sentidos' => $sentidos,
         ];
     }
 
@@ -216,8 +248,24 @@ class CargaService extends MgService
     public static function sincronizar(array $data): Carga
     {
         return DB::transaction(function () use ($data) {
+            // Trava consultiva pelo uuid: serializa ate dois envios da MESMA carga
+            // chegando ao mesmo tempo (libera sozinha no commit/rollback). So depois
+            // dela e seguro ler o estado — antes, os dois liam a linha antiga e cada
+            // um gravava so os campos "sujos" dele (TASK-180).
+            DB::select('select pg_advisory_xact_lock(hashtext(?))', ['carga:' . $data['uuid']]);
+
             $carga = Carga::firstOrNew(['uuid' => $data['uuid']]);
+
+            // Concorrencia otimista. `versao` ausente/null = aparelho que nunca
+            // recebeu resposta desta carga (criacao reenviada) ou app antigo:
+            // aplica, como sempre foi.
+            $versaoCliente = $data['versao'] ?? null;
+            if ($carga->exists && $versaoCliente !== null && (int) $versaoCliente !== (int) $carga->versao) {
+                throw new CargaConflitoException($carga->fresh(static::WITH));
+            }
+
             $carga->fill($data);
+            $carga->versao = $carga->exists ? ((int) $carga->versao + 1) : 1;
             static::snapshotCaminhaoMotorista($carga);
             $carga->save();
             static::sincronizarPontos($carga, $data['pontos'] ?? []);
@@ -228,7 +276,7 @@ class CargaService extends MgService
             static::validar($carga);
             static::gerarMovimento($carga);
             return $carga->fresh(static::WITH);
-        });
+        }, 3); // retentativa em deadlock/serialization failure do Postgres
     }
 
     /** Dados do motorista SEM cadastro — com codpessoamotorista ficam NULL. */
@@ -237,8 +285,6 @@ class CargaService extends MgService
         'telefonemotorista',
         'cepmotorista',
         'enderecomotorista',
-        'numeromotorista',
-        'complementomotorista',
         'bairromotorista',
         'codcidademotorista',
     ];
@@ -429,14 +475,12 @@ class CargaService extends MgService
     }
 
     /**
-     * Validacoes (autoridade do servidor): fechamento do rateio nas etapas
-     * finais + over-load de contrato de venda. So cobra fechamento no FINALIZADO
-     * (antes disso o kanban aceita parcial).
+     * Validacoes (autoridade do servidor): fechamento do rateio no FINALIZADO
+     * (antes disso o kanban aceita parcial). Contrato alem do saldo NAO bloqueia
+     * (D12, 29/09): o caminhao completa a carga e o patio so avisa.
      */
     protected static function validar(Carga $carga): void
     {
-        static::validarOverloadContrato($carga);
-
         if ($carga->etapa !== static::ETAPA_FINAL) {
             return;
         }
@@ -459,50 +503,6 @@ class CargaService extends MgService
                 throw ValidationException::withMessages([
                     'pontos' => "A soma das " . ($papel === 'ORIGEM' ? 'origens' : 'destinos')
                         . " (" . round($soma) . " kg) deve fechar com o liquido (" . round($liq) . " kg).",
-                ]);
-            }
-        }
-    }
-
-    /**
-     * Bloqueio de over-load: destino CONTRATO (venda) nao pode levar o total
-     * entregue acima do contratado. Contrato em volume aberto (quantidade NULL,
-     * rapa-silo) pula.
-     */
-    protected static function validarOverloadContrato(Carga $carga): void
-    {
-        $kgPorContrato = [];
-        foreach ($carga->CargaPontoS as $p) {
-            if ($p->contatipo === 'CONTRATO' && $p->papel === 'DESTINO' && $p->codcontrato) {
-                $kgPorContrato[$p->codcontrato] = ($kgPorContrato[$p->codcontrato] ?? 0) + (float) $p->liquido;
-            }
-        }
-        if (!$kgPorContrato) {
-            return;
-        }
-        $contratos = Contrato::with('Cultura')
-            ->whereIn('codcontrato', array_keys($kgPorContrato))
-            ->get()
-            ->keyBy('codcontrato');
-
-        foreach ($kgPorContrato as $cod => $estaCargaKg) {
-            $contrato = $contratos->get($cod);
-            if (!$contrato || $contrato->quantidade === null) {
-                continue;
-            }
-            $pesosaca = (float) ($contrato->Cultura->pesosaca ?? 60) ?: 60;
-            $contratadokg = (float) $contrato->quantidade * $pesosaca;
-            // entregue por OUTRAS cargas (extrato; exclui a propria).
-            $jaOutros = (float) MovimentoGrao::where('contatipo', 'CONTRATO')
-                ->where('codcontrato', $cod)
-                ->where('papel', 'DESTINO')
-                ->when($carga->codcarga, fn ($q) => $q->where('codcarga', '!=', $carga->codcarga))
-                ->sum('liquido');
-            if ($jaOutros + $estaCargaKg > $contratadokg + 1) {
-                $saldo = max(0, $contratadokg - $jaOutros);
-                throw ValidationException::withMessages([
-                    'pontos' => "Contrato {$contrato->contrato}: carregamento excede o contratado ("
-                        . round($contratadokg) . " kg). Saldo disponivel: " . round($saldo) . " kg.",
                 ]);
             }
         }
@@ -568,7 +568,7 @@ class CargaService extends MgService
      * Sinal do saldo: UNIDADE e a unica conta-saldo (+entrada/-saida); PLANTIO
      * (producao) e CONTRATO (entregue/recebido) sao contadores (sempre +).
      */
-    protected static function sinal(string $contatipo, string $papel): int
+    public static function sinal(string $contatipo, string $papel): int
     {
         if ($contatipo === 'UNIDADE') {
             return $papel === 'DESTINO' ? 1 : -1;
@@ -598,18 +598,34 @@ class CargaService extends MgService
         return $res;
     }
 
+    /**
+     * Cancelar/reativar, com a mesma trava e versao do sincronizar (TASK-180):
+     * hoje o MgService::ativar/inativar nem estava em transacao, e se o
+     * gerarMovimento falhasse no meio a carga ficava cancelada/reativada com o
+     * extrato velho.
+     */
     public static function inativar($model, $date = null)
     {
-        $model = parent::inativar($model, $date);
-        // Carga inativada some do extrato (estorno) — mantem os saldos coerentes.
-        static::gerarMovimento($model->fresh('CargaPontoS'));
-        return $model;
+        return DB::transaction(function () use ($model, $date) {
+            DB::select('select pg_advisory_xact_lock(hashtext(?))', ['carga:' . $model->uuid]);
+            $model = Carga::where('codcarga', $model->codcarga)->lockForUpdate()->firstOrFail();
+            $model->versao++;
+            $model = parent::inativar($model, $date);
+            // Carga inativada some do extrato (estorno) — mantem os saldos coerentes.
+            static::gerarMovimento($model->fresh('CargaPontoS'));
+            return $model;
+        }, 3);
     }
 
     public static function ativar($model)
     {
-        $model = parent::ativar($model);
-        static::gerarMovimento($model->fresh('CargaPontoS'));
-        return $model;
+        return DB::transaction(function () use ($model) {
+            DB::select('select pg_advisory_xact_lock(hashtext(?))', ['carga:' . $model->uuid]);
+            $model = Carga::where('codcarga', $model->codcarga)->lockForUpdate()->firstOrFail();
+            $model->versao++;
+            $model = parent::ativar($model);
+            static::gerarMovimento($model->fresh('CargaPontoS'));
+            return $model;
+        }, 3);
     }
 }

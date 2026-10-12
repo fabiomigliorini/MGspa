@@ -15,12 +15,24 @@ const menuGroups = [
   {
     label: 'Movimento',
     items: [
+      {
+        label: 'Painel',
+        icon: 'dashboard',
+        color: 'blue-8',
+        to: { name: 'painel' },
+      },
+      {
+        label: 'Ocorrências',
+        icon: 'policy',
+        color: 'red-7',
+        to: { name: 'ocorrencia' },
+      },
       { label: 'Pix Recebidos', icon: 'pix', color: 'teal-7', to: { name: 'pix' } },
       {
-        label: 'Liquidações',
+        label: 'Pagamentos',
         icon: 'paid',
         color: 'indigo-7',
-        to: { name: 'liquidacao-titulo' },
+        to: { name: 'pagamento' },
       },
       {
         label: 'Agrupamentos',
@@ -29,12 +41,6 @@ const menuGroups = [
         to: { name: 'agrupamento' },
       },
       { label: 'Títulos', icon: 'request_quote', color: 'indigo-7', to: { name: 'titulo' } },
-      {
-        label: 'Saldos',
-        icon: 'account_balance_wallet',
-        color: 'amber-8',
-        to: { name: 'portador-saldos' },
-      },
       {
         label: 'Boletos Emitidos',
         icon: 'receipt',
@@ -47,6 +53,29 @@ const menuGroups = [
         icon: 'move_up',
         color: 'deep-purple-7',
         to: { name: 'cheque-repasse' },
+      },
+    ],
+  },
+  {
+    label: 'Caixa',
+    items: [
+      {
+        label: 'Portadores',
+        icon: 'account_balance_wallet',
+        color: 'amber-8',
+        to: { name: 'portador' },
+      },
+      {
+        label: 'Itens do Caixa',
+        icon: 'inventory_2',
+        color: 'amber-9',
+        to: { name: 'caixa-item' },
+      },
+      {
+        label: 'Maquinetas',
+        icon: 'point_of_sale',
+        color: 'deep-orange-8',
+        to: { name: 'maquineta' },
       },
     ],
   },
@@ -79,7 +108,6 @@ const menuGroups = [
         color: 'deep-purple-8',
         to: { name: 'tipo-movimento-titulo' },
       },
-      { label: 'Portadores', icon: 'credit_card', color: 'cyan-8', to: { name: 'portador' } },
       {
         label: 'Formas de Pagamento',
         icon: 'payments',

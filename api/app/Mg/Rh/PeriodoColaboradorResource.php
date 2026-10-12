@@ -42,13 +42,15 @@ class PeriodoColaboradorResource extends JsonResource
                 'inativo'         => $ac->inativo,
                 'criacao'         => $ac->criacao,
                 'usuariocriacao'  => $ac->usuariocriacao,
+                // pagamento do evento (M6 doc-3): o ativo, ou o último cancelado
+                'codpagamento'    => optional($ac->PagamentoS->sortBy(fn ($p) => [$p->estado == 'C' ? 1 : 0, -$p->codpagamento])->first())->codpagamento,
                 // Só os títulos da baixa original (tipo 601), evita duplicar com ajustes.
                 'titulos'         => $ac->MovimentoTituloS
                     ->where('codtipomovimentotitulo', 601)
                     ->map(fn ($m) => [
                         'codtitulo' => (int) $m->codtitulo,
                         'numero'    => optional($m->Titulo)->numero,
-                        'valor'     => (float) (($m->credito ?? 0) + ($m->debito ?? 0)),
+                        'valor'     => abs((float) $m->principal),
                     ])->values(),
             ];
         })->values();

@@ -4,11 +4,17 @@ import { toRaw } from 'vue'
 import { db } from 'boot/db'
 import { Notify, uid } from 'quasar'
 import { sincronizacaoStore } from 'stores/sincronizacao'
-import tiposPagamento from '../data/tipos-pagamento.json'
+import { caixaStore } from 'stores/caixa'
+import { useAuthStore } from 'stores/auth'
+import { cobrancaStore } from '@components/stores/cobrancaStore'
 import bandeirasCartao from '../data/bandeiras-cartao.json'
 import { falar } from '../utils/falar.js'
+import { CONDICOES, MEIO, MEIOS, totalPagamento } from '@components/cobranca/pagamento.js'
 
 const sSinc = sincronizacaoStore()
+const sCobranca = cobrancaStore()
+
+const arredonda = (v) => Math.round((parseFloat(v) || 0) * 100) / 100
 
 // Serializa operações concorrentes por uuid de negócio.
 // Evita race entre cliques rápidos, scanner duplo e listener multi-aba.
@@ -50,9 +56,16 @@ function instalarListenerMultiAba(store) {
 // fechado é sempre resposta velha — em geral o PUT do sincronizar ou um GET do polling de
 // PIX/maquininha que demorou. Aplicá-la devolvia a tela para "aberto" no meio da emissão,
 // desmontando o card da nota que estava transmitindo (TASK-146).
+//
+// A exceção é a reabertura pelo gerente (TASK-30): o servidor volta para 1 com uma
+// `reabertura` nova, e aí não é resposta velha.
 function respostaAtrasada(atual, ret) {
+  const reaberto = !!ret?.reabertura && ret.reabertura !== atual?.reabertura
   const atrasada =
-    atual?.uuid === ret?.uuid && atual?.codnegociostatus > 1 && ret?.codnegociostatus == 1
+    atual?.uuid === ret?.uuid &&
+    atual?.codnegociostatus > 1 &&
+    ret?.codnegociostatus == 1 &&
+    !reaberto
   if (atrasada) {
     console.warn(
       `[negócio ${ret.uuid}] resposta atrasada descartada: servidor devolveu status 1 com o negócio já em ${atual.codnegociostatus}`,
@@ -89,7 +102,7 @@ function descontosIguais(a, b) {
 
 export const negocioStore = defineStore('negocio', {
   persist: {
-    pick: ['padrao', 'paginaAtual', 'ultimos', 'maquinetasRecentes'],
+    pick: ['padrao', 'paginaAtual', 'ultimos'],
   },
 
   state: () => ({
@@ -98,22 +111,15 @@ export const negocioStore = defineStore('negocio', {
     ultimos: [],
     dialog: {
       valores: false,
-      receber: false,
       pagamento: false,
       vale: false,
     },
     // uuid do vale aberto no dialog de vale compras; null = vale novo
     valeEditando: null,
-    // pagamento aberto no dialog de detalhe (drawer de totais)
+    // pagamento (ou grupo de parcelas, com `condicao`) aberto no dialog de detalhe
     pagamentoDetalhe: null,
-    // wizard Receber: valor deste pagamento, forma escolhida e vale bipado
-    receber: {
-      valor: null,
-      forma: null,
-      codtituloVale: null,
-    },
-    // maquininhas usadas em cartão manual neste PDV, mais recente primeiro
-    maquinetasRecentes: [],
+    // configuracao do PDV: vem do backend na sincronizacao (aplicarConfiguracao) e fica
+    // persistida para funcionar offline
     padrao: {
       codestoquelocal: 101001, //Deposito
       codpessoa: 1, //Consumidor
@@ -121,10 +127,8 @@ export const negocioStore = defineStore('negocio', {
       codoperacao: 2, //Saída
       venda: true, //Saída
       impressora: null,
-      codpagarmepos: null,
-      codsauruspos: null,
-      maquineta: null,
-      codportador: null,
+      codmaquineta: null,
+      codportadorpix: null,
     },
     paginaAtual: 1,
     dialogVerificarDuplicados: false,
@@ -162,17 +166,45 @@ export const negocioStore = defineStore('negocio', {
         .filter((vale) => vale.inativo == null)
         .sort((a, b) => String(a.criacao).localeCompare(String(b.criacao)))
     },
+    // venda fechada que o gerente reabriu (TASK-30): mantém o PDV original e se edita de
+    // qualquer PDV, por qualquer usuário
+    reaberto() {
+      return this.negocio?.codnegociostatus == 1 && !!this.negocio?.reabertura
+    },
+    // só mostra o botão: quem garante é o servidor (Gerente da filial, Financeiro, Admin)
+    podeGerenciar() {
+      const grupos = (useAuthStore().usuario?.permissoes ?? []).map((p) => p.grupousuario)
+      return ['Administrador', 'Gerente', 'Financeiro'].some((g) => grupos.includes(g))
+    },
+    // fechado ou cancelado
+    podeReabrir() {
+      const status = this.negocio?.codnegociostatus
+      return (status == 2 || status == 3) && this.podeGerenciar
+    },
     podeEditar() {
+      if (this.reaberto) {
+        return true
+      }
       return this.negocio?.codnegociostatus == 1 && this.negocio?.codpdv == sSinc.pdv?.codpdv
     },
+    // o cancelado (C) e a parcela inativa da venda reaberta não contam
+    pagamentosAtivos() {
+      return (this.negocio?.pagamentos ?? []).filter((pag) => pag.estado != 'C')
+    },
+    parcelasAtivas() {
+      return (this.negocio?.parcelas ?? []).filter((np) => !np.inativo)
+    },
+    // o que falta receber; negativo = troco (o dinheiro entregue entra inteiro: total + troco)
     valorapagar() {
-      var pagamentos = 0
-      if (this.negocio.pagamentos) {
-        pagamentos = this.negocio.pagamentos
-          .map((item) => item.valortotal)
-          .reduce((prev, curr) => prev + curr, 0)
-      }
-      return Math.round((this.negocio.valortotal - pagamentos) * 100) / 100
+      const pagamentos = this.pagamentosAtivos.reduce(
+        (soma, pag) => soma + (pag.total || 0) + (pag.valortroco || 0),
+        0,
+      )
+      const parcelas = this.parcelasAtivas.reduce(
+        (soma, np) => soma + (parseFloat(np.valor) || 0),
+        0,
+      )
+      return arredonda(this.negocio.valortotal - pagamentos - parcelas)
     },
     // mesma regra do PdvNegocioService::fechar: venda >= 1.000 sem CPF/CNPJ não fecha
     faltaIdentificarCliente() {
@@ -225,11 +257,18 @@ export const negocioStore = defineStore('negocio', {
   },
 
   actions: {
-    async salvarPadrao(padrao) {
-      this.padrao = { ...padrao }
-      const nat = await db.naturezaOperacao.get(padrao.codnaturezaoperacao)
-      this.padrao.codoperacao = nat.codoperacao
-      this.padrao.venda = nat.venda
+    // a configuracao do dispositivo (tblpdv) vira o padrao dos negocios deste PDV
+    aplicarConfiguracao(pdv) {
+      this.padrao = {
+        codestoquelocal: pdv.codestoquelocal,
+        codpessoa: 1, //Consumidor
+        codnaturezaoperacao: pdv.codnaturezaoperacao,
+        codoperacao: pdv.codoperacao,
+        venda: pdv.venda,
+        impressora: pdv.impressora,
+        codmaquineta: pdv.codmaquineta,
+        codportadorpix: pdv.codportadorpix,
+      }
     },
 
     async atualizarListagem() {
@@ -447,6 +486,7 @@ export const negocioStore = defineStore('negocio', {
         itens: [],
         vales: [],
         pagamentos: [],
+        parcelas: [],
         titulos: [],
         notas: [],
         codpdv: sSinc.pdv.codpdv,
@@ -459,6 +499,9 @@ export const negocioStore = defineStore('negocio', {
     },
 
     async recalcularValorTotal() {
+      // desconto dado na forma de pagamento entra no desconto dos itens e vales
+      this.ratearDescontoPagamento()
+
       let valorprodutos = 0
       let valordesconto = 0
       let valorfrete = 0
@@ -503,10 +546,10 @@ export const negocioStore = defineStore('negocio', {
           }
         })
 
-      // soma os juros dos pagamentos
-      const valorjuros = this.negocio.pagamentos.reduce((acumulador, pag) => {
-        return acumulador + pag.valorjuros
-      }, 0)
+      // juros dos pagamentos (parcelamento no cartão) e das parcelas (crediário)
+      const valorjuros =
+        this.pagamentosAtivos.reduce((soma, pag) => soma + (pag.juros || 0), 0) +
+        this.parcelasAtivas.reduce((soma, np) => soma + (parseFloat(np.juros) || 0), 0)
 
       let valortotal =
         valorprodutos +
@@ -571,15 +614,69 @@ export const negocioStore = defineStore('negocio', {
       alvos.forEach((alvo, i) => (alvo.valorjuros = fatias[i] || null))
     },
 
+    // O dinheiro entregue (total + troco) não muda; o troco é redistribuído entre os pagamentos
+    // em dinheiro (o maior primeiro) quando o saldo muda, e o principal acompanha
+    // Rateia o desconto dado no pagamento (dinheiro, M5 doc-3) no valordesconto dos itens e
+    // vales, pelos mesmos pesos do juros. Cada um guarda a fatia em valordescontopagamento
+    // (o servidor devolve a mesma conta, por uuid) para refazer o rateio sem perder o
+    // desconto digitado. Ordem por uuid, sobra no último: igual ao
+    // PdvNegocioPagamentoService::ratearDesconto.
+    ratearDescontoPagamento() {
+      const r2 = (num) => Math.round((parseFloat(num) || 0) * 100) / 100
+      const porUuid = (a, b) => (a.uuid < b.uuid ? -1 : a.uuid > b.uuid ? 1 : 0)
+      const total = r2(this.pagamentosAtivos.reduce((soma, pag) => soma + (pag.desconto || 0), 0))
+      const itens = this.negocio.itens.filter((i) => i.inativo == null).sort(porUuid)
+      const vales = (this.negocio.vales ?? []).filter((v) => v.inativo == null).sort(porUuid)
+      const alvos = [...itens, ...vales]
+      const pesos = [...itens.map((i) => r2(i.valorprodutos)), ...vales.map((v) => r2(v.valorvale))]
+      const base = r2(pesos.reduce((soma, peso) => soma + peso, 0))
+      const fatias = new Map()
+      if (total > 0 && base > 0) {
+        let soma = 0
+        alvos.forEach((alvo, i) => {
+          const fatia = i == alvos.length - 1 ? r2(total - soma) : r2((total * pesos[i]) / base)
+          soma = r2(soma + fatia)
+          fatias.set(alvo.uuid, fatia)
+        })
+      }
+      // inativos também: devolvem a fatia que tinham
+      const todos = [...this.negocio.itens, ...(this.negocio.vales ?? [])]
+      todos.forEach((alvo) => {
+        const anterior = r2(alvo.valordescontopagamento)
+        const fatia = fatias.get(alvo.uuid) ?? 0
+        if (anterior == fatia) {
+          return
+        }
+        alvo.valordesconto = r2(r2(alvo.valordesconto) - anterior + fatia) || null
+        alvo.valordescontopagamento = fatia || null
+        if (alvo.valorvale !== undefined) {
+          alvo.valortotal = r2(r2(alvo.valorvale) - r2(alvo.valordesconto))
+        } else {
+          alvo.valortotal = r2(
+            r2(alvo.valorprodutos) -
+              r2(alvo.valordesconto) +
+              r2(alvo.valorfrete) +
+              r2(alvo.valorseguro) +
+              r2(alvo.valoroutras),
+          )
+        }
+      })
+    },
+
     async recalcularTroco() {
       const pagar = this.valorapagar
-      let troco = pagar < 0 ? Math.abs(pagar) : null
-      this.negocio.pagamentos
-        .filter((pag) => pag.codformapagamento == process.env.CODFORMAPAGAMENTO_DINHEIRO)
-        .sort((a, b) => b.valorpagamento - a.valorpagamento) // ordem decrescente
+      let troco = pagar < 0 ? Math.abs(pagar) : 0
+      // só o rascunho: o já efetivado (venda reaberta) não muda de valor
+      ;(this.negocio.pagamentos ?? [])
+        .filter((pag) => pag.meio == MEIO.DINHEIRO && !pag.integracao && pag.estado == 'P')
+        .sort((a, b) => b.total + (b.valortroco || 0) - (a.total + (a.valortroco || 0)))
         .forEach((pag) => {
-          pag.valortroco = Math.min(troco, pag.valorpagamento)
-          troco -= pag.valortroco
+          const entregue = arredonda(pag.total + (pag.valortroco || 0))
+          const valortroco = arredonda(Math.min(troco, entregue))
+          troco = arredonda(troco - valortroco)
+          pag.valortroco = valortroco || null
+          pag.total = arredonda(entregue - valortroco)
+          pag.principal = arredonda(pag.total + (pag.desconto || 0) - (pag.juros || 0))
         })
     },
 
@@ -656,6 +753,8 @@ export const negocioStore = defineStore('negocio', {
       negocio.uuid = uuid
       negocio.codnegociostatus = 1
       negocio.justificativa = null
+      // a cópia de uma venda reaberta (TASK-30) nasce aberta, não reaberta
+      negocio.reabertura = null
       negocio.lancamento = formataTimestampIso(new Date())
       negocio.criacao = formataTimestampIso(new Date())
       negocio.alteracao = formataTimestampIso(new Date())
@@ -663,9 +762,11 @@ export const negocioStore = defineStore('negocio', {
       negocio.codpdv = sSinc.pdv.codpdv
       negocio.Pdv = { ...sSinc.pdv }
       negocio.pagamentos = []
+      negocio.parcelas = []
       negocio.titulos = []
       negocio.notas = []
       negocio.PagarMePedidoS = []
+      negocio.SaurusPedidoS = []
       negocio.pixCob = []
       negocio.itens = negocio.itens.filter((i) => {
         return i.inativo == null
@@ -761,6 +862,9 @@ export const negocioStore = defineStore('negocio', {
       }
       if (this.negocio.pagamentos == null) {
         this.negocio.pagamentos = []
+      }
+      if (this.negocio.parcelas == null) {
+        this.negocio.parcelas = []
       }
       if (this.negocio.titulos == null) {
         this.negocio.titulos = []
@@ -864,7 +968,10 @@ export const negocioStore = defineStore('negocio', {
       if (sincronizar) {
         if (this.negocio.codnegociostatus == 1) {
           this.negocio.alteracao = formataTimestampIso(new Date())
-          this.negocio.lancamento = formataTimestampIso(new Date())
+          // a reaberta mantém a data do fechamento original (TASK-30)
+          if (!this.negocio.reabertura) {
+            this.negocio.lancamento = formataTimestampIso(new Date())
+          }
         }
         this.negocio.sincronizado = false
       }
@@ -1050,7 +1157,9 @@ export const negocioStore = defineStore('negocio', {
         item.valorunitario = valorunitario
         item.valorprodutos = valorprodutos
         item.percentualdesconto = percentualdesconto
+        // o dialog edita só o desconto digitado; a fatia do pagamento volta no rateio
         item.valordesconto = valordesconto
+        item.valordescontopagamento = null
         item.valorfrete = valorfrete
         item.valorseguro = valorseguro
         item.valoroutras = valoroutras
@@ -1087,6 +1196,8 @@ export const negocioStore = defineStore('negocio', {
       } else {
         item.valordesconto = Math.round(item.valorprodutos * item.percentualdesconto) / 100
       }
+      // desconto refeito do zero: a fatia do pagamento volta no rateio
+      item.valordescontopagamento = null
       this.itemRecalcularValorTotal(item)
     },
 
@@ -1294,6 +1405,7 @@ export const negocioStore = defineStore('negocio', {
         // undefined = quem chamou nem mexeu no campo; deixa como esta.
         if (valordesconto !== undefined) {
           vale.valordesconto = parseFloat(valordesconto) || null
+          vale.valordescontopagamento = null
         }
         vale.alteracao = formataTimestampIso(new Date())
         this.valeRecalcularValores(vale)
@@ -1442,6 +1554,7 @@ export const negocioStore = defineStore('negocio', {
           continue
         }
         vale.valordesconto = fatia.valordesconto
+        vale.valordescontopagamento = null
         vale.alteracao = formataTimestampIso(new Date())
         this.valeRecalcularValores(vale)
       }
@@ -1527,6 +1640,8 @@ export const negocioStore = defineStore('negocio', {
       for (let index = 0; index <= ultimoIndex; index++) {
         const item = itensOrdenados[index] // Usa o item ORDENADO
 
+        // o desconto digitado substitui o do item; a fatia do pagamento volta no rateio
+        item.valordescontopagamento = null
         aplicarRateio(
           item,
           index,
@@ -1695,8 +1810,9 @@ export const negocioStore = defineStore('negocio', {
       return true
     },
 
-    // abre o wizard Receber; forma/codtituloVale pulam direto para o passo da forma (bipagem VAL…)
-    abrirReceber({ forma = null, codtituloVale = null } = {}) {
+    // abre o wizard de cobrança para o negócio; forma/codtituloVale pulam direto para o passo
+    // da forma (bipagem VAL…)
+    async abrirReceber({ forma = null, codtituloVale = null } = {}) {
       if (this.valorapagar <= 0) {
         Notify.create({
           type: 'negative',
@@ -1717,100 +1833,176 @@ export const negocioStore = defineStore('negocio', {
         })
         return
       }
-      this.receber = {
-        valor: this.valorapagar > 0 ? this.valorapagar : null,
+      sCobranca.abrir({
+        valor: this.valorapagar,
+        total: this.negocio.valortotal,
+        saldo: this.valorapagar,
+        sentido: this.negocio.codoperacao == 1 ? 'saida' : 'entrada',
+        pessoa: { codpessoa: this.negocio.codpessoa, fantasia: this.negocio.Pessoa?.fantasia },
+        documento: this.documentoCobranca(),
+        contexto: await this.contextoCobranca(this.negocio.codestoquelocal, this.reaberto),
+        padrao: this.padrao,
         forma,
         codtituloVale,
+      })
+    },
+
+    // o PDV como contexto do wizard de cobrança (também no Receber título): a filial e as
+    // maquinetas vêm do estoque local; online, as maquinetas são buscadas de novo
+    // `reaberto`: na venda reaberta o dinheiro entra onde o da venda entrou, na data dela
+    // (o servidor decide e o F3 confere a sessão); a gaveta deste PDV não importa (TASK-30)
+    async contextoCobranca(codestoquelocal, reaberto = false) {
+      const local = async () => (await db.estoqueLocal.get(codestoquelocal)) ?? {}
+      const contexto = {
+        pdv: sSinc.pdv.uuid,
+        codfilial: (await local()).codfilial ?? null,
+        carregarMaquinetas: async (aoAtualizar) => {
+          const antes = (await local()).MaquinetaS ?? []
+          sSinc.silentSincronizarEstoqueLocal().then(async (ok) => {
+            if (ok && aoAtualizar) {
+              aoAtualizar((await local()).MaquinetaS ?? [])
+            }
+          })
+          return antes
+        },
+        buscarVale: (codtitulo) => sSinc.buscarVale(codtitulo),
+        // PDV sem gaveta ou caixa fechado: Dinheiro bloqueado no wizard (M9 doc-3)
+        bloqueioDinheiro: null,
       }
-      this.dialog.receber = true
+      if (reaberto) {
+        return contexto
+      }
+      // o wizard abre na hora com o Dinheiro liberado; a resposta do servidor chega depois e
+      // bloqueia (offline não chega: fica liberado). Pelo store, se já abriu, para a tela reagir
+      caixaStore()
+        .bloqueioDinheiro()
+        .then((motivo) => {
+          if (toRaw(sCobranca.contexto) === contexto) {
+            sCobranca.contexto.bloqueioDinheiro = motivo
+          } else {
+            contexto.bloqueioDinheiro = motivo
+          }
+        })
+      return contexto
     },
 
-    registrarMaquinetaRecente({ serial, apelido, codpessoa }) {
-      this.maquinetasRecentes = [
-        { serial, apelido, codpessoa },
-        ...this.maquinetasRecentes.filter((m) => m.serial !== serial),
-      ].slice(0, 5)
+    // o negócio como documento do wizard de cobrança
+    documentoCobranca() {
+      const uuid = this.negocio.uuid
+      return {
+        tipo: 'negocio',
+        codnegocio: this.negocio.codnegocio,
+        codestoquelocal: this.negocio.codestoquelocal,
+        sincronizado: !!this.negocio.sincronizado,
+        valesUsados: this.pagamentosAtivos.filter((p) => p.codtitulo).map((p) => p.codtitulo),
+        preparar: async () => {
+          if (this.negocio?.uuid != uuid) {
+            return false
+          }
+          return (await this.garantirSincronizado()) ? this.negocio.codnegocio : false
+        },
+        atualizar: async () => {
+          if (this.negocio?.uuid == uuid && this.negocio.codnegocio) {
+            await this.recarregarDaApi(this.negocio.codnegocio)
+          }
+        },
+      }
     },
 
-    async adicionarPagamento({
-      codformapagamento,
-      tipo,
-      valorpagamento,
-      codtitulo = null,
-      valorjuros = null,
-      valortroco = null,
-      codpessoa = null,
-      bandeira = null,
-      autorizacao = null,
-      parcelas = null,
-      valorparcela = null,
-      dias = null,
-      serialmaquineta = null,
-      cmc7 = null,
-      chequevencimento = null,
-      chequecnpj = null,
-      chequeemitente = null,
-    }) {
+    // Pagamento vindo do wizard (formato novo): completa uuid, total e os nomes da tela
+    async adicionarPagamento(dados) {
       return comLock(this.negocio?.uuid, async () => {
         await this.recarregar()
 
-        // descricao forma de pagamento
-        const fp = await db.formaPagamento.get(codformapagamento)
+        // vale identifica o cliente quando a venda está no consumidor final
+        const { codpessoavale, ...pag } = dados
+        if (codpessoavale && this.negocio.codpessoa == 1) {
+          await this.informarPessoa(codpessoavale, null)
+        }
 
-        // nome parceiro
         let parceiro = null
-        if (codpessoa) {
-          const pes = await db.pessoa.get(codpessoa)
+        if (pag.codpessoa) {
+          const pes = await db.pessoa.get(pag.codpessoa)
           parceiro = pes?.fantasia ?? null
         }
-
-        // nome bandeira
-        const nomebandeira = bandeira
-          ? (bandeirasCartao.find((el) => el.bandeira == bandeira)?.nome ?? null)
+        const nomebandeira = pag.bandeira
+          ? (bandeirasCartao.find((el) => el.bandeira == pag.bandeira)?.nome ?? null)
           : null
 
-        // nome Tipo
-        const nometipo = tipo ? (tiposPagamento.find((el) => el.tipo == tipo)?.nome ?? null) : null
-
-        // objeto do pagamento
         const pagamento = {
-          codnegocioformapagamento: null,
+          codpagamento: null,
           uuid: uid(),
-          codformapagamento,
-          formapagamento: fp.formapagamento,
-          alteracao: formataTimestampIso(new Date()),
-          criacao: formataTimestampIso(new Date()),
-          valorpagamento,
-          codtitulo,
-          valorjuros,
-          valortotal: Math.round((valorpagamento + (valorjuros || 0)) * 100) / 100,
-          valortroco,
-          avista: fp.avista,
-          tipo,
-          nometipo,
+          meio: pag.meio,
+          meiodescricao: MEIOS[pag.meio] ?? null,
+          estado: 'P',
+          principal: arredonda(pag.principal),
+          juros: arredonda(pag.juros),
+          multa: 0,
+          desconto: arredonda(pag.desconto),
+          total: 0,
+          valortroco: pag.valortroco ? arredonda(pag.valortroco) : null,
           integracao: false,
-          codpessoa,
+          codpessoa: pag.codpessoa ?? null,
           parceiro,
-          bandeira,
+          bandeira: pag.bandeira ?? null,
           nomebandeira,
-          autorizacao,
-          parcelas,
-          valorparcela,
-          dias,
-          serialmaquineta,
-          cmc7,
-          chequevencimento,
-          chequecnpj,
-          chequeemitente,
+          autorizacao: pag.autorizacao ?? null,
+          parcelas: pag.parcelas ?? null,
+          codmaquineta: pag.codmaquineta ?? null,
+          maquineta: pag.maquineta ?? null,
+          codtitulo: pag.codtitulo ?? null,
+          cmc7: pag.cmc7 ?? null,
+          chequevencimento: pag.chequevencimento ?? null,
+          chequecnpj: pag.chequecnpj ?? null,
+          chequeemitente: pag.chequeemitente ?? null,
+          criacao: formataTimestampIso(new Date()),
+          alteracao: formataTimestampIso(new Date()),
         }
+        pagamento.total = totalPagamento(pagamento)
         this.negocio.pagamentos.push(pagamento)
 
-        // recalcula total por causa dos juros
+        // recalcula total por causa dos juros e do desconto
         await this.recalcularValorTotal()
-
-        // salva
         await this.salvar()
         return pagamento
+      })
+    },
+
+    // Parcelas vindas do wizard (condição, vencimento e valor já ajustados). Outra parcela da
+    // mesma condição no negócio continua; a numeração é refeita por vencimento.
+    async adicionarParcelas(lista) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        for (const np of lista) {
+          this.negocio.parcelas.push({
+            codnegocioparcela: null,
+            uuid: uid(),
+            condicao: np.condicao,
+            condicaodescricao: CONDICOES[np.condicao] ?? null,
+            numero: np.numero,
+            vencimento: np.vencimento,
+            valor: arredonda(np.valor),
+            juros: arredonda(np.juros),
+            codtitulo: null,
+            criacao: formataTimestampIso(new Date()),
+            alteracao: formataTimestampIso(new Date()),
+          })
+        }
+        this.renumerarParcelas()
+        await this.recalcularValorTotal()
+        await this.salvar()
+      })
+    },
+
+    renumerarParcelas() {
+      const porCondicao = {}
+      for (const np of this.negocio.parcelas) {
+        ;(porCondicao[np.condicao] ??= []).push(np)
+      }
+      Object.values(porCondicao).forEach((lista) => {
+        lista
+          .sort((a, b) => String(a.vencimento).localeCompare(b.vencimento))
+          .forEach((np, i) => (np.numero = i + 1))
       })
     },
 
@@ -1827,6 +2019,83 @@ export const negocioStore = defineStore('negocio', {
         }
         await this.salvar()
       })
+    },
+
+    // Venda reaberta (TASK-30): o pagamento que já foi fato não se apaga, sai cancelado (C)
+    // e volta reativado (P até o F3); o F3 é que mexe no caixa, lote, vale e cheque
+    async cancelarPagamento(uuid) {
+      return this.trocarEstadoPagamento(uuid, 'C')
+    },
+
+    async reativarPagamento(uuid) {
+      return this.trocarEstadoPagamento(uuid, 'P')
+    },
+
+    async trocarEstadoPagamento(uuid, estado) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        const pag = this.negocio.pagamentos.find((item) => item.uuid == uuid)
+        if (pag) {
+          pag.estado = estado
+          await this.recalcularValorTotal()
+        }
+        await this.salvar()
+      })
+    },
+
+    // a parcela que já virou título sai (inativa) e volta; o F3 estorna ou gera o título
+    async cancelarParcelas(condicao) {
+      return this.trocarInativoParcelas(condicao, formataTimestampIso(new Date()))
+    },
+
+    async reativarParcelas(condicao) {
+      return this.trocarInativoParcelas(condicao, null)
+    },
+
+    async trocarInativoParcelas(condicao, inativo) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        this.negocio.parcelas
+          .filter(
+            (np) => np.condicao == condicao && np.codtitulo && (inativo ? !np.inativo : np.inativo),
+          )
+          .forEach((np) => (np.inativo = inativo))
+        await this.recalcularValorTotal()
+        await this.salvar()
+      })
+    },
+
+    // exclui todas as parcelas (ainda sem título) de uma condição
+    async excluirParcelas(condicao) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        this.negocio.parcelas = this.negocio.parcelas.filter(
+          (np) => np.condicao != condicao || np.codtitulo,
+        )
+        await this.recalcularValorTotal()
+        await this.salvar()
+      })
+    },
+
+    // cobrança integrada mudou (PixCobDialog, PagarMePedidoDialog, SaurusPedidoDialog): se é
+    // deste negócio, recarrega do servidor (o pagamento nasce lá quando o banco confirma)
+    async cobrancaAtualizada({ codnegocio, pixCob = null }) {
+      if (!codnegocio || !this.negocio || this.negocio.codnegocio != codnegocio) {
+        return
+      }
+      if (!this.negocio.sincronizado) {
+        return
+      }
+      // PIX com o mesmo status: só substitui, nem recarrega
+      if (pixCob) {
+        const index = (this.negocio.pixCob ?? []).findIndex((c) => c.codpixcob === pixCob.codpixcob)
+        if (index > -1 && this.negocio.pixCob[index].codpixcobstatus == pixCob.codpixcobstatus) {
+          this.negocio.pixCob[index] = pixCob
+          this.salvar(false)
+          return
+        }
+      }
+      await this.recarregarDaApi(this.negocio.codnegocio)
     },
 
     // se o negocio ainda nao subiu pro servidor, tenta sincronizar antes de desistir
@@ -1863,6 +2132,25 @@ export const negocioStore = defineStore('negocio', {
       }
     },
 
+    // venda fechada reaberta pelo gerente (TASK-30): o servidor volta o status para 1 e a
+    // resposta vale mesmo "andando para trás" (forcar)
+    async reabrir(justificativa) {
+      try {
+        const ret = await sSinc.reabrirNegocio(this.negocio.codnegocio, justificativa)
+        if (ret.codnegocio) {
+          Notify.create({
+            type: 'positive',
+            message: 'Negócio reaberto!',
+            timeout: 1000, // 1 segundo
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          await this.atualizarNegocioPeloObjeto(ret, true)
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
+
     async cancelar(justificativa) {
       if (!(await this.garantirSincronizado())) {
         Notify.create({
@@ -1887,132 +2175,6 @@ export const negocioStore = defineStore('negocio', {
       } catch (error) {
         console.log(error)
       }
-    },
-
-    async criarPixCob(valor, codportador) {
-      if (!(await this.garantirSincronizado())) {
-        Notify.create({
-          type: 'negative',
-          message: 'Impossível criar Cobrança PIX em um negócio não sincronizado com o servidor!',
-          timeout: 3000, // 3 segundos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-        return false
-      }
-      try {
-        const ret = await sSinc.criarPixCob(valor, this.negocio.codnegocio, codportador)
-        if (ret.codnegocio) {
-          Notify.create({
-            type: 'positive',
-            message: 'Cobrança PIX Criada!',
-            timeout: 1000, // 1 segundo
-            actions: [{ icon: 'close', color: 'white' }],
-          })
-          await this.atualizarNegocioPeloObjeto(ret)
-          return ret.pixCob[0]
-        }
-      } catch (error) {
-        console.log(error)
-      }
-      return false
-    },
-
-    async criarPagarMePedido(
-      codpagarmepos,
-      valor,
-      valorparcela,
-      valorjuros,
-      tipo,
-      parcelas,
-      jurosloja,
-    ) {
-      if (!(await this.garantirSincronizado())) {
-        Notify.create({
-          type: 'negative',
-          message:
-            'Impossível criar Cobrança Stone/PagarMe em um negócio não sincronizado com o servidor!',
-          timeout: 3000, // 3 segundos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-        return false
-      }
-      try {
-        const descricao = 'Negocio ' + this.negocio.codnegocio
-        const ret = await sSinc.criarPagarMePedido(
-          this.negocio.codnegocio,
-          this.negocio.codpessoa,
-          codpagarmepos,
-          valor,
-          valorparcela,
-          valorjuros,
-          tipo,
-          parcelas,
-          jurosloja,
-          descricao,
-        )
-        if (ret.codnegocio) {
-          Notify.create({
-            type: 'positive',
-            message: 'Cobrança Pagar Me/Stone Criada!',
-            timeout: 1000, // 1 segundo
-            actions: [{ icon: 'close', color: 'white' }],
-          })
-          await this.atualizarNegocioPeloObjeto(ret)
-          return ret.PagarMePedidoS[0]
-        }
-      } catch (error) {
-        console.log(error)
-      }
-      return false
-    },
-
-    async criarSaurusPedido(
-      codsauruspos,
-      valor,
-      valorparcela,
-      valorjuros,
-      tipo,
-      parcelas,
-      jurosloja,
-    ) {
-      if (!(await this.garantirSincronizado())) {
-        Notify.create({
-          type: 'negative',
-          message:
-            'Impossível criar Cobrança Saurus/Safra Pay em um negócio não sincronizado com o servidor!',
-          timeout: 3000, // 3 segundos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-        return false
-      }
-      try {
-        const descricao = 'Negocio ' + this.negocio.codnegocio
-        const ret = await sSinc.criarSaurusPedido(
-          this.negocio.codnegocio,
-          this.negocio.codpessoa,
-          codsauruspos,
-          valor,
-          valorparcela,
-          valorjuros,
-          tipo,
-          parcelas,
-          jurosloja,
-          descricao,
-        )
-        if (ret.codnegocio) {
-          Notify.create({
-            type: 'positive',
-            message: 'Cobrança Saurus/Safra Pay Criada!',
-            timeout: 1000, // 1 segundo
-            actions: [{ icon: 'close', color: 'white' }],
-          })
-          await this.atualizarNegocioPeloObjeto(ret)
-          return ret.SaurusPedidoS[0]
-        }
-      } catch (error) {
-        console.log(error)
-      }
-      return false
     },
 
     async uploadAnexo(pasta, ratio, anexoBase64) {
@@ -2130,9 +2292,7 @@ export const negocioStore = defineStore('negocio', {
     // sabe deles (o pagamento so' baixa no fechamento), entao sem isso o
     // FIFO devolveria o mesmo vale duas vezes.
     async valeEscopoSelecionar(codpessoafavorecido, turma, valor) {
-      const usados = (this.negocio.pagamentos ?? [])
-        .filter((p) => p.codtitulo)
-        .map((p) => p.codtitulo)
+      const usados = this.pagamentosAtivos.filter((p) => p.codtitulo).map((p) => p.codtitulo)
       return sSinc.valeEscopoSelecionar({
         codpessoafavorecido,
         turma: turma || null,
@@ -2147,10 +2307,9 @@ export const negocioStore = defineStore('negocio', {
     async adicionarPagamentosVale(vales) {
       for (const vale of vales) {
         await this.adicionarPagamento({
-          codformapagamento: parseInt(process.env.CODFORMAPAGAMENTO_VALE),
-          tipo: 12, // tPag Vale Presente
+          meio: MEIO.VALE,
           codtitulo: vale.codtitulo,
-          valorpagamento: parseFloat(vale.usar),
+          principal: parseFloat(vale.usar),
         })
       }
       return true

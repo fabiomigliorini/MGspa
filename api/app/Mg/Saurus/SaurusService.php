@@ -5,11 +5,14 @@ namespace Mg\Saurus;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Mg\Filial\Filial;
-use Mg\FormaPagamento\FormaPagamento;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 use Mg\Negocio\NegocioService;
 use Mg\Pessoa\Pessoa;
 use Mg\Saurus\S2Pay\ApiService;
+use Mg\Maquineta\Maquineta;
+use Mg\Maquineta\MaquinetaService;
+use Ramsey\Uuid\Uuid;
 
 class SaurusService
 {
@@ -35,6 +38,75 @@ class SaurusService
         98 => 'bank_slip',
         99 => 'others',
     ];
+
+    // Registra (ou renova) o PDV Saurus na API: devolve o PDV com a chavepublica que vira o QR
+    // lido pelo pinpad. Sem uuid, cria um PDV novo com o próximo número da filial.
+    public static function registrarPdv(string $apelido, int $codfilial, ?string $pdv_uuid = null): SaurusPdv
+    {
+        $pdv_uuid = $pdv_uuid ?? (string) Uuid::uuid4();
+
+        $pdvSaurus = SaurusPdv::where('id', $pdv_uuid)->first();
+        if ($pdvSaurus && $pdvSaurus->vencimento > now()) {
+            return $pdvSaurus;
+        }
+
+        $pessoa = Filial::findOrFail($codfilial)->Pessoa;
+
+        if ($pdvSaurus) {
+            $numero = $pdvSaurus->numero;
+        } else {
+            $ultimo = SaurusPdv::where('codfilial', $codfilial)->orderBy('numero', 'desc')->first();
+            $numero = $ultimo ? $ultimo->numero + 1 : 1;
+        }
+
+        $response = ApiService::functionPdvRegistrar($pdv_uuid, $pessoa, $numero);
+
+        return SaurusPdv::updateOrCreate(
+            [
+                'id' => $pdv_uuid,
+            ],
+            [
+                'apelido' => $apelido,
+                'autorizacao' => $response->autorizacao->response->chavePublica,
+                'vencimento' => Carbon::parse($response->autorizacao->response->vencimento)->subHour(1)->subMinutes(10),
+                'chavepublica' => $response->pdv->response->chavePublica,
+                'contratoid' => $response->pdv->response->contratoId,
+                'codfilial' => $codfilial,
+                'numero' => $numero,
+            ]
+        );
+    }
+
+    // Depois que o pinpad leu o QR: busca na API o pinpad pareado ao PDV Saurus e grava.
+    // Null enquanto o pinpad não leu.
+    public static function verificarLeitura(SaurusPdv $pdvSaurus): ?SaurusPinPad
+    {
+        $response = ApiService::functionPdvVerificar($pdvSaurus->autorizacao);
+
+        if (str_contains($response->retTexto, 'Chave de Autorização está Inválida')) {
+            $pessoa = Filial::findOrFail($pdvSaurus->codfilial)->Pessoa;
+            $autorizacao = ApiService::functionAutorizacao($pdvSaurus->id, $pessoa->cnpj);
+            $pdvSaurus->autorizacao = $autorizacao->response->chavePublica;
+            $pdvSaurus->vencimento = Carbon::parse($autorizacao->response->vencimento)->subHour(1)->subMinutes(10);
+            $pdvSaurus->save();
+            $response = ApiService::functionPdvVerificar($pdvSaurus->autorizacao);
+        }
+
+        if (empty($response->response->pinPads)) {
+            return null;
+        }
+
+        return SaurusPinPad::updateOrCreate(
+            [
+                'id' => $response->response->pinPads[0],
+            ],
+            [
+                'apelido' => mb_substr($pdvSaurus->apelido, 0, 20),
+                'codfilial' => $pdvSaurus->codfilial,
+                'codsauruspdv' => $pdvSaurus->codsauruspdv,
+            ]
+        );
+    }
 
     public static function cancelarPedidosAbertosPdv($codsauruspdv)
     {
@@ -177,7 +249,7 @@ class SaurusService
         $ped->fresh();
 
         if($ped->status == 2) {
-            self::vincularNegocioFormaPagamento($ped);
+            self::vincularPagamento($ped);
         }
 
         return $ped;
@@ -236,63 +308,122 @@ class SaurusService
         return $reg;
     }
 
-    public static function vincularNegocioFormaPagamento(SaurusPedido $ped)
+    // Pedido pago da venda aberta vira o pagamento efetivado da venda (M4
+    // doc-3). Fora de uma venda (baixa de titulos, adiantamento) nao vira
+    // pagamento sozinho: a tela que cobrou grava o pagamento ao finalizar
+    // (pagar); fechada antes, o cartao se lanca 'a mao (TASK-220). Venda
+    // cancelada: o pagamento foi cancelado junto e nao volta.
+    public static function vincularPagamento(SaurusPedido $ped)
     {
-        if (empty($ped->codnegocio)) {
-            return false;
+        if (empty($ped->codnegocio) || $ped->Negocio->codnegociostatus == NegocioService::STATUS_CANCELADO) {
+            return true;
         }
+        $cartao = static::cartaoDoPedido($ped);
 
-        $fp = FormaPagamento::firstOrNew([
-            'safrapay' => true,
-            'integracao' => true
-        ]);
-
-        if (!$fp->exists) {
-            $fp->formapagamento = 'Saurus S2Pay';
-            $fp->avista = true;
-            $fp->integracao = true;
-            $fp->safrapay = true;
-            $fp->save();
+        // pagamento efetivado: a maquineta ja' confirmou (M4 doc-3). Um por
+        // pedido; mesma autorizacao no negocio e' o mesmo pagamento.
+        $pag = Pagamento::where('codsauruspedido', $ped->codsauruspedido)->first();
+        if (!$pag && !empty($cartao['autorizacao'])) {
+            $pag = Pagamento::where('codnegocio', $ped->codnegocio)
+                ->where('autorizacao', $cartao['autorizacao'])
+                ->where('codpessoa', config('mg.codpessoa_safra'))
+                ->first();
         }
+        $pag = $pag ?? new Pagamento();
+        PagamentoService::preencher($pag, array_merge($cartao, [
+            'codnegocio' => $ped->codnegocio,
+            'codfilial' => $ped->Negocio->codfilial ?? $ped->SaurusPdv->codfilial,
+            'codpdv' => $ped->Negocio->codpdv ?? null,
+            'codpessoa' => config('mg.codpessoa_safra'),
+        ]));
+        $pag->save();
+        if ($pag->estado != PagamentoService::ESTADO_CANCELADO) {
+            PagamentoService::efetivar($pag);
+        }
+        NegocioService::fecharSePago($ped->Negocio);
 
+        return true;
+    }
+
+    // Cartao cobrado na baixa de titulos ou no adiantamento: o pagamento
+    // nasce quando a tela grava, um por pedido (TASK-220). $campos: codpessoa,
+    // observacoes, referente, codpdv, codfilial.
+    public static function pagar(int $codsauruspedido, float $valor, array $campos): Pagamento
+    {
+        $ped = SaurusPedido::lockForUpdate()->findOrFail($codsauruspedido);
+        if ($ped->status != 2) {
+            abort(422, 'O pedido da SafraPay não está pago!');
+        }
+        if (!empty($ped->codnegocio)) {
+            abort(422, "O pedido da SafraPay é da venda #{$ped->codnegocio}!");
+        }
+        $usado = Pagamento::where('codsauruspedido', $ped->codsauruspedido)
+            ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
+            ->value('codpagamento');
+        if ($usado) {
+            abort(422, "O cartão deste pedido já está no pagamento #{$usado}!");
+        }
+        $cartao = static::cartaoDoPedido($ped);
+        if (abs($cartao['principal'] - round($valor, 2)) > 0.005) {
+            abort(422, 'O cartão é de R$ ' . number_format($cartao['principal'], 2, ',', '.')
+                . ' e a baixa é de R$ ' . number_format($valor, 2, ',', '.') . '!');
+        }
+        // a hora em que o cartao passou
+        $passou = $ped->SaurusPagamentoS->max('transacao');
+        $pag = PagamentoService::criar(array_merge($cartao, [
+            'codnegocio' => null,
+            'codfilial' => $campos['codfilial'] ?? $ped->SaurusPdv->codfilial,
+            'codpdv' => $campos['codpdv'] ?? null,
+            'estado' => PagamentoService::ESTADO_PENDENTE,
+            'transacao' => $passou ? Carbon::parse($passou) : Carbon::now(),
+            'codpessoa' => $campos['codpessoa'] ?? null,
+            'observacoes' => $campos['observacoes'] ?? null,
+            'referente' => $campos['referente'] ?? null,
+        ]));
+        PagamentoService::efetivar($pag);
+        return $pag;
+    }
+
+    // O cartao do pedido: meio, principal, juros, autorizacao, NSU,
+    // parcelas, bandeira e maquineta
+    private static function cartaoDoPedido(SaurusPedido $ped): array
+    {
         $tipo = 99; //Outros
         $autorizacao = null;
+        $nsu = null;
         $bandeira = null;
-        $serialmaquineta = $ped->SaurusPdv->SaurusPinPadS->first()->serial ?? null;
+        // pinpad que cobrou; sem ele, o mais novo do PDV Saurus
+        $pinpad = $ped->SaurusPdv->SaurusPinPadS()->orderBy('codsauruspinpad', 'desc')->first();
         foreach ($ped->SaurusPagamentoS as $pag) {
             $tipo = $pag->modpagamento;
 
             $autorizacao = $pag->autorizacao;
+            $nsu = $pag->nsu;
             $bandeira = static::buscaOuCriaBandeira(
                 $pag->SaurusBandeira->bandeira
             );
-            $serialmaquineta = $pag->SaurusPinPad->serial ?? $serialmaquineta;
+            $pinpad = $pag->SaurusPinPad ?? $pinpad;
         }
+        $maquineta = $pinpad ? MaquinetaService::daSaurusPinPad($pinpad) : null;
+        return [
+            'codsauruspedido' => $ped->codsauruspedido,
+            'meio' => array_key_exists((int) $tipo, PagamentoService::MEIOS) ? (int) $tipo : PagamentoService::MEIO_OUTROS,
+            'principal' => $ped->valor,
+            'juros' => $ped->valorjuros ?? 0,
+            'valortroco' => null,
+            'autorizacao' => $autorizacao,
+            // NSU e parcelas, como no relatorio da maquineta (M9.8)
+            'nsu' => $nsu,
+            'parcelas' => $ped->parcelas,
+            'bandeira' => $bandeira->tband ?? null,
+            'codmaquineta' => $maquineta->codmaquineta ?? null,
+        ];
+    }
 
-        NegocioFormaPagamento::updateOrCreate(
-            [
-                'codnegocio' => $ped->codnegocio,
-                'autorizacao' => $autorizacao,
-                'codpessoa' => config('mg.codpessoa_safra')
-            ],
-            [
-                'codsauruspedido' => $ped->codsauruspedido,
-                'codformapagamento' => $fp->codformapagamento,
-                'avista' => true,
-                'valorpagamento' => $ped->valor,
-                'valorjuros' => $ped->valorjuros,
-                'valortotal' => $ped->valor + $ped->valorjuros,
-                'valortroco' => null,
-                'tipo' => $tipo,
-                'bandeira' => $bandeira->tband,
-                'integracao' => true,
-                'serialmaquineta' => $serialmaquineta,
-            ]
-        );
-
-        NegocioService::fecharSePago($ped->Negocio);
-
-        return true;
+    // a maquineta do pedido (o pinpad que cobrou; sem ele, o mais novo do PDV Saurus)
+    public static function maquinetaDoPedido(SaurusPedido $ped): ?Maquineta
+    {
+        return Maquineta::find(static::cartaoDoPedido($ped)['codmaquineta']);
     }
 
     public static function cancelarPedido(SaurusPedido $ped)

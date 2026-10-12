@@ -18,32 +18,18 @@ class TipoMovimentoTitulo extends MgModel
 
 
     protected $fillable = [
-        'ajuste',
-        'armotizacao',
-        'desconto',
-        'estorno',
-        'implantacao',
         'inativo',
-        'juros',
         'observacao',
-        'pagamento',
         'tipomovimentotitulo'
     ];
 
     protected $casts = [
-        'ajuste' => 'boolean',
         'alteracao' => 'datetime',
-        'armotizacao' => 'boolean',
         'codtipomovimentotitulo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
-        'desconto' => 'boolean',
-        'estorno' => 'boolean',
-        'implantacao' => 'boolean',
         'inativo' => 'datetime',
-        'juros' => 'boolean',
-        'pagamento' => 'boolean'
     ];
 
 
@@ -63,11 +49,6 @@ class TipoMovimentoTitulo extends MgModel
     public function MovimentoTituloS()
     {
         return $this->hasMany(MovimentoTitulo::class, 'codtipomovimentotitulo', 'codtipomovimentotitulo');
-    }
-
-    public function TipoTituloS()
-    {
-        return $this->hasMany(TipoTitulo::class, 'codtipomovimentotitulo', 'codtipomovimentotitulo');
     }
 
 }

@@ -34,7 +34,7 @@
         </q-card>
         <q-form @change="buscarPessoas()">
           <div class="q-pa-md q-gutter-md">
-            <q-select
+            <MgSelect
               outlined
               v-model="sPessoa.filtroPesquisa.fisica"
               label="Tipo Pessoa"
@@ -85,7 +85,7 @@
             </SelectGrupoEconomico>
             <SelectCidade v-model="sPessoa.filtroPesquisa.codcidade" label="Cidade" clearable>
             </SelectCidade>
-            <q-select
+            <MgSelect
               outlined
               v-model="sPessoa.filtroPesquisa.inativo"
               label="Ativo / Inativo"
@@ -119,6 +119,7 @@
 
 <script>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { ref, onMounted, defineAsyncComponent, watch } from 'vue'
 import { useQuasar } from 'quasar'
@@ -131,6 +132,7 @@ export default {
   components: {
     MgInput,
     MgInputValor,
+    MgSelect,
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
     SelectGrupoEconomico: defineAsyncComponent(
       () => import('@components/MgSelectGrupoEconomico.vue'),

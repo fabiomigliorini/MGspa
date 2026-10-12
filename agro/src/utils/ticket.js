@@ -68,6 +68,7 @@ export function ticketDoServidor(c) {
     safra: c.Safra?.safra,
     placa: c.placa,
     placacarreta: c.placacarreta,
+    placacarreta2: c.placacarreta2,
     veiculo: c.Veiculo?.veiculo || null,
     motorista: c.motorista,
     // `liquido` do ponto é o rateio já gravado pelo servidor — no pátio ele é
@@ -112,7 +113,11 @@ export function imprimirTicket(t) {
       </div>
       <table>
         ${linha('Placa', t.placa || '—')}
-        ${t.placacarreta ? linha('Carreta', t.placacarreta) : ''}
+        ${
+          t.placacarreta
+            ? linha('Reboque', [t.placacarreta, t.placacarreta2].filter(Boolean).join(' / '))
+            : ''
+        }
         ${t.veiculo ? linha('Caminhão', t.veiculo) : ''}
         ${linha('Motorista', t.motorista || '—')}
         ${t.cultura ? linha('Cultura / Safra', `${t.cultura} — ${t.safra || '—'}`) : ''}

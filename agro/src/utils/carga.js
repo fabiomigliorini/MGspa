@@ -113,6 +113,33 @@ export function proximaEtapa(carga) {
   return i >= 0 && i < ordem.length - 1 ? ordem[i + 1] : null
 }
 
+// O dado próprio da etapa atual já está na carga? Quem grava (Registrar, lápis)
+// pula a etapa preenchida em vez de pedir o mesmo número de novo no dialog.
+// `itens` = parâmetros de classificação da cultura (store.parametrosDaCarga).
+// FISCAL fica false de propósito: a NF sempre passa pelo dialog com "Conferir",
+// porque a etapa seguinte é FINALIZADO.
+export function etapaPreenchida(carga, itens = []) {
+  switch (carga?.etapa) {
+    case 'PBT':
+      return Number(carga.pbt) > 0
+    case 'TARA':
+      return Number(carga.tara) > 0
+    case 'CLASSIFICACAO':
+      return (
+        itens.length > 0 &&
+        itens.every((it) => {
+          const linha = (carga.classificacao || []).find(
+            (c) => c.codparametroclassificacao === it.codparametroclassificacao,
+          )
+          const v = linha?.leitura
+          return v !== null && v !== undefined && v !== ''
+        })
+      )
+    default:
+      return false
+  }
+}
+
 export function cargaFinalizada(carga) {
   return carga?.etapa === ETAPA_FINAL
 }
@@ -148,8 +175,6 @@ export const CAMPOS_MOTORISTA_SEM_CADASTRO = [
   'telefonemotorista',
   'cepmotorista',
   'enderecomotorista',
-  'numeromotorista',
-  'complementomotorista',
   'bairromotorista',
   'codcidademotorista',
 ]
@@ -378,6 +403,7 @@ export function normalizarCargaDoServidor(cs) {
   return {
     uuid: cs.uuid,
     codcarga: cs.codcarga ?? null,
+    versao: cs.versao ?? null,
     codsafra: cs.codsafra,
     sentido: cs.sentido,
     etapa: cs.etapa,

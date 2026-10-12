@@ -245,7 +245,7 @@ watch(
                             type="a"
                             class="q-pa-none"
                           />
-                          {{ formataTimestamp(ev.lancamento) }}
+                          {{ formataTimestamp(ev.transacao) }}
                           <q-badge v-if="ev.manual" color="orange" label="manual" class="q-ml-xs" />
                         </q-item-label>
                       </q-item-section>

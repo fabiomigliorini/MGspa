@@ -173,7 +173,10 @@ const preparar = async () => {
     valoravulso: vale.valoravulso,
     // na edição o kit já está lançado: o valor dele vem dos itens do vale
     valorprodutos: vale.valorprodutos,
-    valordesconto: vale.valordesconto,
+    // só o desconto digitado (a parte do pagamento é rateada sozinha)
+    valordesconto:
+      Math.round(((vale.valordesconto || 0) - (vale.valordescontopagamento || 0)) * 100) / 100 ||
+      null,
     percentualdesconto:
       vale.valordesconto > 0 && vale.valorvale > 0
         ? Math.round((vale.valordesconto / vale.valorvale) * 1000) / 10

@@ -8,7 +8,8 @@ use Mg\Cheque\Cheque;
 use Mg\Cheque\ChequeService;
 use Mg\Cheque\Cmc7\Cmc7;
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 
 /**
  * Cheque recebido no PDV: os dados vêm no pagamento (sync offline) e o tblcheque
@@ -17,15 +18,13 @@ use Mg\Negocio\NegocioFormaPagamento;
  */
 class PdvNegocioChequeService
 {
-    const TIPO_CHEQUE = 2; // tPag NFe
-
-    public static function ehCheque(NegocioFormaPagamento $nfp): bool
+    public static function ehCheque(Pagamento $pag): bool
     {
-        return $nfp->tipo == static::TIPO_CHEQUE;
+        return $pag->meio == PagamentoService::MEIO_CHEQUE;
     }
 
     // regras do cheque no fechamento: cliente identificado, sem troco, CMC7 válido, data
-    public static function validar(Negocio $negocio, NegocioFormaPagamento $nfp): void
+    public static function validar(Negocio $negocio, Pagamento $nfp): void
     {
         if ($negocio->codpessoa == 1) {
             throw new Exception('Cheque só para cliente identificado! Informe o cliente.', 1);
@@ -44,11 +43,11 @@ class PdvNegocioChequeService
     // cria o tblcheque de cada pagamento em cheque (idempotente por pagamento)
     public static function gerar(Negocio $negocio): void
     {
-        foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
+        foreach ($negocio->PagamentoS()->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->get() as $nfp) {
             if (!static::ehCheque($nfp)) {
                 continue;
             }
-            if (Cheque::where('codnegocioformapagamento', $nfp->codnegocioformapagamento)->exists()) {
+            if (Cheque::where('codpagamento', $nfp->codpagamento)->exists()) {
                 continue;
             }
             $emitentes = [];
@@ -64,10 +63,10 @@ class PdvNegocioChequeService
                 'emitente' => $nfp->chequeemitente,
                 'emissao' => Carbon::today(),
                 'vencimento' => $nfp->chequevencimento,
-                'valor' => $nfp->valortotal,
+                'valor' => $nfp->total,
                 'indstatus' => 1, // à repassar
-                'lancamento' => Carbon::now(),
-                'codnegocioformapagamento' => $nfp->codnegocioformapagamento,
+                'transacao' => $nfp->transacao ?? Carbon::now(),
+                'codpagamento' => $nfp->codpagamento,
                 'emitentes' => $emitentes,
             ]);
         }
@@ -76,17 +75,36 @@ class PdvNegocioChequeService
     // cancelamento do negócio: cheque ainda à repassar é cancelado; já repassado bloqueia
     public static function cancelar(Negocio $negocio): void
     {
-        foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
-            $cheques = Cheque::where('codnegocioformapagamento', $nfp->codnegocioformapagamento)
-                ->whereNull('cancelamento')
-                ->get();
-            foreach ($cheques as $cheque) {
-                if ($cheque->indstatus != 1) {
-                    throw new Exception("O cheque {$cheque->numero} já foi repassado. Impossível cancelar!", 1);
-                }
-                $cheque->cancelamento = Carbon::now();
-                $cheque->save();
+        foreach ($negocio->PagamentoS as $nfp) {
+            static::cancelarDoPagamento($nfp);
+        }
+    }
+
+    // o cheque do pagamento reativado na venda reaberta volta a valer (TASK-30)
+    public static function reativarDoPagamento(Pagamento $nfp): void
+    {
+        $cheques = Cheque::where('codpagamento', $nfp->codpagamento)
+            ->whereNotNull('cancelamento')
+            ->where('indstatus', 1)
+            ->get();
+        foreach ($cheques as $cheque) {
+            $cheque->cancelamento = null;
+            $cheque->save();
+        }
+    }
+
+    // o cheque de um pagamento (o cancelado na venda reaberta, TASK-30)
+    public static function cancelarDoPagamento(Pagamento $nfp): void
+    {
+        $cheques = Cheque::where('codpagamento', $nfp->codpagamento)
+            ->whereNull('cancelamento')
+            ->get();
+        foreach ($cheques as $cheque) {
+            if ($cheque->indstatus != 1) {
+                throw new Exception("O cheque {$cheque->numero} já foi repassado. Impossível cancelar!", 1);
             }
+            $cheque->cancelamento = Carbon::now();
+            $cheque->save();
         }
     }
 }

@@ -52,7 +52,7 @@ function openPedido(p) {
 </script>
 
 <template>
-  <q-page class="q-pa-md bg-grey-4">
+  <q-page class="q-pa-md">
     <div v-if="sWoo.pedidos.length == 0" class="absolute-center text-grey text-center">
       <q-icon name="do_not_disturb" size="200px" />
       <h4 class="q-ma-none">Nenhum registro localizado!</h4>

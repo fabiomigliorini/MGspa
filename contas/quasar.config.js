@@ -42,7 +42,8 @@ export default defineConfig((/* ctx */) => {
     // https://github.com/quasarframework/quasar/tree/dev/extras
     extras: [
       // 'ionicons-v4',
-      // 'mdi-v7',
+      // ícones das formas de pagamento do wizard e da listagem (@components/cobranca)
+      'mdi-v7',
       // 'fontawesome-v6',
       // 'eva-icons',
       // 'themify',
@@ -94,6 +95,8 @@ export default defineConfig((/* ctx */) => {
         // Shared stores in ../components importam 'pinia'; como estão fora da raiz do
         // app, o resolver do build (Rolldown) não acha o pinia. Aliasa pro local.
         pinia: path.resolve(import.meta.dirname, 'node_modules/pinia'),
+        // idem para o QR do PIX (@components/cobranca/PixCobDialog.vue)
+        qrcode: path.resolve(import.meta.dirname, 'node_modules/qrcode'),
       },
 
       vueRouterMode: 'history', // available values: 'hash', 'history'

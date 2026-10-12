@@ -9,7 +9,7 @@
 // `local`; os blocos recebem a MESMA referência via prop e persistem através
 // de `persistirBloco` (provide), que reaproveita o caminho já existente
 // (CargaPage.persistir: troca de safra + erro tratado), sem duplicar nada.
-import { ref, computed, watch, provide, nextTick } from 'vue'
+import { ref, computed, watch, provide, nextTick, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useCargaStore } from 'src/stores/carga'
 import { calcularCarga, sacas } from 'src/utils/desconto'
@@ -22,6 +22,7 @@ import {
   pontosPorPapel,
   somaPercBate,
   proximaEtapa,
+  etapaPreenchida,
   cargaFinalizada,
   cargaPesada,
   sentidoMeta,
@@ -42,7 +43,7 @@ const props = defineProps({
   // através dela (via persistirBloco), nunca chamando a store diretamente.
   persistir: { type: Function, default: null },
 })
-const emit = defineEmits(['salvar', 'avancar', 'cancelar'])
+const emit = defineEmits(['registrada', 'avancar', 'cancelar', 'desistir'])
 
 const $q = useQuasar()
 const store = useCargaStore()
@@ -58,6 +59,12 @@ const blocoClassificacao = ref(null)
 // Conferência do fechamento (detalhe em `avancar`). Declarado aqui em cima
 // porque o watcher imediato da carga, logo abaixo, já o zera.
 const revisando = ref(false)
+
+// Registrada nesta sessão. `props.novo` vem da rota e só vira false depois do
+// router.replace da página — a cadeia de modais precisa saber NA HORA que a
+// carga deixou de ser nova (o dialog seguinte já abre como "Confirmar").
+const registrada = ref(false)
+const ehNova = computed(() => props.novo && !registrada.value)
 
 // Cópia local — clonada só quando MUDA a carga (uuid). A store recarrega o
 // Dexie em background (sync) e isso não pode apagar o que o operador está
@@ -80,10 +87,12 @@ watch(
   { immediate: true },
 )
 watch(
-  () => [props.carga?.codcarga, props.carga?.sincronizado, props.carga?.syncerro],
-  ([codcarga, sincronizado, syncerro]) => {
+  () => [props.carga?.codcarga, props.carga?.sincronizado, props.carga?.syncerro, props.carga?.versao],
+  ([codcarga, sincronizado, syncerro, versao]) => {
     if (!local.value || !props.carga || props.carga.uuid !== local.value.uuid) return
-    Object.assign(local.value, { codcarga, sincronizado, syncerro })
+    // `versao` entra aqui pelo mesmo motivo: sem isso, salvar de novo com o form
+    // aberto mandaria uma versão velha e bateria 409 na própria mão (TASK-180).
+    Object.assign(local.value, { codcarga, sincronizado, syncerro, versao })
   },
 )
 
@@ -252,8 +261,10 @@ function entradaValida() {
     blocoOperacao.value?.abrir()
     return false
   }
+  // O aviso abre onde se corrige (como o da safra abre a Operação).
   if (!origens.value.length && !destinos.value.length) {
     $q.notify({ type: 'warning', message: 'Informe ao menos uma origem ou destino.' })
+    blocoPontos.value?.abrir()
     return false
   }
   // Linha sem entidade seria DESCARTADA em silêncio (o filtro `pontoCompleto` do
@@ -261,8 +272,9 @@ function entradaValida() {
   if ((local.value?.pontos || []).some((p) => !pontoCompleto(p))) {
     $q.notify({
       type: 'negative',
-      message: 'Selecione o talhão/unidade/contrato de cada origem e destino, ou remova a linha.',
+      message: 'Selecione o talhão/unidade/contrato de cada origem e destino.',
     })
+    blocoPontos.value?.abrir()
     return false
   }
   return true
@@ -304,14 +316,18 @@ function onErroValidacao(comp) {
   })
 }
 
-function salvar() {
-  if (finalizada.value ? !validarFinalizacao() : !entradaValida()) return
-  emit('salvar', local.value)
-}
-// Salva na etapa ATUAL, sem avançar — pra corrigir um dado sem empurrar a carga.
-function salvarSemAvancar() {
-  if (!entradaValida()) return
-  emit('salvar', local.value)
+// Registrar da carga nova: grava pela 1ª vez, já na etapa seguinte à que o dado
+// preenchido cobre — sem isso o FAB virava "Pesar bruto" com o peso já digitado
+// e o dialog pedia o mesmo número de novo. Aguarda a gravação (props.persistir)
+// pra cadeia de modais seguir com a carga já registrada; a página navega pro
+// uuid e avisa a etapa (`registrada`).
+async function registrar() {
+  if (!entradaValida()) return false
+  pularEtapasPreenchidas()
+  const salva = await props.persistir(local.value)
+  registrada.value = true
+  emit('registrada', salva)
+  return true
 }
 function cancelarCarga() {
   const sincronizada = !!local.value.codcarga || !!local.value.sincronizado
@@ -327,6 +343,16 @@ function cancelarCarga() {
 }
 
 const proxima = computed(() => proximaEtapa(local.value))
+// Etapa cujo dado já está na carga não pede confirmação de novo: quem grava
+// pula pra próxima. Para antes de FINALIZADO — fechar o romaneio é sempre a
+// conferência explícita de `concluirEtapa`.
+function pularEtapasPreenchidas() {
+  let prox = proximaEtapa(local.value)
+  while (prox && prox !== 'FINALIZADO' && etapaPreenchida(local.value, itensCarga.value)) {
+    local.value.etapa = prox
+    prox = proximaEtapa(local.value)
+  }
+}
 // Transição p/ FINALIZADO: ativa as :rules de "soma fecha" dos campos de líquido
 // (no bloco de Pontos, via `finalizando` injetado).
 const finalizando = computed(() => proxima.value === 'FINALIZADO')
@@ -350,7 +376,26 @@ watch(
 )
 
 function avancar() {
+  // Cadastro incompleto: abre o modal do que falta, sem toast — é o passo
+  // seguinte da cadeia, não um erro (o aviso de `entradaValida` fica pra quem
+  // tenta gravar por fora).
+  const cadastro = cadastroPendente()
+  if (cadastro) {
+    BLOCOS[cadastro].value?.abrir()
+    return
+  }
   if (!entradaValida()) return
+  if (ehNova.value) {
+    // O dialog da etapa é o Registrar (peso vazio é aceito: o caminhão fica no
+    // pátio esperando a balança). Peso já digitado pelo lápis: registra direto
+    // e segue pro que falta.
+    if (etapaPreenchida(local.value, itensCarga.value))
+      registrar()
+        .then((ok) => ok && proximoPasso('pesagem'))
+        .catch(() => {})
+    else abrirEtapa(local.value.etapa, proxima.value, 'Registrar')
+    return
+  }
   if (erroClassificacao.value) {
     $q.notify({ type: 'negative', message: erroClassificacao.value })
     return
@@ -387,25 +432,64 @@ const BLOCO_DA_ETAPA = {
   CLASSIFICACAO: blocoClassificacao,
   FISCAL: blocoPontos,
 }
-function abrirEtapa(etapa, prox) {
+function abrirEtapa(etapa, prox, rotulo = prox === 'FINALIZADO' ? 'Conferir' : 'Confirmar') {
   const bloco = BLOCO_DA_ETAPA[etapa]?.value
   if (!bloco) {
     // Etapa sem dado próprio (não existe hoje): avança direto, como antes.
     concluirEtapa()
     return
   }
-  bloco.abrir({ etapa, rotulo: prox === 'FINALIZADO' ? 'Conferir' : 'Confirmar' })
+  bloco.abrir({ etapa, rotulo })
+}
+
+// Os blocos pelo nome que eles mesmos usam ao chamar `proximoPasso`.
+const BLOCOS = {
+  operacao: blocoOperacao,
+  pontos: blocoPontos,
+  pesagem: blocoPesagem,
+  classificacao: blocoClassificacao,
+}
+const PASSO_DA_ETAPA = { PBT: 'pesagem', TARA: 'pesagem', CLASSIFICACAO: 'classificacao', FISCAL: 'pontos' }
+// Cadastro incompleto, na ordem do balcão: quem opera → de onde/pra onde.
+// Devolve a chave em BLOCOS ou null.
+function cadastroPendente() {
+  if (!local.value?.codsafra || !local.value?.placa) return 'operacao'
+  if (!origens.value.length && !destinos.value.length) return 'pontos'
+  if ((local.value.pontos || []).some((p) => !pontoCompleto(p))) return 'pontos'
+  return null
+}
+// O que ainda falta na carga: o cadastro acima ou o dado da etapa (peso,
+// classificação, NF). Devolve a chave em BLOCOS ou null.
+function passoPendente() {
+  const cadastro = cadastroPendente()
+  if (cadastro) return cadastro
+  if (finalizada.value || revisando.value) return null
+  if (etapaPreenchida(local.value, itensCarga.value)) return null
+  return PASSO_DA_ETAPA[local.value.etapa] || null
+}
+// Salvou um modal: fecha e já abre o próximo que falta (Esc interrompe). O
+// bloco que acabou de fechar não reabre — Registrar sem peso deixa o caminhão
+// no pátio esperando a balança, sem o dialog voltar na cara do operador. Nada
+// pendente (correção pelo lápis numa carga completa): nada abre.
+async function proximoPasso(nome) {
+  await nextTick()
+  const pendente = passoPendente()
+  if (!pendente || pendente === nome) return
+  avancar()
 }
 
 // Confirmar do dialog aberto pelo botão da etapa. O bloco já aplicou o valor em
-// `local`. Etapa do meio: avança e grava (a página avisa a etapa nova). Última
-// etapa: grava o peso e entra na CONFERÊNCIA (`revisando`) — o romaneio só fecha
-// no clique seguinte, em "Salvar", com o caminhão ainda na balança.
+// `local`. Carga nova: é o Registrar. Etapa do meio: avança e grava (a página
+// avisa a etapa nova). Última etapa: grava o peso e entra na CONFERÊNCIA
+// (`revisando`) — o romaneio só fecha no clique seguinte, em "Salvar", com o
+// caminhão ainda na balança.
 async function concluirEtapa() {
+  if (ehNova.value) return registrar()
   const prox = proxima.value
   if (!prox) return false
   if (prox !== 'FINALIZADO') {
     local.value.etapa = prox
+    pularEtapasPreenchidas()
     emit('avancar', local.value)
     return true
   }
@@ -424,19 +508,20 @@ async function concluirEtapa() {
   return true
 }
 
-// Botão principal (FAB): registrar (nova), salvar (finalizada) ou avançar etapa.
+// Botão principal (FAB): registrar (nova) ou avançar etapa. Carga finalizada
+// não tem mais o que salvar por aqui — cada bloco já persiste a própria
+// correção pelo lápis (persistirBloco); o botão nem aparece (ver template).
 function onSubmit() {
-  if (props.novo || finalizada.value) salvar()
-  else avancar()
+  if (!finalizada.value) avancar()
 }
 const rotuloPrincipal = computed(() => {
-  if (props.novo) return 'Registrar'
-  if (finalizada.value || revisando.value) return 'Salvar'
+  if (ehNova.value) return 'Registrar'
+  if (revisando.value) return 'Salvar'
   return etapaMeta.value.acao
 })
 const iconePrincipal = computed(() => {
-  if (props.novo) return 'add'
-  if (finalizada.value || revisando.value) return 'save'
+  if (ehNova.value) return 'add'
+  if (revisando.value) return 'save'
   return etapaMeta.value.icon
 })
 // Verde no clique que fecha o romaneio — é o único que não tem volta.
@@ -505,13 +590,15 @@ function imprimir() {
 // carga é nova (`novo`), nenhum bloco persiste — só edita `local` em memória;
 // nada é criado no Dexie/servidor antes do clique em "Registrar".
 async function persistirBloco() {
-  if (props.novo) return true
+  if (ehNova.value) return true
   if (!entradaValida()) return false
+  pularEtapasPreenchidas()
   await props.persistir(local.value)
   return true
 }
 provide('persistirBloco', persistirBloco)
 provide('concluirEtapa', concluirEtapa)
+provide('proximoPasso', proximoPasso)
 provide('trocarOperacao', trocarOperacao)
 provide('calc', calc)
 provide('itensCarga', itensCarga)
@@ -519,9 +606,30 @@ provide('sacasLiquido', sacasLiquido)
 provide('avisoClassificacao', avisoClassificacao)
 provide('finalizando', finalizando)
 
+// Carga nova já abre no modal de Operação, com o cursor na Safra — é o 1º passo
+// da cadeia. Vale também pra carga em branco que aparece depois de finalizar
+// (o `:key` da página remonta o form).
+// Fechar esse 1º modal sem salvar (ESC, clique fora, Cancelar) é desistir da
+// carga: a página volta pra "Nenhuma carga aberta" em vez de deixar o formulário
+// em branco na tela. Só o 1º: reaberto depois (pelo card ou pelo Registrar sem
+// safra), a carga nova pode já ter dado digitado nos outros blocos.
+let primeiroPasso = false
+onMounted(() => {
+  if (!props.novo) return
+  primeiroPasso = true
+  blocoOperacao.value?.abrir()
+})
+function onOperacaoFechada(salvou) {
+  if (primeiroPasso && !salvou) emit('desistir')
+  primeiroPasso = false
+}
+
 // Atalhos da página (F3 = principal com validação do q-form; F4 = imprimir).
 defineExpose({
-  submit: () => formRef.value?.submit(),
+  // Com evento: o `@submit.prevent` do q-form chama preventDefault() nele, e
+  // sem evento (submit() puro) o handler estourava antes do onSubmit — o F3
+  // não fazia nada.
+  submit: () => formRef.value?.submit(new Event('submit')),
   imprimir,
 })
 </script>
@@ -529,10 +637,15 @@ defineExpose({
 <template>
   <q-form v-if="local" ref="formRef" @submit.prevent="onSubmit" @validation-error="onErroValidacao">
     <div class="q-pa-md q-gutter-y-md carga-form">
-      <CargaBlocoOperacao ref="blocoOperacao" :carga="local" :novo="novo" />
-      <CargaBlocoPontos ref="blocoPontos" :carga="local" :novo="novo" />
-      <CargaBlocoPesagem ref="blocoPesagem" :carga="local" :novo="novo" />
-      <CargaBlocoClassificacao ref="blocoClassificacao" :carga="local" :novo="novo" />
+      <CargaBlocoOperacao
+        ref="blocoOperacao"
+        :carga="local"
+        :novo="ehNova"
+        @fechado="onOperacaoFechada"
+      />
+      <CargaBlocoPontos ref="blocoPontos" :carga="local" :novo="ehNova" />
+      <CargaBlocoPesagem ref="blocoPesagem" :carga="local" :novo="ehNova" />
+      <CargaBlocoClassificacao ref="blocoClassificacao" :carga="local" :novo="ehNova" />
 
       <q-banner v-if="revisando" dense rounded class="bg-green-1 text-green-9">
         <template #avatar><q-icon name="fact_check" color="green-8" /></template>
@@ -557,16 +670,16 @@ defineExpose({
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
       <div class="row items-center q-gutter-sm">
-        <q-btn v-if="!novo" fab icon="delete" color="negative" @click="cancelarCarga">
+        <q-btn v-if="!ehNova" fab icon="delete" color="negative" @click="cancelarCarga">
           <q-tooltip>Cancelar carga</q-tooltip>
         </q-btn>
         <q-btn v-if="finalizada" fab icon="print" color="accent" @click="imprimir">
           <q-tooltip>Imprimir romaneio (F4)</q-tooltip>
         </q-btn>
-        <q-btn v-if="!novo && !finalizada" fab icon="save" color="grey-7" @click="salvarSemAvancar">
-          <q-tooltip>Salvar sem avançar</q-tooltip>
-        </q-btn>
+        <!-- Carga finalizada: nada a salvar por aqui (cada bloco corrige e
+             persiste sozinho pelo lápis) — o FAB principal não existe. -->
         <q-btn
+          v-if="!finalizada"
           type="submit"
           fab
           :icon="iconePrincipal"

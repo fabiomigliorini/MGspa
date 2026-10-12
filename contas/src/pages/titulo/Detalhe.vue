@@ -14,9 +14,11 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { abrirPdf } from '@components/abrirPdf'
+import { abrirVale } from '@components/abrirVale'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
@@ -54,10 +56,18 @@ const model = ref({})
 // Travas (legado MGsis): só Numero e Valor são bloqueados.
 // Quando duplicando, geradoAuto/liquidado retornam false porque o novo registro
 // não herda codnegocio/codtituloagrupamento e nasce com saldo positivo.
-const geradoAuto = computed(
+const automatico = computed(
   () =>
-    !duplicando.value &&
-    !!(titulo.value?.codnegocioformapagamento || titulo.value?.codtituloagrupamento),
+    !!(
+      titulo.value?.codnegocioparcela ||
+      titulo.value?.codtituloagrupamento ||
+      titulo.value?.codcaixaitem
+    ),
+)
+const geradoAuto = computed(() => !duplicando.value && automatico.value)
+// vale/adiantamento: valor e datas são do pagamento, mas o estorno continua aqui (TASK-214)
+const travado = computed(
+  () => geradoAuto.value || (!duplicando.value && !!titulo.value?.nasceudepagamento),
 )
 // Quando o título foi LIQUIDADO por um agrupamento, o vínculo está no movimento
 // (não em titulo.codtituloagrupamento, que indica que ele foi GERADO por agrupamento).
@@ -71,7 +81,7 @@ const liquidado = computed(() => !duplicando.value && Number(titulo.value?.saldo
 const estornado = computed(() => !!titulo.value?.estornado)
 
 // Estornar segue a mesma regra de geradoAuto: títulos gerados automaticamente
-// (vinculados a negócio ou agrupamento) só podem ser estornados pela origem.
+// (vinculados a negócio, agrupamento ou maquineta de parceiro) só podem ser estornados pela origem.
 const podeEstornar = computed(
   () =>
     podeMutar.value &&
@@ -226,6 +236,12 @@ function bbBaixar(b) {
   })
 }
 
+// título de crédito com saldo (vale, adiantamento, crédito do cliente): o vale que o caixa bipa,
+// o mesmo da venda e do pagamento (TASK-216)
+function abrirValeTitulo() {
+  abrirVale(api, codtitulo.value)
+}
+
 async function bbAbrirPdf(b) {
   await abrirPdf(
     api,
@@ -278,13 +294,31 @@ function parseDateLocal(s) {
 const movimentosOrdenados = computed(() => {
   const lista = titulo.value?.movimentos
   if (!lista) return []
-  return [...lista].sort((a, b) => {
-    const ta = a.transacao || ''
-    const tb = b.transacao || ''
-    if (ta !== tb) return ta < tb ? -1 : 1
-    return (a.codmovimentotitulo ?? 0) - (b.codmovimentotitulo ?? 0)
-  })
+  const porCodigo = new Map(lista.map((m) => [m.codmovimentotitulo, m]))
+  return [...lista]
+    .sort((a, b) => {
+      const ta = a.transacao || ''
+      const tb = b.transacao || ''
+      if (ta !== tb) return ta < tb ? -1 : 1
+      return (a.codmovimentotitulo ?? 0) - (b.codmovimentotitulo ?? 0)
+    })
+    .map((m) => ({
+      ...m,
+      // o estorno não guarda liquidação/agrupamento: a origem dele é a do movimento que ele desfez
+      origem: porCodigo.get(m.codmovimentotituloestorno) ?? m,
+      // anulado = faz parte de um par estorno/estornado, que some da lista
+      anulado: !!(m.codmovimentotituloestorno || m.codmovimentotituloestornadopor),
+    }))
 })
+
+// Estorno antigo não aponta para o movimento que desfez: sem saber o par, os dois ficam sempre à vista.
+const mostrarEstornos = ref(false)
+const qtdAnulados = computed(() => movimentosOrdenados.value.filter((m) => m.anulado).length)
+const movimentosVisiveis = computed(() =>
+  mostrarEstornos.value
+    ? movimentosOrdenados.value
+    : movimentosOrdenados.value.filter((m) => !m.anulado),
+)
 
 const classeVencimento = computed(() => {
   if (!titulo.value || Number(titulo.value.saldo) === 0) return 'text-grey-6'
@@ -303,8 +337,8 @@ const urlMovimento = (m) => {
     // Baixa por Acerto RH (app pessoas) — sem link direto daqui.
     return null
   }
-  if (m.codliquidacaotitulo) {
-    return `/liquidacao-titulo/${m.codliquidacaotitulo}`
+  if (m.codpagamento && !m.codnegocio) {
+    return `/pagamento/${m.codpagamento}`
   }
   if (m.codtituloagrupamento) {
     return `/agrupamento/${m.codtituloagrupamento}`
@@ -320,6 +354,9 @@ const urlMovimento = (m) => {
   }
   if (titulo.value.codnegocio) {
     return urlNegocio(titulo.value.codnegocio)
+  }
+  if (titulo.value.codcaixaitem) {
+    return `/caixa-item/${titulo.value.codcaixaitem}`
   }
 }
 
@@ -349,6 +386,9 @@ watch(() => route.fullPath, carregar)
             </div>
             <div class="text-h6 text-grey-7 ellipsis" v-if="titulo.fatura">
               {{ titulo.fatura }}
+            </div>
+            <div v-if="automatico" class="text-caption text-grey-7">
+              Gerado automaticamente — estorno só pela origem
             </div>
           </q-item-section>
         </q-item>
@@ -424,6 +464,18 @@ watch(() => route.fullPath, carregar)
           <q-card-section class="text-grey-9 text-overline row items-center">
             DETALHES DO TÍTULO
             <q-space />
+            <q-btn
+              v-if="Number(titulo.saldo) < 0"
+              flat
+              round
+              dense
+              icon="confirmation_number"
+              size="sm"
+              color="grey-7"
+              @click="abrirValeTitulo"
+            >
+              <q-tooltip>Vale</q-tooltip>
+            </q-btn>
             <q-btn
               v-if="podeEditar"
               flat
@@ -605,47 +657,95 @@ watch(() => route.fullPath, carregar)
           <!-- Card Movimentos -->
           <div class="col-xs-12 col-sm-6">
             <q-card bordered flat class="q-mt-md">
-              <q-card-section class="text-grey-9 text-overline">
-                MOVIMENTOS ({{ titulo.movimentos.length }})
+              <q-card-section class="text-grey-9 text-overline row items-center">
+                MOVIMENTOS ({{ movimentosVisiveis.length }})
+                <q-space />
+                <q-toggle
+                  v-if="qtdAnulados"
+                  v-model="mostrarEstornos"
+                  size="sm"
+                  :label="`Mostrar estornos (${qtdAnulados})`"
+                />
               </q-card-section>
+
+              <MgEmptyState v-if="!movimentosVisiveis.length" plain icon="undo">
+                Todos os movimentos foram estornados.
+              </MgEmptyState>
 
               <q-list separator>
                 <q-item
-                  v-for="m in movimentosOrdenados"
+                  v-for="m in movimentosVisiveis"
                   :key="m.codmovimentotitulo"
-                  :href="urlMovimento(m)"
+                  :href="urlMovimento(m.origem)"
+                  :class="m.anulado ? 'bg-grey-2' : ''"
                 >
                   <!-- Transacao -->
                   <q-item-section>
-                    <q-item-label class="ellipsis text-primary text-weight-bold">
-                      <span v-if="m.codperiodocolaboradoracerto"> Acerto RH </span>
-                      <span v-else-if="m.codliquidacaotitulo">
-                        Liquidação {{ formataCodigo(m.codliquidacaotitulo) }}
+                    <q-item-label
+                      class="ellipsis text-weight-bold"
+                      :class="m.anulado ? 'text-grey-7' : 'text-primary'"
+                    >
+                      <span v-if="m.origem.codperiodocolaboradoracerto"> Acerto RH </span>
+                      <span v-else-if="m.origem.codpagamento && !m.origem.codnegocio">
+                        Pagamento {{ formataCodigo(m.origem.codpagamento) }}
                       </span>
-                      <span v-else-if="m.codtituloagrupamento">
-                        Agrupamento {{ formataCodigo(m.codtituloagrupamento) }}
+                      <span v-else-if="m.origem.codtituloagrupamento">
+                        Agrupamento {{ formataCodigo(m.origem.codtituloagrupamento) }}
                       </span>
-                      <span v-else-if="m.codboletoretorno">Retorno Boleto</span>
-                      <span v-else-if="m.codcobranca">Cobrança</span>
+                      <span v-else-if="m.origem.codboletoretorno">Retorno Boleto</span>
+                      <span v-else-if="m.origem.codcobranca">Cobrança</span>
                       <span v-else-if="titulo.codnegocio">
                         Negócio {{ formataCodigo(titulo.codnegocio) }}
                       </span>
+                      <span v-else-if="titulo.codcaixaitem"> Repasse {{ titulo.caixaitem }} </span>
                       <span v-else class="text-italic text-grey-7 text-weight-regular">
                         Sem Identificação de Origem
                       </span>
                       <MgInfoCriacao :registro="m" />
                     </q-item-label>
                     <q-item-label v-if="m.portador" caption>{{ m.portador }}</q-item-label>
+                    <q-item-label v-if="mostrarEstornos" caption>
+                      Movimento {{ formataCodigo(m.codmovimentotitulo) }}
+                    </q-item-label>
+                    <q-item-label v-if="m.codmovimentotituloestorno" caption>
+                      <q-badge color="grey-7" label="Estorno" />
+                      do movimento {{ formataCodigo(m.codmovimentotituloestorno) }}
+                    </q-item-label>
+                    <q-item-label v-else-if="m.codmovimentotituloestornadopor" caption>
+                      <q-badge color="grey-7" label="Estornado" />
+                      pelo movimento {{ formataCodigo(m.codmovimentotituloestornadopor) }}
+                    </q-item-label>
+                    <q-item-label v-else-if="m.estorno" caption>
+                      <q-badge color="grey-7" label="Estorno" />
+                    </q-item-label>
                   </q-item-section>
 
                   <!-- VALOR -->
                   <q-item-section side>
                     <q-item-label
                       class="text-weight-bold"
-                      :class="m.operacao === 'CR' ? 'text-orange' : 'text-green'"
+                      :class="[
+                        m.operacao === 'CR' ? 'text-orange' : 'text-green',
+                        m.anulado ? 'text-strike' : '',
+                      ]"
                     >
-                      {{ formataNumero(Math.abs(m.valor)) }} {{ m.operacao }}
+                      {{ formataNumero(Math.abs(m.principal)) }} {{ m.operacao }}
                     </q-item-label>
+                    <!-- juros, multa e desconto vêm na mesma linha da baixa -->
+                    <template v-if="m.juros || m.multa || m.desconto">
+                      <q-item-label caption v-if="m.juros" class="text-orange">
+                        Juros {{ formataNumero(m.juros) }}
+                      </q-item-label>
+                      <q-item-label caption v-if="m.multa" class="text-orange">
+                        Multa {{ formataNumero(m.multa) }}
+                      </q-item-label>
+                      <q-item-label caption v-if="m.desconto" class="text-blue">
+                        Desconto {{ formataNumero(m.desconto) }}
+                      </q-item-label>
+                      <q-item-label caption class="text-weight-bold">
+                        Total {{ formataNumero(Math.abs(m.total)) }}
+                      </q-item-label>
+                    </template>
                     <q-item-label caption>
                       {{ m.tipomovimentotitulo }}
                     </q-item-label>
@@ -904,8 +1004,8 @@ watch(() => route.fullPath, carregar)
                   outlined
                   label="Número"
                   maxlength="20"
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
@@ -921,8 +1021,8 @@ watch(() => route.fullPath, carregar)
                   v-model="model.valor"
                   label="Valor"
                   prefix="R$"
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto || liquidado"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado || liquidado"
                   :rules="[(v) => (v && Number(v) > 0) || 'Obrigatório']"
                 />
               </div>
@@ -934,8 +1034,8 @@ watch(() => route.fullPath, carregar)
                   type="date"
                   label="Emissão"
                   stack-label
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
@@ -947,8 +1047,8 @@ watch(() => route.fullPath, carregar)
                   type="date"
                   label="Transação"
                   stack-label
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>

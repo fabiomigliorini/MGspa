@@ -8,11 +8,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mg\MgController;
 use Mg\Pdv\PdvPessoaService;
+use Mg\Usuario\Autorizador;
 
 class CargaController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     public function index(Request $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         [$filter, $sort, $fields] = $this->filtros($request);
         $res = CargaService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
         return CargaResource::collection($res);
@@ -29,6 +34,8 @@ class CargaController extends MgController
      */
     public function listagem(Request $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         [$filter, $sort, $fields] = $this->filtros($request);
         $qry = CargaService::pesquisar($filter, $sort, $fields, CargaService::WITH_LISTAGEM);
 
@@ -41,6 +48,8 @@ class CargaController extends MgController
 
     public function show(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return new CargaResource(Carga::with(CargaService::WITH)->findOrFail($id));
     }
 
@@ -50,6 +59,8 @@ class CargaController extends MgController
      */
     public function relatorio(Request $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $filtros = $request->all();
 
         if ($request->boolean('html')) {
@@ -70,6 +81,8 @@ class CargaController extends MgController
      */
     public function sincronizar(CargaSincronizarRequest $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $carga = CargaService::sincronizar($request->validated());
         return new CargaResource($carga->load(CargaService::WITH));
     }
@@ -81,13 +94,13 @@ class CargaController extends MgController
      */
     public function cadastrarMotorista(CargaMotoristaRequest $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $d = $request->validated();
-        // O novaPessoa espera o telefone como "(DD) numero" (separa pelo ')').
+        // Sempre celular (tipo 2). O novaPessoa espera "(DD) numero" (separa
+        // pelo ')').
         $tel = $d['telefone'];
-        $telefone = [
-            'tipo' => strlen($tel) === 11 ? 2 : 1,
-            'numero' => '(' . substr($tel, 0, 2) . ')' . substr($tel, 2),
-        ];
+        $telefone = ['tipo' => 2, 'numero' => '(' . substr($tel, 0, 2) . ')' . substr($tel, 2)];
         $pessoa = DB::transaction(fn () => PdvPessoaService::novaPessoa((object) [
             'fisica' => true,
             'cnpj' => $d['cpf'],
@@ -98,8 +111,6 @@ class CargaController extends MgController
             'enderecos' => [[
                 'cep' => $d['cep'],
                 'endereco' => $d['endereco'],
-                'numero' => $d['numero'],
-                'complemento' => $d['complemento'] ?? null,
                 'bairro' => $d['bairro'],
                 'codcidade' => $d['codcidade'],
             ]],
@@ -116,12 +127,16 @@ class CargaController extends MgController
 
     public function inativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = CargaService::inativar(Carga::findOrFail($id));
         return new CargaResource($model->fresh(CargaService::WITH));
     }
 
     public function ativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = CargaService::ativar(Carga::findOrFail($id));
         return new CargaResource($model->fresh(CargaService::WITH));
     }

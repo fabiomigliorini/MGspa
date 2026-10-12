@@ -6,7 +6,6 @@ use Exception;
 use Illuminate\Support\Facades\DB;
 
 use Mg\Negocio\Negocio;
-use Mg\Negocio\NegocioFormaPagamentoService;
 use Mg\Titulo\TituloService;
 
 /**
@@ -183,11 +182,10 @@ class PdvValeEscopoService
      */
     public static function reconferirSaldos(Negocio $negocio)
     {
-        $nfps = $negocio->NegocioFormaPagamentoS()
-            ->whereNotNull('codtitulo')
-            ->where('codformapagamento', NegocioFormaPagamentoService::CODFORMAPAGAMENTO_VALE)
-            ->orderBy('codnegocioformapagamento')
-            ->get();
+        // o vale que ja' tem a baixa ativa (venda reaberta, TASK-30) ja' saiu
+        // do saldo: conferir de novo contaria duas vezes
+        $nfps = PdvNegocioPrazoService::pagamentosVale($negocio)
+            ->filter(fn ($nfp) => !PdvNegocioPrazoService::amortizacaoAtiva($nfp));
 
         if ($nfps->isEmpty()) {
             return;
@@ -197,7 +195,7 @@ class PdvValeEscopoService
         $querUsar = [];
         foreach ($nfps as $nfp) {
             $cod = (int) $nfp->codtitulo;
-            $querUsar[$cod] = round(($querUsar[$cod] ?? 0) + (float) $nfp->valorpagamento, 2);
+            $querUsar[$cod] = round(($querUsar[$cod] ?? 0) + (float) $nfp->principal, 2);
         }
 
         // trava os títulos na ordem do código, sempre -- ordem fixa é o que

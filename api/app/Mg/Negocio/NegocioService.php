@@ -6,9 +6,8 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Exception;
 
-use Mg\Titulo\Titulo;
-use Mg\Portador\Portador;
-use Mg\NaturezaOperacao\Operacao;
+use Mg\Auditoria\AuditoriaService;
+use Mg\Pagamento\PagamentoService;
 use Mg\Pdv\PdvNegocioService;
 use Mg\Rh\ProcessarVendaJob;
 
@@ -30,7 +29,7 @@ class NegocioService
         if ($negocio->codnegociostatus != static::STATUS_ABERTO) {
             return false;
         }
-        $valorpagamento = floatval($negocio->NegocioFormaPagamentoS()->sum('valorpagamento'));
+        $valorpagamento = static::valorPago($negocio);
         if (($negocio->valortotal - $valorpagamento) > 0.01) {
             return false;
         }
@@ -43,7 +42,11 @@ class NegocioService
 
     public static function recalcularTotal(Negocio $negocio)
     {
-        $negocio->valorjuros = $negocio->NegocioFormaPagamentoS()->sum('valorjuros');
+        $negocio->valorjuros = round(
+            floatval($negocio->PagamentoS()->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->sum('juros'))
+                + floatval($negocio->NegocioParcelaS()->sum('juros')),
+            2
+        );
         // valorvales e a face dos vales compras do negocio, bruta e simetrica
         // ao valorprodutos (decisao 20 do plano). Sem vale ela vale 0 e a
         // conta e a mesma de sempre -- mas sem ela um negocio com vale que
@@ -82,14 +85,8 @@ class NegocioService
         }
 
         //Calcula total pagamentos à vista e à prazo
-        $valorPagamentos = 0;
-        $valorPagamentosPrazo = 0;
-        foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
-            $valorPagamentos += ($nfp->valortotal)?$nfp->valortotal:$nfp->valorpagamento;
-            if (!$nfp->FormaPagamento->avista) {
-                $valorPagamentosPrazo += $nfp->valortotal;
-            }
-        }
+        $valorPagamentos = static::valorPago($negocio);
+        $valorPagamentosPrazo = floatval($negocio->NegocioParcelaS()->sum('valor'));
 
         //valida total pagamentos
         if (($negocio->valortotal - $valorPagamentos) >= 0.01) {
@@ -101,13 +98,11 @@ class NegocioService
             throw new \Exception("O valor a prazo ({$valorPagamentosPrazo}) é superior ao Total ({$negocio->valortotal})!", 1);
         }
 
-        //gera títulos
-        foreach ($negocio->NegocioFormaPagamentoS as $nfp) {
-            if (!static::gerarTitulos($nfp)) {
-                throw new \Exception("Falha ao gerar os Títulos!", 1);
-                return false;
-            }
+        //efetiva os pagamentos e gera os títulos das parcelas
+        foreach ($negocio->PagamentoS()->where('estado', PagamentoService::ESTADO_PENDENTE)->get() as $pag) {
+            PagamentoService::efetivar($pag);
         }
+        NegocioParcelaService::gerarTitulos($negocio);
 
         //atualiza status
         $negocio->update([
@@ -115,6 +110,13 @@ class NegocioService
             'codusuario' => Auth::user()->codusuario??$negocio->codusuario,
             'lancamento' => Carbon::now()
         ]);
+        AuditoriaService::registrar(
+            'tblnegocio',
+            $negocio->codnegocio,
+            AuditoriaService::TIPO_NEGOCIO_FECHADO,
+            ['codnegociostatus' => static::STATUS_ABERTO],
+            ['codnegociostatus' => static::STATUS_FECHADO]
+        );
 
         // Dispara processamento de indicadores RH
         ProcessarVendaJob::dispatch($negocio->codnegocio);
@@ -135,66 +137,14 @@ class NegocioService
         return true;
     }
 
-    public static function gerarTitulos (NegocioFormaPagamento $nfp)
+    // Σ total dos pagamentos (contrario subtrai) + Σ parcelas
+    public static function valorPago(Negocio $negocio): float
     {
-        //se for avista ignora
-        if ($nfp->FormaPagamento->avista) {
-            return true;
+        $pago = 0;
+        foreach ($negocio->PagamentoS()->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)->get() as $pag) {
+            $pago += $pag->ehSaida() ? -$pag->total : $pag->total;
         }
-
-        //se ja tem titulos gerados gera erro
-        if (count($nfp->Titulos) != 0) {
-            throw new Exception("Já existem Títulos gerados para a forma de pagamento, impossível gerar novos!");
-        }
-
-        $total = 0;
-        $parcelas = $nfp->FormaPagamento->parcelas;
-
-        // faz um looping para gerar duplicatas
-        for ($i = 1; $i <= $parcelas; $i++) {
-
-            //Joga diferença no último titulo gerado
-            if ($i == $parcelas) {
-                $valor = $nfp->valorpagamento - $total;
-            } else {
-                $valor = floor($nfp->valorpagamento / $parcelas);
-            }
-            $total += $valor;
-
-            $titulo = new Titulo();
-            $titulo->codnegocioformapagamento = $nfp->codnegocioformapagamento;
-            $titulo->codfilial = $nfp->Negocio->codfilial;
-            $titulo->codtipotitulo = $nfp->Negocio->NaturezaOperacao->codtipotitulo;
-            $titulo->codcontacontabil = $nfp->Negocio->NaturezaOperacao->codcontacontabil;
-            if ($nfp->Negocio->NaturezaOperacao->codoperacao == Operacao::SAIDA) {
-                $titulo->debito = $valor;
-            } else {
-                $titulo->credito = $valor;
-            }
-            $titulo->boleto = $nfp->FormaPagamento->boleto;
-            $titulo->codpessoa = $nfp->Negocio->codpessoa;
-            $titulo->numero = "N" . str_pad($nfp->codnegocio, 8, "0", STR_PAD_LEFT) . "-$i/{$parcelas}";
-            $titulo->emissao = Carbon::now();
-            $titulo->transacao = $titulo->emissao;
-            $titulo->sistema = $titulo->emissao;
-            $titulo->vencimento = $titulo->emissao->addDays($i * $nfp->FormaPagamento->diasentreparcelas);
-            $titulo->vencimentooriginal = $titulo->vencimento;
-            $titulo->gerencial = true;
-
-            //se for boleto pega o primeiro portador bancario da filial
-            if ($titulo->boleto) {
-                $portador = Portador::where('codfilial', $titulo->codfilial)->where('emiteboleto', true)->first();
-                if ($portador) {
-                    $titulo->codportador = $portador->codportador;
-                }
-            }
-
-            //se deu erro ao salvar titulo aborta
-            if (!$titulo->save()) {
-                return false;
-            }
-        }
-        return $total;
+        return round($pago + floatval($negocio->NegocioParcelaS()->sum('valor')), 2);
     }
 
 }

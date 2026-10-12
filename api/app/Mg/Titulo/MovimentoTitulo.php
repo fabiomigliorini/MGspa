@@ -7,17 +7,15 @@
 namespace Mg\Titulo;
 
 use Mg\MgModel;
-use Mg\Portador\PortadorMovimento;
 use Mg\Boleto\BoletoRetorno;
 use Mg\Cobranca\Cobranca;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Portador\Portador;
 use Mg\Titulo\TipoMovimentoTitulo;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloAgrupamento;
 use Mg\Usuario\Usuario;
 use Mg\Titulo\TituloBoleto;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
 
 class MovimentoTitulo extends MgModel
 {
@@ -28,8 +26,8 @@ class MovimentoTitulo extends MgModel
     protected $fillable = [
         'codboletoretorno',
         'codcobranca',
-        'codliquidacaotitulo',
-        'codnegocioformapagamento',
+        'codmovimentotituloestorno',
+        'codpagamento',
         'codperiodocolaboradoracerto',
         'codportador',
         'codtipomovimentotitulo',
@@ -37,10 +35,12 @@ class MovimentoTitulo extends MgModel
         'codtituloagrupamento',
         'codtituloboleto',
         'codtitulorelacionado',
-        'credito',
-        'debito',
+        'desconto',
         'historico',
-        'sistema',
+        'juros',
+        'multa',
+        'principal',
+        'total',
         'transacao'
     ];
 
@@ -48,9 +48,9 @@ class MovimentoTitulo extends MgModel
         'alteracao' => 'datetime',
         'codboletoretorno' => 'integer',
         'codcobranca' => 'integer',
-        'codliquidacaotitulo' => 'integer',
         'codmovimentotitulo' => 'integer',
-        'codnegocioformapagamento' => 'integer',
+        'codmovimentotituloestorno' => 'integer',
+        'codpagamento' => 'integer',
         'codperiodocolaboradoracerto' => 'integer',
         'codportador' => 'integer',
         'codtipomovimentotitulo' => 'integer',
@@ -60,12 +60,25 @@ class MovimentoTitulo extends MgModel
         'codtitulorelacionado' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'credito' => 'float',
         'criacao' => 'datetime',
-        'debito' => 'float',
-        'sistema' => 'datetime',
+        'desconto' => 'float',
+        'juros' => 'float',
+        'multa' => 'float',
+        'principal' => 'float',
+        'total' => 'float',
         'transacao' => 'date'
     ];
+
+
+    /**
+     * Movimento que desfaz outro. O estorno novo aponta para o original
+     * (codmovimentotituloestorno); o antigo só tem o tipo para dizer.
+     */
+    public function ehEstorno(): bool
+    {
+        return !empty($this->codmovimentotituloestorno)
+            || in_array((int) $this->codtipomovimentotitulo, MovimentoTituloService::TIPOS_ESTORNO);
+    }
 
 
     // Chaves Estrangeiras
@@ -79,14 +92,14 @@ class MovimentoTitulo extends MgModel
         return $this->belongsTo(Cobranca::class, 'codcobranca', 'codcobranca');
     }
 
-    public function LiquidacaoTitulo()
+    public function MovimentoTituloEstorno()
     {
-        return $this->belongsTo(LiquidacaoTitulo::class, 'codliquidacaotitulo', 'codliquidacaotitulo');
+        return $this->belongsTo(MovimentoTitulo::class, 'codmovimentotituloestorno', 'codmovimentotitulo');
     }
 
-    public function NegocioFormaPagamento()
+    public function Pagamento()
     {
-        return $this->belongsTo(NegocioFormaPagamento::class, 'codnegocioformapagamento', 'codnegocioformapagamento');
+        return $this->belongsTo(Pagamento::class, 'codpagamento', 'codpagamento');
     }
 
     public function PeriodoColaboradorAcerto()
@@ -136,9 +149,9 @@ class MovimentoTitulo extends MgModel
 
 
     // Tabelas Filhas
-    public function PortadorMovimentoS()
+    public function MovimentoTituloEstornoS()
     {
-        return $this->hasMany(PortadorMovimento::class, 'codmovimentotitulo', 'codmovimentotitulo');
+        return $this->hasMany(MovimentoTitulo::class, 'codmovimentotituloestorno', 'codmovimentotitulo');
     }
 
 }

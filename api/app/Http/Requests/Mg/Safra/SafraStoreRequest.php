@@ -22,6 +22,8 @@ class SafraStoreRequest extends FormRequest
                 Rule::unique('tblsafra', 'anoplantio')->where('codcultura', $this->input('codcultura')),
             ],
             'anocolheita' => ['required', 'integer', 'min:2000', 'max:2100'],
+            // Safra de onde copiar os talhoes (TASK-201) — nao e coluna da safra.
+            'codsafraorigem' => ['nullable', 'exists:tblsafra,codsafra'],
         ];
     }
 

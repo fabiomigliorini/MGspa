@@ -8,12 +8,13 @@ export function nomeCompleto(nome) {
   return (nome || '').trim().split(/\s+/).filter(Boolean).length >= 2
 }
 
-// Pessoa FÍSICA com exatamente este CPF (só dígitos), ou null. O select de
-// pessoa casa dígitos por substring; aqui só vale o CPF inteiro. O cnpj vem
-// numérico do banco (perde zero à esquerda) — por isso o padStart.
+// Pessoa FÍSICA com exatamente este CPF (só dígitos), ou null — inclusive
+// INATIVA (vem com `inativo`): o cadastro recusa CPF repetido mesmo de inativo.
+// O select de pessoa casa dígitos por substring; aqui só vale o CPF inteiro. O
+// cnpj vem numérico do banco (perde zero à esquerda) — por isso o padStart.
 export async function pessoaPorCpf(cpf) {
   const { data } = await api.get('v1/select/pessoa', {
-    params: { busca: cpf, page: 1 },
+    params: { busca: cpf, page: 1, inativos: 1 },
     skipLoading: true,
   })
   const rows = Array.isArray(data) ? data : data?.data || []
@@ -24,7 +25,7 @@ export async function pessoaPorCpf(cpf) {
   )
 }
 
-// Cadastra o motorista (pessoa física + telefone + endereço) a partir dos
+// Cadastra o motorista (pessoa física + celular + endereço) a partir dos
 // campos *motorista da carga. Devolve { codpessoa, fantasia, pessoa, cnpj }.
 export async function cadastrarMotorista(c) {
   const { data } = await api.post('v1/carga/motorista', {
@@ -33,8 +34,6 @@ export async function cadastrarMotorista(c) {
     telefone: c.telefonemotorista,
     cep: c.cepmotorista,
     endereco: c.enderecomotorista,
-    numero: c.numeromotorista,
-    complemento: c.complementomotorista,
     bairro: c.bairromotorista,
     codcidade: c.codcidademotorista,
   })

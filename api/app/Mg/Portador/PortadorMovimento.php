@@ -1,72 +1,101 @@
 <?php
-/**
- * Created by php artisan gerador:model.
- * Date: 27/May/2026 11:35:13
- */
 
 namespace Mg\Portador;
 
+use Mg\Caixa\CaixaItem;
 use Mg\MgModel;
-use Mg\Portador\ExtratoBancarioPortadorMovimento;
-use Mg\Titulo\MovimentoTitulo;
-use Mg\Negocio\NegocioFormaPagamento;
-use Mg\Pix\Pix;
-use Mg\Portador\Portador;
-use Mg\Portador\PortadorTransferencia;
+use Mg\Pagamento\Pagamento;
+use Mg\Usuario\Usuario;
 
+/**
+ * Movimento do portador (doc-4, redefinicao do dinheiro): o registro
+ * principal do saldo. Tipo P pagamento (nasce do pagamento,
+ * PortadorMovimentoService::sincronizar; `inativo` = linha trocada), A ajuste
+ * e T transferencia (PortadorLancamentoService; a transferencia sao duas
+ * linhas ligadas pelo par, com o mesmo estado), I item do caixa (a entrada ou
+ * saida do item no portador em especie: codcaixaitem e as linhas em `itens`; o
+ * item conta como cedula, vender nao lanca nada), M bordero da maquineta de
+ * parceiro (o total em dinheiro do dia: codcaixaitem sem `itens`; credito na
+ * conta corrente da maquineta). valor com sinal (positivo
+ * entrou); transacao = quando aparece no portador. Mantido a mao.
+ */
 class PortadorMovimento extends MgModel
 {
     protected $table = 'tblportadormovimento';
     protected $primaryKey = 'codportadormovimento';
 
+    const TIPO_PAGAMENTO = 'P';
+    const TIPO_AJUSTE = 'A';
+    const TIPO_TRANSFERENCIA = 'T';
+    const TIPO_ITEM = 'I';
+    const TIPO_MAQUINETA = 'M';
+
+    // so' ajuste, transferencia, item e maquineta
+    const ESTADO_PENDENTE = 'P';
+    const ESTADO_EFETIVADO = 'E';
+    const ESTADO_CANCELADO = 'C';
 
     protected $fillable = [
-        'codmovimentotitulo',
-        'codnegocioformapagamento',
-        'codpix',
         'codportador',
-        'codportadortransferencia',
+        'codportadorperiodo',
+        'codpagamento',
+        'valor',
+        'transacao',
+        'parcela',
         'conciliado',
         'inativo',
-        'lancamento',
-        'manual',
+        'tipo',
+        'estado',
         'observacoes',
-        'valor'
+        'codportadormovimentopar',
+        'confirmacao',
+        'codusuarioconfirmacao',
+        'cancelamento',
+        'codusuariocancelamento',
+        'justificativa',
+        'codcaixaitem',
+        'itens',
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'codmovimentotitulo' => 'integer',
-        'codnegocioformapagamento' => 'integer',
-        'codpix' => 'integer',
+        'codpagamento' => 'integer',
         'codportador' => 'integer',
         'codportadormovimento' => 'integer',
-        'codportadortransferencia' => 'integer',
+        'codportadorperiodo' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'conciliado' => 'boolean',
         'criacao' => 'datetime',
         'inativo' => 'datetime',
-        'lancamento' => 'datetime',
-        'manual' => 'boolean',
-        'valor' => 'float'
+        'parcela' => 'integer',
+        'transacao' => 'datetime',
+        'valor' => 'float',
+        'codportadormovimentopar' => 'integer',
+        'confirmacao' => 'datetime',
+        'codusuarioconfirmacao' => 'integer',
+        'cancelamento' => 'datetime',
+        'codusuariocancelamento' => 'integer',
+        'codcaixaitem' => 'integer',
+        'itens' => 'array',
     ];
 
+    // conta no saldo: a linha do pagamento nao trocada; ajuste e
+    // transferencia nao cancelados (a confirmar conta, decisao 13)
+    public function valendo(): bool
+    {
+        return empty($this->inativo) && $this->estado != self::ESTADO_CANCELADO;
+    }
 
     // Chaves Estrangeiras
-    public function MovimentoTitulo()
+    public function CaixaItem()
     {
-        return $this->belongsTo(MovimentoTitulo::class, 'codmovimentotitulo', 'codmovimentotitulo');
+        return $this->belongsTo(CaixaItem::class, 'codcaixaitem', 'codcaixaitem');
     }
 
-    public function NegocioFormaPagamento()
+    public function Pagamento()
     {
-        return $this->belongsTo(NegocioFormaPagamento::class, 'codnegocioformapagamento', 'codnegocioformapagamento');
-    }
-
-    public function Pix()
-    {
-        return $this->belongsTo(Pix::class, 'codpix', 'codpix');
+        return $this->belongsTo(Pagamento::class, 'codpagamento', 'codpagamento');
     }
 
     public function Portador()
@@ -74,16 +103,39 @@ class PortadorMovimento extends MgModel
         return $this->belongsTo(Portador::class, 'codportador', 'codportador');
     }
 
-    public function PortadorTransferencia()
+    public function PortadorPeriodo()
     {
-        return $this->belongsTo(PortadorTransferencia::class, 'codportadortransferencia', 'codportadortransferencia');
+        return $this->belongsTo(PortadorPeriodo::class, 'codportadorperiodo', 'codportadorperiodo');
     }
 
+    public function Par()
+    {
+        return $this->belongsTo(PortadorMovimento::class, 'codportadormovimentopar', 'codportadormovimento');
+    }
+
+    public function UsuarioConfirmacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioconfirmacao', 'codusuario');
+    }
+
+    public function UsuarioCancelamento()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocancelamento', 'codusuario');
+    }
+
+    public function UsuarioCriacao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
+    }
+
+    public function UsuarioAlteracao()
+    {
+        return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
+    }
 
     // Tabelas Filhas
     public function ExtratoBancarioPortadorMovimentoS()
     {
         return $this->hasMany(ExtratoBancarioPortadorMovimento::class, 'codportadormovimento', 'codportadormovimento');
     }
-
 }

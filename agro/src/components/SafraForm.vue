@@ -3,6 +3,7 @@ import { ref, computed, watch, onMounted } from 'vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import RadioCultura from 'components/RadioCultura.vue'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 
 // Formulário único de safra — serve tanto pra criar quanto pra editar. Recebe o
 // objeto reativo do form (da store do domínio) e a lista de safras já
@@ -15,6 +16,10 @@ const props = defineProps({
 
 const form = computed(() => props.form)
 const isNovo = computed(() => !form.value.codsafra)
+
+// Safras de onde copiar os talhões: as ativas, qualquer cultura (soja → milho
+// usa os mesmos talhões).
+const opcoesOrigem = computed(() => props.safras.filter((s) => !s.inativo))
 
 // Cultura escolhida no radio: guardada pra saber o ciclo na hora de derivar o
 // ano de colheita e montar a descrição.
@@ -145,6 +150,22 @@ onMounted(() => {
         hint="Gerada automaticamente — pode ajustar"
         outlined
         @update:model-value="onSafraInput"
+      />
+    </div>
+
+    <!-- Só na criação: a fazenda quase não muda de uma safra para outra. -->
+    <div v-if="isNovo" class="col-12">
+      <MgSelect
+        v-model="form.codsafraorigem"
+        :options="opcoesOrigem"
+        option-value="codsafra"
+        option-label="safra"
+        emit-value
+        map-options
+        clearable
+        outlined
+        label="Copiar talhões de"
+        hint="Traz os talhões com o desenho e a área do cadastro da fazenda. Variedade e data ficam para preencher."
       />
     </div>
   </div>

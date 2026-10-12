@@ -8,14 +8,18 @@ use RuntimeException;
 
 class TipoTituloService
 {
-    const TIPO_PIX_RECEBER = 201;
-    const TIPO_PIX_PAGAR = 930;
-    const TIPO_ENTREGA_RECEBER = 310;
-    const TIPO_ENTREGA_PAGAR = 320;
+    const TIPO_PIX_RECEBER = 101;
+    const TIPO_PIX_PAGAR = 201;
+    const TIPO_ENTREGA_RECEBER = 102;
+    const TIPO_ENTREGA_PAGAR = 202;
+    // nascem com o dinheiro (M8 doc-3; codigos fixos do tipo_titulo_limpeza.sql)
+    const TIPO_VALE_COLABORADOR = 120;
+    const TIPO_ADIANTAMENTO_FORNECEDOR = 121;
+    const TIPO_ADIANTAMENTO_CLIENTE = 211;
 
     public static function listar(array $filtros)
     {
-        $q = TipoTitulo::with('TipoMovimentoTitulo');
+        $q = TipoTitulo::query();
 
         if (!empty($filtros['codtipotitulo'])) {
             $q->where('codtipotitulo', $filtros['codtipotitulo']);
@@ -23,11 +27,11 @@ class TipoTituloService
         if (!empty($filtros['tipotitulo'])) {
             $q->palavras('tipotitulo', $filtros['tipotitulo']);
         }
-        if (!empty($filtros['codtipomovimentotitulo'])) {
-            $q->where('codtipomovimentotitulo', $filtros['codtipomovimentotitulo']);
+        if (!empty($filtros['natureza'])) {
+            $q->where('natureza', $filtros['natureza']);
         }
 
-        foreach (['pagar', 'receber', 'debito', 'credito'] as $flag) {
+        foreach (['pagar', 'receber', 'movimentaportador'] as $flag) {
             if (array_key_exists($flag, $filtros) && $filtros[$flag] !== null && $filtros[$flag] !== '') {
                 $q->where($flag, filter_var($filtros[$flag], FILTER_VALIDATE_BOOLEAN));
             }
@@ -52,9 +56,7 @@ class TipoTituloService
 
     public static function criar(array $dados): TipoTitulo
     {
-        $tipo = TipoTitulo::create($dados);
-        $tipo->load('TipoMovimentoTitulo');
-        return $tipo;
+        return TipoTitulo::create($dados);
     }
 
     public static function atualizar(TipoTitulo $tipo, array $dados): TipoTitulo
@@ -62,7 +64,6 @@ class TipoTituloService
         $tipo->fill($dados);
         $tipo->save();
         $tipo->refresh();
-        $tipo->load('TipoMovimentoTitulo');
         return $tipo;
     }
 
@@ -71,7 +72,6 @@ class TipoTituloService
         $tipo->inativo = Carbon::now();
         $tipo->save();
         $tipo->refresh();
-        $tipo->load('TipoMovimentoTitulo');
         return $tipo;
     }
 
@@ -80,7 +80,6 @@ class TipoTituloService
         $tipo->inativo = null;
         $tipo->save();
         $tipo->refresh();
-        $tipo->load('TipoMovimentoTitulo');
         return $tipo;
     }
 

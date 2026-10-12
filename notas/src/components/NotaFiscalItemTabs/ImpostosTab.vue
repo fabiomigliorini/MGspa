@@ -11,6 +11,7 @@ import {
 import { storeToRefs } from 'pinia'
 import SelectCfop from '@components/MgSelectCfop.vue'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgSelect from '@components/MgSelect.vue'
 
 const notaFiscalStore = useNotaFiscalStore()
 
@@ -46,7 +47,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
 
         <!-- CST / CSOSN -->
         <div class="col-6 col-sm-8" v-if="!editingItem.csosn">
-          <q-select
+          <MgSelect
             v-model="editingItem.icmscst"
             :options="ICMS_CST_OPTIONS"
             label="CST"
@@ -59,7 +60,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
         </div>
 
         <div class="col-6 col-sm-8" v-else>
-          <q-select
+          <MgSelect
             v-model="editingItem.csosn"
             :options="CSOSN_OPTIONS"
             label="CSOSN "
@@ -173,7 +174,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
       <div class="row q-col-gutter-md">
         <!-- CST -->
         <div class="col-12">
-          <q-select
+          <MgSelect
             v-model="editingItem.ipicst"
             :options="IPI_CST_OPTIONS"
             label="IPI CST"
@@ -255,7 +256,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
       <div class="row q-col-gutter-md">
         <!-- CST -->
         <div class="col-12">
-          <q-select
+          <MgSelect
             v-model="editingItem.piscst"
             :options="PIS_CST_OPTIONS"
             label="PIS CST"
@@ -314,7 +315,7 @@ const { editingItem } = storeToRefs(notaFiscalStore)
       <div class="row q-col-gutter-md">
         <!-- CST -->
         <div class="col-12">
-          <q-select
+          <MgSelect
             v-model="editingItem.cofinscst"
             :options="COFINS_CST_OPTIONS"
             label="COFINS CST"

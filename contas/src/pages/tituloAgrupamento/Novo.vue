@@ -10,7 +10,7 @@ import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import SeletorTitulosAbertos from 'src/components/SeletorTitulosAbertos.vue'
+import SeletorTitulosAbertos from '@components/MgSeletorTitulosAbertos.vue'
 import { formataNumero, formataDataIso } from '@components/formatters'
 
 const route = useRoute()

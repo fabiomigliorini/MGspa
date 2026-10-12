@@ -21,10 +21,9 @@ class TituloAgrupamento extends MgModel
     protected $fillable = [
         'cancelamento',
         'codpessoa',
-        'credito',
-        'debito',
         'emissao',
-        'observacao'
+        'observacao',
+        'valor'
     ];
 
     protected $casts = [
@@ -34,10 +33,9 @@ class TituloAgrupamento extends MgModel
         'codtituloagrupamento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'credito' => 'float',
         'criacao' => 'datetime',
-        'debito' => 'float',
-        'emissao' => 'date'
+        'emissao' => 'date',
+        'valor' => 'float'
     ];
 
 

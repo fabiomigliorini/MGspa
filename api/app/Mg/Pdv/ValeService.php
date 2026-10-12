@@ -2,10 +2,10 @@
 
 namespace Mg\Pdv;
 
-use Dompdf\Dompdf;
-use Picqer\Barcode\BarcodeGeneratorPNG;
 use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioParcelaService;
 use Mg\Titulo\TituloService;
+use Mg\Titulo\TituloValeService;
 
 class ValeService
 {
@@ -31,29 +31,8 @@ class ValeService
      */
     public static function pdf(Negocio $negocio, $uuid = null, $codtitulo = null)
     {
-        $generator = new BarcodeGeneratorPNG();
-        $comprovantes = static::comprovantes($negocio, $uuid, $codtitulo);
-
-        $barcodes = [];
-        foreach ($comprovantes as $comp) {
-            $tit = $comp['titulo'];
-            $str = 'VAL' . str_pad($tit->codtitulo, 8, '0', STR_PAD_LEFT);
-            $barcodes[$tit->codtitulo] = base64_encode($generator->getBarcode($str, $generator::TYPE_CODE_128, 1, 60));
-        }
-
-        // carrega HTML da view
-        $dompdf = new Dompdf();
-        $html = view('negocio.vale', compact('comprovantes', 'barcodes'))->render();
-        $dompdf->loadHtml($html, 'UTF-8');
-
-        // Bobina 80mm x 297 (altura A4)
-        $dompdf->setPaper([0.0, 0.0, 226.77, 841.89], 'portrait');
-
-        // Renderiza
-        $dompdf->render();
-
-        // retorna o PDF em uma variavel
-        return $dompdf->output();
+        // o papel e' o do titulo (TituloValeService): o mesmo na venda, no titulo e no pagamento
+        return TituloValeService::pdf(collect(static::comprovantes($negocio, $uuid, $codtitulo))->pluck('titulo'));
     }
 
     /**
@@ -80,10 +59,10 @@ class ValeService
 
         // saldo de vale resgatado e credito de devolucao (caminho de sempre)
         // $codtitulo filtra por titulo, e nao pelo pagamento: o credito da
-        // devolucao e' gerado pelo pagamento (TituloS), com nfp.codtitulo nulo
-        foreach ($uuid ? [] : $negocio->NegocioFormaPagamentoS as $nfp) {
+        // devolucao e' o titulo da parcela (condicao V)
+        foreach ($uuid ? [] : $negocio->PagamentoS as $nfp) {
             if (!empty($nfp->codtitulo) && (!$codtitulo || $nfp->codtitulo == $codtitulo)) {
-                if ($nfp->Titulo->codtipotitulo == TituloService::TIPO_VALE && $nfp->Titulo->saldo < 0) {
+                if ($nfp->Titulo->saldo < 0) {
                     $comprovantes[$nfp->codtitulo] = $comprovantes[$nfp->codtitulo] ?? [
                         'titulo' => $nfp->Titulo,
                         'vale' => null,
@@ -91,17 +70,17 @@ class ValeService
                     ];
                 }
             }
-            foreach ($nfp->TituloS as $tit) {
-                if ($codtitulo && $tit->codtitulo != $codtitulo) {
-                    continue;
-                }
-                if ($tit->codtipotitulo == TituloService::TIPO_VALE && $tit->saldo < 0) {
-                    $comprovantes[$tit->codtitulo] = $comprovantes[$tit->codtitulo] ?? [
-                        'titulo' => $tit,
-                        'vale' => null,
-                        'letra' => null,
-                    ];
-                }
+        }
+        foreach ($uuid ? [] : NegocioParcelaService::titulos($negocio) as $tit) {
+            if ($codtitulo && $tit->codtitulo != $codtitulo) {
+                continue;
+            }
+            if (in_array((int) $tit->codtipotitulo, TituloService::TIPOS_VALE_PDV) && $tit->saldo < 0) {
+                $comprovantes[$tit->codtitulo] = $comprovantes[$tit->codtitulo] ?? [
+                    'titulo' => $tit,
+                    'vale' => null,
+                    'letra' => null,
+                ];
             }
         }
 

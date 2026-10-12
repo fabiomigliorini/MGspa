@@ -14,13 +14,12 @@ class TipoTituloUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'tipotitulo' => 'required|string|max:20',
+            'tipotitulo' => 'required|string|max:50',
             'observacoes' => 'nullable|string|max:255',
-            'codtipomovimentotitulo' => 'nullable|integer|exists:tbltipomovimentotitulo,codtipomovimentotitulo',
+            'natureza' => 'required|in:R,P',
+            'movimentaportador' => 'boolean',
             'pagar' => 'boolean',
             'receber' => 'boolean',
-            'debito' => 'boolean',
-            'credito' => 'boolean',
         ];
     }
 }

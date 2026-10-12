@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-21 21:33'
-updated_date: '2026-09-28 21:00'
+updated_date: '2026-10-10 19:06'
 labels:
   - agro
 dependencies: []
@@ -25,7 +25,12 @@ A store do patio ja tem saldoUnidadeOffline(cod) (snapshot do servidor + delta d
 <!-- AC:BEGIN -->
 - [ ] #1 Linha de ORIGEM (silo) mostra o saldo do silo na safra da carga, como a do contrato mostra o saldo a entregar
 - [ ] #2 Saída maior que o saldo pede confirmação no pátio; entrada acima da capacidade também
-- [ ] #3 Silo inativo não recebe carga nova
-- [ ] #4 Tela de Estoque destaca silo com saldo negativo e mostra a quebra
-- [ ] #5 Saída de silo baixa o peso bruto; o destino recebe o líquido e a quebra aparece no relatório
+- [ ] #3 Tela de Estoque destaca silo com saldo negativo e mostra a quebra
+- [ ] #4 Saída de silo baixa o peso bruto; o destino recebe o líquido e a quebra aparece no relatório
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Revisão do backlog com o Fábio (10/10/2026, 2ª varredura): o AC 'Silo inativo não recebe carga nova' saiu: a tela já só oferece silo ativo desde jun/26 (agro/src/stores/carga.js unidadesAtivas, SelectUnidade); a recusa no servidor ficou na TASK-181.
+<!-- SECTION:NOTES:END -->

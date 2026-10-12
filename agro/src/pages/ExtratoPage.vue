@@ -22,6 +22,7 @@ const {
   salvando,
   form,
   pesosaca,
+  retirada,
   liquidoForm,
 } = storeToRefs(store)
 
@@ -279,15 +280,26 @@ onMounted(async () => {
                   :rules="[(v) => !!v]"
                 />
               </div>
-              <div class="col-6">
-                <MgInputValor v-model="form.bruto" :decimals="0" suffix="kg" label="Bruto" />
+              <div :class="retirada ? 'col-12' : 'col-6'">
+                <MgInputValor
+                  v-model="form.bruto"
+                  :decimals="0"
+                  suffix="kg"
+                  :label="retirada ? 'Quantidade' : 'Bruto'"
+                />
               </div>
-              <div class="col-6">
+              <div v-if="!retirada" class="col-6">
                 <MgInputValor v-model="form.desconto" :decimals="0" suffix="kg" label="Desconto" />
               </div>
               <div class="col-12">
                 <q-banner dense class="bg-grey-2 text-grey-9">
-                  Líquido = bruto − desconto = <b>{{ fmt(liquidoForm) }} kg</b>
+                  {{
+                    form.contatipo !== 'UNIDADE'
+                      ? 'Líquido'
+                      : retirada
+                        ? 'Retirada do silo'
+                        : 'Entrada no silo'
+                  }}: <b>{{ fmt(liquidoForm) }} kg</b>
                 </q-banner>
               </div>
               <div class="col-12">

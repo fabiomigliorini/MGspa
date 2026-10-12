@@ -16,35 +16,22 @@ export const listagemStore = defineStore('listagem', {
 
   state: () => ({
     opcoes: {
-      codformapagamento: [
-        {
-          label: 'Dinheiro',
-          value: process.env.CODFORMAPAGAMENTO_DINHEIRO,
-        },
-        {
-          label: 'PIX Chave',
-          value: process.env.CODFORMAPAGAMENTO_PIXCHAVE,
-        },
-        {
-          label: 'Cartão Manual',
-          value: process.env.CODFORMAPAGAMENTO_CARTAOMANUAL,
-        },
-        {
-          label: 'Entrega',
-          value: process.env.CODFORMAPAGAMENTO_ENTREGA,
-        },
-        {
-          label: 'Fechamento',
-          value: process.env.CODFORMAPAGAMENTO_FECHAMENTO,
-        },
-        {
-          label: 'Carteira',
-          value: process.env.CODFORMAPAGAMENTO_CARTEIRA,
-        },
-        {
-          label: 'Boleto',
-          value: process.env.CODFORMAPAGAMENTO_BOLETO,
-        },
+      // à vista/à prazo como no MGsis (valoravista/valoraprazo), m<meio> do
+      // pagamento, c<condição> da parcela
+      forma: [
+        { label: 'À Vista', value: 'avista' },
+        { label: 'À Prazo', value: 'aprazo' },
+        { label: 'Dinheiro', value: 'm1' },
+        { label: 'Cartão Crédito', value: 'm3' },
+        { label: 'Cartão Débito', value: 'm4' },
+        { label: 'PIX QR Code', value: 'm17' },
+        { label: 'Cheque', value: 'm2' },
+        { label: 'Vale Compras', value: 'm12' },
+        { label: 'PIX Chave', value: 'cX' },
+        { label: 'Entrega', value: 'cE' },
+        { label: 'Fechamento', value: 'cF' },
+        { label: 'Crediário', value: 'cP' },
+        { label: 'Boleto', value: 'cB' },
       ],
       integracao: ['Manual', 'Integrado'],
       codnegociostatus: [
@@ -60,10 +47,16 @@ export const listagemStore = defineStore('listagem', {
           label: 'Cancelado',
           value: 3,
         },
+        // venda fechada que o gerente reabriu e ainda não fechou de novo
+        {
+          label: 'Reaberto',
+          value: 'R',
+        },
       ],
     },
     filtro: {},
     negocios: [],
+    carregando: false,
     orcamentos: [],
     paginacao: {
       current_page: 0,
@@ -76,7 +69,23 @@ export const listagemStore = defineStore('listagem', {
     },
   }),
 
+  getters: {
+    filtrosAtivos: (state) =>
+      Object.values(state.filtro).filter((valor) =>
+        Array.isArray(valor) ? valor.length > 0 : valor !== null && valor !== '',
+      ).length,
+  },
+
   actions: {
+    limparFiltros() {
+      this.filtro = Object.fromEntries(
+        Object.entries(this.filtro).map(([chave, valor]) => [
+          chave,
+          Array.isArray(valor) ? [] : null,
+        ]),
+      )
+    },
+
     async inicializaFiltro() {
       if (Object.keys(this.filtro).length > 0) {
         return
@@ -95,7 +104,7 @@ export const listagemStore = defineStore('listagem', {
         codpessoatransportador: null,
         codpdv: null,
         integracao: [],
-        codformapagamento: [],
+        forma: [],
         valor_de: null,
         valor_ate: null,
       }
@@ -118,6 +127,7 @@ export const listagemStore = defineStore('listagem', {
       if (this.paginacao.current_page >= this.paginacao.last_page) {
         return false
       }
+      this.carregando = true
       try {
         const filtro = { ...this.filtro }
         filtro.pdv = sSinc.pdv.uuid
@@ -143,6 +153,8 @@ export const listagemStore = defineStore('listagem', {
           actions: [{ icon: 'close', color: 'white' }],
         })
         return false
+      } finally {
+        this.carregando = false
       }
     },
 

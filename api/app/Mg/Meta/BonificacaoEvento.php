@@ -26,7 +26,7 @@ class BonificacaoEvento extends MgModel
         'codpessoa',
         'codunidadenegocio',
         'descricao',
-        'lancamento',
+        'transacao',
         'manual',
         'tipo',
         'valor'
@@ -43,7 +43,7 @@ class BonificacaoEvento extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
-        'lancamento' => 'datetime',
+        'transacao' => 'datetime',
         'manual' => 'boolean',
         'valor' => 'float'
     ];

@@ -3,12 +3,12 @@
 namespace Mg\Portador;
 
 use App\Mg\Portador\ExtratoBbService;
-use App\Mg\Portador\SomatorioSaldoResource;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 use Mg\MgController;
+use Mg\Usuario\Autorizador;
 
 class PortadorController extends MgController
 {
@@ -17,13 +17,26 @@ class PortadorController extends MgController
     {
         if ($request->boolean('paginar')) {
             $paginator = PortadorService::listar($request->only([
-                'codportador', 'portador', 'codbanco', 'codfilial', 'emiteboleto', 'inativo',
+                'codportador', 'portador', 'tipo', 'codbanco', 'codfilial', 'emiteboleto', 'inativo',
             ]));
             return PortadorResource::collection($paginator);
         }
 
         $portadores = Portador::ativo()->orderBy('portador')->get();
         return PortadorResource::collection($portadores);
+    }
+
+    // so' os portadores em que o usuario e' operador ou gestor
+    public function painel(Request $request)
+    {
+        $request->validate([
+            'codfilial' => 'nullable|integer',
+            'inativos' => 'nullable|boolean',
+        ]);
+        return ['data' => PortadorService::painel(
+            $request->codfilial ? (int) $request->codfilial : null,
+            $request->boolean('inativos')
+        )];
     }
 
     public function show(Request $request, $codportador)
@@ -34,6 +47,7 @@ class PortadorController extends MgController
 
     public function store(PortadorStoreRequest $request)
     {
+        Autorizador::autoriza(['Financeiro']);
         DB::beginTransaction();
         try {
             $portador = PortadorService::criar($request->validated());
@@ -47,6 +61,7 @@ class PortadorController extends MgController
 
     public function update(PortadorUpdateRequest $request, $codportador)
     {
+        Autorizador::autoriza(['Financeiro']);
         DB::beginTransaction();
         try {
             $portador = Portador::findOrFail($codportador);
@@ -61,6 +76,7 @@ class PortadorController extends MgController
 
     public function inativar($codportador)
     {
+        Autorizador::autoriza(['Financeiro']);
         DB::beginTransaction();
         try {
             $portador = Portador::findOrFail($codportador);
@@ -75,6 +91,7 @@ class PortadorController extends MgController
 
     public function ativar($codportador)
     {
+        Autorizador::autoriza(['Financeiro']);
         DB::beginTransaction();
         try {
             $portador = Portador::findOrFail($codportador);
@@ -89,6 +106,7 @@ class PortadorController extends MgController
 
     public function destroy($codportador)
     {
+        Autorizador::autoriza(['Financeiro']);
         DB::beginTransaction();
         try {
             $portador = Portador::findOrFail($codportador);
@@ -120,6 +138,7 @@ class PortadorController extends MgController
 
     public function importarOfx(Request $request)
     {
+        Autorizador::autoriza(['Financeiro']);
         $request->validate([
             'arquivos' => 'required',
             'arquivos.*' => 'required|mimes:txt,ofx'
@@ -175,14 +194,6 @@ class PortadorController extends MgController
 
     public function getIntervaloSaldos(){
         return PortadorService::getIntervaloTotalExtratos();
-    }
-
-    public function listaSaldos(Request $request){
-        $dia = Carbon::parse($request->dia);
-
-        $dados = PortadorService::listaSaldos($dia);
-
-        return new SomatorioSaldoResource($dados);
     }
 
     public function listaSaldosPortador(Request $request, $codportador){

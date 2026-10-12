@@ -1,4 +1,5 @@
 import { markRaw, defineAsyncComponent } from 'vue'
+import { PERMISSOES } from 'src/constants/permissoes'
 
 // Drawers do pátio: o MainLayout renderiza `meta.leftDrawer`/`meta.rightDrawer`
 // como componente. markRaw evita o Vue tornar o componente reativo via $route.
@@ -24,6 +25,7 @@ const routes = [
         meta: {
           auth: true,
           title: 'Início',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
         },
       },
 
@@ -37,6 +39,7 @@ const routes = [
           title: 'Pátio de Cargas',
           leftDrawer: CargaLeftDrawer,
           rightDrawer: CargaResumo,
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
         },
       },
       {
@@ -49,74 +52,119 @@ const routes = [
           auth: true,
           title: 'Romaneios',
           leftDrawer: CargasFiltrosDrawer,
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
         },
       },
       {
         path: 'cargas/:codcarga',
         name: 'carga-detalhe',
         component: () => import('pages/CargaDetailPage.vue'),
-        meta: { auth: true, title: 'Romaneio' },
+        meta: {
+          auth: true,
+          title: 'Romaneio',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
       {
         path: 'extrato',
         name: 'extrato',
         component: () => import('pages/ExtratoPage.vue'),
-        meta: { auth: true, title: 'Estoque & Extrato' },
+        meta: {
+          auth: true,
+          title: 'Estoque & Extrato',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
       {
         path: 'unidades-armazenadoras',
         name: 'unidades-armazenadoras',
         component: () => import('pages/UnidadesArmazenadorasPage.vue'),
-        meta: { auth: true, title: 'Unidades Armazenadoras' },
+        meta: {
+          auth: true,
+          title: 'Unidades Armazenadoras',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
 
       {
         path: 'safras',
         name: 'safras',
         component: () => import('pages/SafrasPage.vue'),
-        meta: { auth: true, title: 'Safras' },
+        meta: {
+          auth: true,
+          title: 'Safras',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
       {
         path: 'safra/:codsafra',
         name: 'safra-detalhe',
         component: () => import('pages/SafraDetailPage.vue'),
-        meta: { auth: true, title: 'Safra' },
+        meta: {
+          auth: true,
+          title: 'Safra',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
       {
         path: 'safra/:codsafra/plantio/:codplantio',
         name: 'plantio-detalhe',
         component: () => import('pages/PlantioDetailPage.vue'),
-        meta: { auth: true, title: 'Plantio' },
+        meta: {
+          auth: true,
+          title: 'Plantio',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
       {
         path: 'fazendas',
         name: 'fazendas',
         component: () => import('pages/FazendasPage.vue'),
-        meta: { auth: true, title: 'Fazendas' },
+        meta: {
+          auth: true,
+          title: 'Fazendas',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
       {
         path: 'fazenda/:codfazenda',
         name: 'fazenda-detalhe',
         component: () => import('pages/FazendaDetailPage.vue'),
-        meta: { auth: true, title: 'Fazenda' },
+        meta: {
+          auth: true,
+          title: 'Fazenda',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
       {
         path: 'culturas',
         name: 'culturas',
         component: () => import('pages/CulturasPage.vue'),
-        meta: { auth: true, title: 'Culturas' },
+        meta: {
+          auth: true,
+          title: 'Culturas',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
       {
         path: 'cultura/:codcultura',
         name: 'cultura-detalhe',
         component: () => import('pages/CulturaDetailPage.vue'),
-        meta: { auth: true, title: 'Cultura' },
+        meta: {
+          auth: true,
+          title: 'Cultura',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
       {
         path: 'cultura/:codcultura/variedades',
         name: 'cultura-variedades',
         component: () => import('pages/CulturaVariedadesPage.vue'),
-        meta: { auth: true, title: 'Variedades' },
+        meta: {
+          auth: true,
+          title: 'Variedades',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
       {
         // Path e name preservados: o cadastro de classificação é o mesmo lugar
@@ -125,14 +173,22 @@ const routes = [
         path: 'cultura/:codcultura/desconto',
         name: 'cultura-desconto',
         component: () => import('pages/ParametroClassificacaoPage.vue'),
-        meta: { auth: true, title: 'Classificação' },
+        meta: {
+          auth: true,
+          title: 'Classificação',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
 
       {
         path: 'contrato/:codcontrato',
         name: 'contrato-detalhe',
         component: () => import('pages/ContratoDetailPage.vue'),
-        meta: { auth: true, title: 'Contrato' },
+        meta: {
+          auth: true,
+          title: 'Contrato',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.GERENTE],
+        },
       },
       {
         path: 'sem-permissao',

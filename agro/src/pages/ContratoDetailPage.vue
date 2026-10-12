@@ -36,6 +36,7 @@ const {
   valornf,
   valorCarregado,
   fixadoResumo,
+  precoMedioLiquido,
   afixar,
   bate,
 } = storeToRefs(store)
@@ -203,6 +204,9 @@ onMounted(() => store.carregar(cod))
                     <div class="text-caption text-grey-6">
                       {{ fmt(b.sacas) }} sc · {{ simbolo(b.iso) }} {{ fmt(b.precomedio, 2) }}/sc
                     </div>
+                    <div v-if="b.firme && precoMedioLiquido" class="text-caption text-grey-7">
+                      Preço médio líquido: R$ {{ fmt(precoMedioLiquido, 2) }}/sc
+                    </div>
                   </div>
                 </template>
                 <div v-else class="text-h5">—</div>
@@ -268,6 +272,10 @@ onMounted(() => store.carregar(cod))
                 class="q-my-sm"
               />
               <div v-if="volumeemaberto" class="text-caption text-grey-7">Sem limite</div>
+              <div v-else-if="saldokg < 0" class="text-caption text-negative">
+                Entregue a mais: <b>{{ fmt(-saldokg) }} kg</b>
+                <span>(≈ {{ fmt(-saldokg / pesosaca, 0) }} sc)</span>
+              </div>
               <div v-else class="text-caption text-grey-7">
                 Saldo a embarcar: <b>{{ fmt(saldokg) }} kg</b>
                 <span class="text-grey-6">(≈ {{ fmt(saldokg / pesosaca, 0) }} sc)</span>

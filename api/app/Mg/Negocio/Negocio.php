@@ -11,7 +11,8 @@ use Mg\Meta\BonificacaoEvento;
 use Mg\Rh\IndicadorLancamento;
 use Mg\Mercos\MercosPedido;
 use Mg\Negocio\NegocioCaixaMercadoria;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Negocio\NegocioParcela;
+use Mg\Pagamento\Pagamento;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioVale;
 use Mg\NfeTerceiro\NfeTerceiro;
@@ -95,6 +96,7 @@ class Negocio extends MgModel
         'criacao' => 'datetime',
         'entrega' => 'boolean',
         'lancamento' => 'datetime',
+        'reabertura' => 'datetime',
         'recebimento' => 'datetime',
         'valoraprazo' => 'float',
         'valoravista' => 'float',
@@ -212,9 +214,21 @@ class Negocio extends MgModel
         return $this->hasMany(NegocioCaixaMercadoria::class, 'codnegocio', 'codnegocio');
     }
 
-    public function NegocioFormaPagamentoS()
+    // so' as ativas: a inativa e' a que saiu da venda reaberta (TASK-30)
+    public function NegocioParcelaS()
     {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codnegocio', 'codnegocio');
+        return $this->hasMany(NegocioParcela::class, 'codnegocio', 'codnegocio')->whereNull('inativo');
+    }
+
+    // ativas e inativas: so' para quem reconcilia a venda reaberta
+    public function NegocioParcelaTodasS()
+    {
+        return $this->hasMany(NegocioParcela::class, 'codnegocio', 'codnegocio');
+    }
+
+    public function PagamentoS()
+    {
+        return $this->hasMany(Pagamento::class, 'codnegocio', 'codnegocio');
     }
 
     public function NegocioProdutoBarraS()
@@ -252,5 +266,4 @@ class Negocio extends MgModel
     {
         return $this->hasMany(WooPedidoNegocio::class, 'codnegocio', 'codnegocio');
     }
-
 }

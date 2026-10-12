@@ -15,6 +15,7 @@ class PortadorUpdateRequest extends FormRequest
     {
         return [
             'portador' => 'required|string|max:50',
+            'tipo' => 'required|in:E,B,A,C,O',
             'codbanco' => 'nullable|integer|exists:tblbanco,codbanco',
             'codfilial' => 'nullable|integer|exists:tblfilial,codfilial',
             'agencia' => 'nullable|integer',
@@ -26,6 +27,7 @@ class PortadorUpdateRequest extends FormRequest
             'carteira' => 'nullable|integer',
             'carteiravariacao' => 'nullable|integer',
             'pixdict' => 'nullable|string|max:77',
+            'tolerancia' => 'nullable|numeric|min:0',
         ];
     }
 }

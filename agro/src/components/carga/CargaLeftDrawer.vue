@@ -60,10 +60,7 @@ function novaCarga() {
     Nenhum caminhão no pátio
   </div>
 
-  <q-item-label header class="row items-center">
-    Finalizadas
-    <q-badge color="green-7" class="q-ml-sm" :label="cargasFinalizadas.length" />
-  </q-item-label>
+  <q-item-label header>Cargas finalizadas</q-item-label>
   <q-banner
     v-if="cargasFinalizadas.length"
     class="bg-green-1 text-green-10 q-mx-sm q-mb-sm rounded-borders"

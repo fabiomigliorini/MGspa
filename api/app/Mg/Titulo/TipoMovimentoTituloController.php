@@ -15,9 +15,7 @@ class TipoMovimentoTituloController extends Controller
     {
         Autorizador::autoriza(self::GRUPOS);
         $result = TipoMovimentoTituloService::listar($request->only([
-            'codtipomovimentotitulo', 'tipomovimentotitulo',
-            'implantacao', 'ajuste', 'armotizacao', 'juros',
-            'desconto', 'pagamento', 'estorno', 'inativo', 'todos',
+            'codtipomovimentotitulo', 'tipomovimentotitulo', 'inativo', 'todos',
         ]));
         return TipoMovimentoTituloResource::collection($result);
     }

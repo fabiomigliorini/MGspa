@@ -32,13 +32,12 @@ class Carga extends MgModel
         'data',
         'placa',
         'placacarreta',
+        'placacarreta2',
         'motorista',
         'cpfmotorista',
         'telefonemotorista',
         'cepmotorista',
         'enderecomotorista',
-        'numeromotorista',
-        'complementomotorista',
         'bairromotorista',
         'codcidademotorista',
         'codveiculo',
@@ -48,14 +47,14 @@ class Carga extends MgModel
         'bruto',
         'desconto',
         'liquido',
-        'aprovado',
         'observacao',
         'inativo',
+        // 'versao' fica fora de proposito: quem incrementa e o servidor
+        // (CargaService::sincronizar), nunca o payload do aparelho.
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'aprovado' => 'datetime',
         'bruto' => 'float',
         'codcarga' => 'integer',
         'codcidademotorista' => 'integer',
@@ -71,6 +70,7 @@ class Carga extends MgModel
         'liquido' => 'float',
         'pbt' => 'float',
         'tara' => 'float',
+        'versao' => 'integer',
     ];
 
     // Chaves Estrangeiras

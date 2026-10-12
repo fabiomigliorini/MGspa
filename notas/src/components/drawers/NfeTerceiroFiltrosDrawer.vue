@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import MgInputData from '@components/MgInputData.vue'
 import { reactive, onMounted, watch, ref, computed } from 'vue'
 import { useNfeTerceiroStore } from '../../stores/nfeTerceiroStore'
@@ -174,7 +175,7 @@ onMounted(() => {
 
       <!-- Importacao -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="filters.importacao"
           :options="importacaoOptions"
           label="Importacao"
@@ -237,7 +238,7 @@ onMounted(() => {
 
       <!-- Situacao -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="filters.indsituacao"
           :options="situacaoOptions"
           label="Situacao"
@@ -251,7 +252,7 @@ onMounted(() => {
 
       <!-- Manifestacao -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="filters.indmanifestacao"
           :options="manifestacaoOptions"
           label="Manifestacao"
@@ -271,12 +272,12 @@ onMounted(() => {
               </q-item-section>
             </q-item>
           </template>
-        </q-select>
+        </MgSelect>
       </div>
 
       <!-- Ignorada -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="filters.ignorada"
           :options="booleanOptions"
           label="Ignorada"
@@ -290,7 +291,7 @@ onMounted(() => {
 
       <!-- Revisao -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="filters.revisao"
           :options="booleanOptions"
           label="Revisada"
@@ -304,7 +305,7 @@ onMounted(() => {
 
       <!-- Conferencia -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="filters.conferencia"
           :options="booleanOptions"
           label="Conferida"

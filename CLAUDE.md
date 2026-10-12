@@ -142,6 +142,18 @@ na mesma tela: critério de aceite, sem perguntar nada.
 O arquivo `.md` da task entra no mesmo commit do código — e o commit só acontece depois da
 autorização, conforme a seção **Commits** acima.
 
+## Cada botão faz uma coisa só — filosofia Unix
+
+**Cada botão, rota e ação faz uma coisa só, e bem feita.** Fechar fecha; contar conta; abrir
+abre. Nada de botão que conta e fecha, de fechar que lança ajuste, de abrir que copia a contagem
+do dia anterior. Se falta um pré-requisito, a ação **recusa** com a mensagem dizendo o que falta
+— não faz o pré-requisito sozinha nem abre outro formulário no caminho.
+
+**Automação de evento só a pedido.** Uma ação disparar outra por conta própria (gerar lançamento,
+fechar o que ficou para trás, criar registro "de apoio") só existe quando quem prioriza pede.
+Não inventar; na dúvida, perguntar. Exemplo do que não fazer: o ajuste automático na abertura e no
+fechamento do caixa (TASK-39), inventado e depois removido.
+
 ## Campos de formulário — os componentes da casa, nunca o Quasar cru
 
 **Campo de texto é `@components/MgInput.vue`, não `<q-input>`.** É o mesmo q-input, com as
@@ -155,8 +167,18 @@ A troca é 1:1: o `MgInput` repassa os atributos (`label`, `type`, `mask`, `maxl
 `focus`/`blur`/`select`/`validate`/`resetValidation`/`nativeEl`. `outlined` já vem ligado.
 
 Cada tipo de campo tem o seu: valor/número é `MgInputValor`, data/timestamp é `MgInputData`,
-seleção é o `MgSelectXxx` do domínio. Componente do Quasar cru só quando nenhum deles cobre.
+seleção é o `MgSelectXxx` do domínio — ou, quando não há um, o `MgSelect`. Componente do Quasar
+cru só quando nenhum deles cobre.
 
 **Campo novo nasce em `MgInput`.** A varredura terminou na **TASK-174** (28/09/2026): não sobrou
 `q-input` cru nos apps nem em `@components` — os únicos são os que servem de base ao próprio
 `MgInput`, `MgInputValor` e `MgInputData`. `<q-input>` que aparecer num diff é regressão.
+
+**Select é `@components/MgSelect.vue`, não `<q-select>`.** As mesmas duas regras do `MgInput`:
+o X do `clearable` e o `readonly` fora do Tab. Os `MgSelectXxx` montam em cima dele, e o select
+sem `MgSelectXxx` de domínio (status, tipo, opções fixas de filtro) usa o `MgSelect` direto.
+Troca 1:1: repassa os atributos e **todos** os slots (`option`, `selected-item`, `no-option`,
+`prepend`…) e expõe `focus`/`blur`/`showPopup`/`hidePopup`/`updateInputValue`/`validate`/
+`resetValidation`. `outlined` já vem ligado. Desde a TASK-174 (10/10/2026) não sobrou `q-select`
+cru com `clearable`; o cru sem `clearable` passa para `MgSelect` quando a tela receber
+manutenção. Select novo nasce em `MgSelect`.

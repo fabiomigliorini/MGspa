@@ -31,9 +31,9 @@ class PlantioUpdateRequest extends FormRequest
                 ->whereNull('inativo')
         )->ignore($this->route('codplantio'), 'codplantio');
 
-        // Data do plantio limitada ao periodo da safra: do inicio do ano de
-        // plantio ao fim do ano de colheita (colheita cai no anoplantio quando
-        // safra de ciclo unico).
+        // Data do plantio opcional (TASK-201); quando informada, limitada ao
+        // periodo da safra: do inicio do ano de plantio ao fim do ano de
+        // colheita (colheita cai no anoplantio quando safra de ciclo unico).
         $safra = Safra::findOrFail($this->route('codsafra'));
         $dataMin = $safra->anoplantio . '-01-01';
         $dataMax = ($safra->anocolheita ?: $safra->anoplantio) . '-12-31';
@@ -43,7 +43,7 @@ class PlantioUpdateRequest extends FormRequest
             'codfazenda' => ['required', 'exists:tblfazenda,codfazenda'],
             'talhao' => ['required', 'string', 'max:60', $unico],
             'codvariedade' => ['required', 'exists:tblvariedade,codvariedade'],
-            'dataplantio' => ['required', 'date', "after_or_equal:$dataMin", "before_or_equal:$dataMax"],
+            'dataplantio' => ['nullable', 'date', "after_or_equal:$dataMin", "before_or_equal:$dataMax"],
             'areaplantada' => ['required', 'numeric', 'gt:0'],
             'expectativasacas' => ['nullable', 'numeric', 'gte:0'],
             'hacolhido' => ['nullable', 'numeric', 'gte:0'], // ha já colhidos (produtividade/produção)

@@ -5,15 +5,14 @@ namespace Mg\Pdv;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioProdutoBarra;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Negocio\NegocioParcelaService;
 use Mg\Negocio\NegocioService;
 use Mg\NotaFiscal\NotaFiscalService;
 use Mg\NotaFiscal\NotaFiscalStatusService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
-use Mg\Portador\Portador;
-use Mg\Titulo\Titulo;
 
 class PdvNegocioDevolucaoService
 {
@@ -42,6 +41,14 @@ class PdvNegocioDevolucaoService
         $negocio->codnegociostatus = 2;
         $negocio->codpdv = $pdv->codpdv;
         $negocio->save();
+        // a devolucao ja' nasce fechada (TASK-209)
+        AuditoriaService::registrar(
+            'tblnegocio',
+            $negocio->codnegocio,
+            AuditoriaService::TIPO_NEGOCIO_FECHADO,
+            null,
+            ['codnegociostatus' => NegocioService::STATUS_FECHADO]
+        );
         $gerarNotaDevolucao = false;
 
 
@@ -146,39 +153,20 @@ class PdvNegocioDevolucaoService
         $negocio->valoraprazo = $negocio->valortotal;
         $negocio->save();
 
-        //cria forma de pagamento
-        $nfp = new NegocioFormaPagamento();
-        $nfp->codnegocio = $negocio->codnegocio;
-        $nfp->valorpagamento = $negocio->valoraprazo;
-        $nfp->codformapagamento = 1030;
-        $nfp->tipo = 90;
-        $nfp->valortotal = $negocio->valortotal;
-        $nfp->save();
-
-
-        // Cria Registro de Titulo
-        $titulo = new Titulo();
-        $titulo->codnegocioformapagamento = $nfp->codnegocioformapagamento;
-        $titulo->codfilial = $nfp->Negocio->codfilial;
-        $titulo->codtipotitulo = $nfp->Negocio->NaturezaOperacao->codtipotitulo;
-        $titulo->codcontacontabil = $nfp->Negocio->NaturezaOperacao->codcontacontabil;
-        if ($nfp->Negocio->codoperacao == 2) {
-            $titulo->debito = $negocio->valortotal;
-        } else {
-            $titulo->credito = $negocio->valortotal;
+        // o credito da devolucao e' uma parcela (condicao V, vale da
+        // devolucao) que vira o titulo pelo tipo da natureza (Vale Compras),
+        // como numa compra (M4 doc-3). Vence em 1 ano.
+        if ($negocio->valortotal > 0) {
+            NegocioParcelaService::gerar(
+                $negocio,
+                NegocioParcelaService::CONDICAO_VALE,
+                $negocio->valortotal
+            );
+            NegocioParcelaService::gerarTitulos(
+                $negocio,
+                'N' . str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT) . '-DEV'
+            );
         }
-        $titulo->boleto = false;
-        $titulo->codpessoa = $nfp->Negocio->codpessoa;
-        $titulo->numero = "N" . str_pad($nfp->codnegocio, 8, "0", STR_PAD_LEFT) . "-DEV";
-        $titulo->emissao = Carbon::now();
-        $titulo->transacao = $titulo->emissao;
-        $titulo->sistema = $titulo->emissao;
-        $vencimento = Carbon::now()->add('year', 1);
-        $titulo->vencimento = $vencimento;
-        $titulo->vencimentooriginal = $titulo->vencimento;
-        $titulo->gerencial = true;
-        $titulo->codportador = Portador::CARTEIRA;
-        $titulo->save();
 
         // Gera a nota fiscal
         if ($gerarNotaDevolucao) {

@@ -155,8 +155,10 @@ class ContratoCalculoService extends MgService
     /**
      * Agregado do contrato a partir dos totais JÁ GRAVADOS nas fixações
      * (totalbrl/liquidobrl/saldomoeda — recalculados por ContratoFixacaoService).
-     * Não recalcula imposto aqui: só soma. R$/saca médios são sobre TODAS as
-     * sacas (a fatia de US$ ainda flutuante entra como R$ 0 até travar o câmbio).
+     * Não recalcula imposto aqui: só soma. PREÇO MÉDIO (definição única, a mesma
+     * da safra e do card do contrato): R$ ÷ sacas FIRMES em R$ — fixações em R$
+     * inteiras + a parte de moeda estrangeira com câmbio travado. A fatia ainda
+     * flutuante não tem R$ e fica fora da média.
      */
     public static function calcularDoContrato(Contrato $contrato): array
     {
@@ -164,7 +166,7 @@ class ContratoCalculoService extends MgService
             ? $contrato->ContratoFixacaoS->whereNull('inativo')
             : $contrato->ContratoFixacaoS()->whereNull('inativo')->get();
 
-        $qtd = (float) $fixacoes->sum('quantidade');
+        $qtd = (float) $fixacoes->sum(fn ($f) => static::sacasFirmes($f));
         $totalbrl = (float) $fixacoes->sum('totalbrl');
         $liquidobrl = (float) $fixacoes->sum('liquidobrl');
         $saldomoeda = (float) $fixacoes->sum('saldomoeda');
@@ -183,6 +185,16 @@ class ContratoCalculoService extends MgService
             'liquidobrl' => round($liquidobrl, 2),
             'saldomoeda' => round($saldomoeda, 2),
         ];
+    }
+
+    /** Sacas da fixação já firmes em R$: todas se em R$; senão, só as de câmbio travado. */
+    public static function sacasFirmes(ContratoFixacao $f): float
+    {
+        if (!$f->estrangeira) {
+            return (float) $f->quantidade;
+        }
+        $preco = (float) $f->preco;
+        return $preco > 0 ? ((float) $f->totalmoeda - (float) $f->saldomoeda) / $preco : 0.0;
     }
 
     /**

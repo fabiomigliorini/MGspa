@@ -20,7 +20,7 @@ use Mg\Titulo\TituloService;
  * valendo.
  *
  * O titulo fica SOLTO -- so' referenciado por tblnegociovale.codtitulo,
- * nunca pendurado em tblnegocioformapagamento. O motivo e' concreto:
+ * nunca pendurado numa parcela do negocio. O motivo e' concreto:
  * PdvNegocioService::negocioFechado() reescreve codpessoa, codtipotitulo e
  * codcontacontabil de TODO titulo pendurado num pagamento, a cada PUT de
  * negocio fechado. Um simples "trocar o cliente do negocio" transformaria o
@@ -102,11 +102,10 @@ class PdvNegocioValeService
         // o credito e' da ESCOLA (ou do Consumidor, no vale ao portador),
         // nao de quem pagou
         $titulo->codpessoa = $vale->codpessoafavorecido;
-        $titulo->credito = $vale->valorvale;
+        $titulo->valor = -1 * $vale->valorvale;
         $titulo->numero = 'V' . str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT) . "-{$letra}";
         $titulo->emissao = $emissao;
         $titulo->transacao = $emissao;
-        $titulo->sistema = $emissao;
         // validade de 1 ano, informativa (decisao 8): sem job de expiracao,
         // o saldo continua resgatavel depois da data
         $titulo->vencimento = $vale->validade ?? (clone $emissao)->addYear();
@@ -116,9 +115,49 @@ class PdvNegocioValeService
         // sem portador, como o vale compras do MGLara sempre nasceu: o credito
         // nao esta em lugar nenhum ate ser resgatado
         $titulo->codportador = null;
-        $titulo->save();
+        TituloService::aplicarSufixoNumero($titulo);
+        TituloService::implantar($titulo);
 
         return $titulo;
+    }
+
+    /**
+     * Venda reaberta (TASK-30): o credito do vale que saiu, mudou de valor ou
+     * de favorecido e' estornado; o emitirCreditos emite de novo o do vale
+     * que ficou. Credito ja' usado nao volta. Sem mudanca, nao faz nada.
+     * O vale que ficou com o credito ja' estornado (o cancelado reaberto)
+     * tambem ganha credito novo, como a parcela no gerarTitulos.
+     */
+    public static function reconciliarCreditos(Negocio $negocio)
+    {
+        foreach ($negocio->NegocioValeS()->whereNotNull('codtitulo')->orderBy('codnegociovale')->get() as $vale) {
+            $titulo = $vale->Titulo;
+            if (empty($titulo)) {
+                continue;
+            }
+            if (!empty($titulo->estornado)) {
+                if (empty($vale->inativo)) {
+                    $vale->codtitulo = null;
+                    $vale->save();
+                }
+                continue;
+            }
+            $mudou = !empty($vale->inativo)
+                || round(abs((float) $titulo->valor), 2) != round((float) $vale->valorvale, 2)
+                || $titulo->codpessoa != $vale->codpessoafavorecido;
+            if (!$mudou) {
+                continue;
+            }
+            if (static::foiMovimentado($titulo)) {
+                $usado = formataNumero(abs((float) $titulo->valor) - abs((float) $titulo->saldo), 2);
+                throw new Exception("O Vale #{$titulo->codtitulo} já foi usado em compras (R$ {$usado}): ele não pode sair nem mudar!", 1);
+            }
+            TituloService::estornar($titulo, "Vale alterado na reabertura da venda #{$negocio->codnegocio}");
+            if (empty($vale->inativo)) {
+                $vale->codtitulo = null;
+                $vale->save();
+            }
+        }
     }
 
     /**
@@ -137,7 +176,7 @@ class PdvNegocioValeService
             }
             if (static::foiMovimentado($titulo)) {
                 $letra = static::letra($i);
-                $usado = formataNumero(abs((float) $titulo->credito) - abs((float) $titulo->saldo), 2);
+                $usado = formataNumero(abs((float) $titulo->valor) - abs((float) $titulo->saldo), 2);
                 throw new Exception("O Vale {$letra} (#{$titulo->codtitulo}) já foi usado em compras: R$ {$usado} do crédito já saiu. Impossível cancelar este negócio!", 1);
             }
         }
@@ -169,7 +208,7 @@ class PdvNegocioValeService
     // conta que o TituloService::estornar() faz antes de deixar estornar.
     public static function foiMovimentado(Titulo $titulo)
     {
-        return round((float) $titulo->debito - (float) $titulo->credito, 2) != round((float) $titulo->saldo, 2);
+        return round((float) $titulo->valor, 2) != round((float) $titulo->saldo, 2);
     }
 
     // "Vale A", "Vale B", ... e depois de Z cai no numero, que e' melhor do

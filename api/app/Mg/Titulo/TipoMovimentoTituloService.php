@@ -19,12 +19,6 @@ class TipoMovimentoTituloService
             $q->palavras('tipomovimentotitulo', $filtros['tipomovimentotitulo']);
         }
 
-        foreach (['implantacao', 'ajuste', 'armotizacao', 'juros', 'desconto', 'pagamento', 'estorno'] as $flag) {
-            if (array_key_exists($flag, $filtros) && $filtros[$flag] !== null && $filtros[$flag] !== '') {
-                $q->where($flag, filter_var($filtros[$flag], FILTER_VALIDATE_BOOLEAN));
-            }
-        }
-
         if (array_key_exists('inativo', $filtros) && $filtros['inativo'] !== null && $filtros['inativo'] !== '') {
             if (in_array($filtros['inativo'], [true, 'true', 1, '1'], true)) {
                 $q->whereNotNull('inativo');

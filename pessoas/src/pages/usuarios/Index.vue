@@ -42,7 +42,7 @@
           <div class="q-pa-md q-gutter-md">
             <MgInput outlined v-model="sUsuario.filtroUsuarioPesquisa.usuario" label="Usuário" />
 
-            <q-select
+            <MgSelect
               outlined
               v-model="sUsuario.filtroUsuarioPesquisa.inativo"
               label="Ativo / Inativo"
@@ -63,6 +63,7 @@
 
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 // 1. Imports do Vue
 import { ref, onMounted, watch } from 'vue'
 

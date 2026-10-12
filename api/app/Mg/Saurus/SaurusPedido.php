@@ -7,7 +7,7 @@
 namespace Mg\Saurus;
 
 use Mg\MgModel;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
 use Mg\Saurus\SaurusPagamento;
 use Mg\Negocio\Negocio;
 use Mg\Saurus\SaurusPdv;
@@ -75,9 +75,9 @@ class SaurusPedido extends MgModel
 
 
     // Tabelas Filhas
-    public function NegocioFormaPagamentoS()
+    public function PagamentoS()
     {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codsauruspedido', 'codsauruspedido');
+        return $this->hasMany(Pagamento::class, 'codsauruspedido', 'codsauruspedido');
     }
 
     public function SaurusPagamentoS()

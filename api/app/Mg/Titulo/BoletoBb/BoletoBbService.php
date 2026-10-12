@@ -2,6 +2,10 @@
 
 namespace Mg\Titulo\BoletoBb;
 
+use Mg\Pagamento\PagamentoService;
+use Mg\Pagamento\PagamentoTituloService;
+use Mg\Pix\PixUsoService;
+
 use Illuminate\Support\Facades\Log;
 
 use Illuminate\Support\Facades\DB;
@@ -23,6 +27,7 @@ use Mg\Titulo\MovimentoTituloService;
 use Mg\Portador\Portador;
 use Mg\Portador\Bb\AuthService;
 use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioParcelaService;
 
 class BoletoBbService
 {
@@ -69,7 +74,7 @@ class BoletoBbService
     {
         // Boleto só faz sentido para título a receber com saldo positivo.
         // Sem isso o BB rejeita com mensagem confusa de "desconto + abatimento >= valor".
-        if ($titulo->debitosaldo <= 0) {
+        if ($titulo->saldo <= 0) {
             throw new \Exception('Boleto só pode ser emitido para título a receber com saldo positivo!');
         }
 
@@ -186,16 +191,22 @@ class BoletoBbService
     }
 
     /**
-     * Registra boleto de todos os titulos do Negocio
+     * Registra boleto de todos os titulos do Negocio. $soNovos: so' o titulo
+     * que ainda nao tem boleto registrado (o F3 da venda reaberta roda de
+     * novo, TASK-30; registrar de novo pegaria outro nosso numero no banco)
      */
-    public static function registrarPeloNegocio(Negocio $negocio)
+    public static function registrarPeloNegocio(Negocio $negocio, bool $soNovos = false)
     {
         $tituloBoletos = collect();
-        foreach ($negocio->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
-            if (!$nfp->FormaPagamento->boleto) {
-                continue;
-            }
-            foreach ($nfp->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'ASC')->get() as $titulo) {
+        $parcelas = $negocio->NegocioParcelaS()
+            ->where('condicao', NegocioParcelaService::CONDICAO_BOLETO)
+            ->orderBy('codnegocioparcela')
+            ->get();
+        foreach ($parcelas as $np) {
+            foreach ($np->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'ASC')->get() as $titulo) {
+                if ($soNovos && $titulo->TituloBoletoS()->whereNull('inativo')->whereNotNull('linhadigitavel')->exists()) {
+                    continue;
+                }
                 $tituloBoletos[] = static::registrar($titulo);
             }
         }
@@ -303,11 +314,9 @@ class BoletoBbService
     public static function pdfPeloNegocio(Negocio $negocio)
     {
         $data = [];
-        foreach ($negocio->NegocioFormaPagamentoS()->orderBy('codnegocioformapagamento')->get() as $nfp) {
-            foreach ($nfp->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'ASC')->get() as $titulo) {
-                foreach ($titulo->TituloBoletoS()->whereNull('inativo')->orderBy('codtituloboleto')->get() as $tituloBoleto) {
-                    $data[] = new BoletoBbPdf($tituloBoleto);
-                }
+        foreach (NegocioParcelaService::titulos($negocio)->where('saldo', '>', 0) as $titulo) {
+            foreach ($titulo->TituloBoletoS()->whereNull('inativo')->orderBy('codtituloboleto')->get() as $tituloBoleto) {
+                $data[] = new BoletoBbPdf($tituloBoleto);
             }
         }
         if (count($data) == 0) {
@@ -333,102 +342,52 @@ class BoletoBbService
      */
     public static function liquidar(TituloBoleto $tituloBoleto)
     {
+        $titulo = Titulo::findOrFail($tituloBoleto->codtitulo);
+        $vinculos = [
+            'codtituloboleto' => $tituloBoleto->codtituloboleto,
+            'codportador' => $tituloBoleto->codportador,
+            'transacao' => $tituloBoleto->datarecebimento,
+        ];
 
-        /*
-        // TODO: Decidir o que fazer com esses 4 campos
-        if ($tituloBoleto->valorpagamentoparcial > 0) { }
-        if ($tituloBoleto->valorabatimento > 0) { }
-        if ($tituloBoleto->valorreajuste > 0) { }
-        if ($tituloBoleto->valoroutro > 0) { }
-        */
+        // "outro" aumenta o titulo e fica num ajuste proprio; juros, multa
+        // e desconto vao na linha da liquidacao, que tira do saldo o pago
+        // sem os juros e a multa e com o desconto
+        $outro = (float) $tituloBoleto->valoroutro;
+        $juros = (float) $tituloBoleto->valorjuromora;
+        $multa = (float) $tituloBoleto->valormulta;
+        $desconto = (float) $tituloBoleto->valordesconto;
+        $pago = (float) $tituloBoleto->valorpago;
+        $principal = $pago - $juros - $multa + $desconto;
 
         // acumula cod dos movimentos gerados
         $codmovimentotitulos = [];
-
-        // lanca outros como ajuste
-        if ($tituloBoleto->valoroutro > 0) {
-            $mov = MovimentoTitulo::firstOrNew([
-                'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_AJUSTE,
-            ]);
-            $mov->codtitulo = $tituloBoleto->codtitulo;
-            $mov->codportador = $tituloBoleto->codportador;
-            $mov->transacao = $tituloBoleto->datarecebimento;
-            $mov->debito = $tituloBoleto->valoroutro;
-            if (!$mov->save()) {
-                return false;
-            }
+        if ($outro != 0) {
+            $mov = MovimentoTituloService::lancar($titulo, MovimentoTituloService::TIPO_AJUSTE, $outro, [], $vinculos, ['codtituloboleto']);
             $codmovimentotitulos[] = $mov->codmovimentotitulo;
         }
-
-        // lanca juros
-        if ($tituloBoleto->valorjuromora > 0) {
-            $mov = MovimentoTitulo::firstOrNew([
-                'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_JUROS,
-            ]);
-            $mov->codtitulo = $tituloBoleto->codtitulo;
-            $mov->codportador = $tituloBoleto->codportador;
-            $mov->transacao = $tituloBoleto->datarecebimento;
-            $mov->debito = $tituloBoleto->valorjuromora;
-            if (!$mov->save()) {
-                return false;
-            }
+        if ($pago != 0 || $principal != 0) {
+            $mov = MovimentoTituloService::lancar(
+                $titulo,
+                MovimentoTituloService::TIPO_LIQUIDACAO,
+                -$principal,
+                ['juros' => $juros, 'multa' => $multa, 'desconto' => $desconto, 'total' => -$pago],
+                $vinculos,
+                ['codtituloboleto']
+            );
             $codmovimentotitulos[] = $mov->codmovimentotitulo;
-        }
-
-        // lanca Multa
-        if ($tituloBoleto->valormulta > 0) {
-            $mov = MovimentoTitulo::firstOrNew([
-                'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_MULTA,
-            ]);
-            $mov->codtitulo = $tituloBoleto->codtitulo;
-            $mov->codportador = $tituloBoleto->codportador;
-            $mov->transacao = $tituloBoleto->datarecebimento;
-            $mov->debito = $tituloBoleto->valormulta;
-            if (!$mov->save()) {
-                return false;
-            }
-            $codmovimentotitulos[] = $mov->codmovimentotitulo;
-        }
-
-        // lanca desconto
-        if ($tituloBoleto->valordesconto > 0) {
-            $mov = MovimentoTitulo::firstOrNew([
-                'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_DESCONTO,
-            ]);
-            $mov->codtitulo = $tituloBoleto->codtitulo;
-            $mov->codportador = $tituloBoleto->codportador;
-            $mov->transacao = $tituloBoleto->datarecebimento;
-            $mov->credito = $tituloBoleto->valordesconto;
-            if (!$mov->save()) {
-                return false;
-            }
-            $codmovimentotitulos[] = $mov->codmovimentotitulo;
-        }
-
-        // lanca valor do pagamento
-        if ($tituloBoleto->valorpago > 0) {
-            $mov = MovimentoTitulo::firstOrNew([
-                'codtituloboleto' => $tituloBoleto->codtituloboleto,
-                'codtipomovimentotitulo' => MovimentoTituloService::TIPO_LIQUIDACAO,
-            ]);
-            $mov->codtitulo = $tituloBoleto->codtitulo;
-            $mov->codportador = $tituloBoleto->codportador;
-            $mov->transacao = $tituloBoleto->datarecebimento;
-            $mov->credito = $tituloBoleto->valorpago;
-            if (!$mov->save()) {
-                return false;
-            }
-            $codmovimentotitulos[] = $mov->codmovimentotitulo;
+            // o dinheiro entrou no banco do boleto: pagamento da baixa (M6 doc-3)
+            PagamentoTituloService::daBaixa($mov, PagamentoService::MEIO_BOLETO, $tituloBoleto->codportador, $tituloBoleto->datarecebimento);
+            // pago pelo QR: o PIX dele aponta para este pagamento (TASK-219)
+            PixUsoService::boletoBaixado($tituloBoleto);
         }
 
         // apaga movimentos que sobraram
-        MovimentoTitulo::where('codtituloboleto', $tituloBoleto->codtituloboleto)
+        $sobraram = MovimentoTitulo::where('codtituloboleto', $tituloBoleto->codtituloboleto)
             ->whereNotIn('codmovimentotitulo', $codmovimentotitulos)
             ->delete();
+        if ($sobraram > 0) {
+            MovimentoTituloService::recalcular($titulo);
+        }
 
         // retorna o mesmo objeto que recebeu
         return $tituloBoleto;

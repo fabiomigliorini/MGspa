@@ -32,7 +32,7 @@ class ControleController extends Controller
             INNER JOIN tblfilial f ON (f.codfilial = n.codfilial)
             INNER JOIN tblpessoa p ON (p.codpessoa = n.codpessoa)
             INNER JOIN tblnegocioprodutobarra npb ON (npb.codnegocio = n.codnegocio)
-            INNER JOIN tblnegocioformapagamento nfp ON (nfp.codnegocio = n.codnegocio)
+            INNER JOIN tblpagamento pag ON (pag.codnegocio = n.codnegocio AND pag.estado <> 'C')
             LEFT JOIN tblnegocioprodutobarra dev ON (dev.codnegocioprodutobarradevolucao = npb.codnegocioprodutobarra)
             LEFT JOIN (
                 SELECT nfpb.codnegocioprodutobarra
@@ -48,7 +48,7 @@ class ControleController extends Controller
             AND n.lancamento >= now() - INTERVAL '30 days'
             AND dev.codnegocioprodutobarra IS NULL
             AND nfs.codnegocioprodutobarra IS NULL
-            AND nfp.integracao = true
+            AND coalesce(pag.codpixcob, pag.codpagarmepedido, pag.codsauruspedido, pag.codliopedido) IS NOT NULL
         ";
 
         $bindings = [];

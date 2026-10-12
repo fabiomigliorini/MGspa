@@ -7,12 +7,15 @@
 namespace Mg\Titulo;
 
 use Mg\MgModel;
+use Mg\Caixa\CaixaItemAcerto;
 use Mg\Boleto\BoletoRetorno;
 use Mg\Cheque\Cheque;
 use Mg\Cobranca\Cobranca;
 use Mg\Cobranca\CobrancaHistoricoTitulo;
 use Mg\Titulo\MovimentoTitulo;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Negocio\NegocioParcela;
+use Mg\Negocio\NegocioVale;
+use Mg\Pagamento\Pagamento;
 use Mg\NfeTerceiro\NfeTerceiroDuplicata;
 use Mg\Rh\PeriodoColaborador;
 use Mg\Titulo\TituloBoleto;
@@ -35,17 +38,11 @@ class Titulo extends MgModel
         'boleto',
         'codcontacontabil',
         'codfilial',
-        'codnegocioformapagamento',
+        'codnegocioparcela',
         'codpessoa',
         'codportador',
         'codtipotitulo',
         'codtituloagrupamento',
-        'credito',
-        'creditosaldo',
-        'creditototal',
-        'debito',
-        'debitosaldo',
-        'debitototal',
         'emissao',
         'estornado',
         'fatura',
@@ -55,9 +52,9 @@ class Titulo extends MgModel
         'observacao',
         'remessa',
         'saldo',
-        'sistema',
         'transacao',
         'transacaoliquidacao',
+        'valor',
         'vencimento',
         'vencimentooriginal'
     ];
@@ -67,7 +64,7 @@ class Titulo extends MgModel
         'boleto' => 'boolean',
         'codcontacontabil' => 'integer',
         'codfilial' => 'integer',
-        'codnegocioformapagamento' => 'integer',
+        'codnegocioparcela' => 'integer',
         'codpessoa' => 'integer',
         'codportador' => 'integer',
         'codtipotitulo' => 'integer',
@@ -75,24 +72,29 @@ class Titulo extends MgModel
         'codtituloagrupamento' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'credito' => 'float',
-        'creditosaldo' => 'float',
-        'creditototal' => 'float',
         'criacao' => 'datetime',
-        'debito' => 'float',
-        'debitosaldo' => 'float',
-        'debitototal' => 'float',
         'emissao' => 'date',
         'estornado' => 'datetime',
         'gerencial' => 'boolean',
         'remessa' => 'integer',
         'saldo' => 'float',
-        'sistema' => 'datetime',
         'transacao' => 'date',
         'transacaoliquidacao' => 'date',
+        'valor' => 'float',
         'vencimento' => 'date',
         'vencimentooriginal' => 'date'
     ];
+
+
+    /**
+     * Título a receber? Valor e saldo têm sinal: positivo é a receber,
+     * negativo é a pagar. Basta um dos dois negativo para ser a pagar — um
+     * a receber pago a maior vira crédito do cliente.
+     */
+    public function ehReceber(): bool
+    {
+        return !((float) $this->saldo < 0 || (float) $this->valor < 0);
+    }
 
 
     // Chaves Estrangeiras
@@ -106,9 +108,35 @@ class Titulo extends MgModel
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
-    public function NegocioFormaPagamento()
+    public function NegocioParcela()
     {
-        return $this->belongsTo(NegocioFormaPagamento::class, 'codnegocioformapagamento', 'codnegocioformapagamento');
+        return $this->belongsTo(NegocioParcela::class, 'codnegocioparcela', 'codnegocioparcela');
+    }
+
+    // titulo a pagar gerado pela conta corrente da maquineta de parceiro
+    public function CaixaItemAcerto()
+    {
+        return $this->hasOne(CaixaItemAcerto::class, 'codtitulo', 'codtitulo');
+    }
+
+    // nasceu de outra tela (negocio, agrupamento, maquineta de parceiro): so'
+    // a origem estorna e muda numero, valor e datas
+    public function geradoAutomaticamente(): bool
+    {
+        return !empty($this->codnegocioparcela)
+            || !empty($this->codtituloagrupamento)
+            || $this->CaixaItemAcerto()->exists();
+    }
+
+    // nasceu com o dinheiro (vale colaborador, adiantamento): a implantacao
+    // e' ligada ao pagamento, que e' o dono do valor e das datas. O estorno
+    // continua aqui (devolve o dinheiro e cancela o pagamento, TASK-214)
+    public function nasceuDePagamento(): bool
+    {
+        return $this->MovimentoTituloS()
+            ->where('codtipomovimentotitulo', MovimentoTituloService::TIPO_IMPLANTACAO)
+            ->whereNotNull('codpagamento')
+            ->exists();
     }
 
     public function Pessoa()
@@ -124,6 +152,12 @@ class Titulo extends MgModel
     public function TipoTitulo()
     {
         return $this->belongsTo(TipoTitulo::class, 'codtipotitulo', 'codtipotitulo');
+    }
+
+    // o vale compras vendido que gerou este titulo de credito (escola, aluno, turma e o kit)
+    public function NegocioVale()
+    {
+        return $this->hasOne(NegocioVale::class, 'codtitulo', 'codtitulo')->whereNull('inativo');
     }
 
     public function TituloAgrupamento()
@@ -173,9 +207,10 @@ class Titulo extends MgModel
         return $this->hasMany(MovimentoTitulo::class, 'codtitulorelacionado', 'codtitulo');
     }
 
-    public function NegocioFormaPagamentoS()
+    // vale consumido como pagamento
+    public function PagamentoS()
     {
-        return $this->hasMany(NegocioFormaPagamento::class, 'codtitulo', 'codtitulo');
+        return $this->hasMany(Pagamento::class, 'codtitulo', 'codtitulo');
     }
 
     public function NfeTerceiroDuplicataS()

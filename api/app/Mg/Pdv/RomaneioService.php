@@ -8,13 +8,14 @@ use chillerlan\QRCode\QROptions;
 use chillerlan\QRCode\Output\QROutputInterface;
 use chillerlan\QRCode\Common\EccLevel;
 use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioAnexoService;
 
 class RomaneioService
 {
     public static function pdf(Negocio $negocio, bool $confissao = true)
     {
         // pega os anexos em base64
-        $anexos = PdvAnexoService::base64($negocio->codnegocio, true);
+        $anexos = NegocioAnexoService::base64($negocio->codnegocio, true);
 
         // gera o QR code da confissao (codnegocio + valor) para leitura automatica
         $qrcode = $confissao ? static::qrCodeConfissao($negocio) : null;
@@ -35,7 +36,7 @@ class RomaneioService
     }
 
     // Gera o QR code que vai impresso na confissao. O conteudo
-    // "MGCONF|codnegocio|valortotal" é lido de volta pelo PdvAnexoService::sugerir()
+    // "MGCONF|codnegocio|valortotal" é lido de volta pelo NegocioAnexoService::sugerir()
     // quando a confissao assinada é fotografada (muito mais robusto que OCR).
     public static function qrCodeConfissao(Negocio $negocio)
     {

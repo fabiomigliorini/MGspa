@@ -6,8 +6,11 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Mg\Colaborador\ColaboradorCargo;
-use Mg\Titulo\MovimentoTitulo;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 use Mg\Titulo\MovimentoTituloService;
+use Mg\Titulo\Titulo;
+use Mg\Titulo\TituloService;
 
 /**
  * Acerto (Encontro de Contas) — modelo de EVENTOS.
@@ -17,11 +20,17 @@ use Mg\Titulo\MovimentoTituloService;
  * PeriodoColaborador->valortotal e é entregue via eventos (Bee/dinheiro) — sem
  * movimento financeiro. Os vales/adiantamentos (títulos reais a débito) são
  * baixados por movimentos (tblmovimentotitulo tipo 601, sem liquidação,
- * amarrados ao evento). A trigger fntblmovimentotituloaiauad baixa o saldo.
+ * amarrados ao evento). O MovimentoTituloService::lancar baixa o saldo.
  *
  * Nada é excluído: um acerto errado é INATIVADO (estornando seus movimentos) e
  * um novo é criado. Vários eventos por colaborador (parcial: parte folha, parte
  * dinheiro, resto Bee).
+ *
+ * Cada evento tem o seu pagamento (M6 do plano doc-3): o saldo do evento, meio
+ * pela forma (B Recarga Bee = compensação, porque o dinheiro anda depois no
+ * título da recarga; D dinheiro, com o portador em espécie de onde saiu ou
+ * para onde entrou; F folha; saldo zero = compensação), e os movimentos
+ * apontam para ele. Inativar cancela o pagamento; reativar cria outro.
  */
 class AcertoService
 {
@@ -147,15 +156,13 @@ class AcertoService
         $beneficioRestante = round(((float) $pc->valortotal) - static::beneficioJaEntregue($acertos), 2);
 
         // Vales/adiantamentos reais (débitos/créditos com saldo != 0).
-        // Exclui o título RH (952) legado — o benefício agora é sintético.
+        // Exclui o título RH (Rubrica RH) legado — o benefício agora é sintético.
         $titulosReais = DB::select("
             SELECT
                 t.codtitulo,
                 t.numero,
                 t.vencimento,
                 t.saldo,
-                t.debitosaldo,
-                t.creditosaldo,
                 tt.tipotitulo,
                 t.codtipotitulo,
                 CASE
@@ -172,9 +179,10 @@ class AcertoService
             JOIN tbltipotitulo tt ON tt.codtipotitulo = t.codtipotitulo
             WHERE t.codpessoa = :codpessoa
               AND t.saldo != 0
-              AND t.codtipotitulo <> 952
+              AND t.codtipotitulo <> :tiporh
             ORDER BY t.vencimento, t.saldo, t.codtitulo
         ", [
+            'tiporh'    => TituloService::TIPO_RH,
             'codpessoa' => $colaborador->codpessoa,
             'dias'      => $dias,
             'dias2'     => $dias,
@@ -189,8 +197,6 @@ class AcertoService
                 'numero'               => 'Remuneração Variável',
                 'vencimento'           => null,
                 'saldo'                => -$beneficioRestante,
-                'debitosaldo'          => $beneficioRestante < 0 ? abs($beneficioRestante) : 0,
-                'creditosaldo'         => $beneficioRestante > 0 ? $beneficioRestante : 0,
                 'tipotitulo'           => 'Benefício',
                 'codtipotitulo'        => 0,
                 'sugestao_descontando' => $beneficioRestante < 0 ? abs($beneficioRestante) : 0,
@@ -219,7 +225,7 @@ class AcertoService
     // Efetivação (cria UM evento por confirmação; suporta parcial/múltiplo)
     // -------------------------------------------------------------------------
 
-    public static function efetivar(int $codperiodocolaborador, array $titulos, string $forma, ?string $observacao, ?string $data): array
+    public static function efetivar(int $codperiodocolaborador, array $titulos, string $forma, ?string $observacao, ?string $data, ?int $codportador = null): array
     {
         $pc = PeriodoColaborador::with(['Colaborador', 'Periodo'])
             ->findOrFail($codperiodocolaborador);
@@ -236,7 +242,7 @@ class AcertoService
         $rubricas   = 0.0;
         $creditos   = 0.0;
         $debitos    = 0.0;
-        $movimentos = []; // [codtitulo, debito, credito]
+        $movimentos = []; // [codtitulo, valor]
 
         foreach ($titulos as $t) {
             $codtitulo   = $t['codtitulo'] ?? null;
@@ -250,14 +256,14 @@ class AcertoService
             }
 
             if ($pagando > 0) {
-                // Título a crédito sendo pago → débito baixa o crédito.
+                // Título a crédito sendo pago → valor positivo baixa o crédito.
                 $creditos    += $pagando;
-                $movimentos[] = ['codtitulo' => (int) $codtitulo, 'debito' => $pagando, 'credito' => null];
+                $movimentos[] = ['codtitulo' => (int) $codtitulo, 'valor' => $pagando];
             }
             if ($descontando > 0) {
-                // Título a débito (vale) sendo descontado → crédito baixa o débito.
+                // Título a débito (vale) sendo descontado → valor negativo baixa o débito.
                 $debitos     += $descontando;
-                $movimentos[] = ['codtitulo' => (int) $codtitulo, 'debito' => null, 'credito' => $descontando];
+                $movimentos[] = ['codtitulo' => (int) $codtitulo, 'valor' => -$descontando];
             }
         }
 
@@ -278,14 +284,17 @@ class AcertoService
         ]);
         $acerto->save();
 
+        $pag = static::criarPagamento($acerto, $pc->Colaborador->codpessoa ?? null, $codportador);
+
         foreach ($movimentos as $m) {
             static::criarMovimento(
                 $acerto->codperiodocolaboradoracerto,
                 $m['codtitulo'],
-                $m['debito'],
-                $m['credito'],
+                $m['valor'],
                 $dataForm,
-                $agora
+                MovimentoTituloService::TIPO_RH,
+                $pag->codpagamento,
+                $pag->portadorDoPagamento()->codportador ?? null
             );
         }
 
@@ -297,25 +306,64 @@ class AcertoService
     protected static function criarMovimento(
         int $codperiodocolaboradoracerto,
         int $codtitulo,
-        ?float $debito,
-        ?float $credito,
+        float $valor,
         string $data,
-        Carbon $agora,
-        int $tipo = MovimentoTituloService::TIPO_RH
+        int $tipo = MovimentoTituloService::TIPO_RH,
+        ?int $codpagamento = null,
+        ?int $codportador = null
     ): void {
-        $mov = new MovimentoTitulo([
-            'codtipomovimentotitulo'      => $tipo,
-            'codtitulo'                   => $codtitulo,
+        MovimentoTituloService::lancar(Titulo::findOrFail($codtitulo), $tipo, $valor, [], [
             'codperiodocolaboradoracerto' => $codperiodocolaboradoracerto,
-            'codliquidacaotitulo'         => null,
-            'codportador'                 => null,
-            'debito'                      => $debito,
-            'credito'                     => $credito,
+            'codpagamento'                => $codpagamento,
+            'codportador'                 => $codportador,
             'historico'                   => 'Acerto RH',
             'transacao'                   => $data,
-            'sistema'                     => $agora,
         ]);
-        $mov->save();
+    }
+
+    // meio do pagamento pela forma do evento
+    const MEIO_DA_FORMA = [
+        'B' => PagamentoService::MEIO_COMPENSACAO,
+        'D' => PagamentoService::MEIO_DINHEIRO,
+        'F' => PagamentoService::MEIO_FOLHA,
+    ];
+
+    // Pagamento do evento: o saldo (rubricas + créditos - débitos) que andou
+    // pela forma. Dinheiro pede o portador em espécie: saldo positivo saiu
+    // dele (a empresa pagou o colaborador), negativo entrou.
+    protected static function criarPagamento(PeriodoColaboradorAcerto $acerto, ?int $codpessoa, ?int $codportador = null): Pagamento
+    {
+        $total = round(abs((float) $acerto->saldo), 2);
+        $pc = $acerto->PeriodoColaborador;
+        $portador = null;
+        if ($acerto->forma == 'D' && $total > 0) {
+            $portador = $codportador ? \Mg\Portador\Portador::find($codportador) : null;
+            if (!$portador || $portador->tipo != \Mg\Portador\Portador::TIPO_ESPECIE || !empty($portador->inativo)) {
+                abort(422, 'Acerto em dinheiro: informe o caixa ou cofre (portador em espécie, ativo).');
+            }
+        }
+        return PagamentoService::criar([
+            'codportadororigem' => ($portador && $acerto->saldo > 0) ? $portador->codportador : null,
+            'codportadordestino' => ($portador && $acerto->saldo < 0) ? $portador->codportador : null,
+            'meio' => ($total > 0) ? static::MEIO_DA_FORMA[$acerto->forma] : PagamentoService::MEIO_COMPENSACAO,
+            'estado' => PagamentoService::ESTADO_EFETIVADO,
+            'principal' => $total,
+            'transacao' => Carbon::parse($acerto->data),
+            'efetivacao' => Carbon::now(),
+            'codusuarioefetivacao' => auth()->user()->codusuario ?? null,
+            'codpessoa' => $codpessoa ?? $pc->Colaborador->codpessoa ?? null,
+            'codfilial' => $pc->Colaborador->codfilial ?? null,
+            'codperiodocolaboradoracerto' => $acerto->codperiodocolaboradoracerto,
+            'observacoes' => $acerto->observacao ? mb_substr($acerto->observacao, 0, 300) : null,
+        ]);
+    }
+
+    protected static function pagamentoAtivo(PeriodoColaboradorAcerto $acerto): ?Pagamento
+    {
+        return Pagamento::where('codperiodocolaboradoracerto', $acerto->codperiodocolaboradoracerto)
+            ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
+            ->orderBy('codpagamento', 'desc')
+            ->first();
     }
 
     // -------------------------------------------------------------------------
@@ -328,7 +376,11 @@ class AcertoService
         if ($acerto->inativo) {
             throw new \Exception('Este acerto já está inativo.');
         }
-        $qtd = static::ajustarBaixas($acerto, false); // desfaz as baixas
+        $pag = static::pagamentoAtivo($acerto);
+        $qtd = static::ajustarBaixas($acerto, false, $pag->codpagamento ?? null); // desfaz as baixas
+        if ($pag) {
+            PagamentoService::cancelar($pag, 'Acerto de RH inativado');
+        }
         $acerto->inativo = Carbon::now();
         $acerto->save();
         return $qtd;
@@ -362,7 +414,13 @@ class AcertoService
         if (!$acerto->inativo) {
             throw new \Exception('Este acerto já está ativo.');
         }
-        $qtd = static::ajustarBaixas($acerto, true); // reaplica as baixas
+        // o mesmo portador do pagamento que foi cancelado
+        $anterior = Pagamento::where('codperiodocolaboradoracerto', $acerto->codperiodocolaboradoracerto)
+            ->orderBy('codpagamento', 'desc')
+            ->first();
+        $codportador = $anterior ? ($anterior->codportadororigem ?? $anterior->codportadordestino) : null;
+        $pag = static::criarPagamento($acerto, null, $codportador);
+        $qtd = static::ajustarBaixas($acerto, true, $pag->codpagamento); // reaplica as baixas
         $acerto->inativo = null;
         $acerto->save();
         return $qtd;
@@ -386,11 +444,10 @@ class AcertoService
      * A diferença (alvo − atual) vira um movimento de ajuste (tipo 930). Como o
      * "original" é sempre derivado só dos 601, o toggle é estável a N idas e voltas.
      */
-    protected static function ajustarBaixas(PeriodoColaboradorAcerto $acerto, bool $ativar): int
+    protected static function ajustarBaixas(PeriodoColaboradorAcerto $acerto, bool $ativar, ?int $codpagamento = null): int
     {
-        $agora = Carbon::now();
-        $hoje  = $agora->toDateString();
-        $qtd   = 0;
+        $hoje = Carbon::now()->toDateString();
+        $qtd  = 0;
 
         foreach ($acerto->MovimentoTituloS->groupBy('codtitulo') as $codtitulo => $movs) {
             if (!$codtitulo) {
@@ -399,7 +456,7 @@ class AcertoService
             $original = 0.0;
             $atual    = 0.0;
             foreach ($movs as $m) {
-                $net    = (float) ($m->debito ?? 0) - (float) ($m->credito ?? 0);
+                $net    = (float) $m->principal;
                 $atual += $net;
                 if ((int) $m->codtipomovimentotitulo === MovimentoTituloService::TIPO_RH) {
                     $original += $net;
@@ -415,11 +472,10 @@ class AcertoService
             static::criarMovimento(
                 $acerto->codperiodocolaboradoracerto,
                 (int) $codtitulo,
-                $delta > 0 ? $delta : null,
-                $delta < 0 ? -$delta : null,
+                $delta,
                 $hoje,
-                $agora,
-                MovimentoTituloService::TIPO_ESTORNO_LIQUIDACAO
+                MovimentoTituloService::TIPO_ESTORNO_LIQUIDACAO,
+                $codpagamento
             );
             $qtd++;
         }

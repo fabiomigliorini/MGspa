@@ -112,11 +112,11 @@ function limparParaProxima() {
   router.replace({ name: 'carga', params: { uuid: 'nova' } })
 }
 
-async function onSalvar(carga) {
-  const salva = await persistir(carga)
-  if (novo.value) router.replace({ name: 'carga', params: { uuid: salva.uuid } })
+// Carga nova gravada pela 1ª vez (o form já persistiu — ele precisa esperar a
+// gravação pra seguir a cadeia de modais): sai de 'nova' pro uuid dela.
+function onRegistrada(salva) {
+  router.replace({ name: 'carga', params: { uuid: salva.uuid } })
   avisarGravado(salva)
-  if (cargaFinalizada(salva)) limparParaProxima()
 }
 async function onAvancar(carga) {
   const salva = await persistir(carga)
@@ -128,6 +128,13 @@ async function onCancelar(carga) {
   if (carga.codcarga || carga.sincronizado) await store.inativar(carga)
   else await store.descartarPendente(carga)
   router.replace({ name: 'carga' })
+}
+
+// Desistiu da carga nova no 1º modal: volta pra "Nenhuma carga aberta". Só se
+// ainda estiver em 'nova' — clicar noutra carga com o modal aberto desmonta o
+// form e fecha o dialog, e isso não pode sequestrar a navegação pro vazio.
+function onDesistir() {
+  if (route.params.uuid === 'nova') router.replace({ name: 'carga' })
 }
 
 function novaCarga() {
@@ -161,7 +168,7 @@ onMounted(async () => {
   await store.carregarCargas()
   carregado.value = true
   await selecionar(route.params.uuid)
-  store.sincronizar().catch(() => {})
+  store.sincronizar()
   document.addEventListener('keydown', hotkeys)
 })
 
@@ -172,7 +179,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <q-page class="bg-grey-2" :style-fn="pageStyleFn">
+  <q-page :style-fn="pageStyleFn">
     <!-- `key` = uuid: trocar de carga REMONTA o formulário. É o que devolve o
          cursor pra placa na carga em branco que abre depois de finalizar; sem
          isso o autofocus só valeria na primeira montagem da página. Salvar a
@@ -184,9 +191,10 @@ onUnmounted(() => {
       :carga="cargaSel"
       :novo="novo"
       :persistir="persistir"
-      @salvar="onSalvar"
+      @registrada="onRegistrada"
       @avancar="onAvancar"
       @cancelar="onCancelar"
+      @desistir="onDesistir"
     />
 
     <div v-else class="absolute-center text-center text-grey-6 q-pa-md">

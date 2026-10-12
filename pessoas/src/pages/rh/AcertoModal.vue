@@ -7,6 +7,7 @@ import { extrairErro } from 'src/utils/rhFormatters'
 import { formataNumero, formataData } from '@components/formatters'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 
 const props = defineProps({
   modelValue: Boolean,
@@ -26,6 +27,8 @@ const dadosColaborador = ref(null)
 const titulos = ref([])
 const observacao = ref('')
 const forma = ref('B')
+// dinheiro: caixa ou cofre (portador em espécie) de onde sai ou para onde entra
+const codportador = ref(null)
 const formaTocada = ref(false)
 const dataEvento = ref(hoje())
 
@@ -81,7 +84,11 @@ const excedeLimite = computed(() => {
   return pctDesconto.value > limite
 })
 
-const podeSalvar = computed(() => totalPagando.value > 0 || totalDescontando.value > 0)
+const podeSalvar = computed(
+  () =>
+    (totalPagando.value > 0 || totalDescontando.value > 0) &&
+    (forma.value !== 'D' || !!codportador.value || resultado.value == 0),
+)
 
 // --- LINHAS ---
 
@@ -123,6 +130,7 @@ const carregar = async () => {
   dadosColaborador.value = null
   formaTocada.value = false
   dataEvento.value = hoje()
+  codportador.value = null
   try {
     const ret = await sRh.getTitulosAcerto(
       props.codperiodo,
@@ -164,6 +172,7 @@ const confirmar = async () => {
   try {
     const payload = {
       forma: forma.value,
+      codportador: forma.value === 'D' ? codportador.value : null,
       data: dataEvento.value,
       observacao: observacao.value,
       titulos: titulos.value.map((t) => ({
@@ -335,6 +344,15 @@ const confirmar = async () => {
             </div>
             <div class="col-12 col-sm-4">
               <MgInputData v-model="dataEvento" label="Data do acerto" />
+            </div>
+            <div class="col-12" v-if="forma === 'D'">
+              <MgSelectPortador
+                v-model="codportador"
+                :tipos="['E']"
+                label="Caixa ou cofre"
+                outlined
+                :rules="[(v) => !!v || 'Obrigatório']"
+              />
             </div>
           </div>
         </q-card-section>

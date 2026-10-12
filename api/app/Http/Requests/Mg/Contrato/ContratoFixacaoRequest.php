@@ -6,6 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 use Mg\Contrato\Contrato;
+use Mg\Contrato\ContratoFixacao;
 use Mg\Contrato\ContratoService;
 
 class ContratoFixacaoRequest extends FormRequest
@@ -48,6 +49,26 @@ class ContratoFixacaoRequest extends FormRequest
     public function withValidator(Validator $validator): void
     {
         $validator->after(function (Validator $validator) {
+            // Piso: o que já tem câmbio travado não pode ser desfeito pela edição.
+            $fixacao = $this->route('codfixacao') !== null
+                ? ContratoFixacao::find($this->route('codfixacao'))
+                : null;
+            $travado = $fixacao
+                ? (float) $fixacao->ContratoFixacaoCambioS()->whereNull('inativo')->sum('valor')
+                : 0.0;
+            if ($travado > 0) {
+                if ((int) $this->input('codmoeda') !== (int) $fixacao->codmoeda) {
+                    $validator->errors()->add('codmoeda', 'Não dá para trocar a moeda: já há câmbio travado.');
+                }
+                if ((float) $this->input('quantidade') * (float) $this->input('preco') < $travado - 0.005) {
+                    $validator->errors()->add(
+                        'quantidade',
+                        'Quantidade × preço fica abaixo do câmbio já travado ('
+                            . number_format($travado, 2, ',', '.') . ').',
+                    );
+                }
+            }
+
             $contrato = Contrato::find($this->route('codcontrato'));
             if (!$contrato || $contrato->quantidade === null) {
                 return; // sem teto (volume em aberto) ou contrato inexistente

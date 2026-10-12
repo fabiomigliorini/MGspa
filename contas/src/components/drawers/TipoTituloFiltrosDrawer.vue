@@ -6,7 +6,6 @@ import { useDebounceFn } from '@vueuse/core'
 import { useTipoTituloStore } from 'src/stores/tipoTituloStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
-import MgSelectTipoMovimentoTitulo from '@components/MgSelectTipoMovimentoTitulo.vue'
 
 const store = useTipoTituloStore()
 
@@ -21,6 +20,12 @@ const clear = () => {
 const boolOptions = [
   { label: 'Sim', value: true },
   { label: 'Não', value: false },
+  { label: 'Todos', value: null },
+]
+
+const naturezaOptions = [
+  { label: 'A Receber', value: 'R' },
+  { label: 'A Pagar', value: 'P' },
   { label: 'Todos', value: null },
 ]
 
@@ -52,21 +57,22 @@ const statusOptions = [
         clearable
         :bottom-slots="false"
         label="Descrição"
-        class="q-mb-sm"
       >
         <template #prepend><q-icon name="description" /></template>
       </MgInput>
-
-      <MgSelectTipoMovimentoTitulo
-        v-model="store.filters.codtipomovimentotitulo"
-        outlined
-        clearable
-        :bottom-slots="false"
-        label="Tipo Movimento"
-      />
     </FilterGroup>
 
     <FilterGroup title="Movimentação">
+      <q-select
+        v-model="store.filters.natureza"
+        :options="naturezaOptions"
+        emit-value
+        map-options
+        outlined
+        :bottom-slots="false"
+        label="Natureza"
+        class="q-mb-sm"
+      />
       <q-select
         v-model="store.filters.pagar"
         :options="boolOptions"
@@ -88,23 +94,13 @@ const statusOptions = [
         class="q-mb-sm"
       />
       <q-select
-        v-model="store.filters.debito"
+        v-model="store.filters.movimentaportador"
         :options="boolOptions"
         emit-value
         map-options
         outlined
         :bottom-slots="false"
-        label="Débito"
-        class="q-mb-sm"
-      />
-      <q-select
-        v-model="store.filters.credito"
-        :options="boolOptions"
-        emit-value
-        map-options
-        outlined
-        :bottom-slots="false"
-        label="Crédito"
+        label="Movimenta portador"
       />
     </FilterGroup>
 

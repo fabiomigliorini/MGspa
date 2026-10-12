@@ -15,8 +15,8 @@ class TipoTituloController extends Controller
     {
         Autorizador::autoriza(self::GRUPOS);
         $result = TipoTituloService::listar($request->only([
-            'codtipotitulo', 'tipotitulo', 'codtipomovimentotitulo',
-            'pagar', 'receber', 'debito', 'credito', 'inativo', 'todos',
+            'codtipotitulo', 'tipotitulo', 'natureza',
+            'pagar', 'receber', 'movimentaportador', 'inativo', 'todos',
         ]));
         return TipoTituloResource::collection($result);
     }
@@ -24,7 +24,7 @@ class TipoTituloController extends Controller
     public function show(int $codtipotitulo)
     {
         Autorizador::autoriza(self::GRUPOS);
-        return new TipoTituloResource(TipoTitulo::with('TipoMovimentoTitulo')->findOrFail($codtipotitulo));
+        return new TipoTituloResource(TipoTitulo::findOrFail($codtipotitulo));
     }
 
     public function store(TipoTituloStoreRequest $request)

@@ -29,7 +29,7 @@
                         {{ formataData($t->vencimento) }}
                     </td>
                     <td class="text-right">
-                        {{ formataNumero($t->debito + $t->credito) }}
+                        {{ formataNumero(abs($t->valor)) }}
                     </td>
                     <td class="text-right">
                         {{ formataNumero($t->saldo) }}

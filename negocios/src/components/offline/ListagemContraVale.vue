@@ -4,51 +4,25 @@
 // mesmo título, mesmo código VAL…, com o saldo que sobrou); esgotado, o card
 // fica só para consulta.
 import { computed } from 'vue'
-import { Notify } from 'quasar'
 import { api } from 'boot/axios'
-import { abrirPdf } from '@components/abrirPdf'
-import { negocioStore } from 'stores/negocio'
+import { abrirVale } from '@components/abrirVale'
+import { pagamentoStore } from 'stores/pagamento'
 import { formataNumero, formataCodigo } from '@components/formatters'
 
 const props = defineProps({
   pagamento: { type: Object, required: true },
 })
 
-const sNegocio = negocioStore()
+const sPagamento = pagamentoStore()
 
 const saldo = computed(() => parseFloat(props.pagamento.valesaldo) || 0)
 
 const urlTitulo = () => process.env.CONTAS_URL + '/titulo/' + props.pagamento.codtitulo
 
-const urlVale = () => '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale'
-
-const imprimir = async () => {
-  if (!sNegocio.padrao.impressora) {
-    Notify.create({
-      type: 'negative',
-      message: 'Nenhuma impressora térmica selecionada!',
-      timeout: 3000,
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-    return
-  }
-  await api.post(urlVale() + '/' + sNegocio.padrao.impressora, null, {
-    params: { codtitulo: props.pagamento.codtitulo },
-  })
-  Notify.create({
-    type: 'positive',
-    message: 'Impressão Solicitada!',
-    timeout: 1000,
-    actions: [{ icon: 'close', color: 'white' }],
-  })
-}
-
+// o vale do título (o mesmo papel da tela do título e do pagamento), com o saldo que sobrou
 const abrir = () =>
-  abrirPdf(
-    api,
-    urlVale(),
-    { codtitulo: props.pagamento.codtitulo },
-    { title: 'Contra Vale', size: 'cupom', onImprimir: imprimir },
+  abrirVale(api, props.pagamento.codtitulo, () =>
+    sPagamento.imprimirVale(props.pagamento.codtitulo),
   )
 </script>
 
@@ -81,7 +55,7 @@ const abrir = () =>
         <q-item-section>
           <q-item-label>
             R$
-            <span class="text-weight-bold">{{ formataNumero(pagamento.valorpagamento) }}</span>
+            <span class="text-weight-bold">{{ formataNumero(pagamento.total) }}</span>
           </q-item-label>
           <q-item-label caption lines="1">Usado neste negócio</q-item-label>
         </q-item-section>

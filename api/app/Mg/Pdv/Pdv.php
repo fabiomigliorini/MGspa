@@ -7,7 +7,6 @@
 namespace Mg\Pdv;
 
 use Mg\MgModel;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Negocio\Negocio;
 use Mg\PagarMe\PagarMePagamento;
 use Mg\PagarMe\PagarMePedido;
@@ -17,6 +16,9 @@ use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
 use Mg\Portador\Portador;
 use Mg\Filial\Setor;
+use Mg\Estoque\EstoqueLocal;
+use Mg\NaturezaOperacao\NaturezaOperacao;
+use Mg\Maquineta\Maquineta;
 
 class Pdv extends MgModel
 {
@@ -27,38 +29,43 @@ class Pdv extends MgModel
     protected $fillable = [
         'alocacao',
         'apelido',
-        'autorizado',
+        'codestoquelocal',
         'codfilial',
+        'codmaquineta',
+        'codnaturezaoperacao',
         'codportador',
+        'codportadorpix',
         'codsetor',
         'desktop',
+        'impressora',
         'inativo',
-        'ip',
-        'latitude',
-        'longitude',
+        'minutosesquecido',
+        'monitoramento',
         'navegador',
         'observacoes',
         'plataforma',
-        'precisao',
         'uuid',
         'versaonavegador'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'autorizado' => 'boolean',
+        'codestoquelocal' => 'integer',
         'codfilial' => 'integer',
+        'codmaquineta' => 'integer',
+        'codnaturezaoperacao' => 'integer',
         'codpdv' => 'integer',
         'codportador' => 'integer',
+        'codportadorpix' => 'integer',
         'codsetor' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
         'desktop' => 'boolean',
         'inativo' => 'datetime',
-        'latitude' => 'float',
-        'longitude' => 'float',
-        'precisao' => 'float'
+        'sincronizacaocompleta' => 'datetime',
+        'minutosesquecido' => 'integer',
+        'monitoramento' => 'date:Y-m-d'
     ];
 
 
@@ -71,6 +78,26 @@ class Pdv extends MgModel
     public function Portador()
     {
         return $this->belongsTo(Portador::class, 'codportador', 'codportador');
+    }
+
+    public function EstoqueLocal()
+    {
+        return $this->belongsTo(EstoqueLocal::class, 'codestoquelocal', 'codestoquelocal');
+    }
+
+    public function NaturezaOperacao()
+    {
+        return $this->belongsTo(NaturezaOperacao::class, 'codnaturezaoperacao', 'codnaturezaoperacao');
+    }
+
+    public function Maquineta()
+    {
+        return $this->belongsTo(Maquineta::class, 'codmaquineta', 'codmaquineta');
+    }
+
+    public function PortadorPix()
+    {
+        return $this->belongsTo(Portador::class, 'codportadorpix', 'codportador');
     }
 
     public function Setor()
@@ -90,10 +117,6 @@ class Pdv extends MgModel
 
 
     // Tabelas Filhas
-    public function LiquidacaoTituloS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codpdv', 'codpdv');
-    }
 
     public function NegocioS()
     {
@@ -118,6 +141,17 @@ class Pdv extends MgModel
     public function PixCobS()
     {
         return $this->hasMany(PixCob::class, 'codpdv', 'codpdv');
+    }
+
+    // IP e localizacao de cada sincronizacao; o atual e' a ultima
+    public function PdvLocalizacaoS()
+    {
+        return $this->hasMany(PdvLocalizacao::class, 'codpdv', 'codpdv');
+    }
+
+    public function UltimaLocalizacao()
+    {
+        return $this->hasOne(PdvLocalizacao::class, 'codpdv', 'codpdv')->latestOfMany('codpdvlocalizacao');
     }
 
 }

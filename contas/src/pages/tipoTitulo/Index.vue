@@ -5,7 +5,6 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { useTipoTituloStore } from 'src/stores/tipoTituloStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
-import MgSelectTipoMovimentoTitulo from '@components/MgSelectTipoMovimentoTitulo.vue'
 
 const $q = useQuasar()
 const store = useTipoTituloStore()
@@ -14,15 +13,19 @@ const dialog = ref(false)
 const isNovo = ref(true)
 const saving = ref(false)
 
+const naturezaOptions = [
+  { label: 'A Receber', value: 'R' },
+  { label: 'A Pagar', value: 'P' },
+]
+
 const emptyModel = () => ({
   codtipotitulo: null,
   tipotitulo: '',
   observacoes: '',
-  codtipomovimentotitulo: null,
+  natureza: null,
+  movimentaportador: false,
   pagar: false,
   receber: false,
-  debito: false,
-  credito: false,
 })
 
 const model = ref(emptyModel())
@@ -39,10 +42,10 @@ const columns = [
   { name: 'direcao', label: 'Direção', field: 'direcao', align: 'center' },
   { name: 'natureza', label: 'Natureza', field: 'natureza', align: 'center' },
   {
-    name: 'tipomovimentotitulo',
-    label: 'Tipo Movimento',
-    field: 'tipomovimentotitulo',
-    align: 'left',
+    name: 'movimentaportador',
+    label: 'Movimenta Portador',
+    field: 'movimentaportador',
+    align: 'center',
   },
   { name: 'inativo', label: 'Status', field: 'inativo', align: 'center' },
   { name: 'acoes', label: '', field: 'acoes', align: 'right' },
@@ -60,11 +63,10 @@ const abrirEditar = (row) => {
     codtipotitulo: row.codtipotitulo,
     tipotitulo: row.tipotitulo,
     observacoes: row.observacoes || '',
-    codtipomovimentotitulo: row.codtipomovimentotitulo,
+    natureza: row.natureza,
+    movimentaportador: !!row.movimentaportador,
     pagar: !!row.pagar,
     receber: !!row.receber,
-    debito: !!row.debito,
-    credito: !!row.credito,
   }
   dialog.value = true
 }
@@ -72,11 +74,10 @@ const abrirEditar = (row) => {
 const payload = () => ({
   tipotitulo: model.value.tipotitulo,
   observacoes: model.value.observacoes,
-  codtipomovimentotitulo: model.value.codtipomovimentotitulo,
+  natureza: model.value.natureza,
+  movimentaportador: model.value.movimentaportador,
   pagar: model.value.pagar,
   receber: model.value.receber,
-  debito: model.value.debito,
-  credito: model.value.credito,
 })
 
 const submit = () => (isNovo.value ? criar() : atualizar())
@@ -194,14 +195,14 @@ onMounted(() => {
               :props="props"
               style="white-space: normal; word-break: break-word; max-width: 10vw"
             >
-              <q-badge v-if="props.row.credito" color="teal-6">Crédito</q-badge>
-              <q-badge v-if="props.row.debito" color="deep-orange-6">Débito</q-badge>
+              <q-badge v-if="props.row.natureza === 'R'" color="green-6">A Receber</q-badge>
+              <q-badge v-else color="orange-7">A Pagar</q-badge>
             </q-td>
           </template>
 
-          <template #body-cell-tipomovimentotitulo="props">
+          <template #body-cell-movimentaportador="props">
             <q-td :props="props" class="text-grey-8">
-              {{ props.row.tipomovimentotitulo || '—' }}
+              <q-icon v-if="props.row.movimentaportador" name="done" size="xs" />
             </q-td>
           </template>
 
@@ -286,11 +287,15 @@ onMounted(() => {
               </div>
 
               <div class="col-12">
-                <MgSelectTipoMovimentoTitulo
-                  v-model="model.codtipomovimentotitulo"
+                <q-select
+                  v-model="model.natureza"
+                  :options="naturezaOptions"
+                  emit-value
+                  map-options
                   outlined
-                  clearable
-                  label="Tipo de Movimento"
+                  label="Natureza"
+                  hint="O sinal com que o título nasce"
+                  :rules="[(v) => !!v]"
                 />
               </div>
 
@@ -300,11 +305,11 @@ onMounted(() => {
               <div class="col-6">
                 <q-checkbox v-model="model.pagar" label="Pagar" />
               </div>
-              <div class="col-6">
-                <q-checkbox v-model="model.credito" label="Crédito" />
-              </div>
-              <div class="col-6">
-                <q-checkbox v-model="model.debito" label="Débito" />
+              <div class="col-12">
+                <q-checkbox
+                  v-model="model.movimentaportador"
+                  label="A implantação movimenta o portador"
+                />
               </div>
 
               <div class="col-12">

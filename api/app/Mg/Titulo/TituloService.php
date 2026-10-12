@@ -3,19 +3,33 @@
 namespace Mg\Titulo;
 
 use Carbon\Carbon;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
 use Mg\Portador\Portador;
 
 class TituloService
 {
-    const TIPO_VALE = 3;
-    const TIPO_RH = 952;
+    // codigos dos tipos de titulo (renumerados no M8.1 do doc-3: 1xx a
+    // receber, 2xx a pagar; ver api/database/tipo_titulo_limpeza.sql)
+    const TIPO_DUPLICATA_RECEBER = 100;
+    const TIPO_DUPLICATA_PAGAR = 200;
+    const TIPO_VALE = 210;
+    const TIPO_CREDITO_CLIENTE = 212;
+    const TIPO_RH = 220;
+
+    // credito que a propria venda gera e sai como vale impresso (vale compras
+    // e credito da devolucao). Para PAGAR no PDV vale qualquer titulo com
+    // saldo de credito.
+    const TIPOS_VALE_PDV = [self::TIPO_VALE, self::TIPO_CREDITO_CLIENTE];
 
     // Regras de atualização de título em atraso (porta de MGJuros)
     const DIAS_TOLERANCIA_ATRASO = 3;
     const PERCENTUAL_JUROS_MES = 4.0;
     const PERCENTUAL_MULTA = 2.0;
 
-    public static function criar(array $dados): Titulo
+    // $pagamento: titulo que movimenta portador (vale colaborador,
+    // adiantamento) nasce com o dinheiro que andou (M8 doc-3)
+    public static function criar(array $dados, ?Pagamento $pagamento = null): Titulo
     {
         $tipoTitulo = TipoTitulo::findOrFail($dados['codtipotitulo']);
 
@@ -41,59 +55,85 @@ class TituloService
             'observacao'       => $dados['observacao'] ?? null,
         ]);
 
-        // se nao informou numero, usa data emissao + sufixo (1), (2)... se duplicado
+        // se nao informou numero, usa data emissao + sufixo (1), (2)... se duplicado;
+        // com `sufixo`, o numero informado tambem ganha o sufixo (repasse do
+        // item do caixa, M13 doc-3)
         if (empty($titulo->numero) && !empty($titulo->emissao)) {
             $titulo->numero = Carbon::parse($titulo->emissao)->format('Y-m-d');
             self::aplicarSufixoNumero($titulo);
+        } elseif (!empty($dados['sufixo'])) {
+            self::aplicarSufixoNumero($titulo);
         }
 
-        // débito/crédito conforme tipotitulo
-        if ($tipoTitulo->credito) {
-            $titulo->credito = $valor;
-            $titulo->debito = 0;
-        } else {
-            $titulo->credito = 0;
-            $titulo->debito = $valor;
-        }
-
-        $titulo->sistema = Carbon::now();
+        // sinal conforme a natureza do tipo: a pagar é negativo
+        $titulo->valor = $tipoTitulo->ehReceber() ? $valor : -$valor;
 
         // valida unicidade do numero por pessoa
         self::validarNumeroUnico($titulo);
 
-        $titulo->save();
+        self::implantar($titulo, $pagamento);
 
         return self::carregar($titulo->codtitulo);
+    }
+
+    /**
+     * Grava um título novo e lança a implantação dele. Todo título nasce por
+     * aqui: quem monta o Titulo na mão chama isto no lugar do save().
+     *
+     * Com $pagamento (título que movimenta portador: vale colaborador,
+     * adiantamento), a implantação é o dinheiro que andou: total = valor,
+     * ligada ao pagamento e no portador dele.
+     */
+    public static function implantar(Titulo $titulo, ?Pagamento $pagamento = null): Titulo
+    {
+        $titulo->save();
+
+        MovimentoTituloService::lancar(
+            $titulo,
+            MovimentoTituloService::TIPO_IMPLANTACAO,
+            (float) $titulo->valor,
+            $pagamento ? ['total' => (float) $titulo->valor] : [],
+            [
+                'codportador'          => $pagamento
+                    ? $pagamento->codportadorDoPagamento()
+                    : $titulo->codportador,
+                'codtituloagrupamento' => $titulo->codtituloagrupamento,
+                'transacao'            => $titulo->transacao,
+                'codpagamento'         => $pagamento->codpagamento ?? null,
+            ]
+        );
+
+        return $titulo;
     }
 
     public static function atualizar(Titulo $titulo, array $dados): Titulo
     {
         $tipoTitulo = TipoTitulo::findOrFail($dados['codtipotitulo'] ?? $titulo->codtipotitulo);
 
-        $geradoAuto = !empty($titulo->codnegocioformapagamento) || !empty($titulo->codtituloagrupamento);
+        $geradoAuto = $titulo->geradoAutomaticamente();
+        // vale/adiantamento: valor e datas são do pagamento (TASK-214)
+        $travado = $geradoAuto || $titulo->nasceuDePagamento();
         $zerado = (float)$titulo->saldo == 0 && !empty($titulo->codtitulo);
 
-        // valor: bloqueado se gerado auto ou já zerado
-        $valorNovo = (float)($dados['valor'] ?? abs((float)$titulo->debito - (float)$titulo->credito));
-        if (!$geradoAuto && !$zerado) {
+        // valor: bloqueado se gerado auto, nascido de pagamento ou já zerado
+        $valorAntigo = (float)$titulo->valor;
+        $valorNovo = (float)($dados['valor'] ?? abs($valorAntigo));
+        if (!$travado && !$zerado) {
             if ($valorNovo <= 0) {
                 throw new \InvalidArgumentException('Valor deve ser maior que zero!');
             }
         }
 
-        // não pode trocar tipo entre crédito e débito
+        // não pode trocar o tipo por um de outra natureza: viraria o sinal do título
         if ((int)$dados['codtipotitulo'] !== (int)$titulo->codtipotitulo) {
             $antigo = TipoTitulo::find($titulo->codtipotitulo);
-            if ($antigo && (
-                (bool)$antigo->credito !== (bool)$tipoTitulo->credito ||
-                (bool)$antigo->debito !== (bool)$tipoTitulo->debito
-            )) {
-                throw new \InvalidArgumentException('Impossível alterar o tipo de título entre Débito e Crédito!');
+            if ($antigo && $antigo->natureza !== $tipoTitulo->natureza) {
+                throw new \InvalidArgumentException('Impossível alterar o tipo de título entre A Receber e A Pagar!');
             }
         }
 
         // Regras de edição (legado MGsis): apenas Numero e Valor são travados.
-        // Numero: travado se gerado automaticamente (negocio/agrupamento).
+        // Numero: travado se gerado automaticamente (negocio/agrupamento/maquineta).
         // Valor: travado se gerado automaticamente OU já liquidado/estornado.
 
         // campos sempre editáveis
@@ -107,25 +147,22 @@ class TituloService
         // vencimento (data prática): sempre editável até liquidar
         $titulo->vencimento = $dados['vencimento'] ?? $titulo->vencimento;
 
-        // numero, emissao, transacao, vencimentooriginal: travados se gerado automaticamente
-        if (!$geradoAuto) {
+        // numero, emissao, transacao: travados se gerado automaticamente ou nascido de pagamento
+        if (!$travado) {
             if (array_key_exists('numero', $dados)) {
                 $titulo->numero = !empty($dados['numero']) ? $dados['numero'] : $titulo->codtitulo;
             }
-            $titulo->vencimentooriginal = $dados['vencimentooriginal'] ?? $titulo->vencimentooriginal;
             $titulo->emissao = $dados['emissao'] ?? $titulo->emissao;
             $titulo->transacao = $dados['transacao'] ?? $titulo->transacao;
         }
+        // vencimentooriginal: travado se gerado automaticamente
+        if (!$geradoAuto) {
+            $titulo->vencimentooriginal = $dados['vencimentooriginal'] ?? $titulo->vencimentooriginal;
+        }
 
-        // valor: travado se gerado automaticamente ou já zerado
-        if (!$geradoAuto && !$zerado) {
-            if ($tipoTitulo->credito) {
-                $titulo->credito = $valorNovo;
-                $titulo->debito = 0;
-            } else {
-                $titulo->credito = 0;
-                $titulo->debito = $valorNovo;
-            }
+        // valor: travado se gerado automaticamente, nascido de pagamento ou já zerado
+        if (!$travado && !$zerado) {
+            $titulo->valor = $tipoTitulo->ehReceber() ? $valorNovo : -$valorNovo;
         }
 
         // portador: sempre aceita o que vem do request.
@@ -138,6 +175,18 @@ class TituloService
 
         $titulo->save();
 
+        // mudou o valor: a diferença entra como ajuste
+        $diferenca = round((float)$titulo->valor - $valorAntigo, 2);
+        if ($diferenca != 0) {
+            MovimentoTituloService::lancar(
+                $titulo,
+                MovimentoTituloService::TIPO_AJUSTE,
+                $diferenca,
+                [],
+                ['codportador' => $titulo->codportador]
+            );
+        }
+
         return self::carregar($titulo->codtitulo);
     }
 
@@ -147,18 +196,18 @@ class TituloService
             'Pessoa:codpessoa,fantasia,pessoa,cnpj,fisica',
             'Filial:codfilial,filial',
             'Portador:codportador,portador,codbanco,codfilial',
-            'TipoTitulo:codtipotitulo,tipotitulo,credito,debito,pagar,receber',
+            'TipoTitulo:codtipotitulo,tipotitulo,natureza,pagar,receber',
             'ContaContabil:codcontacontabil,contacontabil',
             'UsuarioCriacao:codusuario,usuario',
             'UsuarioAlteracao:codusuario,usuario',
-            'NegocioFormaPagamento:codnegocioformapagamento,codnegocio',
+            'NegocioParcela:codnegocioparcela,codnegocio',
             'TituloAgrupamento:codtituloagrupamento,emissao',
             'MovimentoTituloS' => function ($q) {
-                $q->orderBy('criacao')->orderBy('sistema')->orderBy('codmovimentotitulo')
+                $q->orderBy('criacao')->orderBy('codmovimentotitulo')
                     ->with([
                         'TipoMovimentoTitulo:codtipomovimentotitulo,tipomovimentotitulo',
                         'Portador:codportador,portador',
-                        'NegocioFormaPagamento:codnegocioformapagamento,codnegocio',
+                        'Pagamento:codpagamento,codnegocio',
                         'UsuarioCriacao:codusuario,usuario',
                     ]);
             },
@@ -170,28 +219,39 @@ class TituloService
         ])->findOrFail($codtitulo);
     }
 
-    public static function estornar(Titulo $titulo)
+    // Título que nasceu com dinheiro (vale colaborador, adiantamento): o
+    // estorno devolve o total ao portador e cancela o pagamento
+    // $cancelarPagamento = false: o titulo sai, o pagamento que nasceu com ele
+    // fica para quem chamou cancelar (PagamentoTituloService::cancelar)
+    public static function estornar(Titulo $titulo, ?string $justificativa = null, bool $cancelarPagamento = true)
     {
         if (!empty($titulo->estornado)) {
-            throw new \Exception("Titulo já está estornado!", 1);
+            abort(422, 'Titulo já está estornado!');
         }
 
         // só pode estornar título não movimentado
-        if (round((float)$titulo->debito - (float)$titulo->credito, 2) != round((float)$titulo->saldo, 2)) {
-            throw new \Exception("Impossível estornar um título movimentado!", 1);
+        if (round((float)$titulo->valor, 2) != round((float)$titulo->saldo, 2)) {
+            abort(422, 'Impossível estornar um título movimentado!');
         }
 
-        $mov = new MovimentoTitulo([
-            'codtitulo' => $titulo->codtitulo,
-            'codtipomovimentotitulo' => MovimentoTituloService::TIPO_ESTORNO_IMPLANTACAO,
-            'debito' => $titulo->creditosaldo,
-            'credito' => $titulo->debitosaldo,
-            'transacao' => date('Y-m-d'),
-            'codtituloagrupamento' => $titulo->codtituloagrupamento,
-            'codportador' => $titulo->codportador,
-            'sistema' => date('Y-m-d H:i:s'),
-        ]);
-        $mov->save();
+        $implantacao = $titulo->MovimentoTituloS()->orderBy('codmovimentotitulo')->first();
+        $pagamento = optional($implantacao)->Pagamento;
+
+        MovimentoTituloService::lancar(
+            $titulo,
+            MovimentoTituloService::TIPO_ESTORNO_IMPLANTACAO,
+            -1 * (float)$titulo->saldo,
+            $pagamento ? ['total' => -1 * (float) $implantacao->total] : [],
+            [
+                'codmovimentotituloestorno' => optional($implantacao)->codmovimentotitulo,
+                'codtituloagrupamento'      => $titulo->codtituloagrupamento,
+                'codportador'               => $pagamento ? $implantacao->codportador : $titulo->codportador,
+                'codpagamento'              => $pagamento->codpagamento ?? null,
+            ]
+        );
+        if ($pagamento && $cancelarPagamento) {
+            PagamentoService::cancelar($pagamento, $justificativa ?: "Estorno do título {$titulo->numero}");
+        }
         return self::carregar($titulo->codtitulo);
     }
 
@@ -219,7 +279,9 @@ class TituloService
         }
     }
 
-    private static function aplicarSufixoNumero(Titulo $titulo): void
+    // o numero ja' usado pela pessoa ganha " (1)", " (2)"... (o titulo da
+    // venda reaberta que nasce de novo, com o estornado ainda la', TASK-30)
+    public static function aplicarSufixoNumero(Titulo $titulo): void
     {
         if (empty($titulo->numero) || empty($titulo->codpessoa)) return;
         $base = $titulo->numero;

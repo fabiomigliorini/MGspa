@@ -7,6 +7,8 @@ const defaultFilters = () => ({
   cpf: null,
   sort: 'horario',
   negocio: 'todos',
+  // sem uso: PIX que ninguém usou num pagamento nem marcou (TASK-219)
+  uso: 'todos',
   horarioinicial: null,
   horariofinal: null,
   valorinicial: null,
@@ -29,6 +31,7 @@ export const usePixStore = defineStore(
       if (f.cpf) count++
       if (f.sort !== 'horario') count++
       if (f.negocio !== 'todos') count++
+      if (f.uso !== 'todos') count++
       if (f.horarioinicial) count++
       if (f.horariofinal) count++
       if (f.valorinicial) count++
@@ -60,6 +63,34 @@ export const usePixStore = defineStore(
       filters.value = defaultFilters()
     }
 
+    // o uso do PIX relido do servidor, na linha da lista
+    function aplicarUso(uso) {
+      const item = items.value.find((i) => i.codpix == uso.codpix)
+      if (item) {
+        item.utilizacao = uso.utilizacao
+        item.usuarioutilizacao = uso.usuarioutilizacao
+        item.codpagamento = uso.codpagamento
+      }
+    }
+
+    // o PIX para usar: valor, data, conta, a pessoa do pagador e se já foi usado
+    async function carregarUso(codpix) {
+      const { data } = await api.get(`v1/pix/${codpix}`)
+      aplicarUso(data.data)
+      return data.data
+    }
+
+    // à mão, no PIX sem pagamento ligado
+    async function marcar(codpix) {
+      const { data } = await api.post(`v1/pix/${codpix}/utilizacao`)
+      aplicarUso(data.data)
+    }
+
+    async function desmarcar(codpix) {
+      const { data } = await api.delete(`v1/pix/${codpix}/utilizacao`)
+      aplicarUso(data.data)
+    }
+
     return {
       filters,
       items,
@@ -69,6 +100,9 @@ export const usePixStore = defineStore(
       activeFiltersCount,
       fetchItems,
       clearFilters,
+      carregarUso,
+      marcar,
+      desmarcar,
     }
   },
   {

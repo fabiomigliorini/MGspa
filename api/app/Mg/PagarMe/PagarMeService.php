@@ -7,9 +7,11 @@ use Illuminate\Support\Facades\Storage;
 use Mg\Filial\Filial;
 use Mg\Negocio\Negocio;
 use Mg\Pessoa\Pessoa;
-use Mg\Negocio\NegocioFormaPagamento;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoService;
+use Mg\Maquineta\Maquineta;
+use Mg\Maquineta\MaquinetaService;
 use Mg\Negocio\NegocioService;
-use Mg\FormaPagamento\FormaPagamento;
 
 use Carbon\Carbon;
 
@@ -61,6 +63,7 @@ class PagarMeService
             $reg->apelido = $serial;
             $reg->codfilial = $codfilial;
             $reg->save();
+            MaquinetaService::daPagarMePos($reg);
         }
         return $reg;
     }
@@ -342,38 +345,101 @@ class PagarMeService
     }
 
 
-    public static function vincularNegocioFormaPagamento(PagarMePedido $ped)
+    // Pedido pago da venda aberta vira o pagamento efetivado da venda (M4
+    // doc-3). Fora de uma venda (baixa de titulos, adiantamento, ou passado
+    // direto na maquininha) nao vira pagamento sozinho: a tela que cobrou
+    // grava o pagamento ao finalizar (pagar); fechada antes, o cartao se
+    // lanca 'a mao (TASK-220). Venda cancelada: o pagamento foi cancelado
+    // junto e nao volta.
+    public static function vincularPagamento(PagarMePedido $ped)
     {
-        if (empty($ped->codnegocio)) {
-            return false;
-        }
-
         if ($ped->valorpagoliquido <= 0) {
-            NegocioFormaPagamento::where([
-                'codpagarmepedido' => $ped->codpagarmepedido,
-            ])->delete();
+            foreach (Pagamento::where('codpagarmepedido', $ped->codpagarmepedido)->get() as $pag) {
+                PagamentoService::cancelar($pag, 'Pedido PagarMe cancelado ou sem pagamento');
+            }
+            return true;
+        }
+        if (empty($ped->codnegocio) || $ped->Negocio->codnegociostatus == NegocioService::STATUS_CANCELADO) {
             return true;
         }
 
-        $fp = FormaPagamento::firstOrNew([
-            'pagarme' => true,
-            'integracao' => true
-        ]);
+        $pag = Pagamento::firstOrNew(['codpagarmepedido' => $ped->codpagarmepedido]);
+        PagamentoService::preencher($pag, array_merge(static::cartaoDoPedido($ped), [
+            'codnegocio' => $ped->codnegocio,
+            'codfilial' => $ped->Negocio->codfilial ?? $ped->codfilial,
+            'codpdv' => $ped->Negocio->codpdv ?? $ped->codpdv,
+            'estado' => ($pag->estado == PagamentoService::ESTADO_CANCELADO) ? PagamentoService::ESTADO_PENDENTE : $pag->estado,
+            'cancelamento' => null,
+            'codusuariocancelamento' => null,
+            'justificativa' => null,
+            'codpessoa' => config('services.pagarme.codpessoa'),
+        ]));
+        $pag->save();
+        PagamentoService::efetivar($pag);
+        NegocioService::fecharSePago($ped->Negocio);
 
-        if (!$fp->exists) {
-            $fp->formapagamento = 'Stone PagarMe';
-            $fp->avista = true;
-            $fp->integracao = true;
-            $fp->save();
+        return true;
+    }
+
+    // Cartao cobrado na baixa de titulos ou no adiantamento: o pagamento
+    // nasce quando a tela grava, um por pedido (TASK-220). $campos: codpessoa,
+    // observacoes, referente, codpdv, codfilial.
+    public static function pagar(int $codpagarmepedido, float $valor, array $campos): Pagamento
+    {
+        $ped = PagarMePedido::lockForUpdate()->findOrFail($codpagarmepedido);
+        if ($ped->valorpagoliquido <= 0) {
+            abort(422, 'O pedido da Stone não está pago!');
         }
+        if (!empty($ped->codnegocio)) {
+            abort(422, "O pedido da Stone é da venda #{$ped->codnegocio}!");
+        }
+        $pag = Pagamento::lockForUpdate()->firstOrNew(['codpagarmepedido' => $ped->codpagarmepedido]);
+        if ($pag->exists && $pag->estado != PagamentoService::ESTADO_CANCELADO) {
+            abort(422, "O cartão deste pedido já está no pagamento #{$pag->codpagamento}!");
+        }
+        $cartao = static::cartaoDoPedido($ped);
+        if (abs($cartao['principal'] - round($valor, 2)) > 0.005) {
+            abort(422, 'O cartão é de R$ ' . number_format($cartao['principal'], 2, ',', '.')
+                . ' e a baixa é de R$ ' . number_format($valor, 2, ',', '.') . '!');
+        }
+        // a hora em que o cartao passou
+        $passou = $ped->PagarMePagamentoS->filter(fn ($p) => !$p->valorcancelamento)->max('transacao');
+        PagamentoService::preencher($pag, array_merge($cartao, [
+            'codnegocio' => null,
+            'codfilial' => $campos['codfilial'] ?? $ped->codfilial,
+            'codpdv' => $campos['codpdv'] ?? $ped->codpdv,
+            'estado' => PagamentoService::ESTADO_PENDENTE,
+            'transacao' => $passou ? Carbon::parse($passou) : Carbon::now(),
+            // o pedido volta a ser usado depois do cancelamento (TASK-218):
+            // a mesma linha (um pagamento por pedido), sem o cancelamento
+            'cancelamento' => null,
+            'codusuariocancelamento' => null,
+            'justificativa' => null,
+            'codmaquinetalotecancelamento' => null,
+            'codpessoa' => $campos['codpessoa'] ?? null,
+            'observacoes' => $campos['observacoes'] ?? null,
+            'referente' => $campos['referente'] ?? null,
+        ]));
+        $pag->save();
+        PagamentoService::efetivar($pag);
+        return $pag;
+    }
 
+    // O cartao do pedido: meio, principal e juros do parcelamento,
+    // autorizacao, NSU, parcelas, bandeira e maquineta
+    private static function cartaoDoPedido(PagarMePedido $ped): array
+    {
         $tipo = 99; //Outros
         $autorizacao = null;
+        $nsu = null;
         $bandeira = null;
+        // POS que cobrou; sem ele, o do pedido
+        $pos = $ped->PagarMePos;
         foreach ($ped->PagarMePagamentoS as $pag) {
             if ($pag->valorcancelamento) {
                 continue;
             }
+            $pos = $pag->PagarMePos ?? $pos;
             switch ($pag->tipo) {
                 case 1: //debit
                     $tipo = 4; //Cartão de Débito
@@ -389,35 +455,33 @@ class PagarMeService
                     break;
             }
             $autorizacao = $pag->autorizacao;
+            $nsu = $pag->nsu;
             $bandeira = static::converteBandeiraPagarMeParaBandeiraNfe(
                 $pag->PagarMeBandeira->bandeira
             );
         }
 
-        NegocioFormaPagamento::updateOrCreate(
-            [
-                'codnegocio' => $ped->codnegocio,
-                'autorizacao' => $autorizacao,
-                'codpessoa' => config('services.pagarme.codpessoa')
-            ],
-            [
-                'codpagarmepedido' => $ped->codpagarmepedido,
-                'codformapagamento' => $fp->codformapagamento,
-                'avista' => true,
-                'valorpagamento' => $ped->valor,
-                'valorjuros' => $ped->valorjuros,
-                'valortotal' => $ped->valorpagoliquido,
-                'valortroco' => null,
-                'tipo' => $tipo,
-                'bandeira' => $bandeira,
-                'integracao' => true,
-                'serialmaquineta' => $ped->PagarMePos->serial ?? null,
-            ]
-        );
+        // o que andou e' o pago liquido (menos cancelamento); o juros e' do
+        // parcelamento, o resto e' principal
+        $juros = min(floatval($ped->valorjuros), floatval($ped->valorpagoliquido));
+        return [
+            'meio' => $tipo,
+            'principal' => round($ped->valorpagoliquido - $juros, 2),
+            'juros' => $juros,
+            'valortroco' => null,
+            'autorizacao' => $autorizacao,
+            // NSU e parcelas, como no relatorio da maquineta (M9.8)
+            'nsu' => $nsu,
+            'parcelas' => $ped->parcelas,
+            'bandeira' => $bandeira,
+            'codmaquineta' => $pos ? MaquinetaService::daPagarMePos($pos)->codmaquineta : null,
+        ];
+    }
 
-        NegocioService::fecharSePago($ped->Negocio);
-
-        return true;
+    // a maquineta do pedido (o POS que cobrou; sem ele, o do pedido)
+    public static function maquinetaDoPedido(PagarMePedido $ped): ?Maquineta
+    {
+        return Maquineta::find(static::cartaoDoPedido($ped)['codmaquineta']);
     }
 
     public static function converteBandeiraPagarMeParaBandeiraNfe($bandeiraPagarMe)
@@ -582,7 +646,7 @@ class PagarMeService
         static::fecharPedidoSePago($ped);
 
         // cria forma de pagamento e atrela ao negocio
-        static::vincularNegocioFormaPagamento($ped);
+        static::vincularPagamento($ped);
 
         return $ped->fresh();
     }

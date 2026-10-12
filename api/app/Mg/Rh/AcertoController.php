@@ -42,7 +42,8 @@ class AcertoController extends Controller
                 $request->input('titulos', []),
                 $request->input('forma'),
                 $request->input('observacao'),
-                $request->input('data')
+                $request->input('data'),
+                $request->input('codportador')
             );
             DB::commit();
             return new PeriodoColaboradorAcertoResource($resultado['acerto']);
@@ -125,6 +126,10 @@ class AcertoController extends Controller
 
         $pdf = AcertoReciboPdf::gerar($codperiodo, [], $codunidadenegocio);
 
+        if ($pdf === '') {
+            abort(404, 'Nenhum acerto com valores: não tem recibo.');
+        }
+
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename="recibos.pdf"',
@@ -137,23 +142,24 @@ class AcertoController extends Controller
 
         $pdf = AcertoReciboPdf::gerar($codperiodo, [$codperiodocolaborador]);
 
+        if ($pdf === '') {
+            abort(404, 'Nenhum acerto com valores: não tem recibo.');
+        }
+
         return response($pdf, 200, [
             'Content-Type'        => 'application/pdf',
             'Content-Disposition' => 'inline; filename="recibos.pdf"',
         ]);
     }
 
-    public function reciboAcerto(int $codperiodo, int $codperiodocolaboradoracerto, Request $request)
+    public function reciboAcerto(int $codperiodo, int $codperiodocolaboradoracerto)
     {
         Autorizador::autoriza(['Recursos Humanos']);
 
-        $tipo = $request->input('tipo');
-        $tipo = in_array($tipo, ['pagamento', 'recebimento'], true) ? $tipo : null;
-
-        $pdf = AcertoReciboPdf::gerarPorAcerto($codperiodocolaboradoracerto, $tipo);
+        $pdf = AcertoReciboPdf::gerarPorAcerto($codperiodocolaboradoracerto);
 
         if ($pdf === '') {
-            abort(404, 'Acerto inativo ou nao encontrado.');
+            abort(404, 'Acerto inativo, não encontrado ou sem valores: não tem recibo.');
         }
 
         return response($pdf, 200, [

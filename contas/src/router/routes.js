@@ -11,19 +11,6 @@ const routes = [
         redirect: { name: 'pix' },
       },
       {
-        path: 'portador/saldos/:dia(\\d{4}-\\d{2}-\\d{2})?',
-        name: 'portador-saldos',
-        component: () => import('pages/SaldosPage.vue'),
-        meta: {
-          auth: true,
-          title: 'Saldos',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
-          leftDrawer: defineAsyncComponent(
-            () => import('components/drawers/SaldosFiltrosDrawer.vue'),
-          ),
-        },
-      },
-      {
         path: 'banco',
         name: 'banco',
         component: () => import('pages/banco/Index.vue'),
@@ -112,16 +99,117 @@ const routes = [
         },
       },
       {
+        // painel dos portadores (doc-4): substitui Saldos e Cadastros → Portadores
         path: 'portador',
         name: 'portador',
         component: () => import('pages/portador/Index.vue'),
         meta: {
           auth: true,
           title: 'Portadores',
-          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
           leftDrawer: defineAsyncComponent(
             () => import('components/drawers/PortadorFiltrosDrawer.vue'),
           ),
+        },
+      },
+      {
+        // o portador e o período (doc-4)
+        path: 'portador/:codportador(\\d+)/:codportadorperiodo(\\d+)?',
+        name: 'portador-detalhe',
+        component: () => import('pages/portador/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Portador',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+        },
+      },
+      {
+        path: 'maquineta',
+        name: 'maquineta',
+        component: () => import('pages/maquineta/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Maquinetas',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/MaquinetaFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'caixa-item',
+        name: 'caixa-item',
+        component: () => import('pages/caixaItem/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Itens do Caixa',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
+        path: 'caixa-item/:codcaixaitem(\\d+)',
+        name: 'caixa-item-detalhe',
+        component: () => import('pages/caixaItem/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Item do Caixa',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO],
+        },
+      },
+      {
+        path: 'maquineta/:codmaquineta(\\d+)/:codmaquinetalote(\\d+)?',
+        name: 'maquineta-detalhe',
+        component: () => import('pages/maquineta/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Maquineta',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+        },
+      },
+      {
+        // painel (TASK-203): sem filial, as filiais com o total de pendências; com filial, tudo
+        // pendente nela, cada item levando à tela que resolve
+        path: 'painel/:codfilial(\\d+)?',
+        name: 'painel',
+        component: () => import('pages/painel/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Painel',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+        },
+      },
+      {
+        path: 'ocorrencia',
+        name: 'ocorrencia',
+        component: () => import('pages/ocorrencia/Index.vue'),
+        meta: {
+          auth: true,
+          title: 'Ocorrências',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/OcorrenciaFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        // a ocorrência e as auditorias amarradas a ela (TASK-209)
+        path: 'ocorrencia/:codocorrencia(\\d+)',
+        name: 'ocorrencia-detalhe',
+        component: () => import('pages/ocorrencia/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Ocorrência',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+        },
+      },
+      {
+        path: 'fechamento/venda/:id(\\d+)',
+        name: 'fechamento-venda',
+        component: () => import('pages/fechamento/Venda.vue'),
+        meta: {
+          auth: true,
+          title: 'Venda com Diferença',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
         },
       },
       {
@@ -249,12 +337,12 @@ const routes = [
         },
       },
       {
-        path: 'liquidacao-titulo',
-        name: 'liquidacao-titulo',
-        component: () => import('pages/liquidacaoTitulo/Index.vue'),
+        path: 'pagamento',
+        name: 'pagamento',
+        component: () => import('pages/pagamento/Index.vue'),
         meta: {
           auth: true,
-          title: 'Liquidações de Títulos',
+          title: 'Pagamentos',
           permissions: [
             PERMISSOES.ADMINISTRADOR,
             PERMISSOES.FINANCEIRO,
@@ -263,17 +351,30 @@ const routes = [
             PERMISSOES.CAIXA,
           ],
           leftDrawer: defineAsyncComponent(
-            () => import('components/drawers/LiquidacaoTituloFiltrosDrawer.vue'),
+            () => import('components/drawers/PagamentoFiltrosDrawer.vue'),
           ),
         },
       },
       {
-        path: 'liquidacao-titulo/nova',
-        name: 'liquidacao-titulo-nova',
-        component: () => import('pages/liquidacaoTitulo/Nova.vue'),
+        path: 'pagamento/divergencias',
+        name: 'pagamento-divergencias',
+        component: () => import('pages/pagamento/Divergencias.vue'),
         meta: {
           auth: true,
-          title: 'Nova Liquidação',
+          title: 'Divergências',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/DivergenciaFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'pagamento/novo',
+        name: 'pagamento-novo',
+        component: () => import('pages/pagamento/Nova.vue'),
+        meta: {
+          auth: true,
+          title: 'Receber ou Pagar Títulos',
           permissions: [
             PERMISSOES.ADMINISTRADOR,
             PERMISSOES.FINANCEIRO,
@@ -284,12 +385,12 @@ const routes = [
         },
       },
       {
-        path: 'liquidacao-titulo/:id(\\d+)',
-        name: 'liquidacao-titulo-detalhe',
-        component: () => import('pages/liquidacaoTitulo/Detalhe.vue'),
+        path: 'pagamento/:id(\\d+)',
+        name: 'pagamento-detalhe',
+        component: () => import('pages/pagamento/Detalhe.vue'),
         meta: {
           auth: true,
-          title: 'Liquidação',
+          title: 'Pagamento',
           permissions: [
             PERMISSOES.ADMINISTRADOR,
             PERMISSOES.FINANCEIRO,

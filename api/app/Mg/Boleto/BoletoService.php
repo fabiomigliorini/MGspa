@@ -195,7 +195,8 @@ class BoletoService
                     'fatura' => $titulo->fatura,
                     'emissao' => $titulo->emissao->toW3cString(),
                     'vencimento' => $titulo->vencimento->toW3cString(),
-                    'debito' => $titulo->debito,
+                    // a tela de boletos (quasar v1) le^ a chave "debito"
+                    'debito' => $titulo->valor,
                     'saldo' => $titulo->saldo,
                     'remessa' => $titulo->remessa,
                 ];
@@ -232,7 +233,7 @@ class BoletoService
                 select
                     codportador,
                     remessa,
-                    sum(debito) as total,
+                    sum(valor) as total,
                     sum(saldo) as saldo,
                     count(codtitulo) as quantidade
                 from tbltitulo
@@ -265,12 +266,13 @@ class BoletoService
             $tmp = $reg->only([
                 "codtitulo",
                 "numero",
-                "debito",
                 "nossonumero",
                 "saldo",
                 "codfilial",
                 "codpessoa",
             ]);
+            // a tela de boletos (quasar v1) le^ a chave "debito"
+            $tmp['debito'] = $reg->valor;
             $tmp['emissao'] = $reg->emissao->toW3cString();
             $tmp['vencimento'] = $reg->vencimento->toW3cString();
             $tmp['filial'] = $reg->Filial->filial;

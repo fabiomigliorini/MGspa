@@ -70,11 +70,18 @@
 }
 
 // Modais da carga no pátio (Operação, Pesagem, Classificação, Origem/Destino):
-// largura do modal de pagamento do /negocios (ReceberDialog) e metade da altura
+// largura do modal de pagamento do /negocios (ReceberDialog) e 60% da altura
 // da tela — o que passar disso rola por dentro, com o rodapé fixo. No celular o
 // q-dialog abre `maximized` e a classe não entra.
 .carga-dialog {
   width: 560px;
   max-width: 95vw;
-  height: 50vh;
+  height: 60vh;
+}
+
+// O hover/foco do q-item é um retângulo: sem cortar, vaza pelos cantos arredondados
+// do card ou da lista. Card de dialog não é afetado (.q-dialog__inner > div ganha).
+.q-card,
+.q-list.rounded-borders {
+  overflow: hidden;
 }

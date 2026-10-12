@@ -8,6 +8,7 @@ import { listagemStore } from 'stores/listagem'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import DialogUnificarComanda from './DialogUnificarComanda.vue'
 import BotaoValeCompras from './BotaoValeCompras.vue'
+import DialogPesquisaProduto from './DialogPesquisaProduto.vue'
 import { conflitosComanda } from '../../utils/comanda.js'
 import { Notify, Dialog, debounce } from 'quasar'
 import { falar } from '../../utils/falar.js'
@@ -244,11 +245,13 @@ const adicionarPeloCodigoBarras = async (txt) => {
     }
   }
 
+  // a quantidade e' desta leitura: le antes de esperar o backend, senao um "2*"
+  // digitado pro proximo item enquanto este e' procurado online iria pra este
+  const qtd = parseFloat(quantidade.value)
+  quantidade.value = 1
   let ret = await sProduto.buscarBarras(txt)
 
   if (ret.length == 1) {
-    const qtd = parseFloat(quantidade.value)
-    quantidade.value = 1
     await sNegocio.itemAdicionar(
       ret[0].codprodutobarra,
       ret[0].barras,
@@ -566,95 +569,19 @@ onUnmounted(() => {
   </q-dialog>
 
   <!-- Pesquisa de Produto -->
-  <q-dialog v-model="sProduto.dialogPesquisa" maximized>
-    <q-card>
-      <q-card-section class="bg-primary text-white">
-        <div class="row q-col-gutter-sm">
-          <MgInput
-            outlined
-            autofocus
-            v-model="sProduto.textoPesquisa"
-            label="Pesquisa"
-            ref="refPesquisa"
-            bg-color="white"
-            class="col"
-            @keydown.enter.prevent="sProduto.pesquisar()"
-          >
-            <template v-slot:append>
-              <q-btn round dense flat icon="close" @click="sProduto.textoPesquisa = ''">
-                <q-tooltip class="bg-accent">Limpar</q-tooltip>
-              </q-btn>
-              <q-btn round dense flat icon="search" @click="sProduto.pesquisar()">
-                <q-tooltip class="bg-accent">Pesquisar</q-tooltip>
-              </q-btn>
-              <q-btn round dense flat icon="logout" @click="sProduto.dialogPesquisa = false">
-                <q-tooltip class="bg-accent">Fechar</q-tooltip>
-              </q-btn>
-            </template>
-          </MgInput>
-          <q-select
-            outlined
-            borderless
-            v-model="sProduto.sortPesquisa"
-            :options="['Alfabética', 'Preço', 'Código', 'Barras']"
-            label="Ordem"
-            bg-color="white"
-            style="width: 130px"
-            @update:model-value="sProduto.pesquisar()"
-          />
-        </div>
-      </q-card-section>
-
-      <q-card-section class="q-pa-none q-ma-none">
-        <div class="row q-pa-md q-col-gutter-md">
-          <template
-            v-for="produto in sProduto.resultadoPesquisa"
-            v-bind:key="produto.codprodutobarra"
-          >
-            <div class="col-xl-2 col-lg-2 col-md-3 col-sm-3 col-xs-6">
-              <q-card
-                v-ripple
-                class="cursor-pointer q-hoverable"
-                @click="
-                  adicionarPelaListagem(
-                    produto.codprodutobarra,
-                    produto.barras,
-                    produto.codproduto,
-                    produto.produto,
-                    produto.codimagem,
-                    produto.preco,
-                  )
-                "
-              >
-                <span class="q-focus-helper"></span>
-                <q-img ratio="1" :src="sProduto.urlImagem(produto.codimagem)" />
-
-                <q-card-section>
-                  <div class="absolute" style="top: 0; right: 5px; transform: translateY(-37px)">
-                    <q-chip color="grey-2" text-color="grey-7">
-                      {{ produto.sigla }}
-                      <template v-if="produto.quantidade > 0">
-                        C/{{ formataNumero(produto.quantidade, 0) }}
-                      </template>
-                    </q-chip>
-                  </div>
-
-                  <div class="text-h5">
-                    <small class="text-grey-7">R$</small>
-                    {{ formataNumero(produto.preco) }}
-                  </div>
-                  <div class="text-caption text-grey-7">
-                    {{ produto.barras }} |
-                    {{ produto.produto }}
-                  </div>
-                </q-card-section>
-              </q-card>
-            </div>
-          </template>
-        </div>
-      </q-card-section>
-    </q-card>
-  </q-dialog>
+  <dialog-pesquisa-produto
+    @select="
+      (p) =>
+        adicionarPelaListagem(
+          p.codprodutobarra,
+          p.barras,
+          p.codproduto,
+          p.produto,
+          p.codimagem,
+          p.preco,
+        )
+    "
+  />
 
   <dialog-unificar-comanda
     v-model="dialogConflito"

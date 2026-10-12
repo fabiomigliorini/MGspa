@@ -24,6 +24,13 @@ class PixCobResource extends Resource
         }
         unset($ret['Portador']);
         $ret['portador'] = $this->Portador->portador;
+        // pagamento que a confirmacao criou (o PIX QR da venda)
+        $ret['codpagamento'] = \Mg\Pagamento\Pagamento::where('codpixcob', $this->codpixcob)
+            ->where('estado', '!=', \Mg\Pagamento\PagamentoService::ESTADO_CANCELADO)
+            ->value('codpagamento');
+        // o PIX que pagou a cobranca: fora da venda, o wizard grava o
+        // pagamento com ele (TASK-219)
+        $ret['codpix'] = $this->PixS()->orderBy('codpix')->value('codpix');
         $ret['PixS'] = [];
         foreach ($this->PixS as $pix) {
             $retPix = $pix->toArray();

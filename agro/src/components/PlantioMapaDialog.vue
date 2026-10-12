@@ -107,6 +107,15 @@ function filtrarTalhoes(termo, update) {
   })
 }
 
+// A safra escolhida em Operação manda: com `codsafra` recebido o mapa abre
+// nela e NÃO oferece trocar (senão o talhão sobrescrevia a safra da carga).
+// Só carga ainda sem safra escolhe a safra aqui.
+const safraTravada = computed(() => props.codsafra != null)
+const rotuloSafraTravada = computed(() => {
+  const s = opcoesSafra.value.find((o) => o.codsafra === props.codsafra)
+  return s ? `${s.cultura} · ${s.safra}` : null
+})
+
 // Ao abrir, parte do que a carga já tem (safra e talhão atuais); sem isso,
 // primeira safra e a única fazenda (se só houver uma).
 watch(
@@ -114,12 +123,11 @@ watch(
   (aberto) => {
     if (!aberto) return
     const atual = props.codplantio ? store.plantioPorId(props.codplantio) : null
-    safraSel.value =
-      atual?.codsafra ||
-      (opcoesSafra.value.some((s) => s.codsafra === props.codsafra) ? props.codsafra : null) ||
-      opcoesSafra.value[0]?.codsafra ||
-      null
-    fazendaSel.value = atual?.codfazenda || null
+    safraSel.value = safraTravada.value
+      ? props.codsafra
+      : atual?.codsafra || opcoesSafra.value[0]?.codsafra || null
+    fazendaSel.value =
+      atual && atual.codsafra === safraSel.value ? atual.codfazenda || null : null
     autoFazenda()
   },
 )
@@ -151,8 +159,11 @@ function escolher(codplantio) {
         <q-btn flat round dense icon="close" v-close-popup tabindex="-1" />
       </q-card-section>
 
-      <!-- Passo 1: cultura / safra -->
-      <q-card-section class="q-py-sm">
+      <!-- Passo 1: cultura / safra (só quando a carga ainda não tem safra) -->
+      <q-card-section v-if="safraTravada" class="q-py-sm text-caption text-grey-7">
+        Safra da carga: <b>{{ rotuloSafraTravada || '—' }}</b> (definida em Operação)
+      </q-card-section>
+      <q-card-section v-else class="q-py-sm">
         <div class="text-caption text-grey-7 q-mb-xs">1. Cultura / safra</div>
         <div class="row q-gutter-xs">
           <q-chip

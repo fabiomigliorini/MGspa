@@ -198,6 +198,7 @@ function excluirCambio(f, c) {
                 :sacas="sacasTravadas(f)"
                 :tributos="f.tributos || []"
                 :pesosaca="pesosaca"
+                :liquido="n(f.liquidobrl)"
               />
 
               <!-- Travas de câmbio + botão travar (US$) -->

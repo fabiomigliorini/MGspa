@@ -34,6 +34,7 @@ const { unidadesAtivas } = storeToRefs(store)
 // Providos pelo CargaForm.vue.
 const persistirBloco = inject('persistirBloco')
 const concluirEtapa = inject('concluirEtapa')
+const proximoPasso = inject('proximoPasso')
 const calc = inject('calc')
 const finalizando = inject('finalizando')
 
@@ -77,6 +78,7 @@ function rotuloUnidade(cod) {
 // ---- Edição (cópia local — clone do array de pontos + codsafra, que pode
 // mudar junto se o talhão escolhido pertencer a outra safra) ----
 const dialogAberto = ref(false)
+const formRef = ref(null)
 const edicao = ref({ pontos: [], codsafra: null })
 // Aberto pelo botão "Notas fiscais" (etapa FISCAL da expedição): número e valor
 // da NF de cada contrato de destino são obrigatórios e confirmar AVANÇA a carga
@@ -137,10 +139,10 @@ function setRotuloPonto(p) {
   else if (p.contatipo === 'UNIDADE') p.rotulo = rotuloUnidade(p.codunidadearmazenadora)
   else if (p.contatipo === 'CONTRATO') p.rotulo = store.rotuloContrato(p.codcontrato)
 }
-// Talhão escolhido pode ser de OUTRA safra (soja × milho): a carga segue a
-// safra do talhão — e a carga nova, que nasce sem safra, ganha a dela daqui.
+// Carga que ainda não tem safra ganha a do talhão escolhido. Safra já definida
+// em Operação nunca é sobrescrita daqui (o mapa só mostra talhões dela).
 function onPlantioSelecionado(plantio) {
-  if (plantio?.codsafra && plantio.codsafra !== edicao.value.codsafra) {
+  if (plantio?.codsafra && !edicao.value.codsafra) {
     edicao.value.codsafra = plantio.codsafra
   }
 }
@@ -150,7 +152,10 @@ async function salvar() {
   carga.value.codsafra = edicao.value.codsafra
   try {
     const ok = etapaAtual.value ? await concluirEtapa() : await persistirBloco()
-    if (ok) dialogAberto.value = false
+    if (ok) {
+      dialogAberto.value = false
+      proximoPasso('pontos')
+    }
   } catch {
     // erro já notificado por quem persiste (CargaPage) — mantém o dialog aberto
   }
@@ -161,7 +166,7 @@ async function salvar() {
   <q-card flat bordered>
     <q-card-section>
       <div class="row items-center q-mb-sm">
-        <div class="text-subtitle2 text-grey-8">Origem / Destino do grão</div>
+        <div class="text-subtitle1 text-grey-8">Origem / Destino do grão</div>
         <q-space />
         <q-btn
           flat
@@ -177,7 +182,7 @@ async function salvar() {
         <div class="col-12 col-md-6">
           <!-- login/logout: os mesmos ícones que o CargaResumo usa pra origem e
                destino no drawer da direita. -->
-          <div class="text-caption text-grey-6 q-mb-xs">
+          <div class="text-body2 text-grey-6 q-mb-xs">
             <q-icon name="login" size="16px" class="q-mr-xs" />Origem
           </div>
           <div v-if="!origens.length" class="text-grey-5">Nenhuma origem informada.</div>
@@ -191,7 +196,7 @@ async function salvar() {
               <q-tooltip>{{ contatipoMeta(p.contatipo).label }}</q-tooltip>
             </q-icon>
             <div class="col">
-              <div class="text-body1 text-weight-medium ellipsis">
+              <div class="text-h6 text-weight-medium ellipsis">
                 {{ p.rotulo || 'Não informado' }}
               </div>
               <div class="text-caption text-grey-6">
@@ -205,7 +210,7 @@ async function salvar() {
           </div>
         </div>
         <div class="col-12 col-md-6">
-          <div class="text-caption text-grey-6 q-mb-xs">
+          <div class="text-body2 text-grey-6 q-mb-xs">
             <q-icon name="logout" size="16px" class="q-mr-xs" />Destino
           </div>
           <div v-if="!destinos.length" class="text-grey-5">Nenhum destino informado.</div>
@@ -219,7 +224,7 @@ async function salvar() {
               <q-tooltip>{{ contatipoMeta(p.contatipo).label }}</q-tooltip>
             </q-icon>
             <div class="col">
-              <div class="text-body1 text-weight-medium ellipsis">
+              <div class="text-h6 text-weight-medium ellipsis">
                 {{ p.rotulo || 'Não informado' }}
               </div>
               <div class="text-caption text-grey-6">
@@ -240,8 +245,14 @@ async function salvar() {
   </q-card>
 
   <q-dialog v-model="dialogAberto" :maximized="$q.screen.lt.sm">
-    <q-card flat class="column no-wrap" :class="{ 'carga-dialog': !$q.screen.lt.sm }">
-      <q-form class="col column no-wrap" @submit="salvar">
+    <!-- F3 aqui confirma ESTE dialog; o .stop segura o F3 da página. -->
+    <q-card
+      flat
+      class="column no-wrap"
+      :class="{ 'carga-dialog': !$q.screen.lt.sm }"
+      @keydown.f3.prevent.stop="formRef.submit($event)"
+    >
+      <q-form ref="formRef" class="col column no-wrap" @submit="salvar">
         <q-card-section class="col scroll">
           <div class="row items-center text-subtitle1 q-mb-md">
             <template v-if="etapaAtual">
@@ -421,6 +432,9 @@ async function salvar() {
                   >
                     Saldo a entregar: {{ fmt(saldoContrato(p.codcontrato)) }} kg
                     <span v-if="kgDoPonto(p)"> · esta carga ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
+                    <span v-if="(kgDoPonto(p) || 0) > saldoContrato(p.codcontrato) + 1">
+                      · passa {{ fmt(kgDoPonto(p) - saldoContrato(p.codcontrato)) }} kg do contratado
+                    </span>
                   </span>
                 </div>
                 <div
@@ -458,9 +472,9 @@ async function salvar() {
           </div>
         </q-card-section>
         <q-card-actions align="right" class="col-auto">
-          <q-btn label="Cancelar" flat color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn label="Cancelar (Esc)" flat color="grey-8" v-close-popup tabindex="-1" />
           <q-btn
-            :label="rotuloConfirmar"
+            :label="`${rotuloConfirmar} (Enter)`"
             type="submit"
             :flat="!etapaAtual"
             :unelevated="!!etapaAtual"

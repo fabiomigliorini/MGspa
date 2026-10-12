@@ -67,9 +67,14 @@ export const useSafraStore = defineStore('safra', () => {
     salvandoSafra.value = true
     try {
       const f = formSafra.value
+      let copiados = 0
       if (f.codsafra) await api.put(`v1/safra/${f.codsafra}`, f)
-      else await api.post('v1/safra', f)
-      notifySuccess('Safra salva!')
+      else copiados = (await api.post('v1/safra', f)).data?.talhoescopiados || 0
+      notifySuccess(
+        copiados
+          ? `Safra salva — ${copiados} ${copiados === 1 ? 'talhão copiado' : 'talhões copiados'}.`
+          : 'Safra salva!',
+      )
       dialogSafra.value = false
       await carregarSafras()
       if (safra.value?.codsafra === f.codsafra) await carregarSafra(f.codsafra)
@@ -179,7 +184,15 @@ export const useSafraStore = defineStore('safra', () => {
     })
   }
 
-  // Grava só o ha colhido (slider do card) — patcha o plantio local sem recarregar tudo.
+  // Check "Talhão finalizado?": não existe colheita parcial em ha — marcado grava
+  // hacolhido = área, desmarcado 0. Recarrega o comercial (produção/progresso/médias).
+  async function marcarFinalizado(codsafra, plantio, finalizado) {
+    const hacolhido = finalizado ? Number(plantio.areaplantada) || 0 : 0
+    await salvarHacolhido(codsafra, plantio.codplantio, hacolhido)
+    await carregarComercial(codsafra)
+  }
+
+  // Grava só o ha colhido — patcha o plantio local sem recarregar tudo.
   async function salvarHacolhido(codsafra, codplantio, hacolhido) {
     try {
       const { data } = await api.post(`v1/safra/${codsafra}/plantio/${codplantio}/hacolhido`, {
@@ -221,6 +234,7 @@ export const useSafraStore = defineStore('safra', () => {
     editarPlantio,
     salvarPlantio,
     salvarHacolhido,
+    marcarFinalizado,
     inativarPlantio,
     excluirPlantio,
     removerPlantio,

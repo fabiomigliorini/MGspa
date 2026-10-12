@@ -1,54 +1,24 @@
 <script setup>
-import { Notify } from 'quasar'
 import { api } from 'boot/axios'
-import { abrirPdf } from '@components/abrirPdf'
+import { abrirVale } from '@components/abrirVale'
 import { formataNumero, formataCodigo, formataData } from '@components/formatters'
 import { negocioStore } from 'stores/negocio'
+import { pagamentoStore } from 'stores/pagamento'
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
 
-const TIPO_VALE = 3
-
 const sNegocio = negocioStore()
+const sPagamento = pagamentoStore()
 
 const urlTitulo = (codtitulo) => {
   return process.env.CONTAS_URL + '/titulo/' + codtitulo
 }
 
-// credito de vale gerado pelo negocio (ex.: devolucao): com saldo, imprime o
-// vale; esgotado, o card fica so para consulta
-const ehValeComSaldo = (titulo) => titulo.codtipotitulo == TIPO_VALE && titulo.saldo < 0
+// título de crédito do negócio (devolução, vale...): com saldo, o vale (o mesmo papel da tela do
+// título e do pagamento); esgotado, o card fica só para consulta
+const ehValeComSaldo = (titulo) => titulo.saldo < 0
 
-const urlVale = () => '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale'
-
-const imprimir = async (codtitulo) => {
-  if (!sNegocio.padrao.impressora) {
-    Notify.create({
-      type: 'negative',
-      message: 'Nenhuma impressora térmica selecionada!',
-      timeout: 3000,
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-    return
-  }
-  await api.post(urlVale() + '/' + sNegocio.padrao.impressora, null, {
-    params: { codtitulo },
-  })
-  Notify.create({
-    type: 'positive',
-    message: 'Impressão Solicitada!',
-    timeout: 1000,
-    actions: [{ icon: 'close', color: 'white' }],
-  })
-}
-
-const abrir = (codtitulo) =>
-  abrirPdf(
-    api,
-    urlVale(),
-    { codtitulo },
-    { title: 'Vale Compras', size: 'cupom', onImprimir: () => imprimir(codtitulo) },
-  )
+const abrir = (codtitulo) => abrirVale(api, codtitulo, () => sPagamento.imprimirVale(codtitulo))
 </script>
 <template>
   <div
@@ -88,11 +58,11 @@ const abrir = (codtitulo) =>
         <q-item-section>
           <q-item-label>
             R$
-            {{ formataNumero(titulo.debito + titulo.credito) }}
+            {{ formataNumero(Math.abs(titulo.valor)) }}
           </q-item-label>
           <q-item-label caption lines="1">
             <template v-if="Math.abs(titulo.saldo) > 0">
-              <template v-if="titulo.saldo != Math.abs(titulo.debito + titulo.credito)">
+              <template v-if="titulo.saldo != Math.abs(titulo.valor)">
                 R$
                 {{ formataNumero(titulo.saldo) }}
               </template>

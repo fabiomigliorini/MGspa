@@ -11,14 +11,12 @@ use Mg\Boleto\BoletoRetorno;
 use Mg\Cheque\ChequeRepasse;
 use Mg\Cobranca\Cobranca;
 use Mg\Portador\ExtratoBancario;
-use Mg\Titulo\LiquidacaoTitulo;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Pdv\Pdv;
 use Mg\Pix\Pix;
 use Mg\Pix\PixCob;
 use Mg\Portador\PortadorMovimento;
 use Mg\Portador\PortadorSaldo;
-use Mg\Portador\PortadorTransferencia;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloBoleto;
 use Mg\Usuario\Usuario;
@@ -29,6 +27,28 @@ use Mg\Pessoa\Pessoa;
 class Portador extends MgModel
 {
     const CARTEIRA = 999;
+
+    // encontro de contas (titulos que se anulam): pagamento de total zero
+    // aqui; era o pseudoportador Programacao Pagamentos (go-live:
+    // api/database/pagamento_amarracao.sql reativa e renomeia)
+    const ENCONTRO_CONTAS = 202016;
+
+    // especie do escritorio: quem opera e' o Financeiro (decisao 23)
+    const CAIXA_FINANCEIRO = 100;
+
+    const TIPO_ESPECIE = 'E';
+    const TIPO_BANCO = 'B';
+    const TIPO_ADQUIRENTE = 'A';
+    const TIPO_CARTAO = 'C';
+    const TIPO_OUTROS = 'O';
+
+    const TIPOS = [
+        self::TIPO_ESPECIE,
+        self::TIPO_BANCO,
+        self::TIPO_ADQUIRENTE,
+        self::TIPO_CARTAO,
+        self::TIPO_OUTROS,
+    ];
 
     protected $table = 'tblportador';
     protected $primaryKey = 'codportador';
@@ -51,7 +71,9 @@ class Portador extends MgModel
         'emiteboleto',
         'inativo',
         'pixdict',
-        'portador'
+        'portador',
+        'tipo',
+        'tolerancia'
     ];
 
     protected $casts = [
@@ -71,9 +93,28 @@ class Portador extends MgModel
         'convenio' => 'float',
         'criacao' => 'datetime',
         'emiteboleto' => 'boolean',
-        'inativo' => 'datetime'
+        'inativo' => 'datetime',
+        'saldo' => 'float',
+        'tolerancia' => 'float'
     ];
 
+
+    // Caixa = portador em especie (gaveta, cofre, troco, Caixa Financeiro):
+    // trabalha em sessao, que abre, so' movimenta aberta, conta e fecha
+    public function ehCaixa(): bool
+    {
+        return $this->tipo === self::TIPO_ESPECIE;
+    }
+
+    // Gaveta = caixa com PDV apontando: o que e' so' do PDV (itens do caixa,
+    // o grupo Caixa operando). Lembrado na instancia: as listas do periodo
+    // perguntam linha a linha
+    private ?bool $gaveta = null;
+
+    public function ehGaveta(): bool
+    {
+        return $this->gaveta ??= $this->tipo === self::TIPO_ESPECIE && $this->PdvS()->exists();
+    }
 
     // Chaves Estrangeiras
     public function Banco()
@@ -123,10 +164,6 @@ class Portador extends MgModel
         return $this->hasMany(ExtratoBancario::class, 'codportador', 'codportador');
     }
 
-    public function LiquidacaoTituloS()
-    {
-        return $this->hasMany(LiquidacaoTitulo::class, 'codportador', 'codportador');
-    }
 
     public function MovimentoTituloS()
     {
@@ -136,6 +173,11 @@ class Portador extends MgModel
     public function PdvS()
     {
         return $this->hasMany(Pdv::class, 'codportador', 'codportador');
+    }
+
+    public function PortadorPeriodoS()
+    {
+        return $this->hasMany(PortadorPeriodo::class, 'codportador', 'codportador');
     }
 
     public function PixS()
@@ -153,19 +195,14 @@ class Portador extends MgModel
         return $this->hasMany(PortadorMovimento::class, 'codportador', 'codportador');
     }
 
+    public function PortadorUsuarioS()
+    {
+        return $this->hasMany(PortadorUsuario::class, 'codportador', 'codportador');
+    }
+
     public function PortadorSaldoS()
     {
         return $this->hasMany(PortadorSaldo::class, 'codportador', 'codportador');
-    }
-
-    public function PortadorTransferenciaDestinoS()
-    {
-        return $this->hasMany(PortadorTransferencia::class, 'codportadordestino', 'codportador');
-    }
-
-    public function PortadorTransferenciaOrigemS()
-    {
-        return $this->hasMany(PortadorTransferencia::class, 'codportadororigem', 'codportador');
     }
 
     public function TituloS()

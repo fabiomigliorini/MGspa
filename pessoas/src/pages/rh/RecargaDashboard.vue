@@ -417,10 +417,6 @@ onMounted(carregar)
                     Título - {{ r.codtitulo }}
                     <q-tooltip>Abrir o título no app de Contas</q-tooltip>
                   </a>
-                  <q-badge v-if="r.portador" outline color="blue-8" class="q-ml-sm">
-                    {{ r.portador }}
-                    <q-tooltip>Portador de onde o pagamento sai</q-tooltip>
-                  </q-badge>
                   <q-space />
                   <div class="text-h6 text-grey-9 q-mr-md">{{ formataNumero(r.valor) }}</div>
                   <q-btn

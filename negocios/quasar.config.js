@@ -92,6 +92,8 @@ export default defineConfig((/* ctx */) => {
         // Shared stores in ../components importam 'pinia'; como estão fora da raiz do
         // app, o resolver do build (Rolldown) não acha o pinia. Aliasa pro local.
         pinia: path.resolve(import.meta.dirname, 'node_modules/pinia'),
+        // idem para o QR do PIX (@components/cobranca/PixCobDialog.vue)
+        qrcode: path.resolve(import.meta.dirname, 'node_modules/qrcode'),
       },
 
       vueRouterMode: 'history',

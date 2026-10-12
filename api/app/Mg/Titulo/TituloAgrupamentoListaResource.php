@@ -8,9 +8,7 @@ class TituloAgrupamentoListaResource extends Resource
 {
     public function toArray($request)
     {
-        $debito = (float)$this->debito;
-        $credito = (float)$this->credito;
-        $valor = $debito - $credito;
+        $valor = (float)$this->valor;
         $operacao = ($valor < 0) ? 'CR' : 'DB';
 
         return [
@@ -21,8 +19,6 @@ class TituloAgrupamentoListaResource extends Resource
             'criacao'              => $this->criacao,
             'cancelamento'         => $this->cancelamento,
             'codusuariocriacao'    => $this->codusuariocriacao,
-            'debito'               => $debito,
-            'credito'              => $credito,
             'valor'                => abs($valor),
             'operacao'             => $operacao,
             'observacao'           => $this->observacao,

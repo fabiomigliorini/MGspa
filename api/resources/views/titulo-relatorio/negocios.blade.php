@@ -109,8 +109,8 @@
                                     <th class="text-right">{{ formataNumero($n->valortotal) }}</th>
                                 </tr>
                             @endif
-                            @foreach ($n->NegocioFormaPagamentoS as $nfp)
-                                @foreach ($nfp->TituloS()->orderBy('vencimento')->get() as $t)
+                            @foreach ([\Mg\Negocio\NegocioParcelaService::titulos($n)] as $titulos)
+                                @foreach ($titulos as $t)
                                     <tr>
                                         <th colspan="4" class="text-right">
                                             Saldo Vencimento {{ formataData($t->vencimento) }}

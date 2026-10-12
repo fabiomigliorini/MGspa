@@ -6,6 +6,7 @@ use App\Http\Requests\Mg\Contrato\ContratoPagamentoRequest;
 use Illuminate\Http\Request;
 use Mg\MgController;
 use Mg\MgService;
+use Mg\Usuario\Autorizador;
 
 /**
  * Recebimentos aninhados na fixação:
@@ -15,8 +16,12 @@ use Mg\MgService;
  */
 class ContratoPagamentoController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     public function index(Request $request, $codcontrato, $codfixacao)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $res = ContratoPagamento::with('Portador')
             ->where('codcontratofixacao', $codfixacao)
             ->orderBy('data')
@@ -26,6 +31,8 @@ class ContratoPagamentoController extends MgController
 
     public function store(ContratoPagamentoRequest $request, $codcontrato, $codfixacao)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $fixacao = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
 
         $model = new ContratoPagamento();
@@ -38,6 +45,8 @@ class ContratoPagamentoController extends MgController
 
     public function update(ContratoPagamentoRequest $request, $codcontrato, $codfixacao, $codpagamento)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = ContratoPagamento::where('codcontratofixacao', $codfixacao)->findOrFail($codpagamento);
         $model->fill($request->validated());
         $model->update();
@@ -47,12 +56,16 @@ class ContratoPagamentoController extends MgController
 
     public function destroy($codcontrato, $codfixacao, $codpagamento)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         ContratoPagamento::where('codcontratofixacao', $codfixacao)->findOrFail($codpagamento)->delete();
         return response()->noContent();
     }
 
     public function inativar(Request $request, $codcontrato, $codfixacao, $codpagamento)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $m = ContratoPagamento::where('codcontratofixacao', $codfixacao)->findOrFail($codpagamento);
         MgService::inativar($m);
         return new ContratoPagamentoResource($m->fresh('Portador'));
@@ -60,6 +73,8 @@ class ContratoPagamentoController extends MgController
 
     public function ativar(Request $request, $codcontrato, $codfixacao, $codpagamento)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $m = ContratoPagamento::where('codcontratofixacao', $codfixacao)->findOrFail($codpagamento);
         MgService::ativar($m);
         return new ContratoPagamentoResource($m->fresh('Portador'));

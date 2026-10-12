@@ -7,13 +7,18 @@ use App\Http\Requests\Mg\Fazenda\FazendaUpdateRequest;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\Request;
 use Mg\MgController;
+use Mg\Usuario\Autorizador;
 
 class FazendaController extends MgController
 {
+    private const GRUPOS = ['Administrador', 'Gerente'];
+
     const WITH = ['Pessoa'];
 
     public function index(Request $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         [$filter, $sort, $fields] = $this->filtros($request);
         $res = FazendaService::pesquisar($filter, $sort, $fields)->paginate()->appends($request->all());
         return FazendaResource::collection($res);
@@ -21,6 +26,8 @@ class FazendaController extends MgController
 
     public function store(FazendaStoreRequest $request)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = new Fazenda();
         $model->fill($request->validated());
         $model->save();
@@ -30,16 +37,22 @@ class FazendaController extends MgController
 
     public function show(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return new FazendaResource(Fazenda::with(static::WITH)->findOrFail($id));
     }
 
     public function resumo(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         return response()->json(FazendaService::resumo($id), 200);
     }
 
     public function update(FazendaUpdateRequest $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = Fazenda::findOrFail($id);
         $model->fill($request->validated());
         $model->update();
@@ -49,6 +62,8 @@ class FazendaController extends MgController
 
     public function destroy($id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $fazenda = Fazenda::findOrFail($id);
         try {
             $fazenda->delete();
@@ -68,6 +83,8 @@ class FazendaController extends MgController
 
     public function inativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = Fazenda::findOrFail($id);
         FazendaService::inativar($model);
         return new FazendaResource($model->fresh(static::WITH));
@@ -75,6 +92,8 @@ class FazendaController extends MgController
 
     public function ativar(Request $request, $id)
     {
+        Autorizador::autoriza(self::GRUPOS);
+
         $model = Fazenda::findOrFail($id);
         FazendaService::ativar($model);
         return new FazendaResource($model->fresh(static::WITH));

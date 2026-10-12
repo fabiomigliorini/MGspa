@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-28 21:11'
+updated_date: '2026-10-10 19:06'
 labels:
   - agro
 dependencies: []
@@ -26,4 +27,5 @@ O pátio aceita contrato de outra cultura, talhão de outra safra, contrato de v
 - [ ] #2 Talhão de outra safra é recusado como origem
 - [ ] #3 Origem e destino seguem as combinações permitidas por sentido (D2)
 - [ ] #4 Tara maior que o PBT é recusada com mensagem clara
+- [ ] #5 Unidade ou contrato inativo é recusado no servidor (a tela já só oferece silo e contrato ativos)
 <!-- AC:END -->

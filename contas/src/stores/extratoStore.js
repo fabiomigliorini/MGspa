@@ -26,7 +26,7 @@ export const useExtratoStore = defineStore('extrato', () => {
 
   const diasDoMes = computed(() => {
     const dias = new Set()
-    extratos.value.forEach((e) => dias.add(date.formatDate(e.lancamento, 'DD')))
+    extratos.value.forEach((e) => dias.add(date.formatDate(e.transacao, 'DD')))
     return Array.from(dias).sort()
   })
 
@@ -69,7 +69,7 @@ export const useExtratoStore = defineStore('extrato', () => {
     }
     let diaAtual = null
     for (const e of extratos.value) {
-      const dia = new Date(e.lancamento)
+      const dia = new Date(e.transacao)
       dia.setHours(0, 0, 0, 0)
       if (diaAtual !== null && diaAtual.getTime() !== dia.getTime()) {
         const saldoDia = saldos.value.find((s) => {
@@ -91,7 +91,7 @@ export const useExtratoStore = defineStore('extrato', () => {
       }
       out.push({
         _key: `e-${e.codextratobancario}`,
-        dia: e.lancamento,
+        dia: e.transacao,
         observacoes: e.observacoes,
         numero: e.numero,
         valor: e.valor,

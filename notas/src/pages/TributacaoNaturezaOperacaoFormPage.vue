@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { formataTimestamp } from '@components/formatters'
 import { ref, computed, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
@@ -233,7 +234,7 @@ onMounted(async () => {
 
               <!-- Tipo de Produto -->
               <div class="col-12 col-sm-6">
-                <q-select
+                <MgSelect
                   v-model="form.codtipoproduto"
                   :options="TIPO_PRODUTO_OPTIONS"
                   option-value="value"
@@ -248,7 +249,7 @@ onMounted(async () => {
                   <template v-slot:prepend>
                     <q-icon name="category" />
                   </template>
-                </q-select>
+                </MgSelect>
               </div>
 
               <!-- Estado -->

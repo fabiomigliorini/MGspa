@@ -118,7 +118,7 @@ class PixWebhookService
         PagarMeService::fecharPedidoSePago($ped);
 
         // cria forma de pagamento e atrela ao negocio
-        PagarMeService::vincularNegocioFormaPagamento($ped);
+        PagarMeService::vincularPagamento($ped);
 
         // retorna o pagamento
         return $pp;

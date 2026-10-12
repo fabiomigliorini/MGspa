@@ -80,16 +80,6 @@ const comissaoLinhas = computed(() => {
     }
   })
 })
-// Total da comissão por moeda ("R$ x + US$ y"). Só quando há mais de uma linha
-// (com uma única fixação o total repetiria a linha).
-const comissaoTotais = computed(() => {
-  if (comissaoLinhas.value.length < 2) return []
-  const map = {}
-  for (const l of comissaoLinhas.value) {
-    map[l.moeda] = (map[l.moeda] || 0) + l.valor
-  }
-  return Object.entries(map).map(([moeda, valor]) => fmtMoeda(moeda, valor))
-})
 </script>
 
 <template>
@@ -159,14 +149,11 @@ const comissaoTotais = computed(() => {
         <div v-if="comissao" class="text-caption text-grey-7">
           <div>
             Comissão {{ comissao }}
-            <span v-if="!ehPercentual && c.comissaototal">· Total {{ rs(c.comissaototal) }}</span>
+            <span v-if="c.comissaototal">· Total {{ rs(c.comissaototal) }}</span>
           </div>
           <template v-if="comissaoLinhas.length">
             <div v-for="l in comissaoLinhas" :key="l.cod" class="q-pl-sm">
               {{ formataNumero(l.quantidade, 0) }} sc · {{ fmtMoeda(l.moeda, l.valor) }}
-            </div>
-            <div v-if="comissaoTotais.length" class="q-pl-sm text-grey-8 text-weight-medium">
-              Total {{ comissaoTotais.join(' + ') }}
             </div>
           </template>
         </div>

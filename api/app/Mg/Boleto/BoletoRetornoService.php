@@ -2,12 +2,14 @@
 
 namespace Mg\Boleto;
 
+use Mg\Pagamento\PagamentoService;
+use Mg\Pagamento\PagamentoTituloService;
+
 use Illuminate\Support\Facades\Storage;
 use Carbon\Carbon;
 
 use Mg\Portador\Portador;
 use Mg\Titulo\Titulo;
-use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloService;
 
 class BoletoRetornoService
@@ -162,73 +164,52 @@ class BoletoRetornoService
             case '115':
             case '117':
 
-                // Lanca Juros
-                $juros = $br->jurosatraso + $br->jurosmora;
-                if ($juros > 0) {
-                    $mov = MovimentoTitulo::firstOrNew([
-                        'codboletoretorno' => $br->codboletoretorno,
-                        'codtipomovimentotitulo' => MovimentoTituloService::TIPO_JUROS,
-                    ]);
-                    $mov->codtitulo = $br->codtitulo;
-                    $mov->codportador = $br->codportador;
-                    $mov->transacao = $br->dataretorno;
-                    $mov->debito = $juros;
-                    if (!$mov->save()) {
-                        return false;
-                    }
-                }
+                $vinculos = [
+                    'codboletoretorno' => $br->codboletoretorno,
+                    'codportador' => $br->codportador,
+                    'transacao' => $br->dataretorno,
+                ];
 
-                // Lanca Desconto
-                $desconto = $br->abatimento + $br->desconto;
-                if ($desconto > 0) {
-                    $mov = MovimentoTitulo::firstOrNew([
-                        'codboletoretorno' => $br->codboletoretorno,
-                        'codtipomovimentotitulo' => MovimentoTituloService::TIPO_DESCONTO,
-                    ]);
-                    $mov->codtitulo = $br->codtitulo;
-                    $mov->codportador = $br->codportador;
-                    $mov->transacao = $br->dataretorno;
-                    $mov->credito = $desconto;
-                    if (!$mov->save()) {
-                        return false;
-                    }
-                }
-
-                // Lanca Liquidacao
-                if ($br->pagamento > 0) {
-                    $mov = MovimentoTitulo::firstOrNew([
-                        'codboletoretorno' => $br->codboletoretorno,
-                        'codtipomovimentotitulo' => MovimentoTituloService::TIPO_LIQUIDACAO,
-                    ]);
-                    $mov->codtitulo = $br->codtitulo;
-                    $mov->codportador = $br->codportador;
-                    $mov->transacao = $br->dataretorno;
-                    $mov->credito = $br->pagamento;
-                    if (!$mov->save()) {
-                        return false;
-                    }
+                // Uma linha: juros e desconto junto com o pago. O que sai do
+                // saldo e' o pago sem os juros e com o desconto.
+                $juros = (float) $br->jurosatraso + (float) $br->jurosmora;
+                $desconto = (float) $br->abatimento + (float) $br->desconto;
+                $pagamento = (float) $br->pagamento;
+                $principal = $pagamento - $juros + $desconto;
+                if ($pagamento > 0 || $principal != 0) {
+                    $mov = MovimentoTituloService::lancar(
+                        $titulo,
+                        MovimentoTituloService::TIPO_LIQUIDACAO,
+                        -$principal,
+                        ['juros' => $juros, 'desconto' => $desconto, 'total' => -$pagamento],
+                        $vinculos,
+                        ['codboletoretorno']
+                    );
+                    PagamentoTituloService::daBaixa($mov, PagamentoService::MEIO_BOLETO, $br->codportador, $br->dataretorno);
                 }
                 break;
 
-            // Estorno
-            case '106':
-            case '115':
-            case '117':
-                $credito = $br->jurosatraso + $br->jurosmora;
-                $debito = $br->abatimento + $br->desconto + $br->pagamento;
-                if ($credito > 0 || $debito > 0) {
-                    $mov = MovimentoTitulo::firstOrNew([
-                        'codboletoretorno' => $br->codboletoretorno,
-                        'codtipomovimentotitulo' => MovimentoTituloService::TIPO_ESTORNO_LIQUIDACAO,
-                    ]);
-                    $mov->codtitulo = $br->codtitulo;
-                    $mov->codportador = $br->codportador;
-                    $mov->transacao = $br->dataretorno;
-                    $mov->credito = $credito;
-                    $mov->debito = $debito;
-                    if (!$mov->save()) {
-                        return false;
-                    }
+            // Estorno de Pagamento (ocorrência 40)
+            case '140':
+                $juros = (float) $br->jurosatraso + (float) $br->jurosmora;
+                $desconto = (float) $br->abatimento + (float) $br->desconto;
+                $pagamento = (float) $br->pagamento;
+                $principal = $pagamento - $juros + $desconto;
+                if ($pagamento > 0 || $principal != 0) {
+                    $mov = MovimentoTituloService::lancar(
+                        $titulo,
+                        MovimentoTituloService::TIPO_ESTORNO_LIQUIDACAO,
+                        $principal,
+                        ['juros' => $juros, 'desconto' => $desconto, 'total' => $pagamento],
+                        [
+                            'codboletoretorno' => $br->codboletoretorno,
+                            'codportador' => $br->codportador,
+                            'transacao' => $br->dataretorno,
+                        ],
+                        ['codboletoretorno']
+                    );
+                    // saiu do banco: pagamento no sentido contrario
+                    PagamentoTituloService::daBaixa($mov, PagamentoService::MEIO_BOLETO, $br->codportador, $br->dataretorno);
                 }
                 break;
 
