@@ -73,6 +73,25 @@ validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e cód
 milestones sobem de uma vez, numa única janela com a API parada, quando o plano terminar. Até lá
 produção fica como está.
 
+**Go-live feito em 12/10/2026** (feriado, lojas fechadas), junto com o agro. Produção estava no
+`55043d39c` (28/09) mais os hotfixes da TASK-154 e da TASK-202; o `git pull` conflitou nos três
+arquivos dos hotfixes e ficou com a versão do origin (árvore = `e4795664e`). Antes, **ensaio** com
+o backup noturno da produção num Postgres separado: os mesmos scripts, na mesma ordem, sem erro.
+Ordem e tempos na produção (`psql -v ON_ERROR_STOP=1`, com scheduler, workers, API, MGLara e MGsis
+parados e nenhuma conexão no banco): `agro_carga_versao` e `agro_plantio_variedade_opcional` (o
+agro 01–30 já estava lá), `titulo_valor` 71 s, `movimento_titulo_colunas` 23 s, `portador_tipo`,
+`maquineta` 50 s, `pagamento` 360 s, `cobranca_documento`, `pagamento_liquidacao` 38 s,
+`negocio_reabertura`, `conferencia`, `auditoria`, `razao`, `caixa_item`, `portador_saldo`,
+`portador_movimento_tipo`, `portador_periodo_limpeza`, `caixa_item_dinamico`,
+`caixa_item_maquineta`, `caixa_item_saldo`, `maquineta_periodo` 24 s, `ocorrencia`,
+`pagamento_amarracao`, `pagamento_referente`, `pix_utilizacao` 16 s, `pdv_configuracao`,
+`tipo_titulo_limpeza` 83 s e, depois do código no lugar, `pdv_autorizado_drop`: ~11 min no total.
+`CONFERENCIA_INICIO=2026-10-12` no `.env` da API. Gavetas no mesmo dia: "Caixa X" virou
+"Caixa Central X" (cofre, com o histórico), Caixa Atacado virou Caixa Cobranca, Troco Deposito
+virou Troco Financeiro, e 17 gavetas novas ("Caixa Botanico 01"…) ligadas aos PDVs de caixa;
+operador da gaveta = quem movimentou o PDV nos 60 dias anteriores, gestores = gerentes e donas da
+loja, depositante do Central e do Troco = quem opera gaveta da loja. Saldo de implantação: 13/10.
+
 **Pendências do Fábio no go-live** (não são gaps do plano): quais dos dois portadores em espécie da
 filial 101 (100 Caixa Financeiro, 101001 Caixa Atacado) são cofre; pessoa e conta contábil de cada
 item do caixa; cadastrar as gavetas (portador em espécie) e vinculá-las em cada PDV de caixa (M2);
