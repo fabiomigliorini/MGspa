@@ -78,37 +78,39 @@ function excluir(u) {
         </q-card-section>
       </q-form>
 
-      <q-list separator class="col scroll q-mb-sm">
-        <q-item v-for="u in store.usuarios" :key="u.codportadorusuario">
-          <q-item-section>
-            <q-item-label :class="u.usuarioinativo ? 'text-grey-6' : ''">
-              {{ u.usuario }}
-              <q-badge v-if="u.usuarioinativo" color="orange-7" class="q-ml-xs">Inativo</q-badge>
-            </q-item-label>
-          </q-item-section>
-          <q-item-section side style="width: 160px">
-            <MgSelect
-              :model-value="u.papel"
-              :options="PAPEIS"
-              emit-value
-              map-options
-              :outlined="false"
-              borderless
-              @update:model-value="(p) => store.salvarUsuario(u.codusuario, p)"
-            />
-          </q-item-section>
-          <q-item-section side>
-            <q-btn flat round size="sm" color="grey-7" icon="close" @click="excluir(u)">
-              <q-tooltip>Tirar da lista</q-tooltip>
-            </q-btn>
-          </q-item-section>
-        </q-item>
-        <q-item v-if="!store.usuarios.length">
-          <q-item-section class="text-grey-7"
-            >Ninguém na lista (só o Administrador).</q-item-section
-          >
-        </q-item>
-      </q-list>
+      <q-card-section class="col scroll q-pt-none">
+        <q-list separator>
+          <q-item v-for="u in store.usuarios" :key="u.codportadorusuario">
+            <q-item-section>
+              <q-item-label :class="u.usuarioinativo ? 'text-grey-6' : ''">
+                {{ u.usuario }}
+                <q-badge v-if="u.usuarioinativo" color="orange-7" class="q-ml-xs">Inativo</q-badge>
+              </q-item-label>
+            </q-item-section>
+            <q-item-section side style="width: 160px">
+              <MgSelect
+                :model-value="u.papel"
+                :options="PAPEIS"
+                emit-value
+                map-options
+                :outlined="false"
+                borderless
+                @update:model-value="(p) => store.salvarUsuario(u.codusuario, p)"
+              />
+            </q-item-section>
+            <q-item-section side>
+              <q-btn flat round size="sm" color="grey-7" icon="close" @click="excluir(u)">
+                <q-tooltip>Tirar da lista</q-tooltip>
+              </q-btn>
+            </q-item-section>
+          </q-item>
+          <q-item v-if="!store.usuarios.length">
+            <q-item-section class="text-grey-7"
+              >Ninguém na lista (só o Administrador).</q-item-section
+            >
+          </q-item>
+        </q-list>
+      </q-card-section>
 
       <q-separator inset />
       <q-card-actions align="right" class="col-auto">
