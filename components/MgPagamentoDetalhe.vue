@@ -1,8 +1,8 @@
 <script setup>
-// Detalhe de um pagamento: o fato (meio, maquineta, portadores, estado, original e contrários) e
-// as amarrações (venda, títulos, com o histórico das desfeitas), o saldo e o que sobra livre.
-// Desamarrar (todos ou um título) estorna as baixas e o pagamento continua; cancelar é só do
-// manual já desamarrado (conceito do Fábio, 09/10/2026). O pagamento vem do pagamentoListaStore.
+// Detalhe de um pagamento: o fato (meio, maquineta, portadores, estado, original e contrários) e o
+// que ele pagou (venda, títulos, com o histórico das baixas estornadas). Baixa errada se desfaz
+// cancelando o pagamento, que estorna as baixas junto (TASK-218). O pagamento vem do
+// pagamentoListaStore.
 // Os recibos ficam sempre à mostra nos dois apps (TASK-216): o A5 e o cupom da térmica, o mesmo
 // recibo (PagamentoReciboService); o que não se aplica, o servidor recusa com a mensagem. Ações
 // próprias do app (editar) entram no slot `acoes`.
@@ -19,7 +19,7 @@ import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInput from '@components/MgInput.vue'
 
 const props = defineProps({
-  // o app diz se o usuário pode desamarrar e cancelar (grupos); o servidor confere de novo
+  // o app diz se o usuário pode cancelar (grupos); o servidor confere de novo
   podeEstornar: {
     type: Boolean,
     default: false,
@@ -130,14 +130,13 @@ const pedirMotivo = (titulo, mensagem, rotulo) =>
     cancel: { label: 'Voltar', color: 'grey-8', flat: true },
   })
 
-// desamarrar (todos ou um título) está desligado por enquanto (TASK-218): a tela não oferece e o
-// servidor recusa
-
-// cancelar: o pagamento não aconteceu (digitado errado); sai do razão
+// cancelar: o pagamento não aconteceu como foi lançado (digitado errado, baixa no título errado);
+// sai do razão e as baixas são estornadas junto. O PIX volta a ficar sem uso e o cartão volta a ser
+// só o pedido, para a baixa certa
 const cancelar = () => {
   pedirMotivo(
     'Cancelar pagamento',
-    'Cancelar diz que este pagamento não aconteceu: ele sai do caixa/banco. Informe o motivo:',
+    'Cancelar diz que este pagamento não aconteceu como foi lançado: ele sai do caixa/banco e as baixas dos títulos são estornadas. PIX e cartão voltam a ficar disponíveis para a baixa certa. Informe o motivo:',
     'Cancelar pagamento',
   ).onOk(async (justificativa) => {
     try {
@@ -397,7 +396,7 @@ const cancelar = () => {
                   {{ m.titulo?.numero }}
                 </q-item-label>
                 <q-item-label caption v-if="m.estornado" class="text-grey-6">
-                  desamarrado
+                  estornado
                 </q-item-label>
                 <q-item-label caption v-if="m.titulo?.codpessoa != pag.codpessoa">
                   {{ m.titulo?.fantasia }}

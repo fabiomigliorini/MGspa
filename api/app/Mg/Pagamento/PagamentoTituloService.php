@@ -31,10 +31,10 @@ use Mg\Titulo\TituloService;
  * = um pagamento; uma linha de movimento por titulo, com principal, juros,
  * multa, desconto e total (o pagamento fica so' com o dinheiro). Um pagamento
  * pode baixar varios titulos e um titulo pode ser baixado por varios
- * pagamentos. Desamarrar estorna as baixas e o pagamento continua; cancelar
- * e' outra coisa (so' o manual ja' desamarrado). Encontro de contas = total
- * zero no portador Encontro de Contas. O mesmo servico atende o contas e o
- * PDV. Sem transacao interna.
+ * pagamentos. Baixa errada se desfaz cancelando o pagamento, que estorna as
+ * baixas junto (nao ha amarrar nem desamarrar, TASK-218). Encontro de contas
+ * = total zero no portador Encontro de Contas. O mesmo servico atende o
+ * contas e o PDV. Sem transacao interna.
  */
 class PagamentoTituloService
 {
@@ -570,7 +570,7 @@ class PagamentoTituloService
     // O lapis do pagamento: pessoa e observacao; a data so' do pagamento
     // manual (a do integrado e' a do banco/maquineta), pelo alterar data
     // (periodo, razao, titulos, com justificativa na auditoria, TASK-204).
-    // Meio e portador nao mudam: sao o fato; errou, desamarra e lanca de novo.
+    // Meio e portador nao mudam: sao o fato; errou, cancela e lanca de novo.
     public static function atualizar(Pagamento $pag, array $dados): Pagamento
     {
         if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
@@ -585,7 +585,7 @@ class PagamentoTituloService
         $atual = $pag->codportadorDoPagamento();
         if ((!empty($dados['meio']) && (int) $dados['meio'] != $pag->meio)
             || (!empty($dados['codportador']) && (int) $dados['codportador'] != $atual)) {
-            abort(422, 'Meio e portador não mudam: desamarre os títulos, cancele e lance de novo.');
+            abort(422, 'Meio e portador não mudam: cancele e lance de novo.');
         }
         if (!empty($dados['transacao'])) {
             $transacao = Carbon::parse($dados['transacao'])->startOfMinute();
@@ -604,62 +604,14 @@ class PagamentoTituloService
         return PagamentoListaService::carregar($pag->codpagamento);
     }
 
-    // Desamarrar desfaz a baixa dos titulos (todas, ou so' as linhas
-    // escolhidas): os movimentos sao estornados e os titulos reabrem; o vale
-    // e o adiantamento que nasceram com o pagamento sao estornados. O
-    // PAGAMENTO CONTINUA: e' o fato (o dinheiro andou) e fica sem amarracao,
-    // para cancelar (so' o manual). Venda pelo negocio, acerto pelo acerto.
-    // Desligado por enquanto (TASK-218): avaliar se amarrar/desamarrar precisa
-    // existir. As duas rotas (contas e PDV) passam por aqui e recusam.
-    public static function desamarrar(Pagamento $pag, string $justificativa, ?array $codmovimentos = null): Pagamento
-    {
-        abort(422, 'Desamarrar títulos do pagamento está desabilitado por enquanto.');
-        $pag = Pagamento::lockForUpdate()->findOrFail($pag->codpagamento);
-        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
-            abort(422, 'Só pagamento efetivado tem amarração para desfazer!');
-        }
-        if (!empty($pag->codnegocio)) {
-            abort(422, 'Pagamento de venda: altere pelo negócio.');
-        }
-        if (!empty($pag->codperiodocolaboradoracerto)) {
-            abort(422, 'Pagamento de acerto de RH: estorne pelo acerto.');
-        }
-        $ativos = PagamentoPendenciaService::movimentosAtivos($pag);
-        // encontro de contas, compensacao e pagamento de titulos a receber e a
-        // pagar juntos: os titulos se pagam entre si, desamarrar e' tudo ou nada
-        $sentidos = $ativos->map(fn ($m) => (float) $m->total < 0 ? -1 : 1)->unique()->count();
-        if ($codmovimentos !== null && count(array_unique($codmovimentos)) < $ativos->count()
-            && ($pag->meio == PagamentoService::MEIO_COMPENSACAO || $sentidos > 1)) {
-            abort(422, 'Estes títulos se pagam entre si (a receber e a pagar): desamarre todos juntos.');
-        }
-        if ($codmovimentos !== null) {
-            $ativos = $ativos->whereIn('codmovimentotitulo', array_map('intval', $codmovimentos));
-        }
-        if ($ativos->isEmpty()) {
-            abort(422, 'Nada amarrado para desfazer!');
-        }
-        $vale = $pag->meio == PagamentoService::MEIO_VALE;
-        foreach ($ativos as $mov) {
-            // vale colaborador / adiantamento: o titulo nasceu com o
-            // pagamento; desamarrar e' estornar o titulo (so' se nao
-            // movimentado), sem cancelar o pagamento
-            if ($mov->codtipomovimentotitulo == MovimentoTituloService::TIPO_IMPLANTACAO) {
-                $vale = true;
-                TituloService::estornar($mov->Titulo, $justificativa, false);
-                continue;
-            }
-            MovimentoTituloService::estornar($mov);
-        }
-        $pag->refresh();
-        OcorrenciaService::pagamentoEstornado($pag, $vale, $justificativa);
-        return PagamentoListaService::carregar($pag->codpagamento);
-    }
-
-    // Cancelar = o fato nao existiu (foi digitado errado): so' o pagamento
-    // manual e ja' desamarrado. Integrado (PIX, cartao da maquineta, Stone,
-    // SafraPay) e boleto nunca se cancelam: o dinheiro entrou de verdade;
-    // devolver e' pela devolucao do PIX / cancelamento no cartao. O cheque a
-    // repassar e' cancelado junto. Sai do razao do portador.
+    // Cancelar = o fato nao existiu como foi lancado (digitado errado, ou o
+    // dinheiro foi usado na baixa errada): as baixas sao estornadas junto (os
+    // titulos reabrem; o vale e o adiantamento que nasceram com o pagamento
+    // sao estornados) e ele sai do razao do portador. Vale tambem para o
+    // integrado (TASK-218): o PIX volta a ficar sem uso e o cartao volta a
+    // ser so' o pedido, para a baixa certa. Boleto nao se cancela: a baixa e'
+    // do proprio titulo. O cheque a repassar e' cancelado junto. Venda pelo
+    // negocio, acerto pelo acerto.
     public static function cancelar(Pagamento $pag, string $justificativa): Pagamento
     {
         $pag = Pagamento::lockForUpdate()->findOrFail($pag->codpagamento);
@@ -672,11 +624,8 @@ class PagamentoTituloService
         if (!empty($pag->codperiodocolaboradoracerto)) {
             abort(422, 'Pagamento de acerto de RH: estorne pelo acerto.');
         }
-        if (!static::manual($pag)) {
-            abort(422, 'Pagamento integrado (banco, maquineta, boleto) não se cancela: o dinheiro entrou de verdade. Para devolver, registre a devolução do PIX ou o cancelamento no cartão.');
-        }
-        if (PagamentoPendenciaService::movimentosAtivos($pag)->isNotEmpty()) {
-            abort(422, 'Desamarre os títulos antes de cancelar o pagamento.');
+        if (static::baixaDoBanco($pag)) {
+            abort(422, 'Pagamento de boleto não se cancela: a baixa é do próprio título.');
         }
         foreach (Cheque::where('codpagamento', $pag->codpagamento)->whereNull('cancelamento')->get() as $cheque) {
             if ($cheque->indstatus != 1) {
@@ -685,26 +634,65 @@ class PagamentoTituloService
             $cheque->cancelamento = Carbon::now();
             $cheque->save();
         }
+        $ativos = static::movimentosAtivos($pag);
+        $vale = $pag->meio == PagamentoService::MEIO_VALE;
+        foreach ($ativos as $mov) {
+            // vale colaborador / adiantamento: o titulo nasceu com o
+            // pagamento; estorna o titulo (so' se nao movimentado)
+            if ($mov->codtipomovimentotitulo == MovimentoTituloService::TIPO_IMPLANTACAO) {
+                $vale = true;
+                TituloService::estornar($mov->Titulo, $justificativa, false);
+                continue;
+            }
+            MovimentoTituloService::estornar($mov);
+        }
         PagamentoService::cancelar($pag, $justificativa);
+        if ($ativos->isNotEmpty()) {
+            OcorrenciaService::pagamentoEstornado($pag, $vale, $justificativa);
+        }
         return PagamentoListaService::carregar($pag->codpagamento);
+    }
+
+    // As baixas que valem (baixa, vale, adiantamento), sem as estornadas. A
+    // linha de estorno tem o tipo da original: quem diz que e' estorno e' o
+    // codmovimentotituloestorno. O estorno antigo (930 e afins, sem esse
+    // vinculo) zera o titulo dentro do pagamento: titulo que soma zero no
+    // pagamento nao tem baixa valendo (nao se estorna duas vezes).
+    public static function movimentosAtivos(Pagamento $pag)
+    {
+        $linhas = MovimentoTitulo::where('codpagamento', $pag->codpagamento)->get();
+        $estornadas = $linhas->pluck('codmovimentotituloestorno')->filter()->all();
+        $zerados = $linhas->groupBy('codtitulo')
+            ->filter(fn ($l) => abs($l->sum(fn ($m) => (float) $m->total)) < 0.005
+                && abs($l->sum(fn ($m) => (float) $m->principal)) < 0.005)
+            ->keys()
+            ->all();
+        return $linhas->filter(fn ($m) => (int) $m->codtipomovimentotitulo < 900
+            && empty($m->codmovimentotituloestorno)
+            && !in_array($m->codmovimentotitulo, $estornadas)
+            && !in_array($m->codtitulo, $zerados))
+            ->values();
+    }
+
+    // Baixa feita pelo banco (boleto BB pela API, retorno de boleto)
+    public static function baixaDoBanco(Pagamento $pag): bool
+    {
+        return MovimentoTitulo::where('codpagamento', $pag->codpagamento)
+            ->where(fn ($q) => $q->whereNotNull('codtituloboleto')->orWhereNotNull('codboletoretorno'))
+            ->exists();
     }
 
     // Lancado a mao (dinheiro, cheque, cartao digitado, banco digitado):
     // nao veio de integracao nem de baixa do banco
     public static function manual(Pagamento $pag): bool
     {
-        if ($pag->ehIntegrado() || !empty($pag->codpix)) {
-            return false;
-        }
-        return !MovimentoTitulo::where('codpagamento', $pag->codpagamento)
-            ->where(fn ($q) => $q->whereNotNull('codtituloboleto')->orWhereNotNull('codboletoretorno'))
-            ->exists();
+        return !$pag->ehIntegrado() && empty($pag->codpix) && !static::baixaDoBanco($pag);
     }
 
     // Linhas de baixa (sem os estornos)
     public static function baixas(Pagamento $pag)
     {
-        // a que foi estornada (desamarrada) tambem sai
+        // a que foi estornada tambem sai
         $estornadas = $pag->MovimentoTituloS->pluck('codmovimentotituloestorno')->filter()->all();
         return $pag->MovimentoTituloS
             ->filter(fn(MovimentoTitulo $m) => !$m->ehEstorno()

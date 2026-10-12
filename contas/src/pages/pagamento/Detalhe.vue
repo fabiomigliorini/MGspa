@@ -2,7 +2,7 @@
 // Pagamento: o detalhe compartilhado (MgPagamentoDetalhe, com os recibos e o "Referente a") e o que
 // é do contas: o lápis. O lápis corrige pessoa e observação (interna); a data só do pagamento manual
 // (a do integrado é a do banco/maquineta) e, se muda, pede justificativa (TASK-204). Meio e portador
-// são o fato e não mudam: errou, desamarra e lança de novo.
+// são o fato e não mudam: errou, cancela e lança de novo.
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { notifySuccess, notifyError } from 'src/utils/notify'

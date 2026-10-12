@@ -10,7 +10,7 @@ use Mg\Usuario\UsuarioService;
 // Quem ve e quem mexe em pagamento de titulo, vale e adiantamento (contas e
 // PDV). Mexer no dinheiro e' pelo PAPEL DO USUARIO NO PORTADOR (conceito do
 // Fabio, 09/10/2026; doc-4): o dinheiro entra num portador = depositante;
-// sai, desamarra, cancela ou corrige = operador; alterar data = gestor (no
+// sai, cancela ou corrige = operador; alterar data = gestor (no
 // alterar data). O PDV so' pre-seleciona o portador dele, nao da' permissao.
 // Ver a listagem continua pela filial (Admin/Financeiro/Cobranca em tudo;
 // Gerente e Caixa nas filiais deles).
@@ -122,7 +122,7 @@ class PagamentoTituloAutorizador
         return null;
     }
 
-    // Desamarrar, cancelar, corrigir pelo lapis, devolver: operador do
+    // Cancelar, corrigir pelo lapis, devolver: operador do
     // portador do pagamento (o encontro de contas antigo, sem portador, e' do
     // Encontro de Contas)
     public static function motivoBloqueioMutacao(Pagamento $pag, int $codusuario, string $acao = 'Alterar'): ?string
@@ -133,7 +133,7 @@ class PagamentoTituloAutorizador
 
     public static function motivoBloqueioEstorno(Pagamento $pag, int $codusuario): ?string
     {
-        return self::motivoBloqueioMutacao($pag, $codusuario, 'Desamarrar ou cancelar');
+        return self::motivoBloqueioMutacao($pag, $codusuario, 'Cancelar');
     }
 
     public static function motivoBloqueioEdicao(Pagamento $pag, int $codusuario): ?string

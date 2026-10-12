@@ -84,7 +84,7 @@ class PagamentoCorrecaoService
     private static function exigirSemTitulo(Pagamento $pag): void
     {
         if ($pag->MovimentoTituloS()->exists()) {
-            abort(422, 'Pagamento de título: estorne pela listagem de pagamentos e lance de novo.');
+            abort(422, 'Pagamento de título: cancele pelo detalhe do pagamento e lance de novo.');
         }
     }
 

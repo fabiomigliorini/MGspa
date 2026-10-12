@@ -1,8 +1,9 @@
 <script setup>
 // Pagamentos (M6.1 doc-3): a listagem única, com venda, títulos, transferência e avulso. Daqui
-// saem o Receber ou Pagar Títulos (página própria) e o Vale / Adiantamento (M8, o mesmo dialog
-// do PDV, com as formas do financeiro: depósito, transferência, cofre, cartão da empresa...).
-import { ref } from 'vue'
+// saem o Receber ou Pagar Títulos (página própria), o Vale / Adiantamento (M8, o mesmo dialog
+// do PDV, com as formas do financeiro: depósito, transferência, cofre, cartão da empresa...) e as
+// Divergências (TASK-218).
+import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import MgPagamentoLista from '@components/MgPagamentoLista.vue'
 import MgAdiantamentoDialog from '@components/MgAdiantamentoDialog.vue'
@@ -14,12 +15,19 @@ import { abrirPdf } from 'src/utils/abrirPdf'
 import { configurarPagamentoLista } from 'src/utils/pagamentoLista'
 import { contextoCobranca, FORMAS_ADIANTAMENTO } from 'src/utils/cobranca'
 import { useAuthStore } from 'src/stores/auth'
+import { PERMISSOES } from 'src/constants/permissoes'
 
 const store = configurarPagamentoLista()
 const router = useRouter()
 const auth = useAuthStore()
 
 const dialogAdiantamento = ref(false)
+
+// Divergências (TASK-218): quem confere (a regra do painel); o servidor recusa a filial de outro
+// gerente
+const veDivergencias = computed(() =>
+  auth.temAlgumaPermissao([PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE]),
+)
 
 function abrirRelatorio() {
   abrirPdf('v1/pagamento/relatorio', store.parametros(), { title: 'Pagamentos' })
@@ -32,6 +40,15 @@ const adiantamentoLancado = (pags) =>
 <template>
   <q-page>
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
+      <div v-if="veDivergencias" class="row justify-end q-mb-sm">
+        <q-btn
+          flat
+          color="primary"
+          icon="rule"
+          label="Divergências"
+          :to="{ name: 'pagamento-divergencias' }"
+        />
+      </div>
       <MgPagamentoLista
         :to="(l) => ({ name: 'pagamento-detalhe', params: { id: l.codpagamento } })"
       />

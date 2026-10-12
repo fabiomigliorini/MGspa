@@ -1,6 +1,6 @@
 <script setup>
 // Pagamento no PDV: o detalhe compartilhado (MgPagamentoDetalhe) numa página com endereço próprio,
-// como no contas (TASK-216): desamarrar e cancelar (o servidor confere o papel), os recibos (o A5 e
+// como no contas (TASK-216): cancelar (o servidor confere o papel), os recibos (o A5 e
 // o cupom, com o Imprimir na térmica do PDV), o vale de crédito dos títulos e o "Referente a".
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'

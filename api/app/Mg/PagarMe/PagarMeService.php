@@ -410,9 +410,12 @@ class PagarMeService
             'codpdv' => $campos['codpdv'] ?? $ped->codpdv,
             'estado' => PagamentoService::ESTADO_PENDENTE,
             'transacao' => $passou ? Carbon::parse($passou) : Carbon::now(),
+            // o pedido volta a ser usado depois do cancelamento (TASK-218):
+            // a mesma linha (um pagamento por pedido), sem o cancelamento
             'cancelamento' => null,
             'codusuariocancelamento' => null,
             'justificativa' => null,
+            'codmaquinetalotecancelamento' => null,
             'codpessoa' => $campos['codpessoa'] ?? null,
             'observacoes' => $campos['observacoes'] ?? null,
             'referente' => $campos['referente'] ?? null,

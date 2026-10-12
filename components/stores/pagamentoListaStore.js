@@ -128,7 +128,7 @@ export const pagamentoListaStore = defineStore('pagamentoLista', {
       return this.pagamento
     },
 
-    // cancelar: só o manual já desamarrado (o pagamento não aconteceu)
+    // cancelar: o pagamento não aconteceu como foi lançado; as baixas são estornadas junto
     async cancelar(id, justificativa) {
       const { data } = await api.post(`${this.endpoint}/${id}/cancelar`, {
         ...this.fixos,

@@ -27,6 +27,21 @@ class PagamentoController extends Controller
         return PagamentoListaResource::collection(PagamentoListaService::listar($filtros));
     }
 
+    // Divergencias (TASK-218): vendas que nao fecham e pagamentos que nao
+    // batem com as baixas ou com a venda; quem ve e' quem confere (painel)
+    public function divergencias(Request $request)
+    {
+        $request->validate([
+            'caso' => 'nullable|string|in:' . implode(',', array_keys(PagamentoDivergenciaService::CASOS)),
+            'data_de' => 'nullable|date',
+            'data_ate' => 'nullable|date',
+            'codfilial' => 'nullable|integer',
+        ]);
+        return response()->json(PagamentoDivergenciaService::listar(
+            $request->only(['caso', 'data_de', 'data_ate', 'codfilial'])
+        ));
+    }
+
     public function show(int $id)
     {
         Autorizador::autoriza(self::GRUPOS_LEITURA);
@@ -69,32 +84,6 @@ class PagamentoController extends Controller
         return new PagamentoDetalheResource($pag);
     }
 
-    // desamarrar: estorna as baixas (todas ou as linhas escolhidas); o
-    // pagamento continua, sem amarracao. "estornar" e' o nome antigo.
-    public function desamarrar(Request $request, int $id)
-    {
-        Autorizador::autoriza(self::GRUPOS_MUTACAO);
-        $request->validate([
-            'justificativa' => 'required|string|min:5|max:300',
-            'codmovimentos' => 'nullable|array',
-            'codmovimentos.*' => 'integer',
-        ]);
-        DB::beginTransaction();
-        $pag = PagamentoListaService::carregar($id);
-        $bloqueio = PagamentoTituloAutorizador::motivoBloqueioEstorno($pag, Auth::user()->codusuario);
-        if ($bloqueio !== null) {
-            abort(403, $bloqueio);
-        }
-        $pag = PagamentoTituloService::desamarrar($pag, $request->justificativa, $request->codmovimentos);
-        DB::commit();
-        return new PagamentoDetalheResource($pag);
-    }
-
-    public function estornar(Request $request, int $id)
-    {
-        return $this->desamarrar($request, $id);
-    }
-
     // o "Referente a" (sai no recibo), em qualquer pagamento efetivado
     public function referente(Request $request, int $id)
     {
@@ -106,7 +95,7 @@ class PagamentoController extends Controller
         return new PagamentoDetalheResource($pag);
     }
 
-    // cancelar: o fato nao existiu (manual digitado errado, ja' desamarrado)
+    // cancelar: o fato nao existiu como foi lancado; estorna as baixas junto
     public function cancelar(Request $request, int $id)
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);

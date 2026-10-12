@@ -151,7 +151,7 @@ class ConferenciaService
         }
 
         // vendas desbalanceadas
-        foreach (VendaConferenciaService::desbalanceadas($filiais) as $r) {
+        foreach (VendaConferenciaService::desbalanceadas($filiais, static::inicio()) as $r) {
             $ret[] = [
                 'tipo' => static::TIPO_VENDA,
                 'id' => $r->codnegocio,

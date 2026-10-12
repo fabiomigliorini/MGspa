@@ -63,27 +63,6 @@ class PdvPagamentoController
         return PagamentoDetalheResource::collection($pags);
     }
 
-    // desamarrar: estorna as baixas (todas ou as linhas escolhidas); o
-    // pagamento continua. "estornar" e' o nome antigo da mesma rota.
-    public function desamarrar(PdvRequest $request, int $id)
-    {
-        $pdv = PdvService::autoriza($request->pdv);
-        $request->validate([
-            'justificativa' => 'required|string|min:5|max:300',
-            'codmovimentos' => 'nullable|array',
-            'codmovimentos.*' => 'integer',
-        ]);
-        DB::beginTransaction();
-        $pag = PdvPagamentoService::desamarrar($pdv, $id, $request->justificativa, $request->codmovimentos);
-        DB::commit();
-        return new PagamentoDetalheResource($pag);
-    }
-
-    public function estornar(PdvRequest $request, int $id)
-    {
-        return $this->desamarrar($request, $id);
-    }
-
     // o "Referente a" (sai no recibo), em qualquer pagamento efetivado que o PDV ve
     public function referente(PdvRequest $request, int $id)
     {
@@ -95,7 +74,7 @@ class PdvPagamentoController
         return new PagamentoDetalheResource($pag);
     }
 
-    // cancelar: so' o pagamento manual ja' desamarrado
+    // cancelar: estorna as baixas junto (TASK-218)
     public function cancelar(PdvRequest $request, int $id)
     {
         $pdv = PdvService::autoriza($request->pdv);

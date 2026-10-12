@@ -13,7 +13,7 @@ class PagamentoDetalheResource extends Resource
 {
     public function toArray($request)
     {
-        // as baixas, com o historico: estornada = amarracao desfeita
+        // as baixas, com o historico das estornadas
         $todos = collect($this->MovimentoTituloS ?? []);
         $estornados = $todos->pluck('codmovimentotituloestorno')->filter()->all();
         $movimentos = $todos
@@ -58,7 +58,6 @@ class PagamentoDetalheResource extends Resource
         $origem = PagamentoListaService::origem($this->resource);
         $portador = $this->portadorDoPagamento();
         $pessoa = PagamentoListaService::pessoa($this->resource);
-        $ativos = collect($movimentos)->where('estornado', false)->count();
         $efetivado = $this->estado == PagamentoService::ESTADO_EFETIVADO;
         $documento = empty($this->codnegocio) && empty($this->codperiodocolaboradoracerto);
         $manual = PagamentoTituloService::manual($this->resource);
@@ -136,19 +135,12 @@ class PagamentoDetalheResource extends Resource
                 'transacao' => $c->transacao,
             ])->values()->all(),
             // o que a tela pode fazer (venda pelo negocio, acerto pelo acerto):
-            // desamarrar o que esta' amarrado; cancelar so' o manual ja'
-            // desamarrado; editar (pessoa, observacao; data so' do manual).
-            // Desamarrar desligado por enquanto (TASK-218)
-            'desamarravel'              => false,
-            'cancelavel'                => $efetivado && $documento && $ativos == 0 && $manual,
+            // cancelar estorna as baixas junto, menos o de boleto (TASK-218);
+            // editar (pessoa, observacao; data so' do manual)
+            'cancelavel'                => $efetivado && $documento && !$baixabanco,
             'editavel'                  => $efetivado && $documento,
             'manual'                    => $manual,
             'integrado'                 => !$manual,
-            'estornavel'                => $efetivado && $documento && $ativos > 0,
-            // pago - devolvido, o que esta' amarrado e o que sobra livre
-            'saldo'                     => $efetivado ? PagamentoPendenciaService::saldo($this->resource) : 0,
-            'amarrado'                  => $efetivado ? PagamentoPendenciaService::amarrado($this->resource) : 0,
-            'livre'                     => $efetivado ? PagamentoPendenciaService::livre($this->resource) : 0,
             'baixabanco'                => $baixabanco,
             'movimentos'                => $movimentos,
             // razao (M10 doc-3): o que caiu em cada portador; inativas =

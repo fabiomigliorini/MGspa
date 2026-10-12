@@ -942,8 +942,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('pagamento/originais', '\Mg\Pdv\PdvPagamentoController@originais');
         Route::get('pagamento/{id}', '\Mg\Pdv\PdvPagamentoController@show')->whereNumber('id');
         Route::post('pagamento', '\Mg\Pdv\PdvPagamentoController@store');
-        Route::post('pagamento/{id}/estornar', '\Mg\Pdv\PdvPagamentoController@estornar')->whereNumber('id');
-        Route::post('pagamento/{id}/desamarrar', '\Mg\Pdv\PdvPagamentoController@desamarrar')->whereNumber('id');
         Route::post('pagamento/{id}/cancelar', '\Mg\Pdv\PdvPagamentoController@cancelar')->whereNumber('id');
         Route::put('pagamento/{id}/referente', '\Mg\Pdv\PdvPagamentoController@referente')->whereNumber('id');
         Route::post('pagamento/recibo/{impressora}', '\Mg\Pdv\PdvPagamentoController@imprimirRecibo');
@@ -1284,11 +1282,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Pagamentos: listagem unica e baixa de titulos (M6/M6.1 doc-3; era liquidacao-titulo)
     Route::get('pagamento', '\Mg\Pagamento\PagamentoController@index');
     Route::get('pagamento/relatorio', '\Mg\Pagamento\PagamentoController@relatorio');
+    Route::get('pagamento/divergencia', '\Mg\Pagamento\PagamentoController@divergencias');
     Route::get('pagamento/{id}', '\Mg\Pagamento\PagamentoController@show')->where('id', '[0-9]+');
     Route::post('pagamento', '\Mg\Pagamento\PagamentoController@store');
     Route::put('pagamento/{id}', '\Mg\Pagamento\PagamentoController@update')->where('id', '[0-9]+');
-    Route::post('pagamento/{id}/estornar', '\Mg\Pagamento\PagamentoController@estornar')->where('id', '[0-9]+');
-    Route::post('pagamento/{id}/desamarrar', '\Mg\Pagamento\PagamentoController@desamarrar')->where('id', '[0-9]+');
     Route::post('pagamento/{id}/cancelar', '\Mg\Pagamento\PagamentoController@cancelar')->where('id', '[0-9]+');
     Route::put('pagamento/{id}/referente', '\Mg\Pagamento\PagamentoController@referente')->where('id', '[0-9]+');
     Route::get('pagamento/{id}/recibo', '\Mg\Pagamento\PagamentoController@recibo')->where('id', '[0-9]+');

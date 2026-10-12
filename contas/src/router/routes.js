@@ -356,6 +356,19 @@ const routes = [
         },
       },
       {
+        path: 'pagamento/divergencias',
+        name: 'pagamento-divergencias',
+        component: () => import('pages/pagamento/Divergencias.vue'),
+        meta: {
+          auth: true,
+          title: 'Divergências',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/DivergenciaFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
         path: 'pagamento/novo',
         name: 'pagamento-novo',
         component: () => import('pages/pagamento/Nova.vue'),

@@ -222,7 +222,7 @@ class TituloService
     // Título que nasceu com dinheiro (vale colaborador, adiantamento): o
     // estorno devolve o total ao portador e cancela o pagamento
     // $cancelarPagamento = false: o titulo sai, o pagamento que nasceu com ele
-    // fica (desamarrar, PagamentoTituloService::desamarrar)
+    // fica para quem chamou cancelar (PagamentoTituloService::cancelar)
     public static function estornar(Titulo $titulo, ?string $justificativa = null, bool $cancelarPagamento = true)
     {
         if (!empty($titulo->estornado)) {

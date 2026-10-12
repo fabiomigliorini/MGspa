@@ -81,19 +81,8 @@ class PdvPagamentoService
         return $pag;
     }
 
-    // Desamarrar (estorna as baixas; o pagamento fica) e cancelar (so' o
-    // manual ja' desamarrado). Caixa: os proprios, nas primeiras 2 horas;
-    // Gerente: a filial
-    public static function desamarrar(Pdv $pdv, int $codpagamento, string $justificativa, ?array $codmovimentos = null): Pagamento
-    {
-        $pag = static::carregar($pdv, $codpagamento);
-        $bloqueio = PagamentoTituloAutorizador::motivoBloqueioEstorno($pag, Auth::user()->codusuario);
-        if ($bloqueio !== null) {
-            abort(403, $bloqueio);
-        }
-        return PagamentoTituloService::desamarrar($pag, $justificativa, $codmovimentos);
-    }
-
+    // Cancelar (estorna as baixas junto, TASK-218). Caixa: os proprios, nas
+    // primeiras 2 horas; Gerente: a filial
     public static function cancelar(Pdv $pdv, int $codpagamento, string $justificativa): Pagamento
     {
         $pag = static::carregar($pdv, $codpagamento);
