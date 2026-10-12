@@ -3,11 +3,11 @@ id: TASK-218
 title: >-
   Pagamento que não bate com a venda ou com os títulos não aparece em lugar
   nenhum, e baixa no pagamento errado não tem como ser desfeita
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-10 21:30'
-updated_date: '2026-10-12 02:17'
+updated_date: '2026-10-12 12:55'
 labels:
   - contas
   - negocios
@@ -83,4 +83,11 @@ No dev, teste do script com rollback: 1.216.225 vendas que não fecham; troco em
 - **Tela** (Chrome headless no dev server do contas): botão na lista de Pagamentos; lista carregada em 8 s ("As 5.000 mais recentes de 1.216.235"); filtro Pagamento que não bate com as baixas → 6 linhas; clique abre o detalhe; sem erro de console nem de API.
 - **Script** (dev, com ROLLBACK, ~6 min): 1.216.225 vendas que não fecham; troco em dinheiro 1.158.671; repetido 26.043 vendas (26.052 cópias); troco do vale 2.107; sobram 29.404.
 - **Lint**: contas completo e negocios (arquivo alterado) sem erro; prettier nos componentes compartilhados.
+
+## Bateria depois do commit 16e612665 (12/10/2026)
+- **Cancelar** (tinker, transação desfeita): encontro de contas 80247801 (estorna as duas baixas, de sinais opostos); cheque 80246692 (cheque cancelado junto, crédito estornado); pagamento 80248399 com título ajustado (estorna pelo TituloService, como o desamarrar fazia); PDV 80248396 pelo PdvPagamentoService.
+- **Acesso** (HTTP, gerente da filial 103): filial 101 recusada com 403 e a mensagem; sem filtro, só a 103.
+- **Tela** (Chrome headless): rolagem 200 → 600 linhas; data de 01/09 a 30/09/2026 → 2 divergências; filial Deposito → 1; caso Pagamento em venda cancelada → lista vazia com a mensagem; o filtro fica gravado; venda abre a Venda com diferença; painel (lista e filial 101) sem erro.
+- **Script** duas vezes na mesma transação (ROLLBACK): a segunda passada não muda nada (troco 0, repetido 0, vale 0) e sobram as mesmas 29.404.
+- Nenhum defeito achado.
 <!-- SECTION:NOTES:END -->
