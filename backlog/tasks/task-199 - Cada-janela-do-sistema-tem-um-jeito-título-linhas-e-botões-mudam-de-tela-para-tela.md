@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-06 19:43'
-updated_date: '2026-10-12 15:28'
+updated_date: '2026-10-12 15:32'
 labels:
   - components
 dependencies: []
@@ -51,4 +51,6 @@ Dúvida para o Fábio antes de começar: o modelo de títulos usa q-card bordere
 Revisão do backlog com o Fábio (10/10/2026, 2ª varredura): contagem nova (arquivos com <q-dialog> no modelo: overline + q-separator inset): estoque 9/9, contas 28/33, pessoas 35/41, @components 10/21, negocios 1/19, notas 0/20, agro 0/23. No estoque a exceção é o detalhe do produto em conferencia/Listagem.vue (text-h6); os do estoque usam bordered flat, o que depende da dúvida aberta (bordered ou não). Em contas faltam os 4 da descrição e ocorrencia/Index.vue.
 
 12/10/2026 — contas/src/components/portador/PortadorUsuariosDialog.vue: rolagem só no corpo com o mesmo padrão do CaixaItemFechamentosDialog (q-card flat class="column no-wrap" max-height 90vh; seções e ações col-auto; q-list col scroll), o que evita a barra de rolagem da janela inteira cortando o arredondado da direita. Usuário inativo com q-badge orange-7 Inativo (padrão das listas do contas) em vez de text-strike. Os dois q-select crus viraram MgSelect (manutenção da tela).
+
+12/10/2026 (ajuste) — a q-list estava solta direto no q-card, sem o padding lateral do q-card-section (já era assim antes da TASK-199): agora fica dentro de <q-card-section class="col scroll q-pt-none">, e é ele que rola. Linhas da lista alinhadas com os campos de cima.
 <!-- SECTION:NOTES:END -->
