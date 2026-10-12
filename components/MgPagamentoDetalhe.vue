@@ -6,7 +6,7 @@
 // Os recibos ficam sempre à mostra nos dois apps (TASK-216): o A5 e o cupom da térmica, o mesmo
 // recibo (PagamentoReciboService); o que não se aplica, o servidor recusa com a mensagem. Ações
 // próprias do app (editar) entram no slot `acoes`.
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
@@ -16,6 +16,7 @@ import { formataNumero, formataData, formataTimestamp, formataCodigo } from '@co
 import { visualPagamento } from '@components/cobranca/pagamento.js'
 import LogoPagamento from '@components/cobranca/LogoPagamento.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgInput from '@components/MgInput.vue'
 
 const props = defineProps({
   // o app diz se o usuário pode desamarrar e cancelar (grupos); o servidor confere de novo
@@ -50,6 +51,29 @@ const emit = defineEmits(['estornado'])
 const $q = useQuasar()
 const store = pagamentoListaStore()
 const pag = computed(() => store.pagamento)
+
+// "Referente a": o texto que sai no recibo, editável em todo pagamento efetivado (TASK-216)
+const dialogReferente = ref(false)
+const referente = ref('')
+const salvandoReferente = ref(false)
+
+const abrirReferente = () => {
+  referente.value = pag.value.referente ?? ''
+  dialogReferente.value = true
+}
+
+const salvarReferente = async () => {
+  salvandoReferente.value = true
+  try {
+    await store.atualizarReferente(pag.value.codpagamento, referente.value)
+    $q.notify({ type: 'positive', message: 'Alterado', color: 'green-5', icon: 'done' })
+    dialogReferente.value = false
+  } catch (e) {
+    erro(e, 'Erro ao alterar')
+  } finally {
+    salvandoReferente.value = false
+  }
+}
 
 const OPERACAO = {
   CR: 'Recebimento',
@@ -290,10 +314,18 @@ const cancelar = () => {
                 </q-item-label>
               </q-item-section>
             </q-item>
-            <q-item v-if="pag.referente">
+            <q-item v-if="pag.estado === 'E'">
               <q-item-section>
                 <q-item-label caption>Referente a (sai no recibo)</q-item-label>
-                <q-item-label>{{ pag.referente }}</q-item-label>
+                <q-item-label v-if="pag.referente">{{ pag.referente }}</q-item-label>
+                <q-item-label v-else class="text-italic text-grey-6"
+                  >vazio: não sai no recibo</q-item-label
+                >
+              </q-item-section>
+              <q-item-section side>
+                <q-btn flat round size="sm" icon="edit" color="grey-7" @click="abrirReferente">
+                  <q-tooltip>Alterar o Referente a</q-tooltip>
+                </q-btn>
               </q-item-section>
             </q-item>
             <q-item v-for="c in pag.contrarios" :key="c.codpagamento">
@@ -457,5 +489,27 @@ const cancelar = () => {
         </q-card>
       </div>
     </div>
+
+    <q-dialog v-model="dialogReferente">
+      <q-card flat style="width: 600px; max-width: 90vw">
+        <q-card-section class="text-grey-9 text-overline">REFERENTE A</q-card-section>
+        <q-form @submit.prevent="salvarReferente">
+          <q-separator inset />
+          <q-card-section>
+            <MgInput
+              v-model="referente"
+              label="Referente a (sai no recibo)"
+              maxlength="255"
+              autofocus
+              hint="Vazio, não sai no recibo"
+            />
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+            <q-btn flat label="Salvar" color="primary" type="submit" :loading="salvandoReferente" />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
   </div>
 </template>

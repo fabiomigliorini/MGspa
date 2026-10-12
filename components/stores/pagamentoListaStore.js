@@ -50,9 +50,8 @@ export const pagamentoListaStore = defineStore('pagamentoLista', {
     pagina: 1,
     temMais: true,
     total: 0,
-    // detalhe aberto (página no contas, dialog no PDV)
+    // detalhe aberto (a página do pagamento, no contas e no PDV)
     pagamento: null,
-    dialogDetalhe: false,
   }),
 
   getters: {
@@ -134,6 +133,17 @@ export const pagamentoListaStore = defineStore('pagamentoLista', {
       const { data } = await api.post(`${this.endpoint}/${id}/cancelar`, {
         ...this.fixos,
         justificativa,
+      })
+      this.pagamento = data.data
+      this.atualizarLinha(data.data)
+      return this.pagamento
+    },
+
+    // o "Referente a" (sai no recibo), sozinho, em qualquer pagamento efetivado (contas e PDV)
+    async atualizarReferente(id, referente) {
+      const { data } = await api.put(`${this.endpoint}/${id}/referente`, {
+        ...this.fixos,
+        referente: referente || null,
       })
       this.pagamento = data.data
       this.atualizarLinha(data.data)

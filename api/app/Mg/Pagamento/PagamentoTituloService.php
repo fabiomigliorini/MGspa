@@ -555,7 +555,19 @@ class PagamentoTituloService
         return $pag;
     }
 
-    // O lapis do pagamento: pessoa, observacao e "referente a"; a data so' do pagamento
+    // O "Referente a" (o texto que sai no recibo), sozinho: muda em qualquer pagamento efetivado,
+    // inclusive de venda e de acerto de RH, no contas e no PDV (TASK-216); vazio, nao sai
+    public static function alterarReferente(Pagamento $pag, ?string $referente): Pagamento
+    {
+        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
+            abort(422, 'Só pagamento efetivado tem recibo!');
+        }
+        $pag->referente = trim((string) $referente) ?: null;
+        $pag->save();
+        return PagamentoListaService::carregar($pag->codpagamento);
+    }
+
+    // O lapis do pagamento: pessoa e observacao; a data so' do pagamento
     // manual (a do integrado e' a do banco/maquineta), pelo alterar data
     // (periodo, razao, titulos, com justificativa na auditoria, TASK-204).
     // Meio e portador nao mudam: sao o fato; errou, desamarra e lanca de novo.
@@ -588,7 +600,6 @@ class PagamentoTituloService
         }
         $pag->codpessoa = !empty($dados['codpessoa']) ? (int) $dados['codpessoa'] : $pag->codpessoa;
         $pag->observacoes = $dados['observacao'] ?? null;
-        $pag->referente = $dados['referente'] ?? null;
         $pag->save();
         return PagamentoListaService::carregar($pag->codpagamento);
     }

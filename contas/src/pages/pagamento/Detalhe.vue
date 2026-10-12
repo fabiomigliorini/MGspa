@@ -1,8 +1,8 @@
 <script setup>
-// Pagamento: o detalhe compartilhado (MgPagamentoDetalhe, com os recibos) e o que é do contas: o
-// lápis. O lápis corrige pessoa, "referente a" (sai no recibo) e observação (interna); a data só do pagamento manual (a do integrado é a
-// do banco/maquineta) e, se muda, pede justificativa (TASK-204). Meio e portador são o fato e não
-// mudam: errou, desamarra e lança de novo.
+// Pagamento: o detalhe compartilhado (MgPagamentoDetalhe, com os recibos e o "Referente a") e o que
+// é do contas: o lápis. O lápis corrige pessoa e observação (interna); a data só do pagamento manual
+// (a do integrado é a do banco/maquineta) e, se muda, pede justificativa (TASK-204). Meio e portador
+// são o fato e não mudam: errou, desamarra e lança de novo.
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { notifySuccess, notifyError } from 'src/utils/notify'
@@ -57,7 +57,6 @@ function abrirDialogEditar() {
   editar.value = {
     codpessoa: pag.value.codpessoa,
     transacao: formataTimestampIso(pag.value.transacao).slice(0, 16),
-    referente: pag.value.referente ?? '',
     observacao: pag.value.observacoes ?? '',
     justificativa: '',
   }
@@ -84,7 +83,6 @@ async function salvarEdicao() {
   try {
     await store.atualizar(id.value, {
       ...editar.value,
-      referente: editar.value.referente || null,
       observacao: editar.value.observacao || null,
       justificativa: dataMudou.value ? editar.value.justificativa : null,
     })
@@ -186,13 +184,6 @@ watch(() => route.fullPath, carregar)
                     (v) => (v || '').trim().length >= 5 || 'Diga o motivo (mínimo 5 letras)',
                   ]"
                   lazy-rules
-                />
-              </div>
-              <div class="col-12">
-                <MgInput
-                  v-model="editar.referente"
-                  label="Referente a (sai no recibo)"
-                  maxlength="255"
                 />
               </div>
               <div class="col-12">

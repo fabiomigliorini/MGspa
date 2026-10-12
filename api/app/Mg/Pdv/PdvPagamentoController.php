@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Mg\Pagamento\PagamentoDetalheResource;
 use Mg\Pagamento\PagamentoListaResource;
 use Mg\Pagamento\PagamentoListaService;
+use Mg\Pagamento\PagamentoTituloService;
 use Mg\Pagamento\PagamentoTituloStoreRequest;
 use Mg\Titulo\TituloAbertosFechamentoService;
 
@@ -81,6 +82,17 @@ class PdvPagamentoController
     public function estornar(PdvRequest $request, int $id)
     {
         return $this->desamarrar($request, $id);
+    }
+
+    // o "Referente a" (sai no recibo), em qualquer pagamento efetivado que o PDV ve
+    public function referente(PdvRequest $request, int $id)
+    {
+        $pdv = PdvService::autoriza($request->pdv);
+        $request->validate(['referente' => 'nullable|string|max:255']);
+        DB::beginTransaction();
+        $pag = PagamentoTituloService::alterarReferente(PdvPagamentoService::carregar($pdv, $id), $request->referente);
+        DB::commit();
+        return new PagamentoDetalheResource($pag);
     }
 
     // cancelar: so' o pagamento manual ja' desamarrado

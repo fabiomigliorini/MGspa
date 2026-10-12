@@ -945,6 +945,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('pagamento/{id}/estornar', '\Mg\Pdv\PdvPagamentoController@estornar')->whereNumber('id');
         Route::post('pagamento/{id}/desamarrar', '\Mg\Pdv\PdvPagamentoController@desamarrar')->whereNumber('id');
         Route::post('pagamento/{id}/cancelar', '\Mg\Pdv\PdvPagamentoController@cancelar')->whereNumber('id');
+        Route::put('pagamento/{id}/referente', '\Mg\Pdv\PdvPagamentoController@referente')->whereNumber('id');
         Route::post('pagamento/recibo/{impressora}', '\Mg\Pdv\PdvPagamentoController@imprimirRecibo');
         // vale colaborador e adiantamentos (M8 doc-3)
         Route::post('titulo', '\Mg\Pdv\PdvTituloController@store');
@@ -1289,6 +1290,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('pagamento/{id}/estornar', '\Mg\Pagamento\PagamentoController@estornar')->where('id', '[0-9]+');
     Route::post('pagamento/{id}/desamarrar', '\Mg\Pagamento\PagamentoController@desamarrar')->where('id', '[0-9]+');
     Route::post('pagamento/{id}/cancelar', '\Mg\Pagamento\PagamentoController@cancelar')->where('id', '[0-9]+');
+    Route::put('pagamento/{id}/referente', '\Mg\Pagamento\PagamentoController@referente')->where('id', '[0-9]+');
     Route::get('pagamento/{id}/recibo', '\Mg\Pagamento\PagamentoController@recibo')->where('id', '[0-9]+');
     // cobranca integrada sem PDV (contas, M6.1 doc-3)
     Route::post('cobranca/pix', '\Mg\Pagamento\CobrancaController@pix');

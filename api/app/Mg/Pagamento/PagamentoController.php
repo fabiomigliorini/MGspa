@@ -95,6 +95,17 @@ class PagamentoController extends Controller
         return $this->desamarrar($request, $id);
     }
 
+    // o "Referente a" (sai no recibo), em qualquer pagamento efetivado
+    public function referente(Request $request, int $id)
+    {
+        Autorizador::autoriza(self::GRUPOS_MUTACAO);
+        $request->validate(['referente' => 'nullable|string|max:255']);
+        DB::beginTransaction();
+        $pag = PagamentoTituloService::alterarReferente(PagamentoListaService::carregar($id), $request->referente);
+        DB::commit();
+        return new PagamentoDetalheResource($pag);
+    }
+
     // cancelar: o fato nao existiu (manual digitado errado, ja' desamarrado)
     public function cancelar(Request $request, int $id)
     {
