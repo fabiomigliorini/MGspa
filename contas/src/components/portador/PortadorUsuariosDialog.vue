@@ -5,6 +5,7 @@
 // todos sem estar aqui. Só o gestor abre.
 import { ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
+import MgSelect from '@components/MgSelect.vue'
 import MgSelectUsuario from '@components/MgSelectUsuario.vue'
 import { periodoStore, PAPEIS } from '@components/stores/periodoStore'
 
@@ -41,32 +42,25 @@ function excluir(u) {
 
 <template>
   <q-dialog v-model="store.dialogUsuarios">
-    <q-card flat style="width: 600px; max-width: 95vw">
-      <q-card-section class="text-grey-9 text-overline text-uppercase">
+    <q-card flat class="column no-wrap" style="width: 600px; max-width: 95vw; max-height: 90vh">
+      <q-card-section class="col-auto text-grey-9 text-overline text-uppercase">
         Usuários de {{ store.portador?.portador }}
       </q-card-section>
       <q-separator inset />
-      <q-card-section class="text-caption text-grey-7 q-pb-none">
+      <q-card-section class="col-auto text-caption text-grey-7 q-pb-none">
         <div v-for="p in PAPEIS" :key="p.value">
           <span class="text-weight-medium">{{ p.label }}</span
           >: {{ p.descricao }}
         </div>
       </q-card-section>
 
-      <q-form @submit.prevent="incluir">
+      <q-form class="col-auto" @submit.prevent="incluir">
         <q-card-section class="row q-col-gutter-md items-start">
           <div class="col-12 col-sm-6">
             <MgSelectUsuario v-model="novo.codusuario" label="Usuário" autofocus />
           </div>
           <div class="col-8 col-sm-4">
-            <q-select
-              v-model="novo.papel"
-              :options="PAPEIS"
-              emit-value
-              map-options
-              outlined
-              label="Papel"
-            />
+            <MgSelect v-model="novo.papel" :options="PAPEIS" emit-value map-options label="Papel" />
           </div>
           <div class="col-4 col-sm-2 q-pt-md">
             <q-btn
@@ -84,19 +78,21 @@ function excluir(u) {
         </q-card-section>
       </q-form>
 
-      <q-list separator class="q-mb-sm">
+      <q-list separator class="col scroll q-mb-sm">
         <q-item v-for="u in store.usuarios" :key="u.codportadorusuario">
           <q-item-section>
-            <q-item-label :class="u.usuarioinativo ? 'text-strike text-grey-6' : ''">
+            <q-item-label :class="u.usuarioinativo ? 'text-grey-6' : ''">
               {{ u.usuario }}
+              <q-badge v-if="u.usuarioinativo" color="orange-7" class="q-ml-xs">Inativo</q-badge>
             </q-item-label>
           </q-item-section>
           <q-item-section side style="width: 160px">
-            <q-select
+            <MgSelect
               :model-value="u.papel"
               :options="PAPEIS"
               emit-value
               map-options
+              :outlined="false"
               borderless
               @update:model-value="(p) => store.salvarUsuario(u.codusuario, p)"
             />
@@ -115,7 +111,7 @@ function excluir(u) {
       </q-list>
 
       <q-separator inset />
-      <q-card-actions align="right">
+      <q-card-actions align="right" class="col-auto">
         <q-btn flat label="Fechar" color="grey-8" v-close-popup />
       </q-card-actions>
     </q-card>
