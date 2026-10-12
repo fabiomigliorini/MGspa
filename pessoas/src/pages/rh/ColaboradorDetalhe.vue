@@ -523,7 +523,7 @@ const imprimirRecibo = () => {
   )
 }
 
-// Todos os recibos de UM acerto (pagamento e/ou recebimento, conforme os valores).
+// O recibo de UM acerto: o do pagamento do acerto, com os dois lados (TASK-216)
 const imprimirReciboAcerto = (ac) => {
   abrirPdf(
     api,
@@ -533,20 +533,6 @@ const imprimirReciboAcerto = (ac) => {
       ac.codperiodocolaboradoracerto +
       '/recibo',
     {},
-    { title: 'Recibos — ' + nome.value },
-  )
-}
-
-// Recibo de um valor especifico do acerto: rubricas/creditos -> pagamento; debitos -> recebimento.
-const imprimirReciboTipo = (ac, tipo) => {
-  abrirPdf(
-    api,
-    'v1/rh/periodo/' +
-      route.params.codperiodo +
-      '/acertos/' +
-      ac.codperiodocolaboradoracerto +
-      '/recibo',
-    { tipo },
     { title: 'Recibo — ' + nome.value },
   )
 }
@@ -1165,19 +1151,6 @@ watch(
             <template #celula-rubricas="{ linha: ac }">
               <div v-if="ac.rubricas" class="row items-center justify-end no-wrap">
                 <span>{{ formataNumero(ac.rubricas) }}</span>
-                <q-btn
-                  v-if="!ac.inativo"
-                  flat
-                  round
-                  dense
-                  size="sm"
-                  color="grey-6"
-                  icon="print"
-                  class="q-ml-xs"
-                  @click="imprimirReciboTipo(ac, 'pagamento')"
-                >
-                  <q-tooltip>Recibo de pagamento</q-tooltip>
-                </q-btn>
               </div>
               <template v-else>—</template>
             </template>
@@ -1185,19 +1158,6 @@ watch(
             <template #celula-creditos="{ linha: ac }">
               <div v-if="ac.creditos" class="row items-center justify-end no-wrap">
                 <span>{{ formataNumero(ac.creditos) }}</span>
-                <q-btn
-                  v-if="!ac.inativo"
-                  flat
-                  round
-                  dense
-                  size="sm"
-                  color="grey-6"
-                  icon="print"
-                  class="q-ml-xs"
-                  @click="imprimirReciboTipo(ac, 'pagamento')"
-                >
-                  <q-tooltip>Recibo de pagamento</q-tooltip>
-                </q-btn>
               </div>
               <template v-else>—</template>
             </template>
@@ -1205,19 +1165,6 @@ watch(
             <template #celula-debitos="{ linha: ac }">
               <div v-if="ac.debitos" class="row items-center justify-end no-wrap">
                 <span>{{ formataNumero(ac.debitos) }}</span>
-                <q-btn
-                  v-if="!ac.inativo"
-                  flat
-                  round
-                  dense
-                  size="sm"
-                  color="grey-6"
-                  icon="print"
-                  class="q-ml-xs"
-                  @click="imprimirReciboTipo(ac, 'recebimento')"
-                >
-                  <q-tooltip>Recibo de recebimento</q-tooltip>
-                </q-btn>
               </div>
               <template v-else>—</template>
             </template>
@@ -1243,7 +1190,7 @@ watch(
                   icon="print"
                   @click="imprimirReciboAcerto(ac)"
                 >
-                  <q-tooltip>Imprimir recibos deste acerto</q-tooltip>
+                  <q-tooltip>Imprimir o recibo deste acerto</q-tooltip>
                 </q-btn>
                 <q-btn
                   v-if="podeEditar && colaborador.status === 'A'"

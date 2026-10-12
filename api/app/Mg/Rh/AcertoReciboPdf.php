@@ -46,9 +46,8 @@ class AcertoReciboPdf
         return self::render($acertos);
     }
 
-    // O recibo de UM acerto. $tipo (pagamento/recebimento) e' do recibo antigo, que separava os
-    // dois lados; o documento unico ja' traz os dois (o encontro de contas) e ignora.
-    public static function gerarPorAcerto(int $codperiodocolaboradoracerto, ?string $tipo = null): string
+    // O recibo de UM acerto: o documento unico ja' traz os dois lados (o encontro de contas)
+    public static function gerarPorAcerto(int $codperiodocolaboradoracerto): string
     {
         ini_set('memory_limit', '256M');
 
