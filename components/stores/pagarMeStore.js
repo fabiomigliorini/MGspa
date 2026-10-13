@@ -118,7 +118,7 @@ export const pagarMeStore = defineStore('pagarMe', {
 
     // o pedido é de um documento (hoje o negócio): quem estiver com ele aberto recarrega
     async atualizarPagarMePedido() {
-      avisar('cobrancaAtualizada', { codnegocio: this.pedido.codnegocio })
+      await avisar('cobrancaAtualizada', { codnegocio: this.pedido.codnegocio })
     },
   },
 })

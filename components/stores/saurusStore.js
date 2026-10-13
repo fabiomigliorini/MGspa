@@ -102,7 +102,7 @@ export const saurusStore = defineStore('saurus', {
 
     // o pedido é de um documento (hoje o negócio): quem estiver com ele aberto recarrega
     async atualizarSaurusPedido() {
-      avisar('cobrancaAtualizada', { codnegocio: this.pedido.codnegocio })
+      await avisar('cobrancaAtualizada', { codnegocio: this.pedido.codnegocio })
     },
   },
 })

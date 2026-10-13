@@ -132,7 +132,7 @@ export const pixStore = defineStore('pixCob', {
 
     // a cobrança é de um documento (hoje o negócio): quem estiver com ele aberto recarrega
     async atualizarPixCobNegocio() {
-      avisar('cobrancaAtualizada', {
+      await avisar('cobrancaAtualizada', {
         codnegocio: this.pixCob.codnegocio,
         pixCob: this.pixCob,
       })
