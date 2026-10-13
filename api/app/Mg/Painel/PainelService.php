@@ -63,19 +63,32 @@ class PainelService
         ];
     }
 
-    // periodo com diferenca a resolver ou transferencia a confirmar; o
-    // periodo aberto nao e' pendencia (como na maquineta)
+    // periodo aberto com movimento, periodo com diferenca a resolver ou
+    // transferencia a confirmar; o periodo aberto sem movimento nao e'
+    // pendencia (como na maquineta)
     private static function caixas(int $codfilial): array
     {
+        $comMovimento = array_map(fn ($r) => (int) $r->codportadorperiodo, DB::select('
+            select distinct pp.codportadorperiodo
+            from tblportadorperiodo pp
+            inner join tblportador p on (p.codportador = pp.codportador)
+            inner join tblportadormovimento m on (m.codportadorperiodo = pp.codportadorperiodo)
+            where p.codfilial = :codfilial
+            and pp.fim is null
+            and m.inativo is null
+        ', ['codfilial' => $codfilial]));
         return array_values(array_filter(
             PortadorService::painel($codfilial, false, false),
-            fn ($p) => $p['pendentes'] > 0
+            fn ($p) => (($p['sessao']['aberta'] ?? false)
+                    && in_array($p['sessao']['codportadorperiodo'], $comMovimento))
+                || $p['pendentes'] > 0
                 || $p['chegando']['quantidade'] > 0
                 || $p['saindo']['quantidade'] > 0
         ));
     }
 
-    // periodo pendente de conciliacao ou sem a foto do bordero
+    // periodo aberto com cartao, periodo pendente de conciliacao ou sem a
+    // foto do bordero; o periodo aberto sem cartao nao e' pendencia
     private static function maquinetas(int $codfilial): array
     {
         $maquinetas = MaquinetaService::listar(['codfilial' => $codfilial, 'inativo' => false]);
@@ -83,12 +96,13 @@ class PainelService
         $ret = [];
         foreach ($maquinetas as $m) {
             $r = $resumo[$m->codmaquineta] ?? null;
-            if (!$r || ($r['pendentes'] == 0 && $r['semBordero'] == 0)) {
+            if (!$r || (!$r['abertoComMovimento'] && $r['pendentes'] == 0 && $r['semBordero'] == 0)) {
                 continue;
             }
             $ret[] = [
                 'codmaquineta' => $m->codmaquineta,
                 'apelido' => $m->apelido,
+                'aberto' => $r['abertoComMovimento'] ? $r['aberto'] : null,
                 'pendentes' => $r['pendentes'],
                 'semBordero' => $r['semBordero'],
             ];

@@ -486,30 +486,15 @@ export const periodoStore = defineStore('periodo', {
       }
     },
 
-    async salvarUsuario(codusuario, papel) {
+    // a lista inteira de uma vez: o servidor inclui, troca o papel e exclui o que mudou
+    async salvarUsuarios(usuarios) {
       this.salvando = true
       try {
-        const { data } = await api.post(`v1/portador/${this.portador.codportador}/usuario`, {
-          codusuario,
-          papel,
+        const { data } = await api.put(`v1/portador/${this.portador.codportador}/usuario`, {
+          usuarios: usuarios.map((u) => ({ codusuario: u.codusuario, papel: u.papel })),
         })
         this.usuarios = data.data
-        return true
-      } catch (error) {
-        avisar(false, erro(error))
-        return false
-      } finally {
-        this.salvando = false
-      }
-    },
-
-    async excluirUsuario(codportadorusuario) {
-      this.salvando = true
-      try {
-        const { data } = await api.delete(
-          `v1/portador/${this.portador.codportador}/usuario/${codportadorusuario}`,
-        )
-        this.usuarios = data.data
+        avisar(true, 'Usuários salvos')
         return true
       } catch (error) {
         avisar(false, erro(error))

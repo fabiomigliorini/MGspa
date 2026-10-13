@@ -46,5 +46,7 @@ Backend: DDL api/database/agro_plantio_variedade_opcional.sql (codvariedade drop
 Frontend: SafraForm 'Copiar talhões de' (só na criação, safras ativas de qualquer cultura); aviso com nº de talhões copiados; SafraDetailPage selo 'Variedade pendente' e checkbox Encerrado desabilitado sem variedade; wizard sem data obrigatória (variedade segue obrigatória).
 Conferido em dev (transação desfeita): origem safra 1 → 22 talhões copiados = 22 distintos ativos; área/cor/geometria iguais ao cadastro; variedade e data nulas; finalizar sem variedade → 422; com variedade → finaliza.
 
+09/10/2026: validado pelo usuário. Lista de 'Copiar talhões de' mostra só safras ativas — confirmado como esperado. Pendente fora do código: rodar api/database/agro_plantio_variedade_opcional.sql em PROD antes do deploy.
+
 Teste ignorado pelo Fábio (10/10/2026): ele dispensou o teste manual dele e pediu para marcar e commitar. Critérios marcados com base no que está implementado e nos testes registrados nas notas acima.
 <!-- SECTION:NOTES:END -->

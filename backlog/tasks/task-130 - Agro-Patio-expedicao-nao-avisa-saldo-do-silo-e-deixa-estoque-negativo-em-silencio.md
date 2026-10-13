@@ -3,7 +3,7 @@ id: TASK-130
 title: >-
   Agro/Patio: expedicao nao avisa saldo do silo e deixa estoque negativo em
   silencio
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-09-21 21:33'
 updated_date: '2026-10-10 19:06'
@@ -12,7 +12,7 @@ labels:
 dependencies: []
 priority: medium
 type: bug
-ordinal: 141000
+ordinal: 2000
 ---
 
 ## Description

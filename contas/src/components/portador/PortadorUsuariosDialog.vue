@@ -3,40 +3,54 @@
 // do editar. Depositante só manda dinheiro para ele (não vê nada); operador vê e movimenta;
 // gestor também confirma transferência, reabre e cuida desta lista. Administrador é gestor em
 // todos sem estar aqui. Só o gestor abre.
+// A lista é um formulário: incluir, trocar o papel e tirar mexem só aqui; o Salvar manda a lista
+// inteira e o Cancelar descarta.
 import { ref, watch } from 'vue'
-import { useQuasar } from 'quasar'
 import MgSelect from '@components/MgSelect.vue'
 import MgSelectUsuario from '@components/MgSelectUsuario.vue'
 import { periodoStore, PAPEIS } from '@components/stores/periodoStore'
 
-const $q = useQuasar()
 const store = periodoStore()
 
+const lista = ref([])
 const novo = ref({ codusuario: null, papel: 'O' })
+// a opção escolhida no MgSelectUsuario: o nome para mostrar na lista antes de salvar
+let escolhido = null
 
 watch(
   () => store.dialogUsuarios,
-  (aberto) => {
+  async (aberto) => {
     if (!aberto) return
+    lista.value = []
     novo.value = { codusuario: null, papel: 'O' }
-    store.buscarUsuarios()
+    await store.buscarUsuarios()
+    lista.value = store.usuarios.map((u) => ({ ...u }))
   },
 )
 
-async function incluir() {
+// quem já está na lista só troca o papel; quem entra vai para o topo, à vista
+function incluir() {
   if (!novo.value.codusuario) return
-  if (await store.salvarUsuario(novo.value.codusuario, novo.value.papel)) {
-    novo.value = { codusuario: null, papel: novo.value.papel }
+  const existente = lista.value.find((u) => u.codusuario === novo.value.codusuario)
+  if (existente) {
+    existente.papel = novo.value.papel
+  } else {
+    lista.value.unshift({
+      codusuario: novo.value.codusuario,
+      usuario: escolhido?.label,
+      usuarioinativo: escolhido?.inativo ?? null,
+      papel: novo.value.papel,
+    })
   }
+  novo.value = { codusuario: null, papel: novo.value.papel }
 }
 
 function excluir(u) {
-  $q.dialog({
-    title: 'Tirar da lista',
-    message: `Tirar ${u.usuario} de ${store.portador.portador}?`,
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-    ok: { label: 'Tirar', color: 'negative', flat: true },
-  }).onOk(() => store.excluirUsuario(u.codportadorusuario))
+  lista.value = lista.value.filter((x) => x !== u)
+}
+
+async function salvar() {
+  if (await store.salvarUsuarios(lista.value)) store.dialogUsuarios = false
 }
 </script>
 
@@ -57,21 +71,18 @@ function excluir(u) {
       <q-form class="col-auto" @submit.prevent="incluir">
         <q-card-section class="row q-col-gutter-md items-start">
           <div class="col-12 col-sm-6">
-            <MgSelectUsuario v-model="novo.codusuario" label="Usuário" autofocus />
+            <MgSelectUsuario
+              v-model="novo.codusuario"
+              label="Usuário"
+              autofocus
+              @select="(opt) => (escolhido = opt)"
+            />
           </div>
           <div class="col-8 col-sm-4">
             <MgSelect v-model="novo.papel" :options="PAPEIS" emit-value map-options label="Papel" />
           </div>
           <div class="col-4 col-sm-2 q-pt-md">
-            <q-btn
-              flat
-              round
-              color="primary"
-              icon="add"
-              type="submit"
-              :disable="!novo.codusuario"
-              :loading="store.salvando"
-            >
+            <q-btn flat round color="primary" icon="add" type="submit" :disable="!novo.codusuario">
               <q-tooltip>Incluir ou trocar o papel</q-tooltip>
             </q-btn>
           </div>
@@ -80,7 +91,7 @@ function excluir(u) {
 
       <q-card-section class="col scroll q-pt-none">
         <q-list separator>
-          <q-item v-for="u in store.usuarios" :key="u.codportadorusuario">
+          <q-item v-for="u in lista" :key="u.codusuario">
             <q-item-section>
               <q-item-label :class="u.usuarioinativo ? 'text-grey-6' : ''">
                 {{ u.usuario }}
@@ -89,13 +100,12 @@ function excluir(u) {
             </q-item-section>
             <q-item-section side style="width: 160px">
               <MgSelect
-                :model-value="u.papel"
+                v-model="u.papel"
                 :options="PAPEIS"
                 emit-value
                 map-options
                 :outlined="false"
                 borderless
-                @update:model-value="(p) => store.salvarUsuario(u.codusuario, p)"
               />
             </q-item-section>
             <q-item-section side>
@@ -104,7 +114,7 @@ function excluir(u) {
               </q-btn>
             </q-item-section>
           </q-item>
-          <q-item v-if="!store.usuarios.length">
+          <q-item v-if="!lista.length">
             <q-item-section class="text-grey-7"
               >Ninguém na lista (só o Administrador).</q-item-section
             >
@@ -114,7 +124,8 @@ function excluir(u) {
 
       <q-separator inset />
       <q-card-actions align="right" class="col-auto">
-        <q-btn flat label="Fechar" color="grey-8" v-close-popup />
+        <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
+        <q-btn flat label="Salvar" color="primary" :loading="store.salvando" @click="salvar" />
       </q-card-actions>
     </q-card>
   </q-dialog>

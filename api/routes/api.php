@@ -1325,8 +1325,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@ativar');
     // usuarios do portador e o papel de cada um (doc-4, redefinicao do dinheiro)
     Route::get('portador/{codportador}/usuario', '\Mg\Portador\PortadorUsuarioController@index')->whereNumber('codportador');
-    Route::post('portador/{codportador}/usuario', '\Mg\Portador\PortadorUsuarioController@store')->whereNumber('codportador');
-    Route::delete('portador/{codportador}/usuario/{codportadorusuario}', '\Mg\Portador\PortadorUsuarioController@destroy')->whereNumber(['codportador', 'codportadorusuario']);
+    Route::put('portador/{codportador}/usuario', '\Mg\Portador\PortadorUsuarioController@update')->whereNumber('codportador');
     // periodo do portador (doc-4): especie abre, conta, fecha (tolerancia ou
     // pendente), reabre, datas, divide, unifica; banco fecha com corte
     Route::post('portador/{codportador}/periodo/abrir', '\Mg\Portador\PortadorPeriodoController@abrir')->whereNumber('codportador');
