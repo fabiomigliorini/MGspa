@@ -20,7 +20,10 @@ const grupos = computed(() => {
   }
   return [...mapa.entries()]
     .sort(([a], [b]) => a.localeCompare(b))
-    .map(([filial, itens]) => ({ filial, itens }))
+    .map(([filial, itens]) => ({
+      filial,
+      itens: itens.sort((a, b) => (a.apelido || '').localeCompare(b.apelido || '')),
+    }))
 })
 
 onMounted(() => sDispositivo.carregar())
