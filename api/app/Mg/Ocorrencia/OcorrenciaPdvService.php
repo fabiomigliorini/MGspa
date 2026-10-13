@@ -210,6 +210,8 @@ class OcorrenciaPdvService
 
     // Desconto acima do maior entre o do cadastro do cliente e 5% sobre a
     // parte paga a vista (pix, dinheiro, debito). E' estado, sem auditoria.
+    // A base e' o bruto (produtos + face dos vales), como no PDV: o pagamento
+    // ja' vem liquido do desconto e 5% sobre ele nunca fecha com os 5% dados.
     private static function desconto(Negocio $negocio): void
     {
         if (!$negocio->NaturezaOperacao->venda || !$negocio->NaturezaOperacao->financeiro) {
@@ -219,20 +221,24 @@ class OcorrenciaPdvService
         if ($desconto <= 0) {
             return;
         }
+        $bruto = (float) $negocio->valorprodutos + (float) $negocio->valorvales;
         $percentualPessoa = (float) ($negocio->Pessoa->desconto ?? 0);
-        $permitidoPessoa = round((float) $negocio->valorprodutos * $percentualPessoa / 100, 2);
-        // principal = valor antes do desconto do pagamento, sem troco
-        $baseAvista = (float) $negocio->PagamentoS()
+        $permitidoPessoa = round($bruto * $percentualPessoa / 100, 2);
+        // principal = valor antes do desconto do pagamento, sem troco; a fatia
+        // dele no liquido (sem juros) diz quanto do bruto foi pago a vista
+        $principalAvista = (float) $negocio->PagamentoS()
             ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
             ->whereIn('meio', static::MEIOS_AVISTA)
             ->sum('principal');
-        $permitidoAvista = round($baseAvista * static::DESCONTO_AVISTA / 100, 2);
+        $liquido = (float) $negocio->valortotal - (float) $negocio->valorjuros;
+        $fracaoAvista = $liquido > 0 ? min(1, $principalAvista / $liquido) : 0;
+        $permitidoAvista = round($bruto * $fracaoAvista * static::DESCONTO_AVISTA / 100, 2);
         $permitido = max($permitidoPessoa, $permitidoAvista);
         $excesso = round($desconto - $permitido, 2);
         if ($excesso <= 0.01) {
             return;
         }
-        $percentual = $negocio->valorprodutos > 0 ? $desconto / $negocio->valorprodutos * 100 : 0;
+        $percentual = $bruto > 0 ? $desconto / $bruto * 100 : 0;
         OcorrenciaService::registrar([
             'tipo' => OcorrenciaService::TIPO_DESCONTO_ACIMA,
             'tabela' => 'tblnegocio',
