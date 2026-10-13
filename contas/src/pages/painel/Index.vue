@@ -76,6 +76,7 @@ const blocos = computed(() => {
         chave: m.codmaquineta,
         titulo: m.apelido,
         subtitulo: [
+          m.aberto ? `Aberto desde ${formataTimestamp(m.aberto, 0)}` : null,
           m.pendentes ? `${m.pendentes} período(s) pendente(s)` : null,
           m.semBordero ? `${m.semBordero} sem borderô` : null,
         ]

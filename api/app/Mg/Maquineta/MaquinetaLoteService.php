@@ -473,7 +473,8 @@ class MaquinetaLoteService
     }
 
     // situacao dos periodos de cada maquineta (a lista de Maquinetas):
-    // [codmaquineta => {aberto: inicio do aberto, pendentes, semBordero}]
+    // [codmaquineta => {aberto: inicio do aberto, abertoComMovimento: o
+    // aberto ja' tem cartao, pendentes, semBordero}]
     public static function resumo(array $codmaquinetas): array
     {
         if (empty($codmaquinetas)) {
@@ -481,7 +482,11 @@ class MaquinetaLoteService
         }
         $marcas = implode(',', array_fill(0, count($codmaquinetas), '?'));
         $regs = DB::select("
-            select l.codmaquinetalote, l.codmaquineta, l.abertura, l.fim, l.fechamento
+            select l.codmaquinetalote, l.codmaquineta, l.abertura, l.fim, l.fechamento,
+                l.fim is null and (
+                    exists (select 1 from tblpagamento p where p.codmaquinetalote = l.codmaquinetalote)
+                    or exists (select 1 from tblpagamento p where p.codmaquinetalotecancelamento = l.codmaquinetalote)
+                ) as movimento
             from tblmaquinetalote l
             where l.codmaquineta in ({$marcas})
             and (l.fim is null or l.fechamento is null or l.fechamento >= now() - interval '60 days')
@@ -489,9 +494,11 @@ class MaquinetaLoteService
         $comFoto = static::comFoto();
         $ret = [];
         foreach ($regs as $r) {
-            $m = $ret[$r->codmaquineta] ?? ['aberto' => null, 'pendentes' => 0, 'semBordero' => 0];
+            $m = $ret[$r->codmaquineta]
+                ?? ['aberto' => null, 'abertoComMovimento' => false, 'pendentes' => 0, 'semBordero' => 0];
             if ($r->fim === null) {
                 $m['aberto'] = $r->abertura;
+                $m['abertoComMovimento'] = (bool) $r->movimento;
             } elseif ($r->fechamento === null) {
                 $m['pendentes']++;
             }

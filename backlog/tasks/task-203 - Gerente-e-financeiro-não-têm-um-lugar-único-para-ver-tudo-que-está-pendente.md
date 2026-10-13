@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-07 19:27'
-updated_date: '2026-10-10 21:51'
+updated_date: '2026-10-13 16:29'
 labels:
   - contas
 dependencies: []
@@ -27,12 +27,13 @@ Pedido do Fábio (07/10/2026): uma dashboard que resume todas as pendências (pe
 - [x] #3 Lista de filiais como entrada do painel, com o total de cada uma
 - [x] #4 Definir quem pode ver o painel de qual filial
 - [x] #5 Eliminar a tela Fechamentos depois do painel validado
+- [x] #6 Período aberto com movimento é pendência, no caixa e na maquineta; aberto sem movimento não é
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-Período aberto não é pendência no painel (10/10/2026): a maquineta só conta período encerrado pendente ou sem borderô; o caixa só conta período com diferença a resolver ou transferência a confirmar. Caixa aberto, com ou sem lançamento, não aparece (PainelService::caixas).
+Período aberto no painel (13/10/2026, AC #6, corrige a regra de 10/10): período aberto com movimento é pendência; aberto sem movimento, não. Caixa: entra o período aberto com algum tblportadormovimento ativo, além do período com diferença a resolver e da transferência a confirmar (PainelService::caixas). Maquineta: entra o período aberto com cartão (pagamento com codmaquinetalote ou codmaquinetalotecancelamento no período), além do período encerrado pendente e do sem borderô; a linha mostra 'Aberto desde' (MaquinetaLoteService::resumo devolve abertoComMovimento). A regra de 10/10 tirava todo período aberto e em produção, no primeiro dia depois do go-live, com tudo aberto, o painel ficou sem caixa e sem maquineta. A maquineta nunca tinha contado o período aberto (desde o c2d163a21): no dev ela só aparecia com período já encerrado, pendente ou sem borderô.
 
 Layout (10/10/2026): filial em abas (uma por filial ativa, link /painel/{codfilial}) no lugar do select; cards em duas colunas a partir de 1024px (col-12 col-md-6); PIX e depósitos antes das confissões. 'Ver todas' das ocorrências abre o livro filtrado pela filial e A conferir (a tela de ocorrências aceita os filtros na URL e parte do padrão).
 
