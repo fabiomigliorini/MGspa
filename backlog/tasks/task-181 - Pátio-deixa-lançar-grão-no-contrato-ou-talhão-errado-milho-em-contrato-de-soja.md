@@ -3,15 +3,16 @@ id: TASK-181
 title: >-
   Pátio deixa lançar grão no contrato ou talhão errado (milho em contrato de
   soja)
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-09-28 21:11'
+updated_date: '2026-10-09 13:26'
 labels:
   - agro
 dependencies: []
 priority: medium
 type: bug
-ordinal: 194000
+ordinal: 1000
 ---
 
 ## Description
