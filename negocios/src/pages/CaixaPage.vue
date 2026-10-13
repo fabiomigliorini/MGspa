@@ -54,7 +54,7 @@ onMounted(carregar)
 </script>
 
 <template>
-  <q-page class="bg-grey-2">
+  <q-page>
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
       <MgEmptyState v-if="!sCaixa.carregando && !sCaixa.gaveta" icon="point_of_sale">
         Este PDV não tem gaveta. Peça ao administrador para vincular a gaveta em Configurações →

@@ -1,7 +1,7 @@
 <script setup>
 // Receber Título / Pagar Vale no PDV (M6.1 doc-3): a mesma tela do contas (MgBaixaTitulos), com
 // as formas do caixa, o dinheiro na gaveta do PDV e o recibo na térmica. Busca só com pessoa ou
-// grupo econômico; a filial do PDV vem no filtro.
+// grupo econômico, de todas as filiais.
 import { useRouter } from 'vue-router'
 import MgBaixaTitulos from '@components/MgBaixaTitulos.vue'
 import { negocioStore } from 'stores/negocio'
@@ -32,13 +32,13 @@ const finalizado = async (pags) => {
           endpoint: 'v1/pdv/pagamento/titulos',
           params: { pdv },
           exigePessoa: true,
-          filialPadrao: sSinc.pdv.codfilial,
         }"
         :formas="FORMAS_RECEBER"
         :contexto="contexto"
         :finalizar="{ url: 'v1/pdv/pagamento', extras: { pdv } }"
         com-data
         :impressora="sNegocio.padrao.impressora"
+        :padrao="sNegocio.padrao"
         @finalizado="finalizado"
       />
     </div>

@@ -49,11 +49,25 @@ class NotaFiscalNegocioService
         bool $ignorarJaNotados = false
     ) {
 
-        if ($modelo == NotaFiscalService::MODELO_NFE && $negocio->codpessoa == PessoaService::CONSUMIDOR) {
+        // Nunca Emitir: o cliente nao quer o CPF/CNPJ dele em nota, mas o
+        // pagamento eletronico precisa de documento -- a NFC-e sai para
+        // Consumidor. NF-e para Consumidor nao existe, entao essa recusa.
+        $nuncaEmitir = $negocio->Pessoa?->notafiscal == PessoaService::NOTAFISCAL_NUNCA;
+        $consumidor = empty($negocio->codpessoa) || $negocio->codpessoa == PessoaService::CONSUMIDOR;
+
+        // sem modelo pedido (fechamento automatico do PDV), escolhe pelo
+        // cliente: Consumidor e Nunca Emitir em NFC-e, o resto em NF-e
+        if (empty($modelo)) {
+            $modelo = ($consumidor || $nuncaEmitir)
+                ? NotaFiscalService::MODELO_NFCE
+                : NotaFiscalService::MODELO_NFE;
+        }
+
+        if ($modelo == NotaFiscalService::MODELO_NFE && $consumidor) {
             throw new Exception("Impossível gerar NFe para Consumidor!", 1);
         }
 
-        if ($negocio->Pessoa->notafiscal == PessoaService::NOTAFISCAL_NUNCA) {
+        if ($nuncaEmitir && $modelo == NotaFiscalService::MODELO_NFE) {
             throw new Exception('Pessoa marcada para Nunca Emitir NFe!', 1);
         }
 
@@ -80,10 +94,10 @@ class NotaFiscalNegocioService
         if (empty($nota)) {
             $nota = new NotaFiscal;
             $nota->codpessoa = $negocio->codpessoa;
-            if (empty($nota->codpessoa)) {
+            if (empty($nota->codpessoa) || $nuncaEmitir) {
                 $nota->codpessoa = Pessoa::CONSUMIDOR;
             }
-            $nota->cpf = $negocio->cpf;
+            $nota->cpf = $nuncaEmitir ? null : $negocio->cpf;
             $nota->codfilial = $negocio->codfilial;
             $nota->codestoquelocal = $negocio->codestoquelocal;
             $nota->serie = 1;

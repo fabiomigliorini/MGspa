@@ -16,10 +16,10 @@ const menuGroups = [
     label: 'Movimento',
     items: [
       {
-        label: 'Fechamentos',
-        icon: 'fact_check',
-        color: 'green-8',
-        to: { name: 'fechamento' },
+        label: 'Painel',
+        icon: 'dashboard',
+        color: 'blue-8',
+        to: { name: 'painel' },
       },
       {
         label: 'Ocorrências',

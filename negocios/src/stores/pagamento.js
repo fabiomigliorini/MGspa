@@ -1,14 +1,14 @@
 // Pagamentos avulsos do PDV, na tela Pagamentos: as formas do Receber Título / Pagar Vale (a
 // tela é a MgBaixaTitulos, a mesma do contas), as do Vale / Adiantamento (M8, o
-// MgAdiantamentoDialog, o mesmo do contas) e o recibo na térmica.
+// MgAdiantamentoDialog, o mesmo do contas), o recibo e o vale de crédito na térmica.
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from 'boot/axios'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import { negocioStore } from 'stores/negocio'
 
-// formas que o caixa usa: recebe o que se confirma na hora; paga vale em dinheiro ou
-// registrando a devolução no cartão/PIX (só Gerente, o servidor confere)
+// formas que o caixa usa: recebe o que se confirma na hora; paga vale em dinheiro ou registrando
+// a devolução no cartão/PIX
 export const FORMAS_RECEBER = {
   entrada: ['cartao', 'pix', 'dinheiro', 'cheque'],
   saida: ['dinheiro', 'estorno'],
@@ -37,6 +37,31 @@ export const pagamentoStore = defineStore('pagamento', {
   }),
 
   actions: {
+    // o vale de crédito do título (Vale Compras / Contra Vale) na térmica do PDV
+    async imprimirVale(codtitulo) {
+      const impressora = negocioStore().padrao.impressora
+      if (!impressora) {
+        Notify.create({
+          type: 'negative',
+          message: 'Nenhuma impressora térmica selecionada!',
+          timeout: 3000,
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return
+      }
+      try {
+        await api.post(`/v1/pdv/titulo/${codtitulo}/vale/${impressora}`)
+        Notify.create({
+          type: 'positive',
+          message: 'Impressão Solicitada!',
+          timeout: 1000,
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+      } catch (error) {
+        avisar(error)
+      }
+    },
+
     async imprimirRecibo(codpagamentos) {
       const impressora = negocioStore().padrao.impressora
       if (!impressora) {

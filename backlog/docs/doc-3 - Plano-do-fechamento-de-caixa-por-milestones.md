@@ -73,6 +73,25 @@ validados em dev, mas **nenhum vai para produção sozinho**: scripts DDL e cód
 milestones sobem de uma vez, numa única janela com a API parada, quando o plano terminar. Até lá
 produção fica como está.
 
+**Go-live feito em 12/10/2026** (feriado, lojas fechadas), junto com o agro. Produção estava no
+`55043d39c` (28/09) mais os hotfixes da TASK-154 e da TASK-202; o `git pull` conflitou nos três
+arquivos dos hotfixes e ficou com a versão do origin (árvore = `e4795664e`). Antes, **ensaio** com
+o backup noturno da produção num Postgres separado: os mesmos scripts, na mesma ordem, sem erro.
+Ordem e tempos na produção (`psql -v ON_ERROR_STOP=1`, com scheduler, workers, API, MGLara e MGsis
+parados e nenhuma conexão no banco): `agro_carga_versao` e `agro_plantio_variedade_opcional` (o
+agro 01–30 já estava lá), `titulo_valor` 71 s, `movimento_titulo_colunas` 23 s, `portador_tipo`,
+`maquineta` 50 s, `pagamento` 360 s, `cobranca_documento`, `pagamento_liquidacao` 38 s,
+`negocio_reabertura`, `conferencia`, `auditoria`, `razao`, `caixa_item`, `portador_saldo`,
+`portador_movimento_tipo`, `portador_periodo_limpeza`, `caixa_item_dinamico`,
+`caixa_item_maquineta`, `caixa_item_saldo`, `maquineta_periodo` 24 s, `ocorrencia`,
+`pagamento_amarracao`, `pagamento_referente`, `pix_utilizacao` 16 s, `pdv_configuracao`,
+`tipo_titulo_limpeza` 83 s e, depois do código no lugar, `pdv_autorizado_drop`: ~11 min no total.
+`CONFERENCIA_INICIO=2026-10-12` no `.env` da API. Gavetas no mesmo dia: "Caixa X" virou
+"Caixa Central X" (cofre, com o histórico), Caixa Atacado virou Caixa Cobranca, Troco Deposito
+virou Troco Financeiro, e 17 gavetas novas ("Caixa Botanico 01"…) ligadas aos PDVs de caixa;
+operador da gaveta = quem movimentou o PDV nos 60 dias anteriores, gestores = gerentes e donas da
+loja, depositante do Central e do Troco = quem opera gaveta da loja. Saldo de implantação: 13/10.
+
 **Pendências do Fábio no go-live** (não são gaps do plano): quais dos dois portadores em espécie da
 filial 101 (100 Caixa Financeiro, 101001 Caixa Atacado) são cofre; pessoa e conta contábil de cada
 item do caixa; cadastrar as gavetas (portador em espécie) e vinculá-las em cada PDV de caixa (M2);
@@ -85,7 +104,7 @@ as views temporárias. `pagamento.sql` leva ~7 min em dev (5,3 milhões de forma
 uma vez, na ordem: `maquineta.sql` grava em `tblnegocioformapagamento` e falha se rodar depois do
 `pagamento.sql` (a tabela já virou view). `pagamento_liquidacao.sql` leva ~45 s em dev (175 mil
 liquidações, 437 mil movimentos) e precisa do `pagamento.sql` antes. O `.env` de produção do negocios
-pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). `conferencia.sql` (M9) e depois `razao.sql`
+pode perder os `CODFORMAPAGAMENTO_*` (o código não lê mais). `conferencia.sql` (M9), `auditoria.sql` (TASK-204, auditoria única; tira a replicação antiga) e depois `razao.sql`
 (M10), `caixa_item.sql` (M13), `portador_saldo.sql` (doc-4, saldo gravado), `portador_movimento_tipo.sql` (doc-4, redefinição do dinheiro) `caixa_item_dinamico.sql` (doc-4, chips) `caixa_item_maquineta.sql` (doc-4, maquinetas de parceiro) e `caixa_item_saldo.sql` (doc-4, saldo gravado dos itens) e `maquineta_periodo.sql` (M9.8, período da maquineta) e `ocorrencia.sql` (TASK-205, livro de ocorrências), nessa ordem, rodam antes do `tipo_titulo_limpeza.sql`. **`tipo_titulo_limpeza.sql` é o último
 script** (renumera os tipos de título; os anteriores usam os códigos antigos), e o
 `NfeTerceiroController.php` do MGsis sobe junto (grava Duplicata a Pagar, código novo 200).
@@ -180,6 +199,47 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
 
 ## Decisões fechadas (não reabrir)
 
+### Pagamento = fato, amarração = outra coisa (Fábio, 09/10/2026 — manda sobre as decisões abaixo)
+
+- **Pagamento** (`tblpagamento`) é o fato de dinheiro confirmado: cada registro no banco, cada
+  cartão passado, cada PIX, cada dinheiro na gaveta. Lançado pelo usuário ou pela integração.
+  Move o razão do portador e o cartão na adquirente. Guarda **só o dinheiro**: meio, portador,
+  valor e os dados do cartão, PIX ou cheque. Juros, multa e desconto de título ficam no movimento
+  do título. A decisão 17 continua: juros do parcelamento e desconto por meio na venda.
+- **Estado:** P = rascunho da venda aberta (o que o caixa digitou e a venda ainda não fechou; só a
+  venda enxerga), E = fato, C = desfeito. Só o E conta para razão, pendências e relatórios.
+  Integrado nunca é P.
+- **Amarração** é o que o pagamento pagou, sempre com histórico (desfazer não apaga):
+  - **título:** o movimento do título, n:n. Um pagamento baixa vários títulos, e um título recebe
+    vários pagamentos.
+  - **venda:** `codnegocio`, no máximo uma venda e com o pagamento inteiro. PIX para duas vendas
+    passa pela parcela "PIX a receber"; excedente vira adiantamento.
+  - **vale e adiantamento:** o movimento que cria o título.
+- **Uma baixa = um pagamento** (títulos e vale/adiantamento): o wizard vem com o valor travado e
+  só calcula o troco no dinheiro. Para pagar com duas formas, fazem-se duas baixas. Na venda, o
+  pagamento dividido continua.
+- **Pendente** = o saldo (pago − devolvido) ≠ o que está amarrado (movimentos ativos + venda
+  fechada). É uma conta, não um status. Aparece em **Pagamentos não resolvidos**, no contas e no
+  PDV, para amarrar a títulos, lançar como adiantamento, casar com o digitado ("já lançado": fica
+  o integrado) ou devolver. A forma **"Já recebido"** do wizard sugere os pendentes; só online.
+- **Desamarrar ≠ cancelar.** Desamarrar estorna as baixas: os títulos reabrem e o pagamento fica.
+  Cancelar é só para o **manual** (dinheiro, cheque, cartão digitado) já desamarrado. Integrado
+  (PIX, Stone, SafraPay, boleto) **nunca se cancela**: a venda cancelada o deixa órfão, e
+  devolver é pela devolução do PIX ou pelo cancelamento no cartão.
+- **Encontro de contas:** pagamento de total zero no portador **Encontro de Contas** (o antigo
+  202016, Programação Pagamentos).
+- **PIX pela chave** confirmado pelo banco vira pagamento sem documento no razão do banco. Na
+  venda, a forma "PIX pela chave" continua (parcela a receber); na baixa de títulos e no vale, não
+  existe.
+- **Permissão = papel do usuário no portador** (doc-4):
+  - **depositante:** receber;
+  - **operador:** pagar, desamarrar, cancelar, corrigir, devolver;
+  - **gestor:** alterar data.
+
+  O PDV só pré-seleciona a gaveta. Isto substitui a decisão 23, que era por grupo.
+- **Data** = a do fato, num período aberto do portador; nunca antes do início do razão.
+- **O usuário é soberano:** o sistema sugere. Não inventar bloqueio, rastreio nem recálculo.
+
 ### Estrutura
 
 1. **Duas peças genéricas: o pagamento e o razão.** O pagamento (`tblpagamento`) é o ato: de onde
@@ -200,7 +260,8 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
    crediário, boleto, entrega, PIX/depósito a receber) fica em `tblnegocioparcela`, com vencimento,
    valor e condição, sugerido pela condição e ajustável no PDV até fechar. Ao fechar, cada parcela
    vira um título. Depois disso, mexer em vencimento é no título, pelo contas.
-6. **A liquidação desaparece.** O movimento de título aponta para o pagamento. Duas formas de
+6. **A liquidação desaparece.** (Revista em 09/10/2026: uma baixa = um pagamento; ver "Pagamento =
+   fato" acima.) O movimento de título aponta para o pagamento. Duas formas de
    pagamento viram dois pagamentos, cada um baixando a sua parte dos títulos. Encontro de contas sem
    dinheiro = pagamento de total zero, meio compensação, sem portador. Histórico de liquidações copiado
    para pagamento (código novo; o antigo guardado em coluna) e view temporária para o MG Lara.
@@ -275,13 +336,16 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
     e "mais opções" (Caixa Financeiro, bancos, `E` de outras filiais). Gaveta de origem ou destino
     sem sessão aberta → 422 (aparece desabilitada com motivo). Fechar gaveta com pendente **chegando**
     → 422; pendente saindo não trava.
-23. **Quem opera**: gaveta → Caixa da filial/Gerente/Admin; cofre/troco → Gerente da filial/Admin
+23. **Quem opera** (substituída em 09/10/2026 pelo papel do usuário no portador, doc-4; o PDV só
+    pré-seleciona a gaveta): gaveta → Caixa da filial/Gerente/Admin; cofre/troco → Gerente da filial/Admin
     (Caixa Financeiro 100 → Financeiro/Admin); banco/adquirente → Financeiro/Admin. Receber dinheiro
     no PDV exige grupo Caixa da filial do negócio e gaveta com sessão aberta (absorve TASK-48/34).
     Vale de colaborador e adiantamento a fornecedor no PDV: **o caixa lança sozinho** (fica
     registrado quem lançou). Pagar vale/crédito de cliente (dinheiro ou registro de cancelamento):
     **só Gerente/Admin**.
-24. **A loja só baixa o que se confirma na hora**: dinheiro, PIX QR (o banco confirma pela API),
+24. (Em 09/10/2026: o PIX pela chave que o banco confirma vira pagamento no razão na hora, e se
+    amarra por "Pagamentos não resolvidos"; na baixa de títulos não há forma PIX pela chave.)
+    **A loja só baixa o que se confirma na hora**: dinheiro, PIX QR (o banco confirma pela API),
     cheque, cartão integrado e cartão manual (o comprovante da maquineta é a prova). PIX por chave,
     transferência e depósito são do financeiro, no contas. **No contas não se baixa título em gaveta.**
 25. **Devolução sempre gera o crédito do cliente** (título **Crédito Cliente, 212**; até a limpeza
@@ -1332,12 +1396,11 @@ no M9").
    descobre pelas câmeras que cobrou errado ou caiu num golpe), **excluir registro indevido**
    (cancela e tira do lote: não é cancelamento na maquineta) e incluir o que faltou (wizard). Total
    da venda, itens, estoque e nota **não mudam** (NFC-e autorizada não se corrige).
-6. **Venda desbalanceada vira pendência** da filial (Σ pagamentos efetivados + Σ parcelas + Σ
-   acertos ≠ total). O destino da diferença é decidido depois, pelo gerente ou pelo financeiro, e
-   gravado como **acerto da venda** (`tblnegocioacerto`): **a menos** → perdoar, vale do colaborador
-   (título 120 a receber do colaborador) ou duplicata do cliente (100); **a mais** → perdoar ou
-   crédito do cliente (212, usável no PDV como vale; o financeiro pode devolver por PIX baixando
-   contra o banco).
+6. **Venda com diferença vira pendência** da filial (Σ pagamentos efetivados + Σ parcelas ≠
+   total). **Não existe acerto da venda**: ou é pagamento ou é duplicata; o que não se paga é
+   desconto ou brinde, que já existem. O conserto é **reabrir o negócio** (ferramenta a fazer).
+   (Revisto em 10/10/2026 pelo Fábio: o "acerto da venda" — perdoar, vale do colaborador,
+   duplicata ou crédito do cliente, em `tblnegocioacerto` — foi inventado sem pedido dele e saiu.)
 7. **Devolução de venda paga no cartão**: a devolução continua gerando o crédito do cliente (212); o
    gerente registra o cancelamento do cartão **pelo lote** (pagamento contrário apontando o
    original, origem = adquirente, mesma maquineta) e o crédito é baixado por esse pagamento.
@@ -1362,10 +1425,8 @@ no M9").
   lote), `codportadorperiodo` (sessão da gaveta do dinheiro), `conferencia`/`codusuarioconferencia`
   (cheque e vale recebido, item a item).
 - `tblpagamentocorrecao`: `codpagamentocorrecao PK, codpagamento NN, antes jsonb, depois jsonb,
-  justificativa NN, audit` (uma linha por correção).
-- `tblnegocioacerto`: `codnegocioacerto PK, codnegocio NN, valor (com sinal: positivo = faltou
-  pagar), destino char(1) P perdão / C colaborador / D duplicata do cliente / R crédito do cliente,
-  codpessoa, codtitulo, justificativa, inativo, audit`.
+  justificativa NN, audit` (uma linha por correção). **Substituída pela `tblauditoria`** (TASK-204,
+  `auditoria.sql`): tipos 3 corrigido, 4 indevido, 5 incluído.
 - `tblportadorperiodo` (do modelo do M10) + `conferencia`, `codusuarioconferencia`,
   `valorconferido` (contado pelo gerente, às cegas). Sessão de gaveta: abre e fecha pelo caixa
   com contagem (`moedas*`, `cedulas*`); `saldofinal` = contado pelo caixa.
@@ -1375,8 +1436,6 @@ no M9").
 
 **Pontos decididos sem o Fábio, a validar** (02/10/2026, ele almoçando: "trabalha sozinho")
 
-- Perdão não gera título nem pagamento: fica só o acerto (quem, quando, justificativa).
-- Crédito do cliente na diferença a mais = 212 Crédito Cliente (não 211 Adiantamento).
 - Cheque e vale recebido: conferência marcada no pagamento.
 - Itens do caixa (chips, ingressos) continuam no M13.
 - Entrada do Caixa no negocios: a definir com o `MainLayout.vue` (estava alterado na árvore por
@@ -1436,8 +1495,8 @@ no M9").
   `MgConfissaoScanner`; PIX abre o título), `Lote.vue` (crédito e débito do borderô às cegas,
   foto, lançamentos escondidos até digitar, corrigir/indevido, reabrir, borderô × sistema e por
   caixa depois de conferido), `Sessao.vue` (dinheiro contado às cegas; depois sistema × caixa ×
-  gerente; reabrir conferência ou caixa), `Venda.vue` (pagamentos, parcelas, acertos, incluir
-  pagamento, destino da diferença); Maquinetas ganhou o botão **Lotes** (`maquineta/:id/lotes`).
+  gerente; reabrir conferência ou caixa), `Venda.vue` (pagamentos, parcelas, incluir
+  pagamento); Maquinetas ganhou o botão **Lotes** (`maquineta/:id/lotes`).
   Store `stores/conferenciaStore.js`; componentes `components/conferencia/{ListaLancamentos,
   CorrecaoPagamentoDialog}`. `@components/cobranca/pagamento.js` exporta `BANDEIRAS`.
 - **negocios**: `/caixa` (`CaixaLayout`, `CaixaPage`, `stores/caixa.js`): abrir com contagem,
@@ -1978,8 +2037,11 @@ crédito/débito.
 
 ## M15 — Pagamento por API de banco e integrações de cancelamento (TASK-196)
 
-Ordem de pagamento (PIX por chave/dados/QR, boleto, TED) como pagamento de saída em estado pendente
-até o banco confirmar; lote + item, chave própria sequencial, "aguardando liberação", devolução como
+(09/10/2026: a ordem de pagamento vive na tabela da integração até o banco confirmar; só então
+vira pagamento. Pagamento nunca nasce pendente.)
+
+Ordem de pagamento (PIX por chave/dados/QR, boleto, TED) na tabela da integração, virando pagamento
+de saída só quando o banco confirma; lote + item, chave própria sequencial, "aguardando liberação", devolução como
 pagamento contrário; cancelamento de cartão pela operadora e devolução de PIX pela API. Levantamento
 de 29/09/2026 (portais oficiais bloqueados; parte de memória): BB Pagamentos em Lote (lote + item,
 liberação, webhook, mTLS A1), Itaú SISPAG (pré-aprovado × pós-autorizado), Bradesco (boleto, tributo,
@@ -2179,3 +2241,7 @@ M9.8 tela igual ao borderô (07/10/2026, com o Fábio; não validado no navegado
 Unificar no caixa (08/10/2026, com o Fábio; validado): a trava 'o anterior sem diferença (para nenhuma sumir)' foi invenção (86138ae06) e saiu, da API (PortadorPeriodoService::unificar) e do botão (PeriodoCabecalho podeUnificar). O saldo inicial do seguinte é a contagem final do anterior, então a diferença do anterior entra na do unificado (ex.: −0,10 e +7,10 → +7,00). Perde-se só em que parte a diferença aconteceu; diferenças opostas se anulam. Continua exigindo os dois não fechados. doc-4, 'Período'.
 
 M9.8 conferir em diálogo (08/10/2026): o resumo da maquineta foi para dentro do card do cabeçalho e a digitação do borderô virou o diálogo 'Conferir com o borderô' (botão na linha Borderô do resumo). Menu do contas: grupo Caixa com Portadores, Itens do Caixa e Maquinetas. doc-4, 'A tela igual ao borderô'.
+
+Acerto da venda removido (10/10/2026, pedido do Fábio): o "destino da diferença" da venda (perdoar, vale do colaborador, duplicata, crédito do cliente — `tblnegocioacerto`) foi inventado no M9 sem pedido dele. Venda não fica com diferença: ou é pagamento ou é duplicata; o que não se paga é desconto ou brinde. Saíram o model `NegocioAcerto`, a relação `Negocio::NegocioAcertoS`, `VendaConferenciaService::acertar/titulo/desfazer` (e o acerto da soma `SQL_PAGO`), as rotas `conferencia/venda/{id}/acerto` e `conferencia/acerto/{id}`, os cards Acertos e Destino da diferença da `Venda.vue` do contas; `conferencia.sql` passou a `DROP TABLE IF EXISTS tblnegocioacerto` (vazia no dev; dropada). Fica a lista Vendas com diferença no Fechamentos; o conserto vai ser reabrir o negócio (a fazer). Decisão 6 do M9 reescrita.
+
+Tela Fechamentos eliminada (10/10/2026, pedido do Fábio; TASK-203 #5): o painel da filial mostra as pendências e leva cada uma à tela que resolve. Saíram `contas/pages/fechamento/Index.vue`, a rota e o item do menu, o `GET v1/conferencia` (`ConferenciaController::index`, `ConferenciaService::pendencias/filiais`) e a lista do `conferenciaStore`. A `Venda.vue` (venda com diferença) fica, aberta pelo painel. Cheque e vale recebidos ficam sem tela até o TASK-203 #2; o `POST conferencia/pagamento/{id}/conferir` continua.

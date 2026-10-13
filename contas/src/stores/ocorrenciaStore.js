@@ -22,6 +22,7 @@ export const useOcorrenciaStore = defineStore(
   () => {
     const filters = ref(defaultFilters())
     const items = ref([])
+    const ocorrencia = ref(null)
     const loading = ref(false)
     const salvando = ref(false)
     const page = ref(1)
@@ -59,9 +60,23 @@ export const useOcorrenciaStore = defineStore(
       }
     }
 
+    // tela da ocorrência: ela com as auditorias amarradas
+    async function carregar(codocorrencia) {
+      loading.value = true
+      try {
+        const { data } = await api.get(`v1/ocorrencia/${codocorrencia}`)
+        ocorrencia.value = data.data
+      } catch (e) {
+        notifyError(e, 'Erro ao buscar a ocorrência')
+      } finally {
+        loading.value = false
+      }
+    }
+
     function substituir(linha) {
       const i = items.value.findIndex((o) => o.codocorrencia === linha.codocorrencia)
       if (i > -1) items.value[i] = linha
+      if (ocorrencia.value?.codocorrencia === linha.codocorrencia) ocorrencia.value = linha
     }
 
     async function conferir(codocorrencia, observacao) {
@@ -101,6 +116,7 @@ export const useOcorrenciaStore = defineStore(
     return {
       filters,
       items,
+      ocorrencia,
       loading,
       salvando,
       page,
@@ -108,6 +124,7 @@ export const useOcorrenciaStore = defineStore(
       total,
       activeFiltersCount,
       fetchItems,
+      carregar,
       conferir,
       reabrir,
       clearFilters,

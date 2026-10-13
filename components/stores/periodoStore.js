@@ -379,19 +379,25 @@ export const periodoStore = defineStore('periodo', {
 
     // espécie: com a contagem final; dentro da tolerância fecha, acima fica pendente
     // só fecha, com a contagem final já informada. Acima da tolerância o servidor deixa pendente:
-    // é erro para quem fechou
+    // é erro para quem fechou. Com dinheiro na contagem, o servidor já abre o seguinte (TASK-212):
+    // vem nos períodos, vira aba nova e a tela continua no fechado
     async fechar() {
+      const antes = new Set(this.periodos.map((p) => p.codportadorperiodo))
       const data = await this.executar(() =>
         api.post(`v1/portador-periodo/${this.periodo.codportadorperiodo}/fechar`),
       )
       if (!data) return null
       const p = data.data
+      const novo = (data.periodos || []).find((x) => !antes.has(x.codportadorperiodo))
+      const seguinte = novo
+        ? `; o seguinte já está aberto com R$ ${formataNumero(novo.saldoinicial)}`
+        : ''
       if (p.situacao === 'fechado') {
-        avisar(true, 'Período fechado')
+        avisar(true, `Período fechado${seguinte}`)
       } else {
         avisar(
           false,
-          `Diferença de R$ ${formataNumero(p.diferenca)} acima da tolerância (R$ ${formataNumero(p.tolerancia)}): o período ficou pendente até a correção`,
+          `Diferença de R$ ${formataNumero(p.diferenca)} acima da tolerância (R$ ${formataNumero(p.tolerancia)}): o período ficou pendente até a correção${seguinte}`,
         )
       }
       return data
@@ -480,30 +486,15 @@ export const periodoStore = defineStore('periodo', {
       }
     },
 
-    async salvarUsuario(codusuario, papel) {
+    // a lista inteira de uma vez: o servidor inclui, troca o papel e exclui o que mudou
+    async salvarUsuarios(usuarios) {
       this.salvando = true
       try {
-        const { data } = await api.post(`v1/portador/${this.portador.codportador}/usuario`, {
-          codusuario,
-          papel,
+        const { data } = await api.put(`v1/portador/${this.portador.codportador}/usuario`, {
+          usuarios: usuarios.map((u) => ({ codusuario: u.codusuario, papel: u.papel })),
         })
         this.usuarios = data.data
-        return true
-      } catch (error) {
-        avisar(false, erro(error))
-        return false
-      } finally {
-        this.salvando = false
-      }
-    },
-
-    async excluirUsuario(codportadorusuario) {
-      this.salvando = true
-      try {
-        const { data } = await api.delete(
-          `v1/portador/${this.portador.codportador}/usuario/${codportadorusuario}`,
-        )
-        this.usuarios = data.data
+        avisar(true, 'Usuários salvos')
         return true
       } catch (error) {
         avisar(false, erro(error))

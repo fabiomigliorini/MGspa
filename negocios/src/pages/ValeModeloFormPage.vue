@@ -105,7 +105,7 @@ onMounted(async () => {
 </script>
 
 <template>
-  <q-page class="bg-grey-2">
+  <q-page>
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
       <div v-if="carregandoForm" class="row justify-center q-my-xl">
         <q-spinner-dots color="primary" size="40px" />

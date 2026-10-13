@@ -1,6 +1,7 @@
 <script setup>
 import { ref, watch } from 'vue'
 import { api } from 'src/services/api'
+import MgSelect from '@components/MgSelect.vue'
 
 // Select com busca remota (autocompletar). Os endpoints do backend retornam
 // [{ label, value, id, ... }]. O termo digitado vai no parâmetro `searchParam`
@@ -55,7 +56,7 @@ const onUpdate = (value) => {
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     :model-value="modelValue"
     :options="options"
     :label="label"
@@ -76,5 +77,5 @@ const onUpdate = (value) => {
         <q-item-section class="text-grey-6">Digite para buscar…</q-item-section>
       </q-item>
     </template>
-  </q-select>
+  </MgSelect>
 </template>

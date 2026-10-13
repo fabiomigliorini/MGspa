@@ -261,7 +261,7 @@ watch(data, () => {
 })
 </script>
 <template>
-  <q-page class="bg-grey-2">
+  <q-page>
     <!-- ANOS -->
     <q-tabs v-model="ano" inline-label class="bg-primary text-white">
       <template v-for="a in anos" :key="a">

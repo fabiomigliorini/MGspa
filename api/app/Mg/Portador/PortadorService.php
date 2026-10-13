@@ -59,10 +59,11 @@ class PortadorService
     // painel /portador (doc-4): os portadores em que o usuario e' operador
     // ou gestor (Administrador, todos), por filial, com o saldo gravado (so'
     // da especie nesta fase, R3), a situacao do periodo (especie) e as
-    // transferencias a confirmar
-    public static function painel(?int $codfilial, bool $inativos): array
+    // transferencias a confirmar. $doUsuario = false: todos da filial (painel
+    // da filial, TASK-203)
+    public static function painel(?int $codfilial, bool $inativos, bool $doUsuario = true): array
     {
-        $meus = PortadorAutorizador::codportadores(PortadorUsuario::PAPEL_OPERADOR);
+        $meus = $doUsuario ? PortadorAutorizador::codportadores(PortadorUsuario::PAPEL_OPERADOR) : null;
         $portadores = Portador::with('Filial:codfilial,filial')
             ->when(!$inativos, fn ($q) => $q->whereNull('inativo'))
             ->when($codfilial, fn ($q) => $q->where('codfilial', $codfilial))

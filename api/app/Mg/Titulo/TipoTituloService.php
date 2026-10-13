@@ -12,6 +12,10 @@ class TipoTituloService
     const TIPO_PIX_PAGAR = 201;
     const TIPO_ENTREGA_RECEBER = 102;
     const TIPO_ENTREGA_PAGAR = 202;
+    // nascem com o dinheiro (M8 doc-3; codigos fixos do tipo_titulo_limpeza.sql)
+    const TIPO_VALE_COLABORADOR = 120;
+    const TIPO_ADIANTAMENTO_FORNECEDOR = 121;
+    const TIPO_ADIANTAMENTO_CLIENTE = 211;
 
     public static function listar(array $filtros)
     {

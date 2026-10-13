@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Mg\Pagamento\PagamentoDetalheResource;
 use Mg\Pagamento\PagamentoListaResource;
 use Mg\Pagamento\PagamentoListaService;
+use Mg\Pagamento\PagamentoTituloService;
 use Mg\Pagamento\PagamentoTituloStoreRequest;
 use Mg\Titulo\TituloAbertosFechamentoService;
 
@@ -62,12 +63,24 @@ class PdvPagamentoController
         return PagamentoDetalheResource::collection($pags);
     }
 
-    public function estornar(PdvRequest $request, int $id)
+    // o "Referente a" (sai no recibo), em qualquer pagamento efetivado que o PDV ve
+    public function referente(PdvRequest $request, int $id)
+    {
+        $pdv = PdvService::autoriza($request->pdv);
+        $request->validate(['referente' => 'nullable|string|max:255']);
+        DB::beginTransaction();
+        $pag = PagamentoTituloService::alterarReferente(PdvPagamentoService::carregar($pdv, $id), $request->referente);
+        DB::commit();
+        return new PagamentoDetalheResource($pag);
+    }
+
+    // cancelar: estorna as baixas junto (TASK-218)
+    public function cancelar(PdvRequest $request, int $id)
     {
         $pdv = PdvService::autoriza($request->pdv);
         $request->validate(['justificativa' => 'required|string|min:5|max:300']);
         DB::beginTransaction();
-        $pag = PdvPagamentoService::estornar($pdv, $id, $request->justificativa);
+        $pag = PdvPagamentoService::cancelar($pdv, $id, $request->justificativa);
         DB::commit();
         return new PagamentoDetalheResource($pag);
     }
@@ -87,7 +100,7 @@ class PdvPagamentoController
     public function recibo(string $codpagamentos)
     {
         $cods = array_filter(array_map('intval', explode(',', $codpagamentos)));
-        return response()->make(PdvPagamentoService::reciboPdf($cods), 200, [
+        return response()->make(\Mg\Pagamento\PagamentoReciboService::pdfTermica($cods), 200, [
             'Content-Type' => 'application/pdf',
             'Content-Disposition' => 'inline; filename="Recibo' . implode('-', $cods) . '.pdf"',
         ]);

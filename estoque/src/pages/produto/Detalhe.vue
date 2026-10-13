@@ -6,6 +6,7 @@ import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgAutocomplete from 'src/components/MgAutocomplete.vue'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const route = useRoute()
@@ -1205,7 +1206,7 @@ onMounted(async () => {
               label="Código de barras (vazio = gera interno)"
               autofocus
             />
-            <q-select
+            <MgSelect
               v-model="barraModel.codprodutoembalagem"
               :options="embOptions"
               emit-value

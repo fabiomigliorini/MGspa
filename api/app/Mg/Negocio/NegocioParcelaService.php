@@ -163,7 +163,9 @@ class NegocioParcelaService
             $qtd = $grupo->count();
             foreach ($grupo as $np) {
                 $total += $np->valor;
-                if (!empty($np->codtitulo)) {
+                // idempotente: a parcela com titulo vivo fica; a reativada
+                // na venda reaberta (titulo estornado) ganha titulo novo
+                if (!empty($np->codtitulo) && empty(optional($np->Titulo)->estornado)) {
                     continue;
                 }
                 $numero = $numeroFixo ?? ('N' . str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT)
@@ -177,12 +179,14 @@ class NegocioParcelaService
                 $titulo->boleto = false;
                 $titulo->codpessoa = $negocio->codpessoa;
                 $titulo->numero = $numero;
-                $titulo->emissao = Carbon::now();
+                // na venda reaberta, a data do fechamento original (TASK-30)
+                $titulo->emissao = empty($negocio->reabertura) ? Carbon::now() : $negocio->lancamento;
                 $titulo->transacao = $titulo->emissao;
                 $titulo->vencimento = $np->vencimento;
                 $titulo->vencimentooriginal = $np->vencimento;
                 $titulo->gerencial = true;
                 $titulo->codportador = Portador::CARTEIRA;
+                TituloService::aplicarSufixoNumero($titulo);
                 TituloService::implantar($titulo);
                 $np->codtitulo = $titulo->codtitulo;
                 $np->save();
@@ -194,10 +198,30 @@ class NegocioParcelaService
         return round($total, 2);
     }
 
-    // Titulos das parcelas do negocio
-    public static function titulos(Negocio $negocio)
+    // Venda reaberta (TASK-30): o titulo vivo de cada parcela acompanha a
+    // pessoa e a natureza da venda (o que o negocioFechado faz na fechada)
+    public static function sincronizarTitulos(Negocio $negocio): void
     {
-        return Titulo::whereIn('codnegocioparcela', $negocio->NegocioParcelaS()->select('codnegocioparcela'))
+        foreach ($negocio->NegocioParcelaS()->whereNotNull('codtitulo')->get() as $np) {
+            $titulo = $np->Titulo;
+            if (!$titulo || !empty($titulo->estornado)) {
+                continue;
+            }
+            $titulo->codpessoa = $negocio->codpessoa;
+            $titulo->codtipotitulo = static::tipoTitulo($np);
+            $titulo->codcontacontabil = $negocio->NaturezaOperacao->codcontacontabil;
+            if ($titulo->isDirty()) {
+                $titulo->save();
+            }
+        }
+    }
+
+    // Titulos das parcelas do negocio (das ativas; $todas: tambem os das
+    // inativas, que a venda reaberta tirou)
+    public static function titulos(Negocio $negocio, bool $todas = false)
+    {
+        $parcelas = $todas ? $negocio->NegocioParcelaTodasS() : $negocio->NegocioParcelaS();
+        return Titulo::whereIn('codnegocioparcela', $parcelas->select('codnegocioparcela'))
             ->orderBy('vencimento')
             ->orderBy('codtitulo')
             ->get();

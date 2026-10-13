@@ -43,27 +43,29 @@ class PortadorUsuarioController extends Controller
         return $this->lista($this->portador($codportador));
     }
 
-    // inclui ou troca o papel
-    public function store(Request $request, int $codportador)
+    // a lista inteira de uma vez (o Salvar do dialog): quem saiu da lista e' excluido, quem ficou
+    // tem o papel trocado e quem entrou e' incluido
+    public function update(Request $request, int $codportador)
     {
         $dados = $request->validate([
-            'codusuario' => 'required|integer|exists:tblusuario,codusuario',
-            'papel' => 'required|in:' . implode(',', array_keys(PortadorUsuario::PAPEIS)),
+            'usuarios' => 'present|array',
+            'usuarios.*.codusuario' => 'required|integer|distinct|exists:tblusuario,codusuario',
+            'usuarios.*.papel' => 'required|in:' . implode(',', array_keys(PortadorUsuario::PAPEIS)),
         ]);
         $portador = $this->portador($codportador);
-        DB::transaction(fn () => PortadorUsuario::updateOrCreate(
-            ['codportador' => $portador->codportador, 'codusuario' => $dados['codusuario']],
-            ['papel' => $dados['papel']]
-        ));
-        return $this->lista($portador);
-    }
-
-    public function destroy(int $codportador, int $codportadorusuario)
-    {
-        $portador = $this->portador($codportador);
-        DB::transaction(fn () => PortadorUsuario::where('codportador', $portador->codportador)
-            ->findOrFail($codportadorusuario)
-            ->delete());
+        $papeis = collect($dados['usuarios'])->pluck('papel', 'codusuario');
+        DB::transaction(function () use ($portador, $papeis) {
+            PortadorUsuario::where('codportador', $portador->codportador)
+                ->whereNotIn('codusuario', $papeis->keys())
+                ->get()
+                ->each->delete();
+            foreach ($papeis as $codusuario => $papel) {
+                PortadorUsuario::updateOrCreate(
+                    ['codportador' => $portador->codportador, 'codusuario' => $codusuario],
+                    ['papel' => $papel]
+                );
+            }
+        });
         return $this->lista($portador);
     }
 }

@@ -1,11 +1,16 @@
 // Baixa de títulos pelo wizard de cobrança, a mesma no PDV (Receber título / Pagar vale) e no
-// contas (Receber ou Pagar Títulos) — M6.1 do plano doc-3.
+// contas (Receber ou Pagar Títulos); também o vale/adiantamento (MgAdiantamentoDialog).
 //
-// O app escolhe os títulos (capital, juros, multa, desconto e total de cada um); aqui ficam o
-// líquido (o sentido sai dele: entra dinheiro ou sai), as formas lançadas no wizard (um pagamento
-// por forma) e a finalização, que manda tudo de uma vez para o servidor. Cobrança integrada
-// (PIX QR, Stone, SafraPay) entra como forma quando o banco/maquineta confirma: o servidor já
-// criou o pagamento e a finalização só o amarra aos títulos.
+// Uma baixa = um pagamento (conceito do Fábio, 09/10/2026): o pagamento é o fato (o dinheiro que
+// andou) e a baixa é a amarração dele com os títulos. O app escolhe os títulos (capital, juros,
+// multa, desconto e total de cada um); aqui ficam o líquido (o sentido sai dele: entra dinheiro
+// ou sai), a forma escolhida no wizard (uma só, com o valor do líquido) e a finalização, que
+// manda tudo de uma vez para o servidor. Para pagar com duas formas, faz duas baixas.
+//
+// Cobrança integrada (PIX QR, Stone, SafraPay) confirmada ainda não é pagamento: vira a forma pelo
+// PIX que pagou (codpix, TASK-219) ou pelo pedido da maquininha (codpagarmepedido,
+// codsauruspedido, TASK-220), e o pagamento nasce na finalização. Fechado antes, o PIX fica sem uso
+// na tela PIX e o cartão se lança à mão.
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
@@ -32,10 +37,10 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
     // { codtitulo, numero, vencimento, operacao ('DB' a receber, 'CR' a pagar), saldo, juros,
     //   multa, desconto, total }
     titulos: [],
-    // formas lançadas no wizard, no formato da baixa
-    pagamentos: [],
-    // cobranças integradas esperando o banco/maquineta: { tipo, id, valor }
-    pendentes: [],
+    // a forma escolhida no wizard, no formato da baixa (uma só)
+    forma: null,
+    // cobrança integrada esperando o banco/maquineta: { tipo, id, valor }
+    pendente: null,
     finalizando: false,
   }),
 
@@ -52,14 +57,22 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
     totalLiquido() {
       return Math.abs(this.liquido)
     },
-    pago() {
-      return arredonda(this.pagamentos.reduce((s, p) => s + p.total, 0))
-    },
-    saldo() {
-      return arredonda(this.totalLiquido - this.pago)
-    },
+    // títulos que se anulam, ou quitados só com desconto (100%): baixa sem dinheiro, no
+    // Encontro de Contas. Todos zerados, sem desconto, não é nada a gravar
     compensacao() {
-      return this.titulos.length > 0 && this.totalLiquido < 0.005
+      return (
+        this.titulos.some((t) => (t.total || 0) > 0 || (t.desconto || 0) > 0) &&
+        this.totalLiquido < 0.005
+      )
+    },
+    // pronto para gravar: a forma escolhida (ou o encontro de contas, que não tem forma)
+    pronto() {
+      return this.compensacao || !!this.forma
+    },
+    // a forma é dinheiro que já entrou (o PIX, o cartão confirmado na maquininha): não gravou, ela
+    // fica para o Gravar em vez de voltar ao wizard
+    formaConfirmada() {
+      return !!(this.forma?.codpix || this.forma?.codpagarmepedido || this.forma?.codsauruspedido)
     },
   },
 
@@ -67,23 +80,33 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
     iniciar({ pessoa, titulos }) {
       this.pessoa = pessoa
       this.titulos = titulos
-      this.pagamentos = []
-      this.pendentes = []
+      this.forma = null
+      this.pendente = null
       if (!ouvindo) {
         ouvindo = true
         ouvir('cobrancaConcluida', (dados) => this.cobrancaConcluida(dados))
       }
     },
 
-    // abre o wizard com o que falta; formas = { entrada: [...], saida: [...] }
+    // abre o wizard com o valor do líquido, travado; formas = { entrada: [...], saida: [...] }
     abrirWizard({ contexto, formas, padrao = {} }) {
-      if (this.saldo <= 0) {
+      if (this.compensacao) {
+        return
+      }
+      if (this.totalLiquido <= 0) {
+        Notify.create({
+          type: 'negative',
+          message: 'Informe o valor dos títulos!',
+          timeout: 3000,
+          actions: [{ icon: 'close', color: 'white' }],
+        })
         return
       }
       cobrancaStore().abrir({
-        valor: this.saldo,
+        valor: this.totalLiquido,
         total: this.totalLiquido,
-        saldo: this.saldo,
+        saldo: this.totalLiquido,
+        valorFixo: true,
         sentido: this.entrada ? 'entrada' : 'saida',
         pessoa: this.pessoa,
         formasPermitidas: this.entrada ? formas.entrada : formas.saida,
@@ -101,11 +124,14 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
       })
     },
 
-    // forma lançada no wizard: o total é o que andou (sem troco)
+    // forma escolhida no wizard: o total é o que andou (sem troco)
     adicionar(pag) {
-      const total = arredonda((pag.principal || 0) + (pag.juros || 0) - (pag.desconto || 0))
-      this.pagamentos.push({
-        meio: pag.meio,
+      const total =
+        pag.codpix || pag.codpagarmepedido || pag.codsauruspedido
+          ? arredonda(pag.total ?? pag.principal)
+          : arredonda((pag.principal || 0) + (pag.juros || 0) - (pag.desconto || 0))
+      this.forma = {
+        meio: pag.meio ?? null,
         total,
         valortroco: pag.valortroco ?? null,
         codportador: pag.codportador ?? null,
@@ -117,63 +143,67 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
         chequevencimento: pag.chequevencimento ?? null,
         chequecnpj: pag.chequecnpj ?? null,
         chequeemitente: pag.chequeemitente ?? null,
-        codpagamento: pag.codpagamento ?? null,
+        codpix: pag.codpix ?? null,
+        codpagarmepedido: pag.codpagarmepedido ?? null,
+        codsauruspedido: pag.codsauruspedido ?? null,
         codpagamentoorigem: pag.codpagamentoorigem ?? null,
         descricao:
           pag.descricao ??
           [MEIOS[pag.meio], pag.maquineta, pag.portador, pag.descricaoorigem]
             .filter(Boolean)
             .join(' · '),
-      })
+      }
     },
 
-    remover(indice) {
-      this.pagamentos.splice(indice, 1)
+    // tira a forma escolhida (a integrada já confirmada não se tira: o dinheiro entrou)
+    remover() {
+      this.forma = null
     },
 
     // cobrança integrada criada pelo wizard: espera a confirmação
     cobrancaCriada({ tipo, dados }) {
-      this.pendentes.push({
+      this.pendente = {
         tipo,
         id: dados[ID_COBRANCA[tipo]],
         valor: arredonda(dados.valororiginal ?? dados.valor),
-      })
+      }
     },
 
     cobrancaConcluida({ tipo, dados }) {
-      const i = this.pendentes.findIndex(
-        (p) => p.tipo === tipo && p.id == dados?.[ID_COBRANCA[tipo]],
-      )
-      if (i < 0) {
+      const p = this.pendente
+      if (!p || p.tipo !== tipo || p.id != dados?.[ID_COBRANCA[tipo]]) {
         return
       }
-      const pendente = this.pendentes.splice(i, 1)[0]
-      if (!dados.codpagamento) {
+      // o PIX QR vem pelo PIX que pagou; Stone e SafraPay, pelo pedido
+      const pix = tipo === 'pix'
+      if (pix && !dados.codpix) {
         Notify.create({
           type: 'negative',
           message: 'O pagamento da cobrança ainda não foi registrado: consulte de novo!',
           timeout: 5000,
           actions: [{ icon: 'close', color: 'white' }],
         })
-        this.pendentes.push(pendente)
         return
       }
+      this.pendente = null
       this.adicionar({
-        codpagamento: dados.codpagamento,
-        principal: pendente.valor,
+        codpix: pix ? dados.codpix : null,
+        codpagarmepedido: tipo === 'pagarme' ? p.id : null,
+        codsauruspedido: tipo === 'saurus' ? p.id : null,
+        total: p.valor,
         descricao: DESCRICAO_COBRANCA[tipo],
       })
     },
 
-    // manda títulos e formas; devolve os pagamentos criados
+    // manda títulos e a forma; devolve os pagamentos (um)
     async finalizar(url, extras = {}) {
       if (this.finalizando) {
         return false
       }
-      if (!this.compensacao && Math.abs(this.saldo) > 0.005) {
+      if (!this.pronto) {
         Notify.create({
           type: 'negative',
-          message: 'Ainda falta lançar R$ ' + this.saldo.toFixed(2).replace('.', ',') + '!',
+          message: 'Escolha como foi pago!',
           timeout: 3000,
           actions: [{ icon: 'close', color: 'white' }],
         })
@@ -181,6 +211,10 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
       }
       this.finalizando = true
       try {
+        const forma = this.forma ? { ...this.forma } : null
+        if (forma) {
+          delete forma.descricao
+        }
         const { data } = await api.post(url, {
           ...extras,
           codpessoa: this.pessoa?.codpessoa,
@@ -192,11 +226,7 @@ export const baixaTitulosStore = defineStore('baixaTitulos', {
             desconto: t.desconto || 0,
             total: t.total,
           })),
-          pagamentos: this.pagamentos.map((p) => {
-            const forma = { ...p }
-            delete forma.descricao
-            return forma
-          }),
+          pagamentos: forma && !this.compensacao ? [forma] : [],
         })
         return data.data
       } catch (error) {

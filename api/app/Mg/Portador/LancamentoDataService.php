@@ -4,15 +4,15 @@ namespace Mg\Portador;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Caixa\CaixaItemService;
 use Mg\Caixa\CaixaService;
 use Mg\Cheque\Cheque;
-use Mg\Conferencia\ConferenciaAutorizador;
 use Mg\Conferencia\ConferenciaService;
 use Mg\Conferencia\PagamentoCorrecaoService;
 use Mg\Maquineta\MaquinetaLoteService;
+use Mg\Ocorrencia\OcorrenciaService;
 use Mg\Pagamento\Pagamento;
-use Mg\Pagamento\PagamentoCorrecao;
 use Mg\Pagamento\PagamentoService;
 use Mg\Titulo\MovimentoTituloService;
 
@@ -29,18 +29,24 @@ use Mg\Titulo\MovimentoTituloService;
  *   Movimento (ajuste, item, bordero, transferencia): a transacao e o periodo
  *   de cada linha; a transferencia muda as duas pontas juntas.
  * Periodo fechado (caixa, banco) ou conferido (maquineta) nao recebe nem perde
- * lancamento. Justificativa obrigatoria, com o antes/depois na trilha. So' o
+ * lancamento. Justificativa obrigatoria, com o antes/depois na auditoria. So' o
  * gestor do portador (o cartao, quem confere a maquineta; no PDV, a gaveta
  * dele). Sem transacao interna: o controller abre.
  */
 class LancamentoDataService
 {
-    // a data nova: nao no futuro, nem antes do razao (go-live)
-    private static function exigirData(Carbon $data): Carbon
+    // tolerancia do relogio do aparelho: ate' 5 minutos a frente vira agora
+    const TOLERANCIA_FUTURO_MIN = 5;
+
+    // nao no futuro (a mesma tolerancia em todo lugar) nem antes do razao
+    private static function exigirLimites(Carbon $data): Carbon
     {
-        $data = $data->copy()->startOfMinute();
-        if ($data->gt(Carbon::now())) {
+        $agora = Carbon::now();
+        if ($data->gt($agora->copy()->addMinutes(static::TOLERANCIA_FUTURO_MIN))) {
             abort(422, 'A data não pode ser no futuro.');
+        }
+        if ($data->gt($agora)) {
+            $data = $agora->copy();
         }
         if ($data->lt(ConferenciaService::inicio())) {
             abort(422, 'A data não pode ser antes do início do razão (' . ConferenciaService::inicio()->format('d/m/Y') . ').');
@@ -48,21 +54,23 @@ class LancamentoDataService
         return $data;
     }
 
+    // a data nova do alterar data
+    private static function exigirData(Carbon $data): Carbon
+    {
+        return static::exigirLimites($data->copy()->startOfMinute());
+    }
+
     // a data informada ao lancar (baixa de titulo, vale; contas e PDV), com
-    // hora: sem data, agora; um pouco a frente (relogio do cliente), agora;
-    // no futuro, recusa. O periodo de cada portador sai dela (a gaveta recusa
-    // sessao fechada)
+    // hora: e' a do fato. Sem data, agora; um pouco a frente (relogio do
+    // aparelho), agora; no futuro ou antes do inicio do razao, recusa. O
+    // periodo de cada portador sai dela: periodo fechado e gaveta sem sessao
+    // naquela hora tambem recusam (PortadorMovimentoService, CaixaService)
     public static function dataInformada(?string $transacao): Carbon
     {
-        $agora = Carbon::now()->startOfSecond();
         if (empty($transacao)) {
-            return $agora;
+            return Carbon::now()->startOfSecond();
         }
-        $data = Carbon::parse($transacao);
-        if ($data->gt($agora->copy()->addMinutes(5))) {
-            abort(422, 'A data não pode ser no futuro.');
-        }
-        return $data->gt($agora) ? $agora : $data;
+        return static::exigirLimites(Carbon::parse($transacao));
     }
 
     private static function justificativa(?string $justificativa): string
@@ -110,10 +118,12 @@ class LancamentoDataService
             ->each(fn ($p) => PortadorPeriodoService::recalcular($p));
     }
 
-    // gestor de cada portador cuja ponta muda (a gaveta do PDV, o proprio
-    // PDV): quem administra so' um lado nao mexe no outro
+    // o papel em cada portador cuja ponta muda: quem administra so' um lado
+    // nao mexe no outro. Gestor altera com o periodo aberto ou pendente;
+    // operador so' com o periodo de onde sai e o para onde vai abertos (Fabio,
+    // 10/10/2026). Fechado, ninguem.
     // `$livre`: a gaveta do PDV ja' resolvida (0 = nenhuma; null = do request)
-    private static function podePortadores(array $codportadores, ?int $livre = null): bool
+    private static function podePortadores(array $codportadores, ?int $livre = null, string $papel = PortadorUsuario::PAPEL_GESTOR): bool
     {
         $cods = array_unique(array_filter($codportadores));
         if (empty($cods)) {
@@ -121,33 +131,104 @@ class LancamentoDataService
         }
         $livre ??= PortadorAutorizador::livre();
         foreach ($cods as $cod) {
-            if ($cod != $livre && !PortadorAutorizador::pode((int) $cod, PortadorUsuario::PAPEL_GESTOR)) {
+            if ($cod != $livre && !PortadorAutorizador::pode((int) $cod, $papel)) {
                 return false;
             }
         }
         return true;
     }
 
+    // periodo do portador ou da maquineta sem fim (aberto, nao pendente)
+    private static function aberto($periodo): bool
+    {
+        return $periodo !== null && $periodo->aberto();
+    }
+
+    const MOTIVO_OPERADOR = 'Alterar a data: o operador só altera com o período de onde sai e o para onde vai abertos; com período pendente, só o gestor.';
+
     // ==== pagamento ====
 
-    // cartao: quem confere a maquineta (o cartao nao entra no razao do
-    // portador); o resto, o gestor de cada portador do pagamento
+    // os portadores do pagamento; no cartao (que nao entra no razao do
+    // portador), o da adquirente da maquineta
+    private static function portadoresDoPagamento(Pagamento $pag): array
+    {
+        $portadores = [$pag->codportadororigem, $pag->codportadordestino];
+        if (!empty($pag->codmaquineta)) {
+            $portadores[] = optional(\Mg\Pagamento\PagamentoTituloService::portadorDaMaquineta($pag->Maquineta))->codportador;
+        }
+        return array_values(array_filter($portadores));
+    }
+
+    // os periodos em que o pagamento esta' hoje: as linhas do razao, a sessao
+    // da gaveta e o periodo da maquineta (o do cancelamento, no cancelamento)
+    private static function periodosAtuaisDoPagamento(Pagamento $pag, bool $cancelamento = false): array
+    {
+        if ($cancelamento) {
+            return [$pag->MaquinetaLoteCancelamento];
+        }
+        $ret = PortadorPeriodo::whereIn('codportadorperiodo', static::periodosDoPagamento($pag))->get()->all();
+        if (!empty($pag->codportadorperiodo)) {
+            $ret[] = PortadorPeriodo::find($pag->codportadorperiodo);
+        }
+        if (!empty($pag->codmaquinetalote)) {
+            $ret[] = $pag->MaquinetaLote;
+        }
+        return $ret;
+    }
+
+    // os periodos para onde o pagamento iria na data nova
+    private static function periodosNaData(Pagamento $pag, Carbon $data, bool $cancelamento = false): array
+    {
+        if ($cancelamento) {
+            return [MaquinetaLoteService::daData($pag->codmaquineta, $data)];
+        }
+        $ret = [];
+        foreach (array_filter([$pag->codportadororigem, $pag->codportadordestino]) as $cod) {
+            if (in_array((int) $pag->meio, PortadorMovimentoService::MEIOS)) {
+                $ret[] = static::periodoDaData(Portador::findOrFail($cod), $data);
+            }
+        }
+        if (!empty($pag->codportadorperiodo)) {
+            $ret[] = CaixaService::sessaoDoMomento(PortadorPeriodo::findOrFail($pag->codportadorperiodo)->Portador, $data);
+        }
+        if (!empty($pag->codmaquinetalote) && !empty($pag->codmaquineta)) {
+            $ret[] = MaquinetaLoteService::daData($pag->codmaquineta, $data);
+        }
+        return $ret;
+    }
+
+    // pode alterar a data (o botao na tela): gestor; ou operador com os
+    // periodos em que o pagamento esta' abertos (o destino confere ao gravar)
     public static function podePagamento(Pagamento $pag, ?int $livre = null): bool
     {
-        if (!empty($pag->codmaquineta) && ConferenciaAutorizador::pode(ConferenciaService::filialDoPagamento($pag))) {
+        $portadores = static::portadoresDoPagamento($pag);
+        if (static::podePortadores($portadores, $livre)) {
             return true;
         }
-        return static::podePortadores([$pag->codportadororigem, $pag->codportadordestino], $livre);
+        return static::podePortadores($portadores, $livre, PortadorUsuario::PAPEL_OPERADOR)
+            && collect(static::periodosAtuaisDoPagamento($pag))->every(fn ($p) => static::aberto($p));
     }
 
-    private static function autorizarPagamento(Pagamento $pag): void
+    // ao gravar: gestor; ou operador com a origem e o destino abertos
+    private static function autorizarPagamento(Pagamento $pag, Carbon $data, bool $cancelamento = false): void
     {
-        if (!static::podePagamento($pag)) {
-            abort(403, 'Alterar a data: só o gestor de cada portador do pagamento (no cartão, quem confere a maquineta).');
+        $portadores = static::portadoresDoPagamento($pag);
+        if (static::podePortadores($portadores)) {
+            return;
+        }
+        if (!static::podePortadores($portadores, null, PortadorUsuario::PAPEL_OPERADOR)) {
+            abort(403, 'Alterar a data: só o operador ou o gestor de cada portador do pagamento (no cartão, o da adquirente).');
+        }
+        $periodos = array_merge(
+            static::periodosAtuaisDoPagamento($pag, $cancelamento),
+            static::periodosNaData($pag, $data, $cancelamento)
+        );
+        if (!collect($periodos)->every(fn ($p) => static::aberto($p))) {
+            abort(403, static::MOTIVO_OPERADOR);
         }
     }
 
-    // o que a data muda no pagamento, para a trilha
+    // o que a data muda no pagamento, para a auditoria
     private static function fotoPagamento(Pagamento $pag): array
     {
         return [
@@ -159,14 +240,11 @@ class LancamentoDataService
         ];
     }
 
-    private static function registrarPagamento(Pagamento $pag, array $antes, string $justificativa): void
+    private static function registrarPagamento(Pagamento $pag, int $tipo, array $antes, string $justificativa): void
     {
-        PagamentoCorrecao::create([
-            'codpagamento' => $pag->codpagamento,
-            'antes' => $antes,
-            'depois' => static::fotoPagamento($pag),
-            'justificativa' => $justificativa,
-        ]);
+        $aud = AuditoriaService::registrar('tblpagamento', $pag->codpagamento, $tipo, $antes, static::fotoPagamento($pag), $justificativa);
+        // em PDV monitorado vai para o gerente conferir (TASK-205)
+        OcorrenciaService::correcao([$aud]);
     }
 
     // os periodos do portador onde o pagamento tem linha (antes de mudar)
@@ -182,7 +260,21 @@ class LancamentoDataService
         $justificativa = static::justificativa($justificativa);
         $data = static::exigirData($data);
         if (!$autorizado) {
-            static::autorizarPagamento($pag);
+            static::autorizarPagamento($pag, $data);
+        }
+        // a devolucao (cancelamento no cartao, devolucao de PIX) nao vem antes
+        // do pagamento original, nem o original depois da devolucao
+        if (!empty($pag->codpagamentoorigem)) {
+            $original = Pagamento::find($pag->codpagamentoorigem);
+            if ($original && $original->transacao && $data->lt($original->transacao->copy()->startOfMinute())) {
+                abort(422, 'A devolução não pode ser antes do pagamento original (' . $original->transacao->format('d/m/Y H:i') . ').');
+            }
+        }
+        $primeiraDevolucao = Pagamento::where('codpagamentoorigem', $pag->codpagamento)
+            ->where('estado', PagamentoService::ESTADO_EFETIVADO)
+            ->min('transacao');
+        if ($primeiraDevolucao && $data->gt(Carbon::parse($primeiraDevolucao))) {
+            abort(422, 'O pagamento não pode ficar depois da devolução dele (' . Carbon::parse($primeiraDevolucao)->format('d/m/Y H:i') . ').');
         }
         static::travar([$pag->codportadororigem, $pag->codportadordestino]);
         // o Conferir da maquineta trava a maquineta: nao entra cartao no
@@ -247,7 +339,7 @@ class LancamentoDataService
         // o cheque recebido leva a data junto
         Cheque::where('codpagamento', $pag->codpagamento)->update(['transacao' => $data]);
 
-        static::registrarPagamento($pag, $antes, $justificativa);
+        static::registrarPagamento($pag, AuditoriaService::TIPO_DATA_ALTERADA, $antes, $justificativa);
         return $pag->fresh();
     }
 
@@ -257,7 +349,7 @@ class LancamentoDataService
     {
         $justificativa = static::justificativa($justificativa);
         $data = static::exigirData($data);
-        static::autorizarPagamento($pag);
+        static::autorizarPagamento($pag, $data, true);
         if (!empty($pag->codmaquineta)) {
             MaquinetaLoteService::travar($pag->codmaquineta);
         }
@@ -273,7 +365,7 @@ class LancamentoDataService
         $pag->cancelamento = $data;
         $pag->codmaquinetalotecancelamento = MaquinetaLoteService::daData($pag->codmaquineta, $data)->codmaquinetalote;
         $pag->save();
-        static::registrarPagamento($pag, $antes, $justificativa);
+        static::registrarPagamento($pag, AuditoriaService::TIPO_DATA_CANCELAMENTO_ALTERADA, $antes, $justificativa);
         return $pag->fresh();
     }
 
@@ -287,6 +379,27 @@ class LancamentoDataService
             : [$mov];
     }
 
+    // a entrada de item que sai do periodo: o disponivel do item la' (saldo
+    // inicial + entradas - saidas, com ela) tem de cobrir o que ela leva
+    private static function exigirEntradaLivre(PortadorMovimento $entrada): void
+    {
+        $periodo = $entrada->PortadorPeriodo;
+        $disponivel = CaixaItemService::disponivel($periodo, PortadorPeriodoService::anterior($periodo))[$entrada->codcaixaitem] ?? [];
+        $chave = fn ($l) => number_format((float) $l['preco'], 2, '.', '') . '|' . mb_strtolower($l['descricao'] ?? '');
+        $tem = [];
+        foreach ($disponivel as $l) {
+            $tem[$chave($l)] = $l['quantidade'];
+        }
+        foreach ($entrada->itens ?? [] as $l) {
+            if (($tem[$chave($l)] ?? 0) < $l['quantidade']) {
+                $nome = trim(optional($entrada->CaixaItem)->item . ' ' . ($l['descricao'] ?? '') . ' ' . number_format((float) $l['preco'], 2, ',', '.'));
+                abort(422, "A saída de {$nome} deste período usa esta entrada: mova ou cancele a saída antes.");
+            }
+        }
+    }
+
+    // pode alterar a data (o botao na tela): gestor; ou operador com os
+    // periodos das linhas abertos (o destino confere ao gravar)
     public static function podeMovimento(PortadorMovimento $mov, ?int $livre = null): bool
     {
         if ($mov->tipo == PortadorMovimento::TIPO_PAGAMENTO) {
@@ -296,7 +409,11 @@ class LancamentoDataService
         if ($mov->tipo == PortadorMovimento::TIPO_TRANSFERENCIA) {
             $cods[] = optional($mov->Par)->codportador;
         }
-        return static::podePortadores($cods, $livre);
+        if (static::podePortadores($cods, $livre)) {
+            return true;
+        }
+        return static::podePortadores($cods, $livre, PortadorUsuario::PAPEL_OPERADOR)
+            && collect(static::linhas($mov))->every(fn ($l) => static::aberto($l->PortadorPeriodo));
     }
 
     // devolve os codportadorperiodo mexidos (de onde saiu e para onde foi)
@@ -310,12 +427,22 @@ class LancamentoDataService
         }
         $justificativa = static::justificativa($justificativa);
         $data = static::exigirData($data);
-        if (!static::podeMovimento($mov)) {
-            abort(403, 'Alterar a data: só o gestor do portador.');
-        }
         $linhas = static::linhas($mov);
+        // gestor; ou operador com o periodo de onde sai e o para onde vai abertos
+        $cods = array_map(fn ($l) => $l->codportador, $linhas);
+        if (!static::podePortadores($cods)) {
+            if (!static::podePortadores($cods, null, PortadorUsuario::PAPEL_OPERADOR)) {
+                abort(403, 'Alterar a data: só o operador ou o gestor do portador.');
+            }
+            foreach ($linhas as $l) {
+                if (!static::aberto($l->PortadorPeriodo) || !static::aberto(static::periodoDaData($l->Portador, $data))) {
+                    abort(403, static::MOTIVO_OPERADOR);
+                }
+            }
+        }
         static::travar(array_map(fn ($l) => $l->codportador, $linhas));
         $mexidos = collect();
+        $auditorias = [];
         foreach ($linhas as $l) {
             $l->refresh();
             if ($l->estado == PortadorMovimento::ESTADO_CANCELADO) {
@@ -331,17 +458,26 @@ class LancamentoDataService
             if ($l->tipo == PortadorMovimento::TIPO_ITEM && $l->valor < 0 && $destino->codportadorperiodo != $l->codportadorperiodo) {
                 PortadorLancamentoService::exigirDisponivel($destino, $l->CaixaItem, $l->itens ?? []);
             }
+            // a entrada de item so' sai do periodo se a saida que ja' saiu
+            // dele continua coberta (o disponivel la' cobre o que ela leva)
+            if ($l->tipo == PortadorMovimento::TIPO_ITEM && $l->valor > 0 && $destino->codportadorperiodo != $l->codportadorperiodo) {
+                static::exigirEntradaLivre($l);
+            }
             $l->transacao = $data;
             $l->codportadorperiodo = $destino->codportadorperiodo;
             $l->save();
             $mexidos->push($l->codportadorperiodo);
-            PortadorMovimentoCorrecao::create([
-                'codportadormovimento' => $l->codportadormovimento,
-                'antes' => $antes,
-                'depois' => ['transacao' => $l->transacao->format('Y-m-d H:i:s'), 'codportadorperiodo' => $l->codportadorperiodo],
-                'justificativa' => $justificativa,
-            ]);
+            $auditorias[] = AuditoriaService::registrar(
+                'tblportadormovimento',
+                $l->codportadormovimento,
+                AuditoriaService::TIPO_DATA_ALTERADA,
+                $antes,
+                ['transacao' => $l->transacao->format('Y-m-d H:i:s'), 'codportadorperiodo' => $l->codportadorperiodo],
+                $justificativa
+            );
         }
+        // as duas pontas da transferencia sao uma correcao so' (TASK-205)
+        OcorrenciaService::correcao($auditorias);
         static::recalcular($mexidos);
         if (in_array($mov->tipo, [PortadorMovimento::TIPO_ITEM, PortadorMovimento::TIPO_MAQUINETA])) {
             CaixaItemService::recalcularSaldos($mov->codportador);
@@ -354,40 +490,30 @@ class LancamentoDataService
     // cancelamento
     public static function alteracoesPagamento(array $codpagamentos, string $campo = 'transacao'): array
     {
-        if (empty($codpagamentos)) {
-            return [];
-        }
-        return PagamentoCorrecao::with('UsuarioCriacao:codusuario,usuario')
-            ->whereIn('codpagamento', array_values(array_unique($codpagamentos)))
-            ->whereRaw("antes->>? is distinct from depois->>?", [$campo, $campo])
-            ->orderBy('codpagamentocorrecao')
-            ->get()
-            ->keyBy('codpagamento')
-            ->map(fn ($c) => static::alteracao($c, $campo))
-            ->all();
+        $tipo = $campo == 'cancelamento'
+            ? AuditoriaService::TIPO_DATA_CANCELAMENTO_ALTERADA
+            : AuditoriaService::TIPO_DATA_ALTERADA;
+        return array_map(
+            fn ($a) => static::alteracao($a, $campo),
+            AuditoriaService::ultimas('tblpagamento', $codpagamentos, $tipo)
+        );
     }
 
     // a ultima data alterada de cada movimento: [codportadormovimento => {...}]
     public static function alteracoesMovimento(array $codportadormovimentos): array
     {
-        if (empty($codportadormovimentos)) {
-            return [];
-        }
-        return PortadorMovimentoCorrecao::with('UsuarioCriacao:codusuario,usuario')
-            ->whereIn('codportadormovimento', array_values(array_unique($codportadormovimentos)))
-            ->orderBy('codportadormovimentocorrecao')
-            ->get()
-            ->keyBy('codportadormovimento')
-            ->map(fn ($c) => static::alteracao($c, 'transacao'))
-            ->all();
+        return array_map(
+            fn ($a) => static::alteracao($a, 'transacao'),
+            AuditoriaService::ultimas('tblportadormovimento', $codportadormovimentos, AuditoriaService::TIPO_DATA_ALTERADA)
+        );
     }
 
-    private static function alteracao($correcao, string $campo): array
+    private static function alteracao($auditoria, string $campo): array
     {
         return [
-            'de' => $correcao->antes[$campo] ?? null,
-            'usuario' => optional($correcao->UsuarioCriacao)->usuario,
-            'justificativa' => $correcao->justificativa,
+            'de' => $auditoria->antes[$campo] ?? null,
+            'usuario' => $auditoria->usuariocriacao,
+            'justificativa' => $auditoria->justificativa,
         ];
     }
 }

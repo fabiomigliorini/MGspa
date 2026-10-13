@@ -45,7 +45,7 @@ class PagamentoListaService
         'Negocio.Pessoa:codpessoa,fantasia',
         'PortadorDestino:codportador,portador,codfilial,tipo',
         'PortadorOrigem:codportador,portador,codfilial,tipo',
-        'Maquineta:codmaquineta,apelido',
+        'Maquineta:codmaquineta,apelido,codpessoa',
         'Pdv:codpdv,apelido',
         'UsuarioCriacao:codusuario,usuario',
         'MovimentoTituloS:codmovimentotitulo,codpagamento,codtitulo,codtipomovimentotitulo,codmovimentotituloestorno',
@@ -67,6 +67,11 @@ class PagamentoListaService
     // CR entrou dinheiro, DB saiu, TR transferencia, CP encontro de contas
     public static function operacao(Pagamento $pag): string
     {
+        // encontro de contas e compensacao: no portador Encontro de Contas,
+        // sem dinheiro
+        if ((int) $pag->meio == PagamentoService::MEIO_COMPENSACAO) {
+            return 'CP';
+        }
         if (!empty($pag->codportadordestino) && !empty($pag->codportadororigem)) {
             return 'TR';
         }
@@ -75,6 +80,10 @@ class PagamentoListaService
         }
         if (!empty($pag->codportadororigem)) {
             return 'DB';
+        }
+        // o cartao (sem portador gravado): entrou, salvo o cancelamento
+        if (!empty($pag->codmaquineta)) {
+            return empty($pag->codpagamentoorigem) ? 'CR' : 'DB';
         }
         if (!empty($pag->codnegocio)) {
             return empty($pag->codpagamentoorigem) ? 'CR' : 'DB';
@@ -145,7 +154,14 @@ class PagamentoListaService
         if (!empty($filtros['codportador'])) {
             $q->where(function ($w) use ($filtros) {
                 $w->where('tblpagamento.codportadordestino', $filtros['codportador'])
-                    ->orWhere('tblpagamento.codportadororigem', $filtros['codportador']);
+                    ->orWhere('tblpagamento.codportadororigem', $filtros['codportador'])
+                    // o cartao da venda nao grava portador: o da adquirente da maquineta
+                    ->orWhereRaw("tblpagamento.codportadordestino is null and tblpagamento.codportadororigem is null
+                        and tblpagamento.codmaquineta in (
+                            select mq.codmaquineta from tblmaquineta mq
+                            join tblportador a on (a.tipo = 'A' and a.codpessoa = mq.codpessoa)
+                            where a.codportador = ?
+                        )", [(int) $filtros['codportador']]);
             });
         }
         if (!empty($filtros['meio'])) {
@@ -220,7 +236,7 @@ class PagamentoListaService
             'Negocio.Pessoa:codpessoa,fantasia',
             'PortadorDestino:codportador,portador,codfilial,tipo',
             'PortadorOrigem:codportador,portador,codfilial,tipo',
-            'Maquineta:codmaquineta,apelido,serial',
+            'Maquineta:codmaquineta,apelido,serial,codpessoa',
             'Pdv:codpdv,apelido',
             'Filial:codfilial,filial',
             'PagamentoOrigem:codpagamento,meio,total,transacao,codnegocio',

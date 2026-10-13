@@ -1,5 +1,6 @@
 <script setup>
 import { ref, computed, watch, nextTick } from "vue";
+import { Notify } from "quasar";
 
 const props = defineProps({
   modelValue: { type: String, default: null },
@@ -131,6 +132,9 @@ function parseDisplay(str) {
     /^(\d{2})\/(\d{2})\/(\d{2}|\d{4})(?:\s+(\d{2}):(\d{2})(?::(\d{2}))?)?\s*$/,
   );
   if (!m) return null;
+  // data com hora: digitar só o dia não vale (00:00 cairia fora da sessão do caixa); a hora é
+  // obrigatória (TASK-204). O calendário troca o dia mantendo a hora.
+  if (isTimestamp.value && !m[4]) return null;
   let y = +m[3];
   if (m[3].length === 2) y = expand2DigitYear(m[3]);
   return validatedDate(
@@ -261,6 +265,21 @@ function setTimePart(part, val) {
   emitFromDate(clampToRange(base));
 }
 
+// só o dia digitado (dd/mm/aaaa), mantendo a hora que já estava: usado ao ir do campo para a hora
+function aplicarDiaDigitado() {
+  const m = (displayRef.value || "").match(/^(\d{2})\/(\d{2})\/(\d{4}|\d{2})(?!\d)/);
+  if (!m) return;
+  let y = +m[3];
+  if (m[3].length === 2) y = expand2DigitYear(m[3]);
+  const base = lastValid.value ? new Date(lastValid.value) : new Date();
+  const dia = validatedDate(y, +m[2], +m[1], base.getHours(), base.getMinutes(), base.getSeconds());
+  if (!dia) return;
+  const clamped = clampToRange(dia);
+  if (lastValid.value?.getTime() !== clamped.getTime()) {
+    emitFromDate(clamped);
+  }
+}
+
 function onTimeKeydown(e, part, isFirst, isLast) {
   if (e.key === "Tab") {
     if (e.shiftKey && isFirst) {
@@ -270,7 +289,12 @@ function onTimeKeydown(e, part, isFirst, isLast) {
       return;
     }
     if (!e.shiftKey && isLast) {
+      // sai da hora para o próximo campo do formulário: o calendário fecha e devolveria o foco
+      // para a data (reabrindo-o); o foco vai direto ao campo seguinte
+      e.preventDefault();
+      proximoCampo.value = proximoFocavel(inputRef.value?.nativeEl);
       popupRef.value?.hide();
+      focarProximo();
     }
     return;
   }
@@ -320,8 +344,36 @@ function selectAllInput() {
   }
 }
 
+// o campo depois deste no formulário (o mesmo dialog/card), fora do calendário
+const proximoCampo = ref(null);
+function proximoFocavel(el) {
+  if (!el) return null;
+  const seletor =
+    'input:not([disabled]):not([tabindex="-1"]), textarea:not([disabled]), button:not([disabled]):not([tabindex="-1"]), [tabindex]:not([tabindex="-1"])';
+  const escopo = el.closest(".q-dialog__inner, form, .q-card") ?? document;
+  const todos = [...escopo.querySelectorAll(seletor)].filter(
+    (x) => x.offsetParent !== null && !x.closest(".q-menu"),
+  );
+  const i = todos.indexOf(el);
+  return i >= 0 ? (todos[i + 1] ?? null) : null;
+}
+function focarProximo() {
+  const alvo = proximoCampo.value;
+  if (!alvo) return;
+  nextTick(() => alvo.focus?.());
+  // o calendário, ao fechar, devolve o foco para a data: manda de novo para o próximo
+  setTimeout(() => {
+    if (proximoCampo.value === alvo) {
+      proximoCampo.value = null;
+      if (document.activeElement !== alvo) alvo.focus?.();
+    }
+  }, 350);
+}
+
 function onFocus() {
   if (props.readonly) return;
+  // voltou para a data só porque o calendário fechou: não reabre
+  if (proximoCampo.value) return;
   selectAllInput();
   popupOpen.value = true;
   popupRef.value?.show();
@@ -344,6 +396,15 @@ function onBlur(evt) {
         emitFromDate(clamped);
       }
     } else {
+      if (isTimestamp.value && /^\d{2}\/\d{2}\/(\d{2}|\d{4})\s*$/.test(text)) {
+        Notify.create({
+          type: "negative",
+          message: "Informe a hora, além do dia.",
+          color: "red-5",
+          icon: "error",
+          timeout: 3000,
+        });
+      }
       displayRef.value = lastValid.value ? dateToDisplay(lastValid.value) : "";
     }
   }
@@ -421,6 +482,8 @@ function onKeydown(e) {
       const el = hourRef.value?.nativeEl;
       if (el) {
         e.preventDefault();
+        // o dia digitado vale antes de ir para a hora (senão a hora entra no dia antigo)
+        aplicarDiaDigitado();
         el.focus();
         el.select();
         return;

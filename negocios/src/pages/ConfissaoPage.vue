@@ -7,7 +7,7 @@ const sSinc = sincronizacaoStore()
 confissaoStore().configurar({ fixos: { pdv: sSinc.pdv.uuid } })
 </script>
 <template>
-  <q-page class="bg-grey-2">
+  <q-page>
     <div class="row q-pa-md">
       <div style="width: 500px; max-width: 90vw; margin: auto">
         <q-card flat bordered>

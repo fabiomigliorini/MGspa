@@ -1,11 +1,11 @@
-import { formataDataIso, formataNumero, formataTimestampIso } from '@components/formatters'
-import { TIPO } from '@components/ocorrencia.js'
+import { formataDataIso, formataTimestampIso } from '@components/formatters'
 import { defineStore } from 'pinia'
 import { toRaw } from 'vue'
 import { db } from 'boot/db'
 import { Notify, uid } from 'quasar'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import { caixaStore } from 'stores/caixa'
+import { useAuthStore } from 'stores/auth'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
 import bandeirasCartao from '../data/bandeiras-cartao.json'
 import { falar } from '../utils/falar.js'
@@ -56,9 +56,16 @@ function instalarListenerMultiAba(store) {
 // fechado é sempre resposta velha — em geral o PUT do sincronizar ou um GET do polling de
 // PIX/maquininha que demorou. Aplicá-la devolvia a tela para "aberto" no meio da emissão,
 // desmontando o card da nota que estava transmitindo (TASK-146).
+//
+// A exceção é a reabertura pelo gerente (TASK-30): o servidor volta para 1 com uma
+// `reabertura` nova, e aí não é resposta velha.
 function respostaAtrasada(atual, ret) {
+  const reaberto = !!ret?.reabertura && ret.reabertura !== atual?.reabertura
   const atrasada =
-    atual?.uuid === ret?.uuid && atual?.codnegociostatus > 1 && ret?.codnegociostatus == 1
+    atual?.uuid === ret?.uuid &&
+    atual?.codnegociostatus > 1 &&
+    ret?.codnegociostatus == 1 &&
+    !reaberto
   if (atrasada) {
     console.warn(
       `[negócio ${ret.uuid}] resposta atrasada descartada: servidor devolveu status 1 com o negócio já em ${atual.codnegociostatus}`,
@@ -111,6 +118,8 @@ export const negocioStore = defineStore('negocio', {
     valeEditando: null,
     // pagamento (ou grupo de parcelas, com `condicao`) aberto no dialog de detalhe
     pagamentoDetalhe: null,
+    // configuracao do PDV: vem do backend na sincronizacao (aplicarConfiguracao) e fica
+    // persistida para funcionar offline
     padrao: {
       codestoquelocal: 101001, //Deposito
       codpessoa: 1, //Consumidor
@@ -118,10 +127,8 @@ export const negocioStore = defineStore('negocio', {
       codoperacao: 2, //Saída
       venda: true, //Saída
       impressora: null,
-      codpagarmepos: null,
-      codsauruspos: null,
-      maquineta: null,
-      codportador: null,
+      codmaquineta: null,
+      codportadorpix: null,
     },
     paginaAtual: 1,
     dialogVerificarDuplicados: false,
@@ -159,25 +166,41 @@ export const negocioStore = defineStore('negocio', {
         .filter((vale) => vale.inativo == null)
         .sort((a, b) => String(a.criacao).localeCompare(String(b.criacao)))
     },
+    // venda fechada que o gerente reabriu (TASK-30): mantém o PDV original e se edita de
+    // qualquer PDV, por qualquer usuário
+    reaberto() {
+      return this.negocio?.codnegociostatus == 1 && !!this.negocio?.reabertura
+    },
+    // só mostra o botão: quem garante é o servidor (Gerente da filial, Financeiro, Admin)
+    podeGerenciar() {
+      const grupos = (useAuthStore().usuario?.permissoes ?? []).map((p) => p.grupousuario)
+      return ['Administrador', 'Gerente', 'Financeiro'].some((g) => grupos.includes(g))
+    },
+    // fechado ou cancelado
+    podeReabrir() {
+      const status = this.negocio?.codnegociostatus
+      return (status == 2 || status == 3) && this.podeGerenciar
+    },
     podeEditar() {
+      if (this.reaberto) {
+        return true
+      }
       return this.negocio?.codnegociostatus == 1 && this.negocio?.codpdv == sSinc.pdv?.codpdv
     },
-    // PDV monitorado e negocio criado a partir da data: remover, diminuir e
-    // excluir pagamento pedem motivo e vao para o livro de ocorrencias (TASK-205)
-    monitorado() {
-      const desde = sSinc.pdv?.monitoramento
-      if (!desde || !this.negocio?.criacao) {
-        return false
-      }
-      return String(this.negocio.criacao).slice(0, 10) >= String(desde).slice(0, 10)
+    // o cancelado (C) e a parcela inativa da venda reaberta não contam
+    pagamentosAtivos() {
+      return (this.negocio?.pagamentos ?? []).filter((pag) => pag.estado != 'C')
+    },
+    parcelasAtivas() {
+      return (this.negocio?.parcelas ?? []).filter((np) => !np.inativo)
     },
     // o que falta receber; negativo = troco (o dinheiro entregue entra inteiro: total + troco)
     valorapagar() {
-      const pagamentos = (this.negocio.pagamentos ?? []).reduce(
+      const pagamentos = this.pagamentosAtivos.reduce(
         (soma, pag) => soma + (pag.total || 0) + (pag.valortroco || 0),
         0,
       )
-      const parcelas = (this.negocio.parcelas ?? []).reduce(
+      const parcelas = this.parcelasAtivas.reduce(
         (soma, np) => soma + (parseFloat(np.valor) || 0),
         0,
       )
@@ -234,11 +257,18 @@ export const negocioStore = defineStore('negocio', {
   },
 
   actions: {
-    async salvarPadrao(padrao) {
-      this.padrao = { ...padrao }
-      const nat = await db.naturezaOperacao.get(padrao.codnaturezaoperacao)
-      this.padrao.codoperacao = nat.codoperacao
-      this.padrao.venda = nat.venda
+    // a configuracao do dispositivo (tblpdv) vira o padrao dos negocios deste PDV
+    aplicarConfiguracao(pdv) {
+      this.padrao = {
+        codestoquelocal: pdv.codestoquelocal,
+        codpessoa: 1, //Consumidor
+        codnaturezaoperacao: pdv.codnaturezaoperacao,
+        codoperacao: pdv.codoperacao,
+        venda: pdv.venda,
+        impressora: pdv.impressora,
+        codmaquineta: pdv.codmaquineta,
+        codportadorpix: pdv.codportadorpix,
+      }
     },
 
     async atualizarListagem() {
@@ -457,7 +487,6 @@ export const negocioStore = defineStore('negocio', {
         vales: [],
         pagamentos: [],
         parcelas: [],
-        ocorrencias: [],
         titulos: [],
         notas: [],
         codpdv: sSinc.pdv.codpdv,
@@ -519,8 +548,8 @@ export const negocioStore = defineStore('negocio', {
 
       // juros dos pagamentos (parcelamento no cartão) e das parcelas (crediário)
       const valorjuros =
-        (this.negocio.pagamentos ?? []).reduce((soma, pag) => soma + (pag.juros || 0), 0) +
-        (this.negocio.parcelas ?? []).reduce((soma, np) => soma + (parseFloat(np.juros) || 0), 0)
+        this.pagamentosAtivos.reduce((soma, pag) => soma + (pag.juros || 0), 0) +
+        this.parcelasAtivas.reduce((soma, np) => soma + (parseFloat(np.juros) || 0), 0)
 
       let valortotal =
         valorprodutos +
@@ -595,9 +624,7 @@ export const negocioStore = defineStore('negocio', {
     ratearDescontoPagamento() {
       const r2 = (num) => Math.round((parseFloat(num) || 0) * 100) / 100
       const porUuid = (a, b) => (a.uuid < b.uuid ? -1 : a.uuid > b.uuid ? 1 : 0)
-      const total = r2(
-        (this.negocio.pagamentos ?? []).reduce((soma, pag) => soma + (pag.desconto || 0), 0),
-      )
+      const total = r2(this.pagamentosAtivos.reduce((soma, pag) => soma + (pag.desconto || 0), 0))
       const itens = this.negocio.itens.filter((i) => i.inativo == null).sort(porUuid)
       const vales = (this.negocio.vales ?? []).filter((v) => v.inativo == null).sort(porUuid)
       const alvos = [...itens, ...vales]
@@ -639,8 +666,9 @@ export const negocioStore = defineStore('negocio', {
     async recalcularTroco() {
       const pagar = this.valorapagar
       let troco = pagar < 0 ? Math.abs(pagar) : 0
+      // só o rascunho: o já efetivado (venda reaberta) não muda de valor
       ;(this.negocio.pagamentos ?? [])
-        .filter((pag) => pag.meio == MEIO.DINHEIRO && !pag.integracao)
+        .filter((pag) => pag.meio == MEIO.DINHEIRO && !pag.integracao && pag.estado == 'P')
         .sort((a, b) => b.total + (b.valortroco || 0) - (a.total + (a.valortroco || 0)))
         .forEach((pag) => {
           const entregue = arredonda(pag.total + (pag.valortroco || 0))
@@ -725,6 +753,8 @@ export const negocioStore = defineStore('negocio', {
       negocio.uuid = uuid
       negocio.codnegociostatus = 1
       negocio.justificativa = null
+      // a cópia de uma venda reaberta (TASK-30) nasce aberta, não reaberta
+      negocio.reabertura = null
       negocio.lancamento = formataTimestampIso(new Date())
       negocio.criacao = formataTimestampIso(new Date())
       negocio.alteracao = formataTimestampIso(new Date())
@@ -733,7 +763,6 @@ export const negocioStore = defineStore('negocio', {
       negocio.Pdv = { ...sSinc.pdv }
       negocio.pagamentos = []
       negocio.parcelas = []
-      negocio.ocorrencias = []
       negocio.titulos = []
       negocio.notas = []
       negocio.PagarMePedidoS = []
@@ -939,7 +968,10 @@ export const negocioStore = defineStore('negocio', {
       if (sincronizar) {
         if (this.negocio.codnegociostatus == 1) {
           this.negocio.alteracao = formataTimestampIso(new Date())
-          this.negocio.lancamento = formataTimestampIso(new Date())
+          // a reaberta mantém a data do fechamento original (TASK-30)
+          if (!this.negocio.reabertura) {
+            this.negocio.lancamento = formataTimestampIso(new Date())
+          }
         }
         this.negocio.sincronizado = false
       }
@@ -1079,7 +1111,7 @@ export const negocioStore = defineStore('negocio', {
       })
     },
 
-    async itemAdicionarQuantidade(uuid, quantidade, motivo = null) {
+    async itemAdicionarQuantidade(uuid, quantidade) {
       return comLock(this.negocio?.uuid, async () => {
         await this.recarregar()
         const item = this.negocio.itens.find(function (item) {
@@ -1092,12 +1124,8 @@ export const negocioStore = defineStore('negocio', {
         if (total <= 0) {
           return
         }
-        const antes = { quantidade: item.quantidade, valortotal: item.valortotal }
         item.quantidade = total
         this.itemRecalcularValorProdutos(item)
-        if (motivo && quantidade < 0) {
-          this.registrarOcorrenciaItem(TIPO.QUANTIDADE_DIMINUIDA, item, antes, motivo)
-        }
         // salva no IndexedDB
         await this.salvar()
       })
@@ -1115,7 +1143,6 @@ export const negocioStore = defineStore('negocio', {
       valorseguro,
       valoroutras,
       valortotal,
-      motivo = null,
     ) {
       return comLock(this.negocio?.uuid, async () => {
         await this.recarregar()
@@ -1124,11 +1151,6 @@ export const negocioStore = defineStore('negocio', {
         })
         if (!item) {
           return false
-        }
-        const antes = {
-          quantidade: item.quantidade,
-          valorunitario: item.valorunitario,
-          valortotal: item.valortotal,
         }
         item.codprodutobarra = codprodutobarra
         item.quantidade = quantidade
@@ -1142,19 +1164,12 @@ export const negocioStore = defineStore('negocio', {
         item.valorseguro = valorseguro
         item.valoroutras = valoroutras
         item.valortotal = valortotal
-        if (motivo) {
-          if (parseFloat(valorunitario) < parseFloat(antes.valorunitario)) {
-            this.registrarOcorrenciaItem(TIPO.PRECO_DIMINUIDO, item, antes, motivo)
-          } else if (parseFloat(quantidade) < parseFloat(antes.quantidade)) {
-            this.registrarOcorrenciaItem(TIPO.QUANTIDADE_DIMINUIDA, item, antes, motivo)
-          }
-        }
         this.recalcularValorTotal()
         await this.salvar()
       })
     },
 
-    async itemInativar(uuid, motivo = null) {
+    async itemInativar(uuid) {
       return comLock(this.negocio?.uuid, async () => {
         await this.recarregar()
         const inativar = this.negocio.itens.find(function (item) {
@@ -1162,67 +1177,9 @@ export const negocioStore = defineStore('negocio', {
         })
         if (inativar) {
           inativar.inativo = formataTimestampIso(new Date())
-          if (motivo) {
-            this.registrarOcorrenciaItem(TIPO.ITEM_EXCLUIDO, inativar, null, motivo)
-          }
           this.recalcularValorTotal()
           await this.salvar()
         }
-      })
-    },
-
-    // Livro de ocorrencias (TASK-205): chamado dentro do comLock, antes do
-    // salvar(); viaja no PUT do negocio e o servidor so' insere (por uuid)
-    registrarOcorrencia(ocorrencia) {
-      ;(this.negocio.ocorrencias ??= []).push({
-        uuid: uid(),
-        criacao: formataTimestampIso(new Date()),
-        ...ocorrencia,
-      })
-    },
-
-    // antes = null no item excluido (sai inteiro); senao, os campos que mudaram
-    registrarOcorrenciaItem(tipo, item, antes, { motivo, justificativa }) {
-      const nome = item.produto
-      const un = (q) => formataNumero(q, Number.isInteger(parseFloat(q)) ? 0 : 3)
-      let descricao, valor, de, para
-      if (tipo == TIPO.ITEM_EXCLUIDO) {
-        valor = item.valortotal
-        descricao = `Removeu ${un(item.quantidade)}× ${nome} — R$ ${formataNumero(valor)}`
-        de = {
-          quantidade: item.quantidade,
-          valorunitario: item.valorunitario,
-          valortotal: item.valortotal,
-        }
-        para = null
-      } else {
-        valor = Math.round((antes.valortotal - item.valortotal) * 100) / 100
-        de = {}
-        para = {}
-        for (const campo of Object.keys(antes)) {
-          if (parseFloat(antes[campo]) != parseFloat(item[campo])) {
-            de[campo] = antes[campo]
-            para[campo] = item[campo]
-          }
-        }
-        if (tipo == TIPO.PRECO_DIMINUIDO) {
-          descricao =
-            `Baixou o preço de ${nome} de R$ ${formataNumero(antes.valorunitario)}` +
-            ` para R$ ${formataNumero(item.valorunitario)}`
-        } else {
-          descricao = `Diminuiu ${nome} de ${un(antes.quantidade)} para ${un(item.quantidade)}`
-        }
-        descricao += ` — R$ ${formataNumero(valor)}`
-      }
-      this.registrarOcorrencia({
-        tipo,
-        uuidregistro: item.uuid,
-        descricao,
-        valor,
-        antes: de,
-        depois: para,
-        motivo,
-        justificativa: justificativa || null,
       })
     },
 
@@ -1847,18 +1804,6 @@ export const negocioStore = defineStore('negocio', {
       if (!forcar && respostaAtrasada(this.negocio, neg)) {
         return false
       }
-      // ocorrencia registrada aqui enquanto a resposta vinha nao se perde
-      // (TASK-205): fica e volta a ser enviada
-      if (this.negocio?.uuid == neg.uuid) {
-        const doServidor = neg.ocorrencias ?? []
-        const pendentes = (this.negocio.ocorrencias ?? []).filter(
-          (oc) => !doServidor.some((s) => s.uuid == oc.uuid),
-        )
-        if (pendentes.length) {
-          neg.ocorrencias = [...doServidor, ...pendentes]
-          neg.sincronizado = false
-        }
-      }
       this.negocio = { ...neg }
       db.negocio.put(neg)
       await this.atualizarListagem()
@@ -1895,7 +1840,7 @@ export const negocioStore = defineStore('negocio', {
         sentido: this.negocio.codoperacao == 1 ? 'saida' : 'entrada',
         pessoa: { codpessoa: this.negocio.codpessoa, fantasia: this.negocio.Pessoa?.fantasia },
         documento: this.documentoCobranca(),
-        contexto: await this.contextoCobranca(this.negocio.codestoquelocal),
+        contexto: await this.contextoCobranca(this.negocio.codestoquelocal, this.reaberto),
         padrao: this.padrao,
         forma,
         codtituloVale,
@@ -1904,7 +1849,9 @@ export const negocioStore = defineStore('negocio', {
 
     // o PDV como contexto do wizard de cobrança (também no Receber título): a filial e as
     // maquinetas vêm do estoque local; online, as maquinetas são buscadas de novo
-    async contextoCobranca(codestoquelocal) {
+    // `reaberto`: na venda reaberta o dinheiro entra onde o da venda entrou, na data dela
+    // (o servidor decide e o F3 confere a sessão); a gaveta deste PDV não importa (TASK-30)
+    async contextoCobranca(codestoquelocal, reaberto = false) {
       const local = async () => (await db.estoqueLocal.get(codestoquelocal)) ?? {}
       const contexto = {
         pdv: sSinc.pdv.uuid,
@@ -1921,6 +1868,9 @@ export const negocioStore = defineStore('negocio', {
         buscarVale: (codtitulo) => sSinc.buscarVale(codtitulo),
         // PDV sem gaveta ou caixa fechado: Dinheiro bloqueado no wizard (M9 doc-3)
         bloqueioDinheiro: null,
+      }
+      if (reaberto) {
+        return contexto
       }
       // o wizard abre na hora com o Dinheiro liberado; a resposta do servidor chega depois e
       // bloqueia (offline não chega: fica liberado). Pelo store, se já abriu, para a tela reagir
@@ -1944,9 +1894,7 @@ export const negocioStore = defineStore('negocio', {
         codnegocio: this.negocio.codnegocio,
         codestoquelocal: this.negocio.codestoquelocal,
         sincronizado: !!this.negocio.sincronizado,
-        valesUsados: (this.negocio.pagamentos ?? [])
-          .filter((p) => p.codtitulo)
-          .map((p) => p.codtitulo),
+        valesUsados: this.pagamentosAtivos.filter((p) => p.codtitulo).map((p) => p.codtitulo),
         preparar: async () => {
           if (this.negocio?.uuid != uuid) {
             return false
@@ -2058,38 +2006,61 @@ export const negocioStore = defineStore('negocio', {
       })
     },
 
-    async excluirPagamento(uuid, motivo = null) {
+    async excluirPagamento(uuid) {
       return comLock(this.negocio?.uuid, async () => {
         await this.recarregar()
         const index = this.negocio.pagamentos.findIndex(function (item) {
           return item.uuid == uuid
         })
         if (index > -1) {
-          const [pag] = this.negocio.pagamentos.splice(index, 1)
-          if (motivo) {
-            const meio = MEIOS[pag.meio] ?? pag.meio
-            this.registrarOcorrencia({
-              tipo: TIPO.PAGAMENTO_EXCLUIDO,
-              uuidregistro: pag.uuid,
-              descricao: `Excluiu pagamento de R$ ${formataNumero(pag.total)} em ${meio}`,
-              valor: pag.total,
-              antes: {
-                uuid: pag.uuid,
-                meio: pag.meio,
-                principal: pag.principal,
-                desconto: pag.desconto,
-                valortroco: pag.valortroco,
-                total: pag.total,
-                autorizacao: pag.autorizacao ?? null,
-              },
-              depois: null,
-              motivo: motivo.motivo,
-              justificativa: motivo.justificativa || null,
-            })
-          }
+          this.negocio.pagamentos.splice(index, 1)
           // recalcula total por causa dos juros
           await this.recalcularValorTotal()
         }
+        await this.salvar()
+      })
+    },
+
+    // Venda reaberta (TASK-30): o pagamento que já foi fato não se apaga, sai cancelado (C)
+    // e volta reativado (P até o F3); o F3 é que mexe no caixa, lote, vale e cheque
+    async cancelarPagamento(uuid) {
+      return this.trocarEstadoPagamento(uuid, 'C')
+    },
+
+    async reativarPagamento(uuid) {
+      return this.trocarEstadoPagamento(uuid, 'P')
+    },
+
+    async trocarEstadoPagamento(uuid, estado) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        const pag = this.negocio.pagamentos.find((item) => item.uuid == uuid)
+        if (pag) {
+          pag.estado = estado
+          await this.recalcularValorTotal()
+        }
+        await this.salvar()
+      })
+    },
+
+    // a parcela que já virou título sai (inativa) e volta; o F3 estorna ou gera o título
+    async cancelarParcelas(condicao) {
+      return this.trocarInativoParcelas(condicao, formataTimestampIso(new Date()))
+    },
+
+    async reativarParcelas(condicao) {
+      return this.trocarInativoParcelas(condicao, null)
+    },
+
+    async trocarInativoParcelas(condicao, inativo) {
+      return comLock(this.negocio?.uuid, async () => {
+        await this.recarregar()
+        this.negocio.parcelas
+          .filter(
+            (np) => np.condicao == condicao && np.codtitulo && (inativo ? !np.inativo : np.inativo),
+          )
+          .forEach((np) => (np.inativo = inativo))
+        await this.recalcularValorTotal()
         await this.salvar()
       })
     },
@@ -2155,6 +2126,25 @@ export const negocioStore = defineStore('negocio', {
             actions: [{ icon: 'close', color: 'white' }],
           })
           await this.atualizarNegocioPeloObjeto(ret)
+        }
+      } catch (error) {
+        console.log(error)
+      }
+    },
+
+    // venda fechada reaberta pelo gerente (TASK-30): o servidor volta o status para 1 e a
+    // resposta vale mesmo "andando para trás" (forcar)
+    async reabrir(justificativa) {
+      try {
+        const ret = await sSinc.reabrirNegocio(this.negocio.codnegocio, justificativa)
+        if (ret.codnegocio) {
+          Notify.create({
+            type: 'positive',
+            message: 'Negócio reaberto!',
+            timeout: 1000, // 1 segundo
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          await this.atualizarNegocioPeloObjeto(ret, true)
         }
       } catch (error) {
         console.log(error)
@@ -2302,9 +2292,7 @@ export const negocioStore = defineStore('negocio', {
     // sabe deles (o pagamento so' baixa no fechamento), entao sem isso o
     // FIFO devolveria o mesmo vale duas vezes.
     async valeEscopoSelecionar(codpessoafavorecido, turma, valor) {
-      const usados = (this.negocio.pagamentos ?? [])
-        .filter((p) => p.codtitulo)
-        .map((p) => p.codtitulo)
+      const usados = this.pagamentosAtivos.filter((p) => p.codtitulo).map((p) => p.codtitulo)
       return sSinc.valeEscopoSelecionar({
         codpessoafavorecido,
         turma: turma || null,

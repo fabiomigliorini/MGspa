@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { api } from 'src/boot/axios'
+import MgSelect from '@components/MgSelect.vue'
 
 const props = defineProps({
   modelValue: {
@@ -68,7 +69,7 @@ watch(
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     :options="opcoes"
     :model-value="modelValue"
     use-input
@@ -107,5 +108,5 @@ watch(
         </q-item-section>
       </q-item>
     </template>
-  </q-select>
+  </MgSelect>
 </template>

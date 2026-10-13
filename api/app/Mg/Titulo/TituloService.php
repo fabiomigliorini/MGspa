@@ -12,7 +12,6 @@ class TituloService
     // codigos dos tipos de titulo (renumerados no M8.1 do doc-3: 1xx a
     // receber, 2xx a pagar; ver api/database/tipo_titulo_limpeza.sql)
     const TIPO_DUPLICATA_RECEBER = 100;
-    const TIPO_VALE_COLABORADOR = 120;
     const TIPO_DUPLICATA_PAGAR = 200;
     const TIPO_VALE = 210;
     const TIPO_CREDITO_CLIENTE = 212;
@@ -96,7 +95,7 @@ class TituloService
             $pagamento ? ['total' => (float) $titulo->valor] : [],
             [
                 'codportador'          => $pagamento
-                    ? ($pagamento->codportadordestino ?? $pagamento->codportadororigem)
+                    ? $pagamento->codportadorDoPagamento()
                     : $titulo->codportador,
                 'codtituloagrupamento' => $titulo->codtituloagrupamento,
                 'transacao'            => $titulo->transacao,
@@ -112,12 +111,14 @@ class TituloService
         $tipoTitulo = TipoTitulo::findOrFail($dados['codtipotitulo'] ?? $titulo->codtipotitulo);
 
         $geradoAuto = $titulo->geradoAutomaticamente();
+        // vale/adiantamento: valor e datas são do pagamento (TASK-214)
+        $travado = $geradoAuto || $titulo->nasceuDePagamento();
         $zerado = (float)$titulo->saldo == 0 && !empty($titulo->codtitulo);
 
-        // valor: bloqueado se gerado auto ou já zerado
+        // valor: bloqueado se gerado auto, nascido de pagamento ou já zerado
         $valorAntigo = (float)$titulo->valor;
         $valorNovo = (float)($dados['valor'] ?? abs($valorAntigo));
-        if (!$geradoAuto && !$zerado) {
+        if (!$travado && !$zerado) {
             if ($valorNovo <= 0) {
                 throw new \InvalidArgumentException('Valor deve ser maior que zero!');
             }
@@ -146,18 +147,21 @@ class TituloService
         // vencimento (data prática): sempre editável até liquidar
         $titulo->vencimento = $dados['vencimento'] ?? $titulo->vencimento;
 
-        // numero, emissao, transacao, vencimentooriginal: travados se gerado automaticamente
-        if (!$geradoAuto) {
+        // numero, emissao, transacao: travados se gerado automaticamente ou nascido de pagamento
+        if (!$travado) {
             if (array_key_exists('numero', $dados)) {
                 $titulo->numero = !empty($dados['numero']) ? $dados['numero'] : $titulo->codtitulo;
             }
-            $titulo->vencimentooriginal = $dados['vencimentooriginal'] ?? $titulo->vencimentooriginal;
             $titulo->emissao = $dados['emissao'] ?? $titulo->emissao;
             $titulo->transacao = $dados['transacao'] ?? $titulo->transacao;
         }
+        // vencimentooriginal: travado se gerado automaticamente
+        if (!$geradoAuto) {
+            $titulo->vencimentooriginal = $dados['vencimentooriginal'] ?? $titulo->vencimentooriginal;
+        }
 
-        // valor: travado se gerado automaticamente ou já zerado
-        if (!$geradoAuto && !$zerado) {
+        // valor: travado se gerado automaticamente, nascido de pagamento ou já zerado
+        if (!$travado && !$zerado) {
             $titulo->valor = $tipoTitulo->ehReceber() ? $valorNovo : -$valorNovo;
         }
 
@@ -217,7 +221,9 @@ class TituloService
 
     // Título que nasceu com dinheiro (vale colaborador, adiantamento): o
     // estorno devolve o total ao portador e cancela o pagamento
-    public static function estornar(Titulo $titulo, ?string $justificativa = null)
+    // $cancelarPagamento = false: o titulo sai, o pagamento que nasceu com ele
+    // fica para quem chamou cancelar (PagamentoTituloService::cancelar)
+    public static function estornar(Titulo $titulo, ?string $justificativa = null, bool $cancelarPagamento = true)
     {
         if (!empty($titulo->estornado)) {
             abort(422, 'Titulo já está estornado!');
@@ -243,7 +249,7 @@ class TituloService
                 'codpagamento'              => $pagamento->codpagamento ?? null,
             ]
         );
-        if ($pagamento) {
+        if ($pagamento && $cancelarPagamento) {
             PagamentoService::cancelar($pagamento, $justificativa ?: "Estorno do título {$titulo->numero}");
         }
         return self::carregar($titulo->codtitulo);
@@ -273,7 +279,9 @@ class TituloService
         }
     }
 
-    private static function aplicarSufixoNumero(Titulo $titulo): void
+    // o numero ja' usado pela pessoa ganha " (1)", " (2)"... (o titulo da
+    // venda reaberta que nasce de novo, com o estornado ainda la', TASK-30)
+    public static function aplicarSufixoNumero(Titulo $titulo): void
     {
         if (empty($titulo->numero) || empty($titulo->codpessoa)) return;
         $base = $titulo->numero;

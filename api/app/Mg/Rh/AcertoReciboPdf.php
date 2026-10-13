@@ -2,7 +2,9 @@
 
 namespace Mg\Rh;
 
-use Dompdf\Dompdf;
+use Mg\Pagamento\Pagamento;
+use Mg\Pagamento\PagamentoReciboService;
+use Mg\Pagamento\PagamentoService;
 
 class AcertoReciboPdf
 {
@@ -41,16 +43,11 @@ class AcertoReciboPdf
             return sprintf('%s|%s|%s|%08d', $unidade, $nome, $data, $e->codperiodocolaboradoracerto);
         })->values();
 
-        if ($acertos->isEmpty()) {
-            return '';
-        }
-
         return self::render($acertos);
     }
 
-    // Recibo(s) de UM unico acerto. $tipo restringe a impressao:
-    // 'pagamento' | 'recebimento' | null (ambos, conforme os valores do evento).
-    public static function gerarPorAcerto(int $codperiodocolaboradoracerto, ?string $tipo = null): string
+    // O recibo de UM acerto: o documento unico ja' traz os dois lados (o encontro de contas)
+    public static function gerarPorAcerto(int $codperiodocolaboradoracerto): string
     {
         ini_set('memory_limit', '256M');
 
@@ -67,7 +64,7 @@ class AcertoReciboPdf
             return '';
         }
 
-        return self::render(collect([$ev]), $tipo);
+        return self::render(collect([$ev]));
     }
 
     // Chave de ordenacao alfabetica: dobra acentos para ASCII e descarta o resto, senao
@@ -81,15 +78,13 @@ class AcertoReciboPdf
         return $chave === '' ? 'ZZZZZZZZ' : $chave;
     }
 
-    private static function render($acertos, ?string $tipo = null): string
+    // O recibo do acerto e' o recibo do PAGAMENTO do acerto (TASK-216): o mesmo documento e o mesmo
+    // service do contas e do PDV, um por acerto, na ordem pedida. Acerto sem valor nao tem recibo.
+    private static function render($acertos): string
     {
-        $html = view('rh.acerto-recibos', compact('acertos', 'tipo'))->render();
-
-        $dompdf = new Dompdf();
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->setPaper('A5', 'landscape');
-        $dompdf->render();
-
-        return $dompdf->output();
+        $pagamentos = $acertos->map(fn ($ev) => Pagamento::where('codperiodocolaboradoracerto', $ev->codperiodocolaboradoracerto)
+            ->where('estado', PagamentoService::ESTADO_EFETIVADO)->value('codpagamento'))
+            ->filter()->values()->all();
+        return $pagamentos ? PagamentoReciboService::pdfLote($pagamentos) : '';
     }
 }

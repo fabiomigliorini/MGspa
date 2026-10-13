@@ -49,7 +49,7 @@ onMounted(() => {
 })
 </script>
 <template>
-  <q-page class="bg-grey-2">
+  <q-page>
     <div class="row justify-center">
       <q-card class="q-ma-md col-xs-11 col-sm-5 col-md-4 col-lg-3 col-xl-2" flat bordered>
         <q-form ref="formItem" @submit="imprimir()">

@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { watch } from 'vue'
 import { useDebounceFn } from '@vueuse/core'
 import { useChequeStore } from 'src/stores/chequeStore'
@@ -109,7 +110,7 @@ const clear = () => {
     </FilterGroup>
 
     <FilterGroup title="Status e Vencimento">
-      <q-select
+      <MgSelect
         v-model="store.filters.indstatus"
         :options="CHEQUE_STATUS_OPTIONS"
         emit-value
@@ -121,7 +122,7 @@ const clear = () => {
         class="q-mb-sm"
       >
         <template #prepend><q-icon name="flag" /></template>
-      </q-select>
+      </MgSelect>
 
       <MgInputData v-model="store.filters.vencimento_de" label="Vencimento de" class="q-mb-sm" />
       <MgInputData v-model="store.filters.vencimento_ate" label="Vencimento até" />

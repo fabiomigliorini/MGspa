@@ -15,8 +15,8 @@ const sSinc = sincronizacaoStore()
 
 const alternarTelaCheia = () => $q.fullscreen.toggle()
 
-// so abre o quiosque se o dispositivo (PDV) estiver autorizado
-const autorizado = computed(() => sSinc.pdv.autorizado)
+// so abre o quiosque se o dispositivo (PDV) estiver ativo (ativo = autorizado)
+const ativo = computed(() => !!sSinc.pdv.codpdv && !sSinc.pdv.inativo)
 
 const TEMPO_ESPERA = 60000 // 60s depois da consulta -> volta pra tela de espera
 const TEMPO_NAO_ENCONTRADO = 8000 // limpa o "nao encontrado" mais rapido
@@ -188,8 +188,8 @@ const linkProduto = (codproduto) => {
 }
 
 onMounted(() => {
-  // dispositivo nao autorizado: nao liga o leitor de codigo de barras
-  if (!autorizado.value) return
+  // dispositivo inativo: nao liga o leitor de codigo de barras
+  if (!ativo.value) return
   document.addEventListener('keydown', onKeydown)
   document.addEventListener('paste', onPaste)
 })
@@ -204,12 +204,12 @@ onUnmounted(() => {
 
 <template>
   <q-page class="column" style="background: linear-gradient(160deg, #f4f6fb 0%, #e7ecf5 100%)">
-    <!-- ===================== DISPOSITIVO NAO AUTORIZADO ===================== -->
-    <div v-if="!autorizado" class="col column flex-center text-center q-pa-xl">
+    <!-- ===================== DISPOSITIVO INATIVO ===================== -->
+    <div v-if="!ativo" class="col column flex-center text-center q-pa-xl">
       <q-icon name="gpp_bad" color="negative" size="170px" />
-      <div class="text-h2 text-weight-bold text-grey-9 q-mt-lg">Dispositivo não autorizado</div>
+      <div class="text-h2 text-weight-bold text-grey-9 q-mt-lg">Dispositivo inativo</div>
       <div class="text-h5 text-weight-light text-grey-7 q-mt-md">
-        Solicite a autorização deste dispositivo para liberar a consulta de preços.
+        Peça a um administrador para ativar este dispositivo e liberar a consulta de preços.
       </div>
       <q-chip
         class="q-mt-xl text-weight-bold"
@@ -231,7 +231,7 @@ onUnmounted(() => {
       />
     </div>
 
-    <!-- conteudo normal: so quando o dispositivo esta autorizado -->
+    <!-- conteudo normal: so quando o dispositivo esta ativo -->
     <template v-else>
       <!-- feedback do codigo sendo lido/digitado -->
       <q-page-sticky position="top" :offset="[0, 24]" class="z-fab">

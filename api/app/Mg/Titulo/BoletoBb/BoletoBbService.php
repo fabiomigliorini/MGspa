@@ -4,6 +4,7 @@ namespace Mg\Titulo\BoletoBb;
 
 use Mg\Pagamento\PagamentoService;
 use Mg\Pagamento\PagamentoTituloService;
+use Mg\Pix\PixUsoService;
 
 use Illuminate\Support\Facades\Log;
 
@@ -190,9 +191,11 @@ class BoletoBbService
     }
 
     /**
-     * Registra boleto de todos os titulos do Negocio
+     * Registra boleto de todos os titulos do Negocio. $soNovos: so' o titulo
+     * que ainda nao tem boleto registrado (o F3 da venda reaberta roda de
+     * novo, TASK-30; registrar de novo pegaria outro nosso numero no banco)
      */
-    public static function registrarPeloNegocio(Negocio $negocio)
+    public static function registrarPeloNegocio(Negocio $negocio, bool $soNovos = false)
     {
         $tituloBoletos = collect();
         $parcelas = $negocio->NegocioParcelaS()
@@ -201,6 +204,9 @@ class BoletoBbService
             ->get();
         foreach ($parcelas as $np) {
             foreach ($np->TituloS()->where('saldo', '>', 0)->orderBy('vencimento', 'ASC')->get() as $titulo) {
+                if ($soNovos && $titulo->TituloBoletoS()->whereNull('inativo')->whereNotNull('linhadigitavel')->exists()) {
+                    continue;
+                }
                 $tituloBoletos[] = static::registrar($titulo);
             }
         }
@@ -336,15 +342,6 @@ class BoletoBbService
      */
     public static function liquidar(TituloBoleto $tituloBoleto)
     {
-
-        /*
-        // TODO: Decidir o que fazer com esses 4 campos
-        if ($tituloBoleto->valorpagamentoparcial > 0) { }
-        if ($tituloBoleto->valorabatimento > 0) { }
-        if ($tituloBoleto->valorreajuste > 0) { }
-        if ($tituloBoleto->valoroutro > 0) { }
-        */
-
         $titulo = Titulo::findOrFail($tituloBoleto->codtitulo);
         $vinculos = [
             'codtituloboleto' => $tituloBoleto->codtituloboleto,
@@ -380,6 +377,8 @@ class BoletoBbService
             $codmovimentotitulos[] = $mov->codmovimentotitulo;
             // o dinheiro entrou no banco do boleto: pagamento da baixa (M6 doc-3)
             PagamentoTituloService::daBaixa($mov, PagamentoService::MEIO_BOLETO, $tituloBoleto->codportador, $tituloBoleto->datarecebimento);
+            // pago pelo QR: o PIX dele aponta para este pagamento (TASK-219)
+            PixUsoService::boletoBaixado($tituloBoleto);
         }
 
         // apaga movimentos que sobraram

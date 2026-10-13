@@ -13,13 +13,17 @@ class PagamentoDetalheResource extends Resource
 {
     public function toArray($request)
     {
-        $movimentos = collect($this->MovimentoTituloS ?? [])
+        // as baixas, com o historico das estornadas
+        $todos = collect($this->MovimentoTituloS ?? []);
+        $estornados = $todos->pluck('codmovimentotituloestorno')->filter()->all();
+        $movimentos = $todos
             ->filter(fn($m) => !$m->ehEstorno())
             ->values()
-            ->map(function ($m) {
+            ->map(function ($m) use ($estornados) {
                 $principal = (float) $m->principal;
                 return [
                     'codmovimentotitulo'     => (int) $m->codmovimentotitulo,
+                    'estornado'              => in_array($m->codmovimentotitulo, $estornados),
                     'codtitulo'              => (int) $m->codtitulo,
                     'codtipomovimentotitulo' => (int) $m->codtipomovimentotitulo,
                     'tipomovimentotitulo'    => optional($m->TipoMovimentoTitulo)->tipomovimentotitulo,
@@ -33,6 +37,8 @@ class PagamentoDetalheResource extends Resource
                     'titulo' => $m->Titulo ? [
                         'codtitulo'   => (int) $m->Titulo->codtitulo,
                         'numero'      => $m->Titulo->numero,
+                        // negativo = credito com saldo: tem vale (Vale Compras / Contra Vale)
+                        'saldo'       => (float) $m->Titulo->saldo,
                         'fatura'      => $m->Titulo->fatura,
                         'vencimento'  => $m->Titulo->vencimento,
                         'gerencial'   => (bool) $m->Titulo->gerencial,
@@ -52,7 +58,9 @@ class PagamentoDetalheResource extends Resource
         $origem = PagamentoListaService::origem($this->resource);
         $portador = $this->portadorDoPagamento();
         $pessoa = PagamentoListaService::pessoa($this->resource);
-        $temTitulo = !empty($movimentos);
+        $efetivado = $this->estado == PagamentoService::ESTADO_EFETIVADO;
+        $documento = empty($this->codnegocio) && empty($this->codperiodocolaboradoracerto);
+        $manual = PagamentoTituloService::manual($this->resource);
         $baixabanco = collect($this->MovimentoTituloS)->contains(fn($m) => !empty($m->codtituloboleto) || !empty($m->codboletoretorno));
         return [
             'codpagamento'              => (int) $this->codpagamento,
@@ -92,7 +100,8 @@ class PagamentoDetalheResource extends Resource
             'motivodescricao'           => PagamentoService::MOTIVOS[$this->motivo] ?? null,
             'estado'                    => $this->estado,
             'estadodescricao'           => PagamentoService::ESTADOS[$this->estado] ?? null,
-            'transacao'                 => $this->transacao,
+            // a hora de Cuiaba sem fuso: o lapis mostra e devolve a mesma hora
+            'transacao'                 => optional($this->transacao)->format('Y-m-d\TH:i:s'),
             'efetivacao'                => $this->efetivacao,
             'criacao'                   => $this->criacao,
             'alteracao'                 => $this->alteracao,
@@ -100,6 +109,7 @@ class PagamentoDetalheResource extends Resource
             'justificativa'             => $this->justificativa,
             'codperiodocolaboradoracerto' => $this->codperiodocolaboradoracerto,
             'observacoes'               => $this->observacoes,
+            'referente'                 => $this->referente,
             'codusuariocriacao'         => $this->codusuariocriacao,
             'codusuarioalteracao'       => $this->codusuarioalteracao,
             'codusuariocancelamento'    => $this->codusuariocancelamento,
@@ -124,14 +134,14 @@ class PagamentoDetalheResource extends Resource
                 'total' => (float) $c->total,
                 'transacao' => $c->transacao,
             ])->values()->all(),
-            // o que a tela pode fazer: estornar e editar so' baixa de titulo
-            // feita a mao (venda pelo negocio, acerto pelo acerto, boleto
-            // pelo banco)
-            'estornavel'                => $temTitulo && $this->estado != PagamentoService::ESTADO_CANCELADO
-                && empty($this->codnegocio) && empty($this->codperiodocolaboradoracerto) && !$baixabanco,
+            // o que a tela pode fazer (venda pelo negocio, acerto pelo acerto):
+            // cancelar estorna as baixas junto, menos o de boleto (TASK-218);
+            // editar (pessoa, observacao; data so' do manual)
+            'cancelavel'                => $efetivado && $documento && !$baixabanco,
+            'editavel'                  => $efetivado && $documento,
+            'manual'                    => $manual,
+            'integrado'                 => !$manual,
             'baixabanco'                => $baixabanco,
-            'recebimento'               => PagamentoTituloService::temRecebimento($this->resource),
-            'pagamento'                 => PagamentoTituloService::temPagamento($this->resource),
             'movimentos'                => $movimentos,
             // razao (M10 doc-3): o que caiu em cada portador; inativas =
             // desfeitas por estorno, cancelamento ou correcao

@@ -1,11 +1,86 @@
 <script setup>
+// PIX recebidos. Sem uso = PIX que ninguém usou num pagamento nem marcou (TASK-219): daqui se
+// baixa títulos com ele (Receber Títulos), lança adiantamento com o valor dele ou marca como
+// usado (já baixado antes do sistema pegar o PIX). O usado mostra o pagamento que o usou.
 import { ref, computed, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { usePixStore } from 'src/stores/pixStore'
-import { notifyError } from 'src/utils/notify'
-import { formataCpf, formataCnpj, formataNumero, tempoRelativo } from '@components/formatters'
+import { useAuthStore } from 'src/stores/auth'
+import { notifyError, notifySuccess } from 'src/utils/notify'
+import { contextoCobranca, FORMAS_ADIANTAMENTO } from 'src/utils/cobranca'
+import MgAdiantamentoDialog from '@components/MgAdiantamentoDialog.vue'
+import {
+  formataCodigo,
+  formataCpf,
+  formataCnpj,
+  formataNumero,
+  formataTimestamp,
+  tempoRelativo,
+} from '@components/formatters'
 
+const $q = useQuasar()
 const store = usePixStore()
+const auth = useAuthStore()
+
+const descricaoPix = (pix) =>
+  [`PIX de R$ ${formataNumero(pix.valor)}`, pix.nome, pix.portador, formataTimestamp(pix.horario)]
+    .filter(Boolean)
+    .join(' · ')
+
+// adiantamento com o PIX inteiro, para a pessoa do CPF/CNPJ do pagador (quando cadastrada)
+const dialogAdiantamento = ref(false)
+const pixAdiantamento = ref(null)
+const abrirAdiantamento = async (item) => {
+  try {
+    const pix = await store.carregarUso(item.codpix)
+    if (pix.utilizacao) {
+      notifyError('Este PIX já foi usado.')
+      return
+    }
+    pixAdiantamento.value = {
+      codpix: pix.codpix,
+      valor: pix.valor,
+      descricao: descricaoPix(pix),
+      codpessoa: pix.codpessoa,
+    }
+    dialogAdiantamento.value = true
+  } catch (error) {
+    notifyError(error, 'Erro ao carregar o PIX')
+  }
+}
+// o diálogo já avisa que lançou
+const adiantamentoLancado = () => store.carregarUso(pixAdiantamento.value.codpix)
+
+const marcar = (item) => {
+  $q.dialog({
+    title: 'Marcar como usado',
+    message: `${descricaoPix(item)}: já foi baixado fora daqui?`,
+    cancel: true,
+  }).onOk(async () => {
+    try {
+      await store.marcar(item.codpix)
+      notifySuccess('PIX marcado como usado!')
+    } catch (error) {
+      notifyError(error, 'Erro ao marcar o PIX')
+    }
+  })
+}
+
+const desmarcar = (item) => {
+  $q.dialog({
+    title: 'Desmarcar',
+    message: `${descricaoPix(item)} volta a ficar sem uso.`,
+    cancel: true,
+  }).onOk(async () => {
+    try {
+      await store.desmarcar(item.codpix)
+      notifySuccess('PIX desmarcado!')
+    } catch (error) {
+      notifyError(error, 'Erro ao desmarcar o PIX')
+    }
+  })
+}
 
 // Dialog consultar PIX
 const dialogConsulta = ref(false)
@@ -111,12 +186,19 @@ onMounted(() => {
       <div class="q-pa-md" style="max-width: 1086px; margin: auto">
         <q-list v-if="store.items.length > 0" bordered separator class="bg-white rounded-borders">
           <q-item v-for="item in store.items" :key="item.e2eid || item.codpix || item.codpixcob">
-            <!-- Avatar status -->
+            <!-- Avatar status: sem uso ou usado -->
             <q-item-section avatar>
               <q-avatar
                 v-if="item.codpix == null"
                 icon="hourglass_empty"
                 color="red"
+                text-color="white"
+                size="40px"
+              />
+              <q-avatar
+                v-else-if="!item.utilizacao"
+                icon="hourglass_empty"
+                color="orange"
                 text-color="white"
                 size="40px"
               />
@@ -135,6 +217,23 @@ onMounted(() => {
                 {{ formataCnpj(item.cnpj) }}
               </q-item-label>
               <q-item-label caption>{{ item.portador }}</q-item-label>
+              <q-item-label v-if="!item.utilizacao" caption class="text-orange-9">
+                Sem uso
+              </q-item-label>
+              <q-item-label v-else-if="item.codpagamento" caption>
+                <router-link
+                  :to="{ name: 'pagamento-detalhe', params: { id: item.codpagamento } }"
+                  class="text-primary"
+                  style="text-decoration: none"
+                >
+                  Pagamento {{ formataCodigo(item.codpagamento) }}
+                </router-link>
+              </q-item-label>
+              <q-item-label v-else caption>
+                Marcado como usado
+                <template v-if="item.usuarioutilizacao"> por {{ item.usuarioutilizacao }}</template>
+                em {{ formataTimestamp(item.utilizacao) }}
+              </q-item-label>
             </q-item-section>
 
             <!-- Col 2: Negocio, TXID, E2EID (hidden on xs) -->
@@ -146,6 +245,14 @@ onMounted(() => {
                 @click="abrirNegocio(item.codnegocio)"
               >
                 Negocio #{{ String(item.codnegocio).padStart(8, '0') }}
+              </q-item-label>
+              <q-item-label v-if="item.codpixcob" caption>
+                QR Code
+                <template v-if="item.usuariocobranca"> de {{ item.usuariocobranca }}</template>
+                <template v-if="item.pdv"> · {{ item.pdv }}</template>
+                <template v-if="item.cobrancacriacao">
+                  · {{ formataTimestamp(item.cobrancacriacao) }}
+                </template>
               </q-item-label>
               <q-item-label v-if="item.txid" caption>{{ item.txid }}</q-item-label>
               <q-item-label v-if="item.e2eid" caption>{{ item.e2eid }}</q-item-label>
@@ -165,6 +272,48 @@ onMounted(() => {
                 </q-tooltip>
                 {{ tempoRelativo(item.horario) }}
               </q-item-label>
+            </q-item-section>
+
+            <!-- Usar o PIX: baixar títulos, adiantamento ou marcar; o marcado à mão desmarca -->
+            <q-item-section side>
+              <div class="row no-wrap">
+                <template v-if="!item.utilizacao">
+                  <q-btn
+                    flat
+                    round
+                    size="sm"
+                    icon="receipt_long"
+                    color="grey-7"
+                    :to="{ name: 'pagamento-novo', query: { codpix: item.codpix } }"
+                  >
+                    <q-tooltip>Baixar títulos</q-tooltip>
+                  </q-btn>
+                  <q-btn
+                    flat
+                    round
+                    size="sm"
+                    icon="savings"
+                    color="grey-7"
+                    @click="abrirAdiantamento(item)"
+                  >
+                    <q-tooltip>Adiantamento</q-tooltip>
+                  </q-btn>
+                  <q-btn flat round size="sm" icon="done" color="grey-7" @click="marcar(item)">
+                    <q-tooltip>Marcar como usado</q-tooltip>
+                  </q-btn>
+                </template>
+                <q-btn
+                  v-else-if="!item.codpagamento"
+                  flat
+                  round
+                  size="sm"
+                  icon="remove_done"
+                  color="grey-7"
+                  @click="desmarcar(item)"
+                >
+                  <q-tooltip>Desmarcar</q-tooltip>
+                </q-btn>
+              </div>
             </q-item-section>
           </q-item>
         </q-list>
@@ -187,6 +336,18 @@ onMounted(() => {
         <q-tooltip>Consultar Pix nos bancos</q-tooltip>
       </q-btn>
     </q-page-sticky>
+
+    <MgAdiantamentoDialog
+      v-model="dialogAdiantamento"
+      :formas="FORMAS_ADIANTAMENTO"
+      :contexto="contextoCobranca"
+      :finalizar="{ url: 'v1/titulo/adiantamento', extras: {} }"
+      com-data
+      com-filial
+      :filial-padrao="auth.usuario?.codfilial ?? null"
+      :pix="pixAdiantamento"
+      @finalizado="adiantamentoLancado"
+    />
 
     <!-- Dialog Consultar PIX -->
     <q-dialog v-model="dialogConsulta">

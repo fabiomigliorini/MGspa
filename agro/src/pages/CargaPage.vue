@@ -179,7 +179,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <q-page class="bg-grey-2" :style-fn="pageStyleFn">
+  <q-page :style-fn="pageStyleFn">
     <!-- `key` = uuid: trocar de carga REMONTA o formulário. É o que devolve o
          cursor pra placa na carga em branco que abre depois de finalizar; sem
          isso o autofocus só valeria na primeira montagem da página. Salvar a

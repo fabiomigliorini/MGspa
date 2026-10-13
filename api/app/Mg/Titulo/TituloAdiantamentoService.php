@@ -9,18 +9,18 @@ use Mg\Pagamento\PagamentoService;
 use Mg\Pagamento\PagamentoTituloService;
 use Mg\Pdv\Pdv;
 use Mg\Portador\LancamentoDataService;
-use Mg\Usuario\Autorizador;
 
 /**
  * Vale colaborador e adiantamentos (M8 do plano doc-3), o mesmo no contas e
  * no PDV: titulo com movimentaportador que ja' nasce com o dinheiro. Um
- * titulo por forma, com a implantacao ligada ao pagamento (total = valor) e
+ * titulo, um pagamento (o mesmo wizard da baixa, uma forma; pode ser um
+ * pagamento que ja' existe, com saldo livre), a implantacao ligada a ele e
  * o portador pela regra da baixa de titulos (PagamentoTituloService). Titulo
  * a receber (vale, adiantamento a fornecedor) = sai dinheiro; a pagar
  * (adiantamento/credito de cliente) = entra.
  *
- * No PDV: dinheiro na gaveta, filial do PDV, o caixa lanca sozinho
- * (Caixa/Gerente da filial) e a saida e' so' em dinheiro. No contas: banco,
+ * No PDV: dinheiro na gaveta (pre-selecionada), filial do PDV e a saida
+ * e' so' em dinheiro. Quem pode: o papel no portador (o controller confere). No contas: banco,
  * cofre, cartao da empresa, cheque, cartao e PIX QR, com a filial escolhida
  * (quem pode, o controller confere). Nos dois, a data com hora (TASK-204;
  * sem data, agora): a gaveta recusa sessao fechada.
@@ -37,9 +37,6 @@ class TituloAdiantamentoService
      */
     public static function lancar(array $dados, ?Pdv $pdv = null): array
     {
-        if ($pdv && !Autorizador::pode([]) && !Autorizador::pode(['Caixa', 'Gerente'], $pdv->codfilial)) {
-            abort(403, 'Vale e adiantamento só Caixa da filial, Gerente ou Administrador!');
-        }
         $tipo = TipoTitulo::findOrFail((int) $dados['codtipotitulo']);
         if (!$tipo->movimentaportador || !empty($tipo->inativo)) {
             abort(422, "Tipo {$tipo->tipotitulo} não nasce com pagamento!");
@@ -56,52 +53,45 @@ class TituloAdiantamentoService
             abort(422, 'Vencimento não pode ser antes da data do lançamento!');
         }
 
+        // um vale/adiantamento = um pagamento (conceito do Fabio, 09/10/2026)
         $formas = array_values($dados['pagamentos'] ?? []);
-        if (empty($formas)) {
-            abort(422, 'Informe como foi pago!');
+        if (count($formas) != 1) {
+            abort(422, empty($formas)
+                ? 'Informe como foi pago!'
+                : 'Um vale ou adiantamento é um pagamento: informe uma forma só.');
         }
-        foreach ($formas as $f) {
-            $meio = (int) ($f['meio'] ?? 0);
-            if ((float) ($f['total'] ?? 0) <= 0) {
-                abort(422, 'O valor de cada forma precisa ser maior que zero!');
-            }
-            if ($meio == PagamentoService::MEIO_COMPENSACAO || !empty($f['codpagamentoorigem'])) {
-                abort(422, "{$tipo->tipotitulo} nasce com dinheiro: compensação e devolução não se aplicam!");
-            }
-            if ($pdv && !$entrada && ($meio != PagamentoService::MEIO_DINHEIRO || !empty($f['codpagamento']))) {
-                abort(422, "{$tipo->tipotitulo} no PDV sai só em dinheiro!");
-            }
-            if ($pdv && !empty($f['codpagamento'])) {
-                $pag = Pagamento::findOrFail((int) $f['codpagamento']);
-                if (!empty($pag->codpdv) && $pag->codpdv != $pdv->codpdv) {
-                    abort(422, "O pagamento {$pag->codpagamento} é de outro PDV!");
-                }
-            }
+        $forma = $formas[0];
+        $meio = (int) ($forma['meio'] ?? 0);
+        PagamentoTituloService::exigirCentavos($forma['total'] ?? 0);
+        if ((float) ($forma['total'] ?? 0) <= 0) {
+            abort(422, 'O valor precisa ser maior que zero!');
+        }
+        if ($meio == PagamentoService::MEIO_COMPENSACAO || !empty($forma['codpagamentoorigem'])) {
+            abort(422, "{$tipo->tipotitulo} nasce com dinheiro: compensação e devolução não se aplicam!");
+        }
+        if ($pdv && !$entrada && $meio != PagamentoService::MEIO_DINHEIRO) {
+            abort(422, "{$tipo->tipotitulo} no PDV sai só em dinheiro!");
         }
 
-        $zero = ['juros' => 0, 'multa' => 0, 'desconto' => 0];
-        $pagamentos = [];
-        foreach ($formas as $forma) {
-            $pag = PagamentoTituloService::pagamentoDaForma($forma, $entrada, false, $zero, $dados, $transacao, $pdv, $codfilial);
-            // o titulo nasce na data do pagamento (a cobranca integrada tem a
-            // dela, da confirmacao)
-            $dataPagamento = Carbon::parse($pag->transacao ?? $transacao)->toDateString();
-            TituloService::criar([
-                'codtipotitulo' => $tipo->codtipotitulo,
-                'codfilial' => $codfilial,
-                'codpessoa' => (int) $dados['codpessoa'],
-                'codcontacontabil' => (int) $dados['codcontacontabil'],
-                'transacao' => $dataPagamento,
-                'emissao' => $dataPagamento,
-                'vencimento' => $vencimento->toDateString(),
-                'valor' => (float) $pag->total,
-                'observacao' => $dados['observacao'] ?? null,
-            ], $pag);
-            if ($entrada && $pag->meio == PagamentoService::MEIO_CHEQUE) {
-                PagamentoTituloService::gerarCheque($pag);
-            }
-            $pagamentos[] = $pag;
+        $pag = PagamentoTituloService::pagamentoDaForma($forma, $entrada, false, $dados, $transacao, $pdv, $codfilial);
+        // o titulo nasce na data do pagamento (o fato), com o valor da forma
+        // (um PIX maior amarra so' a parte dele aqui)
+        $dataPagamento = Carbon::parse($pag->transacao ?? $transacao)->toDateString();
+        TituloService::criar([
+            'codtipotitulo' => $tipo->codtipotitulo,
+            'codfilial' => $codfilial,
+            'codpessoa' => (int) $dados['codpessoa'],
+            'codcontacontabil' => (int) $dados['codcontacontabil'],
+            'transacao' => $dataPagamento,
+            'emissao' => $dataPagamento,
+            'vencimento' => $vencimento->toDateString(),
+            'valor' => round((float) $forma['total'], 2),
+            'observacao' => $dados['observacao'] ?? null,
+        ], $pag);
+        if ($entrada && $pag->meio == PagamentoService::MEIO_CHEQUE) {
+            PagamentoTituloService::gerarCheque($pag);
         }
+        $pagamentos = [$pag];
 
         return array_map(fn($p) => PagamentoListaService::carregar($p->codpagamento), $pagamentos);
     }

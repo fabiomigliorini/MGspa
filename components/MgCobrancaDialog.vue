@@ -85,7 +85,7 @@ const FORMAS = [
   {
     valor: 'banco',
     label: 'Banco',
-    caption: 'Transferência, TED, depósito, PIX pela chave, boleto',
+    caption: 'Transferência, TED, depósito, boleto',
     ...VISUAL.banco,
     componente: FormaPortador,
   },
@@ -176,6 +176,11 @@ const irParaForma = () => {
 // dinheiro recebido: o operador digita o que recebeu (campo focado, vazio); demais: saldo
 const prepararValor = () => {
   editandoDesconto.value = false
+  // valor travado: ao (re)entrar numa forma volta ao valor do documento (o dinheiro digitado
+  // numa forma não fica na outra)
+  if (sCobranca.valorFixo) {
+    sCobranca.valor = saldo.value
+  }
   desconto.value = comDesconto.value
     ? arredonda((saldo.value * formaAtual.value.desconto) / 100)
     : 0
@@ -200,8 +205,16 @@ const notificar = (message) => {
   })
 }
 
+// valor travado (baixa de títulos, vale): só o dinheiro recebido se digita, para o troco
+const podeEditar = computed(
+  () => !sCobranca.valorFixo || (formaAtual.value?.dinheiro && entrada.value),
+)
+
 // ---- edição do valor (Insert) ----
 const editar = () => {
+  if (!podeEditar.value) {
+    return
+  }
   valorEdicao.value = valor.value
   editando.value = true
 }
@@ -210,6 +223,12 @@ const aplicarEdicao = () => {
   const v = parseFloat(valorEdicao.value)
   if (!v || v <= 0) {
     notificar('Informe o valor!')
+    return
+  }
+  if (sCobranca.valorFixo && arredonda(v) < aPagar.value) {
+    notificar(
+      `O valor é R$ ${formataNumero(aPagar.value)}: para pagar uma parte, ajuste os títulos.`,
+    )
     return
   }
   sCobranca.valor = arredonda(v)
@@ -261,12 +280,20 @@ const prepararValorDinheiro = () => {
 const escolherForma = (forma) => {
   sCobranca.forma = forma.valor
   irParaForma()
+  // escolhida com o mouse, o item some: o foco volta para o card (Enter/Esc/Insert)
+  focar()
 }
 
 // passo 2 → dinheiro do PDV e formas diretas lançam; as outras seguem para as perguntas
 const continuar = async () => {
   if (!valor.value || valor.value <= 0) {
     editar()
+    return
+  }
+  if (sCobranca.valorFixo && temFalta.value) {
+    notificar(
+      `O valor é R$ ${formataNumero(aPagar.value)}: para pagar uma parte, ajuste os títulos.`,
+    )
     return
   }
   if (temTroco.value && !(formaAtual.value.dinheiro && entrada.value)) {
@@ -496,9 +523,13 @@ const tecla = (e) => {
 
           <div class="q-mb-md text-right">
             <template v-if="!editando">
-              <div class="text-h2 text-weight-bold text-primary cursor-pointer" @click="editar">
+              <div
+                class="text-h2 text-weight-bold text-primary"
+                :class="{ 'cursor-pointer': podeEditar }"
+                @click="editar"
+              >
                 R$ {{ formataNumero(valor) }}
-                <q-tooltip class="bg-accent">Alterar valor (Insert)</q-tooltip>
+                <q-tooltip v-if="podeEditar" class="bg-accent">Alterar valor (Insert)</q-tooltip>
               </div>
               <div class="row items-center justify-end text-subtitle1 text-grey-7">
                 <q-icon
@@ -510,7 +541,10 @@ const tecla = (e) => {
                 {{ formaAtual.dinheiro && entrada ? 'Recebido em' : verbo + ' em' }}
                 {{ formaAtual.label }}
               </div>
-              <div class="row items-center justify-end text-subtitle1 text-grey-7">
+              <div
+                v-if="podeEditar"
+                class="row items-center justify-end text-subtitle1 text-grey-7"
+              >
                 <span class="text-grey-5 q-ml-sm"> Tecla Insert altera o valor </span>
               </div>
             </template>
@@ -560,7 +594,8 @@ const tecla = (e) => {
             </div>
             <div class="text-subtitle1 text-orange-10">Falta</div>
           </div>
-          <div class="text-right" v-else>
+          <!-- troco só onde há troco (dinheiro recebido); valor travado sem troco não mostra -->
+          <div class="text-right" v-else-if="temTroco || (formaAtual.dinheiro && entrada)">
             <div class="text-h2 text-weight-bold text-green-9">
               R$ {{ formataNumero(diferenca) }}
             </div>

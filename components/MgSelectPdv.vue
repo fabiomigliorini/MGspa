@@ -1,8 +1,9 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
+import MgSelect from '@components/MgSelect.vue'
 
-// ===== Padrão LOCAL (autorizados, ~130) =====
+// ===== Padrão LOCAL (ativos, ~130) =====
 // Carrega TUDO uma vez de v1/select/pdv, cacheia (lista + byId no store compartilhado)
 // e filtra no FRONT ao digitar. clearable é opcional (default false).
 const props = defineProps({
@@ -60,7 +61,7 @@ onMounted(() => carregar())
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     :model-value="modelValue"
     :options="opcoes"
     :label="label"
@@ -94,5 +95,5 @@ onMounted(() => carregar())
     <template v-if="$slots.before" #before><slot name="before" /></template>
     <template v-if="$slots.after" #after><slot name="after" /></template>
     <template v-if="$slots.hint" #hint><slot name="hint" /></template>
-  </q-select>
+  </MgSelect>
 </template>

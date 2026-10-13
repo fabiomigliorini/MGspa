@@ -4,14 +4,21 @@ namespace Mg\Pagamento;
 
 use Mg\Ocorrencia\OcorrenciaService;
 use Carbon\Carbon;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Cheque\Cheque;
 use Mg\Cheque\ChequeService;
 use Mg\Cheque\Cmc7\Cmc7;
 use Mg\Maquineta\Maquineta;
+use Mg\PagarMe\PagarMePedido;
+use Mg\PagarMe\PagarMeService;
 use Mg\Pdv\Pdv;
+use Mg\Pix\Pix;
+use Mg\Pix\PixUsoService;
 use Mg\Portador\LancamentoDataService;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorMovimentoService;
+use Mg\Saurus\SaurusPedido;
+use Mg\Saurus\SaurusService;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloHelper;
 use Mg\Titulo\MovimentoTituloService;
@@ -19,13 +26,15 @@ use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloService;
 
 /**
- * Recebimento e pagamento de titulos (M6 do plano doc-3, com varias formas
- * no M6.1): o pagamento no lugar da liquidacao. Um pagamento por forma; as
- * linhas dos titulos sao distribuidas pelos pagamentos por vencimento, uma
- * linha de movimento por titulo em cada pagamento, com principal, juros,
- * multa, desconto e total. Encontro de contas sem dinheiro = total zero,
- * meio compensacao, sem portador. O mesmo servico atende o contas e o PDV
- * (dinheiro na gaveta). Sem transacao interna.
+ * Recebimento e pagamento de titulos: o pagamento e' o fato (o dinheiro que
+ * andou) e a baixa e' a amarracao (conceito do Fabio, 09/10/2026). Uma baixa
+ * = um pagamento; uma linha de movimento por titulo, com principal, juros,
+ * multa, desconto e total (o pagamento fica so' com o dinheiro). Um pagamento
+ * pode baixar varios titulos e um titulo pode ser baixado por varios
+ * pagamentos. Baixa errada se desfaz cancelando o pagamento, que estorna as
+ * baixas junto (nao ha amarrar nem desamarrar, TASK-218). Encontro de contas
+ * = total zero no portador Encontro de Contas. O mesmo servico atende o
+ * contas e o PDV. Sem transacao interna.
  */
 class PagamentoTituloService
 {
@@ -36,19 +45,6 @@ class PagamentoTituloService
         202035 => PagamentoService::MEIO_PERDA,       // Perda por Prazo
         202016 => PagamentoService::MEIO_COMPENSACAO, // Programacao Pagamentos
         202053 => PagamentoService::MEIO_COMPENSACAO, // Cred Pis/Cofins
-    ];
-
-    // meios que a edicao do contas pode escolher
-    const MEIOS_CONTAS = [
-        PagamentoService::MEIO_DINHEIRO,
-        PagamentoService::MEIO_CHEQUE,
-        PagamentoService::MEIO_CREDITO,
-        PagamentoService::MEIO_DEBITO,
-        PagamentoService::MEIO_BOLETO,
-        PagamentoService::MEIO_DEPOSITO,
-        PagamentoService::MEIO_PIX,
-        PagamentoService::MEIO_TRANSFERENCIA,
-        PagamentoService::MEIO_OUTROS,
     ];
 
     // meios que andam por conta de banco (so' no contas)
@@ -88,12 +84,26 @@ class PagamentoTituloService
         if (!$maquineta) {
             return null;
         }
-        return Portador::where('tipo', Portador::TIPO_ADQUIRENTE)
-            ->where('codpessoa', $maquineta->codpessoa)
-            ->whereNull('inativo')
-            ->orderBy('codportador')
-            ->first();
+        // a maquineta carregada so' com algumas colunas (a da listagem) vem
+        // sem a pessoa: sem ela, casaria a primeira adquirente sem pessoa
+        $codpessoa = $maquineta->codpessoa
+            ?? Maquineta::whereKey($maquineta->codmaquineta)->value('codpessoa');
+        if (empty($codpessoa)) {
+            return null;
+        }
+        // lembrado no request: a listagem pergunta uma vez por cartao
+        if (!array_key_exists($codpessoa, static::$adquirentes)) {
+            static::$adquirentes[$codpessoa] = Portador::where('tipo', Portador::TIPO_ADQUIRENTE)
+                ->where('codpessoa', $codpessoa)
+                ->whereNull('inativo')
+                ->orderBy('codportador')
+                ->first();
+        }
+        return static::$adquirentes[$codpessoa];
     }
+
+    // {codpessoa: Portador|null} da adquirente
+    private static array $adquirentes = [];
 
     // Liquido dos titulos com o sinal do movimento: negativo = entra
     // dinheiro (recebe mais do que paga), positivo = sai
@@ -108,16 +118,21 @@ class PagamentoTituloService
     }
 
     /**
-     * Baixa os titulos com as formas informadas e devolve os pagamentos.
+     * Baixa os titulos com UM pagamento (uma baixa = um pagamento, conceito
+     * do Fabio de 09/10/2026) e devolve [o pagamento].
      *
      * $dados: codpessoa, transacao (com hora), observacao, titulos[] (codtitulo,
-     * saldo, juros, multa, desconto, total) e pagamentos[] (meio, total,
-     * codportador, codmaquineta, bandeira, autorizacao, parcelas, cheque,
-     * codpagamento = cobranca integrada ja' confirmada, codpagamentoorigem =
+     * saldo, juros, multa, desconto, total) e pagamentos[] com UMA forma
+     * (meio, total, codportador, codmaquineta, bandeira, autorizacao,
+     * parcelas, cheque; codpix = o PIX que caiu na conta, usado inteiro;
+     * codpagarmepedido / codsauruspedido = o cartao cobrado na maquininha
+     * integrada; codpagamentoorigem =
      * cancelamento no cartao / devolucao de PIX). Titulos que se anulam nao
-     * levam forma: viram um encontro de contas.
+     * levam forma: viram um encontro de contas (total zero no portador
+     * Encontro de Contas).
      *
-     * $pdv: baixa feita no PDV (dinheiro na gaveta dele; sem banco).
+     * O pagamento guarda so' o dinheiro; juros, multa e desconto ficam nos
+     * movimentos dos titulos. $pdv: baixa feita no PDV.
      */
     public static function baixar(array $dados, ?Pdv $pdv = null): array
     {
@@ -127,11 +142,23 @@ class PagamentoTituloService
         // a data com hora (TASK-204), no contas e no PDV: o periodo sai dela
         $transacao = LancamentoDataService::dataInformada($dados['transacao'] ?? null);
 
+        // os titulos travados, na ordem do codigo, e o saldo conferido ja'
+        // travado: duas baixas ao mesmo tempo nao passam as duas
+        $codigos = array_map(fn ($t) => (int) ($t['codtitulo'] ?? 0), $dados['titulos']);
+        if (count($codigos) != count(array_unique($codigos))) {
+            abort(422, 'O mesmo título está duas vezes na baixa!');
+        }
+        $travados = Titulo::whereIn('codtitulo', $codigos)
+            ->orderBy('codtitulo')
+            ->lockForUpdate()
+            ->get()
+            ->keyBy('codtitulo');
+
         // linhas dos titulos, com o sinal do movimento (negativo = entra)
         $linhas = [];
         $liquido = 0;
         foreach ($dados['titulos'] as $t) {
-            $titulo = Titulo::findOrFail((int) $t['codtitulo']);
+            $titulo = $travados[(int) $t['codtitulo']] ?? abort(404, "Título {$t['codtitulo']} não encontrado!");
             static::validarLinha($titulo, $t);
             if ((float) $t['total'] <= 0 && (float) ($t['desconto'] ?? 0) <= 0) {
                 abort(422, "Total do título {$titulo->numero} deve ser maior que zero!");
@@ -143,7 +170,6 @@ class PagamentoTituloService
                 'juros' => round((float) ($t['juros'] ?? 0), 2),
                 'multa' => round((float) ($t['multa'] ?? 0), 2),
                 'desconto' => round((float) ($t['desconto'] ?? 0), 2),
-                'sinal' => $sinal,
             ];
             $liquido += $sinal * (float) $t['total'];
         }
@@ -151,173 +177,117 @@ class PagamentoTituloService
         $entrada = $liquido < 0;
         $compensacao = abs($liquido) < 0.005;
 
-        // formas: a soma tem que ser o liquido; titulos que se anulam viram
-        // um pagamento de compensacao sem dinheiro
+        // uma forma: o valor dela e' o liquido dos titulos
         $formas = array_values($dados['pagamentos'] ?? []);
         if ($compensacao) {
-            if ($pdv) {
-                abort(422, 'Os títulos se anulam: faça o encontro de contas pelo financeiro.');
-            }
-            $formas = [['meio' => PagamentoService::MEIO_COMPENSACAO, 'total' => 0]];
+            $forma = ['meio' => PagamentoService::MEIO_COMPENSACAO, 'total' => 0];
         } else {
-            if (empty($formas)) {
-                abort(422, 'Informe como foi pago!');
+            if (count($formas) != 1) {
+                abort(422, empty($formas)
+                    ? 'Informe como foi pago!'
+                    : 'Uma baixa é um pagamento: informe uma forma só.');
             }
-            $soma = 0;
-            foreach ($formas as $f) {
-                if ((float) ($f['total'] ?? 0) <= 0) {
-                    abort(422, 'O valor de cada forma precisa ser maior que zero!');
-                }
-                $soma += (float) $f['total'];
+            $forma = $formas[0];
+            static::exigirCentavos($forma['total'] ?? 0);
+            if ((float) ($forma['total'] ?? 0) <= 0) {
+                abort(422, 'O valor do pagamento precisa ser maior que zero!');
             }
-            if (abs(round($soma, 2) - abs($liquido)) > 0.005) {
-                $s = number_format($soma, 2, ',', '.');
+            if (abs(round((float) $forma['total'], 2) - abs($liquido)) > 0.005) {
+                $s = number_format((float) $forma['total'], 2, ',', '.');
                 $l = number_format(abs($liquido), 2, ',', '.');
-                abort(422, "A soma das formas ({$s}) não bate com o líquido dos títulos ({$l})!");
+                abort(422, "O pagamento ({$s}) não bate com o líquido dos títulos ({$l})!");
             }
         }
-
-        $partes = static::distribuir($linhas, $formas, $liquido);
 
         $codfilialTitulos = $linhas[0]['titulo']->codfilial;
-        $pagamentos = [];
-        foreach ($formas as $i => $forma) {
-            $somaPartes = static::somarPartes($partes[$i]);
-            $pag = static::pagamentoDaForma($forma, $entrada, $compensacao, $somaPartes, $dados, $transacao, $pdv, $codfilialTitulos);
-            // o titulo liquida na data do pagamento (a cobranca integrada tem
-            // a dela, da confirmacao): um lugar so' manda na data
-            $dataPagamento = Carbon::parse($pag->transacao ?? $transacao)->format('Y-m-d');
-            foreach ($partes[$i] as $parte) {
-                MovimentoTituloHelper::liquidar(
-                    $parte['titulo'],
-                    $parte['total'],
-                    $parte['juros'],
-                    $parte['multa'],
-                    $parte['desconto'],
-                    $dataPagamento,
-                    $pag->codportadordestino ?? $pag->codportadororigem,
-                    null,
-                    $pag->codpagamento
-                );
-            }
-            if ($entrada && $pag->meio == PagamentoService::MEIO_CHEQUE) {
-                static::gerarCheque($pag);
-            }
-            $pagamentos[] = $pag;
+        $pag = static::pagamentoDaForma($forma, $entrada, $compensacao, $dados, $transacao, $pdv, $codfilialTitulos);
+        // o titulo liquida na data do pagamento (o fato): o orfao amarrado
+        // hoje baixa na data em que o dinheiro entrou
+        $dataPagamento = Carbon::parse($pag->transacao ?? $transacao)->format('Y-m-d');
+        foreach ($linhas as $linha) {
+            MovimentoTituloHelper::liquidar(
+                $linha['titulo'],
+                $linha['total'],
+                $linha['juros'],
+                $linha['multa'],
+                $linha['desconto'],
+                $dataPagamento,
+                $pag->codportadorDoPagamento(),
+                null,
+                $pag->codpagamento
+            );
+        }
+        if ($entrada && $pag->meio == PagamentoService::MEIO_CHEQUE) {
+            static::gerarCheque($pag);
         }
 
-        return array_map(fn($p) => PagamentoListaService::carregar($p->codpagamento), $pagamentos);
+        return [PagamentoListaService::carregar($pag->codpagamento)];
     }
 
-    // Distribui as linhas pelas formas: as do sentido do liquido em ordem de
-    // vencimento, enchendo cada forma; as do sentido contrario (vale contra
-    // notinha) inteiras na primeira, que comporta o valor delas a mais. Uma
-    // linha que cai entre duas formas e' dividida, com juros, multa e
-    // desconto proporcionais.
-    protected static function distribuir(array $linhas, array $formas, float $liquido): array
+    // valor com no maximo 2 casas
+    public static function exigirCentavos($valor): void
     {
-        $partes = array_fill(0, count($formas), []);
-        $capacidade = array_map(fn($f) => round((float) ($f['total'] ?? 0), 2), $formas);
-        $sentido = $liquido < 0 ? -1 : 1;
-
-        $maioria = [];
-        foreach ($linhas as $l) {
-            if (abs($liquido) < 0.005 || $l['total'] <= 0 || $l['sinal'] != $sentido) {
-                $partes[0][] = $l;
-                if (abs($liquido) >= 0.005) {
-                    $capacidade[0] = round($capacidade[0] + $l['total'], 2);
-                }
-                continue;
-            }
-            $maioria[] = $l;
+        if (abs(round((float) $valor, 2) - (float) $valor) > 0.0000001) {
+            abort(422, 'Valor com mais de duas casas decimais!');
         }
-        usort($maioria, fn($a, $b) => [$a['titulo']->vencimento, $a['titulo']->codtitulo] <=> [$b['titulo']->vencimento, $b['titulo']->codtitulo]);
-
-        $i = 0;
-        foreach ($maioria as $l) {
-            $resta = $l['total'];
-            $pedacos = [];
-            while ($resta > 0.005) {
-                while ($i < count($formas) - 1 && $capacidade[$i] <= 0.005) {
-                    $i++;
-                }
-                $valor = ($i == count($formas) - 1) ? $resta : min($resta, $capacidade[$i]);
-                $pedacos[] = [$i, round($valor, 2)];
-                $capacidade[$i] = round($capacidade[$i] - $valor, 2);
-                $resta = round($resta - $valor, 2);
-            }
-            // juros, multa e desconto proporcionais; o ultimo pedaco leva a sobra
-            $acum = ['juros' => 0, 'multa' => 0, 'desconto' => 0];
-            foreach ($pedacos as $k => [$idx, $valor]) {
-                $parte = $l;
-                $parte['total'] = $valor;
-                foreach (['juros', 'multa', 'desconto'] as $col) {
-                    $parte[$col] = ($k == count($pedacos) - 1)
-                        ? round($l[$col] - $acum[$col], 2)
-                        : round($l[$col] * $valor / $l['total'], 2);
-                    $acum[$col] = round($acum[$col] + $parte[$col], 2);
-                }
-                $partes[$idx][] = $parte;
-            }
-        }
-        return $partes;
     }
 
-    // colunas do pagamento = soma das linhas; encontro misto que daria
-    // principal negativo fica so' com o total
-    protected static function somarPartes(array $partes): array
-    {
-        $soma = ['juros' => 0, 'multa' => 0, 'desconto' => 0];
-        foreach ($partes as $p) {
-            foreach ($soma as $col => $v) {
-                $soma[$col] = round($v + $p[$col], 2);
-            }
-        }
-        return $soma;
-    }
-
-    // Cria o pagamento de uma forma (ou amarra a cobranca integrada ja'
-    // confirmada), com origem e destino pelo meio e por onde aconteceu. Usado
-    // tambem pelo lancamento de vale/adiantamento (TituloAdiantamentoService).
+    // Cria o pagamento da forma, com origem e destino pelo meio e por onde
+    // aconteceu. So' o dinheiro: principal =
+    // total. Usado tambem pelo vale/adiantamento (TituloAdiantamentoService).
     public static function pagamentoDaForma(
         array $forma,
         bool $entrada,
         bool $compensacao,
-        array $soma,
         array $dados,
         Carbon $transacao,
         ?Pdv $pdv,
         int $codfilialTitulos
     ): Pagamento {
         $total = round((float) ($forma['total'] ?? 0), 2);
-        $principal = round($total - $soma['juros'] - $soma['multa'] + $soma['desconto'], 2);
-        $valores = ['principal' => $principal] + $soma;
-        if ($principal < 0 || ($principal == 0 && !$compensacao)) {
-            $valores = ['principal' => $total, 'juros' => 0, 'multa' => 0, 'desconto' => 0];
-        }
-        $comum = [
-            'codpessoa' => (int) $dados['codpessoa'],
-            'observacoes' => $dados['observacao'] ?? null,
-        ];
 
-        // cobranca integrada (PIX QR, Stone, SafraPay): o pagamento nasceu na
-        // confirmacao, sem titulo; aqui so' ganha a pessoa e os valores
-        if (!empty($forma['codpagamento'])) {
-            $pag = Pagamento::lockForUpdate()->findOrFail((int) $forma['codpagamento']);
-            if ($pag->estado != PagamentoService::ESTADO_EFETIVADO || !empty($pag->codnegocio) || $pag->MovimentoTituloS()->exists()) {
-                abort(422, "O pagamento {$pag->codpagamento} não está disponível para baixar títulos!");
+        // o cartao cobrado na maquininha integrada (Stone, SafraPay): o
+        // pagamento nasce com o pedido, quando a tela grava (TASK-220)
+        if (!empty($forma['codpagarmepedido']) || !empty($forma['codsauruspedido'])) {
+            if (!$entrada) {
+                abort(422, 'O cartão cobrado na maquininha só recebe!');
             }
-            if (abs($pag->total - $total) > 0.005) {
-                abort(422, "O valor do pagamento {$pag->codpagamento} não confere com a forma!");
+            $campos = [
+                'codpessoa' => (int) $dados['codpessoa'],
+                'observacoes' => $dados['observacao'] ?? null,
+                'referente' => $dados['referente'] ?? null,
+                'codpdv' => $pdv->codpdv ?? null,
+                'codfilial' => $pdv->codfilial ?? null,
+            ];
+            return !empty($forma['codpagarmepedido'])
+                ? PagarMeService::pagar((int) $forma['codpagarmepedido'], $total, $campos)
+                : SaurusService::pagar((int) $forma['codsauruspedido'], $total, $campos);
+        }
+
+        // o PIX que caiu na conta (tela PIX, PIX QR do wizard): o pagamento
+        // nasce com ele, inteiro, na data e na conta dele (TASK-219)
+        if (!empty($forma['codpix'])) {
+            if (!$entrada) {
+                abort(422, 'O PIX recebido só paga título a receber ou adiantamento de cliente!');
             }
-            PagamentoService::preencher($pag, $comum + $valores);
-            $pag->save();
-            PortadorMovimentoService::sincronizar($pag);
-            return $pag;
+            return PixUsoService::pagar((int) $forma['codpix'], $total, [
+                'codpessoa' => (int) $dados['codpessoa'],
+                'observacoes' => $dados['observacao'] ?? null,
+                'referente' => $dados['referente'] ?? null,
+                'codpdv' => $pdv->codpdv ?? null,
+                'codfilial' => $pdv->codfilial ?? null,
+            ]);
         }
 
         $meio = (int) ($forma['meio'] ?? 0);
-        $base = $comum + $valores + [
+        $base = [
+            'codpessoa' => (int) $dados['codpessoa'],
+            'observacoes' => $dados['observacao'] ?? null,
+            'referente' => $dados['referente'] ?? null,
+            'principal' => $total,
+            'juros' => 0,
+            'multa' => 0,
+            'desconto' => 0,
             'meio' => $meio,
             'estado' => PagamentoService::ESTADO_EFETIVADO,
             'transacao' => $transacao,
@@ -327,11 +297,15 @@ class PagamentoTituloService
             'codfilial' => $pdv->codfilial ?? $codfilialTitulos,
         ];
 
+        // encontro de contas: total zero no portador Encontro de Contas
         if ($compensacao || $meio == PagamentoService::MEIO_COMPENSACAO) {
-            if ($pdv) {
-                abort(422, 'Compensação não é feita no PDV!');
-            }
-            return PagamentoService::criar(array_merge($base, ['meio' => PagamentoService::MEIO_COMPENSACAO]));
+            // a compensacao com valor (credito de PIS/Cofins, programacao de
+            // pagamentos) fica com o valor compensado; o encontro, com zero
+            return PagamentoService::criar(array_merge($base, [
+                'meio' => PagamentoService::MEIO_COMPENSACAO,
+                'principal' => $compensacao ? 0 : $total,
+                'codportadordestino' => Portador::ENCONTRO_CONTAS,
+            ]));
         }
 
         // cancelamento no cartao / devolucao de PIX: contrario do original
@@ -363,12 +337,15 @@ class PagamentoTituloService
         ];
 
         if (in_array($meio, PagamentoService::MEIOS_CARTAO) && $entrada) {
+            $maquineta = Maquineta::findOrFail((int) $forma['codmaquineta']);
             $campos += [
-                'codmaquineta' => (int) $forma['codmaquineta'],
+                'codmaquineta' => $maquineta->codmaquineta,
                 'bandeira' => $forma['bandeira'] ?? null,
                 'autorizacao' => $forma['autorizacao'] ?? null,
                 'parcelas' => $forma['parcelas'] ?? null,
             ];
+            // o cartao e' da loja da maquineta
+            $campos['codfilial'] = $pdv->codfilial ?? $maquineta->codfilial ?? $campos['codfilial'];
         }
         if ($meio == PagamentoService::MEIO_DINHEIRO && $entrada) {
             $campos['valortroco'] = $forma['valortroco'] ?? null;
@@ -384,9 +361,53 @@ class PagamentoTituloService
         return PagamentoService::criar(array_merge($base, $campos));
     }
 
-    // Portador da forma: dinheiro na gaveta do PDV (no contas, cofre/troco/
-    // Caixa Financeiro escolhido); cheque recebido na Carteira; cartao na
-    // adquirente da maquineta; banco e cartao da empresa escolhidos no contas
+    // O portador em que a forma vai mexer, para conferir o papel do usuario
+    // antes de gravar (PagamentoTituloAutorizador). Sem validar a forma.
+    public static function portadorPrevisto(array $forma, bool $entrada, ?Pdv $pdv): ?Portador
+    {
+        if (!empty($forma['codpagarmepedido'])) {
+            $ped = PagarMePedido::find((int) $forma['codpagarmepedido']);
+            return $ped ? static::portadorDaMaquineta(PagarMeService::maquinetaDoPedido($ped)) : null;
+        }
+        if (!empty($forma['codsauruspedido'])) {
+            $ped = SaurusPedido::find((int) $forma['codsauruspedido']);
+            return $ped ? static::portadorDaMaquineta(SaurusService::maquinetaDoPedido($ped)) : null;
+        }
+        if (!empty($forma['codpix'])) {
+            return optional(Pix::find((int) $forma['codpix']))->Portador;
+        }
+        $meio = (int) ($forma['meio'] ?? 0);
+        if ($meio == PagamentoService::MEIO_COMPENSACAO) {
+            return Portador::find(Portador::ENCONTRO_CONTAS);
+        }
+        if (!empty($forma['codpagamentoorigem'])) {
+            $original = Pagamento::find((int) $forma['codpagamentoorigem']);
+            if (!$original) {
+                return null;
+            }
+            return ($original->meio == PagamentoService::MEIO_PIX)
+                ? Portador::find($original->codportadordestino)
+                : (static::portadorDaMaquineta($original->Maquineta) ?? Portador::find($original->codportadordestino));
+        }
+        if (!empty($forma['codportador'])) {
+            return Portador::find((int) $forma['codportador']);
+        }
+        if (in_array($meio, PagamentoService::MEIOS_CARTAO) && $entrada && !empty($forma['codmaquineta'])) {
+            return static::portadorDaMaquineta(Maquineta::find((int) $forma['codmaquineta']));
+        }
+        if ($meio == PagamentoService::MEIO_DINHEIRO && $pdv && !empty($pdv->codportador)) {
+            return Portador::find($pdv->codportador);
+        }
+        if ($meio == PagamentoService::MEIO_CHEQUE && $entrada) {
+            return Portador::find(Portador::CARTEIRA);
+        }
+        return null;
+    }
+
+    // Portador da forma: dinheiro no portador de especie escolhido (no PDV, a
+    // gaveta dele vem pre-selecionada: sem escolha, e' ela); cheque recebido
+    // na Carteira; cartao na adquirente da maquineta; banco e cartao da
+    // empresa escolhidos no contas
     protected static function portadorDaForma(array $forma, int $meio, bool $entrada, ?Pdv $pdv): ?Portador
     {
         $escolhido = !empty($forma['codportador']) ? Portador::findOrFail((int) $forma['codportador']) : null;
@@ -399,7 +420,7 @@ class PagamentoTituloService
 
         switch ($meio) {
             case PagamentoService::MEIO_DINHEIRO:
-                if ($pdv) {
+                if ($pdv && !$escolhido) {
                     if (empty($pdv->codportador)) {
                         abort(422, 'PDV sem gaveta: vincule o portador em Config → PDV.');
                     }
@@ -501,8 +522,8 @@ class PagamentoTituloService
         $titulo = $mov->Titulo;
         // a data alterada a mao (TASK-204) vale sobre a do banco no
         // reprocessamento: o pagamento e o movimento do titulo ficam nela
-        $alterada = $pag->exists && PagamentoCorrecao::where('codpagamento', $pag->codpagamento)
-            ->whereRaw("antes->>'transacao' is distinct from depois->>'transacao'")
+        $alterada = $pag->exists && $pag->AuditoriaS()
+            ->where('tipo', AuditoriaService::TIPO_DATA_ALTERADA)
             ->exists();
         PagamentoService::preencher($pag, [
             'codportadordestino' => $entrada ? $codportador : null,
@@ -534,15 +555,26 @@ class PagamentoTituloService
         return $pag;
     }
 
-    // Corrige pessoa, portador, meio, data e observacao, como a liquidacao
-    // permitia (decisao do Fabio, 01/10/2026: excecao a regra de o pagamento
-    // nao mudar). Valores e titulos nao mudam: para isso, estorna e lanca de
-    // novo. O portador vai junto para as linhas do movimento; a data, pelo
-    // LancamentoDataService (com justificativa, TASK-204).
+    // O "Referente a" (o texto que sai no recibo), sozinho: muda em qualquer pagamento efetivado,
+    // inclusive de venda e de acerto de RH, no contas e no PDV (TASK-216); vazio, nao sai
+    public static function alterarReferente(Pagamento $pag, ?string $referente): Pagamento
+    {
+        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
+            abort(422, 'Só pagamento efetivado tem recibo!');
+        }
+        $pag->referente = trim((string) $referente) ?: null;
+        $pag->save();
+        return PagamentoListaService::carregar($pag->codpagamento);
+    }
+
+    // O lapis do pagamento: pessoa e observacao; a data so' do pagamento
+    // manual (a do integrado e' a do banco/maquineta), pelo alterar data
+    // (periodo, razao, titulos, com justificativa na auditoria, TASK-204).
+    // Meio e portador nao mudam: sao o fato; errou, cancela e lanca de novo.
     public static function atualizar(Pagamento $pag, array $dados): Pagamento
     {
-        if ($pag->estado == PagamentoService::ESTADO_CANCELADO) {
-            abort(422, 'Pagamento estornado não pode ser alterado!');
+        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
+            abort(422, 'Só pagamento efetivado é alterado!');
         }
         if (!empty($pag->codnegocio)) {
             abort(422, 'Pagamento de venda: altere pelo negócio.');
@@ -550,72 +582,41 @@ class PagamentoTituloService
         if (!empty($pag->codperiodocolaboradoracerto)) {
             abort(422, 'Pagamento de acerto de RH: altere pelo acerto.');
         }
-        if (!$pag->MovimentoTituloS()->exists()) {
-            abort(422, 'Pagamento sem título não é alterado aqui.');
+        $atual = $pag->codportadorDoPagamento();
+        if ((!empty($dados['meio']) && (int) $dados['meio'] != $pag->meio)
+            || (!empty($dados['codportador']) && (int) $dados['codportador'] != $atual)) {
+            abort(422, 'Meio e portador não mudam: cancele e lance de novo.');
         }
-        foreach ($pag->MovimentoTituloS as $mov) {
-            if (!empty($mov->codtituloboleto) || !empty($mov->codboletoretorno)) {
-                abort(422, 'Baixa de boleto pelo banco não é alterada aqui.');
-            }
-        }
-        // a data com hora (TASK-204): mudou, vai primeiro pelo alterar data
-        // (periodo, razao, titulos e a trilha, com justificativa), com a
-        // permissao do lapis; depois o portador, ja' na data nova
-        $transacao = Carbon::parse($dados['transacao'])->startOfMinute();
-        if ($pag->transacao->format('Y-m-d H:i') != $transacao->format('Y-m-d H:i')) {
-            LancamentoDataService::alterarPagamento($pag, $transacao, $dados['justificativa'] ?? null, true);
-            $pag->refresh();
-        }
-
-        // compensacao (sem dinheiro) continua sem portador
-        $codportador = null;
-        if ($pag->meio != PagamentoService::MEIO_COMPENSACAO || !empty($pag->codportadororigem) || !empty($pag->codportadordestino)) {
-            if (empty($dados['codportador'])) {
-                abort(422, 'Informe o portador!');
-            }
-            $portador = Portador::findOrFail((int) $dados['codportador']);
-            $atual = $pag->codportadordestino ?? $pag->codportadororigem;
-            if ($portador->codportador != $atual) {
-                if (!empty($portador->inativo)) {
-                    abort(422, "Portador {$portador->portador} inativo!");
+        if (!empty($dados['transacao'])) {
+            $transacao = Carbon::parse($dados['transacao'])->startOfMinute();
+            if ($pag->transacao->format('Y-m-d H:i') != $transacao->format('Y-m-d H:i')) {
+                if (!static::manual($pag)) {
+                    abort(422, 'A data do pagamento integrado é a do banco ou da maquineta.');
                 }
-                if ($portador->ehGaveta()) {
-                    abort(422, 'No contas não se baixa título em gaveta de caixa: escolha cofre ou banco.');
-                }
+                // a permissao da data e' a do alterar data: gestor do portador
+                LancamentoDataService::alterarPagamento($pag, $transacao, $dados['justificativa'] ?? null);
+                $pag->refresh();
             }
-            $codportador = $portador->codportador;
-            $meio = !empty($dados['meio']) ? (int) $dados['meio'] : ($portador->codportador != $atual ? static::meioDoPortador($portador) : $pag->meio);
-            if ($meio != $pag->meio && !in_array($meio, static::MEIOS_CONTAS)) {
-                abort(422, "Meio de pagamento {$meio} não pode ser escolhido aqui!");
-            }
-            $pag->meio = $meio;
-            if (!empty($pag->codportadordestino)) {
-                $pag->codportadordestino = $codportador;
-            } else {
-                $pag->codportadororigem = $codportador;
-            }
-            $pag->codfilial = $portador->codfilial ?? $pag->codfilial;
         }
-        $pag->codpessoa = (int) $dados['codpessoa'];
+        $pag->codpessoa = !empty($dados['codpessoa']) ? (int) $dados['codpessoa'] : $pag->codpessoa;
         $pag->observacoes = $dados['observacao'] ?? null;
-        PagamentoService::validar($pag);
         $pag->save();
-        PortadorMovimentoService::sincronizar($pag);
-
-        foreach ($pag->MovimentoTituloS as $mov) {
-            $mov->codportador = $codportador;
-            $mov->save();
-        }
         return PagamentoListaService::carregar($pag->codpagamento);
     }
 
-    // Estornar desfaz o pagamento inteiro: estorna cada linha de baixa,
-    // cancela o cheque ainda a repassar e cancela o pagamento (com
-    // justificativa)
-    public static function estornar(Pagamento $pag, string $justificativa): Pagamento
+    // Cancelar = o fato nao existiu como foi lancado (digitado errado, ou o
+    // dinheiro foi usado na baixa errada): as baixas sao estornadas junto (os
+    // titulos reabrem; o vale e o adiantamento que nasceram com o pagamento
+    // sao estornados) e ele sai do razao do portador. Vale tambem para o
+    // integrado (TASK-218): o PIX volta a ficar sem uso e o cartao volta a
+    // ser so' o pedido, para a baixa certa. Boleto nao se cancela: a baixa e'
+    // do proprio titulo. O cheque a repassar e' cancelado junto. Venda pelo
+    // negocio, acerto pelo acerto.
+    public static function cancelar(Pagamento $pag, string $justificativa): Pagamento
     {
+        $pag = Pagamento::lockForUpdate()->findOrFail($pag->codpagamento);
         if ($pag->estado == PagamentoService::ESTADO_CANCELADO) {
-            abort(422, 'Pagamento já estornado!');
+            abort(422, 'Pagamento já cancelado!');
         }
         if (!empty($pag->codnegocio)) {
             abort(422, 'Pagamento de venda: cancele pelo negócio.');
@@ -623,58 +624,80 @@ class PagamentoTituloService
         if (!empty($pag->codperiodocolaboradoracerto)) {
             abort(422, 'Pagamento de acerto de RH: estorne pelo acerto.');
         }
-        if (!$pag->MovimentoTituloS()->exists()) {
-            abort(422, 'Pagamento sem título não é estornado aqui.');
-        }
-        foreach ($pag->MovimentoTituloS as $mov) {
-            if (!empty($mov->codtituloboleto)) {
-                abort(422, 'Baixa de boleto pelo banco não é estornada aqui.');
-            }
+        if (static::baixaDoBanco($pag)) {
+            abort(422, 'Pagamento de boleto não se cancela: a baixa é do próprio título.');
         }
         foreach (Cheque::where('codpagamento', $pag->codpagamento)->whereNull('cancelamento')->get() as $cheque) {
             if ($cheque->indstatus != 1) {
-                abort(422, "O cheque {$cheque->numero} já foi repassado. Impossível estornar!");
+                abort(422, "O cheque {$cheque->numero} já foi repassado. Impossível cancelar!");
             }
             $cheque->cancelamento = Carbon::now();
             $cheque->save();
         }
+        $ativos = static::movimentosAtivos($pag);
         $vale = $pag->meio == PagamentoService::MEIO_VALE;
-        foreach ($pag->MovimentoTituloS as $mov) {
-            if ($mov->ehEstorno() || $mov->MovimentoTituloEstornoS()->exists()) {
-                continue;
-            }
-            // vale colaborador / adiantamento: o pagamento nasceu com o
-            // titulo, estornar e' desfazer o titulo (so' se nao movimentado)
+        foreach ($ativos as $mov) {
+            // vale colaborador / adiantamento: o titulo nasceu com o
+            // pagamento; estorna o titulo (so' se nao movimentado)
             if ($mov->codtipomovimentotitulo == MovimentoTituloService::TIPO_IMPLANTACAO) {
                 $vale = true;
-                TituloService::estornar($mov->Titulo, $justificativa);
+                TituloService::estornar($mov->Titulo, $justificativa, false);
                 continue;
             }
             MovimentoTituloService::estornar($mov);
         }
-        $pag->refresh();
         PagamentoService::cancelar($pag, $justificativa);
-        OcorrenciaService::pagamentoEstornado($pag, $vale, $justificativa);
+        if ($ativos->isNotEmpty()) {
+            OcorrenciaService::pagamentoEstornado($pag, $vale, $justificativa);
+        }
         return PagamentoListaService::carregar($pag->codpagamento);
+    }
+
+    // As baixas que valem (baixa, vale, adiantamento), sem as estornadas. A
+    // linha de estorno tem o tipo da original: quem diz que e' estorno e' o
+    // codmovimentotituloestorno. O estorno antigo (930 e afins, sem esse
+    // vinculo) zera o titulo dentro do pagamento: titulo que soma zero no
+    // pagamento nao tem baixa valendo (nao se estorna duas vezes).
+    public static function movimentosAtivos(Pagamento $pag)
+    {
+        $linhas = MovimentoTitulo::where('codpagamento', $pag->codpagamento)->get();
+        $estornadas = $linhas->pluck('codmovimentotituloestorno')->filter()->all();
+        $zerados = $linhas->groupBy('codtitulo')
+            ->filter(fn ($l) => abs($l->sum(fn ($m) => (float) $m->total)) < 0.005
+                && abs($l->sum(fn ($m) => (float) $m->principal)) < 0.005)
+            ->keys()
+            ->all();
+        return $linhas->filter(fn ($m) => (int) $m->codtipomovimentotitulo < 900
+            && empty($m->codmovimentotituloestorno)
+            && !in_array($m->codmovimentotitulo, $estornadas)
+            && !in_array($m->codtitulo, $zerados))
+            ->values();
+    }
+
+    // Baixa feita pelo banco (boleto BB pela API, retorno de boleto)
+    public static function baixaDoBanco(Pagamento $pag): bool
+    {
+        return MovimentoTitulo::where('codpagamento', $pag->codpagamento)
+            ->where(fn ($q) => $q->whereNotNull('codtituloboleto')->orWhereNotNull('codboletoretorno'))
+            ->exists();
+    }
+
+    // Lancado a mao (dinheiro, cheque, cartao digitado, banco digitado):
+    // nao veio de integracao nem de baixa do banco
+    public static function manual(Pagamento $pag): bool
+    {
+        return !$pag->ehIntegrado() && empty($pag->codpix) && !static::baixaDoBanco($pag);
     }
 
     // Linhas de baixa (sem os estornos)
     public static function baixas(Pagamento $pag)
     {
+        // a que foi estornada tambem sai
+        $estornadas = $pag->MovimentoTituloS->pluck('codmovimentotituloestorno')->filter()->all();
         return $pag->MovimentoTituloS
-            ->filter(fn(MovimentoTitulo $m) => !$m->ehEstorno() && (int) $m->codtipomovimentotitulo < 900);
-    }
-
-    // Baixou titulo a receber? (principal negativo)
-    public static function temRecebimento(Pagamento $pag): bool
-    {
-        return static::baixas($pag)->contains(fn($m) => (float) $m->principal < 0);
-    }
-
-    // Baixou titulo a pagar? (principal positivo)
-    public static function temPagamento(Pagamento $pag): bool
-    {
-        return static::baixas($pag)->contains(fn($m) => (float) $m->principal > 0);
+            ->filter(fn(MovimentoTitulo $m) => !$m->ehEstorno()
+                && (int) $m->codtipomovimentotitulo < 900
+                && !in_array($m->codmovimentotitulo, $estornadas));
     }
 
     // Total com o sinal do movimento, como a liquidacao antiga: negativo =

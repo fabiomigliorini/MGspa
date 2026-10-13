@@ -317,8 +317,11 @@ class MaquinetaLoteService
         return $lote;
     }
 
-    // inicio, fim (so' quem ja' tem) e observacoes do nao conferido. Nao
-    // recusa lancamento fora: o vinculo manda, nao a hora
+    // inicio, fim (so' quem ja' tem) e observacoes do nao conferido. Os
+    // cartoes acompanham a faixa nova (TASK-204: a data manda no periodo):
+    // cada cartao da maquineta que estava neste periodo, ou cuja hora cai na
+    // faixa nova, vai para o periodo da hora dele, se nenhum dos dois estiver
+    // conferido. O mesmo com a data do cancelamento.
     public static function editarDatas(MaquinetaLote $lote, Carbon $inicio, ?Carbon $fim, ?string $observacoes): MaquinetaLote
     {
         static::travar($lote->codmaquineta);
@@ -330,7 +333,46 @@ class MaquinetaLoteService
         $lote->fim = $fim;
         $lote->observacoes = trim($observacoes ?? '') ?: null;
         $lote->save();
+        static::realocar($lote, $inicio, $fim);
         return $lote;
+    }
+
+    private static function realocar(MaquinetaLote $lote, Carbon $inicio, ?Carbon $fim): void
+    {
+        $lotes = MaquinetaLote::where('codmaquineta', $lote->codmaquineta)->get()->keyBy('codmaquinetalote');
+        $daHora = function ($hora) use ($lotes) {
+            $hora = Carbon::parse($hora);
+            return $lotes->filter(fn ($l) => Carbon::parse($l->abertura)->lte($hora)
+                && (empty($l->fim) || Carbon::parse($l->fim)->gte($hora)))
+                ->sortByDesc('abertura')
+                ->first();
+        };
+        foreach ([['transacao', 'codmaquinetalote'], ['cancelamento', 'codmaquinetalotecancelamento']] as [$data, $coluna]) {
+            $pags = Pagamento::where('codmaquineta', $lote->codmaquineta)
+                ->whereNotNull($data)
+                ->where(function ($w) use ($lote, $coluna, $data, $inicio, $fim) {
+                    $w->where($coluna, $lote->codmaquinetalote)
+                        ->orWhere(function ($x) use ($data, $inicio, $fim) {
+                            $x->where($data, '>=', $inicio);
+                            if ($fim) {
+                                $x->where($data, '<=', $fim);
+                            }
+                        });
+                })
+                ->get(['codpagamento', $data, $coluna]);
+            foreach ($pags as $pag) {
+                $novo = $daHora($pag->$data);
+                $atual = $lotes[$pag->$coluna] ?? null;
+                if (!$novo || $novo->codmaquinetalote == $pag->$coluna) {
+                    continue;
+                }
+                if ($novo->conferido() || ($atual && $atual->conferido())) {
+                    continue;
+                }
+                // sem o model: o vinculo da conferencia nao refaz
+                Pagamento::where('codpagamento', $pag->codpagamento)->update([$coluna => $novo->codmaquinetalote]);
+            }
+        }
     }
 
     // nada no futuro, fim depois do inicio e sem invadir outro periodo da

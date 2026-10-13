@@ -7,7 +7,6 @@ import { Dialog } from 'quasar'
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
 import MgInputValor from '@components/MgInputValor.vue'
-import OcorrenciaMotivoDialog from './OcorrenciaMotivoDialog.vue'
 
 const sProduto = produtoStore()
 const sNegocio = negocioStore()
@@ -88,19 +87,7 @@ const edicao = ref({
   valorseguro: null,
   valoroutras: null,
   valortotal: null,
-  original: null,
 })
-
-// PDV monitorado: o caixa diz o motivo e vai para o livro de ocorrencias (TASK-205)
-const pedirMotivo = (titulo, mensagem, okLabel) =>
-  new Promise((resolve) => {
-    Dialog.create({
-      component: OcorrenciaMotivoDialog,
-      componentProps: { titulo, mensagem, okLabel, contexto: 'item' },
-    })
-      .onOk((motivo) => resolve(motivo))
-      .onCancel(() => resolve(null))
-  })
 
 const editar = async (uuid) => {
   await sNegocio.recarregar()
@@ -123,19 +110,10 @@ const editar = async (uuid) => {
   edicao.value.valorseguro = item.valorseguro
   edicao.value.valoroutras = item.valoroutras
   edicao.value.valortotal = item.valortotal
-  edicao.value.original = { quantidade: item.quantidade, valorunitario: item.valorunitario }
   dialogItem.value = true
 }
 
 const inativar = async (uuid) => {
-  if (sNegocio.monitorado) {
-    const item = sNegocio.negocio.itens.find((i) => i.uuid == uuid)
-    const motivo = await pedirMotivo('Excluir item', item?.produto, 'Excluir')
-    if (motivo) {
-      sNegocio.itemInativar(uuid, motivo)
-    }
-    return
-  }
   Dialog.create({
     title: 'Excluir',
     message: 'Tem certeza que você deseja excluir esse item do negócio?',
@@ -146,55 +124,28 @@ const inativar = async (uuid) => {
   })
 }
 
-const diminuir = async (item) => {
-  if (sNegocio.monitorado && parseFloat(item.quantidade) > 1) {
-    const motivo = await pedirMotivo('Diminuir quantidade', item.produto, 'Diminuir')
-    if (motivo) {
-      sNegocio.itemAdicionarQuantidade(item.uuid, -1, motivo)
-    }
-    return
-  }
-  sNegocio.itemAdicionarQuantidade(item.uuid, -1)
-}
-
 const salvar = async () => {
-  const original = edicao.value.original
-  const diminuiu =
-    sNegocio.monitorado &&
-    original &&
-    (parseFloat(edicao.value.quantidade) < parseFloat(original.quantidade) ||
-      parseFloat(edicao.value.valorunitario) < parseFloat(original.valorunitario))
-  if (diminuiu) {
-    const motivo = await pedirMotivo('Diminuir item', 'Quantidade ou preço menor', 'Salvar')
-    if (motivo) {
-      gravar(motivo)
-    }
-    return
-  }
   Dialog.create({
     title: 'Salvar',
     message: 'Tem certeza que você deseja salvar?',
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'OK', color: 'primary', flat: true },
-  }).onOk(() => gravar())
-}
-
-const gravar = (motivo = null) => {
-  sNegocio.itemSalvar(
-    edicao.value.uuid,
-    parseInt(edicao.value.codprodutobarra),
-    parseFloat(edicao.value.quantidade),
-    parseFloat(edicao.value.valorunitario),
-    parseFloat(edicao.value.valorprodutos),
-    parseFloat(edicao.value.percentualdesconto),
-    parseFloat(edicao.value.valordesconto),
-    parseFloat(edicao.value.valorfrete),
-    parseFloat(edicao.value.valorseguro),
-    parseFloat(edicao.value.valoroutras),
-    parseFloat(edicao.value.valortotal),
-    motivo,
-  )
-  dialogItem.value = false
+  }).onOk(() => {
+    sNegocio.itemSalvar(
+      edicao.value.uuid,
+      parseInt(edicao.value.codprodutobarra),
+      parseFloat(edicao.value.quantidade),
+      parseFloat(edicao.value.valorunitario),
+      parseFloat(edicao.value.valorprodutos),
+      parseFloat(edicao.value.percentualdesconto),
+      parseFloat(edicao.value.valordesconto),
+      parseFloat(edicao.value.valorfrete),
+      parseFloat(edicao.value.valorseguro),
+      parseFloat(edicao.value.valoroutras),
+      parseFloat(edicao.value.valortotal),
+    )
+    dialogItem.value = false
+  })
 }
 
 const recalcularValorProdutos = () => {
@@ -434,7 +385,7 @@ const linkProduto = (codproduto) => {
                 round
                 dense
                 flat
-                @click="diminuir(item)"
+                @click="sNegocio.itemAdicionarQuantidade(item.uuid, -1)"
               />
               {{ formataNumeroInteligente(item.quantidade) }}
               <q-btn

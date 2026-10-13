@@ -2,11 +2,12 @@
 // Vale colaborador e adiantamentos (M8 do plano doc-3), o mesmo dialog no contas e no PDV: título
 // que já nasce com o dinheiro (tipos com "movimenta portador"). Tipo, pessoa, valor, vencimento,
 // conta e observação → wizard de cobrança no sentido do tipo (vale e adiantamento a fornecedor:
-// sai dinheiro; adiantamento de cliente: entra). Cada forma lançada vira um título; quando as
-// formas fecham o valor, grava. Cada app informa as formas, o contexto do wizard (PDV ou contas)
-// e para onde manda. O wizard e os dialogs PIX/Stone/SafraPay ficam na página que usa. A data tem
-// hora (TASK-204: a data manda no período do portador; no PDV, a sessão da gaveta daquela hora);
-// sem mexer nela, vai vazia e o servidor usa agora.
+// sai dinheiro; adiantamento de cliente: entra). A forma confirmada no wizard grava na hora (a
+// integrada, quando o banco/maquineta confirma). Cada app informa as formas, o contexto do wizard
+// (PDV ou contas) e para onde manda. O wizard e os dialogs PIX/Stone/SafraPay ficam na página que
+// usa. A data tem hora (TASK-204: a data manda no período do portador; no PDV, a sessão da gaveta
+// daquela hora); sem mexer nela, vai vazia e o servidor usa agora. Com `pix` (vindo da tela PIX,
+// TASK-219), o adiantamento de cliente usa o PIX inteiro, na data dele.
 import { ref, computed, watch } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
@@ -34,6 +35,8 @@ const props = defineProps({
   filialPadrao: { type: Number, default: null },
   // configuração do PDV para o wizard (maquineta, conta PIX, impressora)
   padrao: { type: Object, default: () => ({}) },
+  // o PIX sem uso (vindo da tela PIX): { codpix, valor, descricao, codpessoa }
+  pix: { type: Object, default: null },
 })
 
 const emit = defineEmits(['update:modelValue', 'finalizado'])
@@ -50,25 +53,32 @@ const daquiA30Dias = () => {
   return formataDataIso(d)
 }
 
-// a data de quando abriu; sem mexer, vai vazia (agora, no servidor)
+// data de outro mês avisa (DIMP e relatórios já apurados), sem bloquear
+const trocaMes = computed(
+  () => !!form.value.transacao && form.value.transacao.slice(0, 7) !== agora().slice(0, 7),
+)
+
+// a data de quando abriu; o que está no campo é o que vai
 const agora = () => formataTimestampIso(new Date()).slice(0, 16)
 const transacaoAbertura = ref(agora())
 
 const vazio = () => ({
   codtipotitulo: null,
-  codpessoa: null,
-  valor: null,
+  codpessoa: props.pix?.codpessoa ?? null,
+  valor: props.pix?.valor ?? null,
   vencimento: daquiA30Dias(),
   codcontacontabil: null,
   codfilial: props.filialPadrao,
   transacao: transacaoAbertura.value,
+  referente: null,
   observacao: null,
 })
 
 const form = ref(vazio())
 const tipos = ref([])
 
-const lancou = computed(() => sBaixa.pagamentos.length > 0)
+// uma forma: um vale/adiantamento = um pagamento
+const lancou = computed(() => !!sBaixa.forma)
 const tipo = computed(() => tipos.value.find((t) => t.value === form.value.codtipotitulo))
 // título a pagar (adiantamento/crédito de cliente) = entra dinheiro
 const entrada = computed(() => tipo.value?.natureza === 'P')
@@ -109,6 +119,10 @@ watch(
     form.value = vazio()
     sBaixa.iniciar({ pessoa: null, titulos: [] })
     await carregarTipos()
+    // o PIX é entrada de dinheiro: adiantamento/crédito de cliente
+    if (props.pix) {
+      tipos.value = tipos.value.filter((t) => t.natureza === 'P')
+    }
     const padrao = tipos.value.find((t) => t.value === TIPO_PADRAO) ?? tipos.value[0]
     if (padrao) trocarTipo(padrao.value)
   },
@@ -116,24 +130,36 @@ watch(
 )
 
 // o título ainda não existe: entra na baixa como uma linha só, no sentido do tipo, para o
-// wizard e as cobranças integradas funcionarem como na baixa de títulos
+// wizard e as cobranças integradas funcionarem como na baixa de títulos (valor travado)
+const prepararBaixa = () => {
+  const valor = Math.round((parseFloat(form.value.valor) || 0) * 100) / 100
+  sBaixa.iniciar({
+    pessoa: { codpessoa: form.value.codpessoa },
+    titulos: [
+      {
+        codtitulo: null,
+        operacao: entrada.value ? 'DB' : 'CR',
+        saldo: valor,
+        juros: 0,
+        multa: 0,
+        desconto: 0,
+        total: valor,
+      },
+    ],
+  })
+}
+
 const cobrar = async () => {
-  if (!lancou.value) {
-    const valor = Math.round((parseFloat(form.value.valor) || 0) * 100) / 100
-    sBaixa.iniciar({
-      pessoa: { codpessoa: form.value.codpessoa },
-      titulos: [
-        {
-          codtitulo: null,
-          operacao: entrada.value ? 'DB' : 'CR',
-          saldo: valor,
-          juros: 0,
-          multa: 0,
-          desconto: 0,
-          total: valor,
-        },
-      ],
+  if (sBaixa.finalizando) return
+  prepararBaixa()
+  // o PIX é a forma, com o valor dele: não há o que cobrar
+  if (props.pix) {
+    sBaixa.adicionar({
+      codpix: props.pix.codpix,
+      total: sBaixa.totalLiquido,
+      descricao: props.pix.descricao,
     })
+    return
   }
   sBaixa.abrirWizard({
     formas: props.formas,
@@ -142,27 +168,23 @@ const cobrar = async () => {
   })
 }
 
-// um título por forma lançada; pagou menos (cobrança integrada de parte), lança o que pagou
 const gravar = async () => {
   if (sBaixa.finalizando || !lancou.value) return
   sBaixa.finalizando = true
   try {
+    const forma = { ...sBaixa.forma }
+    delete forma.descricao
     const { data } = await api.post(props.finalizar.url, {
       ...props.finalizar.extras,
       codtipotitulo: form.value.codtipotitulo,
       codpessoa: form.value.codpessoa,
       codcontacontabil: form.value.codcontacontabil,
       vencimento: form.value.vencimento,
+      referente: form.value.referente || null,
       observacao: form.value.observacao,
-      ...(props.comData && form.value.transacao !== transacaoAbertura.value
-        ? { transacao: form.value.transacao }
-        : {}),
+      ...(props.comData ? { transacao: form.value.transacao } : {}),
       ...(props.comFilial ? { codfilial: form.value.codfilial } : {}),
-      pagamentos: sBaixa.pagamentos.map((p) => {
-        const forma = { ...p }
-        delete forma.descricao
-        return forma
-      }),
+      pagamentos: [forma],
     })
     notificar('positive', `${tipo.value?.label ?? 'Título'} lançado!`)
     sBaixa.iniciar({ pessoa: null, titulos: [] })
@@ -170,18 +192,21 @@ const gravar = async () => {
     emit('finalizado', data.data)
   } catch (error) {
     notificar('negative', error?.response?.data?.message ?? error?.message ?? 'Erro ao lançar')
+    // não gravou: volta a editar; a integrada já confirmada (o dinheiro entrou) fica para o Gravar
+    if (props.pix || !sBaixa.formaConfirmada) {
+      sBaixa.remover()
+    }
   } finally {
     sBaixa.finalizando = false
   }
 }
 
-// lançou tudo: grava sozinho
+// a forma chegou (confirmada no wizard, a integrada confirmada pelo banco/maquineta ou o PIX):
+// grava na hora
 watch(
-  () => [sBaixa.saldo, sBaixa.pagamentos.length],
-  ([saldo, lancados]) => {
-    if (props.modelValue && lancados > 0 && Math.abs(saldo) < 0.005) {
-      gravar()
-    }
+  () => sBaixa.forma,
+  (forma) => {
+    if (props.modelValue && forma) gravar()
   },
 )
 </script>
@@ -205,7 +230,7 @@ watch(
                 @update:model-value="trocarTipo"
               />
             </div>
-            <div class="col-12 col-sm-5" v-if="comData">
+            <div class="col-12 col-sm-5" v-if="comData && !pix">
               <MgInputData
                 v-model="form.transacao"
                 type="timestamp"
@@ -226,6 +251,13 @@ watch(
                 lazy-rules
               />
             </div>
+            <div
+              v-if="comData && !pix && trocaMes"
+              class="col-12 text-caption text-orange-9 row no-wrap items-center"
+            >
+              <q-icon name="warning" size="xs" class="q-mr-xs" />
+              Data de outro mês: pode afetar a DIMP e relatórios já apurados.
+            </div>
             <div class="col-12">
               <MgSelectPessoa
                 v-model="form.codpessoa"
@@ -242,7 +274,7 @@ watch(
                 label="Valor"
                 prefix="R$"
                 :min="0.01"
-                :disable="lancou"
+                :disable="lancou || !!pix"
                 :rules="[(v) => v > 0]"
                 lazy-rules
               />
@@ -266,8 +298,16 @@ watch(
             </div>
             <div class="col-12">
               <MgInput
+                v-model="form.referente"
+                label="Referente a (sai no recibo)"
+                maxlength="255"
+                :disable="lancou"
+              />
+            </div>
+            <div class="col-12">
+              <MgInput
                 v-model="form.observacao"
-                label="Observação"
+                label="Observação (interna)"
                 maxlength="255"
                 :disable="lancou"
               />
@@ -275,44 +315,29 @@ watch(
           </div>
         </q-card-section>
 
-        <q-list v-if="lancou" separator>
-          <q-item v-for="(p, i) in sBaixa.pagamentos" :key="i">
-            <q-item-section>{{ p.descricao }}</q-item-section>
-            <q-item-section side>R$ {{ formataNumero(p.total) }}</q-item-section>
-            <q-item-section side>
-              <q-btn
-                v-if="!p.codpagamento"
-                flat
-                round
-                size="sm"
-                icon="close"
-                color="grey-7"
-                @click="sBaixa.remover(i)"
-              >
-                <q-tooltip>Tirar esta forma</q-tooltip>
-              </q-btn>
-            </q-item-section>
-          </q-item>
+        <q-card-section v-if="pix" class="text-caption text-grey-7">
+          Usando o {{ pix.descricao }}
+        </q-card-section>
+
+        <q-list v-else-if="lancou" separator>
           <q-item>
-            <q-item-section class="text-orange-10">Falta</q-item-section>
-            <q-item-section side class="text-orange-10 text-weight-bold">
-              R$ {{ formataNumero(sBaixa.saldo) }}
-            </q-item-section>
-            <q-item-section side style="width: 40px" />
+            <q-item-section>{{ sBaixa.forma.descricao }}</q-item-section>
+            <q-item-section side>R$ {{ formataNumero(sBaixa.forma.total) }}</q-item-section>
           </q-item>
         </q-list>
 
         <q-card-actions align="right">
-          <q-btn flat color="grey-8" label="Cancelar" v-close-popup />
+          <q-btn flat color="grey-8" label="Cancelar" v-close-popup tabindex="-1" />
           <q-btn
-            v-if="lancou && sBaixa.saldo > 0"
+            v-if="!lancou || sBaixa.finalizando"
             flat
             color="primary"
-            label="Lançar o que foi pago"
+            :label="verbo"
+            type="submit"
             :loading="sBaixa.finalizando"
-            @click="gravar"
           />
-          <q-btn flat color="primary" :label="verbo" type="submit" :loading="sBaixa.finalizando" />
+          <!-- a integrada já confirmada que não gravou: grava de novo -->
+          <q-btn v-else flat color="primary" label="Gravar" @click="gravar" />
         </q-card-actions>
       </q-form>
     </q-card>

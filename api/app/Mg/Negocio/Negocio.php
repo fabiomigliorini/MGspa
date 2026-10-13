@@ -96,6 +96,7 @@ class Negocio extends MgModel
         'criacao' => 'datetime',
         'entrega' => 'boolean',
         'lancamento' => 'datetime',
+        'reabertura' => 'datetime',
         'recebimento' => 'datetime',
         'valoraprazo' => 'float',
         'valoravista' => 'float',
@@ -213,7 +214,14 @@ class Negocio extends MgModel
         return $this->hasMany(NegocioCaixaMercadoria::class, 'codnegocio', 'codnegocio');
     }
 
+    // so' as ativas: a inativa e' a que saiu da venda reaberta (TASK-30)
     public function NegocioParcelaS()
+    {
+        return $this->hasMany(NegocioParcela::class, 'codnegocio', 'codnegocio')->whereNull('inativo');
+    }
+
+    // ativas e inativas: so' para quem reconcilia a venda reaberta
+    public function NegocioParcelaTodasS()
     {
         return $this->hasMany(NegocioParcela::class, 'codnegocio', 'codnegocio');
     }
@@ -257,10 +265,5 @@ class Negocio extends MgModel
     public function WooPedidoNegocioS()
     {
         return $this->hasMany(WooPedidoNegocio::class, 'codnegocio', 'codnegocio');
-    }
-
-    public function NegocioAcertoS()
-    {
-        return $this->hasMany(NegocioAcerto::class, 'codnegocio', 'codnegocio');
     }
 }

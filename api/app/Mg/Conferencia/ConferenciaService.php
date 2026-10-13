@@ -30,29 +30,33 @@ class ConferenciaService
         return Carbon::parse(config('mg.conferencia_inicio'))->startOfDay();
     }
 
+    // venda reaberta (TASK-30): na sincronizacao o pagamento so' muda de
+    // estado; lote e sessao ficam para o F3, que reconcilia
+    private static bool $adiado = false;
+
+    public static function semVincular(callable $fn)
+    {
+        $antes = static::$adiado;
+        static::$adiado = true;
+        try {
+            return $fn();
+        } finally {
+            static::$adiado = $antes;
+        }
+    }
+
     // saving do Pagamento: cartao no lote, dinheiro na sessao da gaveta
     public static function vincular(Pagamento $pag): void
     {
+        if (static::$adiado) {
+            return;
+        }
         $transacao = $pag->transacao ? Carbon::parse($pag->transacao) : Carbon::now();
         if ($transacao->lt(static::inicio())) {
             return;
         }
         MaquinetaLoteService::vincular($pag);
         CaixaService::vincular($pag);
-    }
-
-    // filtro de filial: a pedida (se pode) ou as que o usuario confere
-    private static function filiais(?int $codfilial): ?array
-    {
-        if (!empty($codfilial)) {
-            ConferenciaAutorizador::autorizar($codfilial);
-            return [$codfilial];
-        }
-        $filiais = ConferenciaAutorizador::filiais();
-        if ($filiais !== null && empty($filiais)) {
-            abort(403, 'Só Financeiro, Administrador ou Gerente!');
-        }
-        return $filiais;
     }
 
     private static function whereFilial(string $coluna, ?array $filiais, array &$params, string $nome = 'f'): string
@@ -68,12 +72,11 @@ class ConferenciaService
         return " and {$coluna} in (" . implode(',', $marcas) . ')';
     }
 
-    // tudo que esta' pendente de conferencia na filial (ou nas filiais do
-    // usuario). Valores do sistema nao vao para a lista: a conferencia e'
-    // as cegas.
-    public static function pendencias(?int $codfilial): array
+    // as pendencias das filiais pedidas (null = todas), sem olhar o usuario:
+    // quem autoriza e' quem chama. $comPix: PIX e deposito a confirmar.
+    // Valores do sistema nao vao para a lista: a conferencia e' as cegas.
+    public static function consultar(?array $filiais, bool $comPix): array
     {
-        $filiais = static::filiais($codfilial);
         $inicio = static::inicio()->format('Y-m-d H:i:s');
         $ret = [];
 
@@ -116,7 +119,7 @@ class ConferenciaService
         foreach (DB::select("
             select n.codnegocio, n.lancamento, n.valortotal, n.codfilial, f.filial, pe.fantasia, pdv.apelido as pdv,
                 (select sum(np.valor) from tblnegocioparcela np where np.codnegocio = n.codnegocio
-                    and np.condicao in ('F', 'P', 'B')) as valorprazo
+                    and np.condicao in ('F', 'P', 'B') and np.inativo is null) as valorprazo
             from tblnegocio n
             inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
             left join tblfilial f on (f.codfilial = n.codfilial)
@@ -130,6 +133,7 @@ class ConferenciaService
                 select 1 from tblnegocioparcela np
                 where np.codnegocio = n.codnegocio
                 and np.condicao in ('F', 'P', 'B')
+                and np.inativo is null
             )
             {$where}
             order by n.lancamento
@@ -147,7 +151,7 @@ class ConferenciaService
         }
 
         // vendas desbalanceadas
-        foreach (VendaConferenciaService::desbalanceadas($filiais) as $r) {
+        foreach (VendaConferenciaService::desbalanceadas($filiais, static::inicio()) as $r) {
             $ret[] = [
                 'tipo' => static::TIPO_VENDA,
                 'id' => $r->codnegocio,
@@ -162,7 +166,7 @@ class ConferenciaService
 
         // PIX por chave e deposito a receber: so' o financeiro, contra o
         // extrato (baixa o titulo no contas)
-        if (ConferenciaAutorizador::irrestrito()) {
+        if ($comPix) {
             $params = ['inicio' => $inicio];
             $where = static::whereFilial('t.codfilial', $filiais, $params);
             foreach (DB::select("
@@ -173,6 +177,7 @@ class ConferenciaService
                 left join tblfilial f on (f.codfilial = t.codfilial)
                 left join tblpessoa pe on (pe.codpessoa = t.codpessoa)
                 where np.condicao = 'X'
+                and np.inativo is null
                 and t.saldo <> 0
                 and n.lancamento >= :inicio
                 {$where}

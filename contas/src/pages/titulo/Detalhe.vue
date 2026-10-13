@@ -18,6 +18,7 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { abrirPdf } from '@components/abrirPdf'
+import { abrirVale } from '@components/abrirVale'
 import { ESTADO_COBRANCA } from 'src/constants/tituloBoleto'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
@@ -64,6 +65,10 @@ const automatico = computed(
     ),
 )
 const geradoAuto = computed(() => !duplicando.value && automatico.value)
+// vale/adiantamento: valor e datas são do pagamento, mas o estorno continua aqui (TASK-214)
+const travado = computed(
+  () => geradoAuto.value || (!duplicando.value && !!titulo.value?.nasceudepagamento),
+)
 // Quando o título foi LIQUIDADO por um agrupamento, o vínculo está no movimento
 // (não em titulo.codtituloagrupamento, que indica que ele foi GERADO por agrupamento).
 // const codtituloagrupamentoLiquidacao = computed(() => {
@@ -229,6 +234,12 @@ function bbBaixar(b) {
       notifyError(e, 'Erro ao baixar boleto')
     }
   })
+}
+
+// título de crédito com saldo (vale, adiantamento, crédito do cliente): o vale que o caixa bipa,
+// o mesmo da venda e do pagamento (TASK-216)
+function abrirValeTitulo() {
+  abrirVale(api, codtitulo.value)
 }
 
 async function bbAbrirPdf(b) {
@@ -453,6 +464,18 @@ watch(() => route.fullPath, carregar)
           <q-card-section class="text-grey-9 text-overline row items-center">
             DETALHES DO TÍTULO
             <q-space />
+            <q-btn
+              v-if="Number(titulo.saldo) < 0"
+              flat
+              round
+              dense
+              icon="confirmation_number"
+              size="sm"
+              color="grey-7"
+              @click="abrirValeTitulo"
+            >
+              <q-tooltip>Vale</q-tooltip>
+            </q-btn>
             <q-btn
               v-if="podeEditar"
               flat
@@ -981,8 +1004,8 @@ watch(() => route.fullPath, carregar)
                   outlined
                   label="Número"
                   maxlength="20"
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
@@ -998,8 +1021,8 @@ watch(() => route.fullPath, carregar)
                   v-model="model.valor"
                   label="Valor"
                   prefix="R$"
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto || liquidado"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado || liquidado"
                   :rules="[(v) => (v && Number(v) > 0) || 'Obrigatório']"
                 />
               </div>
@@ -1011,8 +1034,8 @@ watch(() => route.fullPath, carregar)
                   type="date"
                   label="Emissão"
                   stack-label
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>
@@ -1024,8 +1047,8 @@ watch(() => route.fullPath, carregar)
                   type="date"
                   label="Transação"
                   stack-label
-                  :bg-color="geradoAuto ? 'grey-3' : ''"
-                  :readonly="geradoAuto"
+                  :bg-color="travado ? 'grey-3' : ''"
+                  :readonly="travado"
                   :rules="[(v) => !!v || 'Obrigatório']"
                 />
               </div>

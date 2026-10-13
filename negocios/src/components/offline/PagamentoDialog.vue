@@ -13,7 +13,6 @@ import {
   visualPagamento,
 } from '@components/cobranca/pagamento.js'
 import LogoPagamento from '@components/cobranca/LogoPagamento.vue'
-import OcorrenciaMotivoDialog from './OcorrenciaMotivoDialog.vue'
 
 const sNegocio = negocioStore()
 
@@ -59,33 +58,67 @@ const campos = computed(() => {
 
 const urlTitulo = (codtitulo) => process.env.CONTAS_URL + '/titulo/' + codtitulo
 
+// Excluir só o rascunho (nunca foi fato); o que já foi fato, na venda reaberta, cancela e
+// reativa (TASK-30)
 const podeExcluir = computed(() => {
   if (!det.value || !sNegocio.podeEditar) {
     return false
   }
   if (ehParcelas.value) {
-    return det.value.parcelas.some((np) => !np.codtitulo)
+    return !det.value.inativa && det.value.parcelas.some((np) => !np.codtitulo)
   }
-  return !det.value.integracao
+  return !det.value.integracao && det.value.estado == 'P' && !det.value.efetivacao
 })
 
-const excluir = () => {
-  // PDV monitorado: o caixa diz o motivo e vai para o livro de ocorrencias (TASK-205)
-  if (!ehParcelas.value && sNegocio.monitorado) {
-    Dialog.create({
-      component: OcorrenciaMotivoDialog,
-      componentProps: {
-        titulo: 'Excluir pagamento',
-        mensagem: `${titulo.value} de R$ ${formataNumero(valor.value)}`,
-        okLabel: 'Excluir',
-        contexto: 'pagamento',
-      },
-    }).onOk(async (motivo) => {
-      await sNegocio.excluirPagamento(det.value.uuid, motivo)
-      sNegocio.dialog.pagamento = false
-    })
-    return
+const podeCancelar = computed(() => {
+  if (!det.value || !sNegocio.reaberto) {
+    return false
   }
+  if (ehParcelas.value) {
+    return !det.value.inativa && det.value.parcelas.some((np) => np.codtitulo)
+  }
+  return (
+    !det.value.integracao &&
+    (det.value.estado == 'E' || (det.value.estado == 'P' && !!det.value.efetivacao))
+  )
+})
+
+const podeReativar = computed(() => {
+  if (!det.value || !sNegocio.reaberto) {
+    return false
+  }
+  if (ehParcelas.value) {
+    return !!det.value.inativa
+  }
+  return !det.value.integracao && det.value.estado == 'C'
+})
+
+const cancelar = () => {
+  Dialog.create({
+    title: 'Cancelar',
+    message: `Cancelar ${titulo.value} de R$ ${formataNumero(valor.value)}? O F3 tira do caixa, da maquininha e do título.`,
+    cancel: { label: 'Voltar', color: 'grey-8', flat: true },
+    ok: { label: 'Cancelar', color: 'negative', flat: true },
+  }).onOk(async () => {
+    if (ehParcelas.value) {
+      await sNegocio.cancelarParcelas(det.value.condicao)
+    } else {
+      await sNegocio.cancelarPagamento(det.value.uuid)
+    }
+    sNegocio.dialog.pagamento = false
+  })
+}
+
+const reativar = async () => {
+  if (ehParcelas.value) {
+    await sNegocio.reativarParcelas(det.value.condicao)
+  } else {
+    await sNegocio.reativarPagamento(det.value.uuid)
+  }
+  sNegocio.dialog.pagamento = false
+}
+
+const excluir = () => {
   Dialog.create({
     title: 'Excluir pagamento',
     message: `Excluir ${titulo.value} de R$ ${formataNumero(valor.value)}?`,
@@ -111,6 +144,7 @@ const excluir = () => {
         <q-item-section>
           <q-item-label class="text-subtitle1">{{ titulo }}</q-item-label>
           <q-item-label caption v-if="det.integracao">Pagamento integrado</q-item-label>
+          <q-item-label caption v-if="det.estado == 'C' || det.inativa">Cancelado</q-item-label>
         </q-item-section>
         <q-item-section side class="text-h6 text-weight-bold text-grey-9">
           {{ formataNumero(valor) }}
@@ -127,7 +161,13 @@ const excluir = () => {
           </q-item-section>
           <q-item-section side class="text-grey-9">
             {{ formataNumero(np.valor) }}
-            <a v-if="np.codtitulo" :href="urlTitulo(np.codtitulo)" target="_blank">
+            <a
+              v-if="np.codtitulo"
+              :href="urlTitulo(np.codtitulo)"
+              target="_blank"
+              class="text-primary"
+              style="text-decoration: none"
+            >
               {{ np.titulonumero ?? np.codtitulo }}
             </a>
           </q-item-section>
@@ -151,6 +191,8 @@ const excluir = () => {
 
       <q-card-actions align="right">
         <q-btn v-if="podeExcluir" flat label="Excluir" color="negative" @click="excluir()" />
+        <q-btn v-if="podeCancelar" flat label="Cancelar" color="negative" @click="cancelar()" />
+        <q-btn v-if="podeReativar" flat label="Reativar" color="primary" @click="reativar()" />
         <q-btn flat label="Fechar" color="primary" v-close-popup />
       </q-card-actions>
     </q-card>

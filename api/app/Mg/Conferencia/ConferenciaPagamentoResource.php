@@ -2,6 +2,7 @@
 
 namespace Mg\Conferencia;
 
+use Mg\Auditoria\AuditoriaService;
 use Mg\Pagamento\PagamentoListaResource;
 use Mg\Pagamento\PagamentoService;
 
@@ -24,7 +25,11 @@ class ConferenciaPagamentoResource extends PagamentoListaResource
             'codportadorperiodo' => $this->codportadorperiodo,
             'conferencia' => $this->conferencia,
             'justificativa' => $this->justificativa,
-            'correcoes' => $this->PagamentoCorrecaoS()->count(),
+            // o selo "corrigido": so' o que mudou valor ou meio
+            'correcoes' => $this->AuditoriaS()->whereIn('tipo', [
+                AuditoriaService::TIPO_CORRIGIDO_CONFERENCIA,
+                AuditoriaService::TIPO_REGISTRO_INDEVIDO,
+            ])->count(),
         ]);
     }
 }

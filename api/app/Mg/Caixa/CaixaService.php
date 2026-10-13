@@ -278,6 +278,7 @@ class CaixaService
             inner join tblpdv pdv on (pdv.codpdv = n.codpdv)
             where pdv.codportador = :portador
             and n.codnegociostatus = 2
+            and np.inativo is null
             and n.lancamento between :inicio and :fim
         ", [
             'portador' => $sessao->codportador,

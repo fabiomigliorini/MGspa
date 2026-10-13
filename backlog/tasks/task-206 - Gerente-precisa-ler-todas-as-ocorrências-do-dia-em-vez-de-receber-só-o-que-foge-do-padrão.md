@@ -21,7 +21,7 @@ ordinal: 218000
 Pedido do Fábio em 08/10/2026, para um segundo momento (depois da TASK-205). Em vez de o gerente conferir linha a linha o livro de ocorrências, uma auditoria diária por LLM entrega um parecer curto por filial com só o que destoa, analisando padrões de comportamento dos usuários.
 
 Proposta discutida:
-- A conta fica com o SQL, a interpretação com a LLM: o sistema monta o pacote do dia (ocorrências + comparação de cada usuário com ele mesmo nos últimos 30 dias e com os colegas da filial + diferença de caixa + regras da casa: 5% à vista, desconto do cadastro, significado dos motivos).
+- A conta fica com o SQL, a interpretação com a LLM: o sistema monta o pacote do dia (ocorrências + comparação de cada usuário com ele mesmo nos últimos 30 dias e com os colegas da filial + diferença de caixa + regras da casa: 5% à vista, desconto do cadastro, significado dos tipos de ocorrência e as auditorias amarradas a cada uma — antes/depois e justificativa).
 - O parecer cita as ocorrências pelo número (#codocorrencia), para o gerente verificar e a LLM não inventar caso; tom de indício ('vale conversar'), nunca acusação.
 - Usuários pseudonimizados (USR-12) no envio; nome só na tela do gerente.
 - Uma chamada por filial por dia, em lote (batch, metade do preço): ~US$ 0,25–0,50 por filial/dia.

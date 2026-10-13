@@ -241,6 +241,28 @@ const cancelar = async () => {
   })
 }
 
+// venda fechada ou cancelada reaberta pelo gerente (TASK-30): só reabre; o F3 fecha de novo
+// com a mesma data, caixa e PDV. O motivo vai para a auditoria (TASK-209)
+const reabrir = () => {
+  Dialog.create({
+    title: 'Justificativa da Reabertura',
+    message:
+      'Descreva o motivo da reabertura, com no mínimo 15 caracteres. O F3 fecha de novo com a mesma data, caixa e PDV.',
+    prompt: {
+      model: '',
+      isValid: (val) => val.trim().length > 14,
+      outlined: true,
+      type: 'text',
+      placeholder: 'Justificativa da Reabertura...',
+    },
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Reabrir', color: 'primary', flat: true },
+  }).onOk(async (justificativa) => {
+    await sNegocio.reabrir(justificativa)
+    emitter.emit('negocioAlterado')
+  })
+}
+
 const receber = async () => {
   if (!sNegocio.podeEditar) {
     return
@@ -369,8 +391,9 @@ const novaNota = async (modelo) => {
   }
 }
 
-const romaneioOuNotaVendaPadrao = async (modelo) => {
-  const integracao = sNegocio.negocio.pagamentos.filter((p) => p.integracao).length
+const romaneioOuNotaVenda = async () => {
+  // o cancelado (riscado na fechada) não conta
+  const integracao = sNegocio.pagamentosAtivos.filter((p) => p.integracao).length
   const tiposEmitir = [
     //1, //Dinheiro
     //2, //Cheque
@@ -389,43 +412,16 @@ const romaneioOuNotaVendaPadrao = async (modelo) => {
     //90= Sem pagamento
     //99=Outros
   ]
-  const emitir = sNegocio.negocio.pagamentos.filter((p) => tiposEmitir.includes(p.meio)).length
+  const emitir = sNegocio.pagamentosAtivos.filter((p) => tiposEmitir.includes(p.meio)).length
   // boleto a prazo também emite
-  const boleto = (sNegocio.negocio.parcelas ?? []).filter((np) => np.condicao == 'B').length
-  // se foi pago por integracao ou por
+  const boleto = sNegocio.parcelasAtivas.filter((np) => np.condicao == 'B').length
+  // se foi pago por integracao ou por meio eletronico, emite; NF-e ou NFC-e
+  // quem escolhe e' o backend, pelo cadastro do cliente
   if (integracao > 0 || emitir > 0 || boleto > 0) {
-    novaNota(modelo)
+    novaNota()
     return
   }
   imprimirAbrirRomaneio()
-}
-
-const romaneioOuNotaVenda = async () => {
-  if (sNegocio.negocio.codpessoa == 1) {
-    // consumidor decide em outra funcao se emite cupom
-    romaneioOuNotaVendaPadrao(65)
-    return
-  } else {
-    // busca a pessoa
-    const p = await db.pessoa.get(sNegocio.negocio.codpessoa)
-
-    // age de acordo com o cadastro (pessoa fora do cache offline cai no padrao)
-    switch (p?.notafiscal) {
-      case 1: // 1 - Sempre
-        novaNota(55)
-        return
-
-      case 9: // 9 - Nunca Emitir
-        romaneioOuNotaVendaPadrao(65)
-        return
-
-      case 2: // 2 - Somente no Fechamento
-      case 0: // 0 - Padrão
-      default:
-        romaneioOuNotaVendaPadrao(55)
-        return
-    }
-  }
 }
 
 const romaneioOuNota = async () => {
@@ -475,7 +471,7 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <q-page v-if="sNegocio.negocio" class="bg-grey-2">
+  <q-page v-if="sNegocio.negocio">
     <div class="q-pa-md q-col-gutter-md">
       <q-item-label header v-if="sNegocio.negocio.codnegociostatus == 2">
         Notas, Títulos e Documentos anexos
@@ -551,7 +547,7 @@ onUnmounted(() => {
         />
         <template v-if="sNegocio.negocio.codnegociostatus == 2">
           <listagem-contra-vale
-            v-for="pagamento in sNegocio.negocio.pagamentos.filter((p) => p.valenumero)"
+            v-for="pagamento in sNegocio.pagamentosAtivos.filter((p) => p.valenumero)"
             :key="pagamento.uuid"
             :pagamento="pagamento"
           />
@@ -744,6 +740,17 @@ onUnmounted(() => {
           <q-tooltip class="bg-accent">Fechar (F3)</q-tooltip>
         </q-btn>
 
+        <!-- REABRIR -->
+        <q-btn
+          fab
+          icon="lock_open"
+          color="secondary"
+          @click="reabrir()"
+          v-if="sNegocio.podeReabrir"
+        >
+          <q-tooltip class="bg-accent">Reabrir Negócio</q-tooltip>
+        </q-btn>
+
         <!-- CANCELAR -->
         <q-btn
           fab
@@ -761,13 +768,20 @@ onUnmounted(() => {
           color="warning"
           :to="route.params.uuid + '/devolucao/'"
           :itensDevolucao="sNegocio.negocio"
+          :disable="sNegocio.negocio.codpessoa == 1"
           v-if="
             sNegocio.itensAtivos.length > 0 &&
             sNegocio.negocio.codnegociostatus == 2 &&
             sNegocio.negocio.venda
           "
         >
-          <q-tooltip class="bg-accent">Devolução</q-tooltip>
+          <q-tooltip class="bg-accent">
+            {{
+              sNegocio.negocio.codpessoa == 1
+                ? 'Informe o cliente para fazer a devolução'
+                : 'Devolução'
+            }}
+          </q-tooltip>
         </q-btn>
       </div>
     </q-page-sticky>

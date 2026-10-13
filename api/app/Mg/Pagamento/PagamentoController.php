@@ -2,7 +2,6 @@
 
 namespace Mg\Pagamento;
 
-use Dompdf\Dompdf;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
@@ -26,6 +25,21 @@ class PagamentoController extends Controller
         $filtros = $request->only(PagamentoListaService::FILTROS);
         $filtros['filiais_permitidas'] = PagamentoTituloAutorizador::filiaisRestritas(Auth::user()->codusuario);
         return PagamentoListaResource::collection(PagamentoListaService::listar($filtros));
+    }
+
+    // Divergencias (TASK-218): vendas que nao fecham e pagamentos que nao
+    // batem com as baixas ou com a venda; quem ve e' quem confere (painel)
+    public function divergencias(Request $request)
+    {
+        $request->validate([
+            'caso' => 'nullable|string|in:' . implode(',', array_keys(PagamentoDivergenciaService::CASOS)),
+            'data_de' => 'nullable|date',
+            'data_ate' => 'nullable|date',
+            'codfilial' => 'nullable|integer',
+        ]);
+        return response()->json(PagamentoDivergenciaService::listar(
+            $request->only(['caso', 'data_de', 'data_ate', 'codfilial'])
+        ));
     }
 
     public function show(int $id)
@@ -54,7 +68,7 @@ class PagamentoController extends Controller
         return PagamentoDetalheResource::collection($pags);
     }
 
-    // corrige pessoa, portador, meio, data e observacao
+    // o lapis: pessoa e observacao; a data so' do manual
     public function update(PagamentoTituloUpdateRequest $request, int $id)
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);
@@ -65,15 +79,24 @@ class PagamentoController extends Controller
         if ($bloqueio !== null) {
             abort(403, $bloqueio);
         }
-        if (!empty($dados['codportador']) && !PagamentoTituloAutorizador::podeCriar(Auth::user()->codusuario, (int) $dados['codportador'])) {
-            abort(403, 'Portador não pertence à sua filial.');
-        }
         $pag = PagamentoTituloService::atualizar($pag, $dados);
         DB::commit();
         return new PagamentoDetalheResource($pag);
     }
 
-    public function estornar(Request $request, int $id)
+    // o "Referente a" (sai no recibo), em qualquer pagamento efetivado
+    public function referente(Request $request, int $id)
+    {
+        Autorizador::autoriza(self::GRUPOS_MUTACAO);
+        $request->validate(['referente' => 'nullable|string|max:255']);
+        DB::beginTransaction();
+        $pag = PagamentoTituloService::alterarReferente(PagamentoListaService::carregar($id), $request->referente);
+        DB::commit();
+        return new PagamentoDetalheResource($pag);
+    }
+
+    // cancelar: o fato nao existiu como foi lancado; estorna as baixas junto
+    public function cancelar(Request $request, int $id)
     {
         Autorizador::autoriza(self::GRUPOS_MUTACAO);
         $request->validate(['justificativa' => 'required|string|min:5|max:300']);
@@ -83,7 +106,7 @@ class PagamentoController extends Controller
         if ($bloqueio !== null) {
             abort(403, $bloqueio);
         }
-        $pag = PagamentoTituloService::estornar($pag, $request->justificativa);
+        $pag = PagamentoTituloService::cancelar($pag, $request->justificativa);
         DB::commit();
         return new PagamentoDetalheResource($pag);
     }
@@ -104,66 +127,17 @@ class PagamentoController extends Controller
 
     // ==== Recibos ====
 
+    // o recibo A5 (o mesmo texto do cupom da termica): PagamentoReciboService
     public function recibo(int $id)
     {
-        $pag = static::carregarParaRecibo($id);
-        $html = '';
-        if (PagamentoTituloService::temRecebimento($pag)) {
-            $html .= view('pagamento.recibo-recebimento', compact('pag'))->render();
-        }
-        if (PagamentoTituloService::temPagamento($pag)) {
-            $html .= view('pagamento.recibo-pagamento', compact('pag'))->render();
-        }
-        if (empty($html)) {
-            abort(422, 'Pagamento sem valores para recibo.');
-        }
-        return static::pdfResponse($html, 'recibo-' . $id);
-    }
-
-    public function reciboRecebimento(int $id)
-    {
-        $pag = static::carregarParaRecibo($id);
-        if (!PagamentoTituloService::temRecebimento($pag)) {
-            abort(422, 'Pagamento sem recebimentos para recibo de recebimento.');
-        }
-        return static::pdfResponse(view('pagamento.recibo-recebimento', compact('pag'))->render(), 'recibo-recebimento-' . $id);
-    }
-
-    public function reciboPagamento(int $id)
-    {
-        $pag = static::carregarParaRecibo($id);
-        if (!PagamentoTituloService::temPagamento($pag)) {
-            abort(422, 'Pagamento sem pagamentos para recibo de pagamento.');
-        }
-        return static::pdfResponse(view('pagamento.recibo-pagamento', compact('pag'))->render(), 'recibo-pagamento-' . $id);
-    }
-
-    protected static function carregarParaRecibo(int $id): Pagamento
-    {
         Autorizador::autoriza(self::GRUPOS_RECIBO);
-        $pag = Pagamento::with([
-            'MovimentoTituloS.Titulo.Filial.Pessoa.Cidade.Estado',
-            'MovimentoTituloS.Titulo.PeriodoColaboradorS.ColaboradorRubricaS',
-            'Pessoa.Cidade.Estado',
-            'UsuarioCriacao',
-        ])->findOrFail($id);
+        $pag = Pagamento::findOrFail($id);
         if (!PagamentoTituloAutorizador::podeVer($pag, Auth::user()->codusuario)) {
             abort(403, 'Pagamento não pertence à sua filial.');
         }
-        if ($pag->estado == PagamentoService::ESTADO_CANCELADO) {
-            abort(422, 'Pagamento estornado.');
-        }
-        return $pag;
-    }
-
-    protected static function pdfResponse(string $html, string $filename)
-    {
-        $dompdf = new Dompdf();
-        $dompdf->loadHtml($html, 'UTF-8');
-        $dompdf->render();
-        return response($dompdf->output(), 200, [
+        return response(PagamentoReciboService::pdf($id), 200, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $filename . '.pdf"',
+            'Content-Disposition' => 'inline; filename="recibo-' . $id . '.pdf"',
         ]);
     }
 }

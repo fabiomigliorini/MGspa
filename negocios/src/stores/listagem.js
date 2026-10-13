@@ -16,8 +16,11 @@ export const listagemStore = defineStore('listagem', {
 
   state: () => ({
     opcoes: {
-      // m<meio> do pagamento, c<condição> da parcela
+      // à vista/à prazo como no MGsis (valoravista/valoraprazo), m<meio> do
+      // pagamento, c<condição> da parcela
       forma: [
+        { label: 'À Vista', value: 'avista' },
+        { label: 'À Prazo', value: 'aprazo' },
         { label: 'Dinheiro', value: 'm1' },
         { label: 'Cartão Crédito', value: 'm3' },
         { label: 'Cartão Débito', value: 'm4' },
@@ -44,10 +47,16 @@ export const listagemStore = defineStore('listagem', {
           label: 'Cancelado',
           value: 3,
         },
+        // venda fechada que o gerente reabriu e ainda não fechou de novo
+        {
+          label: 'Reaberto',
+          value: 'R',
+        },
       ],
     },
     filtro: {},
     negocios: [],
+    carregando: false,
     orcamentos: [],
     paginacao: {
       current_page: 0,
@@ -60,7 +69,23 @@ export const listagemStore = defineStore('listagem', {
     },
   }),
 
+  getters: {
+    filtrosAtivos: (state) =>
+      Object.values(state.filtro).filter((valor) =>
+        Array.isArray(valor) ? valor.length > 0 : valor !== null && valor !== '',
+      ).length,
+  },
+
   actions: {
+    limparFiltros() {
+      this.filtro = Object.fromEntries(
+        Object.entries(this.filtro).map(([chave, valor]) => [
+          chave,
+          Array.isArray(valor) ? [] : null,
+        ]),
+      )
+    },
+
     async inicializaFiltro() {
       if (Object.keys(this.filtro).length > 0) {
         return
@@ -102,6 +127,7 @@ export const listagemStore = defineStore('listagem', {
       if (this.paginacao.current_page >= this.paginacao.last_page) {
         return false
       }
+      this.carregando = true
       try {
         const filtro = { ...this.filtro }
         filtro.pdv = sSinc.pdv.uuid
@@ -127,6 +153,8 @@ export const listagemStore = defineStore('listagem', {
           actions: [{ icon: 'close', color: 'white' }],
         })
         return false
+      } finally {
+        this.carregando = false
       }
     },
 

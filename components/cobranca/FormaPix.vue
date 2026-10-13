@@ -67,7 +67,7 @@ const opcoesModo = computed(() => {
 })
 
 const opcoesConta = computed(() => {
-  const padraoCod = sCobranca.padrao?.codportador
+  const padraoCod = sCobranca.padrao?.codportadorpix
   const localCodfilial = codfilial.value
 
   // separa por filial
@@ -209,7 +209,7 @@ defineExpose({ tecla })
       <lista-opcoes
         ref="listaRef"
         :opcoes="opcoesConta"
-        :inicial="sCobranca.padrao.codportador"
+        :inicial="sCobranca.padrao.codportadorpix"
         @escolher="(o) => qr(o.valor)"
       />
     </template>

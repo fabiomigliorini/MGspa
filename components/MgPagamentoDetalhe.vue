@@ -1,24 +1,46 @@
 <script setup>
-// Detalhe de um pagamento (M6.1 doc-3): documento (venda, títulos movimentados, transferência,
-// avulso), meio, maquineta, portadores, estado, pagamento original e contrários; estornar
-// (baixa de título feita à mão). O pagamento vem do pagamentoListaStore; ações próprias do app
-// (recibo, editar) entram no slot `acoes`.
-import { computed } from 'vue'
+// Detalhe de um pagamento: o fato (meio, maquineta, portadores, estado, original e contrários) e o
+// que ele pagou (venda, títulos, com o histórico das baixas estornadas). Baixa errada se desfaz
+// cancelando o pagamento, que estorna as baixas junto (TASK-218). O pagamento vem do
+// pagamentoListaStore.
+// Os recibos ficam sempre à mostra nos dois apps (TASK-216): o A5 e o cupom da térmica, o mesmo
+// recibo (PagamentoReciboService); o que não se aplica, o servidor recusa com a mensagem. Ações
+// próprias do app (editar) entram no slot `acoes`.
+import { computed, ref } from 'vue'
 import { useQuasar } from 'quasar'
+import { api } from 'src/services/api'
+import { abrirPdf } from '@components/abrirPdf'
+import { abrirVale } from '@components/abrirVale'
 import { pagamentoListaStore } from '@components/stores/pagamentoListaStore'
 import { formataNumero, formataData, formataTimestamp, formataCodigo } from '@components/formatters'
 import { visualPagamento } from '@components/cobranca/pagamento.js'
 import LogoPagamento from '@components/cobranca/LogoPagamento.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgInput from '@components/MgInput.vue'
 
-defineProps({
-  // o app diz se o usuário pode estornar (grupos); o servidor confere de novo
+const props = defineProps({
+  // o app diz se o usuário pode cancelar (grupos); o servidor confere de novo
   podeEstornar: {
     type: Boolean,
     default: false,
   },
   // rota do título (página do contas); sem ela, link para o contas
   toTitulo: {
+    type: Function,
+    default: null,
+  },
+  // rota do portador no período (página do contas); sem ela, link para o contas
+  toPortador: {
+    type: Function,
+    default: null,
+  },
+  // o app que tem térmica (PDV) manda o cupom do recibo para ela; sem isto, o cupom só abre
+  imprimirTermica: {
+    type: Function,
+    default: null,
+  },
+  // idem para o vale de crédito de um título (recebe o codtitulo)
+  imprimirVale: {
     type: Function,
     default: null,
   },
@@ -29,6 +51,29 @@ const emit = defineEmits(['estornado'])
 const $q = useQuasar()
 const store = pagamentoListaStore()
 const pag = computed(() => store.pagamento)
+
+// "Referente a": o texto que sai no recibo, editável em todo pagamento efetivado (TASK-216)
+const dialogReferente = ref(false)
+const referente = ref('')
+const salvandoReferente = ref(false)
+
+const abrirReferente = () => {
+  referente.value = pag.value.referente ?? ''
+  dialogReferente.value = true
+}
+
+const salvarReferente = async () => {
+  salvandoReferente.value = true
+  try {
+    await store.atualizarReferente(pag.value.codpagamento, referente.value)
+    $q.notify({ type: 'positive', message: 'Alterado', color: 'green-5', icon: 'done' })
+    dialogReferente.value = false
+  } catch (e) {
+    erro(e, 'Erro ao alterar')
+  } finally {
+    salvandoReferente.value = false
+  }
+}
 
 const OPERACAO = {
   CR: 'Recebimento',
@@ -42,6 +87,26 @@ const COR_TOTAL = { CR: 'text-green-8', DB: 'text-red-8', TR: 'text-blue-8', CP:
 const urlPessoa = (cod) => (cod ? `${process.env.PESSOAS_URL}/pessoa/${cod}` : null)
 const urlVenda = (cod) => `${process.env.NEGOCIOS_URL}/negocio/${cod}`
 const urlTitulo = (cod) => `${process.env.CONTAS_URL}/titulo/${cod}`
+const urlPortador = (cod, per) => `${process.env.CONTAS_URL}/portador/${cod}${per ? `/${per}` : ''}`
+
+const abrirRecibo = () =>
+  abrirPdf(api, `v1/pagamento/${pag.value.codpagamento}/recibo`, {}, { title: 'Recibo' })
+
+const abrirReciboTermica = () =>
+  abrirPdf(
+    api,
+    `v1/pdv/pagamento/recibo/${pag.value.codpagamento}`,
+    {},
+    {
+      title: 'Recibo térmica',
+      size: 'cupom',
+      onImprimir: props.imprimirTermica ? () => props.imprimirTermica(pag.value) : null,
+    },
+  )
+
+// o vale de crédito do título (Vale Compras / Contra Vale), o mesmo da venda e da tela do título
+const abrirValeTitulo = (codtitulo) =>
+  abrirVale(api, codtitulo, props.imprimirVale ? () => props.imprimirVale(codtitulo) : null)
 
 const erro = (e, padrao) =>
   $q.notify({
@@ -51,30 +116,35 @@ const erro = (e, padrao) =>
     icon: 'error',
   })
 
-const estornar = () => {
+const pedirMotivo = (titulo, mensagem, rotulo) =>
   $q.dialog({
-    title: 'Estornar',
-    message: 'Estornar desfaz a baixa de todos os títulos deste pagamento. Informe o motivo:',
+    title: titulo,
+    message: mensagem,
     prompt: {
       model: '',
       type: 'text',
       outlined: true,
       isValid: (v) => (v || '').trim().length >= 5,
     },
-    ok: { label: 'Estornar', color: 'negative', flat: true },
-    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
-  }).onOk(async (justificativa) => {
+    ok: { label: rotulo, color: 'negative', flat: true },
+    cancel: { label: 'Voltar', color: 'grey-8', flat: true },
+  })
+
+// cancelar: o pagamento não aconteceu como foi lançado (digitado errado, baixa no título errado);
+// sai do razão e as baixas são estornadas junto. O PIX volta a ficar sem uso e o cartão volta a ser
+// só o pedido, para a baixa certa
+const cancelar = () => {
+  pedirMotivo(
+    'Cancelar pagamento',
+    'Cancelar diz que este pagamento não aconteceu como foi lançado: ele sai do caixa/banco e as baixas dos títulos são estornadas. PIX e cartão voltam a ficar disponíveis para a baixa certa. Informe o motivo:',
+    'Cancelar pagamento',
+  ).onOk(async (justificativa) => {
     try {
-      await store.estornar(pag.value.codpagamento, justificativa)
-      $q.notify({ type: 'positive', message: 'Estornado', color: 'green-5', icon: 'done' })
+      await store.cancelar(pag.value.codpagamento, justificativa)
+      $q.notify({ type: 'positive', message: 'Cancelado', color: 'green-5', icon: 'done' })
       emit('estornado', store.pagamento)
     } catch (e) {
-      $q.notify({
-        type: 'negative',
-        message: e?.response?.data?.message ?? e?.message ?? 'Erro ao estornar',
-        color: 'red-5',
-        icon: 'error',
-      })
+      erro(e, 'Erro ao cancelar')
     }
   })
 }
@@ -153,16 +223,22 @@ const estornar = () => {
             DETALHES
             <q-space />
             <slot name="acoes" :pagamento="pag" />
+            <q-btn flat round size="sm" icon="receipt" color="grey-7" @click="abrirRecibo">
+              <q-tooltip>Recibo</q-tooltip>
+            </q-btn>
+            <q-btn flat round size="sm" icon="print" color="grey-7" @click="abrirReciboTermica">
+              <q-tooltip>Recibo térmica</q-tooltip>
+            </q-btn>
             <q-btn
-              v-if="podeEstornar && pag.estornavel"
+              v-if="podeEstornar && pag.cancelavel"
               flat
               round
               size="sm"
-              icon="undo"
+              icon="block"
               color="grey-7"
-              @click="estornar"
+              @click="cancelar"
             >
-              <q-tooltip>Estornar</q-tooltip>
+              <q-tooltip>Cancelar pagamento</q-tooltip>
             </q-btn>
             <MgInfoCriacao :registro="pag" />
           </q-card-section>
@@ -198,7 +274,11 @@ const estornar = () => {
             </q-item>
             <q-item v-if="pag.maquineta || pag.autorizacao">
               <q-item-section>
-                <q-item-label caption>Cartão</q-item-label>
+                <q-item-label caption>
+                  {{
+                    [3, 4].includes(Number(pag.meio)) || pag.maquineta ? 'Cartão' : 'Autorização'
+                  }}
+                </q-item-label>
                 <q-item-label>
                   {{
                     [
@@ -231,6 +311,20 @@ const estornar = () => {
                   {{ formataNumero(pag.pagamentoorigem.total) }} de
                   {{ formataData(pag.pagamentoorigem.transacao) }}
                 </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="pag.estado === 'E'">
+              <q-item-section>
+                <q-item-label caption>Referente a (sai no recibo)</q-item-label>
+                <q-item-label v-if="pag.referente">{{ pag.referente }}</q-item-label>
+                <q-item-label v-else class="text-italic text-grey-6"
+                  >vazio: não sai no recibo</q-item-label
+                >
+              </q-item-section>
+              <q-item-section side>
+                <q-btn flat round size="sm" icon="edit" color="grey-7" @click="abrirReferente">
+                  <q-tooltip>Alterar o Referente a</q-tooltip>
+                </q-btn>
               </q-item-section>
             </q-item>
             <q-item v-for="c in pag.contrarios" :key="c.codpagamento">
@@ -295,8 +389,14 @@ const estornar = () => {
               :target="toTitulo ? undefined : '_blank'"
             >
               <q-item-section>
-                <q-item-label class="text-weight-medium text-primary">
+                <q-item-label
+                  class="text-weight-medium"
+                  :class="m.estornado ? 'text-strike text-grey-6' : 'text-primary'"
+                >
                   {{ m.titulo?.numero }}
+                </q-item-label>
+                <q-item-label caption v-if="m.estornado" class="text-grey-6">
+                  estornado
                 </q-item-label>
                 <q-item-label caption v-if="m.titulo?.codpessoa != pag.codpessoa">
                   {{ m.titulo?.fantasia }}
@@ -331,6 +431,19 @@ const estornar = () => {
                 <q-item-label caption>{{ m.tipomovimentotitulo }}</q-item-label>
                 <q-item-label caption>vence {{ formataData(m.titulo?.vencimento) }}</q-item-label>
               </q-item-section>
+              <!-- título de crédito com saldo (vale, adiantamento, crédito do cliente): o vale -->
+              <q-item-section side v-if="!m.estornado && m.titulo?.saldo < 0">
+                <q-btn
+                  flat
+                  round
+                  size="sm"
+                  icon="confirmation_number"
+                  color="grey-7"
+                  @click.stop.prevent="abrirValeTitulo(m.codtitulo)"
+                >
+                  <q-tooltip>Vale</q-tooltip>
+                </q-btn>
+              </q-item-section>
             </q-item>
           </q-list>
         </q-card>
@@ -339,7 +452,13 @@ const estornar = () => {
         <q-card bordered flat v-if="pag.razao?.length" class="q-mb-md">
           <q-card-section class="text-grey-9 text-overline">RAZÃO</q-card-section>
           <q-list separator>
-            <q-item v-for="r in pag.razao" :key="r.codportadormovimento">
+            <q-item
+              v-for="r in pag.razao"
+              :key="r.codportadormovimento"
+              :to="toPortador ? toPortador(r.codportador, r.codportadorperiodo) : undefined"
+              :href="toPortador ? undefined : urlPortador(r.codportador, r.codportadorperiodo)"
+              :target="toPortador ? undefined : '_blank'"
+            >
               <q-item-section>
                 <q-item-label :class="r.inativo ? 'text-strike text-grey-6' : ''">
                   {{ r.portador }}
@@ -369,5 +488,27 @@ const estornar = () => {
         </q-card>
       </div>
     </div>
+
+    <q-dialog v-model="dialogReferente">
+      <q-card flat style="width: 600px; max-width: 90vw">
+        <q-card-section class="text-grey-9 text-overline">REFERENTE A</q-card-section>
+        <q-form @submit.prevent="salvarReferente">
+          <q-separator inset />
+          <q-card-section>
+            <MgInput
+              v-model="referente"
+              label="Referente a (sai no recibo)"
+              maxlength="255"
+              autofocus
+              hint="Vazio, não sai no recibo"
+            />
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+            <q-btn flat label="Salvar" color="primary" type="submit" :loading="salvandoReferente" />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
   </div>
 </template>

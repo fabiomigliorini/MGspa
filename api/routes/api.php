@@ -669,8 +669,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // PDV (público)
     Route::group(['prefix' => 'pdv'], function () {
-        // registro do dispositivo: primeiro passo da sincronizacao, sem usuario logado
+        // cadastrar o navegador como dispositivo exige usuario logado; a sincronizacao, que so'
+        // atualiza o que ele sabe de si, roda sem usuario (quiosque)
+        Route::post('dispositivo', '\Mg\Pdv\PdvController@postDispositivo');
         Route::put('dispositivo', '\Mg\Pdv\PdvController@putDispositivo')
+            ->withoutMiddleware('auth:api');
+        Route::put('dispositivo/sincronizacao-completa', '\Mg\Pdv\PdvController@putSincronizacaoCompleta')
             ->withoutMiddleware('auth:api');
         Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio')
             ->name('pdv.negocio.romaneio')
@@ -898,11 +902,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::put('prancheta', '\Mg\Pdv\PdvController@putPrancheta');
         Route::put('negocio', '\Mg\Pdv\PdvController@putNegocio');
         Route::get('negocio', '\Mg\Pdv\PdvController@getNegocios');
-        Route::get('negocio/conferencia', '\Mg\Pdv\PdvController@conferencia');
+        Route::get('negocio/relatorio', '\Mg\Pdv\PdvController@relatorioNegocios');
         Route::get('negocio/{codnegocio}', '\Mg\Pdv\PdvController@getNegocio');
         Route::delete('negocio/{codnegocio}', '\Mg\Pdv\PdvController@deleteNegocio');
         Route::post('negocio/{codnegocio}/apropriar', '\Mg\Pdv\PdvController@apropriar');
         Route::post('negocio/{codnegocio}/fechar', '\Mg\Pdv\PdvController@fecharNegocio');
+        Route::post('negocio/{codnegocio}/reabrir', '\Mg\Pdv\PdvController@reabrirNegocio');
         Route::post('negocio/{codnegocio}/romaneio/{impressora}', '\Mg\Pdv\PdvController@imprimirRomaneio');
         Route::post('negocio/{codnegocio}/vale/{impressora}', '\Mg\Pdv\PdvController@imprimirVale');
         Route::post('negocio/{codnegocio}/comanda/{impressora}', '\Mg\Pdv\PdvController@imprimirComanda');
@@ -917,11 +922,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::delete('pagar-me/pedido/{codpagarmepedido}', '\Mg\Pdv\PdvController@cancelarPagarMePedido');
         Route::post('negocio/{codnegocio}/nota-fiscal', '\Mg\Pdv\PdvController@notaFiscal');
         Route::get('dispositivo', '\Mg\Pdv\PdvController@getDispositivo');
-        Route::post('dispositivo/{codpdv}/autorizado', '\Mg\Pdv\PdvController@autorizar');
-        Route::delete('dispositivo/{codpdv}/autorizado', '\Mg\Pdv\PdvController@desautorizar');
+        // o proprio dispositivo se ve sem login (quiosque); os outros, Administrador ou Gerente
+        Route::get('dispositivo/{codpdv}', '\Mg\Pdv\PdvController@showDispositivo')
+            ->whereNumber('codpdv')->withoutMiddleware('auth:api');
+        Route::get('dispositivo/{codpdv}/registros', '\Mg\Pdv\PdvController@registrosDispositivo')
+            ->whereNumber('codpdv')->withoutMiddleware('auth:api');
         Route::post('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@inativar');
-        Route::delete('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@reativar');
-        Route::put('dispositivo/{codpdv}/editar', '\Mg\Pdv\PdvController@update');
+        Route::delete('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@ativar');
+        Route::put('dispositivo/{codpdv}', '\Mg\Pdv\PdvController@update')->whereNumber('codpdv');
         Route::get('vale/{codtitulo}', '\Mg\Pdv\PdvController@buscarVale');
 
         // consumo de vale por escopo (escola / turma), em FIFO
@@ -934,10 +942,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('pagamento/originais', '\Mg\Pdv\PdvPagamentoController@originais');
         Route::get('pagamento/{id}', '\Mg\Pdv\PdvPagamentoController@show')->whereNumber('id');
         Route::post('pagamento', '\Mg\Pdv\PdvPagamentoController@store');
-        Route::post('pagamento/{id}/estornar', '\Mg\Pdv\PdvPagamentoController@estornar')->whereNumber('id');
+        Route::post('pagamento/{id}/cancelar', '\Mg\Pdv\PdvPagamentoController@cancelar')->whereNumber('id');
+        Route::put('pagamento/{id}/referente', '\Mg\Pdv\PdvPagamentoController@referente')->whereNumber('id');
         Route::post('pagamento/recibo/{impressora}', '\Mg\Pdv\PdvPagamentoController@imprimirRecibo');
         // vale colaborador e adiantamentos (M8 doc-3)
         Route::post('titulo', '\Mg\Pdv\PdvTituloController@store');
+        Route::post('titulo/{codtitulo}/vale/{impressora}', '\Mg\Pdv\PdvController@imprimirValeTitulo')->where('codtitulo', '[0-9]+');
         // caixa: a gaveta do PDV e se esta' aberta (M9; a tela do caixa usa
         // as rotas v1/caixa desde o M13 doc-3)
         Route::get('caixa', '\Mg\Caixa\CaixaController@status');
@@ -1246,6 +1256,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('pix/{codportador}/consultar', '\Mg\Pix\PixController@consultarPix');
     Route::get('pix/', '\Mg\Pix\PixController@index');
     Route::get('pix/descobre-nome', '\Mg\Pix\PixController@descobreNome');
+    // PIX usado ou sem uso (TASK-219)
+    Route::get('pix/{codpix}', '\Mg\Pix\PixController@pix')->whereNumber('codpix');
+    Route::post('pix/{codpix}/utilizacao', '\Mg\Pix\PixController@marcar')->whereNumber('codpix');
+    Route::delete('pix/{codpix}/utilizacao', '\Mg\Pix\PixController@desmarcar')->whereNumber('codpix');
 
     // TituloBoleto + Titulo CRUD + Pagamento + Agrupamento
     Route::get('titulo/boleto/abertos/resumo', '\Mg\Titulo\TituloBoletoController@abertosResumo');
@@ -1259,19 +1273,22 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // vale colaborador e adiantamentos (M8 doc-3; o PDV usa v1/pdv/titulo)
     Route::post('titulo/adiantamento', '\Mg\Titulo\TituloAdiantamentoController@store');
     Route::get('titulo/{codtitulo}', '\Mg\Titulo\TituloController@show')->where('codtitulo', '[0-9]+');
+    // o vale de credito do titulo (Vale Compras / Contra Vale, TASK-216); assinada para a termica
+    Route::get('titulo/{codtitulo}/vale', '\Mg\Titulo\TituloController@vale')->where('codtitulo', '[0-9]+')
+        ->name('titulo.vale')->withoutMiddleware('auth:api')->middleware('auth_or_signed');
     Route::put('titulo/{codtitulo}', '\Mg\Titulo\TituloController@update')->where('codtitulo', '[0-9]+');
     Route::post('titulo/{codtitulo}/estornar', '\Mg\Titulo\TituloController@estornar')->where('codtitulo', '[0-9]+');
 
     // Pagamentos: listagem unica e baixa de titulos (M6/M6.1 doc-3; era liquidacao-titulo)
     Route::get('pagamento', '\Mg\Pagamento\PagamentoController@index');
     Route::get('pagamento/relatorio', '\Mg\Pagamento\PagamentoController@relatorio');
+    Route::get('pagamento/divergencia', '\Mg\Pagamento\PagamentoController@divergencias');
     Route::get('pagamento/{id}', '\Mg\Pagamento\PagamentoController@show')->where('id', '[0-9]+');
     Route::post('pagamento', '\Mg\Pagamento\PagamentoController@store');
     Route::put('pagamento/{id}', '\Mg\Pagamento\PagamentoController@update')->where('id', '[0-9]+');
-    Route::post('pagamento/{id}/estornar', '\Mg\Pagamento\PagamentoController@estornar')->where('id', '[0-9]+');
+    Route::post('pagamento/{id}/cancelar', '\Mg\Pagamento\PagamentoController@cancelar')->where('id', '[0-9]+');
+    Route::put('pagamento/{id}/referente', '\Mg\Pagamento\PagamentoController@referente')->where('id', '[0-9]+');
     Route::get('pagamento/{id}/recibo', '\Mg\Pagamento\PagamentoController@recibo')->where('id', '[0-9]+');
-    Route::get('pagamento/{id}/recibo-recebimento', '\Mg\Pagamento\PagamentoController@reciboRecebimento')->where('id', '[0-9]+');
-    Route::get('pagamento/{id}/recibo-pagamento', '\Mg\Pagamento\PagamentoController@reciboPagamento')->where('id', '[0-9]+');
     // cobranca integrada sem PDV (contas, M6.1 doc-3)
     Route::post('cobranca/pix', '\Mg\Pagamento\CobrancaController@pix');
     Route::post('cobranca/pagar-me', '\Mg\Pagamento\CobrancaController@pagarMe');
@@ -1308,8 +1325,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('portador/{codportador}/inativo', '\Mg\Portador\PortadorController@ativar');
     // usuarios do portador e o papel de cada um (doc-4, redefinicao do dinheiro)
     Route::get('portador/{codportador}/usuario', '\Mg\Portador\PortadorUsuarioController@index')->whereNumber('codportador');
-    Route::post('portador/{codportador}/usuario', '\Mg\Portador\PortadorUsuarioController@store')->whereNumber('codportador');
-    Route::delete('portador/{codportador}/usuario/{codportadorusuario}', '\Mg\Portador\PortadorUsuarioController@destroy')->whereNumber(['codportador', 'codportadorusuario']);
+    Route::put('portador/{codportador}/usuario', '\Mg\Portador\PortadorUsuarioController@update')->whereNumber('codportador');
     // periodo do portador (doc-4): especie abre, conta, fecha (tolerancia ou
     // pendente), reabre, datas, divide, unifica; banco fecha com corte
     Route::post('portador/{codportador}/periodo/abrir', '\Mg\Portador\PortadorPeriodoController@abrir')->whereNumber('codportador');
@@ -1387,12 +1403,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('maquineta-lote/{id}/foto/{arquivo}', '\Mg\Maquineta\MaquinetaPeriodoController@excluirFoto')->whereNumber('id');
     Route::post('maquineta-lote/{id}/pagamento/{codpagamento}/data', '\Mg\Maquineta\MaquinetaPeriodoController@data')->whereNumber(['id', 'codpagamento']);
 
-    // Conferencias e fechamento do caixa (M9 doc-3): tela Fechamentos do contas
-    Route::get('conferencia', '\Mg\Conferencia\ConferenciaController@index');
+    // Conferencias do que o caixa movimentou (M9 doc-3): venda com diferenca e cheque/vale
     Route::get('conferencia/venda/{id}', '\Mg\Conferencia\ConferenciaController@showVenda')->whereNumber('id');
-    Route::post('conferencia/venda/{id}/acerto', '\Mg\Conferencia\ConferenciaController@acertarVenda')->whereNumber('id');
     Route::post('conferencia/venda/{id}/pagamento', '\Mg\Conferencia\ConferenciaController@incluirPagamento')->whereNumber('id');
-    Route::delete('conferencia/acerto/{id}', '\Mg\Conferencia\ConferenciaController@desfazerAcerto')->whereNumber('id');
     Route::post('conferencia/pagamento/{id}/correcao', '\Mg\Conferencia\ConferenciaController@corrigirPagamento')->whereNumber('id');
     Route::post('conferencia/pagamento/{id}/indevido', '\Mg\Conferencia\ConferenciaController@indevido')->whereNumber('id');
     Route::post('conferencia/pagamento/{id}/conferir', '\Mg\Conferencia\ConferenciaController@conferirPagamento')->whereNumber('id');
@@ -1400,8 +1413,18 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // Livro de ocorrencias (TASK-205): tela Ocorrencias do contas
     Route::get('ocorrencia', '\Mg\Ocorrencia\OcorrenciaController@index');
+    Route::get('ocorrencia/{id}', '\Mg\Ocorrencia\OcorrenciaController@show')->whereNumber('id');
     Route::post('ocorrencia/{id}/conferir', '\Mg\Ocorrencia\OcorrenciaController@conferir')->whereNumber('id');
     Route::delete('ocorrencia/{id}/conferir', '\Mg\Ocorrencia\OcorrenciaController@reabrir')->whereNumber('id');
+
+    // Historico de um registro, auditoria e ocorrencias (TASK-209): MgHistorico
+    Route::get('auditoria/{tabela}/{codigo}', '\Mg\Auditoria\AuditoriaController@historico')
+        ->where('tabela', 'tbl[a-z]+')
+        ->whereNumber('codigo');
+
+    // Painel da filial (TASK-203): tudo pendente na filial, leva 'a tela que resolve
+    Route::get('painel', '\Mg\Painel\PainelController@index');
+    Route::get('filial/{codfilial}/painel', '\Mg\Painel\PainelController@show')->whereNumber('codfilial');
 
     // Mercos
     Route::post('pdv/mercos/pedido/importar/{alterado_apos?}', '\Mg\Pdv\PdvMercosController@importarPedido');

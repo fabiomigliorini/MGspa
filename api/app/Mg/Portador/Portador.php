@@ -28,6 +28,11 @@ class Portador extends MgModel
 {
     const CARTEIRA = 999;
 
+    // encontro de contas (titulos que se anulam): pagamento de total zero
+    // aqui; era o pseudoportador Programacao Pagamentos (go-live:
+    // api/database/pagamento_amarracao.sql reativa e renomeia)
+    const ENCONTRO_CONTAS = 202016;
+
     // especie do escritorio: quem opera e' o Financeiro (decisao 23)
     const CAIXA_FINANCEIRO = 100;
 

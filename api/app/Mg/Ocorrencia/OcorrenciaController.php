@@ -37,6 +37,13 @@ class OcorrenciaController extends Controller
         return $oc;
     }
 
+    // a ocorrencia com as auditorias amarradas (TASK-209): tela da ocorrencia
+    public function show(int $id)
+    {
+        $oc = $this->ocorrencia($id);
+        return ['data' => OcorrenciaService::carregar($oc->codocorrencia)];
+    }
+
     public function conferir(Request $request, int $id)
     {
         $dados = $request->validate(['observacao' => 'nullable|string|max:500']);

@@ -14,6 +14,7 @@ use Mg\Cobranca\Cobranca;
 use Mg\Cobranca\CobrancaHistoricoTitulo;
 use Mg\Titulo\MovimentoTitulo;
 use Mg\Negocio\NegocioParcela;
+use Mg\Negocio\NegocioVale;
 use Mg\Pagamento\Pagamento;
 use Mg\NfeTerceiro\NfeTerceiroDuplicata;
 use Mg\Rh\PeriodoColaborador;
@@ -127,6 +128,17 @@ class Titulo extends MgModel
             || $this->CaixaItemAcerto()->exists();
     }
 
+    // nasceu com o dinheiro (vale colaborador, adiantamento): a implantacao
+    // e' ligada ao pagamento, que e' o dono do valor e das datas. O estorno
+    // continua aqui (devolve o dinheiro e cancela o pagamento, TASK-214)
+    public function nasceuDePagamento(): bool
+    {
+        return $this->MovimentoTituloS()
+            ->where('codtipomovimentotitulo', MovimentoTituloService::TIPO_IMPLANTACAO)
+            ->whereNotNull('codpagamento')
+            ->exists();
+    }
+
     public function Pessoa()
     {
         return $this->belongsTo(Pessoa::class, 'codpessoa', 'codpessoa');
@@ -140,6 +152,12 @@ class Titulo extends MgModel
     public function TipoTitulo()
     {
         return $this->belongsTo(TipoTitulo::class, 'codtipotitulo', 'codtipotitulo');
+    }
+
+    // o vale compras vendido que gerou este titulo de credito (escola, aluno, turma e o kit)
+    public function NegocioVale()
+    {
+        return $this->hasOne(NegocioVale::class, 'codtitulo', 'codtitulo')->whereNull('inativo');
     }
 
     public function TituloAgrupamento()

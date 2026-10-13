@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import { watch } from 'vue'
 import { useTributacaoStore } from 'stores/tributacao'
 import { useQuasar } from 'quasar'
@@ -228,7 +229,7 @@ const limparFiltros = async () => {
 
       <!-- Vigência -->
       <div class="q-mb-md">
-        <q-select
+        <MgSelect
           v-model="store.filters.vigencia"
           label="Vigência"
           outlined

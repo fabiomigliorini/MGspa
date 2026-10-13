@@ -2,7 +2,9 @@
 
 namespace Mg\Pdv;
 
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Mg\Pagamento\PagamentoTituloAutorizador;
 use Mg\Pagamento\PagamentoDetalheResource;
 use Mg\Titulo\TituloAdiantamentoService;
 use Mg\Titulo\TituloAdiantamentoStoreRequest;
@@ -17,8 +19,15 @@ class PdvTituloController
     public function store(TituloAdiantamentoStoreRequest $request)
     {
         $pdv = PdvService::autoriza($request->pdv);
+        $dados = $request->validated();
+        // pelo papel do usuario no portador da forma (a gaveta do PDV so'
+        // vem pre-selecionada)
+        $bloqueio = PagamentoTituloAutorizador::motivoBloqueioAdiantamento(Auth::user()->codusuario, $dados, $pdv);
+        if ($bloqueio !== null) {
+            abort(403, $bloqueio);
+        }
         DB::beginTransaction();
-        $pags = TituloAdiantamentoService::lancar($request->validated(), $pdv);
+        $pags = TituloAdiantamentoService::lancar($dados, $pdv);
         DB::commit();
         return PagamentoDetalheResource::collection($pags);
     }

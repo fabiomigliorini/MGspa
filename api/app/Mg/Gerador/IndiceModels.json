@@ -6478,32 +6478,6 @@
     },
     "hasMany": []
   },
-  "tblbaseremota": {
-    "tabela": "tblbaseremota",
-    "campocodigo": "codbaseremota",
-    "namespace": "Mg\\Filial",
-    "classe": "BaseRemota",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/BaseRemota.php",
-    "belongsTo": {
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      }
-    },
-    "hasMany": {
-      "tblauditoriatransmissao.codbaseremota": {
-        "tabela": "tblauditoriatransmissao",
-        "coluna": "codbaseremota",
-        "metodo": "AuditoriaTransmissaoS"
-      }
-    }
-  },
   "tblcaixamercadoria": {
     "tabela": "tblcaixamercadoria",
     "campocodigo": "codcaixamercadoria",
@@ -6945,41 +6919,6 @@
       }
     },
     "hasMany": []
-  },
-  "tblauditoriatransmissao": {
-    "tabela": "tblauditoriatransmissao",
-    "campocodigo": "codauditoria",
-    "namespace": "Mg\\Filial",
-    "classe": "AuditoriaTransmissao",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/AuditoriaTransmissao.php",
-    "belongsTo": {
-      "codauditoria": {
-        "tabela": "tblauditoria",
-        "coluna": "codauditoria",
-        "metodo": "Auditoria"
-      },
-      "codbaseremota": {
-        "tabela": "tblbaseremota",
-        "coluna": "codbaseremota",
-        "metodo": "BaseRemota"
-      }
-    },
-    "hasMany": []
-  },
-  "tblauditoria": {
-    "tabela": "tblauditoria",
-    "campocodigo": "codauditoria",
-    "namespace": "Mg\\Filial",
-    "classe": "Auditoria",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/Auditoria.php",
-    "belongsTo": [],
-    "hasMany": {
-      "tblauditoriatransmissao.codauditoria": {
-        "tabela": "tblauditoriatransmissao",
-        "coluna": "codauditoria",
-        "metodo": "AuditoriaTransmissaoS"
-      }
-    }
   },
   "tblsauruspdv": {
     "tabela": "tblsauruspdv",
@@ -7899,15 +7838,6 @@
         "metodo": "UnidadeNegocio"
       }
     },
-    "hasMany": []
-  },
-  "tblauditoriaexcecao": {
-    "tabela": "tblauditoriaexcecao",
-    "campocodigo": "codauditoriaexcecao",
-    "namespace": "Mg\\Filial",
-    "classe": "AuditoriaExcecao",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/Filial/AuditoriaExcecao.php",
-    "belongsTo": [],
     "hasMany": []
   },
   "tblbit": {

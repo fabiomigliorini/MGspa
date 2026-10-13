@@ -3,11 +3,11 @@ id: TASK-204
 title: >-
   Lançamento feito com a data errada não tem como ir para o dia certo no caixa,
   no banco e na maquininha
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-08 21:59'
-updated_date: '2026-10-09 00:33'
+updated_date: '2026-10-10 16:16'
 labels:
   - contas
 dependencies: []
@@ -28,28 +28,37 @@ Notas técnicas:
 - PDV: transacao = Carbon::now(); o pagamento grava codportadorperiodo (sessão), que PortadorMovimentoService::periodo usa antes da data.
 - Maquineta: MaquinetaLoteService::vincular põe no lote corrente; o "mover" de PagamentoCorrecaoService::corrigir muda o lote sem mudar a data. O cancelamento já tem data (tblpagamento.cancelamento) e lote (codmaquinetalotecancelamento) próprios.
 - Movimento do portador (item, borderô, ajuste, transferência): PortadorLancamentoService::dataNoPeriodo.
-- Rastro: PagamentoCorrecaoService::registrar (antes/depois + justificativa) para pagamento; movimento do portador ainda não tem onde registrar.
+- Rastro: tblauditoria (AuditoriaService::registrar), para pagamento e movimento do portador.
 - Fecha-se em ordem (caixa, banco), então período mais novo que o destino nunca está fechado.
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Cada linha do extrato do portador (caixa, banco) e do período da maquineta tem botão de alterar a data com hora; a linha vai para o período daquela data
-- [ ] #2 Período fechado (caixa/banco) ou conferido (maquineta) não recebe nem perde lançamento: recusa dizendo qual reabrir
-- [ ] #3 Venda (dinheiro, cartão ou PIX): alterar a data muda o pagamento e o extrato; negócio e NFC-e ficam com a data original e a linha mostra que a data difere da venda
-- [ ] #4 Baixa de título: a data com hora é informada na tela da baixa e pode ser alterada no extrato; alterar num lugar muda extrato, pagamento e liquidação do título, em qualquer portador
-- [ ] #5 Vale/adiantamento: igual à baixa, e a emissão do título acompanha; vencimento não muda
-- [ ] #6 PDV: baixa e vale ganham data com hora, limitada aos períodos não fechados da gaveta
-- [ ] #7 Sangria/reforço: uma data só para a transferência; muda as duas pontas juntas
-- [ ] #8 Item do caixa, borderô de parceiro e ajuste: alterar a data leva a linha (e a foto do borderô) para o período da data; saldo do item recalculado
-- [ ] #9 Cartão e PIX automáticos e boleto pelo retorno do banco também podem ter a data alterada, inclusive no pagamento
-- [ ] #10 Pagamento de acerto do RH também tem a data alterável no extrato
-- [ ] #11 Maquineta: a data manda no período; o mover para outro período sem data deixa de existir
-- [ ] #12 Cancelamento de cartão tem data própria editável; o período do cancelamento segue essa data, sem mexer na venda
-- [ ] #13 Alterar a data pede justificativa e grava o antes/depois, mostrado na linha; só o gestor do portador (no PDV, quem já lança ali)
-- [ ] #14 Mudar de mês é permitido, com aviso de que pode afetar DIMP e relatórios já apurados
-- [ ] #15 Juros, multa, desconto e total não mudam ao alterar a data
-- [ ] #16 O caixa pendente não fecha sozinho depois da alteração: fecha pelo botão Fechar
+- [x] #1 Cada linha do extrato do portador (caixa, banco) e do período da maquineta tem botão de alterar a data com hora; a linha vai para o período daquela data
+- [x] #2 Período fechado (caixa/banco) ou conferido (maquineta) não recebe nem perde lançamento: recusa dizendo qual reabrir
+- [x] #3 Venda (dinheiro, cartão ou PIX): alterar a data muda o pagamento e o extrato; negócio e NFC-e ficam com a data original e a linha mostra que a data difere da venda
+- [x] #4 Baixa de título: a data com hora é informada na tela da baixa e pode ser alterada no extrato; alterar num lugar muda extrato, pagamento e liquidação do título, em qualquer portador
+- [x] #5 Vale/adiantamento: igual à baixa, e a emissão do título acompanha; vencimento não muda
+- [x] #6 PDV: baixa e vale ganham data com hora, limitada aos períodos não fechados da gaveta
+- [x] #7 Sangria/reforço: uma data só para a transferência; muda as duas pontas juntas
+- [x] #8 Item do caixa, borderô de parceiro e ajuste: alterar a data leva a linha (e a foto do borderô) para o período da data; saldo do item recalculado
+- [x] #9 Cartão e PIX automáticos e boleto pelo retorno do banco também podem ter a data alterada, inclusive no pagamento
+- [x] #10 Pagamento de acerto do RH também tem a data alterável no extrato
+- [x] #11 Maquineta: a data manda no período; o mover para outro período sem data deixa de existir
+- [x] #12 Cancelamento de cartão tem data própria editável; o período do cancelamento segue essa data, sem mexer na venda
+- [x] #13 Alterar a data pede justificativa e grava o antes/depois, mostrado na linha; o gestor do portador altera em período aberto ou pendente; o operador, só quando o período de onde sai e o para onde vai estão abertos
+- [x] #14 Mudar de mês é permitido, com aviso de que pode afetar DIMP e relatórios já apurados
+- [x] #15 Juros, multa, desconto e total não mudam ao alterar a data
+- [x] #16 O caixa pendente não fecha sozinho depois da alteração: fecha pelo botão Fechar
+- [x] #17 Receber ou Pagar Títulos (contas e PDV): data, pessoa e observação num diálogo aberto pelo FAB, à vista mesmo com a lista rolada
+- [x] #18 Toda correção de lançamento (data alterada, correção da conferência) fica registrada num lugar só, a auditoria
+- [x] #19 O selo 'corrigido' na conferência e na maquininha aparece só quando o valor ou o meio foi corrigido
+- [x] #20 A auditoria antiga da replicação entre bases sai: tabelas, funções e o usuário de banco
+- [x] #21 Baixa e vale: data no futuro (além de 5 min do relógio) ou antes do início do razão são recusadas, com a mesma tolerância do alterar data
+- [x] #22 Campo de data com hora: digitar só o dia é recusado (informe a hora); o calendário mantém a hora
+- [x] #23 Hora do extrato e do lápis do pagamento vai sem fuso (hora de Cuiabá): qualquer aparelho mostra e grava a mesma hora
+- [x] #24 Devolução (cancelamento no cartão/devolução de PIX) não fica antes do pagamento original, nem o original depois da devolução
+- [x] #25 Editar início/fim do período da maquineta leva junto os cartões cuja hora cai na faixa nova (só períodos não conferidos)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -62,8 +71,10 @@ Servidor
 - Rotas: POST v1/portador-movimento/{id}/data e POST v1/maquineta-lote/{id}/pagamento/{codpagamento}/data. Removidos o "mover" da correção (PagamentoCorrecaoService) e a rota GET v1/maquineta/{cod}/lote.
 - Baixa de título e vale/adiantamento (contas e PDV) usam a data com hora informada; sem data, agora. Lápis do recebimento: data com hora; mudou, vai pelo alterarPagamento com justificativa.
 - Maquineta: o cartão entra no período da data se ele não estiver conferido; senão, no aberto (o cartão que a API confirma depois não trava).
-- Trilha: pagamento em tblpagamentocorrecao; movimento na tabela nova tblportadormovimentocorrecao.
-- DDL do go-live: api/database/portador_movimento_correcao.sql (já aplicada no banco de dev).
+- Auditoria única (09/10/2026): tblauditoria genérica (tabela + codigo + tipo; antes/depois só com os campos relevantes que mudaram; justificativa pode ficar vazia) no lugar de tblpagamentocorrecao e tblportadormovimentocorrecao. Tipos: 1 data alterada, 2 data do cancelamento alterada, 3 corrigido na conferência, 4 registro indevido, 5 incluído na conferência (6–13 vêm com a TASK-205: item excluído, quantidade alterada, preço diferente do cadastro, vale excluído, pagamento apagado, parcela apagada, negócio cancelado, estornado; a ocorrência amarra as auditorias N:N em tblocorrenciaauditoria, e as correções 1–5 em PDV monitorado também viram ocorrência). Selo "corrigido" conta só 3 e 4. O reprocessamento do boleto procura o tipo 1, não o JSON.
+- A replicação entre bases de 2011 saiu: tblauditoria antiga, tblauditoriatransmissao, tblauditoriaexcecao, tblbaseremota, geraauditoria(), criatriggers_geraauditoria(boolean) e o usuário mgsis_replicacao (a tblcobrancahistoricotitulo passa para o mgsis). O mgsis_yii fica (o MGsis usa).
+- Corrigido junto: o nome de quem alterou não aparecia no "era dd/mm" (o accessor usuariocriacao do MgModel engolia a relação).
+- DDL do go-live: api/database/auditoria.sql, depois do conferencia.sql (rodado 2x no dev). portador_movimento_correcao.sql e a seção da tblpagamentocorrecao no conferencia.sql saíram.
 
 Telas
 - Extrato do portador (contas e caixa do PDV): botão de calendário na linha, dialog AlterarDataDialog (data com hora, justificativa, aviso de troca de mês); linha mostra "era dd/mm hh:mm: justificativa · usuário"; venda com pagamento noutro dia mostra o selo "venda de dd/mm".
@@ -101,4 +112,8 @@ Riscos que ficam (não tratados)
 - Mover uma ENTRADA de item para outro período não confere as saídas que dependiam dela.
 - O número do vale gerado pela data de emissão (AAAA-MM-DD) não muda junto.
 - O codpdv do request não é validado pelo dispositivo (padrão que já existia em sangria e cancelamento); com a regra por portador, o alcance fica na gaveta do próprio PDV.
+
+Operador altera a data (10/10/2026, pedido do Fábio: 'desde que tanto a origem quanto o destino estejam com o período em aberto'). LancamentoDataService: o gestor do portador continua alterando em período aberto ou pendente; o operador só quando o período de onde a linha sai e o para onde vai estão abertos (sem fim) — no pagamento, as linhas do razão, a sessão da gaveta e o período da maquineta (no cartão, o papel no portador da adquirente); na transferência, as duas pontas, com papel de operador nos dois portadores. Com período pendente a recusa diz que só o gestor; fechado, ninguém. O botão do extrato (podeAlterarData) segue a mesma regra. Achado no teste: o lápis do cartão autorizava pela adquirente errada (a maquineta da listagem vinha sem a pessoa e casava a primeira adquirente sem pessoa, Cielo Super Link); corrigido em PagamentoTituloService::portadorDaMaquineta (commit da TASK-188). Testado: baterias s9 e s10 (32 checagens) e E2E no caixa do PDV (sessão aberta grava com auditoria; sessão fechada recusa).
+
+Teste ignorado pelo Fábio (10/10/2026): ele dispensou o teste manual dele e pediu para marcar e commitar. Critérios marcados com base no que está implementado e nos testes registrados nas notas acima.
 <!-- SECTION:NOTES:END -->

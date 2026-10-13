@@ -19,7 +19,7 @@ class PagarMePedidoResource extends Resource
         $ret['apelido'] = $this->PagarMePos->apelido??null;
         $ret['statusdescricao'] = PagarMeService::STATUS_DESCRIPTION[$this->status]??null;
         $ret['tipodescricao'] = PagarMeService::TYPE_DESCRIPTION[$this->tipo]??null;
-        // pagamento que a confirmacao criou (o recebimento de titulo o amarra)
+        // pagamento que a confirmacao criou (o da venda)
         $ret['codpagamento'] = \Mg\Pagamento\Pagamento::where('codpagarmepedido', $this->codpagarmepedido)
             ->where('estado', '!=', \Mg\Pagamento\PagamentoService::ESTADO_CANCELADO)
             ->value('codpagamento');

@@ -1,5 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { ref, computed } from 'vue'
 
@@ -65,7 +66,7 @@ defineExpose({
 
     <MgInputValor v-model="model.codpessoa" :decimals="0" :grouping="false" label="Código Pessoa" />
 
-    <q-select
+    <MgSelect
       outlined
       v-model="model.crt"
       :options="opcoesCrt"

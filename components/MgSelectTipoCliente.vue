@@ -1,4 +1,5 @@
 <script setup>
+import MgSelect from '@components/MgSelect.vue'
 // ===== Select ESTÁTICO (4 opções fixas, sem backend) =====
 // Tipo de cliente fiscal: PFC/PFN/PJC/PJN.
 defineProps({
@@ -22,7 +23,7 @@ function onUpdate(v) {
 </script>
 
 <template>
-  <q-select
+  <MgSelect
     :model-value="modelValue"
     :options="opcoes"
     :label="label"
@@ -48,5 +49,5 @@ function onUpdate(v) {
     <template v-if="$slots.before" #before><slot name="before" /></template>
     <template v-if="$slots.after" #after><slot name="after" /></template>
     <template v-if="$slots.hint" #hint><slot name="hint" /></template>
-  </q-select>
+  </MgSelect>
 </template>

@@ -76,16 +76,35 @@ class PdvNegocioChequeService
     public static function cancelar(Negocio $negocio): void
     {
         foreach ($negocio->PagamentoS as $nfp) {
-            $cheques = Cheque::where('codpagamento', $nfp->codpagamento)
-                ->whereNull('cancelamento')
-                ->get();
-            foreach ($cheques as $cheque) {
-                if ($cheque->indstatus != 1) {
-                    throw new Exception("O cheque {$cheque->numero} já foi repassado. Impossível cancelar!", 1);
-                }
-                $cheque->cancelamento = Carbon::now();
-                $cheque->save();
+            static::cancelarDoPagamento($nfp);
+        }
+    }
+
+    // o cheque do pagamento reativado na venda reaberta volta a valer (TASK-30)
+    public static function reativarDoPagamento(Pagamento $nfp): void
+    {
+        $cheques = Cheque::where('codpagamento', $nfp->codpagamento)
+            ->whereNotNull('cancelamento')
+            ->where('indstatus', 1)
+            ->get();
+        foreach ($cheques as $cheque) {
+            $cheque->cancelamento = null;
+            $cheque->save();
+        }
+    }
+
+    // o cheque de um pagamento (o cancelado na venda reaberta, TASK-30)
+    public static function cancelarDoPagamento(Pagamento $nfp): void
+    {
+        $cheques = Cheque::where('codpagamento', $nfp->codpagamento)
+            ->whereNull('cancelamento')
+            ->get();
+        foreach ($cheques as $cheque) {
+            if ($cheque->indstatus != 1) {
+                throw new Exception("O cheque {$cheque->numero} já foi repassado. Impossível cancelar!", 1);
             }
+            $cheque->cancelamento = Carbon::now();
+            $cheque->save();
         }
     }
 }

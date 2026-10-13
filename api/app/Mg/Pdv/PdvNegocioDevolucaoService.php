@@ -5,6 +5,7 @@ namespace Mg\Pdv;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\Auth;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioProdutoBarra;
 use Mg\Negocio\NegocioParcelaService;
@@ -40,6 +41,14 @@ class PdvNegocioDevolucaoService
         $negocio->codnegociostatus = 2;
         $negocio->codpdv = $pdv->codpdv;
         $negocio->save();
+        // a devolucao ja' nasce fechada (TASK-209)
+        AuditoriaService::registrar(
+            'tblnegocio',
+            $negocio->codnegocio,
+            AuditoriaService::TIPO_NEGOCIO_FECHADO,
+            null,
+            ['codnegociostatus' => NegocioService::STATUS_FECHADO]
+        );
         $gerarNotaDevolucao = false;
 
 

@@ -4,7 +4,7 @@ title: Aposentar as Metas antigas preservando o historico
 status: To Do
 assignee: []
 created_date: '2026-09-12 15:53'
-updated_date: '2026-09-12 17:14'
+updated_date: '2026-10-10 19:07'
 labels:
   - pessoas
   - api
@@ -55,7 +55,7 @@ Fazer em ordem: (1) mapear de-para dos campos, (2) migrar/recriar o historico e 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 De-para documentado entre as tabelas antigas (tblmeta/tblmetafilial/tblmetafilialpessoa) e as novas (tblperiodo/tblperiodocolaborador/tblindicador/tblindicadorlancamento)
-- [ ] #2 Historico das 112 metas / 386 metas de filial / 2812 metas de pessoa recriado na estrutura nova, com conferencia de totais antes e depois
+- [ ] #2 Metas ate nov/25 recriadas na estrutura nova, com conferencia de totais antes e depois; dez/25, jan/26 e fev/26 ja existem no RH novo (periodos 2, 3 e 1) e so se conferem (jan/26 esta sem colaboradores)
 - [ ] #3 Telas /meta e o item Metas do menu removidos; ninguem perde acesso ao historico, que passa a ser consultado pelas telas de RH
 - [ ] #4 Backend app/Mg/Meta, requests, commands, agendamentos e rotas removidos; sem referencia orfa em Filial, UnidadeNegocio, Pessoa, Negocio, NegocioProdutoBarra e Cargo
 - [ ] #5 Tabelas antigas dropadas (as vazias direto; as com dados so depois da migracao conferida), com script DDL versionado para rodar em producao
@@ -77,4 +77,6 @@ b) o historico entra so como lancamento consolidado, sem recriar a hierarquia.
 
 Levantar os campos das duas estruturas e propor o de-para antes de escrever
 qualquer script de migracao.
+
+Revisão do backlog com o Fábio (10/10/2026, 2ª varredura): AC #2 ajustado: tblmeta 136 (dez/25) = tblperiodo 2 (76 colaboradores), 137 (jan/26) = tblperiodo 3 (62 indicadores, 0 colaboradores), 138 (fev/26) = tblperiodo 1 (81 colaboradores); os três períodos foram criados em 20/02/2026 para comparar com o legado. Sobram 109 metas a migrar.
 <!-- SECTION:NOTES:END -->

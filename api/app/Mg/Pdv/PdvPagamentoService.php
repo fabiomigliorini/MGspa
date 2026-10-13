@@ -8,7 +8,6 @@ use Mg\Pagamento\PagamentoListaService;
 use Mg\Pagamento\PagamentoService;
 use Mg\Pagamento\PagamentoTituloAutorizador;
 use Mg\Pagamento\PagamentoTituloService;
-use Mg\Usuario\Autorizador;
 
 /**
  * Receber titulo e pagar vale/credito do cliente no PDV (M7 do plano doc-3,
@@ -53,76 +52,48 @@ class PdvPagamentoService
         })->filter(fn($p) => $p['disponivel'] > 0)->values()->all();
     }
 
-    // Baixa pelo PDV: receber e' de quem opera o caixa; pagar vale/credito
-    // (sai dinheiro) so' Gerente da filial ou Administrador
+    // Baixa pelo PDV: pelo papel do usuario no portador da forma (o
+    // dinheiro entra = depositante; sai = operador); a gaveta do PDV so' vem
+    // pre-selecionada
     public static function baixar(Pdv $pdv, array $dados): array
     {
-        if (PagamentoTituloService::liquido($dados['titulos'] ?? []) > 0) {
-            if (!Autorizador::pode([]) && !Autorizador::pode(['Gerente'], $pdv->codfilial)) {
-                abort(403, 'Pagar vale ou crédito do cliente só Gerente ou Administrador!');
-            }
-        }
-        foreach ($dados['pagamentos'] ?? [] as $f) {
-            if (empty($f['codpagamento'])) {
-                continue;
-            }
-            $pag = Pagamento::findOrFail($f['codpagamento']);
-            if (!empty($pag->codpdv) && $pag->codpdv != $pdv->codpdv) {
-                abort(422, "O pagamento {$pag->codpagamento} é de outro PDV!");
-            }
+        $bloqueio = PagamentoTituloAutorizador::motivoBloqueioBaixa(Auth::user()->codusuario, $dados, $pdv);
+        if ($bloqueio !== null) {
+            abort(403, $bloqueio);
         }
         return PagamentoTituloService::baixar($dados, $pdv);
     }
 
-    // Pagamento da listagem do PDV: so' os dele
+    // Pagamento visto no PDV: os dele, os da gaveta dele (transferencia,
+    // M11) e os de portador em que o usuario tem papel (o PIX do banco usado
+    // na baixa)
     public static function carregar(Pdv $pdv, int $codpagamento): Pagamento
     {
         $pag = PagamentoListaService::carregar($codpagamento);
-        // transferencia que chega na gaveta deste PDV (M11) tambem se ve
         $daGaveta = !empty($pdv->codportador)
             && in_array($pdv->codportador, [$pag->codportadororigem, $pag->codportadordestino]);
-        if ($pag->codpdv != $pdv->codpdv && !$daGaveta) {
+        $portador = $pag->codportadorDoPagamento();
+        $temPapel = !empty($portador)
+            && \Mg\Portador\PortadorAutorizador::pode((int) $portador, \Mg\Portador\PortadorUsuario::PAPEL_DEPOSITANTE);
+        if ($pag->codpdv != $pdv->codpdv && !$daGaveta && !$temPapel) {
             abort(403, 'Pagamento de outro PDV!');
         }
         return $pag;
     }
 
-    // Caixa: os proprios, nas primeiras 2 horas; Gerente: a filial
-    public static function estornar(Pdv $pdv, int $codpagamento, string $justificativa): Pagamento
+    // Cancelar (estorna as baixas junto, TASK-218). Caixa: os proprios, nas
+    // primeiras 2 horas; Gerente: a filial
+    public static function cancelar(Pdv $pdv, int $codpagamento, string $justificativa): Pagamento
     {
         $pag = static::carregar($pdv, $codpagamento);
         $bloqueio = PagamentoTituloAutorizador::motivoBloqueioEstorno($pag, Auth::user()->codusuario);
         if ($bloqueio !== null) {
             abort(403, $bloqueio);
         }
-        return PagamentoTituloService::estornar($pag, $justificativa);
+        return PagamentoTituloService::cancelar($pag, $justificativa);
     }
 
     // Recibo termico (80mm) de um ou mais pagamentos do mesmo recebimento
-    public static function reciboPdf(array $codpagamentos): string
-    {
-        $pags = Pagamento::with([
-            'Pessoa',
-            'Filial.Pessoa',
-            'PortadorDestino:codportador,portador',
-            'PortadorOrigem:codportador,portador',
-            'Maquineta:codmaquineta,apelido',
-            'UsuarioCriacao:codusuario,usuario',
-            'MovimentoTituloS.Titulo:codtitulo,numero,vencimento,codtipotitulo,observacao',
-            'MovimentoTituloS.Titulo.TipoTitulo:codtipotitulo,tipotitulo',
-        ])->whereIn('codpagamento', $codpagamentos)->orderBy('codpagamento')->get();
-        if ($pags->isEmpty()) {
-            abort(404, 'Pagamento não encontrado!');
-        }
-        $html = view('pagamento.recibo-termica', compact('pags'))->render();
-        $dompdf = new \Dompdf\Dompdf();
-        $dompdf->loadHtml($html, 'UTF-8');
-        // bobina 80mm
-        $dompdf->setPaper([0.0, 0.0, 226.77, 841.89], 'portrait');
-        $dompdf->render();
-        return $dompdf->output();
-    }
-
     public static function imprimirRecibo(array $codpagamentos, string $impressora): void
     {
         $url = \URL::temporarySignedRoute('pdv.pagamento.recibo', now()->addMinutes(10), ['codpagamentos' => implode(',', $codpagamentos)]);

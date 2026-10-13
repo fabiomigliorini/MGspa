@@ -10,10 +10,6 @@
 --   tblmaquinetalote       — o bordero da maquineta: um aberto por
 --                            maquineta; o gerente fecha digitando quantidade
 --                            e total do bordero (com foto)
---   tblpagamentocorrecao   — trilha das correcoes de pagamento (antes/depois
---                            + justificativa)
---   tblnegocioacerto       — destino da diferenca da venda desbalanceada
---                            (perdao, vale colaborador, duplicata, credito)
 --   tblpagamento           — lote do cartao, lote do cancelamento, registro
 --                            indevido, sessao da gaveta do dinheiro e
 --                            conferencia item a item (cheque, vale)
@@ -113,49 +109,13 @@ CREATE INDEX IF NOT EXISTS idx_tblpagamento_codportadorperiodo
     ON tblpagamento (codportadorperiodo) WHERE codportadorperiodo IS NOT NULL;
 
 -- ---------------------------------------------------------------------
--- 4. Trilha das correcoes de pagamento
+-- 4. Acerto da venda: removido (10/10/2026). Venda nao fica com
+--    diferenca: ou e' pagamento ou e' duplicata.
 -- ---------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS tblpagamentocorrecao (
-    codpagamentocorrecao bigserial NOT NULL,
-    codpagamento bigint NOT NULL,
-    antes jsonb NOT NULL,
-    depois jsonb NOT NULL,
-    justificativa varchar(300) NOT NULL,
-    criacao timestamp(0) without time zone DEFAULT now(),
-    codusuariocriacao bigint,
-    alteracao timestamp(0) without time zone DEFAULT now(),
-    codusuarioalteracao bigint,
-    CONSTRAINT pk_tblpagamentocorrecao PRIMARY KEY (codpagamentocorrecao)
-);
-CREATE INDEX IF NOT EXISTS idx_tblpagamentocorrecao_codpagamento
-    ON tblpagamentocorrecao (codpagamento);
+DROP TABLE IF EXISTS tblnegocioacerto;
 
 -- ---------------------------------------------------------------------
--- 5. Acerto da venda desbalanceada (destino da diferenca)
--- ---------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS tblnegocioacerto (
-    codnegocioacerto bigserial NOT NULL,
-    codnegocio bigint NOT NULL,
-    -- positivo = faltou pagar (a menos); negativo = pagou a mais
-    valor numeric(14,2) NOT NULL,
-    -- P perdao, C vale do colaborador, D duplicata do cliente, R credito do cliente
-    destino char(1) NOT NULL,
-    codpessoa bigint,
-    codtitulo bigint,
-    justificativa varchar(300) NOT NULL,
-    inativo timestamp(0) without time zone,
-    criacao timestamp(0) without time zone DEFAULT now(),
-    codusuariocriacao bigint,
-    alteracao timestamp(0) without time zone DEFAULT now(),
-    codusuarioalteracao bigint,
-    CONSTRAINT pk_tblnegocioacerto PRIMARY KEY (codnegocioacerto),
-    CONSTRAINT tblnegocioacerto_destino_check CHECK (destino IN ('P', 'C', 'D', 'R')),
-    CONSTRAINT tblnegocioacerto_valor_check CHECK (valor <> 0)
-);
-CREATE INDEX IF NOT EXISTS idx_tblnegocioacerto_codnegocio ON tblnegocioacerto (codnegocio);
-
--- ---------------------------------------------------------------------
--- 6. Chaves estrangeiras
+-- 5. Chaves estrangeiras
 -- ---------------------------------------------------------------------
 DO $$
 DECLARE
@@ -176,15 +136,7 @@ BEGIN
             ('fk_tblpagamento_tblmaquinetalote', 'tblpagamento', 'codmaquinetalote', 'tblmaquinetalote', 'codmaquinetalote'),
             ('fk_tblpagamento_tblmaquinetalote_cancelamento', 'tblpagamento', 'codmaquinetalotecancelamento', 'tblmaquinetalote', 'codmaquinetalote'),
             ('fk_tblpagamento_tblportadorperiodo', 'tblpagamento', 'codportadorperiodo', 'tblportadorperiodo', 'codportadorperiodo'),
-            ('fk_tblpagamento_tblusuario_conferencia', 'tblpagamento', 'codusuarioconferencia', 'tblusuario', 'codusuario'),
-            ('fk_tblpagamentocorrecao_tblpagamento', 'tblpagamentocorrecao', 'codpagamento', 'tblpagamento', 'codpagamento'),
-            ('fk_tblpagamentocorrecao_tblusuario', 'tblpagamentocorrecao', 'codusuariocriacao', 'tblusuario', 'codusuario'),
-            ('fk_tblpagamentocorrecao_tblusuario_0', 'tblpagamentocorrecao', 'codusuarioalteracao', 'tblusuario', 'codusuario'),
-            ('fk_tblnegocioacerto_tblnegocio', 'tblnegocioacerto', 'codnegocio', 'tblnegocio', 'codnegocio'),
-            ('fk_tblnegocioacerto_tblpessoa', 'tblnegocioacerto', 'codpessoa', 'tblpessoa', 'codpessoa'),
-            ('fk_tblnegocioacerto_tbltitulo', 'tblnegocioacerto', 'codtitulo', 'tbltitulo', 'codtitulo'),
-            ('fk_tblnegocioacerto_tblusuario', 'tblnegocioacerto', 'codusuariocriacao', 'tblusuario', 'codusuario'),
-            ('fk_tblnegocioacerto_tblusuario_0', 'tblnegocioacerto', 'codusuarioalteracao', 'tblusuario', 'codusuario')
+            ('fk_tblpagamento_tblusuario_conferencia', 'tblpagamento', 'codusuarioconferencia', 'tblusuario', 'codusuario')
         ) AS t(nome, tabela, coluna, ref, refcoluna)
     LOOP
         IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = fk.nome) THEN

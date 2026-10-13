@@ -6,13 +6,13 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-01 14:36'
-updated_date: '2026-10-09 00:20'
+updated_date: '2026-10-10 18:58'
 labels:
   - negocios
 dependencies:
   - TASK-188
-priority: high
-type: feature
+priority: medium
+type: enhancement
 ordinal: 203000
 ---
 
@@ -24,5 +24,5 @@ Pedido do Fábio em 01/10/2026, na validação da TASK-188 (M5). Hoje o PDV só 
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 O livro de ocorrências (TASK-205) usa a constante de 5% à vista (OcorrenciaService::DESCONTO_AVISTA) para apontar desconto acima do permitido: trocar pela regra por forma de pagamento e categoria de cliente
+- [ ] #1 O livro de ocorrências (TASK-205) usa a constante de 5% à vista (OcorrenciaPdvService::DESCONTO_AVISTA) para apontar desconto acima do permitido: trocar pela regra por forma de pagamento e categoria de cliente
 <!-- AC:END -->

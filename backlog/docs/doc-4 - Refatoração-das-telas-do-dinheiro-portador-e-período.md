@@ -848,7 +848,8 @@ o passado e o momento, lançar e alterar no mesmo lugar.
    autorização, parcelas e valor; registro indevido. Só no período não conferido.
 9. **Fica para depois**: a dashboard de pendências do gerente (unidade) e do financeiro (geral), que
    leva cada item à tela onde ele está (TASK-203). O resto de Fechamentos (cheque, vale, duplicata,
-   venda com diferença, PIX) continua como está.
+   venda com diferença, PIX) continua como está. *(10/10/2026: a tela Fechamentos saiu; o painel da
+   filial leva a cada pendência, e cheque e vale esperam tela própria, TASK-203 #2.)*
 
 ### Como ficou no código (07/10/2026; não validado)
 

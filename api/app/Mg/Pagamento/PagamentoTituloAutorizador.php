@@ -2,17 +2,21 @@
 
 namespace Mg\Pagamento;
 
-use Carbon\Carbon;
 use Mg\Portador\Portador;
+use Mg\Portador\PortadorAutorizador;
+use Mg\Portador\PortadorUsuario;
 use Mg\Usuario\UsuarioService;
 
-// Quem ve, cria e estorna recebimento/pagamento de titulo no contas
-// (M6 doc-3, as regras da antiga liquidacao): Admin/Financeiro/Cobranca em
-// tudo; Gerente e Caixa pela filial do pagamento (a do portador).
+// Quem ve e quem mexe em pagamento de titulo, vale e adiantamento (contas e
+// PDV). Mexer no dinheiro e' pelo PAPEL DO USUARIO NO PORTADOR (conceito do
+// Fabio, 09/10/2026; doc-4): o dinheiro entra num portador = depositante;
+// sai, cancela ou corrige = operador; alterar data = gestor (no
+// alterar data). O PDV so' pre-seleciona o portador dele, nao da' permissao.
+// Ver a listagem continua pela filial (Admin/Financeiro/Cobranca em tudo;
+// Gerente e Caixa nas filiais deles).
 class PagamentoTituloAutorizador
 {
     private const GRUPOS_IRRESTRITOS = ['Administrador', 'Financeiro', 'Cobranca'];
-    private const JANELA_CAIXA_MIN = 120;
 
     public static function temAcessoIrrestrito(int $codusuario): bool
     {
@@ -55,106 +59,85 @@ class PagamentoTituloAutorizador
         return !empty(array_intersect(array_map('intval', $filiais), self::filiaisRestritas($codusuario)));
     }
 
-    // encontro de contas sem dinheiro (sem portador) so' para irrestritos
-    public static function podeCriar(int $codusuario, ?int $codportador): bool
+    // o papel que o usuario precisa ter no portador, ou o motivo de nao poder
+    public static function motivoPapel(int $codusuario, ?Portador $portador, string $papel, string $acao): ?string
     {
-        if (self::temAcessoIrrestrito($codusuario)) {
-            return true;
-        }
-        $portador = $codportador ? Portador::find($codportador) : null;
-        if (!$portador || !$portador->codfilial) {
-            return false;
-        }
-        return in_array((int)$portador->codfilial, self::filiaisRestritas($codusuario), true);
-    }
-
-    // Baixa pelo wizard do contas: cada forma com portador precisa ser da
-    // filial do usuario (sem portador, a filial e' a do titulo); encontro de
-    // contas e compensacao so' para irrestritos
-    public static function motivoBloqueioBaixa(int $codusuario, array $dados): ?string
-    {
-        if (self::temAcessoIrrestrito($codusuario)) {
+        if (!$portador) {
             return null;
         }
-        $filiais = self::filiaisRestritas($codusuario);
-        $codtitulo = $dados['titulos'][0]['codtitulo'] ?? null;
-        $codfilialTitulo = $codtitulo ? \Mg\Titulo\Titulo::find($codtitulo)->codfilial ?? null : null;
-        $formas = $dados['pagamentos'] ?? [];
-        if (empty($formas)) {
-            return 'Encontro de contas só pelo Financeiro.';
-        }
-        foreach ($formas as $f) {
-            if ((int) ($f['meio'] ?? 0) == PagamentoService::MEIO_COMPENSACAO) {
-                return 'Compensação só pelo Financeiro.';
-            }
-            $portador = !empty($f['codportador']) ? Portador::find($f['codportador']) : null;
-            $codfilial = $portador->codfilial ?? $codfilialTitulo;
-            if (!$codfilial || !in_array((int) $codfilial, $filiais, true)) {
-                return 'Portador não pertence à sua filial.';
-            }
-        }
-        return null;
-    }
-
-    // vale/adiantamento no contas: Gerente e Caixa so' na filial deles, com
-    // portador dela
-    public static function motivoBloqueioAdiantamento(int $codusuario, array $dados): ?string
-    {
-        if (self::temAcessoIrrestrito($codusuario)) {
+        if (PortadorAutorizador::pode($portador->codportador, $papel, $codusuario)) {
             return null;
         }
-        $filiais = self::filiaisRestritas($codusuario);
-        if (!in_array((int) ($dados['codfilial'] ?? 0), $filiais, true)) {
-            return 'Filial não pertence a você.';
-        }
-        foreach ($dados['pagamentos'] ?? [] as $f) {
-            $portador = !empty($f['codportador']) ? Portador::find($f['codportador']) : null;
-            if ($portador && $portador->codfilial && !in_array((int) $portador->codfilial, $filiais, true)) {
-                return 'Portador não pertence à sua filial.';
-            }
-        }
-        return null;
+        return "{$acao} em {$portador->portador}: só "
+            . mb_strtolower(PortadorUsuario::PAPEIS[$papel])
+            . ($papel == PortadorUsuario::PAPEL_GESTOR ? '' : ' ou acima')
+            . ' do portador.';
     }
 
-    /**
-     * Retorna null se autorizado, ou string com mensagem de erro.
-     * $acao usado apenas para compor as mensagens (ex: 'estornar', 'editar').
-     */
-    public static function motivoBloqueioMutacao(Pagamento $pag, int $codusuario, string $acao = 'alterar'): ?string
+    // A forma da baixa/vale: entra dinheiro no portador = depositante; sai =
+    // operador; encontro de contas e compensacao = operador no Encontro de
+    // Contas; pagamento que ja' existe = pelo sentido dele
+    public static function motivoBloqueioForma(int $codusuario, array $forma, bool $entrada, ?\Mg\Pdv\Pdv $pdv = null): ?string
     {
-        if (self::temAcessoIrrestrito($codusuario)) {
-            return null;
+        $portador = PagamentoTituloService::portadorPrevisto($forma, $entrada, $pdv);
+        $papel = $entrada ? PortadorUsuario::PAPEL_DEPOSITANTE : PortadorUsuario::PAPEL_OPERADOR;
+        if ((int) ($forma['meio'] ?? 0) == PagamentoService::MEIO_COMPENSACAO) {
+            $papel = PortadorUsuario::PAPEL_OPERADOR;
         }
-        $codfilialPortador = (int)self::filial($pag);
+        return static::motivoPapel($codusuario, $portador, $papel, $entrada ? 'Receber' : 'Pagar');
+    }
 
-        if (UsuarioService::temGrupo($codusuario, 'Gerente')) {
-            $filiaisGerente = UsuarioService::filiaisDoUsuarioNoGrupo($codusuario, 'Gerente');
-            if (in_array($codfilialPortador, $filiaisGerente, true)) {
+    // Baixa de titulos (contas e PDV): pela forma; titulos que se anulam =
+    // encontro de contas
+    public static function motivoBloqueioBaixa(int $codusuario, array $dados, ?\Mg\Pdv\Pdv $pdv = null): ?string
+    {
+        $liquido = PagamentoTituloService::liquido($dados['titulos'] ?? []);
+        $formas = array_values($dados['pagamentos'] ?? []);
+        if (abs($liquido) < 0.005 || empty($formas)) {
+            if (PortadorAutorizador::pode(Portador::ENCONTRO_CONTAS, PortadorUsuario::PAPEL_OPERADOR, $codusuario)) {
                 return null;
             }
+            return 'Encontro de contas: só operador ou gestor do portador Encontro de Contas.';
         }
-
-        if (UsuarioService::temGrupo($codusuario, 'Caixa')) {
-            if ((int)$pag->codusuariocriacao !== $codusuario) {
-                return "Caixa só pode {$acao} seus próprios recebimentos e pagamentos.";
+        foreach ($formas as $f) {
+            $motivo = static::motivoBloqueioForma($codusuario, $f, $liquido < 0, $pdv);
+            if ($motivo !== null) {
+                return $motivo;
             }
-            $minutos = Carbon::parse($pag->criacao)->diffInMinutes(Carbon::now());
-            if ($minutos > self::JANELA_CAIXA_MIN) {
-                return "Caixa só pode {$acao} seus próprios recebimentos e pagamentos nas primeiras 2 horas.";
-            }
-            return null;
         }
+        return null;
+    }
 
-        return 'Pagamento não pertence à sua filial.';
+    // Vale/adiantamento (contas e PDV): pela forma, no sentido do tipo
+    public static function motivoBloqueioAdiantamento(int $codusuario, array $dados, ?\Mg\Pdv\Pdv $pdv = null): ?string
+    {
+        $tipo = \Mg\Titulo\TipoTitulo::find((int) ($dados['codtipotitulo'] ?? 0));
+        $entrada = $tipo ? !$tipo->ehReceber() : true;
+        foreach (array_values($dados['pagamentos'] ?? []) as $f) {
+            $motivo = static::motivoBloqueioForma($codusuario, $f, $entrada, $pdv);
+            if ($motivo !== null) {
+                return $motivo;
+            }
+        }
+        return null;
+    }
+
+    // Cancelar, corrigir pelo lapis, devolver: operador do
+    // portador do pagamento (o encontro de contas antigo, sem portador, e' do
+    // Encontro de Contas)
+    public static function motivoBloqueioMutacao(Pagamento $pag, int $codusuario, string $acao = 'Alterar'): ?string
+    {
+        $portador = $pag->portadorDoPagamento() ?? Portador::find(Portador::ENCONTRO_CONTAS);
+        return static::motivoPapel($codusuario, $portador, PortadorUsuario::PAPEL_OPERADOR, $acao);
     }
 
     public static function motivoBloqueioEstorno(Pagamento $pag, int $codusuario): ?string
     {
-        return self::motivoBloqueioMutacao($pag, $codusuario, 'estornar');
+        return self::motivoBloqueioMutacao($pag, $codusuario, 'Cancelar');
     }
 
     public static function motivoBloqueioEdicao(Pagamento $pag, int $codusuario): ?string
     {
-        return self::motivoBloqueioMutacao($pag, $codusuario, 'editar');
+        return self::motivoBloqueioMutacao($pag, $codusuario, 'Corrigir');
     }
 }

@@ -3,6 +3,7 @@
 namespace Mg\Pagamento;
 
 use Mg\MgModel;
+use Mg\Auditoria\Auditoria;
 use Mg\Cheque\Cheque;
 use Mg\Filial\Filial;
 use Mg\Lio\LioPedido;
@@ -77,6 +78,7 @@ class Pagamento extends MgModel
         'chequecnpj',
         'chequeemitente',
         'observacoes',
+        'referente',
         'codmaquinetalote',
         'codmaquinetalotecancelamento',
         'indevido',
@@ -160,10 +162,31 @@ class Pagamento extends MgModel
         return !empty($this->codportadororigem) && empty($this->codportadordestino);
     }
 
-    // Portador do pagamento: o destino (recebimento) ou a origem (pagamento)
+    // Portador do pagamento: o destino (recebimento) ou a origem (pagamento).
+    // O cartao da venda nao grava portador: e' o da adquirente da maquineta
     public function portadorDoPagamento(): ?Portador
     {
-        return $this->PortadorDestino ?? $this->PortadorOrigem;
+        return $this->PortadorDestino ?? $this->PortadorOrigem
+            ?? (empty($this->codmaquineta) ? null : PagamentoTituloService::portadorDaMaquineta($this->Maquineta));
+    }
+
+    public function codportadorDoPagamento(): ?int
+    {
+        $cod = $this->codportadordestino ?? $this->codportadororigem ?? optional($this->portadorDoPagamento())->codportador;
+        return empty($cod) ? null : (int) $cod;
+    }
+
+    // Entrou dinheiro: tem destino e nao tem origem. O cartao da venda (sem
+    // portador gravado) entrou, salvo o cancelamento dele
+    public function entrada(): bool
+    {
+        if (!empty($this->codportadororigem)) {
+            return false;
+        }
+        if (!empty($this->codportadordestino)) {
+            return true;
+        }
+        return !empty($this->codmaquineta) && empty($this->codpagamentoorigem);
     }
 
     // Chaves Estrangeiras
@@ -298,9 +321,11 @@ class Pagamento extends MgModel
         return $this->hasMany(Pagamento::class, 'codpagamentoorigem', 'codpagamento');
     }
 
-    public function PagamentoCorrecaoS()
+    // auditoria (TASK-204): data alterada e correcoes da conferencia
+    public function AuditoriaS()
     {
-        return $this->hasMany(PagamentoCorrecao::class, 'codpagamento', 'codpagamento');
+        return $this->hasMany(Auditoria::class, 'codigo', 'codpagamento')
+            ->where('tabela', 'tblpagamento');
     }
 
     // razao (M10 doc-3): o que este pagamento lancou em cada portador

@@ -3,21 +3,23 @@
 namespace Mg\Conferencia;
 
 use Carbon\Carbon;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Caixa\CaixaService;
 use Mg\Maquineta\Maquineta;
 use Mg\Maquineta\MaquinetaLoteService;
 use Mg\Negocio\Negocio;
+use Mg\Ocorrencia\OcorrenciaService;
 use Mg\Pagamento\Pagamento;
-use Mg\Pagamento\PagamentoCorrecao;
 use Mg\Pagamento\PagamentoService;
 use Mg\Portador\PortadorMovimentoService;
 use Mg\Portador\PortadorPeriodo;
+use Mg\Portador\PortadorPeriodoService;
 
 /**
  * Correcao dos lancamentos na conferencia (M9 doc-3): o gerente acerta o
  * pagamento com a realidade (o caixa errou, a API da maquineta duplicou ou
  * mandou valor errado). Justificativa obrigatoria e o antes/depois na
- * tblpagamentocorrecao. Total da venda, itens e nota nao mudam: a venda que
+ * tblauditoria. Total da venda, itens e nota nao mudam: a venda que
  * ficar desbalanceada vira pendencia (VendaConferenciaService).
  */
 class PagamentoCorrecaoService
@@ -39,14 +41,11 @@ class PagamentoCorrecaoService
         return $ret;
     }
 
-    private static function registrar(Pagamento $pag, array $antes, string $justificativa): void
+    private static function registrar(Pagamento $pag, int $tipo, ?array $antes, string $justificativa): void
     {
-        PagamentoCorrecao::create([
-            'codpagamento' => $pag->codpagamento,
-            'antes' => $antes,
-            'depois' => static::foto($pag),
-            'justificativa' => mb_substr($justificativa, 0, 300),
-        ]);
+        $aud = AuditoriaService::registrar('tblpagamento', $pag->codpagamento, $tipo, $antes, static::foto($pag), $justificativa);
+        // em PDV monitorado vai para o gerente conferir (TASK-205)
+        OcorrenciaService::correcao([$aud]);
     }
 
     private static function justificativa(?string $justificativa): string
@@ -70,7 +69,10 @@ class PagamentoCorrecaoService
             MaquinetaLoteService::exigirNaoConferido($pag->MaquinetaLote);
         }
         if (!empty($pag->codportadorperiodo) && !empty($pag->PortadorPeriodo->fechamento)) {
-            abort(422, 'O caixa deste dinheiro já foi fechado: reabra a sessão antes.');
+            $periodo = $pag->PortadorPeriodo;
+            abort(422, "O caixa deste dinheiro ({$periodo->Portador->portador}, "
+                . PortadorPeriodoService::descricao($periodo)
+                . ') já foi fechado: reabra a sessão antes.');
         }
         if (!empty($pag->conferencia)) {
             abort(422, 'Este pagamento já foi conferido: reabra a conferência antes.');
@@ -82,7 +84,7 @@ class PagamentoCorrecaoService
     private static function exigirSemTitulo(Pagamento $pag): void
     {
         if ($pag->MovimentoTituloS()->exists()) {
-            abort(422, 'Pagamento de título: estorne pela listagem de pagamentos e lance de novo.');
+            abort(422, 'Pagamento de título: cancele pelo detalhe do pagamento e lance de novo.');
         }
     }
 
@@ -162,7 +164,7 @@ class PagamentoCorrecaoService
         PagamentoService::validar($pag);
         $pag->save();
         PortadorMovimentoService::sincronizar($pag);
-        static::registrar($pag, $antes, $justificativa);
+        static::registrar($pag, AuditoriaService::TIPO_CORRIGIDO_CONFERENCIA, $antes, $justificativa);
         return $pag->fresh();
     }
 
@@ -180,7 +182,7 @@ class PagamentoCorrecaoService
         $antes = static::foto($pag);
         $pag->indevido = true;
         PagamentoService::cancelar($pag, "Registro indevido: {$justificativa}");
-        static::registrar($pag, $antes, $justificativa);
+        static::registrar($pag, AuditoriaService::TIPO_REGISTRO_INDEVIDO, $antes, $justificativa);
         return $pag->fresh();
     }
 
@@ -228,7 +230,7 @@ class PagamentoCorrecaoService
         if (!empty($pag->codmaquinetalote)) {
             MaquinetaLoteService::exigirNaoConferido($pag->MaquinetaLote);
         }
-        static::registrar($pag, [], $justificativa);
+        static::registrar($pag, AuditoriaService::TIPO_INCLUIDO_CONFERENCIA, null, $justificativa);
         return $pag->fresh();
     }
 }

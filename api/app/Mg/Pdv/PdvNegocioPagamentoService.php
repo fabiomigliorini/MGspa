@@ -3,10 +3,12 @@
 namespace Mg\Pdv;
 
 use Carbon\Carbon;
+use Mg\Conferencia\ConferenciaService;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioParcela;
 use Mg\Negocio\NegocioParcelaService;
 use Mg\Negocio\NegocioService;
+use Mg\Ocorrencia\OcorrenciaPdvService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
 
@@ -39,7 +41,21 @@ class PdvNegocioPagamentoService
 
     // Upsert por uuid, apaga o que nao veio. Pagamento integrado ou que ja'
     // saiu de pendente e parcela que ja' virou titulo nao mudam.
+    //
+    // Venda reaberta (TASK-30): o manual ja' efetivado e a parcela que ja'
+    // virou titulo nao se apagam, so' mudam de estado quando o PDV manda
+    // (cancelado/reativado, inativo); o lote e a sessao do dinheiro ficam
+    // para o F3.
     public static function importar(Negocio $negocio, array $pagamentos, array $parcelas): void
+    {
+        if (PdvNegocioReaberturaService::reaberto($negocio)) {
+            ConferenciaService::semVincular(fn () => static::importarTudo($negocio, $pagamentos, $parcelas));
+            return;
+        }
+        static::importarTudo($negocio, $pagamentos, $parcelas);
+    }
+
+    private static function importarTudo(Negocio $negocio, array $pagamentos, array $parcelas): void
     {
         $uuids = [];
         foreach ($pagamentos as $dados) {
@@ -49,10 +65,16 @@ class PdvNegocioPagamentoService
             $uuids[] = $dados['uuid'];
             static::importarPagamento($negocio, $dados);
         }
-        foreach ($negocio->PagamentoS()->whereNotIn('uuid', $uuids)->get() as $pag) {
-            if ($pag->ehIntegrado() || $pag->estado != PagamentoService::ESTADO_PENDENTE) {
-                continue;
-            }
+        // so' o rascunho que nunca foi fato some; o que ja' foi efetivado (o
+        // reativado da venda reaberta) so' sai cancelado, pelo estado
+        $apagados = $negocio->PagamentoS()->whereNotIn('uuid', $uuids)->get()->filter(
+            fn ($pag) => !$pag->ehIntegrado()
+                && $pag->estado == PagamentoService::ESTADO_PENDENTE
+                && empty($pag->efetivacao)
+        );
+        // vai para o gerente antes de sumir (TASK-205)
+        OcorrenciaPdvService::pagamentosApagados($negocio, $apagados);
+        foreach ($apagados as $pag) {
             $pag->delete();
         }
 
@@ -61,10 +83,14 @@ class PdvNegocioPagamentoService
             $uuids[] = $dados['uuid'];
             static::importarParcela($negocio, $dados);
         }
-        $negocio->NegocioParcelaS()
+        $apagadas = $negocio->NegocioParcelaTodasS()
             ->whereNull('codtitulo')
             ->whereNotIn('uuid', $uuids)
-            ->delete();
+            ->get();
+        OcorrenciaPdvService::parcelasApagadas($negocio, $apagadas);
+        foreach ($apagadas as $np) {
+            $np->delete();
+        }
     }
 
     public static function importarPagamento(Negocio $negocio, array $dados): Pagamento
@@ -72,6 +98,11 @@ class PdvNegocioPagamentoService
         $pag = Pagamento::firstOrNew(['uuid' => $dados['uuid']]);
         if (!empty($pag->codnegocio) && $pag->codnegocio != $negocio->codnegocio) {
             abort(422, "Pagamento de outro negócio ({$pag->codnegocio})!");
+        }
+        $reaberta = PdvNegocioReaberturaService::reaberto($negocio);
+        // venda reaberta: o manual cancela e reativa pelo estado
+        if ($pag->exists && $reaberta && PdvNegocioReaberturaService::trocarEstado($negocio, $pag, $dados['estado'] ?? null)) {
+            return $pag;
         }
         if ($pag->exists && ($pag->ehIntegrado() || $pag->estado != PagamentoService::ESTADO_PENDENTE)) {
             return $pag;
@@ -106,6 +137,14 @@ class PdvNegocioPagamentoService
         if ($pag->desconto > 0 && $meio != PagamentoService::MEIO_DINHEIRO) {
             abort(422, 'Desconto por forma de pagamento só no dinheiro!');
         }
+        // venda reaberta: o pagamento novo e' da data da venda, e o dinheiro
+        // entra (ou sai, no troco) onde o dinheiro da venda entrou
+        if ($reaberta && !$pag->exists) {
+            $pag->transacao = $negocio->lancamento;
+            if ($meio == PagamentoService::MEIO_DINHEIRO) {
+                $pag->codportadordestino = PdvNegocioReaberturaService::portadorDinheiro($negocio);
+            }
+        }
         $pag->save();
         return $pag;
     }
@@ -117,6 +156,11 @@ class PdvNegocioPagamentoService
             abort(422, "Parcela de outro negócio ({$np->codnegocio})!");
         }
         if (!empty($np->codtitulo)) {
+            // venda reaberta: a parcela que ja' virou titulo sai e volta
+            // (inativo); o F3 estorna ou gera o titulo
+            if (PdvNegocioReaberturaService::reaberto($negocio)) {
+                PdvNegocioReaberturaService::trocarInativo($np, $dados['inativo'] ?? null);
+            }
             return $np;
         }
         $condicao = $dados['condicao'] ?? null;
@@ -205,10 +249,18 @@ class PdvNegocioPagamentoService
     // Formato novo devolvido ao PDV
     // ---------------------------------------------------------------
 
-    // Cancelado so' aparece quando o negocio inteiro esta' cancelado
+    // O cancelado (pagamento C, parcela inativa) so' fica escondido na venda
+    // aberta comum; na reaberta (para reativar), na fechada e na cancelada
+    // aparece riscado (TASK-30)
+    private static function mostrarCancelado(Negocio $negocio): bool
+    {
+        return $negocio->codnegociostatus != NegocioService::STATUS_ABERTO
+            || PdvNegocioReaberturaService::reaberto($negocio);
+    }
+
     public static function pagamentos(Negocio $negocio): array
     {
-        $cancelado = $negocio->codnegociostatus == NegocioService::STATUS_CANCELADO;
+        $cancelado = static::mostrarCancelado($negocio);
         $ret = [];
         foreach ($negocio->PagamentoS()->orderBy('codpagamento')->get() as $pag) {
             if (!$cancelado && $pag->estado == PagamentoService::ESTADO_CANCELADO) {
@@ -235,7 +287,14 @@ class PdvNegocioPagamentoService
             'desconto' => $pag->desconto,
             'total' => $pag->total,
             'valortroco' => $pag->valortroco,
-            'integracao' => $pag->ehIntegrado(),
+            // o PDV nao grava nem apaga: veio de integracao, ou e' um pagamento
+            // ja' efetivado na venda aberta. Na venda reaberta o manual muda
+            // pelo estado (TASK-30)
+            'integracao' => $pag->ehIntegrado() || (
+                $pag->estado == PagamentoService::ESTADO_EFETIVADO
+                && optional($pag->Negocio)->codnegociostatus == NegocioService::STATUS_ABERTO
+                && !PdvNegocioReaberturaService::reaberto($pag->Negocio)
+            ),
             'codpessoa' => $pag->codpessoa,
             'parceiro' => $pag->Pessoa->fantasia ?? null,
             'bandeira' => $pag->bandeira,
@@ -254,6 +313,8 @@ class PdvNegocioPagamentoService
             'codsauruspedido' => $pag->codsauruspedido,
             'codliopedido' => $pag->codliopedido,
             'codportadordestino' => $pag->codportadordestino,
+            // ja' foi fato: na venda reaberta sai cancelado, nunca apagado (TASK-30)
+            'efetivacao' => $pag->efetivacao,
             // logo do banco na listagem do PDV (public/bancos/{codbanco}.svg)
             'codbanco' => $pag->PixCob->Portador->codbanco ?? null,
             'criacao' => $pag->criacao,
@@ -273,7 +334,9 @@ class PdvNegocioPagamentoService
     public static function parcelas(Negocio $negocio): array
     {
         $ret = [];
-        $parcelas = $negocio->NegocioParcelaS()
+        $parcelas = (static::mostrarCancelado($negocio)
+            ? $negocio->NegocioParcelaTodasS()
+            : $negocio->NegocioParcelaS())
             ->orderBy('condicao')
             ->orderBy('vencimento')
             ->orderBy('codnegocioparcela')
@@ -291,6 +354,7 @@ class PdvNegocioPagamentoService
                 'juros' => $np->juros,
                 'codtitulo' => $np->codtitulo,
                 'titulonumero' => $np->Titulo->numero ?? null,
+                'inativo' => $np->inativo,
                 'criacao' => $np->criacao,
                 'alteracao' => $np->alteracao,
             ];
@@ -320,7 +384,22 @@ class PdvNegocioPagamentoService
             ->whereIn('meio', $meios);
         if (!empty($condicoes)) {
             $query->union(
-                \DB::table('tblnegocioparcela')->select('codnegocio')->whereIn('condicao', $condicoes)
+                \DB::table('tblnegocioparcela')->select('codnegocio')->whereNull('inativo')->whereIn('condicao', $condicoes)
+            );
+        }
+    }
+
+    // Integrado = pagamento de integracao (Pagamento::ehIntegrado); Manual =
+    // pagamento lancado na mao ou parcela
+    public static function filtroIntegracao($query, bool $integrado): void
+    {
+        $integracao = 'coalesce(codpixcob, codpagarmepedido, codsauruspedido, codliopedido) is not null';
+        $query->select('codnegocio')->from('tblpagamento')->whereNotNull('codnegocio')
+            ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
+            ->whereRaw($integrado ? $integracao : "not ({$integracao})");
+        if (!$integrado) {
+            $query->union(
+                \DB::table('tblnegocioparcela')->select('codnegocio')->whereNull('inativo')
             );
         }
     }

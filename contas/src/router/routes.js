@@ -167,12 +167,14 @@ const routes = [
         },
       },
       {
-        path: 'fechamento',
-        name: 'fechamento',
-        component: () => import('pages/fechamento/Index.vue'),
+        // painel (TASK-203): sem filial, as filiais com o total de pendências; com filial, tudo
+        // pendente nela, cada item levando à tela que resolve
+        path: 'painel/:codfilial(\\d+)?',
+        name: 'painel',
+        component: () => import('pages/painel/Index.vue'),
         meta: {
           auth: true,
-          title: 'Fechamentos',
+          title: 'Painel',
           permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
         },
       },
@@ -187,6 +189,17 @@ const routes = [
           leftDrawer: defineAsyncComponent(
             () => import('components/drawers/OcorrenciaFiltrosDrawer.vue'),
           ),
+        },
+      },
+      {
+        // a ocorrência e as auditorias amarradas a ela (TASK-209)
+        path: 'ocorrencia/:codocorrencia(\\d+)',
+        name: 'ocorrencia-detalhe',
+        component: () => import('pages/ocorrencia/Detalhe.vue'),
+        meta: {
+          auth: true,
+          title: 'Ocorrência',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
         },
       },
       {
@@ -339,6 +352,19 @@ const routes = [
           ],
           leftDrawer: defineAsyncComponent(
             () => import('components/drawers/PagamentoFiltrosDrawer.vue'),
+          ),
+        },
+      },
+      {
+        path: 'pagamento/divergencias',
+        name: 'pagamento-divergencias',
+        component: () => import('pages/pagamento/Divergencias.vue'),
+        meta: {
+          auth: true,
+          title: 'Divergências',
+          permissions: [PERMISSOES.ADMINISTRADOR, PERMISSOES.FINANCEIRO, PERMISSOES.GERENTE],
+          leftDrawer: defineAsyncComponent(
+            () => import('components/drawers/DivergenciaFiltrosDrawer.vue'),
           ),
         },
       },
