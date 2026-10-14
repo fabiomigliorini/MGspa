@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-08 21:59'
-updated_date: '2026-10-10 16:16'
+updated_date: '2026-10-14 23:28'
 labels:
   - contas
 dependencies: []
@@ -59,6 +59,7 @@ Notas técnicas:
 - [x] #23 Hora do extrato e do lápis do pagamento vai sem fuso (hora de Cuiabá): qualquer aparelho mostra e grava a mesma hora
 - [x] #24 Devolução (cancelamento no cartão/devolução de PIX) não fica antes do pagamento original, nem o original depois da devolução
 - [x] #25 Editar início/fim do período da maquineta leva junto os cartões cuja hora cai na faixa nova (só períodos não conferidos)
+- [x] #26 Pagamento lançado depois do go-live com data de antes (ex.: cartão do dia 08 baixado no dia 13): o gestor leva para a data certa e ele sai do período da maquineta, da gaveta e do razão; o operador não pode (Fábio, 14/10/2026)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -86,7 +87,7 @@ Escolhas feitas sem perguntar (revisar no teste)
 - Permissão: gestor de qualquer um dos portadores envolvidos (na transferência, origem ou destino); cartão: quem confere a maquineta (Gerente da filial/Financeiro); no PDV, a gaveta dele. O lápis do recebimento também exige isso para mudar a data.
 - Data informada até 5 minutos à frente vira agora (relógio do cliente); mais que isso, recusa.
 - O contas continua recusando a gaveta do PDV na baixa/vale (o PDV informa a data, decisão 4).
-- A data não pode ir para antes do início do razão (go-live).
+- A data não pode ir para antes do início do razão (go-live). Revisto em 14/10/2026 (AC #26): o pagamento pode, só pelo gestor, e sai da conferência; movimento do portador, baixa e vale continuam recusando. Controle contra uso indevido: TASK-227.
 
 Roteiro de teste
 1. Caixa pendente de ontem: no PDV, lançar o vale com a data/hora de ontem dentro do período pendente → cai no período de ontem; no contas, Fechar o período de ontem → fecha se a diferença zerou.
