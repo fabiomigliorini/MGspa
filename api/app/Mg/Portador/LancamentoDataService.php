@@ -29,7 +29,8 @@ use Mg\Titulo\MovimentoTituloService;
  *   Movimento (ajuste, item, bordero, transferencia): a transacao e o periodo
  *   de cada linha; a transferencia muda as duas pontas juntas.
  * Periodo fechado (caixa, banco) ou conferido (maquineta) nao recebe nem perde
- * lancamento. Justificativa obrigatoria, com o antes/depois na auditoria. So' o
+ * lancamento. Antes do go-live so' o pagamento vai, pelo gestor, e sai da
+ * conferencia. Justificativa obrigatoria, com o antes/depois na auditoria. So' o
  * gestor do portador (o cartao, quem confere a maquineta; no PDV, a gaveta
  * dele). Sem transacao interna: o controller abre.
  */
@@ -39,7 +40,8 @@ class LancamentoDataService
     const TOLERANCIA_FUTURO_MIN = 5;
 
     // nao no futuro (a mesma tolerancia em todo lugar) nem antes do razao
-    private static function exigirLimites(Carbon $data): Carbon
+    // (`$antesDoRazao`: o pagamento, que pode sair da conferencia)
+    private static function exigirLimites(Carbon $data, bool $antesDoRazao = false): Carbon
     {
         $agora = Carbon::now();
         if ($data->gt($agora->copy()->addMinutes(static::TOLERANCIA_FUTURO_MIN))) {
@@ -48,16 +50,16 @@ class LancamentoDataService
         if ($data->gt($agora)) {
             $data = $agora->copy();
         }
-        if ($data->lt(ConferenciaService::inicio())) {
+        if (!$antesDoRazao && $data->lt(ConferenciaService::inicio())) {
             abort(422, 'A data não pode ser antes do início do razão (' . ConferenciaService::inicio()->format('d/m/Y') . ').');
         }
         return $data;
     }
 
     // a data nova do alterar data
-    private static function exigirData(Carbon $data): Carbon
+    private static function exigirData(Carbon $data, bool $antesDoRazao = false): Carbon
     {
-        return static::exigirLimites($data->copy()->startOfMinute());
+        return static::exigirLimites($data->copy()->startOfMinute(), $antesDoRazao);
     }
 
     // a data informada ao lancar (baixa de titulo, vale; contas e PDV), com
@@ -258,8 +260,15 @@ class LancamentoDataService
     public static function alterarPagamento(Pagamento $pag, Carbon $data, ?string $justificativa, bool $autorizado = false): Pagamento
     {
         $justificativa = static::justificativa($justificativa);
-        $data = static::exigirData($data);
-        if (!$autorizado) {
+        $data = static::exigirData($data, true);
+        // antes do go-live o pagamento sai da conferencia (sem sessao, periodo
+        // da maquineta nem razao, como o historico): so' o gestor de cada
+        // portador (Fabio, 14/10/2026)
+        $foraDoRazao = $data->lt(ConferenciaService::inicio());
+        if ($foraDoRazao && !static::podePortadores(static::portadoresDoPagamento($pag))) {
+            abort(403, 'Antes do início do razão (' . ConferenciaService::inicio()->format('d/m/Y') . '), só o gestor de cada portador do pagamento altera a data (no cartão, o da adquirente).');
+        }
+        if (!$autorizado && !$foraDoRazao) {
             static::autorizarPagamento($pag, $data);
         }
         // a devolucao (cancelamento no cartao, devolucao de PIX) nao vem antes
@@ -294,13 +303,14 @@ class LancamentoDataService
         $antes = static::fotoPagamento($pag);
 
         $pag->transacao = $data;
-        // a sessao da gaveta e o periodo da maquineta seguem a data
+        // a sessao da gaveta e o periodo da maquineta seguem a data; antes do
+        // go-live, nenhum
         if (!empty($pag->codportadorperiodo)) {
             $caixa = PortadorPeriodo::findOrFail($pag->codportadorperiodo)->Portador;
-            $pag->codportadorperiodo = CaixaService::sessaoDoMomento($caixa, $data)->codportadorperiodo;
+            $pag->codportadorperiodo = $foraDoRazao ? null : CaixaService::sessaoDoMomento($caixa, $data)->codportadorperiodo;
         }
         if (!empty($pag->codmaquinetalote) && !empty($pag->codmaquineta)) {
-            $pag->codmaquinetalote = MaquinetaLoteService::daData($pag->codmaquineta, $data)->codmaquinetalote;
+            $pag->codmaquinetalote = $foraDoRazao ? null : MaquinetaLoteService::daData($pag->codmaquineta, $data)->codmaquinetalote;
         }
         PagamentoService::validar($pag);
         $pag->save();
