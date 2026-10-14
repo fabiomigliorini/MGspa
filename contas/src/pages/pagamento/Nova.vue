@@ -1,7 +1,7 @@
 <script setup>
 // Receber ou Pagar Títulos: a tela de baixa compartilhada com o PDV (MgBaixaTitulos), com as
 // formas do financeiro (cartão com bandeira, autorização, parcelas e maquineta; banco; dinheiro
-// do cofre; cheque; cartão da empresa; compensação). Gaveta de PDV não aparece. Maquinetas de
+// do cofre, troco, caixa ou gaveta; cheque; cartão da empresa; compensação). Maquinetas de
 // todas as filiais (o financeiro conserta lançamento de qualquer loja).
 // Com ?codpix= (vindo da tela PIX, TASK-219), usa o PIX inteiro, na data e na conta dele.
 import { ref, onMounted } from 'vue'

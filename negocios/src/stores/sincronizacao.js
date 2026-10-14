@@ -4,11 +4,15 @@ import { db } from 'boot/db'
 import { uid } from 'quasar'
 import { Platform } from 'quasar'
 import { Notify } from 'quasar'
+import moment from 'moment'
 
 // o negocio.js chama sincronizacaoStore() no topo do modulo: importar ele daqui de forma
 // estatica fecha um ciclo que quebra quando a sincronizacao carrega primeiro (Meu Dispositivo
 // como primeira tela). Por isso o negocio vem por import dinamico, so' na hora de usar.
 const negocio = async () => (await import('stores/negocio')).negocioStore()
+
+// a sincronizacao ao abrir roda uma vez por carga do app, nao a cada tela que mostra a janela
+let verificadaAoAbrir = false
 
 export const DISPOSITIVO_NAO_CADASTRADO =
   'Este navegador não está cadastrado como dispositivo. Abra o Meu Dispositivo e clique em Cadastrar.'
@@ -188,11 +192,59 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
     },
 
+    // Ao abrir o sistema (TASK-197): com a ultima sincronizacao ha mais de 2 horas, ou nunca
+    // feita, abre a janela e ja sincroniza. Quem chama e' a janela de sincronizar ao aparecer
+    // (PDV e quiosque). Sem cadastro ou inativo nao sincroniza: o router manda pro Meu Dispositivo.
+    async sincronizarAoAbrir() {
+      if (verificadaAoAbrir) {
+        return
+      }
+      verificadaAoAbrir = true
+      if (!this.pdv.codpdv || this.pdv.inativo) {
+        return
+      }
+      const completa = this.ultimaSincronizacao.completa
+      if (completa && moment(completa).isAfter(moment().subtract(2, 'hours'))) {
+        return
+      }
+      this.importacao.dialog = true
+      await this.sincronizar()
+    },
+
+    // Uma sincronizacao por vez, entre todas as janelas do navegador (TASK-197): a trava do
+    // Web Locks vale para as abas do mesmo site e solta sozinha se a janela que sincroniza fechar
     async sincronizar() {
-      // desabilita o botao ja no clique, antes do dispositivo() responder
+      if (this.importacao.rodando) {
+        return
+      }
+      // desabilita o botao ja no clique, antes da trava e do dispositivo() responderem
       this.importacao.rodando = true
       this.importacao.erro = false
 
+      // sem Web Locks (navegador antigo ou pagina sem https) sincroniza sem a trava
+      if (!navigator.locks) {
+        await this.executarSincronizacao()
+        return
+      }
+      const rodou = await navigator.locks.request(
+        'sincronizacao',
+        { ifAvailable: true },
+        async (trava) => {
+          if (!trava) {
+            return false
+          }
+          await this.executarSincronizacao()
+          return true
+        },
+      )
+      if (!rodou) {
+        this.importacao.rodando = false
+        this.importacao.dialog = false
+        erro('Já existe uma sincronização em andamento, nesta ou em outra janela.')
+      }
+    },
+
+    async executarSincronizacao() {
       // verifica se PDV pode acessar API (o dispositivo() ja avisou o erro)
       try {
         await this.dispositivo()

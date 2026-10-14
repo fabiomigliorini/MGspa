@@ -1,10 +1,14 @@
 <script setup>
+import { onMounted } from 'vue'
 import { formataNumero } from '@components/formatters'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 
 // Janela "Sincronizar...": abre com sSinc.importacao.dialog = true
 // (botao do cabecalho do PDV e menu do quiosque).
 const sSinc = sincronizacaoStore()
+
+// ao abrir o sistema com a sincronizacao velha, a janela abre e ja sincroniza (TASK-197)
+onMounted(() => sSinc.sincronizarAoAbrir())
 </script>
 
 <template>

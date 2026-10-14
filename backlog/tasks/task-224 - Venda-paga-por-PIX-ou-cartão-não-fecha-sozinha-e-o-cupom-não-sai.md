@@ -1,11 +1,11 @@
 ---
 id: TASK-224
 title: Venda paga por PIX ou cartão não fecha sozinha e o cupom não sai
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-13 22:53'
-updated_date: '2026-10-13 22:53'
+updated_date: '2026-10-13 23:00'
 labels:
   - negocios
 dependencies: []
@@ -24,8 +24,8 @@ Causa: desde c12254f04 (TASK-188 M6.1) os stores da cobrança (components/stores
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Pagamento PIX confirmado com o dialog aberto fecha a venda e emite o cupom sozinho, quando quita o saldo
-- [ ] #2 Pagamento no cartão (Stone/PagarMe e SafraPay) confirmado com o dialog aberto fecha a venda e emite o cupom sozinho, quando quita o saldo
+- [x] #1 Pagamento PIX confirmado com o dialog aberto fecha a venda e emite o cupom sozinho, quando quita o saldo
+- [x] #2 Pagamento no cartão (Stone/PagarMe e SafraPay) confirmado com o dialog aberto fecha a venda e emite o cupom sozinho, quando quita o saldo
 <!-- AC:END -->
 
 ## Implementation Notes
