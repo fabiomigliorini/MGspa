@@ -5,6 +5,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { negocioStore } from 'stores/negocio'
 import { produtoStore } from 'stores/produto'
 import { useAuthStore } from 'stores/auth'
+import { useAuth } from 'src/composables/useAuth'
 import { pagarMeStore } from '@components/stores/pagarMeStore'
 import { saurusStore } from '@components/stores/saurusStore'
 import { pixStore } from '@components/stores/pixStore'
@@ -21,12 +22,14 @@ import { abrirPdf } from '@components/abrirPdf'
 import { Dialog, Notify, debounce } from 'quasar'
 import { db } from 'boot/db'
 import emitter from '../utils/emitter.js'
+import MgEmptyState from '@components/MgEmptyState.vue'
 
 const route = useRoute()
 const router = useRouter()
 const sNegocio = negocioStore()
 const sProduto = produtoStore()
 const sAuth = useAuthStore()
+const { estaAutenticado, expiresAt } = useAuth()
 const sPagarMe = pagarMeStore()
 const sSaurus = saurusStore()
 const sPix = pixStore()
@@ -155,6 +158,12 @@ const carregareOuCriarNegocio = async () => {
       router.push('/offline/' + sNegocio.negocio.uuid)
       return
     }
+  }
+  // sem usuario (ou com a sessao vencida) nao abre negocio sozinho: manda-lo pro servidor
+  // abriria o login. F2/Novo continuam abrindo, inclusive sem login e sem rede (TASK-197)
+  const sessaoVencida = expiresAt.value && new Date(expiresAt.value) < new Date()
+  if (!estaAutenticado.value || sessaoVencida) {
+    return
   }
   vazioOuCriar()
 }
@@ -785,5 +794,10 @@ onUnmounted(() => {
         </q-btn>
       </div>
     </q-page-sticky>
+  </q-page>
+  <q-page v-else class="q-pa-md">
+    <MgEmptyState icon="point_of_sale">
+      Aperte F2 ou clique em Novo para começar uma venda
+    </MgEmptyState>
   </q-page>
 </template>
