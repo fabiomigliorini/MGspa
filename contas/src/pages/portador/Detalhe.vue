@@ -107,6 +107,9 @@ const extrato = computed(() => {
   }
 })
 
+// o cadastro do PDV fica no negocios
+const urlPdv = (codpdv) => `${process.env.NEGOCIOS_URL}/dispositivo/${codpdv}`
+
 function excluir() {
   $q.dialog({
     title: 'Excluir',
@@ -232,6 +235,32 @@ function abrirPeriodo() {
             </div>
           </div>
         </div>
+
+        <!-- PDVs que apontam para ele (o que o faz gaveta); a gaveta se troca no cadastro do PDV -->
+        <q-card v-if="portador.pdvs?.length" flat bordered class="q-mb-md">
+          <q-list separator>
+            <q-item-label header class="q-py-sm text-weight-medium">PDVs vinculados</q-item-label>
+            <q-item
+              v-for="d in portador.pdvs"
+              :key="d.codpdv"
+              clickable
+              :href="urlPdv(d.codpdv)"
+              target="_blank"
+            >
+              <q-item-section avatar>
+                <q-icon name="point_of_sale" color="grey-7" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label :class="d.inativo ? 'text-strike text-grey-6' : ''">
+                  {{ d.apelido || 'Sem apelido' }}
+                </q-item-label>
+                <q-item-label caption>
+                  {{ d.filial ?? 'Sem filial' }}<template v-if="d.inativo"> · inativo</template>
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card>
 
         <q-card v-if="(periodos.length && periodo) || podeAbrir" flat bordered class="q-mb-md">
           <!-- abas: ano → mês → período -->

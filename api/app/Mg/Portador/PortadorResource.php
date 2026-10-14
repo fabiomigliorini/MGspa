@@ -22,6 +22,13 @@ class PortadorResource extends Resource
         $ret['movimentoconciliar'] = $this->PortadorMovimentoS()->whereNull('inativo')->where('conciliado', false)->count();
         $ret['gaveta'] = $this->ehGaveta();
         $ret['caixa'] = $this->ehCaixa();
+        // PDVs que apontam para ele (o que o faz gaveta)
+        $ret['pdvs'] = $this->PdvS()->with('Filial')->orderBy('apelido')->get()->map(fn ($pdv) => [
+            'codpdv' => $pdv->codpdv,
+            'apelido' => $pdv->apelido,
+            'filial' => optional($pdv->Filial)->filial,
+            'inativo' => $pdv->inativo,
+        ]);
         $ret['banco'] = $this->whenLoaded('Banco', function () {
             return optional($this->Banco)->banco;
         });
