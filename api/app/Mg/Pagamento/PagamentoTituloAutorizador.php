@@ -2,6 +2,7 @@
 
 namespace Mg\Pagamento;
 
+use Mg\Portador\LancamentoDataService;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorAutorizador;
 use Mg\Portador\PortadorUsuario;
@@ -10,8 +11,8 @@ use Mg\Usuario\UsuarioService;
 // Quem ve e quem mexe em pagamento de titulo, vale e adiantamento (contas e
 // PDV). Mexer no dinheiro e' pelo PAPEL DO USUARIO NO PORTADOR (conceito do
 // Fabio, 09/10/2026; doc-4): o dinheiro entra num portador = depositante;
-// sai, cancela ou corrige = operador; alterar data = gestor (no
-// alterar data). O PDV so' pre-seleciona o portador dele, nao da' permissao.
+// sai, cancela ou corrige = operador; alterar data e data de antes do
+// go-live = gestor. O PDV so' pre-seleciona o portador dele, nao da' permissao.
 // Ver a listagem continua pela filial (Admin/Financeiro/Cobranca em tudo;
 // Gerente e Caixa nas filiais deles).
 class PagamentoTituloAutorizador
@@ -76,15 +77,20 @@ class PagamentoTituloAutorizador
 
     // A forma da baixa/vale: entra dinheiro no portador = depositante; sai =
     // operador; encontro de contas e compensacao = operador no Encontro de
-    // Contas; pagamento que ja' existe = pelo sentido dele
-    public static function motivoBloqueioForma(int $codusuario, array $forma, bool $entrada, ?\Mg\Pdv\Pdv $pdv = null): ?string
+    // Contas; pagamento que ja' existe = pelo sentido dele. Com data de antes
+    // do go-live, fora da conferencia: so' o gestor (Fabio, 15/10/2026)
+    public static function motivoBloqueioForma(int $codusuario, array $forma, bool $entrada, ?\Mg\Pdv\Pdv $pdv = null, bool $antesDoRazao = false): ?string
     {
         $portador = PagamentoTituloService::portadorPrevisto($forma, $entrada, $pdv);
         $papel = $entrada ? PortadorUsuario::PAPEL_DEPOSITANTE : PortadorUsuario::PAPEL_OPERADOR;
         if ((int) ($forma['meio'] ?? 0) == PagamentoService::MEIO_COMPENSACAO) {
             $papel = PortadorUsuario::PAPEL_OPERADOR;
         }
-        return static::motivoPapel($codusuario, $portador, $papel, $entrada ? 'Receber' : 'Pagar');
+        if ($antesDoRazao) {
+            $papel = PortadorUsuario::PAPEL_GESTOR;
+        }
+        $acao = ($entrada ? 'Receber' : 'Pagar') . ($antesDoRazao ? ' com data antes do go-live' : '');
+        return static::motivoPapel($codusuario, $portador, $papel, $acao);
     }
 
     // Baixa de titulos (contas e PDV): pela forma; titulos que se anulam =
@@ -93,14 +99,18 @@ class PagamentoTituloAutorizador
     {
         $liquido = PagamentoTituloService::liquido($dados['titulos'] ?? []);
         $formas = array_values($dados['pagamentos'] ?? []);
+        $antesDoRazao = LancamentoDataService::antesDoRazao($dados['transacao'] ?? null);
         if (abs($liquido) < 0.005 || empty($formas)) {
-            if (PortadorAutorizador::pode(Portador::ENCONTRO_CONTAS, PortadorUsuario::PAPEL_OPERADOR, $codusuario)) {
+            $papel = $antesDoRazao ? PortadorUsuario::PAPEL_GESTOR : PortadorUsuario::PAPEL_OPERADOR;
+            if (PortadorAutorizador::pode(Portador::ENCONTRO_CONTAS, $papel, $codusuario)) {
                 return null;
             }
-            return 'Encontro de contas: só operador ou gestor do portador Encontro de Contas.';
+            return $antesDoRazao
+                ? 'Encontro de contas com data antes do go-live: só gestor do portador Encontro de Contas.'
+                : 'Encontro de contas: só operador ou gestor do portador Encontro de Contas.';
         }
         foreach ($formas as $f) {
-            $motivo = static::motivoBloqueioForma($codusuario, $f, $liquido < 0, $pdv);
+            $motivo = static::motivoBloqueioForma($codusuario, $f, $liquido < 0, $pdv, $antesDoRazao);
             if ($motivo !== null) {
                 return $motivo;
             }
@@ -113,8 +123,9 @@ class PagamentoTituloAutorizador
     {
         $tipo = \Mg\Titulo\TipoTitulo::find((int) ($dados['codtipotitulo'] ?? 0));
         $entrada = $tipo ? !$tipo->ehReceber() : true;
+        $antesDoRazao = LancamentoDataService::antesDoRazao($dados['transacao'] ?? null);
         foreach (array_values($dados['pagamentos'] ?? []) as $f) {
-            $motivo = static::motivoBloqueioForma($codusuario, $f, $entrada, $pdv);
+            $motivo = static::motivoBloqueioForma($codusuario, $f, $entrada, $pdv, $antesDoRazao);
             if ($motivo !== null) {
                 return $motivo;
             }

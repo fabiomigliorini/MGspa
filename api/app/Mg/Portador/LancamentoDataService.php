@@ -64,7 +64,8 @@ class LancamentoDataService
 
     // a data informada ao lancar (baixa de titulo, vale; contas e PDV), com
     // hora: e' a do fato. Sem data, agora; um pouco a frente (relogio do
-    // aparelho), agora; no futuro ou antes do inicio do razao, recusa. O
+    // aparelho), agora; no futuro, recusa. Antes do go-live so' o gestor
+    // (PagamentoTituloAutorizador) e o pagamento fica fora da conferencia. O
     // periodo de cada portador sai dela: periodo fechado e gaveta sem sessao
     // naquela hora tambem recusam (PortadorMovimentoService, CaixaService)
     public static function dataInformada(?string $transacao): Carbon
@@ -72,7 +73,13 @@ class LancamentoDataService
         if (empty($transacao)) {
             return Carbon::now()->startOfSecond();
         }
-        return static::exigirLimites(Carbon::parse($transacao));
+        return static::exigirLimites(Carbon::parse($transacao), true);
+    }
+
+    // a data informada e' de antes do go-live
+    public static function antesDoRazao(?string $transacao): bool
+    {
+        return !empty($transacao) && Carbon::parse($transacao)->lt(ConferenciaService::inicio());
     }
 
     private static function justificativa(?string $justificativa): string
