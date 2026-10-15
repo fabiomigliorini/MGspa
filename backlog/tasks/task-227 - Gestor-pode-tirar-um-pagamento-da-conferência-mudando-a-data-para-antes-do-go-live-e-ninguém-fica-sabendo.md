@@ -17,7 +17,7 @@ ordinal: 238000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-Desde 14/10/2026 (TASK-204, AC #26) o gestor pode levar um pagamento para antes do go-live (12/10). Caso real: o cartão do dia 08 foi baixado no dia 13 e não tinha como ir para o dia certo. O pagamento sai do período da maquineta, da gaveta e do razão; fica só a auditoria (antes/depois e justificativa). O operador não pode.
+Desde 14/10/2026 (TASK-204, AC #26 e #27) o gestor pode levar um pagamento para antes do go-live (12/10), no alterar data, na baixa de título e no vale. Casos reais: o cartão do dia 08 foi baixado no dia 13 e não tinha como ir para o dia certo; um depósito de 28/08 no Sicredi não tinha como ser baixado. O pagamento sai do período da maquineta, da gaveta e do razão; fica só a auditoria (antes/depois e justificativa). O operador não pode.
 
 Medo do Fábio: usarem isso para fazer rolo. O risco está no dinheiro: tirar um pagamento da gaveta diminui o que ela devia ter, a pessoa embolsa e o caixa fecha certo. No cartão o borderô da maquininha denuncia; no PIX/banco, o extrato.
 
