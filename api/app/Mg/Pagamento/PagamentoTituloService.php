@@ -414,9 +414,6 @@ class PagamentoTituloService
         if ($escolhido && !empty($escolhido->inativo)) {
             abort(422, "Portador {$escolhido->portador} inativo!");
         }
-        if ($escolhido && !$pdv && $escolhido->ehGaveta()) {
-            abort(422, 'No contas não se baixa título em gaveta de caixa: receba pelo PDV ou escolha cofre/banco.');
-        }
 
         switch ($meio) {
             case PagamentoService::MEIO_DINHEIRO:

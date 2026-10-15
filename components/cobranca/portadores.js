@@ -1,12 +1,11 @@
 // Portadores que o contas oferece nas formas do wizard (vêm do contexto, já restritos às filiais
-// do usuário): os ativos dos tipos pedidos, sem gaveta de PDV (no contas não se baixa em gaveta),
-// os da filial do documento primeiro.
+// do usuário): os ativos dos tipos pedidos, os da filial do documento primeiro.
 import { logo } from './logos.js'
 
 export const opcoesPortador = (sCobranca, tipos) => {
   const codfilial = sCobranca.contexto?.codfilial
   const lista = (sCobranca.contexto?.portadores ?? [])
-    .filter((p) => tipos.includes(p.tipo) && !p.gaveta && !p.inativo)
+    .filter((p) => tipos.includes(p.tipo) && !p.inativo)
     .sort((a, b) => {
       const fa = a.codfilial == codfilial ? 0 : 1
       const fb = b.codfilial == codfilial ? 0 : 1
