@@ -124,8 +124,15 @@ class CaixaItemService
                 $somar($l, $m['valor'] < 0 ? -1 : 1);
             }
         }
-        ksort($juntas);
-        return array_values(array_filter($juntas, fn ($l) => $l['quantidade'] != 0));
+        return static::ordenar(array_values(array_filter($juntas, fn ($l) => $l['quantidade'] != 0)));
+    }
+
+    // ordem das linhas: descricao, preco
+    private static function ordenar(array $linhas): array
+    {
+        usort($linhas, fn ($a, $b) => [mb_strtolower($a['descricao'] ?? ''), (float) $a['preco']]
+            <=> [mb_strtolower($b['descricao'] ?? ''), (float) $b['preco']]);
+        return $linhas;
     }
 
     // o que tem de cada item no periodo, para a saida: a contagem que deu o
@@ -484,7 +491,7 @@ class CaixaItemService
 
     // limpa as linhas: preco positivo, quantidade inteira nao negativa,
     // descricao opcional; junta as de mesmo preco e descricao e tira as
-    // zeradas. Ordem: preco, descricao
+    // zeradas. Ordem: descricao, preco
     public static function linhas(?array $linhas): array
     {
         $juntas = [];
@@ -509,8 +516,7 @@ class CaixaItemService
                 $juntas[$chave] = ['preco' => $preco, 'quantidade' => $quantidade, 'descricao' => $descricao];
             }
         }
-        ksort($juntas);
-        return array_values($juntas);
+        return static::ordenar(array_values($juntas));
     }
 
     // as linhas da entrada ou saida, mesma regra da tela (ItemCaixaDialog):
