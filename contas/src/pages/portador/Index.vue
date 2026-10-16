@@ -63,84 +63,90 @@ onMounted(() => store.buscarPainel())
         </q-btn>
       </div>
 
-      <q-card v-for="f in filiais" :key="f.codfilial ?? 0" flat bordered class="q-mb-md">
-        <q-item>
-          <q-item-section>
-            <q-item-label class="text-subtitle1 text-weight-medium">{{ f.filial }}</q-item-label>
-          </q-item-section>
-          <q-item-section side>
-            <q-item-label caption>espécie</q-item-label>
-            <q-item-label class="text-weight-bold" :class="f.total < 0 ? 'text-red-8' : ''">
-              R$ {{ formataNumero(f.total) }}
-            </q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-list v-for="t in f.tipos" :key="t.tipo" separator>
-          <q-separator />
-          <q-item-label
-            header
-            class="q-py-sm text-weight-medium"
-            :class="`text-${portadorTipoColor(t.tipo)}`"
-          >
-            {{ t.label }}
-          </q-item-label>
-          <q-item
-            v-for="p in t.portadores"
-            :key="p.codportador"
-            clickable
-            :to="{ name: 'portador-detalhe', params: { codportador: p.codportador } }"
-          >
-            <q-item-section avatar>
-              <q-icon
-                :name="p.ehGaveta ? 'point_of_sale' : ICONE[p.tipo]"
-                :color="portadorTipoColor(p.tipo)"
-              />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label :class="p.inativo ? 'text-strike text-grey-6' : ''">
-                {{ p.portador }}
-                <q-badge v-if="aberta(p)" color="green-7" class="q-ml-sm" label="Aberto" />
-              </q-item-label>
-              <q-item-label v-if="situacao(p)" caption>{{ situacao(p) }}</q-item-label>
+      <div class="row q-col-gutter-md">
+        <div v-for="f in filiais" :key="f.codfilial ?? 0" class="col-xs-12 col-sm-6 col-md-4">
+          <q-card flat bordered>
+            <q-item>
+              <q-item-section>
+                <q-item-label class="text-subtitle1 text-weight-medium">{{
+                  f.filial
+                }}</q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-item-label caption>espécie</q-item-label>
+                <q-item-label class="text-weight-bold" :class="f.total < 0 ? 'text-red-8' : ''">
+                  R$ {{ formataNumero(f.total) }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-list v-for="t in f.tipos" :key="t.tipo" separator>
+              <q-separator />
               <q-item-label
-                v-if="p.pendentes || p.chegando.quantidade || p.saindo.quantidade"
-                caption
+                header
+                class="q-py-sm text-weight-medium"
+                :class="`text-${portadorTipoColor(t.tipo)}`"
               >
-                <q-badge
-                  v-if="p.pendentes"
-                  color="amber-10"
-                  class="q-mr-xs"
-                  :label="`${p.pendentes} período(s) pendente(s)`"
-                />
-                <q-badge
-                  v-if="p.chegando.quantidade"
-                  color="amber-8"
-                  class="q-mr-xs"
-                  :label="`${p.chegando.quantidade} chegando a confirmar · R$ ${formataNumero(p.chegando.valor)}`"
-                />
-                <q-badge
-                  v-if="p.saindo.quantidade"
-                  color="amber-8"
-                  :label="`${p.saindo.quantidade} saindo a confirmar · R$ ${formataNumero(p.saindo.valor)}`"
-                />
+                {{ t.label }}
               </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-item-label
-                v-if="p.saldo !== null"
-                class="text-weight-bold"
-                :class="p.saldo < 0 ? 'text-red-8' : 'text-grey-9'"
+              <q-item
+                v-for="p in t.portadores"
+                :key="p.codportador"
+                clickable
+                :to="{ name: 'portador-detalhe', params: { codportador: p.codportador } }"
               >
-                R$ {{ formataNumero(p.saldo) }}
-              </q-item-label>
-              <q-item-label v-else class="text-grey-5">—</q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-icon name="chevron_right" color="grey-5" />
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-card>
+                <q-item-section avatar>
+                  <q-icon
+                    :name="p.ehGaveta ? 'point_of_sale' : ICONE[p.tipo]"
+                    :color="portadorTipoColor(p.tipo)"
+                  />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label :class="p.inativo ? 'text-strike text-grey-6' : ''">
+                    {{ p.portador }}
+                    <q-badge v-if="aberta(p)" color="green-7" class="q-ml-sm" label="Aberto" />
+                  </q-item-label>
+                  <q-item-label v-if="situacao(p)" caption>{{ situacao(p) }}</q-item-label>
+                  <q-item-label
+                    v-if="p.pendentes || p.chegando.quantidade || p.saindo.quantidade"
+                    caption
+                  >
+                    <q-badge
+                      v-if="p.pendentes"
+                      color="amber-10"
+                      class="q-mr-xs"
+                      :label="`${p.pendentes} período(s) pendente(s)`"
+                    />
+                    <q-badge
+                      v-if="p.chegando.quantidade"
+                      color="amber-8"
+                      class="q-mr-xs"
+                      :label="`${p.chegando.quantidade} chegando a confirmar · R$ ${formataNumero(p.chegando.valor)}`"
+                    />
+                    <q-badge
+                      v-if="p.saindo.quantidade"
+                      color="amber-8"
+                      :label="`${p.saindo.quantidade} saindo a confirmar · R$ ${formataNumero(p.saindo.valor)}`"
+                    />
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-item-label
+                    v-if="p.saldo !== null"
+                    class="text-weight-bold"
+                    :class="p.saldo < 0 ? 'text-red-8' : 'text-grey-9'"
+                  >
+                    R$ {{ formataNumero(p.saldo) }}
+                  </q-item-label>
+                  <q-item-label v-else class="text-grey-5">—</q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-icon name="chevron_right" color="grey-5" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card>
+        </div>
+      </div>
 
       <MgEmptyState v-if="!carregando && !filiais.length" icon="account_balance_wallet">
         Nenhum portador nesta filial.
