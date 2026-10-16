@@ -192,8 +192,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
     },
 
-    // Ao abrir o sistema (TASK-197): com a ultima sincronizacao ha mais de 2 horas, ou nunca
-    // feita, abre a janela e ja sincroniza. Quem chama e' a janela de sincronizar ao aparecer
+    // Ao abrir o sistema (TASK-197): sem ter sincronizado hoje (ultima de outro dia, ou nunca
+    // feita), abre a janela e ja sincroniza. Quem chama e' a janela de sincronizar ao aparecer
     // (PDV e quiosque). Sem cadastro ou inativo nao sincroniza: o router manda pro Meu Dispositivo.
     async sincronizarAoAbrir() {
       if (verificadaAoAbrir) {
@@ -204,7 +204,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
       const completa = this.ultimaSincronizacao.completa
-      if (completa && moment(completa).isAfter(moment().subtract(2, 'hours'))) {
+      if (completa && moment(completa).isSame(moment(), 'day')) {
         return
       }
       this.importacao.dialog = true

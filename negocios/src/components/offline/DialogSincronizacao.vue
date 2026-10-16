@@ -1,6 +1,6 @@
 <script setup>
 import { onMounted } from 'vue'
-import { formataNumero } from '@components/formatters'
+import { formataNumero, formataTimestamp } from '@components/formatters'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 
 // Janela "Sincronizar...": abre com sSinc.importacao.dialog = true
@@ -12,7 +12,9 @@ onMounted(() => sSinc.sincronizarAoAbrir())
 </script>
 
 <template>
-  <q-dialog v-model="sSinc.importacao.dialog">
+  <!-- fechar por qualquer caminho (Cancelar, ESC, clique fora) para a sincronizacao: ela nao
+  pode seguir rodando escondida -->
+  <q-dialog v-model="sSinc.importacao.dialog" @hide="sSinc.abortarSincronizacao()">
     <q-card class="q-pa-md">
       <q-card-section>
         <div class="text-h4 text-center">Sincronizar...</div>
@@ -39,6 +41,13 @@ onMounted(() => sSinc.sincronizarAoAbrir())
           {{ sSinc.labelSincronizacao }}
         </div>
         <div class="text-center text-grey">{{ sSinc.importacao.tempoTotal }} Segundos</div>
+        <div class="text-center text-grey">
+          <template v-if="sSinc.ultimaSincronizacao.completa">
+            Última sincronização
+            {{ formataTimestamp(sSinc.ultimaSincronizacao.completa, 4, true) }}
+          </template>
+          <template v-else>Nunca sincronizado</template>
+        </div>
         <div class="q-pa-md flex flex-center">
           <q-toggle
             v-model="sSinc.sincronizacao.config"
