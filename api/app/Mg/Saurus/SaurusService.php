@@ -230,7 +230,10 @@ class SaurusService
                 'nsu' => $response->response->codNSU,
                 'autorizacao' => $response->response->codAut,
                 'controle' => $response->response->codControle,
-                'transacao' => $response->response->dTransacao,
+                // a Saurus manda a hora em UTC (gravada como veio, ficava 4h adiantada) (TASK-228)
+                'transacao' => $response->response->dTransacao
+                    ? Carbon::parse($response->response->dTransacao, 'UTC')->setTimezone(config('app.timezone'))
+                    : null,
                 'status' => $response->response->indStatus,
                 'cartao' => $response->response->numCartao,
                 'valor' => $response->response->valorPagamento,
@@ -407,7 +410,9 @@ class SaurusService
         $maquineta = $pinpad ? MaquinetaService::daSaurusPinPad($pinpad) : null;
         return [
             'codsauruspedido' => $ped->codsauruspedido,
-            'meio' => array_key_exists((int) $tipo, PagamentoService::MEIOS) ? (int) $tipo : PagamentoService::MEIO_OUTROS,
+            // debito ou credito, como a Safra mostra; voucher e o resto, Outros,
+            // como na Stone (o vale-presente 12 nao e' o nosso Vale Compras) (TASK-228)
+            'meio' => in_array((int) $tipo, PagamentoService::MEIOS_CARTAO) ? (int) $tipo : PagamentoService::MEIO_OUTROS,
             'principal' => $ped->valor,
             'juros' => $ped->valorjuros ?? 0,
             'valortroco' => null,

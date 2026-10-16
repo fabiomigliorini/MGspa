@@ -8,6 +8,7 @@
 // parcelas, valor), Registro indevido (sai do período como se nunca tivesse entrado) e Alterar a
 // data (TASK-204: a data manda no período, o cartão vai para o período da data); o cancelamento
 // tem a data própria, que se altera sem mexer na venda. A data alterada aparece embaixo da linha.
+// A aba Por hora junta as vendas numa lista só, em ordem de hora, para conferir com as papeletas.
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
@@ -29,11 +30,18 @@ const computador = computed(() => $q.screen.gt.xs)
 
 const bordero = computed(() => borderoDoPeriodo(periodo.value))
 const mostrarCancelados = ref(false)
-const blocos = computed(() =>
-  bordero.value.blocos
+const ordem = ref('bandeira')
+const blocos = computed(() => {
+  const filtrados = bordero.value.blocos
     .map((b) => ({ ...b, linhas: b.linhas.filter((x) => mostrarCancelados.value || !x.cancelada) }))
-    .filter((b) => b.linhas.length),
-)
+    .filter((b) => b.linhas.length)
+  if (ordem.value === 'bandeira') return filtrados
+  // por hora: um bloco só, sem cabeçalho, cada linha com a modalidade e a bandeira
+  const linhas = filtrados
+    .flatMap((b) => b.linhas.map((x) => ({ ...x, grupo: b.titulo })))
+    .sort((a, b) => new Date(a.momento) - new Date(b.momento))
+  return linhas.length ? [{ chave: 'hora', linhas }] : []
+})
 const vazio = computed(() => !bordero.value.blocos.length && !bordero.value.cancelamentos.length)
 
 // NSU e autorização, cada um quando houver (a autorização sem rótulo: é o número do papel); no
@@ -110,20 +118,34 @@ function indevido(x) {
         color="primary"
       />
     </q-card-section>
+    <q-tabs
+      v-if="!vazio"
+      v-model="ordem"
+      align="left"
+      no-caps
+      active-color="primary"
+      indicator-color="primary"
+      class="text-grey-8"
+    >
+      <q-tab name="bandeira" label="Por bandeira" />
+      <q-tab name="hora" label="Por hora" />
+    </q-tabs>
 
     <q-list v-if="!vazio">
       <template v-for="b in blocos" :key="b.chave">
+        <q-separator />
         <!-- a bandeira, com quantidade e valor, como no papel -->
-        <q-separator />
-        <div
-          class="row no-wrap items-center text-weight-medium text-grey-9 q-px-md q-py-sm bg-grey-2"
-        >
-          <div class="col ellipsis">{{ b.titulo }}</div>
-          <div class="text-right" style="width: 40px">{{ b.quantidade }}</div>
-          <div class="text-right" style="width: 96px">{{ formataNumero(b.valor) }}</div>
-          <div v-if="editavel" style="width: 96px" />
-        </div>
-        <q-separator />
+        <template v-if="b.titulo">
+          <div
+            class="row no-wrap items-center text-weight-medium text-grey-9 q-px-md q-py-sm bg-grey-2"
+          >
+            <div class="col ellipsis">{{ b.titulo }}</div>
+            <div class="text-right" style="width: 40px">{{ b.quantidade }}</div>
+            <div class="text-right" style="width: 96px">{{ formataNumero(b.valor) }}</div>
+            <div v-if="editavel" style="width: 96px" />
+          </div>
+          <q-separator />
+        </template>
 
         <q-item
           v-for="x in b.linhas"
@@ -136,6 +158,9 @@ function indevido(x) {
             <div class="row no-wrap items-center">
               <div style="width: 56px">{{ formataHora(x.momento) }}</div>
               <div class="col ellipsis" :class="x.cancelada ? '' : 'text-grey-8'">
+                <span v-if="x.grupo" :class="x.cancelada ? '' : 'text-grey-9'">
+                  {{ x.grupo }} ·
+                </span>
                 {{ codigo(x.l) }}
                 <span v-if="computador && venda(x.l)" class="text-caption text-grey-6 q-ml-sm">
                   {{ venda(x.l) }}

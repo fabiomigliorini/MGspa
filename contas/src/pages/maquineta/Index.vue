@@ -24,59 +24,70 @@ onMounted(() => store.fetchItems())
 <template>
   <q-page>
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
-      <q-card v-for="f in filiais" :key="f.codfilial ?? 0" flat bordered class="q-mb-md">
-        <q-item>
-          <q-item-section>
-            <q-item-label class="text-subtitle1 text-weight-medium">{{ f.filial }}</q-item-label>
-          </q-item-section>
-        </q-item>
-        <q-list v-for="a in f.adquirentes" :key="a.codpessoa ?? 0" separator>
-          <q-separator />
-          <q-item-label header class="q-py-sm text-weight-medium text-primary">
-            {{ a.adquirente ?? 'Sem adquirente' }}
-          </q-item-label>
-          <q-item
-            v-for="m in a.maquinetas"
-            :key="m.codmaquineta"
-            clickable
-            :to="{ name: 'maquineta-detalhe', params: { codmaquineta: m.codmaquineta } }"
-          >
-            <q-item-section avatar>
-              <q-icon name="contactless" :color="maquinetaIntegracaoColor(m.integracao)" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label :class="m.inativo ? 'text-strike text-grey-6' : ''">
-                {{ m.apelido }}
-                <q-badge v-if="m.periodos?.aberto" color="green-7" class="q-ml-sm" label="Aberto" />
+      <div class="row q-col-gutter-md">
+        <div v-for="f in filiais" :key="f.codfilial ?? 0" class="col-xs-12 col-sm-6 col-md-4">
+          <q-card flat bordered>
+            <q-item>
+              <q-item-section>
+                <q-item-label class="text-subtitle1 text-weight-medium">{{
+                  f.filial
+                }}</q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-list v-for="a in f.adquirentes" :key="a.codpessoa ?? 0" separator>
+              <q-separator />
+              <q-item-label header class="q-py-sm text-weight-medium text-primary">
+                {{ a.adquirente ?? 'Sem adquirente' }}
               </q-item-label>
-              <q-item-label caption>
-                {{ maquinetaIntegracaoLabel(m.integracao) }}
-                <template v-if="m.serial"> · {{ m.serial }}</template>
-                <template v-if="m.compartilhada"> · Todas as filiais</template>
-              </q-item-label>
-              <q-item-label v-if="m.periodos?.aberto" caption>
-                Aberto desde {{ formataTimestamp(m.periodos.aberto, 0) }}
-              </q-item-label>
-              <q-item-label v-if="pendencias(m)" caption>
-                <q-badge
-                  v-if="m.periodos.pendentes"
-                  color="amber-10"
-                  class="q-mr-xs"
-                  :label="`${m.periodos.pendentes} período(s) pendente(s)`"
-                />
-                <q-badge
-                  v-if="m.periodos.semBordero"
-                  color="orange-8"
-                  :label="`${m.periodos.semBordero} sem borderô`"
-                />
-              </q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-icon name="chevron_right" color="grey-5" />
-            </q-item-section>
-          </q-item>
-        </q-list>
-      </q-card>
+              <q-item
+                v-for="m in a.maquinetas"
+                :key="m.codmaquineta"
+                clickable
+                :to="{ name: 'maquineta-detalhe', params: { codmaquineta: m.codmaquineta } }"
+              >
+                <q-item-section avatar>
+                  <q-icon name="contactless" :color="maquinetaIntegracaoColor(m.integracao)" />
+                </q-item-section>
+                <q-item-section>
+                  <q-item-label :class="m.inativo ? 'text-strike text-grey-6' : ''">
+                    {{ m.apelido }}
+                    <q-badge
+                      v-if="m.periodos?.aberto"
+                      color="green-7"
+                      class="q-ml-sm"
+                      label="Aberto"
+                    />
+                  </q-item-label>
+                  <q-item-label caption>
+                    {{ maquinetaIntegracaoLabel(m.integracao) }}
+                    <template v-if="m.serial"> · {{ m.serial }}</template>
+                    <template v-if="m.compartilhada"> · Todas as filiais</template>
+                  </q-item-label>
+                  <q-item-label v-if="m.periodos?.aberto" caption>
+                    Aberto desde {{ formataTimestamp(m.periodos.aberto, 0) }}
+                  </q-item-label>
+                  <q-item-label v-if="pendencias(m)" caption>
+                    <q-badge
+                      v-if="m.periodos.pendentes"
+                      color="amber-10"
+                      class="q-mr-xs"
+                      :label="`${m.periodos.pendentes} período(s) pendente(s)`"
+                    />
+                    <q-badge
+                      v-if="m.periodos.semBordero"
+                      color="orange-8"
+                      :label="`${m.periodos.semBordero} sem borderô`"
+                    />
+                  </q-item-label>
+                </q-item-section>
+                <q-item-section side>
+                  <q-icon name="chevron_right" color="grey-5" />
+                </q-item-section>
+              </q-item>
+            </q-list>
+          </q-card>
+        </div>
+      </div>
 
       <MgEmptyState v-if="!loading && !filiais.length" icon="contactless">
         Nenhuma maquineta encontrada.

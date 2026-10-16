@@ -801,7 +801,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         ->withoutMiddleware('auth:api')->middleware('auth_or_cookie');
 
     // PagarMe
-    Route::post('pagar-me/webhook/', '\Mg\PagarMe\PagarMeController@webhook');
+    // a Stone chama sem login (no laravel antigo era fora do auth; TASK-228)
+    Route::post('pagar-me/webhook/', '\Mg\PagarMe\PagarMeController@webhook')
+        ->withoutMiddleware('auth:api');
     Route::post('pagar-me/pedido/', '\Mg\PagarMe\PagarMeController@criarPedido');
     Route::post('pagar-me/pedido/{codpagarmepedido}/consultar', '\Mg\PagarMe\PagarMeController@consultarPedido');
     Route::delete('pagar-me/pedido/{codpagarmepdido}', '\Mg\PagarMe\PagarMeController@cancelarPedido');
