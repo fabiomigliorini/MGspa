@@ -440,18 +440,19 @@ class PagarMeService
                 continue;
             }
             $pos = $pag->PagarMePos ?? $pos;
+            // o meio e' o que a Stone mostra: pre-pago ela trata como debito
+            // (relatorio, recebimento D+1 e taxa de debito); voucher e' Outros,
+            // como na Saurus (TASK-228)
             switch ($pag->tipo) {
                 case 1: //debit
+                case 4: //prepaid
                     $tipo = 4; //Cartão de Débito
                     break;
                 case 2: //credit
                     $tipo = 3; //Cartão de Crédito
                     break;
                 case 3: //voucher
-                    $tipo = 3; //Cartão de Crédito
-                    break;
-                case 4: //prepaid
-                    $tipo = 3; //Cartão de Crédito
+                    $tipo = 99; //Outros
                     break;
             }
             $autorizacao = $pag->autorizacao;
@@ -536,8 +537,10 @@ class PagarMeService
             $codpagarmebandeira = $band->codpagarmebandeira;
         }
 
-        // data da transacao - covnerte Timezone de UTC pra America/Cuiaba
-        $transacao = Carbon::parse($transacao);
+        // data da transacao: desde jan/2026 a Stone manda a hora de Sao Paulo
+        // sem fuso (lida como Cuiaba, ficava 1h adiantada); com Z ou com o
+        // fuso, vale o que veio (TASK-228)
+        $transacao = Carbon::parse($transacao, 'America/Sao_Paulo');
         $transacao->setTimezone(config('app.timezone'));
 
         // decide se é pagamento ou cancelamento pelo status da transacao
@@ -635,6 +638,14 @@ class PagarMeService
                 );
             }
         }
+
+        // pago sem o cartao (a Stone ainda nao mandou a transacao, com tipo e
+        // bandeira): continua pendente e a proxima consulta do PDV traz o
+        // cartao; sem isso o pagamento nascia Outros e a nota saia assim (TASK-228)
+        if ($valorpago > 0 && !$ped->PagarMePagamentoS()->whereNull('valorcancelamento')->exists()) {
+            return $ped->fresh();
+        }
+
         $ped->valorpago = $valorpago;
         $ped->valorcancelado = $valorcancelado;
         $ped->valorpagoliquido = $valorpago - $valorcancelado;
