@@ -41,7 +41,7 @@ export const useCaixaItemStore = defineStore('caixaItem', () => {
   // de caixa fechado)
   const item = ref(null)
   const saldos = ref([])
-  // os tipos do item (descrição + preço distintos) e o dialog que troca a descrição de um em tudo
+  // os tipos do item com saldo (descrição + preço distintos) e o dialog que troca a descrição de um em tudo
   const tipos = ref([])
   const tipoDialog = ref(false)
   const tipoModel = ref({ preco: null, descricao: null, nova: '' })

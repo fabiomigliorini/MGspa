@@ -70,7 +70,7 @@ function excluirLinha(i) {
   form.value.linhas = form.value.linhas.filter((_, j) => j !== i)
 }
 
-// typeahead da descrição: as já usadas no item (entradas e contagens)
+// typeahead da descrição: as dos tipos do item com saldo em algum caixa
 const sugestoes = ref([])
 function buscarDescricao(busca, update) {
   api

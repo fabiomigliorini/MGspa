@@ -218,47 +218,36 @@ class CaixaItemService
         });
     }
 
-    // as descricoes distintas ja' gravadas no item: nas entradas e saidas e
-    // nas contagens (ate' 20, em ordem alfabetica)
+    // as descricoes distintas dos tipos com saldo (ate' 20, em ordem
+    // alfabetica), para o typeahead da entrada
     public static function descricoes(CaixaItem $item, ?string $busca): array
     {
-        $regs = DB::select("
-            select distinct d from (
-                select e->>'descricao' as d
-                from tblportadormovimento m, jsonb_array_elements(m.itens) e
-                where m.codcaixaitem = :item1
-                union
-                select e->>'descricao'
-                from tblportadorperiodo p, jsonb_array_elements(coalesce(p.contagemitensfinal -> :cod1, '[]')) e
-                union
-                select e->>'descricao'
-                from tblportadorperiodo p, jsonb_array_elements(coalesce(p.contagemitensinicial -> :cod2, '[]')) e
-            ) x
-            where d is not null and d ilike :busca
-            order by d
-            limit 20
-        ", [
-            'item1' => $item->codcaixaitem,
-            'cod1' => (string) $item->codcaixaitem,
-            'cod2' => (string) $item->codcaixaitem,
-            'busca' => '%' . trim($busca ?? '') . '%',
-        ]);
-        return array_map(fn ($r) => $r->d, $regs);
+        $busca = mb_strtolower(trim($busca ?? ''));
+        $ret = [];
+        foreach (static::tipos($item) as $t) {
+            $chave = mb_strtolower(trim($t['descricao'] ?? ''));
+            if ($chave !== '' && ($busca === '' || str_contains($chave, $busca))) {
+                $ret[$chave] ??= $t['descricao'];
+            }
+        }
+        return array_slice(array_values($ret), 0, 20);
     }
 
-    // os tipos do item (descricao + preco distintos), pelas entradas e
-    // saidas: o item so' entra no caixa por entrada, entao toda linha de
-    // contagem nasceu de uma (indice em codcaixaitem, sem varrer os periodos)
+    // os tipos do item (descricao + preco distintos) que tem saldo em algum
+    // caixa (o mesmo de saldos()): o lancado por engano e estornado, ou o
+    // que saiu de uso e zerou em todos os caixas, nao aparece
     public static function tipos(CaixaItem $item): array
     {
-        $regs = DB::select("
-            select distinct on (lower(coalesce(e->>'descricao', '')), (e->>'preco')::numeric)
-                e->>'descricao' as descricao, (e->>'preco')::numeric as preco
-            from tblportadormovimento m, jsonb_array_elements(m.itens) e
-            where m.codcaixaitem = :item
-            order by lower(coalesce(e->>'descricao', '')), (e->>'preco')::numeric, e->>'descricao'
-        ", ['item' => $item->codcaixaitem]);
-        return array_map(fn ($r) => ['descricao' => $r->descricao, 'preco' => (float) $r->preco], $regs);
+        $tipos = [];
+        foreach (static::saldos($item) as $s) {
+            foreach ($s['linhas'] as $l) {
+                if ($l['quantidade'] > 0) {
+                    $chave = number_format((float) $l['preco'], 2, '.', '') . '|' . mb_strtolower($l['descricao'] ?? '');
+                    $tipos[$chave] ??= ['descricao' => $l['descricao'], 'preco' => (float) $l['preco']];
+                }
+            }
+        }
+        return static::ordenar(array_values($tipos));
     }
 
     // troca a descricao de um tipo (descricao + preco) em tudo: entradas e

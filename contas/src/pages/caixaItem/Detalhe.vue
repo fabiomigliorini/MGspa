@@ -2,8 +2,8 @@
 // O item do caixa e quanto tem dele em cada caixa que já mexeu com ele (a contagem final do último
 // período fechado de cada um mais as entradas e saídas depois dele, como o saldo do dinheiro; com
 // o total): só os com saldo, ou também os zerados. Clicar no caixa abre os períodos dele em que o
-// item mexeu, com as entradas e saídas. Embaixo, os tipos (descrição + preço) já lançados, cada um
-// com o editar da descrição, que muda em tudo. Criação, editar, inativar e excluir no cabeçalho. A
+// item mexeu, com as entradas e saídas. Embaixo, os tipos (descrição + preço) com saldo em algum
+// caixa, cada um com o editar da descrição, que muda em tudo. Criação, editar, inativar e excluir no cabeçalho. A
 // maquineta de parceiro não tem saldo nos caixas: mostra a conta corrente (o que devemos ao
 // parceiro).
 import { computed, onMounted, ref, watch } from 'vue'
