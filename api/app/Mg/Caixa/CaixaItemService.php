@@ -56,8 +56,10 @@ class CaixaItemService
     // entra no caixa por entrada): a contagem final do ultimo periodo fechado
     // (com fim) mais as entradas e saidas depois dele (o periodo aberto), como
     // o saldo do dinheiro; vender nao lanca, so' aparece na contagem. Tudo por
-    // indice: o item pelo codcaixaitem, o ultimo fechado por (codportador,
-    // inicio)
+    // indice: o item pelo codcaixaitem, o ultimo fechado e os periodos depois
+    // dele por (codportador, inicio), as entradas deles pelo
+    // codportadorperiodo (o ANY(ARRAY) faz o banco ir por ali, e nao varrer
+    // todas as entradas do item na historia de cada caixa)
     public static function saldos(CaixaItem $item): array
     {
         $sql = "
@@ -75,11 +77,15 @@ class CaixaItemService
             LEFT JOIN LATERAL (
                 SELECT jsonb_agg(jsonb_build_object('valor', m.valor, 'itens', m.itens)) AS lancamentos
                 FROM tblportadormovimento m
-                JOIN tblportadorperiodo pm ON pm.codportadorperiodo = m.codportadorperiodo
-                WHERE m.codcaixaitem = :codcaixaitem
+                WHERE m.codportadorperiodo = ANY (ARRAY(
+                    SELECT pm.codportadorperiodo
+                    FROM tblportadorperiodo pm
+                    WHERE pm.codportador = p.codportador
+                    AND pm.inicio > COALESCE(u.inicio, '-infinity')
+                ))
+                AND m.codcaixaitem = :codcaixaitem
                 AND m.estado <> 'C'
                 AND m.codportador = p.codportador
-                AND (u.inicio IS NULL OR pm.inicio > u.inicio)
             ) e ON TRUE
             WHERE p.codportador IN (
                 SELECT codportador FROM tblportadormovimento
