@@ -7,6 +7,9 @@ Origem: auditoria de 2026-09-25 (lógica do /agro, com foco em entradas e saída
   commit. Foi refeita e ampliada em **`api/tests/agro/`** (TASK-184; ver o `README.md` de lá):
   - cenários, corrida, descontos, valores, listagem, permissões e estresse;
   - `conferencia.sql`, só leitura, para rodar na PROD.
+- **16/10/2026:** a bateria foi removida do repositório (TASK-231), porque testes dentro da API
+  não são o padrão do sistema. Para recuperar: `git show 8139b9b2 --stat` (TASK-184). Os
+  comandos de `run.php` citados abaixo são histórico.
 - Os cenários S2–S17 citados abaixo viraram os ids da bateria nova. A tabela "Como a bateria
   vai evoluindo" traz a correspondência.
 - As tasks da Fase 0.2 foram criadas: TASK-SYNC = **TASK-180**, TASK-DOM = **TASK-181**.

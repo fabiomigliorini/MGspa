@@ -14,10 +14,9 @@ repete no dev o que o pátio faz e confere os números contra as regras decidida
 referência para separar **defeito** de **forma de trabalhar aceita**. Antes de tratar um
 comportamento do agro como bug, conferir aqui.
 
-**Como conferir de novo:** ver `api/tests/agro/README.md`.
-- `run.php todos --relatorio` roda a bateria completa.
-- `run.php conferir` roda só leitura, no banco inteiro.
-- `node api/tests/agro/desconto-front.mjs` confere a paridade entre pátio e servidor.
+**Como conferir de novo:** a bateria foi removida do repositório em 16/10/2026 (TASK-231),
+porque testes dentro da API não são o padrão do sistema. As regras abaixo continuam valendo.
+Para recuperar a bateria: `git show 8139b9b2 --stat` (TASK-184).
 
 Os ids entre parênteses (A1, C5, T2…) são os cenários da bateria.
 
