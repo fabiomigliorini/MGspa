@@ -264,12 +264,13 @@ watch(
 
         <div v-if="periodo" class="row q-col-gutter-md q-mb-md">
           <!-- a foto do borderô ao lado do borderô do sistema, para comparar linha a linha -->
-          <div class="col-12 col-md-3">
+          <div class="col-12 col-sm-5 col-md-3">
             <PeriodoFoto />
           </div>
-          <div class="col-12 col-md-9">
-            <!-- o cabeçalho tem os dialogs junto (vários nós): o espaço fica no div -->
-            <div class="q-mb-md"><PeriodoCabecalho /></div>
+          <div class="col-12 col-sm-7 col-md-4">
+            <PeriodoCabecalho />
+          </div>
+          <div class="col-12 col-md-5">
             <PeriodoLancamentos />
           </div>
         </div>

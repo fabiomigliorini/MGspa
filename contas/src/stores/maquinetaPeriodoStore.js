@@ -18,8 +18,12 @@ export const useMaquinetaPeriodoStore = defineStore('maquinetaPeriodo', () => {
   const periodo = ref(null)
   const carregando = ref(false)
   const salvando = ref(false)
+  // a linha do resumo clicada, que filtra o detalhe: {chave, descricao, modalidade, bandeira} ou
+  // {chave: 'cancelamentos', descricao}; vale até trocar de período
+  const filtro = ref(null)
 
   function aplicar(data) {
+    if (data.periodo?.codmaquinetalote !== periodo.value?.codmaquinetalote) filtro.value = null
     maquineta.value = data.maquineta
     periodos.value = data.periodos
     periodo.value = data.periodo
@@ -86,6 +90,7 @@ export const useMaquinetaPeriodoStore = defineStore('maquinetaPeriodo', () => {
     periodo,
     carregando,
     salvando,
+    filtro,
     carregar,
     recarregar,
     conferir,

@@ -31,7 +31,10 @@ const ORDEM = Object.keys(MODALIDADES)
 // a modalidade do relatório da maquineta (MaquinetaLoteService::modalidade)
 const modalidade = (l) =>
   l.meio === MEIO_DEBITO ? 'debito' : (l.parcelas ?? 1) > 1 ? 'parcelado' : 'vista'
-const bandeira = (l) => (l.bandeira ? (l.bandeiradescricao ?? 'Outros') : 'Sem bandeira')
+export const bandeira = (l) => (l.bandeira ? (l.bandeiradescricao ?? 'Outros') : 'Sem bandeira')
+// a modalidade na linha da venda, com as parcelas: Débito, Crédito à vista, Crédito 6x
+export const modalidadeDaVenda = (l) =>
+  modalidade(l) === 'parcelado' ? `Crédito ${l.parcelas}x` : MODALIDADES[modalidade(l)]
 const porHora = (a, b) => new Date(a.momento) - new Date(b.momento)
 const soma = (linhas) => Math.round(linhas.reduce((s, x) => s + x.valor, 0) * 100) / 100
 
@@ -63,6 +66,9 @@ export function borderoDoPeriodo(periodo) {
     const chave = `${mod}|${band}`
     blocos[chave] ??= {
       chave,
+      // a modalidade e a bandeira como no resumo (MaquinetaLoteService::sistema), para o filtro
+      modalidade: mod,
+      bandeira: l.bandeira || null,
       ordem: [ORDEM.indexOf(mod), !l.bandeira, band],
       titulo: `${MODALIDADES[mod]} · ${band}`,
       linhas: [],

@@ -1,7 +1,9 @@
 <script setup>
 // Detalhe do período da maquineta (TASK-188 M9.8) na ordem do relatório da maquininha: modalidade
-// → bandeira → hora, uma linha por venda (hora, NSU, autorização, parcelas e valor, como no papel;
-// no computador, em cinza, o caixa e a venda). A linha leva à venda ou ao pagamento. A venda
+// → bandeira → hora; a linha clicada no resumo filtra o detalhe (o chip no título tira o filtro).
+// Cada venda em duas linhas: em cima a hora, a modalidade (Débito, Crédito à vista, Crédito 6x) e
+// o valor; embaixo, em cinza, a bandeira, o NSU e a autorização, como no
+// papel, e no computador o caixa e a venda. A linha leva sempre ao pagamento. A venda
 // cancelada no próprio período fica fora, como no papel, e volta riscada no "Mostrar cancelados";
 // o cancelamento de venda de outro período e o estorno ficam num bloco no fim, negativos. No
 // período não conferido, cada venda tem Corrigir (crédito/débito, maquineta, bandeira, autorização,
@@ -18,12 +20,12 @@ import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 import { useConferenciaStore } from 'src/stores/conferenciaStore'
 import CorrecaoPagamentoDialog from 'components/conferencia/CorrecaoPagamentoDialog.vue'
 import AlterarDataDialog from '@components/portador/AlterarDataDialog.vue'
-import { borderoDoPeriodo } from 'components/maquineta/linhas'
+import { borderoDoPeriodo, bandeira, modalidadeDaVenda } from 'components/maquineta/linhas'
 
 const $q = useQuasar()
 const store = useMaquinetaPeriodoStore()
 const sConferencia = useConferenciaStore()
-const { periodo } = storeToRefs(store)
+const { periodo, filtro } = storeToRefs(store)
 
 const editavel = computed(() => periodo.value?.situacao !== 'conferido')
 const computador = computed(() => $q.screen.gt.xs)
@@ -31,28 +33,40 @@ const computador = computed(() => $q.screen.gt.xs)
 const bordero = computed(() => borderoDoPeriodo(periodo.value))
 const mostrarCancelados = ref(false)
 const ordem = ref('bandeira')
+// o filtro da linha clicada no resumo: a modalidade (e a bandeira, quando veio) ou só o cancelamento
+// de outro período
+const doFiltro = (b) => {
+  const f = filtro.value
+  if (!f) return true
+  if (f.chave === 'cancelamentos') return false
+  return b.modalidade === f.modalidade && (f.bandeira === undefined || b.bandeira === f.bandeira)
+}
+const cancelamentos = computed(() =>
+  !filtro.value || filtro.value.chave === 'cancelamentos' ? bordero.value.cancelamentos : [],
+)
 const blocos = computed(() => {
   const filtrados = bordero.value.blocos
+    .filter(doFiltro)
     .map((b) => ({ ...b, linhas: b.linhas.filter((x) => mostrarCancelados.value || !x.cancelada) }))
     .filter((b) => b.linhas.length)
   if (ordem.value === 'bandeira') return filtrados
-  // por hora: um bloco só, sem cabeçalho, cada linha com a modalidade e a bandeira
+  // por hora: um bloco só, sem cabeçalho (a linha já tem a modalidade e a bandeira)
   const linhas = filtrados
-    .flatMap((b) => b.linhas.map((x) => ({ ...x, grupo: b.titulo })))
+    .flatMap((b) => b.linhas)
     .sort((a, b) => new Date(a.momento) - new Date(b.momento))
   return linhas.length ? [{ chave: 'hora', linhas }] : []
 })
 const vazio = computed(() => !bordero.value.blocos.length && !bordero.value.cancelamentos.length)
 
-// NSU e autorização, cada um quando houver (a autorização sem rótulo: é o número do papel); no
-// celular, só o primeiro que tiver
-const codigos = (l) => [l.nsu ? `NSU ${l.nsu}` : null, l.autorizacao].filter(Boolean)
-const codigo = (l) => (computador.value ? codigos(l).join(' · ') : (l.nsu ?? l.autorizacao ?? ''))
+// a linha de baixo: bandeira, NSU e autorização, cada um quando houver (a autorização sem rótulo: é
+// o número do papel), o `extra` do cancelamento e, no computador, o caixa e a venda
 const venda = (l) => [l.pdv || 'Escritório', l.documento].filter(Boolean).join(' · ')
-const link = (l) =>
-  l.codnegocio
-    ? { href: `${process.env.NEGOCIOS_URL}/negocio/${l.codnegocio}`, target: '_blank' }
-    : { to: { name: 'pagamento-detalhe', params: { id: l.codpagamento } } }
+const detalhes = (l, extra = null) =>
+  [bandeira(l), l.nsu ? `NSU ${l.nsu}` : null, l.autorizacao, extra, computador.value && venda(l)]
+    .filter(Boolean)
+    .join(' · ')
+// sempre o pagamento: o cartão é um pagamento, e de lá o "Referente a" leva à venda
+const link = (l) => ({ to: { name: 'pagamento-detalhe', params: { id: l.codpagamento } } })
 // corrigir e indevido só no cartão que caiu aqui, ainda valendo
 const podeCorrigir = (x) => editavel.value && !x.cancelada && x.l.estado !== 'C'
 
@@ -110,7 +124,18 @@ function indevido(x) {
 <template>
   <q-card flat bordered>
     <q-card-section class="row items-center">
-      <div class="col text-subtitle1 text-weight-medium">Detalhe</div>
+      <div class="col row items-center">
+        <div class="text-subtitle1 text-weight-medium">Detalhe</div>
+        <!-- a linha clicada no resumo -->
+        <q-chip
+          v-if="filtro"
+          removable
+          color="blue-1"
+          text-color="primary"
+          :label="filtro.descricao"
+          @remove="filtro = null"
+        />
+      </div>
       <q-toggle
         v-if="bordero.cancelados"
         v-model="mostrarCancelados"
@@ -141,7 +166,7 @@ function indevido(x) {
           >
             <div class="col ellipsis">{{ b.titulo }}</div>
             <div class="text-right" style="width: 40px">{{ b.quantidade }}</div>
-            <div class="text-right" style="width: 96px">{{ formataNumero(b.valor) }}</div>
+            <div class="text-right" style="width: 80px">{{ formataNumero(b.valor) }}</div>
             <div v-if="editavel" style="width: 96px" />
           </div>
           <q-separator />
@@ -154,17 +179,12 @@ function indevido(x) {
           v-bind="link(x.l)"
           :class="x.cancelada ? 'text-strike text-grey-5' : ''"
         >
-          <q-item-section>
+          <!-- no-wrap: com o wrap do Quasar a linha estica até o texto todo e empurra o valor -->
+          <q-item-section class="no-wrap">
             <div class="row no-wrap items-center">
-              <div style="width: 56px">{{ formataHora(x.momento) }}</div>
-              <div class="col ellipsis" :class="x.cancelada ? '' : 'text-grey-8'">
-                <span v-if="x.grupo" :class="x.cancelada ? '' : 'text-grey-9'">
-                  {{ x.grupo }} ·
-                </span>
-                {{ codigo(x.l) }}
-                <span v-if="computador && venda(x.l)" class="text-caption text-grey-6 q-ml-sm">
-                  {{ venda(x.l) }}
-                </span>
+              <div style="width: 48px">{{ formataHora(x.momento) }}</div>
+              <div class="col ellipsis">
+                {{ modalidadeDaVenda(x.l) }}
                 <q-badge v-if="x.l.correcoes" class="q-ml-xs" color="orange-8" label="corrigido" />
                 <q-badge
                   v-if="!x.cancelada && x.l.estado === 'C'"
@@ -173,10 +193,7 @@ function indevido(x) {
                   label="cancelado depois"
                 />
               </div>
-              <div class="text-right" style="width: 40px">
-                {{ x.l.parcelas > 1 ? `${x.l.parcelas}x` : '' }}
-              </div>
-              <div class="text-right text-weight-medium" style="width: 96px">
+              <div class="text-right text-weight-medium" style="width: 80px">
                 {{ formataNumero(x.valor) }}
               </div>
               <div v-if="editavel" class="row no-wrap justify-end" style="width: 96px">
@@ -218,6 +235,9 @@ function indevido(x) {
                 </template>
               </div>
             </div>
+            <div class="text-caption q-pl-xl" :class="x.cancelada ? '' : 'text-grey-7'">
+              {{ detalhes(x.l) }}
+            </div>
             <div v-if="alterada(x)" class="text-caption text-grey-7 q-pl-xl">
               <q-icon name="event" size="xs" />
               era {{ formataTimestamp(alterada(x).de) }}: {{ alterada(x).justificativa }}
@@ -228,33 +248,24 @@ function indevido(x) {
       </template>
 
       <!-- cancelamento de venda de outro período e estorno: descontam do total -->
-      <template v-if="bordero.cancelamentos.length">
+      <template v-if="cancelamentos.length">
         <q-separator />
         <div
           class="row no-wrap items-center text-weight-medium text-red-8 q-px-md q-py-sm bg-red-1"
         >
           <div class="col ellipsis">Cancelamento de outro período</div>
-          <div class="text-right" style="width: 96px">
-            {{ formataNumero(bordero.cancelamentos.reduce((s, x) => s + x.valor, 0)) }}
+          <div class="text-right" style="width: 80px">
+            {{ formataNumero(cancelamentos.reduce((s, x) => s + x.valor, 0)) }}
           </div>
           <div v-if="editavel" style="width: 96px" />
         </div>
         <q-separator />
-        <q-item v-for="x in bordero.cancelamentos" :key="x.chave" clickable v-bind="link(x.l)">
-          <q-item-section>
+        <q-item v-for="x in cancelamentos" :key="x.chave" clickable v-bind="link(x.l)">
+          <q-item-section class="no-wrap">
             <div class="row no-wrap items-center">
-              <div style="width: 56px">{{ formataHora(x.momento) }}</div>
-              <div class="col ellipsis text-grey-8">
-                {{ codigo(x.l) }}
-                <span class="text-caption text-grey-6 q-ml-sm">
-                  {{ x.outroPeriodo ? `venda de ${formataData(x.l.transacao)}` : 'estorno' }}
-                  <template v-if="computador && venda(x.l)"> · {{ venda(x.l) }}</template>
-                </span>
-              </div>
-              <div class="text-right" style="width: 40px">
-                {{ x.l.parcelas > 1 ? `${x.l.parcelas}x` : '' }}
-              </div>
-              <div class="text-right text-weight-medium text-red-8" style="width: 96px">
+              <div style="width: 48px">{{ formataHora(x.momento) }}</div>
+              <div class="col ellipsis">{{ modalidadeDaVenda(x.l) }}</div>
+              <div class="text-right text-weight-medium text-red-8" style="width: 80px">
                 {{ formataNumero(x.valor) }}
               </div>
               <div v-if="editavel" class="row no-wrap justify-end" style="width: 96px">
@@ -272,6 +283,11 @@ function indevido(x) {
                   </q-tooltip>
                 </q-btn>
               </div>
+            </div>
+            <div class="text-caption text-grey-7 q-pl-xl">
+              {{
+                detalhes(x.l, x.outroPeriodo ? `venda de ${formataData(x.l.transacao)}` : 'estorno')
+              }}
             </div>
             <div v-if="alterada(x)" class="text-caption text-grey-7 q-pl-xl">
               <q-icon name="event" size="xs" />
