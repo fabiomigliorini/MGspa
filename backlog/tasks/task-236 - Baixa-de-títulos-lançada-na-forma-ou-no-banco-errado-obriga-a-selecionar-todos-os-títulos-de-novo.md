@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-17 19:58'
-updated_date: '2026-10-17 22:54'
+updated_date: '2026-10-17 23:15'
 labels:
   - contas
 dependencies: []
@@ -78,4 +78,6 @@ Testes (tinker, transação desfeita)
 - Recusas: sem justificativa; banco para caixa (tipo diferente); PIX que caiu na conta (não trocável); destino fechado (administrador); destino pendente com operador; depositante nos dois.
 - Gravam: operador com tudo aberto; gestor com destino pendente (processo novo: o PortadorAutorizador guarda o papel em memória).
 - Lint e prettier (contas e negocios) e compilação dos quatro .vue sem erro. Não testado no navegador.
+
+Correção (17/10/2026, Fábio no teste em produção): o Referente a tinha ficado editável em dois lugares (lápis e botão próprio). Volta a mudar só no botão próprio do detalhe; no Editar aparece em somente leitura. Saiu do lápis no servidor (atualizar e UpdateRequest).
 <!-- SECTION:NOTES:END -->

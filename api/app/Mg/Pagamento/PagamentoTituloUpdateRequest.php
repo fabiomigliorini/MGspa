@@ -19,7 +19,6 @@ class PagamentoTituloUpdateRequest extends FormRequest
             'meio'        => 'nullable|integer',
             'transacao'   => 'required|date',
             'observacao'  => 'nullable|string|max:300',
-            'referente'   => 'nullable|string|max:255',
             // a data ou o portador mudou (TASK-204, TASK-236): por que
             'justificativa' => 'nullable|string|max:300',
         ];

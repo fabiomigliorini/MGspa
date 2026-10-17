@@ -15,6 +15,8 @@ defineProps({
   // a data aparece (o PIX usado na baixa tem a data dele e não mostra)
   comData: { type: Boolean, default: true },
   dataReadonly: { type: Boolean, default: false },
+  // o Editar mostra o referente sem mudar: ele muda no botão próprio do detalhe
+  referenteReadonly: { type: Boolean, default: false },
   focoPessoa: { type: Boolean, default: false },
 })
 
@@ -62,6 +64,7 @@ const observacao = defineModel('observacao', { type: String, default: '' })
               v-model="referente"
               label="Referente a (sai no recibo)"
               maxlength="255"
+              :readonly="referenteReadonly"
               :bottom-slots="false"
             />
           </div>

@@ -585,7 +585,7 @@ class PagamentoTituloService
         return in_array($meio, PagamentoService::MEIOS_CARTAO) && !$pag->entrada();
     }
 
-    // O lapis do pagamento: pessoa, referente e observacao; a data so' do
+    // O lapis do pagamento: pessoa e observacao; a data so' do
     // pagamento manual (a do integrado e' a do banco/maquineta), pelo alterar
     // data (TASK-204); o portador por outro do mesmo tipo (TASK-236). Data e
     // portador pedem justificativa e vao para a auditoria. O meio nao muda:
@@ -622,9 +622,6 @@ class PagamentoTituloService
         }
         $pag->codpessoa = !empty($dados['codpessoa']) ? (int) $dados['codpessoa'] : $pag->codpessoa;
         $pag->observacoes = $dados['observacao'] ?? null;
-        if (array_key_exists('referente', $dados)) {
-            $pag->referente = trim((string) $dados['referente']) ?: null;
-        }
         $pag->save();
         return PagamentoListaService::carregar($pag->codpagamento);
     }

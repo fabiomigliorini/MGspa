@@ -1,7 +1,8 @@
 <script setup>
 // Pagamento: o detalhe compartilhado (MgPagamentoDetalhe, com os recibos e o "Referente a") e o que
 // é do contas: o lápis e o Duplicar. O lápis usa o mesmo formulário do Receber (MgPagamentoForm):
-// pessoa, referente e observação; a data só do pagamento manual (a do integrado é a do
+// pessoa e observação; o referente em somente leitura (muda no botão próprio do detalhe, que vale
+// também para venda e acerto); a data só do pagamento manual (a do integrado é a do
 // banco/maquineta, TASK-204); o portador por outro do mesmo tipo, só no manual em dinheiro, banco ou
 // cartão da empresa (TASK-236). O que não muda fica em somente leitura. Data ou portador mudou: pede
 // justificativa. O meio não muda: cancela e usa o Duplicar, que abre a baixa com os mesmos títulos
@@ -92,7 +93,6 @@ async function salvarEdicao() {
   try {
     await store.atualizar(id.value, {
       ...editar.value,
-      referente: editar.value.referente || null,
       observacao: editar.value.observacao || null,
       justificativa: dataMudou.value || portadorMudou.value ? editar.value.justificativa : null,
     })
@@ -166,6 +166,7 @@ watch(() => route.fullPath, carregar)
         titulo="Editar"
         :valor="pag.total"
         :data-readonly="!pag.manual"
+        referente-readonly
         foco-pessoa
         v-model:transacao="editar.transacao"
         v-model:codpessoa="editar.codpessoa"
@@ -176,7 +177,7 @@ watch(() => route.fullPath, carregar)
         <div class="col-12">
           <MgSelectPortador
             v-model="editar.codportador"
-            :label="pag.meiodescricao"
+            label="Portador"
             :tipos="pag.portadortrocavel ? [pag.portadortipo] : null"
             :papel="pag.portadortrocavel ? 'O' : null"
             :readonly="!pag.portadortrocavel"
