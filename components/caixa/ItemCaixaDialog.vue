@@ -5,7 +5,8 @@
 // Qualquer portador em espécie.
 // Entrada ou saída já vem escolhida no Lançar (store.sentido; a saída com o caixa vazio o Lançar
 // desabilita). Wizard: 1) o item (pula quando só tem um); 2) as linhas — na entrada, descrição
-// (typeahead com as já usadas no item), preço e quantidade; na saída, só o que está no caixa
+// (typeahead com as já usadas no item), quantidade e preço, numa linha só do sm pra cima (por isso
+// a entrada abre com 600px); na saída, só o que está no caixa
 // (`saida` do item no período: saldo inicial + entradas − saídas), no jeito da contagem, com o
 // disponível de teto; 3) data, o total e observação, foco no Lançar. Passo 1 no teclado (setas e
 // Enter).
@@ -14,6 +15,7 @@ import { api } from 'src/services/api'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
+import MgSelect from '@components/MgSelect.vue'
 import ContagemCaixa from '@components/caixa/ContagemCaixa.vue'
 import ListaOpcoes from '@components/cobranca/ListaOpcoes.vue'
 import { formataNumero, formataTimestampIso } from '@components/formatters'
@@ -68,7 +70,7 @@ function excluirLinha(i) {
   form.value.linhas = form.value.linhas.filter((_, j) => j !== i)
 }
 
-// typeahead da descrição: as já usadas no item (entradas e contagens)
+// typeahead da descrição: as dos tipos do item com saldo em algum caixa
 const sugestoes = ref([])
 function buscarDescricao(busca, update) {
   api
@@ -180,7 +182,7 @@ async function salvar() {
       flat
       tabindex="0"
       class="no-outline"
-      style="width: 400px; max-width: 95vw"
+      :style="{ width: form.sinal > 0 ? '600px' : '400px', maxWidth: '95vw' }"
       @keydown="tecla"
     >
       <q-form @submit.prevent="avancar">
@@ -204,51 +206,58 @@ async function salvar() {
             autofocus
           />
           <template v-else>
-            <div v-for="(l, i) in form.linhas" :key="i" class="row q-col-gutter-sm items-start">
-              <div class="col-12">
-                <q-select
-                  :model-value="l.descricao"
-                  :options="sugestoes"
-                  use-input
-                  fill-input
-                  hide-selected
-                  input-debounce="300"
-                  outlined
-                  label="Descrição"
-                  maxlength="50"
-                  :autofocus="i === 0"
-                  :rules="[regraDescricao(l)]"
-                  @filter="buscarDescricao"
-                  @input-value="(v) => (l.descricao = v || null)"
-                  @update:model-value="(v) => (l.descricao = v || null)"
-                />
+            <!-- uma linha por item do sm pra cima; no xs, duas, com divisória entre os itens -->
+            <template v-for="(l, i) in form.linhas" :key="i">
+              <q-separator v-if="i > 0" class="lt-sm q-mt-sm q-mb-md" />
+              <div class="row q-col-gutter-sm items-start">
+                <div class="col-12 col-sm-6">
+                  <MgSelect
+                    :model-value="l.descricao"
+                    :options="sugestoes"
+                    use-input
+                    fill-input
+                    hide-selected
+                    input-debounce="300"
+                    label="Descrição"
+                    maxlength="50"
+                    :autofocus="i === form.linhas.length - 1"
+                    :rules="[regraDescricao(l)]"
+                    @filter="buscarDescricao"
+                    @input-value="(v) => (l.descricao = v || null)"
+                    @update:model-value="(v) => (l.descricao = v || null)"
+                  />
+                </div>
+                <div class="col-6 col-sm-3">
+                  <MgInputValor
+                    v-model="l.quantidade"
+                    label="Quantidade"
+                    :decimals="0"
+                    :min="0"
+                    :rules="[regraQuantidade(l)]"
+                  />
+                </div>
+                <div class="col-6 col-sm-3">
+                  <MgInputValor
+                    v-model="l.preco"
+                    label="Preço"
+                    :rules="[regraPreco(l)]"
+                    bottom-slots
+                  >
+                    <template #hint>
+                      <div class="text-right">{{ valorLinha(l) }}</div>
+                    </template>
+                    <template v-if="form.linhas.length > 1" #append>
+                      <q-icon
+                        name="close"
+                        tabindex="-1"
+                        class="cursor-pointer"
+                        @click.stop="excluirLinha(i)"
+                      />
+                    </template>
+                  </MgInputValor>
+                </div>
               </div>
-              <div class="col-6">
-                <MgInputValor v-model="l.preco" label="Preço" :rules="[regraPreco(l)]" />
-              </div>
-              <div class="col-6">
-                <MgInputValor
-                  v-model="l.quantidade"
-                  label="Quantidade"
-                  :decimals="0"
-                  :min="0"
-                  :rules="[regraQuantidade(l)]"
-                  bottom-slots
-                >
-                  <template #hint>
-                    <div class="text-right">{{ valorLinha(l) }}</div>
-                  </template>
-                  <template v-if="form.linhas.length > 1" #append>
-                    <q-icon
-                      name="close"
-                      tabindex="-1"
-                      class="cursor-pointer"
-                      @click.stop="excluirLinha(i)"
-                    />
-                  </template>
-                </MgInputValor>
-              </div>
-            </div>
+            </template>
             <q-btn flat size="sm" color="primary" icon="add" label="Linha" @click="incluirLinha" />
             <div class="row items-center q-mt-md">
               <div class="col text-subtitle2">Total</div>

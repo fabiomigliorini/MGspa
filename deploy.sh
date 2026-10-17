@@ -36,13 +36,13 @@ titulo() {
   echo "=========================================="
 }
 
-# Retorna 0 (executa) so com s/sim. Qualquer outra coisa pula.
+# Retorna 0 (executa) com Enter, s ou sim. Qualquer outra coisa pula.
 # Sempre usado dentro de `if`, entao o return 1 nao dispara o `set -e`.
 confirma() {
   local resp
-  read -r -p ">>> $1  Executar? [s/N] " resp
+  read -r -p ">>> $1  Executar? [S/n] " resp
   case "$resp" in
-    [sS]|[sS][iI][mM]) return 0 ;;
+    ''|[sS]|[sS][iI][mM]) return 0 ;;
     *) echo "    ...pulado." ; return 1 ;;
   esac
 }

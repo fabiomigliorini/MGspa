@@ -56,8 +56,10 @@ class CaixaItemService
     // entra no caixa por entrada): a contagem final do ultimo periodo fechado
     // (com fim) mais as entradas e saidas depois dele (o periodo aberto), como
     // o saldo do dinheiro; vender nao lanca, so' aparece na contagem. Tudo por
-    // indice: o item pelo codcaixaitem, o ultimo fechado por (codportador,
-    // inicio)
+    // indice: o item pelo codcaixaitem, o ultimo fechado e os periodos depois
+    // dele por (codportador, inicio), as entradas deles pelo
+    // codportadorperiodo (o ANY(ARRAY) faz o banco ir por ali, e nao varrer
+    // todas as entradas do item na historia de cada caixa)
     public static function saldos(CaixaItem $item): array
     {
         $sql = "
@@ -75,11 +77,15 @@ class CaixaItemService
             LEFT JOIN LATERAL (
                 SELECT jsonb_agg(jsonb_build_object('valor', m.valor, 'itens', m.itens)) AS lancamentos
                 FROM tblportadormovimento m
-                JOIN tblportadorperiodo pm ON pm.codportadorperiodo = m.codportadorperiodo
-                WHERE m.codcaixaitem = :codcaixaitem
+                WHERE m.codportadorperiodo = ANY (ARRAY(
+                    SELECT pm.codportadorperiodo
+                    FROM tblportadorperiodo pm
+                    WHERE pm.codportador = p.codportador
+                    AND pm.inicio > COALESCE(u.inicio, '-infinity')
+                ))
+                AND m.codcaixaitem = :codcaixaitem
                 AND m.estado <> 'C'
                 AND m.codportador = p.codportador
-                AND (u.inicio IS NULL OR pm.inicio > u.inicio)
             ) e ON TRUE
             WHERE p.codportador IN (
                 SELECT codportador FROM tblportadormovimento
@@ -124,8 +130,15 @@ class CaixaItemService
                 $somar($l, $m['valor'] < 0 ? -1 : 1);
             }
         }
-        ksort($juntas);
-        return array_values(array_filter($juntas, fn ($l) => $l['quantidade'] != 0));
+        return static::ordenar(array_values(array_filter($juntas, fn ($l) => $l['quantidade'] != 0)));
+    }
+
+    // ordem das linhas: descricao, preco
+    private static function ordenar(array $linhas): array
+    {
+        usort($linhas, fn ($a, $b) => [mb_strtolower($a['descricao'] ?? ''), (float) $a['preco']]
+            <=> [mb_strtolower($b['descricao'] ?? ''), (float) $b['preco']]);
+        return $linhas;
     }
 
     // o que tem de cada item no periodo, para a saida: a contagem que deu o
@@ -211,47 +224,36 @@ class CaixaItemService
         });
     }
 
-    // as descricoes distintas ja' gravadas no item: nas entradas e saidas e
-    // nas contagens (ate' 20, em ordem alfabetica)
+    // as descricoes distintas dos tipos com saldo (ate' 20, em ordem
+    // alfabetica), para o typeahead da entrada
     public static function descricoes(CaixaItem $item, ?string $busca): array
     {
-        $regs = DB::select("
-            select distinct d from (
-                select e->>'descricao' as d
-                from tblportadormovimento m, jsonb_array_elements(m.itens) e
-                where m.codcaixaitem = :item1
-                union
-                select e->>'descricao'
-                from tblportadorperiodo p, jsonb_array_elements(coalesce(p.contagemitensfinal -> :cod1, '[]')) e
-                union
-                select e->>'descricao'
-                from tblportadorperiodo p, jsonb_array_elements(coalesce(p.contagemitensinicial -> :cod2, '[]')) e
-            ) x
-            where d is not null and d ilike :busca
-            order by d
-            limit 20
-        ", [
-            'item1' => $item->codcaixaitem,
-            'cod1' => (string) $item->codcaixaitem,
-            'cod2' => (string) $item->codcaixaitem,
-            'busca' => '%' . trim($busca ?? '') . '%',
-        ]);
-        return array_map(fn ($r) => $r->d, $regs);
+        $busca = mb_strtolower(trim($busca ?? ''));
+        $ret = [];
+        foreach (static::tipos($item) as $t) {
+            $chave = mb_strtolower(trim($t['descricao'] ?? ''));
+            if ($chave !== '' && ($busca === '' || str_contains($chave, $busca))) {
+                $ret[$chave] ??= $t['descricao'];
+            }
+        }
+        return array_slice(array_values($ret), 0, 20);
     }
 
-    // os tipos do item (descricao + preco distintos), pelas entradas e
-    // saidas: o item so' entra no caixa por entrada, entao toda linha de
-    // contagem nasceu de uma (indice em codcaixaitem, sem varrer os periodos)
+    // os tipos do item (descricao + preco distintos) que tem saldo em algum
+    // caixa (o mesmo de saldos()): o lancado por engano e estornado, ou o
+    // que saiu de uso e zerou em todos os caixas, nao aparece
     public static function tipos(CaixaItem $item): array
     {
-        $regs = DB::select("
-            select distinct on (lower(coalesce(e->>'descricao', '')), (e->>'preco')::numeric)
-                e->>'descricao' as descricao, (e->>'preco')::numeric as preco
-            from tblportadormovimento m, jsonb_array_elements(m.itens) e
-            where m.codcaixaitem = :item
-            order by lower(coalesce(e->>'descricao', '')), (e->>'preco')::numeric, e->>'descricao'
-        ", ['item' => $item->codcaixaitem]);
-        return array_map(fn ($r) => ['descricao' => $r->descricao, 'preco' => (float) $r->preco], $regs);
+        $tipos = [];
+        foreach (static::saldos($item) as $s) {
+            foreach ($s['linhas'] as $l) {
+                if ($l['quantidade'] > 0) {
+                    $chave = number_format((float) $l['preco'], 2, '.', '') . '|' . mb_strtolower($l['descricao'] ?? '');
+                    $tipos[$chave] ??= ['descricao' => $l['descricao'], 'preco' => (float) $l['preco']];
+                }
+            }
+        }
+        return static::ordenar(array_values($tipos));
     }
 
     // troca a descricao de um tipo (descricao + preco) em tudo: entradas e
@@ -484,7 +486,7 @@ class CaixaItemService
 
     // limpa as linhas: preco positivo, quantidade inteira nao negativa,
     // descricao opcional; junta as de mesmo preco e descricao e tira as
-    // zeradas. Ordem: preco, descricao
+    // zeradas. Ordem: descricao, preco
     public static function linhas(?array $linhas): array
     {
         $juntas = [];
@@ -509,8 +511,7 @@ class CaixaItemService
                 $juntas[$chave] = ['preco' => $preco, 'quantidade' => $quantidade, 'descricao' => $descricao];
             }
         }
-        ksort($juntas);
-        return array_values($juntas);
+        return static::ordenar(array_values($juntas));
     }
 
     // as linhas da entrada ou saida, mesma regra da tela (ItemCaixaDialog):

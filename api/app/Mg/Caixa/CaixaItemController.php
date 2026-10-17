@@ -59,8 +59,8 @@ class CaixaItemController extends Controller
         ];
     }
 
-    // as descricoes ja' usadas no item (entradas e contagens), para o
-    // typeahead da entrada
+    // as descricoes dos tipos com saldo em algum caixa, para o typeahead da
+    // entrada
     public function descricoes(Request $request, int $id)
     {
         $request->validate(['busca' => 'nullable|string|max:50']);
@@ -69,7 +69,7 @@ class CaixaItemController extends Controller
         return ['data' => CaixaItemService::descricoes($item, $request->busca)];
     }
 
-    // os tipos do item: descricao + preco distintos
+    // os tipos do item com saldo em algum caixa: descricao + preco distintos
     public function tipos(int $id)
     {
         $item = CaixaItem::findOrFail($id);
