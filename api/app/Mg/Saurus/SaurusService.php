@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Log;
 use Mg\Filial\Filial;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
+use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioService;
 use Mg\Pessoa\Pessoa;
 use Mg\Saurus\S2Pay\ApiService;
@@ -108,26 +109,31 @@ class SaurusService
         );
     }
 
-    public static function cancelarPedidosAbertosPdv($codsauruspdv)
+    // Cancelar e' so' na nossa tabela: a Saurus nao fica sabendo e a maquininha
+    // continua aceitando o pagamento. Por isso antes pergunta 'a Saurus: o que
+    // ela diz pago vira pagamento (consultarPedido) e fica; so' o resto e'
+    // cancelado. A Saurus fora do ar nao segura a venda: cancela assim mesmo e
+    // registra no log (TASK-233)
+    private static function cancelarSeNaoPago($peds)
     {
-        $peds = SaurusPedido::where([
-            'codsauruspdv' => $codsauruspdv,
-            'status' => 0,
-        ])->get();
-
         foreach ($peds as $ped) {
             try {
-                // update pedido to status 3
-                $ped->status = 3;
-                $ped->save();
-
-            } catch (\Exception $e) {
-                
-                Log::error('Erro ao cancelar pedido Saurus: '.$e->getMessage());
+                $ped = static::consultarPedido($ped);
+            } catch (\Throwable $th) {
+                Log::error("Erro ao consultar pedido Saurus {$ped->codsauruspedido} antes de cancelar: {$th->getMessage()}");
             }
+            if ($ped->status != 0) {
+                continue;
+            }
+            $ped->status = 3;
+            $ped->save();
         }
+    }
 
-        return true;
+    // fechar ou cancelar a venda cancela as cobrancas dela que ficaram abertas
+    public static function cancelarPedidosAbertosNegocio(Negocio $negocio)
+    {
+        static::cancelarSeNaoPago($negocio->SaurusPedidoS()->where('status', 0)->get());
     }
 
     public static function criarPedido(
@@ -431,12 +437,25 @@ class SaurusService
         return Maquineta::find(static::cartaoDoPedido($ped)['codmaquineta']);
     }
 
+    // Botao Cancelar: pergunta 'a Saurus antes e recusa se ja' foi pago (a
+    // maquininha aceita pagar depois do cancelamento). Saurus fora do ar
+    // recusa tambem: o caixa tenta de novo (TASK-233)
     public static function cancelarPedido(SaurusPedido $ped)
     {
-        if ($ped->status != 0) {
-            throw new \Exception("Pedido não consta como pendente! Status {$ped->status}!", 1);
+        if ($ped->status == 0) {
+            try {
+                $ped = static::consultarPedido($ped);
+            } catch (\Throwable $th) {
+                Log::error("Erro ao consultar pedido Saurus {$ped->codsauruspedido} antes de cancelar: {$th->getMessage()}");
+                abort(422, 'Não foi possível consultar a SafraPay antes de cancelar. Tente de novo.');
+            }
         }
-
+        if ($ped->status == 2) {
+            abort(422, 'O pedido já foi pago na maquininha e não pode ser cancelado!');
+        }
+        if ($ped->status != 0) {
+            abort(422, "Pedido não consta como pendente! Status {$ped->status}!");
+        }
 
         $ped->update([
             'status' => 3

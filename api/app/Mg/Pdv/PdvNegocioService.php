@@ -25,6 +25,7 @@ use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Titulo\TituloService;
 use Illuminate\Support\Facades\Log;
 use Mg\Rh\ProcessarVendaJob;
+use Mg\Saurus\SaurusService;
 
 class PdvNegocioService
 {
@@ -340,6 +341,11 @@ class PdvNegocioService
             throw new Exception('O Status do Negócio não permite Fechamento!', 1);
         }
 
+        // cobranca SafraPay ainda aberta: pergunta 'a Saurus e cancela a que
+        // nao foi paga; a paga entra como pagamento da venda e os totais
+        // abaixo acusam se sobrar (TASK-233)
+        SaurusService::cancelarPedidosAbertosNegocio($negocio);
+
         // venda reaberta (TASK-30): as mesmas validacoes, mas o que ja' foi
         // validado e gerado no primeiro fechamento nao se valida de novo; e o
         // fechamento original (data, caixa, PDV) fica
@@ -635,6 +641,10 @@ class PdvNegocioService
         // pagamentos acima nunca o alcanca
         PdvNegocioValeService::estornarCreditos($negocio);
         PdvNegocioChequeService::cancelar($negocio);
+
+        // cobranca SafraPay ainda aberta: pergunta 'a Saurus; a paga vira
+        // pagamento e e' cancelada junto com os outros abaixo (TASK-233)
+        SaurusService::cancelarPedidosAbertosNegocio($negocio);
 
         // o que o negocio tinha, para o livro de ocorrencias (TASK-205)
         $foto = OcorrenciaService::fotoCancelamento($negocio);
