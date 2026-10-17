@@ -45,41 +45,52 @@ const reenviar = async () => {
 // a maquininha aceita pagar depois do cancelamento, e o cancelamento não vai para a Saurus:
 // pede para digitar DESISTIR. O backend consulta antes e recusa se já foi pago (TASK-233).
 // O botão se chama Desistir: "Cancelar" no rodapé de um dialog lê-se como fechar a janela
+// A confirmação fecha junto com a cobrança: o cliente pode pagar enquanto o caixa digita
+let confirmacao = null
+
 const desistir = () => {
-  $q.dialog({
-    title: 'Desistir da cobrança?',
-    message:
-      'A maquininha continua aceitando o pagamento depois do cancelamento. Se o cliente pagar, abra a cobrança e consulte para puxar o cartão. Digite DESISTIR para confirmar:',
-    prompt: {
-      model: '',
-      type: 'text',
-      outlined: true,
-      placeholder: 'DESISTIR',
-      isValid: (v) => (v || '').trim() === 'DESISTIR',
-    },
-    ok: { label: 'Desistir', color: 'negative', flat: true },
-    cancel: { label: 'Voltar', color: 'grey-8', flat: true },
-  }).onOk(async () => {
-    const ok = await sSaurus.cancelarPedido()
-    if (ok === false) {
-      // recusado (já pago, por exemplo): mostra o que a Saurus tem
-      await sSaurus.consultarPedido(true)
-      verificarPago()
-      return
-    }
-    if (sSaurus.pedido.status == 3) {
-      sSaurus.dialog.detalhesPedido = false
-    }
-  })
+  confirmacao = $q
+    .dialog({
+      title: 'Desistir da cobrança?',
+      message:
+        'A maquininha continua aceitando o pagamento depois do cancelamento. Se o cliente pagar, abra a cobrança e consulte para puxar o cartão. Digite DESISTIR para confirmar:',
+      prompt: {
+        model: '',
+        type: 'text',
+        outlined: true,
+        placeholder: 'DESISTIR',
+        isValid: (v) => (v || '').trim() === 'DESISTIR',
+      },
+      ok: { label: 'Desistir', color: 'negative', flat: true },
+      cancel: { label: 'Voltar', color: 'grey-8', flat: true },
+    })
+    .onOk(async () => {
+      const ok = await sSaurus.cancelarPedido()
+      if (ok === false) {
+        // recusado (já pago, por exemplo): mostra o que a Saurus tem
+        await sSaurus.consultarPedido(true)
+        verificarPago()
+        return
+      }
+      if (sSaurus.pedido.status == 3) {
+        sSaurus.dialog.detalhesPedido = false
+      }
+    })
+    .onDismiss(() => (confirmacao = null))
 }
 
 const onShow = () => {
   btnConsultarRef.value?.$el?.focus()
   iniciar()
 }
+
+const onHide = () => {
+  parar()
+  confirmacao?.hide()
+}
 </script>
 <template>
-  <q-dialog v-model="sSaurus.dialog.detalhesPedido" @show="onShow" @hide="parar">
+  <q-dialog v-model="sSaurus.dialog.detalhesPedido" @show="onShow" @hide="onHide">
     <q-card flat style="width: 600px">
       <q-card-section>
         <div class="text-h6">
@@ -247,7 +258,7 @@ const onShow = () => {
           color="negative"
           @click="desistir()"
           tabindex="-1"
-          v-if="sSaurus.pedido.status != 3"
+          v-if="sSaurus.pedido.status == 0"
         />
         <q-btn flat label="consultar" color="primary" @click="consultar()" ref="btnConsultarRef" />
         <q-btn
