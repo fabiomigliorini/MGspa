@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-17 22:22'
+updated_date: '2026-10-17 22:44'
 labels:
   - negocios
 dependencies: []
@@ -34,8 +34,8 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 <!-- AC:BEGIN -->
 - [ ] #1 PDV autorizado se autentica com credencial própria (não só o uuid na query string) nas rotas usadas sem usuário logado: quiosque e sincronização
 - [x] #2 Sincronização roda sozinha ao iniciar o sistema, sem clicar no botão (ex-TASK-54)
-- [ ] #3 Sincronização incremental traz só o que mudou desde a última, inclusive cadastro recém-feito de pessoa (ex-TASK-36), produto e preço
-- [ ] #4 Sincronização incremental só fica disponível quando compensa: o servidor ainda tem a versão do PDV, os diffs somados são menores que a completa e a última completa tem até 7 dias; senão só a Sincronização completa fica disponível, já com o foco (a que abre sozinha ao iniciar segue a mesma regra)
+- [x] #3 Sincronização incremental traz só o que mudou desde a última, inclusive cadastro recém-feito de pessoa (ex-TASK-36), produto e preço
+- [x] #4 Sincronização incremental só fica disponível quando compensa: o servidor ainda tem a versão do PDV, os diffs somados são menores que a completa e a última completa tem até 7 dias; senão só a Sincronização completa fica disponível, já com o foco (a que abre sozinha ao iniciar segue a mesma regra)
 - [ ] #5 Sincronização não fica esperando a localização: hoje o Chrome no Linux às vezes não devolve a posição (mesmo com permissão) e a sincronização recusa depois de 10 s; localização continua obrigatória
 - [ ] #6 Quiosque sem resposta do backend (offline, rede caída, PDV não autorizado) não mostra o saldo do cache como estoque atual: avisa que é estoque não confirmado e de quando é; sem cache, mostra estoque indisponível (não zero) (ex-TASK-154)
 - [x] #7 Sincronizar funciona sem usuário logado: o botão não fica desabilitado nem avisa de login ou de sessão expirada
@@ -44,9 +44,10 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #10 Ao abrir sem usuário logado (ou com a sessão vencida), o PDV não abre negócio sozinho e o login não aparece; F2/Novo continuam abrindo, inclusive sem login e sem rede
 - [x] #11 Fechar a janela Sincronizar com ESC ou clicando fora para a sincronização, igual ao Cancelar: ela não continua rodando escondida e travando o PDV
 - [x] #12 A janela Sincronizar mostra a data e a hora (com segundos) da última sincronização
-- [ ] #13 Botões Sincronização completa e Sincronização incremental na janela Sincronizar; com a incremental disponível o foco vai nela, e a completa baixa a base inteira de pessoas e produtos mesmo assim
-- [ ] #14 Durante a sincronização cada linha diz o que está fazendo (consultando o servidor, baixando tudo, baixando alterações) e a base inteira avança de 2 em 2 mil registros, sem parecer travada
-- [ ] #15 Ao terminar sem erro a janela fecha e avisa 'Sincronização finalizada'; cancelada não avisa
+- [x] #13 Botões Sincronização completa e Sincronização incremental na janela Sincronizar; com a incremental disponível o foco vai nela, e a completa baixa a base inteira de pessoas e produtos mesmo assim
+- [x] #14 Durante a sincronização cada linha diz o que está fazendo (consultando o servidor, baixando tudo, baixando alterações) e a base inteira avança de 2 em 2 mil registros, sem parecer travada
+- [x] #15 Ao terminar sem erro a janela fecha e avisa 'Sincronização finalizada'; cancelada não avisa
+- [x] #16 Com outra janela do navegador sincronizando, a janela Sincronizar nem abre (botão do PDV, menu do quiosque e a sincronização ao abrir o sistema): recusa com o aviso de que já existe uma sincronização em andamento
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -76,4 +77,6 @@ Fábio (17/10/2026, primeira sincronização em produção): a full parecia trav
 - Full grava e mostra o progresso a cada 2 mil; as linhas dizem 'Consultando o servidor...', 'Baixando tudo: x / y registros', 'Baixando alterações: ...'.
 - Fim sem erro: Notify 'Sincronização finalizada'; cancelada não avisa.
 - Teste em Chrome headless contra o quasar dev (17/10): completa ao abrir num perfil limpo em 23 s com o aviso no fim; reabrir -> incremental com foco, 'Nada mudou' em 2 s; registro com versão de 01/10 no IndexedDB -> só a completa, com foco, e depois dela a incremental volta; versão de pessoas desconhecida -> só a completa; ESC no meio da completa -> sem aviso.
+
+Fábio (17/10/2026): a trava entre janelas só valia no executar; a janela Sincronizar abria na segunda aba, verificava a incremental e só recusava no clique. Agora abrirJanela() consulta a mesma trava do Web Locks (navigator.locks.query) antes de abrir, e é o único caminho de abertura: botão do cabeçalho (BtnSincronizacao), menu do quiosque e sincronizarAoAbrir. Na corrida entre a consulta e o clique, o sincronizar() continua recusando. Teste com duas abas no Chrome headless: com A fazendo a completa, B ao abrir o sistema e B no botão do cabeçalho recusam com o aviso, sem abrir a janela; A terminada, B abre normalmente.
 <!-- SECTION:NOTES:END -->

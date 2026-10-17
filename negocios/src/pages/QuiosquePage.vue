@@ -281,7 +281,7 @@ onUnmounted(() => {
             color="white"
             text-color="primary"
             icon="refresh"
-            @click="sSinc.importacao.dialog = true"
+            @click="sSinc.abrirJanela()"
           >
             <q-tooltip anchor="center left" self="center right">Sincronizar</q-tooltip>
           </q-fab-action>

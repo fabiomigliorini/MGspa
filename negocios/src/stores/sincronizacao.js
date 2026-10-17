@@ -79,6 +79,10 @@ const limitar = (n) => {
 
 export const DISPOSITIVO_NAO_CADASTRADO =
   'Este navegador não está cadastrado como dispositivo. Abra o Meu Dispositivo e clique em Cadastrar.'
+// trava do Web Locks: uma sincronizacao por vez entre as janelas do navegador
+const TRAVA = 'sincronizacao'
+const EM_ANDAMENTO = 'Já existe uma sincronização em andamento, nesta ou em outra janela.'
+
 export const DISPOSITIVO_INATIVO =
   'Dispositivo inativo. Abra o Meu Dispositivo e peça a um administrador para ativá-lo.'
 
@@ -271,9 +275,25 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       if (completa && moment(completa).isSame(moment(), 'day')) {
         return
       }
-      this.importacao.dialog = true
+      if (!(await this.abrirJanela())) {
+        return
+      }
       await this.verificarIncremental()
       await this.sincronizar(!this.importacao.incremental)
+    },
+
+    // com outra janela sincronizando, a janela Sincronizar nem abre: recusa com o mesmo aviso do
+    // sincronizar(), consultando a mesma trava. Na corrida, o sincronizar() ainda recusa no clique
+    async abrirJanela() {
+      if (navigator.locks) {
+        const { held } = await navigator.locks.query()
+        if (held.some((t) => t.name === TRAVA)) {
+          erro(EM_ANDAMENTO)
+          return false
+        }
+      }
+      this.importacao.dialog = true
+      return true
     },
 
     // a incremental so' vale se, em pessoas e produtos, o servidor ainda conhece a versao local,
@@ -327,21 +347,17 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         await this.executarSincronizacao(full)
         return
       }
-      const rodou = await navigator.locks.request(
-        'sincronizacao',
-        { ifAvailable: true },
-        async (trava) => {
-          if (!trava) {
-            return false
-          }
-          await this.executarSincronizacao(full)
-          return true
-        },
-      )
+      const rodou = await navigator.locks.request(TRAVA, { ifAvailable: true }, async (trava) => {
+        if (!trava) {
+          return false
+        }
+        await this.executarSincronizacao(full)
+        return true
+      })
       if (!rodou) {
         this.importacao.rodando = false
         this.importacao.dialog = false
-        erro('Já existe uma sincronização em andamento, nesta ou em outra janela.')
+        erro(EM_ANDAMENTO)
       }
     },
 

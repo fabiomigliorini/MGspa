@@ -3,8 +3,8 @@ import { nextTick, onMounted, ref } from 'vue'
 import { formataNumero, formataTimestamp } from '@components/formatters'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 
-// Janela "Sincronizar...": abre com sSinc.importacao.dialog = true
-// (botao do cabecalho do PDV e menu do quiosque).
+// Janela "Sincronizar...": abre com sSinc.abrirJanela(), que recusa com outra janela sincronizando
+// (botao do cabecalho do PDV, menu do quiosque e a sincronizacao ao abrir o sistema).
 const sSinc = sincronizacaoStore()
 
 // ao abrir o sistema com a sincronizacao velha, a janela abre e ja sincroniza (TASK-197)

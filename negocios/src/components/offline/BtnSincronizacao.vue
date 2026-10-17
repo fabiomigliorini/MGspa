@@ -22,7 +22,8 @@ const erro = (message) =>
 
 // Sincronizar só sincroniza (TASK-46) e não pede usuário logado (TASK-197): o backend autoriza
 // pelo dispositivo. Com o navegador sem cadastro ou com o dispositivo inativo, só avisa e não
-// abre janela nenhuma. O cadastro e a ativação ficam no Meu Dispositivo.
+// abre janela nenhuma; com outra janela sincronizando, o abrirJanela recusa. O cadastro e a
+// ativação ficam no Meu Dispositivo.
 const abrirSincronizacao = () => {
   if (!sSinc.pdv.codpdv) {
     erro(DISPOSITIVO_NAO_CADASTRADO)
@@ -32,7 +33,7 @@ const abrirSincronizacao = () => {
     erro(DISPOSITIVO_INATIVO)
     return
   }
-  sSinc.importacao.dialog = true
+  sSinc.abrirJanela()
 }
 
 const btnSincronizarColor = computed({
