@@ -6,19 +6,14 @@
 import { defineStore } from 'pinia'
 import { api } from 'src/services/api'
 
-const iso = (d) =>
-  [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-
+// sem período por padrão: as datas só filtram quando a pessoa preenche
 const filtrosVazios = () => {
-  const hoje = new Date()
   return {
     codpagamento: null,
-    transacao_de: iso(new Date(hoje.getFullYear(), hoje.getMonth(), 1)),
-    transacao_ate: iso(hoje),
+    transacao_de: null,
+    transacao_ate: null,
+    valor_de: null,
+    valor_ate: null,
     codfilial: null,
     codpdv: null,
     codportador: null,
@@ -31,6 +26,9 @@ const filtrosVazios = () => {
     codusuariocriacao: null,
   }
 }
+
+// busca corrente: o filtro novo não espera a anterior, e a resposta dela é descartada
+let seq = 0
 
 export const pagamentoListaStore = defineStore('pagamentoLista', {
   persist: {
@@ -95,22 +93,26 @@ export const pagamentoListaStore = defineStore('pagamentoLista', {
 
     async buscar(reset = false) {
       if (reset) {
+        seq++
         this.pagina = 1
         this.temMais = true
+      } else if (!this.temMais || this.carregando) {
+        return
       }
-      if (!this.temMais || this.carregando) return
+      const minha = seq
       this.carregando = true
       try {
         const { data } = await api.get(this.endpoint, {
           params: { ...this.parametros(), page: this.pagina },
         })
+        if (minha !== seq) return
         const linhas = data.data || []
         this.itens = reset ? linhas : [...this.itens, ...linhas]
         this.total = data.meta?.total ?? this.itens.length
         this.temMais = this.pagina < (data.meta?.last_page ?? this.pagina)
         this.pagina++
       } finally {
-        this.carregando = false
+        if (minha === seq) this.carregando = false
       }
     },
 

@@ -18,10 +18,14 @@ const cache = useSelectCacheStore()
 const ENTITY = 'estoqueMovimentoTipo'
 const ENDPOINT = 'v1/select/estoque-movimento-tipo'
 
+// O store cacheia inativos num bucket separado (`{ent}__inativos`) — ler sempre
+// `entities[ENTITY]` devolveria lista vazia quando a prop inativos esta ligada.
+const chaveCache = computed(() => (props.inativos ? `${ENTITY}__inativos` : ENTITY))
+
 const opcoes = ref([])
 const carregando = ref(false)
 
-const permitidos = computed(() => cache.entities[ENTITY]?.items || [])
+const permitidos = computed(() => cache.entities[chaveCache.value]?.items || [])
 
 async function carregar() {
   carregando.value = true

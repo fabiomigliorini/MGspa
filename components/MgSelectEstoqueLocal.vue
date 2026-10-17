@@ -21,11 +21,15 @@ const cache = useSelectCacheStore()
 const ENTITY = 'estoqueLocal'
 const ENDPOINT = 'v1/select/estoque-local'
 
+// O store cacheia inativos num bucket separado (`{ent}__inativos`) — ler sempre
+// `entities[ENTITY]` devolveria lista vazia quando a prop inativos esta ligada.
+const chaveCache = computed(() => (props.inativos ? `${ENTITY}__inativos` : ENTITY))
+
 const opcoes = ref([])
 const carregando = ref(false)
 
 const permitidos = computed(() => {
-  const todos = cache.entities[ENTITY]?.items || []
+  const todos = cache.entities[chaveCache.value]?.items || []
   if (props.codfilial == null) return todos
   return todos.filter((v) => Number(v.codfilial) === Number(props.codfilial))
 })
