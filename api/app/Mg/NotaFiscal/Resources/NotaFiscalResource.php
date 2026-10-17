@@ -58,11 +58,7 @@ class NotaFiscalResource extends JsonResource
             return null;
         }
 
-        $ret = $this->Pessoa?->only(['codpessoa', 'pessoa', 'fantasia', 'cpfcnpj']);
-        $ret['cidade'] = $this->Pessoa?->Cidade?->cidade;
-        $ret['uf'] = $this->Pessoa?->Cidade?->Estado?->sigla;
-
-        return $ret;
+        return $this->Pessoa?->only(['codpessoa', 'pessoa', 'fantasia', 'cpfcnpj']);
     }
 
     private function formatNaturezaOperacao(): ?array

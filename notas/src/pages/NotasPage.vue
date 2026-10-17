@@ -8,6 +8,7 @@ import { useSelectFilialStore } from 'stores/selects/filial'
 import { useAuth } from 'src/composables/useAuth'
 import { getStatusColor, getStatusIcon, getModeloLabel } from '../constants/notaFiscal'
 import { formataTimestamp, formataNumero, formataNumeroNota } from '@components/formatters'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import api from '../services/api'
 
@@ -288,125 +289,131 @@ onMounted(async () => {
 
 <template>
   <q-page>
-    <!-- Loading inicial -->
-    <div v-if="loading && notas.length === 0" class="row justify-center q-py-xl">
-      <q-spinner color="primary" size="3em" />
-    </div>
-
-    <!-- Empty State -->
-    <q-card v-else-if="notas.length === 0" flat bordered class="q-pa-xl text-center q-ma-sm">
-      <q-icon name="description" size="4em" color="grey-5" />
-      <div class="text-h6 text-grey-7 q-mt-md">Nenhuma nota fiscal encontrada</div>
-      <div class="text-caption text-grey-7 q-mt-sm">
-        <template v-if="hasActiveFilters">Tente ajustar os filtros</template>
-        <template v-else>Clique em "Nova Nota" para criar sua primeira nota fiscal</template>
+    <div class="q-pa-md" style="max-width: 1086px; margin: auto">
+      <!-- Loading inicial -->
+      <div v-if="loading && notas.length === 0" class="row justify-center q-py-xl">
+        <q-spinner color="primary" size="3em" />
       </div>
-    </q-card>
 
-    <!-- Lista de Notas -->
-    <q-infinite-scroll v-else @load="onLoad" :offset="250">
-      <q-list separator>
-        <q-item
-          dense
-          hoverable
-          v-for="nota in notas"
-          :key="nota.codnotafiscal"
-          clickable
-          :to="'/nota/' + nota.codnotafiscal"
-          class="q-py-xs"
-        >
-          <!-- items-center: os dois icones tem tamanhos diferentes, entao sem isso ficam
-               alinhados pela esquerda e o menor parece deslocado -->
-          <q-item-section avatar style="min-width: 32px" class="items-center">
-            <q-icon :name="getStatusIcon(nota.status)" :color="getStatusColor(nota.status)" />
-            <!-- tpemis 9: emitida em contingencia off-line, ainda a transmitir -->
-            <q-icon v-if="nota.tpemis == 9" name="cloud_off" color="orange" size="xs">
-              <q-tooltip>Emitida em contingência off-line</q-tooltip>
-            </q-icon>
-          </q-item-section>
+      <!-- Vazio -->
+      <MgEmptyState v-else-if="notas.length === 0" icon="description">
+        Nenhuma nota fiscal encontrada.
+        <div class="text-caption q-mt-xs">
+          <template v-if="hasActiveFilters">Tente ajustar os filtros.</template>
+          <template v-else>Clique em "Nova Nota" para criar sua primeira nota fiscal.</template>
+        </div>
+      </MgEmptyState>
 
-          <q-item-section>
-            <div class="row items-center">
-              <!-- Número -->
-              <div class="q-px-sm col-6 col-md-3 text-weight-medium text-caption">
-                {{ getModeloLabel(nota.modelo) }} {{ formataNumeroNota(nota.numero) }} - S{{
-                  nota.serie
-                }}
-              </div>
+      <!-- Lista de Notas -->
+      <q-infinite-scroll v-else @load="onLoad" :offset="250">
+        <q-card flat bordered>
+          <q-list separator>
+            <q-item
+              dense
+              hoverable
+              v-for="nota in notas"
+              :key="nota.codnotafiscal"
+              clickable
+              :to="'/nota/' + nota.codnotafiscal"
+              class="q-py-xs"
+            >
+              <!-- items-center: os dois icones tem tamanhos diferentes, entao sem isso ficam
+                   alinhados pela esquerda e o menor parece deslocado -->
+              <q-item-section avatar style="min-width: 32px" class="items-center">
+                <q-icon :name="getStatusIcon(nota.status)" :color="getStatusColor(nota.status)" />
+                <!-- tpemis 9: emitida em contingencia off-line, ainda a transmitir -->
+                <q-icon v-if="nota.tpemis == 9" name="cloud_off" color="orange" size="xs">
+                  <q-tooltip>Emitida em contingência off-line</q-tooltip>
+                </q-icon>
+              </q-item-section>
 
-              <!-- Filial -->
-              <div class="q-px-sm col-6 col-md-1 text-caption text-grey-7 text-right">
-                {{ nota.filial?.filial }}
-              </div>
+              <q-item-section>
+                <!--
+                  items-start: data e valor ficam na altura da primeira linha (número/pessoa).
+                  full-width: sem ela o navegador mede a altura com as colunas estreitas, o texto
+                  quebra nessa medição e a linha fica mais alta que o conteúdo (68px em vez de 48).
+                -->
+                <div class="row items-start full-width">
+                  <!-- Número, com a filial embaixo -->
+                  <div class="q-px-sm col-6 col-md-4">
+                    <div class="text-weight-medium text-caption ellipsis">
+                      {{ getModeloLabel(nota.modelo) }} {{ formataNumeroNota(nota.numero) }} - S{{
+                        nota.serie
+                      }}
+                    </div>
+                    <div class="text-caption text-grey-7 ellipsis">
+                      {{ nota.filial?.filial }}
+                    </div>
+                  </div>
 
-              <!-- Pessoa -->
-              <div
-                class="q-px-sm col-8 col-md-3 text-weight-bold text-caption text-primary ellipsis"
-              >
-                {{ nota.pessoa?.fantasia || 'Sem pessoa' }}
-              </div>
+                  <!-- Pessoa, com a natureza de operação embaixo -->
+                  <div class="q-px-sm col-6 col-md-4">
+                    <div class="text-weight-bold text-caption text-primary ellipsis">
+                      {{ nota.pessoa?.fantasia || 'Sem pessoa' }}
+                    </div>
+                    <div class="text-caption text-grey-7 ellipsis">
+                      {{ nota.naturezaOperacao?.naturezaoperacao }}
+                    </div>
+                  </div>
 
-              <!-- Cidade -->
-              <div class="q-px-sm col-4 col-md-1 text-caption text-grey-7 text-right">
-                {{ nota.pessoa?.cidade ? `${nota.pessoa.cidade}/${nota.pessoa.uf}` : '' }}
-              </div>
+                  <!-- Data -->
+                  <div class="q-px-sm col-6 col-md-2 text-caption text-grey-7 ellipsis">
+                    {{ formataTimestamp(nota.saida, 4, true) }}
+                  </div>
 
-              <!-- Data -->
-              <div class="q-px-sm col-6 col-md-2 text-caption text-grey-7 ellipsis">
-                {{ formataTimestamp(nota.saida, 4, true) }}
-              </div>
+                  <!-- Valor -->
+                  <div
+                    class="q-px-sm col-6 col-md-2 text-weight-bold text-primary text-caption text-right ellipsis"
+                  >
+                    R$ {{ formataNumero(nota.valortotal) }}
+                  </div>
 
-              <!-- Valor -->
-              <div
-                class="q-px-sm col-6 col-md-2 text-weight-bold text-primary text-caption text-right"
-              >
-                R$ {{ formataNumero(nota.valortotal) }}
-              </div>
+                  <!-- Ações no tablet (sm): à direita, embaixo do valor. No celular (xs) não
+                       aparecem: as ações ficam no detalhe da nota. O componente é um flex row,
+                       então quem o empurra é o justify-end (text-right não tem efeito) -->
+                  <div class="q-px-sm col-12 row justify-end sm" @click.stop>
+                    <MgNotaFiscalAcoes
+                      compact
+                      :nota="nota"
+                      :api="api"
+                      @action-completed="onAcaoConcluida"
+                    />
+                  </div>
+                </div>
+              </q-item-section>
 
-              <!-- Natureza -->
-              <div class="q-px-sm col-12 text-caption text-grey-7">
-                {{ nota?.naturezaOperacao?.naturezaoperacao }}
-              </div>
-
-              <!-- Ações -->
-              <div class="q-px-sm col-12 col-md-2 text-right lt-md" @click.stop>
+              <!--
+                Ações. A largura precisa comportar o MAIOR conjunto que a barra mostra em modo
+                compact: uma NFC-e de contingência em ERR tem Emitir + Consultar + DANFE +
+                Inutilizar. Com 95px (que cabia 3) o quarto botão empurrava a linha e a listagem
+                inteira ganhava scroll horizontal.
+              -->
+              <q-item-section side style="width: 140px" class="gt-sm">
                 <MgNotaFiscalAcoes
                   compact
                   :nota="nota"
                   :api="api"
                   @action-completed="onAcaoConcluida"
                 />
-              </div>
-            </div>
-          </q-item-section>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card>
 
-          <!--
-            Ações. A largura precisa comportar o MAIOR conjunto que a barra mostra em modo
-            compact: uma NFC-e de contingência em ERR tem Emitir + Consultar + DANFE +
-            Inutilizar. Com 95px (que cabia 3) o quarto botão empurrava a linha e a listagem
-            inteira ganhava scroll horizontal.
-          -->
-          <q-item-section side style="width: 140px" class="gt-sm">
-            <MgNotaFiscalAcoes
-              compact
-              :nota="nota"
-              :api="api"
-              @action-completed="onAcaoConcluida"
-            />
-          </q-item-section>
-        </q-item>
-      </q-list>
+        <template v-slot:loading>
+          <div class="row justify-center q-my-md">
+            <q-spinner-dots color="primary" size="40px" />
+          </div>
+        </template>
+      </q-infinite-scroll>
 
-      <template v-slot:loading>
-        <div class="row justify-center q-my-md">
-          <q-spinner-dots color="primary" size="40px" />
-        </div>
-      </template>
-    </q-infinite-scroll>
+      <!-- o respiro para os FABs não cobrirem o fim da lista -->
+      <div class="q-py-xl" />
+    </div>
 
     <!-- FABs -->
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
-      <div class="row items-center q-gutter-sm">
+      <div class="row q-gutter-sm items-end">
         <!-- Gerar NFC-e Faltantes -->
         <q-btn
           v-if="podeGerar"
@@ -415,7 +422,7 @@ onMounted(async () => {
           color="orange-7"
           @click="abrirDialogNfce"
         >
-          <q-tooltip>Gerar NFC-e Faltantes</q-tooltip>
+          <q-tooltip anchor="top middle" self="bottom middle">Gerar NFC-e Faltantes</q-tooltip>
         </q-btn>
 
         <!-- Gerar Transferências -->
@@ -426,7 +433,7 @@ onMounted(async () => {
           color="teal"
           @click="abrirDialogTransferencias"
         >
-          <q-tooltip>Gerar Transferências</q-tooltip>
+          <q-tooltip anchor="top middle" self="bottom middle">Gerar Transferências</q-tooltip>
         </q-btn>
 
         <!-- Imprimir Relatório -->
@@ -437,7 +444,7 @@ onMounted(async () => {
           :loading="loadingRelatorio"
           @click="abrirRelatorio"
         >
-          <q-tooltip>Imprimir Relatório</q-tooltip>
+          <q-tooltip anchor="top middle" self="bottom middle">Imprimir Relatório</q-tooltip>
         </q-btn>
 
         <!-- Nova Nota -->
@@ -448,7 +455,7 @@ onMounted(async () => {
           :to="{ name: 'nota-fiscal-create' }"
           :disable="loading"
         >
-          <q-tooltip>Nova Nota</q-tooltip>
+          <q-tooltip anchor="top middle" self="bottom middle">Nova Nota</q-tooltip>
         </q-btn>
       </div>
     </q-page-sticky>
