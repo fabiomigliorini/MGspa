@@ -3,11 +3,11 @@ id: TASK-233
 title: >-
   Cobrança SafraPay cancelada esconde o cartão que o cliente pagou e o caixa
   lança à mão
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-17 16:28'
-updated_date: '2026-10-17 16:47'
+updated_date: '2026-10-17 17:28'
 labels:
   - negocios
 dependencies: []
@@ -30,11 +30,11 @@ Fora desta task (relatado, sem task): criação do pedido que falha/timeout é e
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Consultar sempre pergunta à Saurus, qualquer que seja o status local do pedido; pedido cancelado que a Saurus diz pago vira aprovado e gera o pagamento do cartão na venda
-- [ ] #2 Botão Cancelar consulta a Saurus antes e recusa o cancelamento quando o pedido já foi pago
-- [ ] #3 Cancelar ou fechar a venda cancela sozinho os pedidos SafraPay ainda abertos dela, consultando antes
-- [ ] #4 Criar cobrança nova no mesmo PDV Saurus não cancela mais a anterior; só fechar ou cancelar a venda cancela (na Stone a dinâmica é outra e continua como está)
-- [ ] #5 Botão Desistir da cobrança (vermelho) pede confirmação: só cancela depois de digitar DESISTIR
+- [x] #1 Consultar sempre pergunta à Saurus, qualquer que seja o status local do pedido; pedido cancelado que a Saurus diz pago vira aprovado e gera o pagamento do cartão na venda
+- [x] #2 Botão Cancelar consulta a Saurus antes e recusa o cancelamento quando o pedido já foi pago
+- [x] #3 Cancelar ou fechar a venda cancela sozinho os pedidos SafraPay ainda abertos dela, consultando antes
+- [x] #4 Criar cobrança nova no mesmo PDV Saurus não cancela mais a anterior; só fechar ou cancelar a venda cancela (na Stone a dinâmica é outra e continua como está)
+- [x] #5 Botão Desistir da cobrança (vermelho) pede confirmação: só cancela depois de digitar DESISTIR
 <!-- AC:END -->
 
 ## Implementation Notes
