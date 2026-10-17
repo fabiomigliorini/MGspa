@@ -4,6 +4,7 @@ namespace Mg\Pagamento;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
 use Mg\Portador\PortadorPeriodoService;
+use Mg\Titulo\MovimentoTituloService;
 
 // Detalhe de um pagamento (M6.1 doc-3): documento (venda, titulos com as
 // linhas de movimento, transferencia, avulso), meio, maquineta, portadores,
@@ -27,6 +28,11 @@ class PagamentoDetalheResource extends Resource
                     'codtitulo'              => (int) $m->codtitulo,
                     'codtipomovimentotitulo' => (int) $m->codtipomovimentotitulo,
                     'tipomovimentotitulo'    => optional($m->TipoMovimentoTitulo)->tipomovimentotitulo,
+                    // a baixa que o Duplicar leva para a tela de baixa (TASK-236)
+                    'duplicavel'             => in_array((int) $m->codtipomovimentotitulo, [
+                        MovimentoTituloService::TIPO_LIQUIDACAO,
+                        MovimentoTituloService::TIPO_AMORTIZACAO,
+                    ]),
                     'transacao'              => $m->transacao,
                     'principal'              => abs($principal),
                     'juros'                  => (float) $m->juros,
@@ -46,6 +52,8 @@ class PagamentoDetalheResource extends Resource
                         'nossonumero' => $m->Titulo->nossonumero,
                         'codpessoa'   => (int) $m->Titulo->codpessoa,
                         'fantasia'    => optional($m->Titulo->Pessoa)->fantasia,
+                        // o sentido do titulo (DB a receber, CR a pagar), como na tela de baixa
+                        'operacao'    => $m->Titulo->ehReceber() ? 'DB' : 'CR',
                         'codfilial'   => (int) $m->Titulo->codfilial,
                         'filial'      => optional($m->Titulo->Filial)->filial,
                         'codportador' => $m->Titulo->codportador,
@@ -142,6 +150,10 @@ class PagamentoDetalheResource extends Resource
             'manual'                    => $manual,
             'integrado'                 => !$manual,
             'baixabanco'                => $baixabanco,
+            // Duplicar (TASK-236): abre a baixa com os mesmos titulos; nao
+            // cancela o original (o Cancelar e' outro botao)
+            'duplicavel'                => $documento && !$baixabanco
+                && collect($movimentos)->contains('duplicavel', true),
             'movimentos'                => $movimentos,
             // razao (M10 doc-3): o que caiu em cada portador; inativas =
             // desfeitas por estorno, cancelamento ou correcao

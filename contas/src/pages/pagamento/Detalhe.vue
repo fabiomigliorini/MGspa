@@ -2,7 +2,8 @@
 // Pagamento: o detalhe compartilhado (MgPagamentoDetalhe, com os recibos e o "Referente a") e o que
 // é do contas: o lápis. O lápis corrige pessoa e observação (interna); a data só do pagamento manual
 // (a do integrado é a do banco/maquineta) e, se muda, pede justificativa (TASK-204). Meio e portador
-// são o fato e não mudam: errou, cancela e lança de novo.
+// são o fato e não mudam: errou, cancela e lança de novo. O Duplicar (TASK-236) abre a baixa com os
+// mesmos títulos já preenchidos; não cancela o original (o Cancelar é outro botão).
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { notifySuccess, notifyError } from 'src/utils/notify'
@@ -122,6 +123,17 @@ watch(() => route.fullPath, carregar)
         "
       >
         <template #acoes>
+          <q-btn
+            v-if="podeMutar && pag.duplicavel"
+            flat
+            round
+            size="sm"
+            icon="content_copy"
+            color="grey-7"
+            :to="{ name: 'pagamento-novo', query: { duplicar: pag.codpagamento } }"
+          >
+            <q-tooltip>Duplicar</q-tooltip>
+          </q-btn>
           <q-btn
             v-if="podeEditar"
             flat

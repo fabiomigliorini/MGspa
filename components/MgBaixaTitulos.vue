@@ -6,7 +6,9 @@
 // banco/maquineta confirma). Títulos que se anulam não pedem forma: é o encontro de contas. Cada
 // app informa onde busca os títulos, as formas, o contexto do wizard (PDV ou contas) e para onde
 // manda a baixa. Com `pix` (vindo da tela PIX, TASK-219), a baixa usa o PIX que caiu na conta:
-// inteiro, na data e na conta dele.
+// inteiro, na data e na conta dele. Com `inicial` (o Duplicar do contas, TASK-236), abre com os
+// títulos, valores, pessoa, data, "referente a" e observação de outro pagamento; a forma se escolhe
+// de novo.
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
@@ -61,6 +63,12 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  // a baixa já preenchida (Duplicar): { titulos (no formato do seletor), codpessoa, transacao,
+  // referente, observacao }
+  inicial: {
+    type: Object,
+    default: null,
+  },
 })
 
 const emit = defineEmits(['finalizado'])
@@ -69,14 +77,14 @@ const sBaixa = baixaTitulosStore()
 
 const agora = () => formataTimestampIso(new Date()).slice(0, 16)
 
-const titulos = ref([])
-const codpessoaFiltro = ref(props.pix?.codpessoa ?? null)
-const codpessoa = ref(null)
-const transacao = ref(agora())
-// a data só fica parada se a pessoa mexeu nela
-const transacaoMexida = ref(false)
-const referente = ref('')
-const observacao = ref('')
+const titulos = ref(props.inicial?.titulos ?? [])
+const codpessoaFiltro = ref(props.pix?.codpessoa ?? props.inicial?.codpessoa ?? null)
+const codpessoa = ref(props.inicial?.codpessoa ?? null)
+const transacao = ref(props.inicial?.transacao ?? agora())
+// a data só fica parada se a pessoa mexeu nela (ou se veio do pagamento duplicado)
+const transacaoMexida = ref(!!props.inicial?.transacao)
+const referente = ref(props.inicial?.referente ?? '')
+const observacao = ref(props.inicial?.observacao ?? '')
 // data, pessoa, "referente a" e observação ficam no diálogo do FAB, à vista com a lista rolada
 const dialog = ref(false)
 
@@ -148,7 +156,9 @@ const aplicarPix = () => {
 // títulos escolhidos: a pessoa é a deles quando é uma só (várias ou nenhuma: vazia), refeita só
 // quando mudam as pessoas dos títulos (editar juros ou total não apaga a escolhida à mão);
 // mudar a seleção ou os valores recomeça a forma
-let pessoasDosTitulos = ''
+const pessoasDe = (lista) => [...new Set(lista.map((t) => t.codpessoa).filter(Boolean))].sort()
+// o duplicado já vem com a pessoa dele: só muda se mudarem as pessoas dos títulos
+let pessoasDosTitulos = pessoasDe(titulos.value).join(',')
 watch(
   titulos,
   (lista) => {
@@ -160,7 +170,7 @@ watch(
         timeout: 3000,
       })
     }
-    const pessoas = [...new Set(lista.map((t) => t.codpessoa).filter(Boolean))].sort()
+    const pessoas = pessoasDe(lista)
     if (pessoas.join(',') !== pessoasDosTitulos) {
       pessoasDosTitulos = pessoas.join(',')
       codpessoa.value = pessoas.length === 1 ? pessoas[0] : null
@@ -240,7 +250,12 @@ watch(
   },
 )
 
-onMounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
+onMounted(() =>
+  sBaixa.iniciar({
+    pessoa: codpessoa.value ? { codpessoa: codpessoa.value } : null,
+    titulos: titulos.value.map((t) => ({ ...t })),
+  }),
+)
 onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
 </script>
 
