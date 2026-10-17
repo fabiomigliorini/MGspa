@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-17 20:58'
+updated_date: '2026-10-17 22:22'
 labels:
   - negocios
 dependencies: []
@@ -35,7 +35,7 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [ ] #1 PDV autorizado se autentica com credencial própria (não só o uuid na query string) nas rotas usadas sem usuário logado: quiosque e sincronização
 - [x] #2 Sincronização roda sozinha ao iniciar o sistema, sem clicar no botão (ex-TASK-54)
 - [ ] #3 Sincronização incremental traz só o que mudou desde a última, inclusive cadastro recém-feito de pessoa (ex-TASK-36), produto e preço
-- [ ] #4 Full só quando não compensa o incremental: nunca sincronizou, navegador novo, versão com mais de 30 dias, ou diffs somados maiores que a full
+- [ ] #4 Sincronização incremental só fica disponível quando compensa: o servidor ainda tem a versão do PDV, os diffs somados são menores que a completa e a última completa tem até 7 dias; senão só a Sincronização completa fica disponível, já com o foco (a que abre sozinha ao iniciar segue a mesma regra)
 - [ ] #5 Sincronização não fica esperando a localização: hoje o Chrome no Linux às vezes não devolve a posição (mesmo com permissão) e a sincronização recusa depois de 10 s; localização continua obrigatória
 - [ ] #6 Quiosque sem resposta do backend (offline, rede caída, PDV não autorizado) não mostra o saldo do cache como estoque atual: avisa que é estoque não confirmado e de quando é; sem cache, mostra estoque indisponível (não zero) (ex-TASK-154)
 - [x] #7 Sincronizar funciona sem usuário logado: o botão não fica desabilitado nem avisa de login ou de sessão expirada
@@ -44,6 +44,9 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #10 Ao abrir sem usuário logado (ou com a sessão vencida), o PDV não abre negócio sozinho e o login não aparece; F2/Novo continuam abrindo, inclusive sem login e sem rede
 - [x] #11 Fechar a janela Sincronizar com ESC ou clicando fora para a sincronização, igual ao Cancelar: ela não continua rodando escondida e travando o PDV
 - [x] #12 A janela Sincronizar mostra a data e a hora (com segundos) da última sincronização
+- [ ] #13 Botões Sincronização completa e Sincronização incremental na janela Sincronizar; com a incremental disponível o foco vai nela, e a completa baixa a base inteira de pessoas e produtos mesmo assim
+- [ ] #14 Durante a sincronização cada linha diz o que está fazendo (consultando o servidor, baixando tudo, baixando alterações) e a base inteira avança de 2 em 2 mil registros, sem parecer travada
+- [ ] #15 Ao terminar sem erro a janela fecha e avisa 'Sincronização finalizada'; cancelada não avisa
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -66,4 +69,11 @@ Implementação (17/10/2026), core da sincronização incremental:
 - Rotas (sem login, uuid do dispositivo como hoje): GET v1/pdv/catalogo/{tabela}/versoes?desde=V (atual com tamanho e registros, diffs com tamanho, desde.conhecida) e GET v1/pdv/catalogo/{tabela}/{versao}.json|.diff (serve o .gz com Content-Encoding gzip).
 - Front: Dexie v9 apaga produto/pessoa e v10 recria só com os índices consultados (codproduto, barras, versao, buscaArr); store sincronizacao com versao.produto/pessoa persistida, sincronizarCatalogo (full em fluxo com fetch/ReadableStream ou diffs em paralelo de 5 aplicados em ordem; full só se a versão local não é conhecida pelo servidor ou se os diffs somados passam do tamanho da full), etapas em paralelo (Promise.allSettled) com uma linha por etapa no dialog e AbortController no Cancelar/ESC; bipe, CNPJ e cadastro de pessoa carimbam a versão local no registro.
 - Teste de ponta a ponta em Chrome headless contra o quasar dev e a api-dev (17/10): full num perfil limpo em 10 s (produtos) com pessoas em paralelo, total 14 s; alteração de preço + barra nova -> diff aplicado em 1,2 s ('5 alterados, 0 excluídos'); exclusão da barra -> '4 alterados, 1 excluídos' e a barra some do IndexedDB; rodada sem mudança -> 'Nada mudou desde a última'. Sem erro de console. Critérios #3 e #4 ficam para o Fábio validar e marcar.
+
+Fábio (17/10/2026, primeira sincronização em produção): a full parecia travada (progresso de 20 em 20 mil, sem dizer o que fazia) e não havia como forçar a completa. Mudou:
+- Botões Sincronização completa e Sincronização incremental. A janela, ao abrir, verifica a incremental (verificarIncremental): disponível só se, em pessoas e produtos, o servidor conhece a versão local, os diffs somados são menores que a completa e a última completa tem até 7 dias. A data da última completa vem da menor versao da tabela no IndexedDB (a completa carimba todos os registros, o diff só os que mudaram). Foco na incremental quando disponível; senão só a completa habilitada, com o foco. A sincronização ao abrir segue a mesma regra.
+- A incremental não cai mais sozinha na completa: se a versão local saiu do servidor depois da verificação, a etapa recusa pedindo a Sincronização completa.
+- Full grava e mostra o progresso a cada 2 mil; as linhas dizem 'Consultando o servidor...', 'Baixando tudo: x / y registros', 'Baixando alterações: ...'.
+- Fim sem erro: Notify 'Sincronização finalizada'; cancelada não avisa.
+- Teste em Chrome headless contra o quasar dev (17/10): completa ao abrir num perfil limpo em 23 s com o aviso no fim; reabrir -> incremental com foco, 'Nada mudou' em 2 s; registro com versão de 01/10 no IndexedDB -> só a completa, com foco, e depois dela a incremental volta; versão de pessoas desconhecida -> só a completa; ESC no meio da completa -> sem aviso.
 <!-- SECTION:NOTES:END -->

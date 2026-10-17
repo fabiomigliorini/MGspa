@@ -1,5 +1,5 @@
 <script setup>
-import { onMounted } from 'vue'
+import { nextTick, onMounted, ref } from 'vue'
 import { formataNumero, formataTimestamp } from '@components/formatters'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 
@@ -10,30 +10,51 @@ const sSinc = sincronizacaoStore()
 // ao abrir o sistema com a sincronizacao velha, a janela abre e ja sincroniza (TASK-197)
 onMounted(() => sSinc.sincronizarAoAbrir())
 
-// uma linha por etapa (TASK-197): produto e pessoa dizem se foi a base inteira ou so' o diff
+// a cada vez que a janela abre ve se a incremental esta' disponivel e foca nela; se nao, so' a
+// completa fica habilitada, com o foco. Rodando (a que abre sozinha), os dois estao desabilitados
+const btnIncremental = ref(null)
+const btnCompleta = ref(null)
+const aoMostrar = async () => {
+  if (!sSinc.importacao.rodando) {
+    await sSinc.verificarIncremental()
+  }
+  await nextTick()
+  const botao = sSinc.importacao.incremental ? btnIncremental : btnCompleta
+  botao.value?.$el.focus()
+}
+
+// uma linha por etapa (TASK-197): produto e pessoa dizem se foi a base inteira ou so' o diff,
+// e enquanto roda a linha diz o que esta' fazendo, para nao parecer travada
 const textoEtapa = (etapa) => {
   if (etapa.modo == 'full') {
-    return `${formataNumero(etapa.registros, 0)} / ${formataNumero(etapa.total, 0)} registros`
+    const contagem = `${formataNumero(etapa.registros, 0)} / ${formataNumero(etapa.total, 0)} registros`
+    return etapa.rodando ? `Baixando tudo: ${contagem}` : contagem
   }
   if (etapa.modo == 'diff') {
     if (!etapa.total) {
       return 'Nada mudou desde a última'
     }
-    return `${formataNumero(etapa.alterados, 0)} alterados, ${formataNumero(etapa.excluidos, 0)} excluídos`
+    const contagem = `${formataNumero(etapa.alterados, 0)} alterados, ${formataNumero(etapa.excluidos, 0)} excluídos`
+    return etapa.rodando ? `Baixando alterações: ${contagem}` : contagem
   }
   // configuracoes conta as quatro; prancheta e vales nao contam nada (o icone ja diz o estado)
   if (etapa.total) {
     return `${etapa.registros} / ${etapa.total}`
   }
-  return ''
+  // pessoas e produtos antes de saber se vai a base inteira ou o diff; prancheta e vales
+  return etapa.rodando ? 'Consultando o servidor...' : ''
 }
 </script>
 
 <template>
   <!-- fechar por qualquer caminho (Cancelar, ESC, clique fora) para a sincronizacao: ela nao
   pode seguir rodando escondida -->
-  <q-dialog v-model="sSinc.importacao.dialog" @hide="sSinc.abortarSincronizacao()">
-    <q-card flat class="q-pa-md" style="width: 520px; max-width: 95vw">
+  <q-dialog
+    v-model="sSinc.importacao.dialog"
+    @show="aoMostrar()"
+    @hide="sSinc.abortarSincronizacao()"
+  >
+    <q-card flat class="q-pa-md" style="width: 600px; max-width: 95vw">
       <q-card-section>
         <div class="text-h4 text-center">Sincronizar...</div>
 
@@ -91,13 +112,22 @@ const textoEtapa = (etapa) => {
           @click="sSinc.abortarSincronizacao()"
           tabindex="-1"
         />
+        <!-- pessoas e produtos pelo arquivo inteiro, mesmo se a incremental estiver disponivel -->
         <q-btn
+          ref="btnCompleta"
           flat
-          label="Sincronizar"
+          label="Sincronização completa"
+          color="primary"
+          @click="sSinc.sincronizar(true)"
+          :disable="sSinc.importacao.rodando || sSinc.importacao.incremental === null"
+        />
+        <q-btn
+          ref="btnIncremental"
+          flat
+          label="Sincronização incremental"
           color="primary"
           @click="sSinc.sincronizar()"
-          autofocus
-          :disable="sSinc.importacao.rodando"
+          :disable="sSinc.importacao.rodando || !sSinc.importacao.incremental"
         />
       </q-card-actions>
     </q-card>

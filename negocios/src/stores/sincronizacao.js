@@ -23,6 +23,8 @@ const CATALOGO = {
 }
 // um .diff.gz sem linha nenhuma tem 20 bytes: abaixo disto nao vale uma requisicao
 const DIFF_VAZIO = 32
+// a full grava e mostra o progresso a cada LOTE registros: lote grande parece travado
+const LOTE = 2000
 // etapas da sincronizacao: cada uma e' uma linha do dialog e roda em paralelo com as outras
 export const ETAPAS = {
   config: 'Configurações',
@@ -47,6 +49,10 @@ const dataDaVersao = (v) =>
   v.replace(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})$/, '$1-$2-$3 $4:$5:$6')
 // aborta os downloads de todas as etapas de uma vez (Cancelar, ESC, clique fora)
 let abortador = null
+// verificacao da incremental em andamento: abrir a janela e a sincronizacao ao abrir pedem juntas
+let verificacao = null
+// dias desde a ultima completa que a incremental ainda vale
+const DIAS_INCREMENTAL = 7
 // no maximo n downloads ao mesmo tempo; cada chamada devolve a promessa do seu download
 const limitar = (n) => {
   let ativos = 0
@@ -144,6 +150,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       erro: false,
       dialog: false,
       tempoTotal: 0,
+      incremental: null, // a janela oferece a incremental? null = verificando
       etapas: Object.fromEntries(Object.entries(ETAPAS).map(([k, l]) => [k, etapaVazia(l)])),
     },
   }),
@@ -265,12 +272,49 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
       this.importacao.dialog = true
-      await this.sincronizar()
+      await this.verificarIncremental()
+      await this.sincronizar(!this.importacao.incremental)
+    },
+
+    // a incremental so' vale se, em pessoas e produtos, o servidor ainda conhece a versao local,
+    // os diffs somados sao menores que a completa e a ultima completa tem ate' DIAS_INCREMENTAL;
+    // senao a janela so' oferece a completa
+    verificarIncremental() {
+      if (!verificacao) {
+        this.importacao.incremental = null
+        verificacao = Promise.all(Object.keys(CATALOGO).map((c) => this.incrementalDisponivel(c)))
+          .then((disponiveis) => disponiveis.every(Boolean))
+          .catch(() => false)
+          .then((disponivel) => (this.importacao.incremental = disponivel))
+          .finally(() => (verificacao = null))
+      }
+      return verificacao
+    },
+
+    async incrementalDisponivel(chave) {
+      const local = this.versao[chave]
+      if (!local) {
+        return false
+      }
+      // a completa carimba todos os registros com a versao dela e o diff so' os que mudaram: a
+      // menor versao da tabela e' a da ultima completa
+      const maisAntigo = await db[chave].orderBy('versao').first()
+      const limite = moment().subtract(DIAS_INCREMENTAL, 'days')
+      if (!maisAntigo || moment(dataDaVersao(maisAntigo.versao)).isBefore(limite)) {
+        return false
+      }
+      const { data } = await api.get(`/v1/pdv/catalogo/${CATALOGO[chave].tabela}/versoes`, {
+        params: { pdv: this.pdv.uuid, desde: local },
+      })
+      const somaDiffs = data.diffs.reduce((soma, d) => soma + d.tamanho, 0)
+      return !!data.desde?.conhecida && somaDiffs < data.atual.tamanho
     },
 
     // Uma sincronizacao por vez, entre todas as janelas do navegador (TASK-197): a trava do
     // Web Locks vale para as abas do mesmo site e solta sozinha se a janela que sincroniza fechar
-    async sincronizar() {
+    // full = botao Sincronizacao completa: pessoas e produtos vem pelo arquivo inteiro; sem ele,
+    // so' os diffs (incremental)
+    async sincronizar(full = false) {
       if (this.importacao.rodando) {
         return
       }
@@ -280,7 +324,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
       // sem Web Locks (navegador antigo ou pagina sem https) sincroniza sem a trava
       if (!navigator.locks) {
-        await this.executarSincronizacao()
+        await this.executarSincronizacao(full)
         return
       }
       const rodou = await navigator.locks.request(
@@ -290,7 +334,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
           if (!trava) {
             return false
           }
-          await this.executarSincronizacao()
+          await this.executarSincronizacao(full)
           return true
         },
       )
@@ -301,7 +345,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
     },
 
-    async executarSincronizacao() {
+    async executarSincronizacao(full) {
       // verifica se PDV pode acessar API (o dispositivo() ja avisou o erro)
       try {
         await this.dispositivo()
@@ -328,10 +372,10 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         etapas.push(this.rodarEtapa('config', () => this.sincronizarConfig()))
       }
       if (this.sincronizacao.pessoa) {
-        etapas.push(this.rodarEtapa('pessoa', () => this.sincronizarCatalogo('pessoa')))
+        etapas.push(this.rodarEtapa('pessoa', () => this.sincronizarCatalogo('pessoa', full)))
       }
       if (this.sincronizacao.produto) {
-        etapas.push(this.rodarEtapa('produto', () => this.sincronizarCatalogo('produto')))
+        etapas.push(this.rodarEtapa('produto', () => this.sincronizarCatalogo('produto', full)))
       }
       if (this.sincronizacao.prancheta) {
         etapas.push(this.rodarEtapa('prancheta', () => this.sincronizarPrancheta()))
@@ -345,9 +389,13 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       // esconde janela de progresso; com erro ela fica aberta, junto dos avisos
       // (cancelada pelo usuario, rodando ja e false e a janela segue fechada)
       const manterAberta = this.importacao.erro && this.importacao.rodando
+      const finalizada = !this.importacao.erro && this.importacao.rodando
       this.inicializaVars()
       if (manterAberta) {
         this.importacao.dialog = true
+      }
+      if (finalizada) {
+        Notify.create({ message: 'Sincronização finalizada', color: 'green-5', icon: 'done' })
       }
       await this.avisarSincronizacaoCompleta()
     },
@@ -473,7 +521,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       return resposta
     },
 
-    async sincronizarCatalogo(chave) {
+    async sincronizarCatalogo(chave, full) {
       const { tabela, pk } = CATALOGO[chave]
       const etapa = this.importacao.etapas[chave]
       const local = this.versao[chave]
@@ -482,13 +530,17 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         signal: abortador?.signal,
       })
       const { atual, diffs } = versoes
-      const somaDiffs = diffs.reduce((soma, d) => soma + d.tamanho, 0)
-      // incremental so' se o servidor ainda conhece a versao local e os diffs somados sao
-      // menores que a full; senao a full e' mais barata
-      if (versoes.desde?.conhecida && somaDiffs < atual.tamanho) {
-        return await this.aplicarDiffs(chave, pk, etapa, tabela, atual, diffs)
+      if (full) {
+        return await this.aplicarFull(chave, etapa, tabela, atual)
       }
-      return await this.aplicarFull(chave, etapa, tabela, atual)
+      // a janela so' oferece a incremental se o servidor conhece a versao local; se ela saiu de
+      // la' depois disso, recusa em vez de baixar tudo por conta propria
+      if (!versoes.desde?.conhecida) {
+        throw new Error(
+          'a versão deste PDV não está mais no servidor, use a Sincronização completa',
+        )
+      }
+      return await this.aplicarDiffs(chave, pk, etapa, tabela, atual, diffs)
     },
 
     // baixa ate' 5 diffs por vez e aplica na ordem das versoes: '-' e' chave que saiu, '+' e'
@@ -536,7 +588,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       return true
     },
 
-    // baixa o json atual em fluxo, um registro por linha, gravando a cada 20 mil; no fim o que
+    // baixa o json atual em fluxo, um registro por linha, gravando a cada LOTE; no fim o que
     // ficou com versao velha nao existe mais no servidor
     async aplicarFull(chave, etapa, tabela, atual) {
       etapa.modo = 'full'
@@ -572,12 +624,12 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         if (done) {
           break
         }
-        resto += decodificador.decode(value, { stream: true })
-        let fim
-        while ((fim = resto.indexOf('\n')) >= 0) {
-          empilhar(resto.slice(0, fim))
-          resto = resto.slice(fim + 1)
-          if (lote.length >= 20000) {
+        // a ultima linha do pedaco pode vir cortada: fica para o proximo
+        const linhas = (resto + decodificador.decode(value, { stream: true })).split('\n')
+        resto = linhas.pop()
+        for (const linha of linhas) {
+          empilhar(linha)
+          if (lote.length >= LOTE) {
             await gravar()
           }
         }
