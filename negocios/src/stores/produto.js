@@ -184,7 +184,7 @@ export const produtoStore = defineStore('produto', {
           timeout: 3000,
         })
         if (data.length > 0) {
-          await db.produto.bulkPut(data)
+          await db.produto.bulkPut(sSinc.carimbar('produto', data))
         }
         return data
       } catch (error) {

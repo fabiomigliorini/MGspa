@@ -3,7 +3,7 @@
 namespace Mg\Negocio;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
-use Mg\Pdv\PdvService;
+use Mg\Pdv\PdvCatalogoService;
 
 class NegocioProdutoBarraResource extends Resource
 {
@@ -27,7 +27,7 @@ class NegocioProdutoBarraResource extends Resource
             $sigla = $this->ProdutoBarra->ProdutoEmbalagem->UnidadeMedida->sigla;
             $quantidade = $this->ProdutoBarra->ProdutoEmbalagem->quantidade;
         }
-        $ret['produto'] = PdvService::montarDescricaoProduto(
+        $ret['produto'] = PdvCatalogoService::montarDescricaoProduto(
             $this->ProdutoBarra->Produto->produto,
             $this->ProdutoBarra->ProdutoVariacao->variacao,
             $sigla,

@@ -14,6 +14,63 @@ const negocio = async () => (await import('stores/negocio')).negocioStore()
 // a sincronizacao ao abrir roda uma vez por carga do app, nao a cada tela que mostra a janela
 let verificadaAoAbrir = false
 
+// Catalogo (TASK-197): produto e pessoa vem do json/diff que o job pdv:catalogo gera no
+// servidor. Full baixa o json atual em fluxo; incremental aplica os diffs depois da versao
+// local. chave = tabela local; tabela = nome no servidor; pk = primeiro campo de cada linha
+const CATALOGO = {
+  produto: { tabela: 'produtos', pk: 'codprodutobarra' },
+  pessoa: { tabela: 'pessoas', pk: 'codpessoa' },
+}
+// um .diff.gz sem linha nenhuma tem 20 bytes: abaixo disto nao vale uma requisicao
+const DIFF_VAZIO = 32
+// etapas da sincronizacao: cada uma e' uma linha do dialog e roda em paralelo com as outras
+export const ETAPAS = {
+  config: 'Configurações',
+  pessoa: 'Pessoas',
+  produto: 'Produtos',
+  prancheta: 'Prancheta',
+  valeModelo: 'Modelos de Vale',
+}
+const etapaVazia = (label) => ({
+  label,
+  rodando: false,
+  concluida: false,
+  erro: false,
+  modo: null, // 'full' | 'diff'
+  total: 0, // registros esperados na full, diffs a aplicar no incremental
+  registros: 0, // gravados na full, diffs aplicados no incremental
+  alterados: 0,
+  excluidos: 0,
+})
+// '20261017-135607' -> '2026-10-17 13:56:07', o formato que o dialog e o backend ja usam
+const dataDaVersao = (v) =>
+  v.replace(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})$/, '$1-$2-$3 $4:$5:$6')
+// aborta os downloads de todas as etapas de uma vez (Cancelar, ESC, clique fora)
+let abortador = null
+// no maximo n downloads ao mesmo tempo; cada chamada devolve a promessa do seu download
+const limitar = (n) => {
+  let ativos = 0
+  const fila = []
+  const proximo = () => {
+    if (ativos >= n || !fila.length) {
+      return
+    }
+    ativos++
+    const { fn, resolve, reject } = fila.shift()
+    fn()
+      .then(resolve, reject)
+      .finally(() => {
+        ativos--
+        proximo()
+      })
+  }
+  return (fn) =>
+    new Promise((resolve, reject) => {
+      fila.push({ fn, resolve, reject })
+      proximo()
+    })
+}
+
 export const DISPOSITIVO_NAO_CADASTRADO =
   'Este navegador não está cadastrado como dispositivo. Abra o Meu Dispositivo e clique em Cadastrar.'
 export const DISPOSITIVO_INATIVO =
@@ -31,7 +88,7 @@ const erro = (message) => {
 
 export const sincronizacaoStore = defineStore('sincronizacao', {
   persist: {
-    pick: ['ultimaSincronizacao', 'pdv', 'configuracaoMigrada'],
+    pick: ['ultimaSincronizacao', 'versao', 'pdv', 'configuracaoMigrada'],
   },
 
   state: () => ({
@@ -54,7 +111,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       prancheta: null,
       completa: null,
     },
-    labelSincronizacao: '',
+    // versao do catalogo que cada tabela local tem (TASK-197); vazia = nunca baixou = full
+    versao: {
+      produto: null,
+      pessoa: null,
+    },
     pdv: {
       // envia para api
       uuid: null,
@@ -78,16 +139,12 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     // a configuracao que ficava so' no navegador ja foi enviada ao backend (TASK-46)
     configuracaoMigrada: false,
     importacao: {
-      totalRegistros: null,
-      totalSincronizados: null,
       progresso: 0,
       rodando: false,
       erro: false,
       dialog: false,
-      requisicoes: null,
-      tempoTotal: null,
-      maxRequisicoes: 1000,
-      limiteRequisicao: 3000,
+      tempoTotal: 0,
+      etapas: Object.fromEntries(Object.entries(ETAPAS).map(([k, l]) => [k, etapaVazia(l)])),
     },
   }),
 
@@ -259,30 +316,31 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // roda as importacoes
-      try {
-        if (this.sincronizacao.config) {
-          await this.sincronizarImpressora()
-          await this.sincronizarFormaPagamento()
-          await this.sincronizarEstoqueLocal()
-          await this.sincronizarNaturezaOperacao()
-        }
-        if (this.sincronizacao.pessoa) {
-          await this.sincronizarPessoa()
-        }
-        if (this.sincronizacao.produto) {
-          await this.sincronizarProduto()
-        }
-        if (this.sincronizacao.prancheta) {
-          await this.sincronizarPrancheta()
-        }
-        if (this.sincronizacao.valeModelo) {
-          await this.sincronizarValeModelo()
-        }
-      } catch (error) {
-        console.log(error)
-        this.importacao.erro = true
+      // Etapas em paralelo (TASK-197): cada uma e' uma linha do dialog, erro numa nao derruba
+      // as outras, e o Cancelar aborta os downloads de todas pelo mesmo controlador
+      abortador = new AbortController()
+      const inicio = performance.now()
+      const cronometro = setInterval(() => {
+        this.importacao.tempoTotal = Math.round((performance.now() - inicio) / 1000)
+      }, 500)
+      const etapas = []
+      if (this.sincronizacao.config) {
+        etapas.push(this.rodarEtapa('config', () => this.sincronizarConfig()))
       }
+      if (this.sincronizacao.pessoa) {
+        etapas.push(this.rodarEtapa('pessoa', () => this.sincronizarCatalogo('pessoa')))
+      }
+      if (this.sincronizacao.produto) {
+        etapas.push(this.rodarEtapa('produto', () => this.sincronizarCatalogo('produto')))
+      }
+      if (this.sincronizacao.prancheta) {
+        etapas.push(this.rodarEtapa('prancheta', () => this.sincronizarPrancheta()))
+      }
+      if (this.sincronizacao.valeModelo) {
+        etapas.push(this.rodarEtapa('valeModelo', () => this.sincronizarValeModelo()))
+      }
+      await Promise.allSettled(etapas)
+      clearInterval(cronometro)
 
       // esconde janela de progresso; com erro ela fica aberta, junto dos avisos
       // (cancelada pelo usuario, rodando ja e false e a janela segue fechada)
@@ -311,7 +369,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     },
 
     async inicializaVars() {
-      this.inicializaProgresso(null)
+      this.importacao.progresso = 0
       this.importacao.dialog = false
       this.importacao.rodando = false
       this.ultimaSincronizacao.completa = [
@@ -329,15 +387,207 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     async abortarSincronizacao() {
       this.importacao.rodando = false
       this.importacao.dialog = false
+      abortador?.abort()
     },
 
-    inicializaProgresso(label) {
-      this.importacao.progresso = 0
-      this.importacao.totalRegistros = 0
-      this.importacao.totalSincronizados = 0
-      this.importacao.requisicoes = 0
-      this.importacao.tempoTotal = 0
-      this.labelSincronizacao = label
+    // uma etapa = uma linha do dialog; fn devolve false (ou lanca) quando falhou
+    async rodarEtapa(chave, fn) {
+      const etapa = this.importacao.etapas[chave]
+      Object.assign(etapa, etapaVazia(etapa.label), { rodando: true })
+      let ok = false
+      try {
+        ok = (await fn()) !== false
+      } catch (error) {
+        // cancelada no meio nao e' erro; as funcoes de configuracao avisam sozinhas
+        if (!['AbortError', 'CanceledError'].includes(error?.name)) {
+          console.log(error)
+          erro(`${etapa.label}: ${error?.response?.data?.message ?? error?.message}`)
+        }
+      }
+      etapa.rodando = false
+      etapa.concluida = ok
+      if (!ok && this.importacao.rodando) {
+        etapa.erro = true
+        this.importacao.erro = true
+      }
+      return ok
+    },
+
+    // progresso geral (botao e circulo do dialog): gravados sobre esperados, todas as etapas
+    atualizarProgresso() {
+      let total = 0
+      let feito = 0
+      for (const e of Object.values(this.importacao.etapas)) {
+        total += e.total
+        feito += Math.min(e.registros, e.total)
+      }
+      this.importacao.progresso = total ? Math.round((feito * 100) / total) : 0
+    },
+
+    // registro que veio ao vivo (bipe, CNPJ, cadastro) leva a versao local da tabela: sem isso
+    // ele nao entraria no indice e sobreviveria a' limpeza da proxima full
+    carimbar(chave, registros) {
+      const versao = this.versao[chave] ?? '0'
+      registros.forEach((r) => (r.versao = versao))
+      return registros
+    },
+
+    // as quatro de configuracao, em sequencia, numa linha so' do dialog
+    async sincronizarConfig() {
+      const etapa = this.importacao.etapas.config
+      etapa.total = 4
+      let ok = true
+      for (const fn of [
+        this.sincronizarImpressora,
+        this.sincronizarFormaPagamento,
+        this.sincronizarEstoqueLocal,
+        this.sincronizarNaturezaOperacao,
+      ]) {
+        if ((await fn.call(this)) === false) {
+          ok = false
+        }
+        etapa.registros++
+        this.atualizarProgresso()
+      }
+      return ok
+    },
+
+    // ---- Catalogo (TASK-197) --------------------------------------------------------------
+
+    urlCatalogo(tabela, caminho) {
+      return api.getUri({
+        url: `/v1/pdv/catalogo/${tabela}/${caminho}`,
+        params: { pdv: this.pdv.uuid },
+      })
+    },
+
+    // resposta de um arquivo do catalogo; o navegador descomprime o gzip sozinho
+    async baixarCatalogo(tabela, versao, tipo) {
+      const resposta = await fetch(this.urlCatalogo(tabela, `${versao}.${tipo}`), {
+        signal: abortador?.signal,
+      })
+      if (!resposta.ok) {
+        const corpo = await resposta.json().catch(() => ({}))
+        throw new Error(corpo.message ?? `${resposta.status} ${resposta.statusText}`)
+      }
+      return resposta
+    },
+
+    async sincronizarCatalogo(chave) {
+      const { tabela, pk } = CATALOGO[chave]
+      const etapa = this.importacao.etapas[chave]
+      const local = this.versao[chave]
+      const { data: versoes } = await api.get(`/v1/pdv/catalogo/${tabela}/versoes`, {
+        params: { pdv: this.pdv.uuid, desde: local ?? undefined },
+        signal: abortador?.signal,
+      })
+      const { atual, diffs } = versoes
+      const somaDiffs = diffs.reduce((soma, d) => soma + d.tamanho, 0)
+      // incremental so' se o servidor ainda conhece a versao local e os diffs somados sao
+      // menores que a full; senao a full e' mais barata
+      if (versoes.desde?.conhecida && somaDiffs < atual.tamanho) {
+        return await this.aplicarDiffs(chave, pk, etapa, tabela, atual, diffs)
+      }
+      return await this.aplicarFull(chave, etapa, tabela, atual)
+    },
+
+    // baixa ate' 5 diffs por vez e aplica na ordem das versoes: '-' e' chave que saiu, '+' e'
+    // registro que entrou ou mudou (o mudado vem nas duas e o bulkPut sobrescreve)
+    async aplicarDiffs(chave, pk, etapa, tabela, atual, diffs) {
+      etapa.modo = 'diff'
+      const uteis = diffs.filter((d) => d.tamanho > DIFF_VAZIO)
+      etapa.total = uteis.length
+      const baixar = limitar(5)
+      const textos = uteis.map((d) =>
+        baixar(async () => (await this.baixarCatalogo(tabela, d.versao, 'diff')).text()),
+      )
+      // uma falha derruba a etapa no await dela; as outras nao podem virar rejeicao solta
+      textos.forEach((t) => t.catch(() => {}))
+      for (let i = 0; i < uteis.length; i++) {
+        const texto = await textos[i]
+        if (!this.importacao.rodando) {
+          return false
+        }
+        const incluir = []
+        const saindo = []
+        for (const linha of texto.split('\n')) {
+          if (linha.startsWith('+{')) {
+            const registro = JSON.parse(linha.slice(1))
+            registro.versao = uteis[i].versao
+            incluir.push(registro)
+          } else if (linha.startsWith('-{')) {
+            saindo.push(parseInt(linha.slice(linha.indexOf(':') + 1)))
+          }
+        }
+        const voltou = new Set(incluir.map((r) => r[pk]))
+        const excluir = saindo.filter((k) => !voltou.has(k))
+        await db[chave].bulkDelete(excluir)
+        await db[chave].bulkPut(incluir)
+        etapa.alterados += incluir.length
+        etapa.excluidos += excluir.length
+        etapa.registros++
+        this.versao[chave] = uteis[i].versao
+        this.ultimaSincronizacao[chave] = dataDaVersao(uteis[i].versao)
+        this.atualizarProgresso()
+      }
+      // os diffs vazios depois do ultimo util tambem contam: o local ja e' igual ao json atual
+      this.versao[chave] = atual.versao
+      this.ultimaSincronizacao[chave] = dataDaVersao(atual.versao)
+      return true
+    },
+
+    // baixa o json atual em fluxo, um registro por linha, gravando a cada 20 mil; no fim o que
+    // ficou com versao velha nao existe mais no servidor
+    async aplicarFull(chave, etapa, tabela, atual) {
+      etapa.modo = 'full'
+      etapa.total = atual.registros ?? 0
+      const resposta = await this.baixarCatalogo(tabela, atual.versao, 'json')
+      const leitor = resposta.body.getReader()
+      const decodificador = new TextDecoder()
+      let resto = ''
+      let lote = []
+      const gravar = async () => {
+        if (!lote.length) {
+          return
+        }
+        await db[chave].bulkPut(lote)
+        etapa.registros += lote.length
+        lote = []
+        this.atualizarProgresso()
+      }
+      const empilhar = (linha) => {
+        if (!linha) {
+          return
+        }
+        const registro = JSON.parse(linha)
+        registro.versao = atual.versao
+        lote.push(registro)
+      }
+      for (;;) {
+        const { done, value } = await leitor.read()
+        if (!this.importacao.rodando) {
+          await leitor.cancel()
+          return false
+        }
+        if (done) {
+          break
+        }
+        resto += decodificador.decode(value, { stream: true })
+        let fim
+        while ((fim = resto.indexOf('\n')) >= 0) {
+          empilhar(resto.slice(0, fim))
+          resto = resto.slice(fim + 1)
+          if (lote.length >= 20000) {
+            await gravar()
+          }
+        }
+      }
+      empilhar(resto + decodificador.decode())
+      await gravar()
+      await db[chave].where('versao').below(atual.versao).delete()
+      this.versao[chave] = atual.versao
+      this.ultimaSincronizacao[chave] = dataDaVersao(atual.versao)
+      return true
     },
 
     async sincronizarImpressora() {
@@ -345,8 +595,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Impressoras')
       let sincronizado = null
 
       try {
@@ -370,10 +618,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.importacao.erro = true
         Notify.create({
           type: 'negative',
-          message: error.response.data.message,
+          message: error?.response?.data?.message ?? error.message,
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        return false
       }
     },
 
@@ -382,8 +631,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Formas de Pagamento')
       let sincronizado = null
 
       try {
@@ -407,10 +654,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.importacao.erro = true
         Notify.create({
           type: 'negative',
-          message: error.response.data.message,
+          message: error?.response?.data?.message ?? error.message,
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        return false
       }
     },
 
@@ -419,8 +667,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Locais de Estoque')
       let sincronizado = null
 
       try {
@@ -444,10 +690,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.importacao.erro = true
         Notify.create({
           type: 'negative',
-          message: error.response.data.message,
+          message: error?.response?.data?.message ?? error.message,
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        return false
       }
     },
 
@@ -482,8 +729,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Natureza De Operação')
       let sincronizado = null
 
       try {
@@ -507,10 +752,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.importacao.erro = true
         Notify.create({
           type: 'negative',
-          message: error.response.data.message,
+          message: error?.response?.data?.message ?? error.message,
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        return false
       }
     },
 
@@ -527,8 +773,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Modelos de Vale')
       let sincronizado = null
 
       try {
@@ -563,174 +807,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
-      }
-    },
-
-    async sincronizarPessoa() {
-      if (!this.importacao.rodando) {
-        return
-      }
-
-      // inicializa progresso
-      this.inicializaProgresso('Pessoas')
-
-      // descobre o total de registros pra sincronizar
-      try {
-        let { data } = await api.get('/v1/pdv/pessoa-count', {
-          params: { pdv: this.pdv.uuid },
-        })
-        this.importacao.totalRegistros = data.count
-        this.importacao.limiteRequisicao = Math.round(this.importacao.totalRegistros / 10)
-      } catch (error) {
-        console.log(error)
-        console.log('Impossível acessar API')
-        this.importacao.erro = true
-        Notify.create({
-          type: 'negative',
-          message: error.response.data.message,
-          timeout: 0, // 20 minutos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-      }
-
-      let sincronizado = null
-      let inicio = performance.now()
-      let codpessoa = 0
-
-      do {
-        // busca dados na api
-        var { data } = await api.get('/v1/pdv/pessoa', {
-          params: {
-            pdv: this.pdv.uuid,
-            codpessoa: codpessoa,
-            limite: this.importacao.limiteRequisicao,
-          },
-        })
-
-        // se nao veio nada interrompe o loop
-        if (data.length == 0) {
-          break
-        }
-
-        // incrementa numero de requisicoes
-        this.importacao.requisicoes++
-
-        // insere dados no banco local indexeddb
-        try {
-          await db.pessoa.bulkPut(data)
-        } catch (error) {
-          console.log(error.stack || error)
-        }
-
-        if (sincronizado == null) {
-          sincronizado = data[0].sincronizado
-        }
-
-        // busca codigo do ultimo registro
-        codpessoa = data.slice(-1)[0].codpessoa
-
-        //monta status de progresso
-        this.importacao.totalSincronizados += data.length
-        this.importacao.progresso = Math.round(
-          (this.importacao.totalSincronizados * 100) / this.importacao.totalRegistros,
-        )
-        this.importacao.tempoTotal = Math.round((performance.now() - inicio) / 1000)
-
-        // loop enquanto nao tiver buscado menos registros que o limite
-      } while (
-        data.length >= this.importacao.limiteRequisicao &&
-        this.importacao.requisicoes <= this.importacao.maxRequisicoes &&
-        this.importacao.rodando
-      )
-
-      // exclui registros que nao vieram na importacao
-      if (this.importacao.rodando) {
-        db.pessoa.where('sincronizado').below(sincronizado).delete()
-        this.ultimaSincronizacao.pessoa = sincronizado
-      }
-    },
-
-    async sincronizarProduto() {
-      if (!this.importacao.rodando) {
-        return
-      }
-
-      // inicializa progresso
-      this.inicializaProgresso('Produtos')
-
-      // descobre o total de registros pra sincronizar
-      try {
-        let { data } = await api.get('/v1/pdv/produto-count', {
-          params: { pdv: this.pdv.uuid },
-        })
-        this.importacao.totalRegistros = data.count
-        this.importacao.limiteRequisicao = Math.round(this.importacao.totalRegistros / 50)
-      } catch (error) {
-        console.log(error)
-        console.log('Impossível acessar API')
-        this.importacao.erro = true
-        Notify.create({
-          type: 'negative',
-          message: error.response.data.message,
-          timeout: 0, // 20 minutos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-      }
-
-      let sincronizado = null
-      let inicio = performance.now()
-      let codprodutobarra = 0
-
-      do {
-        // busca dados na api
-        var { data } = await api.get('/v1/pdv/produto', {
-          params: {
-            pdv: this.pdv.uuid,
-            codprodutobarra: codprodutobarra,
-            limite: this.importacao.limiteRequisicao,
-          },
-        })
-
-        // se nao veio nada interrompe o loop
-        if (data.length == 0) {
-          break
-        }
-
-        // incrementa numero de requisicoes
-        this.importacao.requisicoes++
-
-        // insere dados no banco local indexeddb
-        try {
-          await db.produto.bulkPut(data)
-        } catch (error) {
-          console.log(error.stack || error)
-        }
-
-        if (sincronizado == null) {
-          sincronizado = data[0].sincronizado
-        }
-
-        // busca codigo do ultimo registro
-        codprodutobarra = data.slice(-1)[0].codprodutobarra
-
-        //monta status de progresso
-        this.importacao.totalSincronizados += data.length
-        this.importacao.progresso = Math.round(
-          (this.importacao.totalSincronizados * 100) / this.importacao.totalRegistros,
-        )
-        this.importacao.tempoTotal = Math.round((performance.now() - inicio) / 1000)
-
-        // loop enquanto nao tiver buscado menos registros que o limite
-      } while (
-        data.length >= this.importacao.limiteRequisicao &&
-        this.importacao.requisicoes <= this.importacao.maxRequisicoes &&
-        this.importacao.rodando
-      )
-
-      // exclui registros que nao vieram na importacao
-      if (this.importacao.rodando) {
-        db.produto.where('sincronizado').below(sincronizado).delete()
-        this.ultimaSincronizacao.produto = sincronizado
+        return false
       }
     },
 
@@ -739,8 +816,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Prancheta')
       let sincronizado = null
 
       try {
@@ -764,10 +839,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.importacao.erro = true
         Notify.create({
           type: 'negative',
-          message: error.response.data.message,
+          message: error?.response?.data?.message ?? error.message,
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        return false
       }
     },
 
@@ -1067,7 +1143,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       try {
         pessoa.pdv = this.pdv.uuid
         var { data } = await api.post('/v1/pdv/pessoa', pessoa)
-        await db.pessoa.bulkPut(data)
+        await db.pessoa.bulkPut(this.carimbar('pessoa', data))
         return data[0].codpessoa
       } catch (error) {
         let message = 'Falha ao salvar a pessoa!'
@@ -1099,7 +1175,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         var { data } = await api.get('/v1/pdv/pessoa/cnpj/' + cnpj, {
           params: { pdv: this.pdv.uuid },
         })
-        await db.pessoa.bulkPut(data)
+        await db.pessoa.bulkPut(this.carimbar('pessoa', data))
         return data.length
       } catch (error) {
         console.log(error)

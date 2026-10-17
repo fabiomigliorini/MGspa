@@ -882,15 +882,15 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // PDV
     // ============================================================
     Route::group(['prefix' => 'pdv'], function () {
-        // consulta de precos do quiosque e sincronizacao: sem usuario logado,
-        // o controller autoriza pelo uuid do dispositivo (PdvService::autoriza)
+        // sem usuario logado (quiosque e sincronizacao): o controller autoriza pelo uuid do
+        // dispositivo (PdvService::autoriza). Catalogo (TASK-197): versoes e arquivos da
+        // sincronizacao incremental, mais o bipe ao vivo que alimenta o mesmo cache
         Route::withoutMiddleware('auth:api')->group(function () {
-            Route::get('produto-count', '\Mg\Pdv\PdvController@produtoCount');
-            Route::get('produto', '\Mg\Pdv\PdvController@produto');
-            Route::get('produto/{barras}', '\Mg\Pdv\PdvController@produtoBarras');
+            Route::get('catalogo/{tabela}/versoes', '\Mg\Pdv\PdvCatalogoController@versoes');
+            Route::get('catalogo/{tabela}/{versao}.{tipo}', '\Mg\Pdv\PdvCatalogoController@arquivo')
+                ->where(['versao' => '\d{8}-\d{6}', 'tipo' => 'json|diff']);
+            Route::get('produto/{barras}', '\Mg\Pdv\PdvCatalogoController@produtoBarras');
             Route::get('produto/{barras}/detalhe', '\Mg\Pdv\PdvController@produtoDetalhe');
-            Route::get('pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
-            Route::get('pessoa', '\Mg\Pdv\PdvController@pessoa');
             Route::get('natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
             Route::get('estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
             Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
@@ -899,7 +899,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
             Route::get('prancheta', '\Mg\Pdv\PdvController@getPrancheta');
             Route::get('impressora', '\Mg\Pdv\PdvController@impressora');
         });
-        Route::get('pessoa/cnpj/{cnpj}', '\Mg\Pdv\PdvController@pessoaPeloCnpj');
+        Route::get('pessoa/cnpj/{cnpj}', '\Mg\Pdv\PdvCatalogoController@pessoaPeloCnpj');
         Route::post('pessoa', '\Mg\Pdv\PdvController@postPessoa');
         Route::put('prancheta', '\Mg\Pdv\PdvController@putPrancheta');
         Route::put('negocio', '\Mg\Pdv\PdvController@putNegocio');

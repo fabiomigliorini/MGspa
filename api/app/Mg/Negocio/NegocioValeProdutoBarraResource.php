@@ -3,7 +3,7 @@
 namespace Mg\Negocio;
 
 use Illuminate\Http\Resources\Json\JsonResource as Resource;
-use Mg\Pdv\PdvService;
+use Mg\Pdv\PdvCatalogoService;
 
 /**
  * Item do vale para o PDV.
@@ -34,7 +34,7 @@ class NegocioValeProdutoBarraResource extends Resource
             $sigla = $pb->ProdutoEmbalagem->UnidadeMedida->sigla;
             $quantidade = $pb->ProdutoEmbalagem->quantidade;
         }
-        $ret['produto'] = PdvService::montarDescricaoProduto(
+        $ret['produto'] = PdvCatalogoService::montarDescricaoProduto(
             $pb->Produto->produto,
             $pb->ProdutoVariacao->variacao,
             $sigla,

@@ -182,54 +182,10 @@ class PdvController
         return new PdvResource($pdv);
     }
 
-    public function produtoCount(PdvRequest $request)
-    {
-        PdvService::autoriza($request->pdv);
-        return PdvService::produtoCount();
-    }
-
-    public function produto(PdvRequest $request)
-    {
-        PdvService::autoriza($request->pdv);
-        $codprodutobarra = $request->codprodutobarra ?? 0;
-        $limite = $request->limite ?? 10000;
-        return PdvService::produto($codprodutobarra, $limite);
-    }
-
-    public function produtoBarras(PdvRequest $request, $barras)
-    {
-        PdvService::autoriza($request->pdv);
-        $codprodutobarra = -1;
-        if ($pb = ProdutoService::buscaPorBarras($barras)) {
-            $codprodutobarra = $pb->codprodutobarra;
-        }
-        return PdvService::produto($codprodutobarra, 1);
-    }
-
     public function produtoDetalhe(PdvRequest $request, $barras)
     {
         PdvService::autoriza($request->pdv);
         return ProdutoService::detalheQuiosque($barras);
-    }
-
-    public function pessoaCount(PdvRequest $request)
-    {
-        PdvService::autoriza($request->pdv);
-        return PdvService::pessoaCount();
-    }
-
-    public function pessoa(PdvRequest $request)
-    {
-        PdvService::autoriza($request->pdv);
-        $codpessoa = $request->codpessoa ?? 0;
-        $limite = $request->limite ?? 10000;
-        return PdvService::pessoa($codpessoa, null, $limite);
-    }
-
-    public function pessoaPeloCnpj(PdvRequest $request, $cnpj)
-    {
-        PdvService::autoriza($request->pdv);
-        return PdvService::pessoa(null, $cnpj, 999999);
     }
 
     public function postPessoa(PdvRequest $request)
@@ -272,7 +228,7 @@ class PdvController
         DB::commit();
 
         // retorna pessoa salva
-        return PdvService::pessoa($pessoa->codpessoa, null, 1);
+        return PdvCatalogoService::pessoa($pessoa->codpessoa, null, 1);
     }
 
     public function naturezaOperacao(PdvRequest $request)

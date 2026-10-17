@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-16 22:54'
+updated_date: '2026-10-17 20:58'
 labels:
   - negocios
 dependencies: []
@@ -33,9 +33,9 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [ ] #1 PDV autorizado se autentica com credencial própria (não só o uuid na query string) nas rotas usadas sem usuário logado: quiosque e sincronização
-- [ ] #2 Sincronização roda sozinha ao iniciar o sistema, sem clicar no botão (ex-TASK-54)
+- [x] #2 Sincronização roda sozinha ao iniciar o sistema, sem clicar no botão (ex-TASK-54)
 - [ ] #3 Sincronização incremental traz só o que mudou desde a última, inclusive cadastro recém-feito de pessoa (ex-TASK-36), produto e preço
-- [ ] #4 Full semanal recarrega a base inteira e corrige o que o incremental não pegou (exclusões, divergências)
+- [ ] #4 Full só quando não compensa o incremental: nunca sincronizou, navegador novo, versão com mais de 30 dias, ou diffs somados maiores que a full
 - [ ] #5 Sincronização não fica esperando a localização: hoje o Chrome no Linux às vezes não devolve a posição (mesmo com permissão) e a sincronização recusa depois de 10 s; localização continua obrigatória
 - [ ] #6 Quiosque sem resposta do backend (offline, rede caída, PDV não autorizado) não mostra o saldo do cache como estoque atual: avisa que é estoque não confirmado e de quando é; sem cache, mostra estoque indisponível (não zero) (ex-TASK-154)
 - [x] #7 Sincronizar funciona sem usuário logado: o botão não fica desabilitado nem avisa de login ou de sessão expirada
@@ -58,4 +58,12 @@ Revisão com o Fábio (14/10/2026): a decisão de 10/10 (o botão manual continu
 Fábio (16/10/2026): o Cancelar abortava (abortarSincronizacao zera importacao.rodando, que os laços checam a cada página), mas ESC e clique fora só punham importacao.dialog = false e a sincronização seguia em segundo plano; o usuário achava que tinha parado, dava F5 e começava de novo. Fix: @hide da q-dialog no DialogSincronizacao chama abortarSincronizacao (vale para os três caminhos). O aborto para na próxima checagem, depois da requisição em andamento responder.
 
 Fábio (16/10/2026): a janela de 2 horas era pequena; a sincronização ao abrir passa a valer se a última não foi hoje (critério 8 reescrito).
+
+Fábio (17/10/2026): o incremental vai por JSON cacheado no backend com diff por versão. Incremental por alteracao foi descartado: não pega exclusão física; lista de chaves e tombstone com trigger foram descartados por abrirem brecha (tabela auxiliar, trigger). LGPD (cifrar o IndexedDB) saiu para task própria, prioridade low.
+
+Implementação (17/10/2026), core da sincronização incremental:
+- Backend: job pdv:catalogo (api/app/Console/Commands/PdvCatalogoCommand.php, agendado a cada 15 min em routes/console.php, withoutOverlapping) gera em storage/app/pdv-catalogo os arquivos produtos-AAAAMMDD-HHMMSS.json.gz e .diff.gz (idem pessoas-), um registro por linha em ordem de chave, sempre, mesmo sem mudança. O diff é um merge em PHP do json novo contra o anterior ('-' saiu, '+' entrou; alterado vem nas duas), numa transação REPEATABLE READ; manifesto catalogo.json gravado por último, renames atômicos. Retenção: diffs 30 dias, jsons só os 2 últimos. Mede 7 s na primeira rodada e 3,5 s nas seguintes no dev (191 mil barras + 27,6 mil pessoas). Consultas de produto/pessoa e as de bipe/CNPJ foram para PdvCatalogoService/PdvCatalogoController; rotas paginadas produto, produto-count, pessoa, pessoa-count removidas. Registro de produto ganhou 'nome' (base, sem variação/embalagem) para a TASK-173.
+- Rotas (sem login, uuid do dispositivo como hoje): GET v1/pdv/catalogo/{tabela}/versoes?desde=V (atual com tamanho e registros, diffs com tamanho, desde.conhecida) e GET v1/pdv/catalogo/{tabela}/{versao}.json|.diff (serve o .gz com Content-Encoding gzip).
+- Front: Dexie v9 apaga produto/pessoa e v10 recria só com os índices consultados (codproduto, barras, versao, buscaArr); store sincronizacao com versao.produto/pessoa persistida, sincronizarCatalogo (full em fluxo com fetch/ReadableStream ou diffs em paralelo de 5 aplicados em ordem; full só se a versão local não é conhecida pelo servidor ou se os diffs somados passam do tamanho da full), etapas em paralelo (Promise.allSettled) com uma linha por etapa no dialog e AbortController no Cancelar/ESC; bipe, CNPJ e cadastro de pessoa carimbam a versão local no registro.
+- Teste de ponta a ponta em Chrome headless contra o quasar dev e a api-dev (17/10): full num perfil limpo em 10 s (produtos) com pessoas em paralelo, total 14 s; alteração de preço + barra nova -> diff aplicado em 1,2 s ('5 alterados, 0 excluídos'); exclusão da barra -> '4 alterados, 1 excluídos' e a barra some do IndexedDB; rodada sem mudança -> 'Nada mudou desde a última'. Sem erro de console. Critérios #3 e #4 ficam para o Fábio validar e marcar.
 <!-- SECTION:NOTES:END -->

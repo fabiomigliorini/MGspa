@@ -125,3 +125,13 @@ db.version(8)
         converterPagamentosAntigos(neg)
       }),
   )
+
+// v9/v10 (TASK-197): produto e pessoa recriadas so' com os indices que alguem consulta e com
+// `versao` (do catalogo do servidor) no lugar de `sincronizado`. Apagar e recriar evita o Dexie
+// reconstruir os indices das 191 mil linhas ao abrir o app; a versao local vazia faz a proxima
+// sincronizacao baixar a base inteira de novo.
+db.version(9).stores({ produto: null, pessoa: null })
+db.version(10).stores({
+  produto: 'codprodutobarra, codproduto, barras, versao, *buscaArr',
+  pessoa: 'codpessoa, versao, *buscaArr',
+})
