@@ -23,26 +23,33 @@ const aoMostrar = async () => {
   botao.value?.$el.focus()
 }
 
-// uma linha por etapa (TASK-197): produto e pessoa dizem se foi a base inteira ou so' o diff,
-// e enquanto roda a linha diz o que esta' fazendo, para nao parecer travada
+// uma linha por etapa (TASK-197), todas no mesmo formato: nome, texto numa linha so' e barra
+// sempre visivel, para a janela nao mudar de tamanho enquanto roda
 const textoEtapa = (etapa) => {
-  if (etapa.modo == 'full') {
-    const contagem = `${formataNumero(etapa.registros, 0)} / ${formataNumero(etapa.total, 0)} registros`
-    return etapa.rodando ? `Baixando tudo: ${contagem}` : contagem
+  // rodando sem nada contado ainda; depois a contagem toma o lugar
+  if (etapa.rodando && !etapa.registros) {
+    return 'Baixando...'
   }
   if (etapa.modo == 'diff') {
     if (!etapa.total) {
       return 'Nada mudou desde a última'
     }
-    const contagem = `${formataNumero(etapa.alterados, 0)} alterados, ${formataNumero(etapa.excluidos, 0)} excluídos`
-    return etapa.rodando ? `Baixando alterações: ${contagem}` : contagem
+    return `${formataNumero(etapa.alterados, 0)} alterados, ${formataNumero(etapa.excluidos, 0)} excluídos`
   }
-  // configuracoes conta as quatro; prancheta e vales nao contam nada (o icone ja diz o estado)
+  // completa: registros; configuracoes: as quatro
   if (etapa.total) {
-    return `${etapa.registros} / ${etapa.total}`
+    return `${formataNumero(etapa.registros, 0)} / ${formataNumero(etapa.total, 0)}`
   }
-  // pessoas e produtos antes de saber se vai a base inteira ou o diff; prancheta e vales
-  return etapa.rodando ? 'Consultando o servidor...' : ''
+  // espaco em branco: a linha do texto existe mesmo vazia
+  return '\u00a0'
+}
+
+// sem contagem (prancheta, vales, antes da versao chegar) a barra fica indeterminada enquanto roda
+const progressoEtapa = (etapa) => {
+  if (etapa.total) {
+    return etapa.registros / etapa.total
+  }
+  return etapa.concluida ? 1 : 0
 }
 </script>
 
@@ -73,17 +80,17 @@ const textoEtapa = (etapa) => {
       <q-list>
         <q-item v-for="(etapa, chave) in sSinc.importacao.etapas" :key="chave">
           <q-item-section avatar>
-            <q-spinner v-if="etapa.rodando" color="primary" size="sm" />
+            <q-spinner v-if="etapa.rodando" color="primary" size="24px" />
             <q-icon v-else-if="etapa.erro" name="error" color="red-5" />
             <q-icon v-else-if="etapa.concluida" name="check_circle" color="green-5" />
             <q-icon v-else name="radio_button_unchecked" color="grey-5" />
           </q-item-section>
           <q-item-section>
             <q-item-label>{{ etapa.label }}</q-item-label>
-            <q-item-label caption>{{ textoEtapa(etapa) }}</q-item-label>
+            <q-item-label caption lines="1">{{ textoEtapa(etapa) }}</q-item-label>
             <q-linear-progress
-              v-if="etapa.total"
-              :value="etapa.registros / etapa.total"
+              :value="progressoEtapa(etapa)"
+              :indeterminate="etapa.rodando && !etapa.total"
               :color="etapa.erro ? 'red-5' : 'primary'"
               rounded
               class="q-mt-xs"
