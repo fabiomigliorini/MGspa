@@ -44,10 +44,12 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #10 Ao abrir sem usuário logado (ou com a sessão vencida), o PDV não abre negócio sozinho e o login não aparece; F2/Novo continuam abrindo, inclusive sem login e sem rede
 - [x] #11 Fechar a janela Sincronizar com ESC ou clicando fora para a sincronização, igual ao Cancelar: ela não continua rodando escondida e travando o PDV
 - [x] #12 A janela Sincronizar mostra a data e a hora (com segundos) da última sincronização
-- [x] #13 Botões Sincronização completa e Sincronização incremental na janela Sincronizar; com a incremental disponível o foco vai nela, e a completa baixa a base inteira de pessoas e produtos mesmo assim
+- [x] #13 Botões Completa e Incremental na janela Sincronizar; com a incremental disponível o foco vai nela, e a completa baixa a base inteira de pessoas e produtos mesmo assim
 - [x] #14 Durante a sincronização cada linha diz o que está fazendo (consultando o servidor, baixando tudo, baixando alterações) e a base inteira avança de 2 em 2 mil registros, sem parecer travada
 - [x] #15 Ao terminar sem erro a janela fecha e avisa 'Sincronização finalizada'; cancelada não avisa
 - [x] #16 Com outra janela do navegador sincronizando, a janela Sincronizar nem abre (botão do PDV, menu do quiosque e a sincronização ao abrir o sistema): recusa com o aviso de que já existe uma sincronização em andamento
+- [ ] #17 Sincronização completa interrompida (Cancelar, F5, computador travado) deixa o PDV como nunca sincronizado: a data da última sincronização some já no começo da completa e a próxima só pode ser completa
+- [ ] #18 Janela Sincronizar cabe no celular: sem o círculo grande, uma barra de progresso por linha e botões Cancelar, Completa e Incremental
 <!-- AC:END -->
 
 ## Implementation Notes

@@ -54,57 +54,52 @@ const textoEtapa = (etapa) => {
     @show="aoMostrar()"
     @hide="sSinc.abortarSincronizacao()"
   >
-    <q-card flat class="q-pa-md" style="width: 600px; max-width: 95vw">
-      <q-card-section>
-        <div class="text-h4 text-center">Sincronizar...</div>
-
-        <div class="flex flex-center q-my-md">
-          <q-circular-progress
-            show-value
-            :indeterminate="sSinc.importacao.progresso == 0 && sSinc.importacao.rodando"
-            rounded
-            size="160px"
-            color="secondary"
-            class="q-ma-md"
-            center-color="green-1"
-            :value="sSinc.importacao.progresso"
-          >
-            {{ sSinc.importacao.progresso }}%
-          </q-circular-progress>
-        </div>
-        <div class="text-center text-grey">{{ sSinc.importacao.tempoTotal }} Segundos</div>
-        <div class="text-center text-grey">
+    <q-card flat style="width: 400px; max-width: 95vw">
+      <q-card-section class="q-pb-none">
+        <div class="text-h6">Sincronizar</div>
+        <div class="text-caption text-grey-7">
           <template v-if="sSinc.ultimaSincronizacao.completa">
             Última sincronização
             {{ formataTimestamp(sSinc.ultimaSincronizacao.completa, 4, true) }}
           </template>
           <template v-else>Nunca sincronizado</template>
+          <template v-if="sSinc.importacao.rodando">
+            · {{ sSinc.importacao.tempoTotal }} s</template
+          >
         </div>
-
-        <!-- as etapas rodam em paralelo: cada uma tem a sua linha, seu estado e seu toggle -->
-        <q-list class="q-mt-md">
-          <q-item v-for="(etapa, chave) in sSinc.importacao.etapas" :key="chave">
-            <q-item-section avatar>
-              <q-spinner v-if="etapa.rodando" color="primary" size="sm" />
-              <q-icon v-else-if="etapa.erro" name="error" color="red-5" />
-              <q-icon v-else-if="etapa.concluida" name="check_circle" color="green-5" />
-              <q-icon v-else name="radio_button_unchecked" color="grey-5" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label>{{ etapa.label }}</q-item-label>
-              <q-item-label caption>{{ textoEtapa(etapa) }}</q-item-label>
-            </q-item-section>
-            <q-item-section side>
-              <q-toggle
-                v-model="sSinc.sincronizacao[chave]"
-                :disable="sSinc.importacao.rodando"
-                tabindex="-1"
-              />
-            </q-item-section>
-          </q-item>
-        </q-list>
       </q-card-section>
-      <q-card-actions align="center">
+
+      <!-- as etapas rodam em paralelo: cada uma tem a sua linha, seu estado, sua barra e seu toggle -->
+      <q-list>
+        <q-item v-for="(etapa, chave) in sSinc.importacao.etapas" :key="chave">
+          <q-item-section avatar>
+            <q-spinner v-if="etapa.rodando" color="primary" size="sm" />
+            <q-icon v-else-if="etapa.erro" name="error" color="red-5" />
+            <q-icon v-else-if="etapa.concluida" name="check_circle" color="green-5" />
+            <q-icon v-else name="radio_button_unchecked" color="grey-5" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>{{ etapa.label }}</q-item-label>
+            <q-item-label caption>{{ textoEtapa(etapa) }}</q-item-label>
+            <q-linear-progress
+              v-if="etapa.total"
+              :value="etapa.registros / etapa.total"
+              :color="etapa.erro ? 'red-5' : 'primary'"
+              rounded
+              class="q-mt-xs"
+            />
+          </q-item-section>
+          <q-item-section side>
+            <q-toggle
+              v-model="sSinc.sincronizacao[chave]"
+              :disable="sSinc.importacao.rodando"
+              tabindex="-1"
+            />
+          </q-item-section>
+        </q-item>
+      </q-list>
+
+      <q-card-actions align="right">
         <q-btn
           flat
           label="Cancelar"
@@ -116,7 +111,7 @@ const textoEtapa = (etapa) => {
         <q-btn
           ref="btnCompleta"
           flat
-          label="Sincronização completa"
+          label="Completa"
           color="primary"
           @click="sSinc.sincronizar(true)"
           :disable="sSinc.importacao.rodando || sSinc.importacao.incremental === null"
@@ -124,7 +119,7 @@ const textoEtapa = (etapa) => {
         <q-btn
           ref="btnIncremental"
           flat
-          label="Sincronização incremental"
+          label="Incremental"
           color="primary"
           @click="sSinc.sincronizar()"
           :disable="sSinc.importacao.rodando || !sSinc.importacao.incremental"

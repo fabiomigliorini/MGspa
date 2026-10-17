@@ -436,15 +436,22 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       this.importacao.progresso = 0
       this.importacao.dialog = false
       this.importacao.rodando = false
-      this.ultimaSincronizacao.completa = [
-        this.ultimaSincronizacao.impressora,
-        this.ultimaSincronizacao.formaPagamento,
-        this.ultimaSincronizacao.estoqueLocal,
-        this.ultimaSincronizacao.naturezaOperacao,
-        this.ultimaSincronizacao.valeModelo,
-        this.ultimaSincronizacao.pessoa,
-        this.ultimaSincronizacao.produto,
-        this.ultimaSincronizacao.prancheta,
+      // sem pessoas ou produtos (completa nunca feita ou interrompida) o PDV nao esta' sincronizado:
+      // o null iria para o fim do sort e valeria a data das outras etapas
+      const u = this.ultimaSincronizacao
+      if (!u.pessoa || !u.produto) {
+        u.completa = null
+        return
+      }
+      u.completa = [
+        u.impressora,
+        u.formaPagamento,
+        u.estoqueLocal,
+        u.naturezaOperacao,
+        u.valeModelo,
+        u.pessoa,
+        u.produto,
+        u.prancheta,
       ].sort()[0]
     },
 
@@ -609,6 +616,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     async aplicarFull(chave, etapa, tabela, atual) {
       etapa.modo = 'full'
       etapa.total = atual.registros ?? 0
+      // antes de comecar: a completa interrompida (Cancelar, F5, travamento) deixa a tabela pela
+      // metade, e ate' ela terminar o PDV fica como nunca sincronizado, so' com a completa
+      this.versao[chave] = null
+      this.ultimaSincronizacao[chave] = null
+      this.ultimaSincronizacao.completa = null
       const resposta = await this.baixarCatalogo(tabela, atual.versao, 'json')
       const leitor = resposta.body.getReader()
       const decodificador = new TextDecoder()
