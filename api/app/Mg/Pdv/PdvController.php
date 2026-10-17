@@ -563,13 +563,12 @@ class PdvController
         return new PagarMePedidoResource($pedido);
     }
 
+    // sempre pergunta 'a Saurus, qualquer que seja o status local: a maquininha
+    // aceita pagar depois do cancelamento (TASK-233)
     public function consultarSaurusPedido($codsauruspedido)
     {
         $pedido = SaurusPedido::findOrFail($codsauruspedido);
-        if ($pedido->status == 0) {
-            $pedido = SaurusService::consultarPedido($pedido);
-        }
-        // $pedido = SaurusService::consultarPedido($pedido);
+        $pedido = SaurusService::consultarPedido($pedido);
         return new SaurusPedidoResource($pedido);
     }
 

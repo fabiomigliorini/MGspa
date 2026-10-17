@@ -2,12 +2,13 @@
 // Dialog especialista do pedido Safrapay/Saurus: foca em Consultar (Enter) e consulta sozinho
 // a cada 3s enquanto o pedido estiver pendente.
 import { ref } from 'vue'
-import { debounce } from 'quasar'
+import { debounce, useQuasar } from 'quasar'
 import { saurusStore } from '@components/stores/saurusStore'
 import { formataNumero, formataTimestampCompleto } from '@components/formatters'
 import { useConsultaAutomatica } from './useConsultaAutomatica.js'
 import { avisar } from './eventos.js'
 
+const $q = useQuasar()
 const sSaurus = saurusStore()
 const btnConsultarRef = ref(null)
 
@@ -41,11 +42,35 @@ const reenviar = async () => {
   await sSaurus.reenviarPedido()
 }
 
-const cancelar = async () => {
-  await sSaurus.cancelarPedido()
-  if (sSaurus.pedido.status == 3) {
-    sSaurus.dialog.detalhesPedido = false
-  }
+// a maquininha aceita pagar depois do cancelamento, e o cancelamento não vai para a Saurus:
+// pede para digitar DESISTIR. O backend consulta antes e recusa se já foi pago (TASK-233).
+// O botão se chama Desistir: "Cancelar" no rodapé de um dialog lê-se como fechar a janela
+const desistir = () => {
+  $q.dialog({
+    title: 'Desistir da cobrança?',
+    message:
+      'A maquininha continua aceitando o pagamento depois do cancelamento. Se o cliente pagar, abra a cobrança e consulte para puxar o cartão. Digite DESISTIR para confirmar:',
+    prompt: {
+      model: '',
+      type: 'text',
+      outlined: true,
+      placeholder: 'DESISTIR',
+      isValid: (v) => (v || '').trim() === 'DESISTIR',
+    },
+    ok: { label: 'Desistir', color: 'negative', flat: true },
+    cancel: { label: 'Voltar', color: 'grey-8', flat: true },
+  }).onOk(async () => {
+    const ok = await sSaurus.cancelarPedido()
+    if (ok === false) {
+      // recusado (já pago, por exemplo): mostra o que a Saurus tem
+      await sSaurus.consultarPedido(true)
+      verificarPago()
+      return
+    }
+    if (sSaurus.pedido.status == 3) {
+      sSaurus.dialog.detalhesPedido = false
+    }
+  })
 }
 
 const onShow = () => {
@@ -218,9 +243,9 @@ const onShow = () => {
       <q-card-actions align="right">
         <q-btn
           flat
-          label="cancelar"
-          color="grey-8"
-          @click="cancelar()"
+          label="Desistir da cobrança"
+          color="negative"
+          @click="desistir()"
           tabindex="-1"
           v-if="sSaurus.pedido.status != 3"
         />

@@ -61,7 +61,9 @@ class CobrancaService
     {
         $pdvSaurus = SaurusPdv::findOrFail($dados['codsauruspos']);
         $pos = SaurusPinPad::where('codsauruspdv', $pdvSaurus->codsauruspdv)->firstOrFail();
-        SaurusService::cancelarPedidosAbertosPdv($pdvSaurus->codsauruspdv);
+        // a cobranca anterior do PDV Saurus fica como esta': a maquininha pode
+        // estar no meio do pagamento dela. Quem cancela e' fechar ou cancelar
+        // a venda (TASK-233). Na Stone a dinamica e' outra, la' cancela.
 
         // 4 debito, 3 credito
         $modpagamento = ($dados['tipo'] == 1) ? 4 : 3;
