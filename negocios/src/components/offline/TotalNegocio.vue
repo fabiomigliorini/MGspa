@@ -381,8 +381,14 @@ const mostrarReceber = computed(
     sNegocio.negocio.financeiro && sNegocio.podeEditar && !temLancamento.value && faltando.value,
 )
 
+// só pagamento efetivado conta (TASK-234): o cancelado e a cobrança pendente ficam na lista,
+// mas não ligam o Faltando
+const temPagamentoEfetivado = computed(
+  () => sNegocio.pagamentosAtivos.length > 0 || sNegocio.parcelasAtivas.length > 0,
+)
+
 const mostrarSaldo = computed(
-  () => sNegocio.negocio.financeiro && temLancamento.value && sNegocio.valorapagar != 0,
+  () => sNegocio.negocio.financeiro && temPagamentoEfetivado.value && sNegocio.valorapagar != 0,
 )
 
 const faltando = computed(() => sNegocio.valorapagar > 0)
