@@ -26,9 +26,10 @@ const aoMostrar = async () => {
 // uma linha por etapa (TASK-197), todas no mesmo formato: nome, texto numa linha so' e barra
 // sempre visivel, para a janela nao mudar de tamanho enquanto roda
 const textoEtapa = (etapa) => {
-  // rodando sem nada contado ainda; depois a contagem toma o lugar
+  // rodando sem nada contado ainda; depois a contagem toma o lugar. Sem contagem (prancheta,
+  // vales, antes da versao chegar) so' executa
   if (etapa.rodando && !etapa.registros) {
-    return 'Baixando...'
+    return etapa.total ? 'Baixando...' : 'Executando...'
   }
   if (etapa.modo == 'diff') {
     if (!etapa.total) {
@@ -39,6 +40,10 @@ const textoEtapa = (etapa) => {
   // completa: registros; configuracoes: as quatro
   if (etapa.total) {
     return `${formataNumero(etapa.registros, 0)} / ${formataNumero(etapa.total, 0)}`
+  }
+  // prancheta e vales nao contam registros
+  if (etapa.concluida) {
+    return 'Completo'
   }
   // espaco em branco: a linha do texto existe mesmo vazia
   return '\u00a0'
