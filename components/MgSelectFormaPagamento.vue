@@ -21,10 +21,14 @@ const cache = useSelectCacheStore()
 const ENTITY = 'formaPagamento'
 const ENDPOINT = 'v1/select/forma-pagamento'
 
+// O store cacheia inativos num bucket separado (`{ent}__inativos`) — ler sempre
+// `entities[ENTITY]` devolveria lista vazia quando a prop inativos esta ligada.
+const chaveCache = computed(() => (props.inativos ? `${ENTITY}__inativos` : ENTITY))
+
 const opcoes = ref([])
 const carregando = ref(false)
 
-const permitidos = computed(() => cache.entities[ENTITY]?.items || [])
+const permitidos = computed(() => cache.entities[chaveCache.value]?.items || [])
 
 // No modo multiple o q-select exige array; coage escalar legado (v-model antigo
 // persistido) em [escalar] pra tela nao quebrar.

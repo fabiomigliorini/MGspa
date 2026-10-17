@@ -5,6 +5,7 @@
 // Divergências (TASK-218).
 import { ref, computed } from 'vue'
 import { useRouter } from 'vue-router'
+import { Notify } from 'quasar'
 import MgPagamentoLista from '@components/MgPagamentoLista.vue'
 import MgAdiantamentoDialog from '@components/MgAdiantamentoDialog.vue'
 import MgCobrancaDialog from '@components/MgCobrancaDialog.vue'
@@ -30,6 +31,16 @@ const veDivergencias = computed(() =>
 )
 
 function abrirRelatorio() {
+  // o relatório lista tudo de uma vez: sem período seriam milhões de linhas
+  if (!store.filtros.transacao_de || !store.filtros.transacao_ate) {
+    Notify.create({
+      type: 'negative',
+      message: 'Informe o período (De e Até) para imprimir o relatório.',
+      color: 'red-5',
+      icon: 'error',
+    })
+    return
+  }
   abrirPdf('v1/pagamento/relatorio', store.parametros(), { title: 'Pagamentos' })
 }
 

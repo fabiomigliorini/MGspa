@@ -114,6 +114,11 @@ class PagamentoController extends Controller
     public function relatorio(Request $request)
     {
         Autorizador::autoriza(self::GRUPOS_LEITURA);
+        // o relatorio carrega tudo na memoria: exige o periodo
+        $request->validate([
+            'transacao_de' => 'required|date',
+            'transacao_ate' => 'required|date',
+        ]);
         $filtros = $request->only(PagamentoListaService::FILTROS);
         $filtros['filiais_permitidas'] = PagamentoTituloAutorizador::filiaisRestritas(Auth::user()->codusuario);
         if ($request->boolean('html')) {

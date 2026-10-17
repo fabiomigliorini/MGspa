@@ -52,7 +52,12 @@ class SelectPortadorController extends Controller
         if (!$inativos) {
             $sql .= ' and p.inativo is null ';
         }
-        $sql .= ' ORDER BY p.portador, p.codportador LIMIT 250';
+        // com page (campo de busca remota): 20 por pagina; sem, a lista toda (ate 250)
+        if ((int) $request->page > 0) {
+            $sql .= ' ORDER BY p.portador, p.codportador LIMIT 20 OFFSET ' . (((int) $request->page - 1) * 20);
+        } else {
+            $sql .= ' ORDER BY p.portador, p.codportador LIMIT 250';
+        }
         $busca = preg_replace('/\s+/', '%', trim($request->busca));
         $rows = DB::select($sql, ['busca' => "%{$busca}%"]);
         // papel do usuario em cada um (doc-4): o Administrador e' gestor em todos

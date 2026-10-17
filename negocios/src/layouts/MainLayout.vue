@@ -14,6 +14,7 @@ const menuGroups = [
     label: 'Ponto de Venda',
     items: [
       { label: 'PDV', icon: 'point_of_sale', color: 'secondary', to: '/' },
+      { label: 'Listagem de Negócios', icon: 'list', color: 'blue-8', to: '/listagem' },
       { label: 'Pagamentos', icon: 'payments', color: 'indigo', to: '/pagamento' },
       { label: 'Caixa', icon: 'savings', color: 'green-8', to: '/caixa' },
       { label: 'Consulta de Preços', icon: 'price_check', color: 'teal', to: '/quiosque' },

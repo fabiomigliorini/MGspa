@@ -3,7 +3,7 @@
 // qualquer estado (pendente amarelo, efetivado, cancelado vermelho). O app configura o
 // pagamentoListaStore (contas: tudo, com a filial do usuário; PDV: travada nele) e decide o que
 // a linha abre: `to(pagamento)` (página de detalhe) ou o evento `abrir` (dialog).
-import { watch, onMounted } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { debounce } from 'quasar'
 import { pagamentoListaStore } from '@components/stores/pagamentoListaStore'
 import { formataData, formataNumero, formataCodigo } from '@components/formatters'
@@ -23,7 +23,13 @@ const emit = defineEmits(['abrir'])
 
 const store = pagamentoListaStore()
 
-const recarregar = debounce(() => store.buscar(true), 600)
+const scrollRef = ref(null)
+
+// filtro novo volta a paginar: um filtro que coube numa página tinha parado o infinite-scroll
+const recarregar = debounce(async () => {
+  await store.buscar(true)
+  scrollRef.value?.resume()
+}, 600)
 watch(() => store.filtros, recarregar, { deep: true })
 
 onMounted(() => store.buscar(true))
@@ -48,7 +54,7 @@ const clicar = (l) => {
 </script>
 
 <template>
-  <q-infinite-scroll @load="carregarMais" :offset="250">
+  <q-infinite-scroll ref="scrollRef" @load="carregarMais" :offset="250">
     <q-list v-if="store.itens.length" bordered separator class="bg-white rounded-borders">
       <q-item
         v-for="l in store.itens"

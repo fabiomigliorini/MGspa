@@ -1,5 +1,6 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, watch, onMounted } from 'vue'
+import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { logo } from '@components/cobranca/logos.js'
 import cartoesManuais from '@components/cobranca/cartoes-manuais.json'
@@ -21,12 +22,19 @@ const props = defineProps({
   integradas: { type: Boolean, default: false },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
+  // Busca no servidor ao digitar (como o MgSelectUsuario): nada de despejar a lista inteira;
+  // 2+ caracteres, 20 por página com scroll infinito. Os filtros locais (filiais, tipos…) não valem.
+  remoto: { type: Boolean, default: false },
 })
 const emit = defineEmits(['update:modelValue', 'select'])
 
 const cache = useSelectCacheStore()
 const ENTITY = 'maquineta'
 const ENDPOINT = 'v1/select/maquineta'
+
+// O store cacheia inativos num bucket separado (`{ent}__inativos`) — ler sempre
+// `entities[ENTITY]` devolveria lista vazia quando a prop inativos esta ligada.
+const chaveCache = computed(() => (props.inativos ? `${ENTITY}__inativos` : ENTITY))
 
 const opcoes = ref([])
 const carregando = ref(false)
@@ -39,15 +47,17 @@ const logoMaquineta = (m) => {
   return logo(cartoesManuais.find((p) => p.codpessoa == m.codpessoa)?.logo)
 }
 const selecionado = computed(() =>
-  props.modelValue
-    ? (cache.entities[ENTITY]?.items || []).find(
-        (m) => Number(m.codmaquineta) === Number(props.modelValue),
-      )
-    : null,
+  props.modelValue && props.remoto
+    ? cache.getById(ENTITY, props.modelValue)
+    : props.modelValue
+      ? (cache.entities[chaveCache.value]?.items || []).find(
+          (m) => Number(m.codmaquineta) === Number(props.modelValue),
+        )
+      : null,
 )
 
 const permitidos = computed(() => {
-  let todas = cache.entities[ENTITY]?.items || []
+  let todas = cache.entities[chaveCache.value]?.items || []
   if (props.codfilial) {
     todas = todas.filter((m) => m.compartilhada || Number(m.codfilial) === Number(props.codfilial))
   }
@@ -75,7 +85,89 @@ async function carregar() {
   }
 }
 
+// ===== Modo remoto: busca no backend, 20/20 (padrão do MgSelectUsuario) =====
+const PER_PAGE = 20
+let buscaAtual = ''
+let pagina = 1
+let temMais = false
+
+async function buscarRemoto(busca, page) {
+  const { data } = await api.get(ENDPOINT, {
+    params: { busca, page, inativos: props.inativos ? 1 : 0 },
+  })
+  const rows = Array.isArray(data) ? data : data?.data || []
+  cache.mergeById(ENTITY, rows)
+  return rows
+}
+
+async function carregarPorId(id) {
+  if (!id) return
+  if (opcoes.value.find((o) => o.value === id)) return
+  const cached = cache.getById(ENTITY, id)
+  if (cached) {
+    opcoes.value = [cached]
+    return
+  }
+  try {
+    const row = await cache.loadById(ENTITY, ENDPOINT, id)
+    if (row) opcoes.value = [row]
+  } catch {
+    // sem registro: deixa o select sem opção resolvida
+  }
+}
+
+function filtrarRemoto(val, update) {
+  if (!val || val.length < 2) {
+    update(() => {
+      opcoes.value = []
+    })
+    return
+  }
+  buscaAtual = val
+  pagina = 1
+  carregando.value = true
+  buscarRemoto(val, 1)
+    .then((rows) => {
+      temMais = rows.length === PER_PAGE
+      update(() => {
+        opcoes.value = rows
+      })
+    })
+    .catch(() => {
+      update(() => {
+        opcoes.value = []
+      })
+    })
+    .finally(() => {
+      carregando.value = false
+    })
+}
+
+async function onScroll({ to }) {
+  if (!props.remoto || !temMais || carregando.value || !buscaAtual) return
+  if (to < opcoes.value.length - 2) return
+  try {
+    carregando.value = true
+    pagina += 1
+    const rows = await buscarRemoto(buscaAtual, pagina)
+    temMais = rows.length === PER_PAGE
+    opcoes.value = [...opcoes.value, ...rows]
+  } catch {
+    temMais = false
+  } finally {
+    carregando.value = false
+  }
+}
+
+watch(
+  () => props.modelValue,
+  (novo, antigo) => {
+    if (props.remoto && novo && novo !== antigo) carregarPorId(novo)
+  },
+)
+
 function filtrar(val, update) {
+  if (props.remoto) return filtrarRemoto(val, update)
   update(() => {
     const needle = (val || '').toLowerCase()
     opcoes.value = needle
@@ -93,7 +185,13 @@ function onUpdate(v) {
   emit('select', (opcoes.value || []).find((o) => o.value === v) || null)
 }
 
-onMounted(() => carregar())
+onMounted(() => {
+  if (props.remoto) {
+    if (props.modelValue) carregarPorId(props.modelValue)
+    return
+  }
+  carregar()
+})
 </script>
 
 <template>
@@ -112,10 +210,15 @@ onMounted(() => carregar())
     map-options
     @filter="filtrar"
     @update:model-value="onUpdate"
+    @virtual-scroll="onScroll"
     v-bind="$attrs"
   >
     <template #no-option>
-      <q-item><q-item-section class="text-grey-6">Nenhuma maquineta</q-item-section></q-item>
+      <q-item>
+        <q-item-section class="text-grey-6">{{
+          remoto && !opcoes.length ? 'Digite ao menos 2 caracteres' : 'Nenhuma maquineta'
+        }}</q-item-section>
+      </q-item>
     </template>
     <template #option="scope">
       <q-item v-bind="scope.itemProps">

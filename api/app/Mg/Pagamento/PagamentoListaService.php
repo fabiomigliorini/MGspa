@@ -27,6 +27,8 @@ class PagamentoListaService
         'codpagamento',
         'transacao_de',
         'transacao_ate',
+        'valor_de',
+        'valor_ate',
         'codfilial',
         'codpdv',
         'codportador',
@@ -144,6 +146,12 @@ class PagamentoListaService
         ] as $key => [$op, $bound]) {
             if (!empty($filtros[$key])) {
                 $q->where('tblpagamento.transacao', $op, Carbon::parse($filtros[$key])->{$bound}()->format('Y-m-d H:i:s'));
+            }
+        }
+        // faixa de valor: o total que a linha mostra (nunca negativo)
+        foreach (['valor_de' => '>=', 'valor_ate' => '<='] as $key => $op) {
+            if (isset($filtros[$key]) && is_numeric($filtros[$key])) {
+                $q->where('tblpagamento.total', $op, (float) $filtros[$key]);
             }
         }
         foreach (['codfilial', 'codpdv', 'codmaquineta', 'codusuariocriacao'] as $col) {

@@ -25,8 +25,21 @@ class SelectMaquinetaController extends Controller
         if (!$inativos) {
             $sql .= ' and m.inativo is null';
         }
-        $sql .= ' order by m.apelido, f.filial, m.codmaquineta limit 500';
-        return response()->json(DB::select($sql), 200);
+        $bindings = [];
+        // busca (campo de busca remota): apelido, serial, filial ou adquirente
+        if (trim((string) $request->busca) !== '') {
+            $sql .= ' and (m.apelido ilike :busca or m.serial ilike :busca or f.filial ilike :busca or p.fantasia ilike :busca)';
+            $busca = preg_replace('/\s+/', '%', trim($request->busca));
+            $bindings['busca'] = "%{$busca}%";
+        }
+        $sql .= ' order by m.apelido, f.filial, m.codmaquineta';
+        // com page: 20 por pagina; sem, a lista toda (ate 500)
+        if ((int) $request->page > 0) {
+            $sql .= ' limit 20 offset ' . (((int) $request->page - 1) * 20);
+        } else {
+            $sql .= ' limit 500';
+        }
+        return response()->json(DB::select($sql, $bindings), 200);
     }
 
     public static function show($id)
