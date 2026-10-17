@@ -3,6 +3,7 @@
 namespace Mg\Pdv;
 
 use Mg\Negocio\NegocioService;
+use Mg\Pagamento\PagamentoService;
 
 /**
  * Filtros da listagem de negocios do PDV, os mesmos na tela e no relatorio
@@ -60,6 +61,14 @@ class PdvNegocioListagemService
                     break;
                 case 'codusuario':
                     $qry->where('codusuario', $valor);
+                    break;
+                case 'codmaquineta':
+                    // negocio com algum pagamento (nao cancelado) na maquineta
+                    $qry->whereIn('codnegocio', function ($query) use ($valor) {
+                        $query->select('codnegocio')->from('tblpagamento')->whereNotNull('codnegocio')
+                            ->where('estado', '!=', PagamentoService::ESTADO_CANCELADO)
+                            ->where('codmaquineta', $valor);
+                    });
                     break;
                 case 'forma':
                     static::filtrarForma($qry, (array) $valor);

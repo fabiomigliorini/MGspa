@@ -1,10 +1,10 @@
 ---
 id: TASK-232
 title: 'Filtros da tela de Pagamentos não mudam a listagem (PDV, Portador, Maquineta)'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-10-17 14:21'
-updated_date: '2026-10-17 15:07'
+updated_date: '2026-10-17 15:14'
 labels:
   - contas
 dependencies: []

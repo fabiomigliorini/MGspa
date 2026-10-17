@@ -7,6 +7,7 @@ import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgSelect from '@components/MgSelect.vue'
 import MgSelectEstoqueLocal from '@components/MgSelectEstoqueLocal.vue'
+import MgSelectMaquineta from '@components/MgSelectMaquineta.vue'
 import MgSelectNaturezaOperacao from '@components/MgSelectNaturezaOperacao.vue'
 import MgSelectPdv from '@components/MgSelectPdv.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
@@ -152,6 +153,15 @@ onMounted(() => {
             clearable
             map-options
             emit-value
+          />
+        </div>
+        <div class="col-12">
+          <MgSelectMaquineta
+            v-model="sListagem.filtro.codmaquineta"
+            label="Maquineta"
+            clearable
+            remoto
+            :bottom-slots="false"
           />
         </div>
         <div class="col-12">
