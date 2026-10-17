@@ -103,6 +103,7 @@ export const listagemStore = defineStore('listagem', {
         codpessoavendedor: null,
         codpessoatransportador: null,
         codpdv: null,
+        codmaquineta: null,
         integracao: [],
         forma: [],
         valor_de: null,
