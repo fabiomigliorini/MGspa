@@ -150,6 +150,9 @@ class PagamentoDetalheResource extends Resource
             'manual'                    => $manual,
             'integrado'                 => !$manual,
             'baixabanco'                => $baixabanco,
+            // o lapis troca o portador por outro do mesmo tipo (TASK-236)
+            'portadortrocavel'          => PagamentoTituloService::portadorTrocavel($this->resource),
+            'portadortipo'              => $portador->tipo ?? null,
             // Duplicar (TASK-236): abre a baixa com os mesmos titulos; nao
             // cancela o original (o Cancelar e' outro botao)
             'duplicavel'                => $documento && !$baixabanco

@@ -1,9 +1,11 @@
 <script setup>
 // Pagamento: o detalhe compartilhado (MgPagamentoDetalhe, com os recibos e o "Referente a") e o que
-// é do contas: o lápis. O lápis corrige pessoa e observação (interna); a data só do pagamento manual
-// (a do integrado é a do banco/maquineta) e, se muda, pede justificativa (TASK-204). Meio e portador
-// são o fato e não mudam: errou, cancela e lança de novo. O Duplicar (TASK-236) abre a baixa com os
-// mesmos títulos já preenchidos; não cancela o original (o Cancelar é outro botão).
+// é do contas: o lápis e o Duplicar. O lápis usa o mesmo formulário do Receber (MgPagamentoForm):
+// pessoa, referente e observação; a data só do pagamento manual (a do integrado é a do
+// banco/maquineta, TASK-204); o portador por outro do mesmo tipo, só no manual em dinheiro, banco ou
+// cartão da empresa (TASK-236). O que não muda fica em somente leitura. Data ou portador mudou: pede
+// justificativa. O meio não muda: cancela e usa o Duplicar, que abre a baixa com os mesmos títulos
+// já preenchidos e não cancela o original.
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { notifySuccess, notifyError } from 'src/utils/notify'
@@ -13,8 +15,8 @@ import { configurarPagamentoLista } from 'src/utils/pagamentoLista'
 import { formataTimestampIso } from '@components/formatters'
 import MgPagamentoDetalhe from '@components/MgPagamentoDetalhe.vue'
 import MgInput from '@components/MgInput.vue'
-import MgInputData from '@components/MgInputData.vue'
-import MgSelectPessoa from '@components/MgSelectPessoa.vue'
+import MgPagamentoForm from '@components/MgPagamentoForm.vue'
+import MgSelectPortador from '@components/MgSelectPortador.vue'
 
 const route = useRoute()
 const auth = useAuthStore()
@@ -58,6 +60,8 @@ function abrirDialogEditar() {
   editar.value = {
     codpessoa: pag.value.codpessoa,
     transacao: formataTimestampIso(pag.value.transacao).slice(0, 16),
+    codportador: pag.value.codportador,
+    referente: pag.value.referente ?? '',
     observacao: pag.value.observacoes ?? '',
     justificativa: '',
   }
@@ -72,6 +76,10 @@ const dataMudou = computed(
     editar.value.transacao !== formataTimestampIso(pag.value.transacao).slice(0, 16),
 )
 
+const portadorMudou = computed(
+  () => !!pag.value && editar.value.codportador !== pag.value.codportador,
+)
+
 // mudar de mês avisa (DIMP e relatórios já apurados), sem bloquear
 const trocaMes = computed(
   () =>
@@ -84,8 +92,9 @@ async function salvarEdicao() {
   try {
     await store.atualizar(id.value, {
       ...editar.value,
+      referente: editar.value.referente || null,
       observacao: editar.value.observacao || null,
-      justificativa: dataMudou.value ? editar.value.justificativa : null,
+      justificativa: dataMudou.value || portadorMudou.value ? editar.value.justificativa : null,
     })
     notifySuccess('Alterado')
     dialogEditar.value = false
@@ -151,71 +160,47 @@ watch(() => route.fullPath, carregar)
 
     <q-inner-loading :showing="loading || salvandoEdicao" color="primary" />
 
-    <!-- Dialog Editar -->
+    <!-- Dialog Editar: o mesmo formulário do Receber -->
     <q-dialog v-model="dialogEditar">
-      <q-card flat style="width: 500px; max-width: 90vw">
-        <q-card-section class="text-grey-9 text-overline">EDITAR</q-card-section>
-        <q-form @submit.prevent="salvarEdicao">
-          <q-separator inset />
-          <q-card-section>
-            <div class="row q-col-gutter-md">
-              <div class="col-12">
-                <MgSelectPessoa
-                  v-model="editar.codpessoa"
-                  label="Pessoa"
-                  autofocus
-                  :rules="[(v) => !!v || 'Obrigatório']"
-                />
-              </div>
-              <div class="col-12 text-caption text-grey-7">
-                {{ pag.meiodescricao }} · {{ pag.portador || 'sem portador' }}
-              </div>
-              <div class="col-12 col-sm-5" v-if="pag.manual">
-                <MgInputData
-                  v-model="editar.transacao"
-                  type="timestamp"
-                  default-time="keep"
-                  :seconds="false"
-                  label="Data"
-                  :rules="[(v) => !!v || 'Obrigatório']"
-                />
-              </div>
-              <div
-                v-if="trocaMes"
-                class="col-12 text-caption text-orange-9 row no-wrap items-center"
-              >
-                <q-icon name="warning" size="xs" class="q-mr-xs" />
-                Muda de mês: pode afetar a DIMP e relatórios já apurados.
-              </div>
-              <div class="col-12" v-if="dataMudou">
-                <MgInput
-                  v-model="editar.justificativa"
-                  label="Por que a data mudou"
-                  maxlength="300"
-                  :rules="[
-                    (v) => (v || '').trim().length >= 5 || 'Diga o motivo (mínimo 5 letras)',
-                  ]"
-                  lazy-rules
-                />
-              </div>
-              <div class="col-12">
-                <MgInput
-                  v-model="editar.observacao"
-                  type="textarea"
-                  label="Observações (internas)"
-                  autogrow
-                  maxlength="300"
-                />
-              </div>
-            </div>
-          </q-card-section>
-          <q-separator inset />
-          <q-card-actions align="right">
-            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-            <q-btn flat label="Salvar" type="submit" color="primary" />
-          </q-card-actions>
-        </q-form>
-      </q-card>
+      <MgPagamentoForm
+        titulo="Editar"
+        :valor="pag.total"
+        :data-readonly="!pag.manual"
+        foco-pessoa
+        v-model:transacao="editar.transacao"
+        v-model:codpessoa="editar.codpessoa"
+        v-model:referente="editar.referente"
+        v-model:observacao="editar.observacao"
+        @submit="salvarEdicao"
+      >
+        <div class="col-12">
+          <MgSelectPortador
+            v-model="editar.codportador"
+            :label="pag.meiodescricao"
+            :tipos="pag.portadortrocavel ? [pag.portadortipo] : null"
+            :papel="pag.portadortrocavel ? 'O' : null"
+            :readonly="!pag.portadortrocavel"
+            :bottom-slots="false"
+          />
+        </div>
+        <div v-if="trocaMes" class="col-12 text-caption text-orange-9 row no-wrap items-center">
+          <q-icon name="warning" size="xs" class="q-mr-xs" />
+          Muda de mês: pode afetar a DIMP e relatórios já apurados.
+        </div>
+        <div class="col-12" v-if="dataMudou || portadorMudou">
+          <MgInput
+            v-model="editar.justificativa"
+            label="Justificativa"
+            maxlength="300"
+            :rules="[(v) => (v || '').trim().length >= 5 || 'Diga o motivo (mínimo 5 letras)']"
+            lazy-rules
+          />
+        </div>
+        <template #acoes>
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn flat label="Salvar" type="submit" color="primary" />
+        </template>
+      </MgPagamentoForm>
     </q-dialog>
   </q-page>
 </template>

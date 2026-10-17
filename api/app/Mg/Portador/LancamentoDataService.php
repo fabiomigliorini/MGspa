@@ -14,6 +14,7 @@ use Mg\Maquineta\MaquinetaLoteService;
 use Mg\Ocorrencia\OcorrenciaService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
+use Mg\Titulo\MovimentoTitulo;
 use Mg\Titulo\MovimentoTituloService;
 
 /**
@@ -82,11 +83,11 @@ class LancamentoDataService
         return !empty($transacao) && Carbon::parse($transacao)->lt(ConferenciaService::inicio());
     }
 
-    private static function justificativa(?string $justificativa): string
+    private static function justificativa(?string $justificativa, string $oque = 'da data'): string
     {
         $justificativa = trim($justificativa ?? '');
         if (mb_strlen($justificativa) < 5) {
-            abort(422, 'Informe a justificativa da alteração da data.');
+            abort(422, "Informe a justificativa da alteração {$oque}.");
         }
         return mb_substr($justificativa, 0, 300);
     }
@@ -237,10 +238,13 @@ class LancamentoDataService
         }
     }
 
-    // o que a data muda no pagamento, para a auditoria
+    // o que a data e o portador mudam no pagamento, para a auditoria (so'
+    // ficam os campos que mudaram)
     private static function fotoPagamento(Pagamento $pag): array
     {
         return [
+            'codportadororigem' => $pag->codportadororigem,
+            'codportadordestino' => $pag->codportadordestino,
             'transacao' => optional($pag->transacao)->format('Y-m-d H:i:s'),
             'codportadorperiodo' => $pag->codportadorperiodo,
             'codmaquinetalote' => $pag->codmaquinetalote,
@@ -260,6 +264,74 @@ class LancamentoDataService
     private static function periodosDoPagamento(Pagamento $pag): Collection
     {
         return PortadorMovimento::where('codpagamento', $pag->codpagamento)->whereNull('inativo')->pluck('codportadorperiodo');
+    }
+
+    // Troca o portador do pagamento por outro do mesmo tipo (TASK-236): um
+    // banco por outro, um cofre por outro. A mesma regra do alterar data, com
+    // o portador de onde sai e o para onde vai: gestor com os periodos abertos
+    // ou pendentes; operador so' com os dois abertos; fechado, ninguem. O
+    // razao sai de um e entra no outro (sincronizar, idempotente), o dinheiro
+    // vai para a sessao do caixa novo, as baixas dos titulos levam o portador
+    // novo e a auditoria guarda o antes e o depois.
+    public static function alterarPortador(Pagamento $pag, int $codportador, ?string $justificativa): Pagamento
+    {
+        $justificativa = static::justificativa($justificativa, 'do portador');
+        $pag = Pagamento::lockForUpdate()->findOrFail($pag->codpagamento);
+        if (!\Mg\Pagamento\PagamentoTituloService::portadorTrocavel($pag)) {
+            abort(422, 'O portador deste pagamento não muda: cancele e use o Duplicar.');
+        }
+        $atual = Portador::findOrFail($pag->codportadorDoPagamento());
+        $novo = Portador::findOrFail($codportador);
+        if ($novo->codportador == $atual->codportador) {
+            return $pag;
+        }
+        if (!empty($novo->inativo)) {
+            abort(422, "Portador {$novo->portador} inativo!");
+        }
+        if ($novo->tipo != $atual->tipo) {
+            abort(422, "Troque por um portador do mesmo tipo de {$atual->portador}.");
+        }
+        // de onde sai: a sessao e a conferencia abertas
+        PagamentoCorrecaoService::exigirAberta($pag);
+        static::travar([$atual->codportador, $novo->codportador]);
+        $antes = static::fotoPagamento($pag);
+        $atuais = static::periodosAtuaisDoPagamento($pag);
+
+        if ($pag->entrada()) {
+            $pag->codportadordestino = $novo->codportador;
+        } else {
+            $pag->codportadororigem = $novo->codportador;
+        }
+        // o dinheiro vai para a sessao do caixa novo na hora do pagamento
+        if (!empty($pag->codportadorperiodo)) {
+            $pag->codportadorperiodo = CaixaService::sessaoDoMomento($novo, $pag->transacao)->codportadorperiodo;
+        }
+
+        $portadores = [$atual->codportador, $novo->codportador];
+        if (!static::podePortadores($portadores)) {
+            // antes do go-live (fora do razao), so' o gestor, como na data
+            if ($pag->transacao->lt(ConferenciaService::inicio())) {
+                abort(403, 'Antes do início do razão, só o gestor do portador de onde sai e do para onde vai troca o portador.');
+            }
+            if (!static::podePortadores($portadores, null, PortadorUsuario::PAPEL_OPERADOR)) {
+                abort(403, 'Trocar o portador: só o operador ou o gestor do portador de onde sai e do para onde vai.');
+            }
+            $periodos = array_merge($atuais, static::periodosNaData($pag, $pag->transacao));
+            if (!collect($periodos)->every(fn ($p) => static::aberto($p))) {
+                abort(403, 'Trocar o portador: o operador só troca com o período de onde sai e o para onde vai abertos; com período pendente, só o gestor.');
+            }
+        }
+
+        PagamentoService::validar($pag);
+        $pag->save();
+        // as linhas do razao (recusa periodo fechado, de onde sai e para onde vai)
+        PortadorMovimentoService::sincronizar($pag);
+        MovimentoTitulo::where('codpagamento', $pag->codpagamento)
+            ->where('codportador', $atual->codportador)
+            ->update(['codportador' => $novo->codportador]);
+
+        static::registrarPagamento($pag, AuditoriaService::TIPO_PORTADOR_ALTERADO, $antes, $justificativa);
+        return $pag->fresh();
     }
 
     // `$autorizado`: quem chama ja' autorizou com a regra dele (o lapis do

@@ -13,9 +13,7 @@ import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
 import { formataNumero, formataTimestampIso } from '@components/formatters'
-import MgInput from '@components/MgInput.vue'
-import MgInputData from '@components/MgInputData.vue'
-import MgSelectPessoa from '@components/MgSelectPessoa.vue'
+import MgPagamentoForm from '@components/MgPagamentoForm.vue'
 import MgSeletorTitulosAbertos from '@components/MgSeletorTitulosAbertos.vue'
 import MgCobrancaDialog from '@components/MgCobrancaDialog.vue'
 import PixCobDialog from '@components/cobranca/PixCobDialog.vue'
@@ -273,53 +271,19 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
     />
 
     <q-dialog v-model="dialog">
-      <q-card flat style="width: 600px; max-width: 90vw">
-        <q-form @submit.prevent="gravar">
-          <q-card-section class="text-grey-9 text-overline row items-center">
-            {{ descricao.toUpperCase() }}
-            <q-space />
-            <span class="text-h6">R$ {{ formataNumero(sBaixa.totalLiquido) }}</span>
-          </q-card-section>
-          <q-separator inset />
-          <q-card-section>
-            <div class="row q-col-gutter-md">
-              <div class="col-xs-12 col-sm-4" v-if="comData && !pix">
-                <MgInputData
-                  :model-value="transacao"
-                  @update:model-value="mudouData"
-                  type="timestamp"
-                  default-time="keep"
-                  :seconds="false"
-                  label="Data"
-                  :bottom-slots="false"
-                />
-              </div>
-              <div class="col-xs-12" :class="comData && !pix ? 'col-sm-8' : ''">
-                <MgSelectPessoa
-                  v-model="codpessoa"
-                  label="Pessoa"
-                  :autofocus="foco === 'pessoa'"
-                  :bottom-slots="false"
-                />
-              </div>
-              <div class="col-12">
-                <MgInput
-                  v-model="referente"
-                  label="Referente a (sai no recibo)"
-                  maxlength="255"
-                  :bottom-slots="false"
-                />
-              </div>
-              <div class="col-12">
-                <MgInput
-                  v-model="observacao"
-                  label="Observação (interna)"
-                  maxlength="300"
-                  :bottom-slots="false"
-                />
-              </div>
-            </div>
-          </q-card-section>
+      <MgPagamentoForm
+        :titulo="descricao"
+        :valor="sBaixa.totalLiquido"
+        :com-data="comData && !pix"
+        :foco-pessoa="foco === 'pessoa'"
+        :transacao="transacao"
+        @update:transacao="mudouData"
+        v-model:codpessoa="codpessoa"
+        v-model:referente="referente"
+        v-model:observacao="observacao"
+        @submit="gravar"
+      >
+        <template #rodape>
           <q-list v-if="sBaixa.forma" separator>
             <q-item>
               <q-item-section>{{ sBaixa.forma.descricao }}</q-item-section>
@@ -334,30 +298,29 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
           <q-card-section v-if="problemaPix" class="text-caption text-negative">
             {{ problemaPix }}
           </q-card-section>
-          <q-separator inset />
-          <q-card-actions align="right">
-            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-            <q-btn
-              v-if="temWizard"
-              flat
-              :label="descricao"
-              color="primary"
-              :disable="sBaixa.finalizando"
-              :autofocus="foco === 'wizard'"
-              @click="abrirWizard"
-            />
-            <q-btn
-              flat
-              label="Gravar"
-              type="submit"
-              color="primary"
-              :autofocus="foco === 'gravar'"
-              :disable="!sBaixa.pronto || !!problemaPix"
-              :loading="sBaixa.finalizando"
-            />
-          </q-card-actions>
-        </q-form>
-      </q-card>
+        </template>
+        <template #acoes>
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn
+            v-if="temWizard"
+            flat
+            :label="descricao"
+            color="primary"
+            :disable="sBaixa.finalizando"
+            :autofocus="foco === 'wizard'"
+            @click="abrirWizard"
+          />
+          <q-btn
+            flat
+            label="Gravar"
+            type="submit"
+            color="primary"
+            :autofocus="foco === 'gravar'"
+            :disable="!sBaixa.pronto || !!problemaPix"
+            :loading="sBaixa.finalizando"
+          />
+        </template>
+      </MgPagamentoForm>
     </q-dialog>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
