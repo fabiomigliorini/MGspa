@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import MgSelect from '@components/MgSelect.vue'
 
 const props = defineProps({

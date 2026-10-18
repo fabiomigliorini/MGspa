@@ -7,7 +7,7 @@ import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
 import { useAuthStore } from 'src/stores'
 import { formataFromNow, verificaPassadoFuturo } from '@components/formatters'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 
 import SelectGrupoCliente from '@components/MgSelectGrupoCliente.vue'
 import SelectFormaPagamento from '@components/MgSelectFormaPagamento.vue'

@@ -7,7 +7,7 @@ import { useAuthStore } from 'src/stores'
 import MGLayout from 'src/layouts/MGLayout.vue'
 import MgInputData from '@components/MgInputData.vue'
 import moment from 'moment'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 
 const user = useAuthStore()
 const caixas = ref([])

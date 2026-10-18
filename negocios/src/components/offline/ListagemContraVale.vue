@@ -4,7 +4,7 @@
 // mesmo título, mesmo código VAL…, com o saldo que sobrou); esgotado, o card
 // fica só para consulta.
 import { computed } from 'vue'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { abrirVale } from '@components/abrirVale'
 import { pagamentoStore } from 'stores/pagamento'
 import { formataNumero, formataCodigo } from '@components/formatters'

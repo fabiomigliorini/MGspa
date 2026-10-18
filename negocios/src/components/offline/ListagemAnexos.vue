@@ -5,7 +5,7 @@ import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')
 import MgSlim from '@components/MgSlim.vue'
 import MgAnexoImagem from './MgAnexoImagem.vue'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
 import { Dialog, Notify } from 'quasar'
 

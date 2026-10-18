@@ -1,10 +1,10 @@
-import { boot } from 'quasar/wrappers'
+import { defineBoot } from '#q-app/wrappers'
 import axios from 'axios'
 import { useAuthStore } from 'src/stores/auth'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 
-export default boot(({ app }) => {
+export default defineBoot(({ app }) => {
   // <-- REMOVE 'router' aqui
 
   // ===== REQUEST INTERCEPTOR =====

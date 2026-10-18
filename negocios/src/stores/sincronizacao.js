@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { db } from 'boot/db'
 import { uid } from 'quasar'
 import { Platform } from 'quasar'

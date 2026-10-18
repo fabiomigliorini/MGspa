@@ -1,6 +1,6 @@
 <script setup>
 import { Dialog, Notify } from 'quasar'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { negocioStore } from 'stores/negocio'
 import { mercosStore } from 'stores/mercos'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'

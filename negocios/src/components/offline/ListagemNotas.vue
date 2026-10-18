@@ -7,7 +7,7 @@ import {
   formataNumeroNota,
 } from '@components/formatters'
 import { Notify } from 'quasar'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'

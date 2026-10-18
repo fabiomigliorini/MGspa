@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { Notify } from 'quasar'
 
 export const pdvStore = defineStore('pdv', {

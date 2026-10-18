@@ -1,6 +1,6 @@
 import { formataTimestampIso } from '@components/formatters'
 import { defineStore } from 'pinia'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { Notify } from 'quasar'
 import moment from 'moment'
 import { negocioStore } from './negocio'

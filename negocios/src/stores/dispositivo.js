@@ -1,6 +1,6 @@
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { Notify } from 'quasar'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 

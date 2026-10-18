@@ -8,7 +8,7 @@ import {
 import { onMounted, ref, watch } from 'vue'
 import { exportFile, Notify, Dialog } from 'quasar'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 
 import moment from 'moment/min/moment-with-locales'
 moment.locale('pt-br')

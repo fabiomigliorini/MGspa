@@ -1,5 +1,5 @@
 <script setup>
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { abrirVale } from '@components/abrirVale'
 import { formataNumero, formataCodigo, formataData } from '@components/formatters'
 import { negocioStore } from 'stores/negocio'

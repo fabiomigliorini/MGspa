@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { db } from 'boot/db'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { sincronizacaoStore } from './sincronizacao'
 import { produtoStore } from './produto'
 

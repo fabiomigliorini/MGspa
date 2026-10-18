@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useQuasar } from 'quasar'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { valeModeloStore } from 'stores/valeModelo'
 import { abrirPdf } from '@components/abrirPdf'
 import { formataNumero } from '@components/formatters'

@@ -10,7 +10,7 @@ import {
   extrairErro,
 } from 'src/utils/rhFormatters'
 import { formataNumero, formataPercentual } from '@components/formatters'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
 import MgTabelaValores from '@components/MgTabelaValores.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'

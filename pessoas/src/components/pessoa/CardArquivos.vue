@@ -5,7 +5,7 @@ import { useQuasar } from 'quasar'
 import { ref } from 'vue'
 import { useAuthStore } from 'src/stores'
 import { pessoaStore } from 'stores/pessoa'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { formataFromNow, formataTimestampCompleto } from '@components/formatters'
 
 const $q = useQuasar()

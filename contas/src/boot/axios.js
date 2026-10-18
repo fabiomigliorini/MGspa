@@ -1,10 +1,10 @@
-import { boot } from 'quasar/wrappers'
+import { defineBoot } from '#q-app/wrappers'
 import axios from 'axios'
 import { useAuthStore } from 'src/stores/auth'
 import { Notify, LoadingBar } from 'quasar'
 import { api } from 'src/services/api'
 
-export default boot(({ app }) => {
+export default defineBoot(({ app }) => {
   // ===== REQUEST INTERCEPTOR =====
   api.interceptors.request.use(
     (config) => {
@@ -106,5 +106,3 @@ export default boot(({ app }) => {
   app.config.globalProperties.$axios = axios
   app.config.globalProperties.$api = api
 })
-
-export { axios, api }

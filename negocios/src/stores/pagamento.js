@@ -3,7 +3,7 @@
 // MgAdiantamentoDialog, o mesmo do contas), o recibo e o vale de crédito na térmica.
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import { negocioStore } from 'stores/negocio'
 

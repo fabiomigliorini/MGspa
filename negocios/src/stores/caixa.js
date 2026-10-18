@@ -2,7 +2,7 @@
 // a do período do portador do contas, só com o período aberto (@components/portador).
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 
 export const caixaStore = defineStore('caixa', {

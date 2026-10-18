@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { db } from 'boot/db'
 import { Notify, LoadingBar } from 'quasar'
 import { sincronizacaoStore } from './sincronizacao'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 
 const sSinc = sincronizacaoStore()
 
