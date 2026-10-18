@@ -113,8 +113,8 @@ export const listagemStore = defineStore('listagem', {
       if (pdv) {
         filtro.codpdv = pdv.codpdv
       }
+      // a ListagemPage observa o filtro e busca; buscar aqui também pedia 2 vezes
       this.filtro = filtro
-      await this.getNegocios()
     },
 
     async getNegocios() {
@@ -153,6 +153,9 @@ export const listagemStore = defineStore('listagem', {
           timeout: 3000, // 3 segundos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        // para de paginar: senão o infinite scroll pede de novo na hora, sem
+        // parar. Mudar um filtro chama o getNegocios, que recomeça da 1ª página
+        this.paginacao.last_page = this.paginacao.current_page
         return false
       } finally {
         this.carregando = false
