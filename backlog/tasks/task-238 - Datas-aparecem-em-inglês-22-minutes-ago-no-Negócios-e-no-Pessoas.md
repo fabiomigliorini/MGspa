@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-18 13:47'
-updated_date: '2026-10-18 13:53'
+updated_date: '2026-10-18 14:13'
 labels:
   - negocios
   - pessoas
@@ -41,4 +41,6 @@ Pegadinha: o primeiro fix, import 'moment/locale/pt-br', não resolvia. No Vite 
 Os moment.locale('pt-br') espalhados nos componentes ficaram; com o boot são redundantes e inofensivos.
 
 Teste (18/10/2026): Chrome headless no dev do negocios (9900) com localStorage 'sincronizacao' simulando a última completa há 22 min: tooltip 'Ultima Sincronização há 22 minutos' (antes do fix: '22 minutes ago'). Dev do pessoas (8081, subido só para o teste e derrubado): o app carrega boot/moment e a instância do moment das telas está em pt-br ('há 22 minutos'). Build mínimo com o Vite 8 de cada app (mesma resolução do build de produção): 'pt-br | há 22 minutos | domingo, 18 de outubro' nos dois.
+
+Desdobramentos (18/10/2026): a limpeza dos moment.locale espalhados e do moment-with-locales do Negócios foi para a TASK-242; a decisão de continuar ou não com o moment, para a TASK-243.
 <!-- SECTION:NOTES:END -->
