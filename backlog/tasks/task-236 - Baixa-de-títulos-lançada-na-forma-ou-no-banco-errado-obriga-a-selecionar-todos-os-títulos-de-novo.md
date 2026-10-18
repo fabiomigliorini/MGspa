@@ -3,11 +3,11 @@ id: TASK-236
 title: >-
   Baixa de títulos lançada na forma ou no banco errado obriga a selecionar todos
   os títulos de novo
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-17 19:58'
-updated_date: '2026-10-17 23:15'
+updated_date: '2026-10-18 13:36'
 labels:
   - contas
 dependencies: []
@@ -26,10 +26,10 @@ Decisão: a forma não se troca no lugar. Ficam duas ações independentes no de
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Botão Duplicar no detalhe do pagamento de títulos (contas) abre o Receber ou Pagar Títulos com os mesmos títulos, valores, pessoa, data, referente e observação já preenchidos; a forma é escolhida de novo
-- [ ] #2 Duplicar não cancela o original; com o original ainda valendo, recusa dizendo para cancelar antes
-- [ ] #3 No Editar do pagamento lançado à mão em dinheiro, banco ou cartão da empresa, o portador troca por outro do mesmo tipo: o razão sai de um e entra no outro, as baixas acompanham e a auditoria guarda o antes e o depois com justificativa; período igual ao alterar data (operador com os dois abertos, gestor também pendente, fechado ninguém)
-- [ ] #4 Editar e Receber/Pagar usam o mesmo formulário (mesma aparência e campos: data, pessoa, referente, observação); o que não pode mudar fica em somente leitura
+- [x] #1 Botão Duplicar no detalhe do pagamento de títulos (contas) abre o Receber ou Pagar Títulos com os mesmos títulos, valores, pessoa, data, referente e observação já preenchidos; a forma é escolhida de novo
+- [x] #2 Duplicar não cancela o original; com o original ainda valendo, recusa dizendo para cancelar antes
+- [x] #3 No Editar do pagamento lançado à mão em dinheiro, banco ou cartão da empresa, o portador troca por outro do mesmo tipo: o razão sai de um e entra no outro, as baixas acompanham e a auditoria guarda o antes e o depois com justificativa; período igual ao alterar data (operador com os dois abertos, gestor também pendente, fechado ninguém)
+- [x] #4 Editar e Receber/Pagar usam o mesmo formulário (mesma aparência e campos: data, pessoa, referente, observação); o que não pode mudar fica em somente leitura
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -80,4 +80,6 @@ Testes (tinker, transação desfeita)
 - Lint e prettier (contas e negocios) e compilação dos quatro .vue sem erro. Não testado no navegador.
 
 Correção (17/10/2026, Fábio no teste em produção): o Referente a tinha ficado editável em dois lugares (lápis e botão próprio). Volta a mudar só no botão próprio do detalhe; no Editar aparece em somente leitura. Saiu do lápis no servidor (atualizar e UpdateRequest).
+
+Validado pelo Fábio em produção (18/10/2026).
 <!-- SECTION:NOTES:END -->
