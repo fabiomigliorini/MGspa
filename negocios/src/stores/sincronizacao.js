@@ -86,6 +86,50 @@ const EM_ANDAMENTO = 'Já existe uma sincronização em andamento, nesta ou em o
 export const DISPOSITIVO_INATIVO =
   'Dispositivo inativo. Abra o Meu Dispositivo e peça a um administrador para ativá-lo.'
 
+// Localizacao (obrigatoria): vale a posicao de ate' 1 min, nunca mais velha. Cada tentativa
+// espera o navegador por 10 s; a resposta que chegar depois fica guardada so' em memoria e serve
+// para a proxima tentativa enquanto tiver ate' 1 min (TASK-197)
+const IDADE_POSICAO = 60 * 1000
+const ESPERA_POSICAO = 10 * 1000
+let posicao = null
+
+// pedido sem timeout: quem desiste e' o localizar(), e a resposta atrasada nao se perde
+const pedirPosicao = () =>
+  new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        posicao = p
+        resolve(p)
+      },
+      reject,
+      { maximumAge: IDADE_POSICAO },
+    )
+  })
+
+const posicaoRecente = () => posicao && Date.now() - posicao.timestamp <= IDADE_POSICAO
+
+// desiste em 10 s ou quando a sincronizacao e' cancelada (signal)
+const localizar = async (signal) => {
+  if (posicaoRecente()) {
+    return posicao
+  }
+  let espera
+  try {
+    return await Promise.race([
+      pedirPosicao(),
+      new Promise((_, reject) => {
+        espera = setTimeout(
+          () => reject(new Error('o navegador não respondeu em 10 segundos')),
+          ESPERA_POSICAO,
+        )
+        signal?.addEventListener('abort', () => reject(signal.reason), { once: true })
+      }),
+    ])
+  } finally {
+    clearTimeout(espera)
+  }
+}
+
 const erro = (message) => {
   Notify.create({
     type: 'negative',
@@ -155,32 +199,37 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       dialog: false,
       tempoTotal: 0,
       incremental: null, // a janela oferece a incremental? null = verificando
+      // a localizacao vem antes das etapas: a janela mostra a busca numa linha propria
+      localizacao: { buscando: false, erro: false, precisao: null },
       etapas: Object.fromEntries(Object.entries(ETAPAS).map(([k, l]) => [k, etapaVazia(l)])),
     },
   }),
 
   actions: {
     // o que o navegador sabe de si: uuid, localizacao (obrigatoria) e plataforma
-    async coletarDispositivo(acao) {
+    async coletarDispositivo(acao, signal) {
       if (!this.pdv.uuid) {
         this.pdv.uuid = uid()
       }
 
+      const loc = this.importacao.localizacao
+      Object.assign(loc, { buscando: true, erro: false, precisao: null })
       try {
-        const pos = await new Promise((resolve, reject) => {
-          // sem timeout o Chrome pode nunca responder, mesmo com a permissao concedida
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            timeout: 10000,
-            maximumAge: 10 * 60 * 1000,
-          })
-        })
+        const pos = await localizar(signal)
         this.pdv.latitude = pos.coords.latitude
         this.pdv.longitude = pos.coords.longitude
         this.pdv.precisao = pos.coords.accuracy
+        loc.precisao = pos.coords.accuracy
       } catch (error) {
-        // localizacao e obrigatoria: sem ela o dispositivo nao cadastra nem sincroniza
-        erro(`Sem a localização do dispositivo não é possível ${acao}: ${error.message}`)
+        // localizacao e obrigatoria: sem ela o dispositivo nao cadastra nem sincroniza.
+        // Cancelada no meio nao e' erro e nao avisa
+        if (!signal?.aborted) {
+          loc.erro = true
+          erro(`Sem a localização do dispositivo não é possível ${acao}: ${error.message}`)
+        }
         throw error
+      } finally {
+        loc.buscando = false
       }
 
       const plat = Platform.is
@@ -217,8 +266,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     // sincronizacao: atualiza o que o backend sabe do navegador e traz de volta o cadastro e a
     // configuracao; navegador nao cadastrado leva 404
-    async dispositivo() {
-      const params = await this.coletarDispositivo('sincronizar')
+    async dispositivo(signal) {
+      const params = await this.coletarDispositivo('sincronizar', signal)
       // uma vez so': o backend preenche com isto as colunas de configuracao ainda vazias
       if (!this.configuracaoMigrada) {
         const padrao = (await negocio()).padrao
@@ -292,6 +341,10 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
           return false
         }
       }
+      // ja' pede a posicao: ate' o clique em Sincronizar ela costuma ter chegado
+      if (!posicaoRecente()) {
+        pedirPosicao().catch(() => {})
+      }
       this.importacao.dialog = true
       return true
     },
@@ -362,12 +415,18 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     },
 
     async executarSincronizacao(full) {
+      // o Cancelar aborta da espera da localizacao ate' os downloads de todas as etapas
+      abortador = new AbortController()
       // verifica se PDV pode acessar API (o dispositivo() ja avisou o erro)
       try {
-        await this.dispositivo()
+        await this.dispositivo(abortador.signal)
       } catch (error) {
         console.log(error)
         this.importacao.rodando = false
+        return
+      }
+      // cancelada enquanto o backend respondia o dispositivo
+      if (!this.importacao.rodando) {
         return
       }
       if (this.pdv.inativo) {
@@ -378,7 +437,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
       // Etapas em paralelo (TASK-197): cada uma e' uma linha do dialog, erro numa nao derruba
       // as outras, e o Cancelar aborta os downloads de todas pelo mesmo controlador
-      abortador = new AbortController()
       const inicio = performance.now()
       const cronometro = setInterval(() => {
         this.importacao.tempoTotal = Math.round((performance.now() - inicio) / 1000)

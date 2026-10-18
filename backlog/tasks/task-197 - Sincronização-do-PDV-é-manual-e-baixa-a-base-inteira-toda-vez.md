@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-17 22:44'
+updated_date: '2026-10-18 14:54'
 labels:
   - negocios
 dependencies: []
@@ -36,7 +36,7 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #2 Sincronização roda sozinha ao iniciar o sistema, sem clicar no botão (ex-TASK-54)
 - [x] #3 Sincronização incremental traz só o que mudou desde a última, inclusive cadastro recém-feito de pessoa (ex-TASK-36), produto e preço
 - [x] #4 Sincronização incremental só fica disponível quando compensa: o servidor ainda tem a versão do PDV, os diffs somados são menores que a completa e a última completa tem até 7 dias; senão só a Sincronização completa fica disponível, já com o foco (a que abre sozinha ao iniciar segue a mesma regra)
-- [ ] #5 Sincronização não fica esperando a localização: hoje o Chrome no Linux às vezes não devolve a posição (mesmo com permissão) e a sincronização recusa depois de 10 s; localização continua obrigatória
+- [x] #5 Sincronização não fica esperando a localização: hoje o Chrome no Linux às vezes não devolve a posição (mesmo com permissão) e a sincronização recusa depois de 10 s; localização continua obrigatória
 - [ ] #6 Quiosque sem resposta do backend (offline, rede caída, PDV não autorizado) não mostra o saldo do cache como estoque atual: avisa que é estoque não confirmado e de quando é; sem cache, mostra estoque indisponível (não zero) (ex-TASK-154)
 - [x] #7 Sincronizar funciona sem usuário logado: o botão não fica desabilitado nem avisa de login ou de sessão expirada
 - [x] #8 Ao abrir o sistema sem ter sincronizado hoje (última sincronização de outro dia, ou nunca feita), a janela Sincronizar abre e já sincroniza sozinha
@@ -81,4 +81,20 @@ Fábio (17/10/2026, primeira sincronização em produção): a full parecia trav
 - Teste em Chrome headless contra o quasar dev (17/10): completa ao abrir num perfil limpo em 23 s com o aviso no fim; reabrir -> incremental com foco, 'Nada mudou' em 2 s; registro com versão de 01/10 no IndexedDB -> só a completa, com foco, e depois dela a incremental volta; versão de pessoas desconhecida -> só a completa; ESC no meio da completa -> sem aviso.
 
 Fábio (17/10/2026): a trava entre janelas só valia no executar; a janela Sincronizar abria na segunda aba, verificava a incremental e só recusava no clique. Agora abrirJanela() consulta a mesma trava do Web Locks (navigator.locks.query) antes de abrir, e é o único caminho de abertura: botão do cabeçalho (BtnSincronizacao), menu do quiosque e sincronizarAoAbrir. Na corrida entre a consulta e o clique, o sincronizar() continua recusando. Teste com duas abas no Chrome headless: com A fazendo a completa, B ao abrir o sistema e B no botão do cabeçalho recusam com o aviso, sem abrir a janela; A terminada, B abre normalmente.
+
+Fábio (18/10/2026), critério #5: localização continua obrigatória ('não quero gente sincronizando sem eu saber onde está'); baixar em paralelo à posição foi descartado. A posição vale até 1 min (era 10 min de maximumAge). No sincronizacao.js, localizar() pede a posição sem timeout ao navegador e desiste em 10 s com a mesma recusa de hoje; a resposta que chega depois fica só em memória (some no F5) e serve à próxima tentativa enquanto tiver até 1 min (pelo timestamp da própria posição). Abrir a janela Sincronizar (abrirJanela) já faz o pedido, para a posição chegar antes do clique. Cadastrar do Meu Dispositivo usa o mesmo caminho.
+
+Fábio (18/10/2026): a janela Sincronizar mostra a busca da localização numa linha própria, acima das etapas e no mesmo formato: girando com 'Buscando a localização do dispositivo...', check com a precisão (± m) ou erro 'Sem localização'; toggle sempre ligado e desabilitado (obrigatória).
+
+Teste em Chrome headless contra o quasar dev e a api-dev (18/10/2026, dispositivo 511 Teste; Chrome com --disable-web-security porque a api-dev só libera CORS para http://localhost e o dev roda em https://localhost:9900). Geolocation real do Chrome com posição emulada e geolocation falsa para controlar atraso e erro, 34/34 ok, sem erro de console:
+- posição emulada: linha Localização é a primeira, toggle ligado e travado, '± 25 m', PUT com a posição e 'Sincronização finalizada';
+- navegador demora 3 s: aos 1 s a linha gira com 'Buscando a localização do dispositivo...' e nenhuma etapa começou; getCurrentPosition com maximumAge 60000 e sem timeout;
+- navegador nunca responde: recusa aos 10,0 s com 'Sem a localização do dispositivo não é possível sincronizar: o navegador não respondeu em 10 segundos', linha vermelha 'Sem localização', sem PUT, janela aberta;
+- posição indisponível: recusa na hora com o erro do navegador;
+- resposta chega aos 12 s: a 1ª tentativa recusa aos 10 s; a 2ª, logo depois, usa a resposta atrasada sem pedir de novo e sincroniza; dentro de 1 min a posição é reaproveitada, depois de 1 min pede outra (PUT com a cidade nova);
+- abrir a janela já pede a posição: com ela chegada, o clique não gira e há um pedido só;
+- Cadastrar: coleta com posição e recusa com 'não é possível cadastrar' sem ela.
+O banco registrou no histórico do 511 cada posição enviada.
+
+Bug achado no teste e corrigido: Cancelar (ou ESC, clique fora) durante a busca da localização fechava a janela, mas a sincronização seguia esperando escondida, mandava o PUT do dispositivo quando a posição chegava e segurava a trava; reabrir a janela recusava com 'Já existe uma sincronização em andamento'. Agora o AbortController nasce antes do dispositivo(): o Cancelar interrompe a espera da localização sem aviso, nada é enviado e a janela reabre na hora. Se cancelar enquanto o PUT do dispositivo responde, as etapas não começam.
 <!-- SECTION:NOTES:END -->

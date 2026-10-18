@@ -1,5 +1,5 @@
 <script setup>
-import { nextTick, onMounted, ref } from 'vue'
+import { computed, nextTick, onMounted, ref } from 'vue'
 import { formataNumero, formataTimestamp } from '@components/formatters'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 
@@ -49,6 +49,21 @@ const textoEtapa = (etapa) => {
   return '\u00a0'
 }
 
+// a localizacao e' obrigatoria e vem antes das etapas: linha propria, no mesmo formato
+const loc = computed(() => sSinc.importacao.localizacao)
+const textoLocalizacao = computed(() => {
+  if (loc.value.buscando) {
+    return 'Buscando a localização do dispositivo...'
+  }
+  if (loc.value.erro) {
+    return 'Sem localização'
+  }
+  if (loc.value.precisao !== null) {
+    return `± ${formataNumero(loc.value.precisao, 0)} m`
+  }
+  return ' '
+})
+
 // sem contagem (prancheta, vales, antes da versao chegar) a barra fica indeterminada enquanto roda
 const progressoEtapa = (etapa) => {
   if (etapa.total) {
@@ -83,6 +98,29 @@ const progressoEtapa = (etapa) => {
 
       <!-- as etapas rodam em paralelo: cada uma tem a sua linha, seu estado, sua barra e seu toggle -->
       <q-list>
+        <!-- obrigatoria: o toggle fica sempre ligado -->
+        <q-item>
+          <q-item-section avatar>
+            <q-spinner v-if="loc.buscando" color="primary" size="24px" />
+            <q-icon v-else-if="loc.erro" name="error" color="red-5" />
+            <q-icon v-else-if="loc.precisao !== null" name="check_circle" color="green-5" />
+            <q-icon v-else name="radio_button_unchecked" color="grey-5" />
+          </q-item-section>
+          <q-item-section>
+            <q-item-label>Localização</q-item-label>
+            <q-item-label caption lines="1">{{ textoLocalizacao }}</q-item-label>
+            <q-linear-progress
+              :value="loc.precisao !== null ? 1 : 0"
+              :indeterminate="loc.buscando"
+              :color="loc.erro ? 'red-5' : 'primary'"
+              rounded
+              class="q-mt-xs"
+            />
+          </q-item-section>
+          <q-item-section side>
+            <q-toggle :model-value="true" disable tabindex="-1" />
+          </q-item-section>
+        </q-item>
         <q-item v-for="(etapa, chave) in sSinc.importacao.etapas" :key="chave">
           <q-item-section avatar>
             <q-spinner v-if="etapa.rodando" color="primary" size="24px" />
