@@ -9,7 +9,6 @@ import {
 import DialogSincronizacao from './DialogSincronizacao.vue'
 import moment from 'moment'
 
-moment.locale('pt-br')
 const sSinc = sincronizacaoStore()
 
 const erro = (message) =>

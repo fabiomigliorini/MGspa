@@ -5,8 +5,7 @@ import { Dialog } from 'quasar'
 import emitter from 'src/utils/emitter'
 import { mercosStore } from 'stores/mercos'
 import { sincronizacaoStore } from 'stores/sincronizacao'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
+import moment from 'moment'
 
 const sMercos = mercosStore()
 const sSinc = sincronizacaoStore()

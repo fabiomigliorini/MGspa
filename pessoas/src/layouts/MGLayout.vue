@@ -1,15 +1,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import moment from 'moment'
-import 'moment/min/locales'
 import { useAuthStore } from 'src/stores'
 import MgAppFooter from '@components/MgAppFooter.vue'
 import MgUserMenu from '@components/MgUserMenu.vue'
 import MgAppsMenu from '@components/MgAppsMenu.vue'
 import MgPageTitle from '@components/MgPageTitle.vue'
 import { useAuth } from 'src/composables/useAuth'
-
-moment.locale('pt-br')
 
 const auth = useAuth()
 const user = useAuthStore()

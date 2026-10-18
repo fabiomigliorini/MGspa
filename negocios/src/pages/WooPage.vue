@@ -3,9 +3,8 @@ import { ref, onMounted, watch } from 'vue'
 import { wooStore } from 'src/stores/woo'
 import { formataNumero, formataTimestampCompleto } from '@components/formatters'
 import { debounce } from 'quasar'
-import moment from 'moment/min/moment-with-locales'
+import moment from 'moment'
 import WooInfoModal from 'src/components/modals/WooInfoModal.vue'
-moment.locale('pt-br')
 
 const sWoo = wooStore()
 const scrollRef = ref(null)

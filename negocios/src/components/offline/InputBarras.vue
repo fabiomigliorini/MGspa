@@ -13,9 +13,8 @@ import { conflitosComanda } from '../../utils/comanda.js'
 import { Notify, Dialog, debounce } from 'quasar'
 import { falar } from '../../utils/falar.js'
 import emitter from '../../utils/emitter.js'
-import moment from 'moment/min/moment-with-locales'
+import moment from 'moment'
 import MgInput from '@components/MgInput.vue'
-moment.locale('pt-br')
 
 const router = useRouter()
 const sProduto = produtoStore()

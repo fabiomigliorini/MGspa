@@ -1,8 +1,6 @@
 <script setup>
 import { ref } from 'vue'
 import { negocioStore } from 'stores/negocio'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
 import MgSlim from '@components/MgSlim.vue'
 import MgAnexoImagem from './MgAnexoImagem.vue'
 import { api } from 'src/services/api'

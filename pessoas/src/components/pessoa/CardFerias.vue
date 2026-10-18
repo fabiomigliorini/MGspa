@@ -6,8 +6,6 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { colaboradorStore } from 'stores/colaborador'
 import moment from 'moment'
-import 'moment/min/locales'
-moment.locale('pt-br')
 import MgInputData from '@components/MgInputData.vue'
 
 const props = defineProps(['colaborador'])

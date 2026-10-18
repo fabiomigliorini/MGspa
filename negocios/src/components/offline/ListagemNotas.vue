@@ -11,8 +11,7 @@ import { api } from 'src/services/api'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
+import moment from 'moment'
 
 const sNegocio = negocioStore()
 const sSinc = sincronizacaoStore()

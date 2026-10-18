@@ -5,8 +5,6 @@ import { debounce } from 'quasar'
 import { wooStore } from 'src/stores/woo'
 import WooChangeStatusModal from 'src/components/modals/WooChangeStatusModal.vue'
 import { Notify } from 'quasar'
-import moment from 'moment'
-moment.locale('pt_br')
 
 const sWoo = wooStore()
 const tab = ref('resumo')

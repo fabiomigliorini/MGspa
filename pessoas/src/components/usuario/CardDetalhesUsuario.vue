@@ -8,8 +8,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { usuarioStore } from 'src/stores/usuario'
 import { useAuthStore } from 'src/stores'
 import moment from 'moment'
-import 'moment/min/locales'
-moment.locale('pt-br')
 
 const $q = useQuasar()
 const router = useRouter()

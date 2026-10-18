@@ -16,10 +16,8 @@ import { db } from 'boot/db'
 import { LoadingBar } from 'quasar'
 import { iconeNegocio, corIconeNegocio } from 'src/utils/iconeNegocio.js'
 import emitter from 'src/utils/emitter'
-import moment from 'moment/min/moment-with-locales'
 import MgInput from '@components/MgInput.vue'
 import MgHistorico from '@components/MgHistorico.vue'
-moment.locale('pt-br')
 
 const sNegocio = negocioStore()
 const sSinc = sincronizacaoStore()

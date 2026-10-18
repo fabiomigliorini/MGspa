@@ -4,8 +4,7 @@ import { ref, computed } from 'vue'
 import { produtoStore } from 'stores/produto'
 import { negocioStore } from 'stores/negocio'
 import { Dialog } from 'quasar'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
+import moment from 'moment'
 import MgInputValor from '@components/MgInputValor.vue'
 
 const sProduto = produtoStore()

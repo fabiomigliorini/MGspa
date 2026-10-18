@@ -138,8 +138,6 @@ import { usuarioStore } from 'stores/usuario'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from 'stores/index'
 import moment from 'moment'
-import 'moment/min/locales'
-moment.locale('pt-br')
 
 export default defineComponent({
   name: 'FormUsuario',

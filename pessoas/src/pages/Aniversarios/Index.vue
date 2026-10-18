@@ -93,8 +93,6 @@ import { pessoaStore } from 'src/stores/pessoa'
 
 // 3. Imports de utilitários
 import moment from 'moment'
-import 'moment/min/locales'
-moment.locale('pt-br')
 
 // 4. Imports de componentes
 import MGLayout from 'layouts/MGLayout.vue'

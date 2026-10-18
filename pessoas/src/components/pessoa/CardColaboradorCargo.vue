@@ -6,8 +6,6 @@ import { colaboradorStore } from 'stores/colaborador'
 import { pessoaStore } from 'stores/pessoa'
 import { tempoRelativo, formataDataIso, formataDataAbreviada } from '@components/formatters'
 import moment from 'moment'
-import 'moment/min/locales'
-moment.locale('pt-br')
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgSelectCargo from '@components/MgSelectCargo.vue'

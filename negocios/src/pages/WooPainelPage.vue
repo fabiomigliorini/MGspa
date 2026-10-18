@@ -3,9 +3,8 @@ import { ref, onMounted } from 'vue'
 import { wooStore } from 'src/stores/woo'
 import { formataNumero } from '@components/formatters'
 import { Notify } from 'quasar'
-import moment from 'moment/min/moment-with-locales'
+import moment from 'moment'
 import WooInfoModal from 'src/components/modals/WooInfoModal.vue'
-moment.locale('pt-br')
 
 const sWoo = wooStore()
 

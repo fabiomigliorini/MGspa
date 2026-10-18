@@ -6,8 +6,7 @@ import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
 import { useRouter } from 'vue-router'
 import { iconeNegocio, corIconeNegocio } from 'src/utils/iconeNegocio.js'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
+import moment from 'moment'
 
 const reconsultandoAbertos = ref(false)
 const sNegocio = negocioStore()

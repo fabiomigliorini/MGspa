@@ -3,8 +3,7 @@ import { formataNumero, formataTimestampCompleto } from '@components/formatters'
 import { onMounted, ref } from 'vue'
 import { Notify } from 'quasar'
 import { pagarMeStore } from '@components/stores/pagarMeStore'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
+import moment from 'moment'
 
 const sPagarMe = pagarMeStore()
 // qual botão está rodando: só ele gira, os outros esperam

@@ -7,8 +7,6 @@ import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { colaboradorStore } from 'stores/colaborador'
 import moment from 'moment'
-import 'moment/min/locales'
-moment.locale('pt-br')
 
 const DIAS_EXPERIENCIA = 30
 

@@ -4,8 +4,7 @@ import { abrirVale } from '@components/abrirVale'
 import { formataNumero, formataCodigo, formataData } from '@components/formatters'
 import { negocioStore } from 'stores/negocio'
 import { pagamentoStore } from 'stores/pagamento'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
+import moment from 'moment'
 
 const sNegocio = negocioStore()
 const sPagamento = pagamentoStore()

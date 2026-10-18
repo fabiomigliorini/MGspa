@@ -10,8 +10,7 @@ import { exportFile, Notify, Dialog } from 'quasar'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
 import { api } from 'src/services/api'
 
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
+import moment from 'moment'
 
 const sSinc = sincronizacaoStore()
 
