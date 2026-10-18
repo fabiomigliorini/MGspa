@@ -182,3 +182,20 @@ Troca 1:1: repassa os atributos e **todos** os slots (`option`, `selected-item`,
 `resetValidation`. `outlined` já vem ligado. Desde a TASK-174 (10/10/2026) não sobrou `q-select`
 cru com `clearable`; o cru sem `clearable` passa para `MgSelect` quando a tela receber
 manutenção. Select novo nasce em `MgSelect`.
+
+## Axios — a instância mora em `src/services/api.js`, nunca no boot
+
+**Quem precisa do axios importa de `src/services/api`.** Ali nasce a instância de cada app:
+`baseURL`, timeout de 15 s e o dedup de double-submit. O arquivo é JavaScript puro, sem Vue,
+Quasar nem store. O `src/boot/axios.js` importa dali, instala os interceptors (token e erros)
+dentro do `defineBoot` e registra `$axios`/`$api` — e não exporta nada.
+
+**Por que não importar do boot.** O Quasar carrega cada boot com `import()` dinâmico, para ele
+virar um chunk próprio. Store ou página que importa o boot faz o build avisar
+`INEFFECTIVE_DYNAMIC_IMPORT`, e já derrubou o negocios ao puxar o boot antes do Pinia existir
+(TASK-207). A doc oficial do Quasar ainda ensina exportar o axios do boot; aqui não. Os seis apps
+estão nesse formato desde a **TASK-237** (18/10/2026): `import … from 'boot/axios'` que aparecer
+num diff é regressão.
+
+**Boot, router e store usam `#q-app/wrappers`** (`defineBoot`, `defineRouter`, `defineStore`).
+Os de `quasar/wrappers` são descontinuados desde o app-vite 2.
