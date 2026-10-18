@@ -1,5 +1,5 @@
 ---
-id: TASK-232
+id: TASK-240
 title: >-
   Chip lançado por engano e estornado continua aparecendo nas descrições do item
   do caixa e como sugestão na entrada
@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-16 23:35'
-updated_date: '2026-10-16 23:35'
+updated_date: '2026-10-18 13:55'
 labels:
   - contas
 dependencies: []
@@ -34,3 +34,9 @@ Desempenho (ac0464689): saldos() buscava as entradas depois do último fechament
 - [x] #2 Descrições e sugestão mostram só o que tem saldo em algum caixa
 - [x] #3 Consulta do saldo continua rápida com um ano de fechamentos e movimentos
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Renumerada de TASK-232 para TASK-240 em 18/10/2026: o número colidiu com a TASK-232 do Eduardo (Filtros da tela de Pagamentos não mudam a listagem). O commit 840cd3282 (16/10/2026) cita esta task como TASK-232.
+<!-- SECTION:NOTES:END -->
