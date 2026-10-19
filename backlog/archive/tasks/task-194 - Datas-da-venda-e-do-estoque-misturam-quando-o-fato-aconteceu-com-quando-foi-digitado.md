@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-02 20:54'
-updated_date: '2026-10-10 19:07'
+updated_date: '2026-10-19 23:19'
 labels:
   - negocios
   - estoque
@@ -37,4 +37,16 @@ Fica de fora do M10, por ser usado em muitos lugares: `tblnegocio.lancamento` �
 
 <!-- SECTION:NOTES:BEGIN -->
 Revisão do backlog com o Fábio (10/10/2026, 2ª varredura): #4 feito pela TASK-204 (783933f7b): o Receber Título do PDV tem data com hora (PagamentoTituloService.php:136), e a entrega paga na volta é um título de Entrega recebido ali. #3 só vale na venda reaberta (TASK-30, 65ae4d593, PdvNegocioPagamentoService.php:140-143); na venda normal a transacao do pagamento continua sendo a hora do sync (PagamentoService.php:151-152).
+
+Revisão com o Fábio (19/10/2026) — arquivada: o comportamento que importa já acontece. PIX ou cartão passado ontem, venda esquecida aberta e fechada hoje: o pagamento fica com a data de ontem e o negócio com a de hoje.
+
+- Negócio: o servidor grava lancamento = hora do Fechar (api/app/Mg/Pdv/PdvNegocioService.php:498).
+- PIX QR da venda, Stone e Safrapay: o pagamento nasce já efetivado quando o banco ou a maquininha confirma, com transacao = hora da confirmação (PixService.php:315, PagarMeService.php:367, SaurusService.php:361, caindo em PagamentoService.php:151). O Fechar não mexe no que já está efetivado (PagamentoService.php:190).
+- Cartão lançado à mão: o PDV manda o negócio ao servidor a cada alteração (negocios/src/stores/negocio.js:971), e o servidor grava transacao = hora em que recebeu o pagamento. O Fechar só põe a efetivação na data do fechamento (PdvNegocioService.php:530); a transacao fica a de ontem.
+
+Onde a data do pagamento vira a de hoje (ficam sem fazer, assim como o rename de #1 e #2):
+- PDV offline ontem: o cartão à mão só chega hoje e a transacao é a hora do sync (#3).
+- Confirmação atrasada no PIX ou na maquininha: a transacao é a hora em que o servidor processou, não o horário do PIX (pix.horario) nem o da transação da Stone (PagarMePagamento.transacao). Normalmente são segundos.
+
+Levantamento só por leitura de código, sem teste.
 <!-- SECTION:NOTES:END -->
