@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-19 10:03'
+updated_date: '2026-10-19 20:33'
 labels:
   - negocios
 dependencies: []
@@ -114,4 +114,11 @@ O teste achou três lugares que ainda mostravam ou mandavam o uuid, corrigidos:
 - O negócio novo copiava o dispositivo inteiro (uuid, latitude, longitude) no campo Pdv, que ia no corpo do PUT e ficava no IndexedDB: agora só apelido e setor, o que o card mostra.
 
 Fábio (19/10/2026), critério #6 (opção A): a store do quiosque guarda se o backend respondeu nesta consulta (confirmado). Sem resposta (offline, rede caída, PDV não autorizado), a tabela de estoque do cache ganha o aviso 'Estoque não confirmado', com a data em que o saldo foi guardado (detalhe.sincronizado); sem cache, aparece 'Estoque indisponível' em vez de nada. Enquanto a consulta ao servidor está em andamento vale o chip 'atualizando…', sem o aviso. Teste em Chrome headless contra o quasar dev, com o detalhe bloqueado pelo navegador para simular o servidor fora (7/7): online sem aviso; fora com cache, aviso com a data e a tabela; fora sem cache, 'Estoque indisponível' com o preço da base local; servidor de volta, confirmado sem aviso. Task concluída.
+
+Fechamento (19/10/2026), para o go-live:
+- Back e front sobem juntos. O backend novo recusa o front antigo (que manda o ?pdv=): até o PDV recarregar a página (F5 ou a tarja de nova versão), as chamadas dele dão 403 'Dispositivo não cadastrado ou inativo'. Sem DDL.
+- Para o usuário comum, a Listagem de negócios passa a abrir filtrada no PDV dele (antes o filtro falhava em silêncio, porque a lista de Dispositivos é só de Administrador/Gerente).
+- Não testado: anexos da confissão no PDV e a mensagem da cobrança PIX (agora PDV #código).
+- Fica: os uuids já vistos (lista, logs, cobranças PIX antigas) continuam valendo; os negócios antigos no IndexedDB guardam o Pdv completo até a próxima sincronização deles.
+- A regra ficou no CLAUDE.md (seção PDV: o uuid é a senha do dispositivo e vai só no cabeçalho X-Pdv).
 <!-- SECTION:NOTES:END -->
