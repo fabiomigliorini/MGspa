@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-19 21:16'
+updated_date: '2026-10-19 21:39'
 labels:
   - negocios
 dependencies: []
@@ -52,6 +52,7 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #18 Janela Sincronizar cabe no celular: sem o círculo grande, uma barra de progresso por linha e botões Cancelar, Completa e Incremental
 - [x] #19 Arquivos do catálogo no servidor ficam numa pasta por catálogo (produtos, pessoas), com o manifesto na raiz e o mesmo endereço de download; a troca não tira a incremental de nenhum PDV
 - [x] #20 A janela Sincronizar busca a localização ao abrir e mostra o andamento numa linha abaixo da última sincronização (buscando, disponível com latitude e longitude, ou o motivo em vermelho); Completa e Incremental só habilitam com a localização
+- [x] #21 Rodada sem mudança num catálogo não deixa arquivo de diff vazio no servidor, e os diffs ficam só 8 dias (1 além dos 7 da completa); a incremental continua valendo para todo PDV
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -137,4 +138,21 @@ Transição (go-live): os arquivos do formato antigo são movidos para as pastas
     docker exec -u 82 -w /opt/www/MGspa/api/storage/app/pdv-catalogo mgspa-api sh -c 'for f in produtos-* pessoas-*; do [ -e "$f" ] || continue; mkdir -p "${f%%-*}" && mv "$f" "${f%%-*}/${f#*-}"; done'
 
 Volta atrás (se reverter o código): for d in produtos pessoas; do for f in $d/*; do mv "$f" "$d-${f##*/}"; done; rmdir $d; done (na pasta pdv-catalogo, mesmo usuário). No dev o comando foi rodado às 16:52 de 19/10: 205 arquivos em cada pasta.
+
+Fábio (19/10/2026), critério #21: o job gravava diff em toda rodada, mesmo sem mudança (gzip vazio de 20 bytes; no dev 402 de 408). Ele só existia porque o servidor decidia se a versão do PDV vale para a incremental olhando se o diff dela estava em disco. Agora a rodada só grava o diff da tabela que mudou, e o controle passa a ser uma regra: a versão do PDV é conhecida se não passa da atual, está dentro da retenção (corte = agora - 8 dias) e é desta corrente (>= inicio, a versão em que a corrente de diffs da tabela começou, gravada por tabela no catalogo.json; recomeça na rodada sem json anterior: primeira vez, pasta apagada). Manifesto sem inicio (de antes da mudança) vale só o corte. Rodada sem json anterior também não grava o diff 'tudo +', que nunca seria aplicado. Retenção dos diffs de 30 para 8 dias: 1 dia além dos 7 em que o front aceita a incremental (DIAS_DIFF no PdvCatalogoService e DIAS_INCREMENTAL no sincronizacao.js, fixos no código, um apontando o outro). Front: saiu o filtro de diff vazio (DIFF_VAZIO).
+
+Go-live: na primeira rodada do job depois do git pull, a limpeza apaga os diffs com mais de 8 dias (nenhum PDV os usava: o front força a completa depois de 7). Depois do git pull, e só com o código novo no ar (o antigo depende deles), apagar os diffs vazios antigos como o usuário 82:
+
+    docker exec -u 82 -w /opt/www/MGspa/api/storage/app/pdv-catalogo mgspa-api find produtos pessoas -name '*.diff.gz' -size 20c -delete
+
+Sem rodar nada quebra: os vazios somem sozinhos em 8 dias, e até lá o front novo baixa arquivos de 20 bytes à toa.
+
+Teste (19/10/2026, dev): job pela linha de comando como uid 82 e Chrome headless contra o quasar dev (negocios-dev:9900), dispositivo 511, sem erro de console:
+- rodada sem mudança: nenhum .diff.gz, catalogo.json com inicio null nas duas tabelas (manifesto de antes), diff plantado de 01/10 apagado pela retenção de 8 dias, 2 jsons;
+- /versoes: desde = atual, desde de rodada sem diff e desde de 17/10 -> conhecida; mais de 8 dias e futuro -> não conhecida;
+- perfil limpo: completa ao abrir; rodada sem mudança -> janela com foco na Incremental, que só consulta as versoes ('Nada mudou');
+- preço do produto 1 +0,10 e mais uma rodada sem mudança -> só produtos/ ganha diff; a incremental baixa esse diff só (o OPTIONS que aparece junto é o preflight de CORS), 4 barras alteradas, pessoas nada mudou, preço novo no IndexedDB; preço de volta -> idem;
+- pasta movida (recomeço): manifesto com anterior null e inicio = a versão nova nas duas tabelas, só os jsons, sem o diff 'tudo +'; a versão antiga do PDV não é conhecida e a janela só oferece a Completa, com o foco; depois dela e de uma rodada sem mudança, inicio mantido e a incremental volta;
+- json anterior só de pessoas apagado: só pessoas recomeça (inicio novo), produtos mantém o dele, a janela só oferece a Completa.
+A pasta de verdade do dev foi devolvida no fim; os diffs vazios antigos do dev foram apagados com o comando do go-live.
 <!-- SECTION:NOTES:END -->

@@ -22,8 +22,6 @@ const CATALOGO = {
   produto: { tabela: 'produtos', pk: 'codprodutobarra' },
   pessoa: { tabela: 'pessoas', pk: 'codpessoa' },
 }
-// um .diff.gz sem linha nenhuma tem 20 bytes: abaixo disto nao vale uma requisicao
-const DIFF_VAZIO = 32
 // a full grava e mostra o progresso a cada LOTE registros: lote grande parece travado
 const LOTE = 2000
 // etapas da sincronizacao: cada uma e' uma linha do dialog e roda em paralelo com as outras
@@ -52,7 +50,8 @@ const dataDaVersao = (v) =>
 let abortador = null
 // verificacao da incremental em andamento: abrir a janela e a sincronizacao ao abrir pedem juntas
 let verificacao = null
-// dias desde a ultima completa que a incremental ainda vale
+// dias desde a ultima completa que a incremental ainda vale. O servidor guarda os diffs 1 dia
+// alem disto (DIAS_DIFF no api/app/Mg/Pdv/PdvCatalogoService.php): quem mexer num mexe no outro
 const DIAS_INCREMENTAL = 7
 // no maximo n downloads ao mesmo tempo; cada chamada devolve a promessa do seu download
 const limitar = (n) => {
@@ -652,15 +651,14 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     // registro que entrou ou mudou (o mudado vem nas duas e o bulkPut sobrescreve)
     async aplicarDiffs(chave, pk, etapa, tabela, atual, diffs) {
       etapa.modo = 'diff'
-      const uteis = diffs.filter((d) => d.tamanho > DIFF_VAZIO)
-      etapa.total = uteis.length
+      etapa.total = diffs.length
       const baixar = limitar(5)
-      const textos = uteis.map((d) =>
+      const textos = diffs.map((d) =>
         baixar(async () => (await this.baixarCatalogo(tabela, d.versao, 'diff')).text()),
       )
       // uma falha derruba a etapa no await dela; as outras nao podem virar rejeicao solta
       textos.forEach((t) => t.catch(() => {}))
-      for (let i = 0; i < uteis.length; i++) {
+      for (let i = 0; i < diffs.length; i++) {
         const texto = await textos[i]
         if (!this.importacao.rodando) {
           return false
@@ -670,7 +668,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         for (const linha of texto.split('\n')) {
           if (linha.startsWith('+{')) {
             const registro = JSON.parse(linha.slice(1))
-            registro.versao = uteis[i].versao
+            registro.versao = diffs[i].versao
             incluir.push(registro)
           } else if (linha.startsWith('-{')) {
             saindo.push(parseInt(linha.slice(linha.indexOf(':') + 1)))
@@ -683,11 +681,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         etapa.alterados += incluir.length
         etapa.excluidos += excluir.length
         etapa.registros++
-        this.versao[chave] = uteis[i].versao
-        this.ultimaSincronizacao[chave] = dataDaVersao(uteis[i].versao)
+        this.versao[chave] = diffs[i].versao
+        this.ultimaSincronizacao[chave] = dataDaVersao(diffs[i].versao)
         this.atualizarProgresso()
       }
-      // os diffs vazios depois do ultimo util tambem contam: o local ja e' igual ao json atual
+      // rodada sem mudanca nao grava diff: depois do ultimo, o local ja e' igual ao json atual
       this.versao[chave] = atual.versao
       this.ultimaSincronizacao[chave] = dataDaVersao(atual.versao)
       return true
