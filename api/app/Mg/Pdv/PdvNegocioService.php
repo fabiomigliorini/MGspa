@@ -218,6 +218,14 @@ class PdvNegocioService
             unset($data['codusuario'], $data['lancamento'], $data['codpdv']);
         }
 
+        // negocio aberto de outro PDV so' muda de PDV pelo Apropriar (TASK-187)
+        if (!$reaberta && !empty($negocio->codpdv) && $negocio->codpdv != $pdv->codpdv) {
+            $codigo = '#' . str_pad($negocio->codpdv, 8, '0', STR_PAD_LEFT);
+            $apelido = $negocio->Pdv->apelido ?? null;
+            $outro = $apelido ? "{$codigo} ({$apelido})" : $codigo;
+            throw new Exception("Este negócio está aberto no PDV {$outro}! Para continuar nele aqui, use o Apropriar (botão vermelho).", 1);
+        }
+
         // importa os dados do negocio
         $negocio->fill($data);
         if (!$reaberta) {

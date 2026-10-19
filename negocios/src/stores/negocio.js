@@ -1726,6 +1726,22 @@ export const negocioStore = defineStore('negocio', {
 
     async sincronizar(uuid) {
       const negocio = await db.negocio.get(uuid)
+      // negócio aberto de outro PDV só muda de PDV pelo Apropriar (TASK-187)
+      if (
+        negocio?.codnegociostatus == 1 &&
+        !negocio.reabertura &&
+        negocio.codpdv &&
+        negocio.codpdv != sSinc.pdv.codpdv
+      ) {
+        Notify.create({
+          type: 'negative',
+          message:
+            'Este negócio está aberto em outro PDV! Para continuar nele aqui, use o Apropriar (botão vermelho).',
+          timeout: 3000, // 3 segundos
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
+      }
       let retorno = false
       try {
         const ret = await sSinc.putNegocio(negocio)
