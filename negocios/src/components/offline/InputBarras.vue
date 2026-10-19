@@ -1,5 +1,10 @@
 <script setup>
-import { formataNumero, formataNumeroInteligente, formataCodigo } from '@components/formatters'
+import {
+  formataNumero,
+  formataNumeroInteligente,
+  formataCodigo,
+  tempoRelativo,
+} from '@components/formatters'
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { produtoStore } from 'stores/produto'
@@ -13,7 +18,6 @@ import { conflitosComanda } from '../../utils/comanda.js'
 import { Notify, Dialog, debounce } from 'quasar'
 import { falar } from '../../utils/falar.js'
 import emitter from '../../utils/emitter.js'
-import moment from 'moment'
 import MgInput from '@components/MgInput.vue'
 
 const router = useRouter()
@@ -536,7 +540,7 @@ onUnmounted(() => {
                     {{ formataNumero(orc.valortotal) }}
                   </q-item-label>
                   <q-item-label caption>
-                    {{ moment(orc.lancamento).fromNow() }}
+                    {{ tempoRelativo(orc.lancamento) }}
                   </q-item-label>
                   <q-item-label caption> </q-item-label>
                 </q-item-section>

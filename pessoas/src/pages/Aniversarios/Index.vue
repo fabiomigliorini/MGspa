@@ -92,7 +92,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { pessoaStore } from 'src/stores/pessoa'
 
 // 3. Imports de utilitários
-import moment from 'moment'
+import { hoje, paraDate, somaAnos, somaDias } from '@components/utils/datas'
 
 // 4. Imports de componentes
 import MGLayout from 'layouts/MGLayout.vue'
@@ -103,7 +103,8 @@ const sPessoa = pessoaStore()
 
 // 6. Refs e computed
 const tipo = ref('todos')
-const date = ref(moment().format('YYYY/MM/DD'))
+// o q-date usa 'YYYY/MM/DD'; as contas, 'YYYY-MM-DD' (comparar o texto é comparar o dia)
+const date = ref(hoje().replaceAll('-', '/'))
 const aniversarios = ref([])
 const events = ref([])
 
@@ -114,44 +115,36 @@ const tipoOptions = [
   { label: 'Fornecedores', value: 'fornecedor' },
 ]
 
+// clicar de novo no dia selecionado limpa o calendário
+const diaSelecionado = computed(() => (date.value ? date.value.replaceAll('/', '-') : null))
+
 // Computed para aniversariantes do dia selecionado
 const aniversariosDoDia = computed(() => {
-  const dia = moment(date.value, 'YYYY/MM/DD')
+  const dia = paraDate(diaSelecionado.value)
+  if (!dia) return []
   return aniversarios.value.filter((a) => {
-    return a.dia == dia.date() && a.mes == dia.month() + 1
+    return a.dia == dia.getDate() && a.mes == dia.getMonth() + 1
   })
 })
 
 // Computed para últimos 7 dias (excluindo o dia selecionado)
 const ultimosAniversarios = computed(() => {
-  const dataSelecionada = moment(date.value, 'YYYY/MM/DD')
-  const dataInicio = moment(dataSelecionada).subtract(7, 'days')
+  const dataSelecionada = diaSelecionado.value
+  const dataInicio = somaDias(dataSelecionada, -7)
 
   return aniversarios.value
-    .filter((a) => {
-      const dataAniversario = moment(a.data, 'YYYY-MM-DD')
-      return (
-        dataAniversario.isBefore(dataSelecionada, 'day') &&
-        dataAniversario.isSameOrAfter(dataInicio, 'day')
-      )
-    })
-    .sort((a, b) => moment(b.data, 'YYYY-MM-DD').valueOf() - moment(a.data, 'YYYY-MM-DD').valueOf())
+    .filter((a) => a.data < dataSelecionada && a.data >= dataInicio)
+    .sort((a, b) => b.data.localeCompare(a.data))
 })
 
 // Computed para próximos 7 dias (excluindo o dia selecionado)
 const proximosAniversarios = computed(() => {
-  const dataSelecionada = moment(date.value, 'YYYY/MM/DD')
-  const dataFim = moment(dataSelecionada).add(7, 'days')
+  const dataSelecionada = diaSelecionado.value
+  const dataFim = somaDias(dataSelecionada, 7)
 
   return aniversarios.value
-    .filter((a) => {
-      const dataAniversario = moment(a.data, 'YYYY-MM-DD')
-      return (
-        dataAniversario.isAfter(dataSelecionada, 'day') &&
-        dataAniversario.isSameOrBefore(dataFim, 'day')
-      )
-    })
-    .sort((a, b) => moment(a.data, 'YYYY-MM-DD').valueOf() - moment(b.data, 'YYYY-MM-DD').valueOf())
+    .filter((a) => a.data > dataSelecionada && a.data <= dataFim)
+    .sort((a, b) => a.data.localeCompare(b.data))
 })
 
 // 7. Funções
@@ -161,17 +154,17 @@ const getAniversarios = async () => {
 
   const dates = []
   const arrAniversarios = []
-  const anoAtual = moment().year()
+  const anoAtual = new Date().getFullYear()
 
   dados.forEach((el) => {
-    const dataOriginal = moment(el.data, 'YYYY-MM-DD')
+    const dataOriginal = paraDate(el.data)
 
-    // Ajusta a data para o ano atual
-    const dataAnoAtual = dataOriginal.clone().year(anoAtual)
-    el.data = dataAnoAtual.format('YYYY-MM-DD')
-    el.dia = dataOriginal.date()
-    el.mes = dataOriginal.month() + 1
-    dates.push(dataAnoAtual.format('YYYY/MM/DD'))
+    // Ajusta a data para o ano atual (29/02 vira 28/02 fora do bissexto)
+    const dataAnoAtual = somaAnos(el.data, anoAtual - dataOriginal.getFullYear())
+    el.data = dataAnoAtual
+    el.dia = dataOriginal.getDate()
+    el.mes = dataOriginal.getMonth() + 1
+    dates.push(dataAnoAtual.replaceAll('-', '/'))
     arrAniversarios.push(el)
   })
 

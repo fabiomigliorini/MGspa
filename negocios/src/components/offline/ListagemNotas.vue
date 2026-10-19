@@ -5,12 +5,12 @@ import {
   formataCodigo,
   formataTimestampCompleto,
   formataNumeroNota,
+  tempoRelativo,
 } from '@components/formatters'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import { negocioStore } from 'stores/negocio'
-import moment from 'moment'
 
 const sNegocio = negocioStore()
 
@@ -155,7 +155,7 @@ defineExpose({
             {{ nota.filial?.filial }}
           </q-item-label>
           <q-item-label caption>
-            {{ moment(nota.saida).fromNow() }},
+            {{ tempoRelativo(nota.saida) }},
             {{ formataTimestampCompleto(nota.saida) }}
           </q-item-label>
         </q-item-section>

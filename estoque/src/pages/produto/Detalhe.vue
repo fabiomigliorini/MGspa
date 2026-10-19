@@ -8,6 +8,7 @@ import MgAutocomplete from 'src/components/MgAutocomplete.vue'
 import MgInput from '@components/MgInput.vue'
 import MgSelect from '@components/MgSelect.vue'
 import MgInputValor from '@components/MgInputValor.vue'
+import { formataData } from '@components/formatters'
 
 const route = useRoute()
 const $q = useQuasar()
@@ -19,7 +20,6 @@ const tab = ref('detalhes')
 
 const formataMoeda = (v) =>
   (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const formataData = (v) => (v ? new Date(v).toLocaleDateString('pt-BR') : '—')
 const formataNum = (v) => (Number(v) || 0).toLocaleString('pt-BR', { maximumFractionDigits: 3 })
 const abcColor = (abc) => ({ A: 'green-6', B: 'amber-7', C: 'blue-6', D: 'red-6' })[abc] || 'grey-6'
 const breadcrumb = (p) =>
@@ -983,7 +983,7 @@ onMounted(async () => {
               <tbody>
                 <tr v-for="n in negocios" :key="n.codnegocioprodutobarra">
                   <td>{{ n.codnegocio }}</td>
-                  <td>{{ formataData(n.lancamento) }}</td>
+                  <td>{{ formataData(n.lancamento) || '—' }}</td>
                   <td>{{ n.pessoa }}</td>
                   <td>{{ n.naturezaoperacao }}</td>
                   <td class="text-right">{{ formataNum(n.quantidade) }}</td>
@@ -1015,7 +1015,7 @@ onMounted(async () => {
               <tbody>
                 <tr v-for="n in notas" :key="n.codnotafiscalprodutobarra">
                   <td>{{ n.numero }}/{{ n.serie }}</td>
-                  <td>{{ formataData(n.saida) }}</td>
+                  <td>{{ formataData(n.saida) || '—' }}</td>
                   <td>{{ n.pessoa }}</td>
                   <td>{{ n.naturezaoperacao }}</td>
                   <td class="text-right">{{ formataNum(n.quantidade) }}</td>
@@ -1045,7 +1045,7 @@ onMounted(async () => {
               </thead>
               <tbody>
                 <tr v-for="c in compras" :key="c.codnfeterceiroitem">
-                  <td>{{ formataData(c.emissao) }}</td>
+                  <td>{{ formataData(c.emissao) || '—' }}</td>
                   <td>{{ c.xprod }}</td>
                   <td class="text-right">{{ formataNum(c.quantidadetotal) }}</td>
                   <td class="text-right">{{ formataMoeda(c.vuncom) }}</td>
@@ -1140,7 +1140,7 @@ onMounted(async () => {
                   <td>{{ w.variacao || '{Sem variação}' }}</td>
                   <td>{{ w.id }}{{ w.idvariation ? ' / ' + w.idvariation : '' }}</td>
                   <td>{{ w.integracao === 'P' ? 'Parcial' : 'Completa' }}</td>
-                  <td>{{ formataData(w.exportacao) }}</td>
+                  <td>{{ formataData(w.exportacao) || '—' }}</td>
                   <td>
                     <q-badge
                       :color="w.inativo ? 'grey-5' : 'green-6'"

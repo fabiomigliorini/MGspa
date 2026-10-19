@@ -14,6 +14,7 @@ import { ref, computed, nextTick } from 'vue'
 import { Notify, useQuasar } from 'quasar'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
 import { formataNumero } from '@components/formatters'
+import { hoje } from '@components/utils/datas'
 import MgInputValor from '@components/MgInputValor.vue'
 import ListaOpcoes from './cobranca/ListaOpcoes.vue'
 import FormaCartao from './cobranca/FormaCartao.vue'
@@ -349,16 +350,11 @@ const pagamentoDinheiro = computed(() => {
 // entrega: título único que vence no dia; compensação: sem dinheiro
 const direto = () => {
   if (formaAtual.value.valor === 'entrega') {
-    const d = new Date()
     parcelas([
       {
         condicao: CONDICAO.ENTREGA,
         numero: 1,
-        vencimento: [
-          d.getFullYear(),
-          String(d.getMonth() + 1).padStart(2, '0'),
-          String(d.getDate()).padStart(2, '0'),
-        ].join('-'),
+        vencimento: hoje(),
         valor: valor.value,
         juros: 0,
       },

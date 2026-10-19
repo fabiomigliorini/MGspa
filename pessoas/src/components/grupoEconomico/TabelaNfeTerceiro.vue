@@ -4,9 +4,9 @@ import { ref, watch, onMounted } from 'vue'
 import { useQuasar, debounce } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'src/stores/pessoa'
-import { formataData, formataDataIso } from '@components/formatters'
+import { formataData } from '@components/formatters'
+import { hoje, inicioAno, inicioMes, somaAnos } from '@components/utils/datas'
 import SelectPessoas from 'components/pessoa/SelectPessoas.vue'
-import moment from 'moment'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -16,7 +16,7 @@ const nfeTerceiro = ref([])
 const filter = ref('')
 const showFilter = ref(true)
 const modelPessoas = ref({
-  desde: formataDataIso(moment().subtract(1, 'year').startOf('month').toDate()),
+  desde: inicioMes(somaAnos(hoje(), -1)),
 })
 const pagination = ref({
   rowsPerPage: 5,
@@ -26,15 +26,15 @@ const pagination = ref({
 const opcoesDesde = [
   {
     label: 'Este Ano',
-    value: formataDataIso(moment().startOf('year').toDate()),
+    value: inicioAno(hoje()),
   },
   {
     label: '1 Ano',
-    value: formataDataIso(moment().subtract(1, 'year').startOf('month').toDate()),
+    value: inicioMes(somaAnos(hoje(), -1)),
   },
   {
     label: '2 Anos',
-    value: formataDataIso(moment().subtract(2, 'year').startOf('month').toDate()),
+    value: inicioMes(somaAnos(hoje(), -2)),
   },
   { label: 'Tudo', value: null },
 ]

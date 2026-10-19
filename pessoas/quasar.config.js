@@ -32,7 +32,7 @@ export default defineConfig((/* ctx */) => {
     // preFetch: true,
 
     // app boot file (/src/boot)
-    boot: ['axios', 'moment'],
+    boot: ['axios'],
 
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#css
     css: ['app.scss'],

@@ -11,7 +11,8 @@ import MgSelectPortador from '@components/MgSelectPortador.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import SeletorTitulosAbertos from '@components/MgSeletorTitulosAbertos.vue'
-import { formataNumero, formataDataIso } from '@components/formatters'
+import { formataNumero } from '@components/formatters'
+import { diasEntre, hoje, somaDias } from '@components/utils/datas'
 
 const route = useRoute()
 const router = useRouter()
@@ -36,7 +37,7 @@ const vencimentos = ref({
 })
 
 const finalizar = ref({
-  emissao: formataDataIso(new Date()),
+  emissao: hoje(),
   codpessoa: null,
   observacao: '',
 })
@@ -115,7 +116,7 @@ function calcularParcelas() {
   const primeira = Number(vencimentos.value.primeira) || 0
   const demais = Number(vencimentos.value.demais) || 0
   const total = totalLiquido.value
-  const dia = new Date()
+  let dia = hoje()
 
   const valores = []
   const datas = []
@@ -123,9 +124,8 @@ function calcularParcelas() {
   const valorBase = Math.floor((total / parcelas) * 100) / 100
 
   for (let i = 0; i < parcelas; i++) {
-    if (i === 0) dia.setDate(dia.getDate() + primeira)
-    else dia.setDate(dia.getDate() + demais)
-    datas.push(formataDataIso(new Date(dia)))
+    dia = somaDias(dia, i === 0 ? primeira : demais)
+    datas.push(dia)
     let v
     if (i === parcelas - 1) v = +(total - acumulado).toFixed(2)
     else {
@@ -159,16 +159,11 @@ function redistribuirValores() {
 function adicionarParcela() {
   const lista = vencimentos.value.parcelasGeradas
   const ultima = lista[lista.length - 1]
-  let baseDate
-  if (ultima) {
-    const [y, m, d] = ultima.vencimento.split('-').map(Number)
-    baseDate = new Date(y, m - 1, d)
-  } else {
-    baseDate = new Date()
-  }
-  baseDate.setDate(baseDate.getDate() + (Number(vencimentos.value.demais) || 0))
   lista.push({
-    vencimento: formataDataIso(baseDate),
+    vencimento: somaDias(
+      ultima ? ultima.vencimento : hoje(),
+      Number(vencimentos.value.demais) || 0,
+    ),
     valor: 0,
   })
   redistribuirValores()
@@ -206,23 +201,17 @@ function setValor(i, novo) {
   }
 }
 
-function dataEmissao() {
-  const [y, m, d] = finalizar.value.emissao.split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
-
 function getDias(i) {
   const p = vencimentos.value.parcelasGeradas[i]
   if (!p) return 0
-  const [y, m, d] = p.vencimento.split('-').map(Number)
-  const target = new Date(y, m - 1, d)
-  return Math.round((target - dataEmissao()) / 86400000)
+  return diasEntre(finalizar.value.emissao, p.vencimento)
 }
 
 function setDias(i, dias) {
-  const base = dataEmissao()
-  base.setDate(base.getDate() + (Number(dias) || 0))
-  vencimentos.value.parcelasGeradas[i].vencimento = formataDataIso(base)
+  vencimentos.value.parcelasGeradas[i].vencimento = somaDias(
+    finalizar.value.emissao,
+    Number(dias) || 0,
+  )
 }
 
 watch(dialogFinalizar, (v) => {

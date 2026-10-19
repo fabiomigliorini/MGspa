@@ -12,7 +12,8 @@
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
-import { formataNumero, formataTimestampIso } from '@components/formatters'
+import { formataNumero } from '@components/formatters'
+import { agora } from '@components/utils/datas'
 import MgPagamentoForm from '@components/MgPagamentoForm.vue'
 import MgSeletorTitulosAbertos from '@components/MgSeletorTitulosAbertos.vue'
 import MgCobrancaDialog from '@components/MgCobrancaDialog.vue'
@@ -73,12 +74,10 @@ const emit = defineEmits(['finalizado'])
 
 const sBaixa = baixaTitulosStore()
 
-const agora = () => formataTimestampIso(new Date()).slice(0, 16)
-
 const titulos = ref(props.inicial?.titulos ?? [])
 const codpessoaFiltro = ref(props.pix?.codpessoa ?? props.inicial?.codpessoa ?? null)
 const codpessoa = ref(props.inicial?.codpessoa ?? null)
-const transacao = ref(props.inicial?.transacao ?? agora())
+const transacao = ref(props.inicial?.transacao ?? agora(false))
 // a data só fica parada se a pessoa mexeu nela (ou se veio do pagamento duplicado)
 const transacaoMexida = ref(!!props.inicial?.transacao)
 const referente = ref(props.inicial?.referente ?? '')
@@ -189,7 +188,7 @@ watch(codpessoa, (v) => {
 // abre o diálogo com a hora de agora, se ninguém mexeu na data
 const abrirDialog = () => {
   if (!transacaoMexida.value) {
-    transacao.value = agora()
+    transacao.value = agora(false)
   }
   dialog.value = true
 }

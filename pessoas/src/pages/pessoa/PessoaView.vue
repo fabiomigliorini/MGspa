@@ -16,7 +16,7 @@ import CardArquivos from 'components/pessoa/CardArquivos.vue'
 import CardRegistroSpc from 'components/pessoa/CardRegistroSpc.vue'
 import CardCertidoes from 'components/pessoa/CardCertidoes.vue'
 import MGLayout from 'layouts/MGLayout.vue'
-import { formataFromNow } from '@components/formatters'
+import { tempoRelativo } from '@components/formatters'
 
 const route = useRoute()
 const sPessoa = pessoaStore()
@@ -64,7 +64,7 @@ watch(
               <div class="text-h5 text-grey-7">
                 {{ sPessoa.item.pessoa }}
                 <span v-if="sPessoa.item.inativo" class="text-negative">
-                  (Inativo {{ formataFromNow(sPessoa.item.inativo) }})
+                  (Inativo {{ tempoRelativo(sPessoa.item.inativo) }})
                 </span>
               </div>
             </q-item-section>

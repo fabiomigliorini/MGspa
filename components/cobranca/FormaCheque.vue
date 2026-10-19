@@ -7,6 +7,7 @@ import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
 import { formataData } from '@components/formatters'
+import { hoje } from '@components/utils/datas'
 import MgInputData from '@components/MgInputData.vue'
 import { parseCmc7 } from './cmc7.js'
 import MgInput from '@components/MgInput.vue'
@@ -23,7 +24,7 @@ const contas = computed(() => opcoesPortador(sCobranca, ['B']))
 
 const etapa = ref('cmc7')
 const cmc7Texto = ref('')
-const vencimento = ref(new Date().toISOString().substr(0, 10))
+const vencimento = ref(hoje())
 const cnpj = ref('')
 const emitente = ref('')
 const nomeRef = ref(null)
@@ -31,7 +32,6 @@ const nomeRef = ref(null)
 const valor = computed(() => sCobranca.valor)
 const consumidor = computed(() => entrada && sCobranca.consumidor)
 const cmc7 = computed(() => parseCmc7(cmc7Texto.value))
-const hoje = new Date().toISOString().substr(0, 10)
 
 // leitor termina em 30 dígitos: se online, puxa o último emitente dessa conta (melhor esforço)
 watch(
@@ -71,7 +71,7 @@ const confirmarCmc7 = () => {
 }
 
 const confirmarVencimento = () => {
-  if (!vencimento.value || vencimento.value < hoje) {
+  if (!vencimento.value || vencimento.value < hoje()) {
     avisar('Informe a data do cheque (hoje ou pré-datado)!')
     return
   }
@@ -175,7 +175,7 @@ defineExpose({ tecla })
 
     <template v-else-if="etapa === 'vencimento'">
       <div class="text-caption text-grey-7 q-mb-sm">Cheque nº {{ cmc7.numero }}</div>
-      <MgInputData v-model="vencimento" label="Bom para" :min="hoje" autofocus class="q-mb-sm" />
+      <MgInputData v-model="vencimento" label="Bom para" :min="hoje()" autofocus class="q-mb-sm" />
       <div class="text-caption text-grey-7">
         Hoje = à vista; data futura = pré-datado (fica no controle de cheques). Enter continua
       </div>

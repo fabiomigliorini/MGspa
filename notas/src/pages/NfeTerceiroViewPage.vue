@@ -15,7 +15,9 @@ import {
   formataData,
   formataNumero,
   formataChave,
+  formataTimestampIso,
 } from '@components/formatters'
+import { agora, hoje, somaDias } from '@components/utils/datas'
 
 const route = useRoute()
 const router = useRouter()
@@ -251,7 +253,7 @@ const handleCarregarIcmsSt = async () => {
 
 const handleGerarGuiaSt = () => {
   const defaultValor = icmsStData.value?.totais?.diferenca || 0
-  const defaultVencimento = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+  const defaultVencimento = somaDias(hoje(), 7)
 
   $q.dialog({
     title: 'Gerar Guia ST',
@@ -396,18 +398,15 @@ const handleMarcarTipoProduto = async () => {
   })
 }
 
-const toIsoMinuto = (date) => {
-  const pad = (n) => String(n).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`
-}
-
 const handleInformarEntrada = () => {
-  entradaModel.value = nfe.value.entrada ? toIsoMinuto(new Date(nfe.value.entrada)) : null
+  entradaModel.value = nfe.value.entrada
+    ? formataTimestampIso(nfe.value.entrada).slice(0, 16)
+    : null
   showEntradaDialog.value = true
 }
 
 const preencherAgora = () => {
-  entradaModel.value = toIsoMinuto(new Date())
+  entradaModel.value = agora(false)
 }
 
 const salvarEntrada = async () => {

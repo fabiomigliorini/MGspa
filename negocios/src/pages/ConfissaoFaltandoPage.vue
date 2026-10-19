@@ -1,15 +1,9 @@
 <script setup>
-import {
-  formataNumero,
-  formataDataIso,
-  formataHora,
-  formataDataCompleta,
-} from '@components/formatters'
+import { formataNumero, formataHora, formataDataCompleta } from '@components/formatters'
 import { onMounted, ref, watch } from 'vue'
 import { exportFile, Notify, Dialog } from 'quasar'
+import { fimMes, hoje, inicioMes, somaDias } from '@components/utils/datas'
 import { api } from 'src/services/api'
-
-import moment from 'moment'
 
 const anos = ref([])
 const ano = ref(null)
@@ -74,37 +68,34 @@ const colunasTabelaNegocios = [
 ]
 
 const inicializaAnosMeses = async () => {
-  ano.value = moment().year()
+  ano.value = new Date().getFullYear()
   let i = ano.value - 3
   do {
     anos.value.push(i)
     i++
   } while (i <= ano.value)
-  mes.value = moment().month() + 1
-  data.value = formataDataIso(new Date())
+  mes.value = new Date().getMonth() + 1
+  data.value = hoje()
   inicializaDiaInicialFinal()
 }
 
+// 1º dia do mês escolhido, 'YYYY-MM-DD' (comparar o texto é comparar o dia)
+const primeiroDia = () => `${ano.value}-${String(mes.value).padStart(2, '0')}-01`
+
 const inicializaDiaInicialFinal = () => {
-  const d = moment(new Date(ano.value, mes.value - 1, 1))
-  d.startOf('month')
+  const fim = fimMes(primeiroDia())
   datasDisponiveis.value = []
-  do {
-    datasDisponiveis.value.push(d.format('YYYY/MM/DD'))
-    d.add(1, 'day')
-  } while (d.month() + 1 == mes.value)
+  for (let d = primeiroDia(); d <= fim; d = somaDias(d, 1)) {
+    datasDisponiveis.value.push(d.replaceAll('-', '/'))
+  }
   decideDia()
   buscaFaltando()
 }
 
+// no mês corrente, hoje; nos outros, o último dia
 const decideDia = () => {
-  const d = moment(new Date(ano.value, mes.value - 1, 1))
-  const hj = moment()
-  if (d.year() == hj.year() && d.month() == hj.month()) {
-    data.value = hj.format('YYYY-MM-DD')
-    return
-  }
-  data.value = d.endOf('month').format('YYYY-MM-DD')
+  const d = primeiroDia()
+  data.value = d === inicioMes(hoje()) ? hoje() : fimMes(d)
 }
 
 const buscaFaltando = async () => {
@@ -113,7 +104,7 @@ const buscaFaltando = async () => {
     // datasFaltando.value = ret.data.resumo;
     datasFaltando.value = []
     ret.data.resumo.forEach((d) => {
-      datasFaltando.value.push(moment(d).format('YYYY/MM/DD'))
+      datasFaltando.value.push(d.replaceAll('-', '/'))
     })
     datas.value = ret.data.datas
     await detalhesDoDia()
@@ -213,7 +204,7 @@ const ignorar = (codnegocio) => {
       const ret = await api.post('/v1/negocio/' + codnegocio + '/ignorar-confissao')
       datasFaltando.value = []
       ret.data.resumo.forEach((d) => {
-        datasFaltando.value.push(moment(d).format('YYYY/MM/DD'))
+        datasFaltando.value.push(d.replaceAll('-', '/'))
       })
       datas.value = ret.data.datas
       await detalhesDoDia()

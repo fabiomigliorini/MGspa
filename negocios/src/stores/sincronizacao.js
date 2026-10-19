@@ -4,7 +4,8 @@ import { db } from 'boot/db'
 import { uid } from 'quasar'
 import { Platform } from 'quasar'
 import { Notify } from 'quasar'
-import moment from 'moment'
+import { formataDataIso } from '@components/formatters'
+import { hoje, paraDate } from '@components/utils/datas'
 
 // o negocio.js chama sincronizacaoStore() no topo do modulo: importar ele daqui de forma
 // estatica fecha um ciclo que quebra quando a sincronizacao carrega primeiro (Meu Dispositivo
@@ -321,7 +322,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
       const completa = this.ultimaSincronizacao.completa
-      if (completa && moment(completa).isSame(moment(), 'day')) {
+      if (completa && formataDataIso(completa) === hoje()) {
         return
       }
       if (!(await this.abrirJanela())) {
@@ -372,8 +373,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       // a completa carimba todos os registros com a versao dela e o diff so' os que mudaram: a
       // menor versao da tabela e' a da ultima completa
       const maisAntigo = await db[chave].orderBy('versao').first()
-      const limite = moment().subtract(DIAS_INCREMENTAL, 'days')
-      if (!maisAntigo || moment(dataDaVersao(maisAntigo.versao)).isBefore(limite)) {
+      const limite = Date.now() - DIAS_INCREMENTAL * 24 * 60 * 60 * 1000
+      if (!maisAntigo || paraDate(dataDaVersao(maisAntigo.versao)) < limite) {
         return false
       }
       const { data } = await api.get(`/v1/pdv/catalogo/${CATALOGO[chave].tabela}/versoes`, {

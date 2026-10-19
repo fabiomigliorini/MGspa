@@ -199,3 +199,21 @@ num diff é regressão.
 
 **Boot, router e store usam `#q-app/wrappers`** (`defineBoot`, `defineRouter`, `defineStore`).
 Os de `quasar/wrappers` são descontinuados desde o app-vite 2.
+
+## Datas — conta em `@components/utils/datas.js`, tela em `@components/formatters`
+
+**Conta com data é `@components/utils/datas.js`; mostrar data é o `@components/formatters`.**
+As funções recebem `'YYYY-MM-DD'`, `'YYYY-MM-DD HH:mm:ss'` (o formato da API e do `MgInputData`)
+ou `Date`, e devolvem `'YYYY-MM-DD'` no horário local: `hoje`, `agora`, `somaDias`, `somaMeses`,
+`somaAnos`, `inicioMes`, `fimMes`, `inicioAno`, `diasEntre`, `duracao`, `paraDate` e `lerDataBr`
+(o `'DD/MM/YYYY'` que as `:rules` recebem do `MgInputData`). Texto `'YYYY-MM-DD'` se compara com
+`<` e `>`. Conta de uma linha (ano atual, "faz mais de 4 horas?") fica em JavaScript puro.
+
+**Por que não `new Date(texto)`, `toISOString()` nem o `date` do Quasar.** Data sem hora
+(`'2026-10-18'`) é lida como meia-noite UTC — em Cuiabá, o dia 17 às 20h — e o `toISOString()`
+depois das 20h já é amanhã; o `date` do Quasar faz `new Date(texto)` por dentro e herda as duas.
+Por dentro o `datas.js` é `Date` puro, sem biblioteca: quando o Safari tiver o Temporal, troca o
+miolo dele e as telas nem percebem. O moment saiu do Negócios e do Pessoas na **TASK-243**
+(18/10/2026), e as cópias de "hoje", "agora", início/fim de mês e dias entre datas dos seis apps
+foram para o `datas.js`: `moment`, `date` do Quasar ou `toISOString().slice(0, 10)` que aparecer
+num diff é regressão.

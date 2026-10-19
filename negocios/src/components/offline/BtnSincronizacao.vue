@@ -1,13 +1,14 @@
 <script setup>
 import { computed } from 'vue'
 import { Notify } from 'quasar'
+import { tempoRelativo } from '@components/formatters'
+import { paraDate } from '@components/utils/datas'
 import {
   sincronizacaoStore,
   DISPOSITIVO_NAO_CADASTRADO,
   DISPOSITIVO_INATIVO,
 } from 'stores/sincronizacao'
 import DialogSincronizacao from './DialogSincronizacao.vue'
-import moment from 'moment'
 
 const sSinc = sincronizacaoStore()
 
@@ -40,7 +41,8 @@ const btnSincronizarColor = computed({
     if (!sSinc.ultimaSincronizacao.completa) {
       return 'red-4'
     }
-    if (moment(sSinc.ultimaSincronizacao.completa).isAfter(moment().subtract(4, 'hours'))) {
+    // até 4 horas depois da última completa o botão fica na cor normal
+    if (Date.now() - paraDate(sSinc.ultimaSincronizacao.completa) < 4 * 60 * 60 * 1000) {
       return null
     }
     return 'red-4'
@@ -69,7 +71,7 @@ const btnSincronizarColor = computed({
       </template>
       <template v-else>
         Ultima Sincronização
-        {{ moment(sSinc.ultimaSincronizacao.completa).fromNow() }}
+        {{ tempoRelativo(sSinc.ultimaSincronizacao.completa) }}
       </template>
     </q-tooltip>
   </q-btn>

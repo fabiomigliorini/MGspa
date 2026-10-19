@@ -80,15 +80,14 @@ function reabrir() {
 }
 
 // ---- início e fim ----
-const iso = (d) => formataTimestampIso(d ? new Date(d) : new Date())
 const dialogDatas = ref(false)
 const datas = ref({ inicio: null, fim: null, observacoes: null })
 
 function prepararDatas() {
   const p = periodo.value
   datas.value = {
-    inicio: iso(p.abertura),
-    fim: p.fim ? iso(p.fim) : null,
+    inicio: formataTimestampIso(p.abertura),
+    fim: p.fim ? formataTimestampIso(p.fim) : null,
     observacoes: p.observacoes,
   }
   dialogDatas.value = true

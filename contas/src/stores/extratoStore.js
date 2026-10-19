@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import { date } from 'quasar'
+import { formataData, formataMesAno } from '@components/formatters'
+import { paraDate, inicioMes, fimMes } from '@components/utils/datas'
 import { api } from 'src/services/api'
 import { notifyError, notifySuccess } from 'src/utils/notify'
 
@@ -26,14 +27,14 @@ export const useExtratoStore = defineStore('extrato', () => {
 
   const diasDoMes = computed(() => {
     const dias = new Set()
-    extratos.value.forEach((e) => dias.add(date.formatDate(e.transacao, 'DD')))
+    extratos.value.forEach((e) => dias.add(formataData(e.transacao, 0).slice(0, 2)))
     return Array.from(dias).sort()
   })
 
   const anosDisponiveis = computed(() => {
-    if (!intervalo.value) return []
-    const inicio = new Date(intervalo.value.primeira_data).getFullYear()
-    const fim = new Date(intervalo.value.ultima_data).getFullYear()
+    if (!intervalo.value?.primeira_data) return []
+    const inicio = paraDate(intervalo.value.primeira_data).getFullYear()
+    const fim = paraDate(intervalo.value.ultima_data).getFullYear()
     const arr = []
     for (let a = inicio; a <= fim; a++) arr.push(String(a))
     return arr
@@ -41,14 +42,15 @@ export const useExtratoStore = defineStore('extrato', () => {
 
   const mesesDisponiveis = computed(() => {
     if (!intervalo.value || !ano.value) return []
-    const inicio = date.startOfDate(intervalo.value.primeira_data, 'month')
-    const fim = date.endOfDate(intervalo.value.ultima_data, 'month')
+    // 'YYYY-MM-DD': comparar o texto é comparar a data
+    const inicio = inicioMes(intervalo.value.primeira_data)
+    const fim = fimMes(intervalo.value.ultima_data)
     const out = []
     for (let m = 1; m <= 12; m++) {
       const mm = String(m).padStart(2, '0')
-      const ref = date.extractDate(`${ano.value}-${mm}-01`, 'YYYY-MM-DD')
-      if (date.isBetweenDates(ref, inicio, fim, { inclusiveFrom: true, inclusiveTo: true })) {
-        out.push({ value: mm, label: date.formatDate(ref, 'MMM').toUpperCase() })
+      const ref = `${ano.value}-${mm}-01`
+      if (ref >= inicio && ref <= fim) {
+        out.push({ value: mm, label: formataMesAno(ref, 0).toUpperCase() })
       }
     }
     return out

@@ -4,6 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useExtratoStore } from 'src/stores/extratoStore'
 import FilterDrawerShell from 'src/components/FilterDrawerShell.vue'
 import FilterGroup from 'src/components/FilterGroup.vue'
+import { inicioMes, fimMes } from '@components/utils/datas'
 
 const store = useExtratoStore()
 const router = useRouter()
@@ -24,14 +25,14 @@ function onAnoChange(ano) {
 
 function mesesDoAno(ano) {
   if (!store.intervalo) return []
-  const inicio = new Date(store.intervalo.primeira_data)
-  const fim = new Date(store.intervalo.ultima_data)
+  // 'YYYY-MM-DD': comparar o texto é comparar a data
+  const inicio = inicioMes(store.intervalo.primeira_data)
+  const fim = fimMes(store.intervalo.ultima_data)
   const out = []
   for (let m = 1; m <= 12; m++) {
-    const ref = new Date(Number(ano), m - 1, 1)
-    if (ref >= new Date(inicio.getFullYear(), inicio.getMonth(), 1) && ref <= fim) {
-      out.push(String(m).padStart(2, '0'))
-    }
+    const mm = String(m).padStart(2, '0')
+    const ref = `${ano}-${mm}-01`
+    if (ref >= inicio && ref <= fim) out.push(mm)
   }
   return out
 }

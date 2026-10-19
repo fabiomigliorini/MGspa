@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import inutilizacaoService from '../services/inutilizacaoService'
 import notaFiscalService from '../services/notaFiscalService'
+import { inicioMes } from '@components/utils/datas'
 
 /**
  * A data que posiciona a faixa no tempo.
@@ -12,18 +13,6 @@ import notaFiscalService from '../services/notaFiscalService'
  * coalesce para agrupar e ordenar (InutilizacaoService::anos).
  */
 export const dataEfetiva = (faixa) => faixa?.protocolodata || faixa?.criacao
-
-/**
- * Chave YYYY-MM-01 do mes, no fuso LOCAL.
- *
- * Nao da para fatiar a string do JSON: o backend serializa em UTC (uma inutilizacao de
- * 28/12 23:00 vira "2018-12-29T02:00:00Z"), entao o corte cru jogaria os registros do fim
- * do mes para o mes seguinte — e os de 31/12 para o ano seguinte, num card fora da aba.
- */
-const mesLocal = (data) => {
-  const d = new Date(data)
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
-}
 
 export const useInutilizacaoStore = defineStore('inutilizacao', {
   state: () => ({
@@ -46,7 +35,9 @@ export const useInutilizacaoStore = defineStore('inutilizacao', {
       const meses = new Map()
 
       state.faixas.forEach((faixa) => {
-        const mes = mesLocal(dataEfetiva(faixa))
+        // chave YYYY-MM-01 no fuso LOCAL: fatiar a string do JSON não dá, o backend serializa em
+        // UTC (28/12 23:00 vira "2018-12-29T02:00:00Z") e o fim do mês iria para o mês seguinte
+        const mes = inicioMes(dataEfetiva(faixa))
         if (!meses.has(mes)) {
           meses.set(mes, { mes, modelos: new Map(), totalFaixas: 0, totalNumeros: 0 })
         }

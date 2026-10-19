@@ -23,6 +23,7 @@
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
+import { hoje } from '@components/utils/datas'
 
 const avisar = (error) => {
   console.log(error)
@@ -32,15 +33,6 @@ const avisar = (error) => {
     timeout: 3000, // 3 segundos
     actions: [{ icon: 'close', color: 'white' }],
   })
-}
-
-const hoje = () => {
-  const d = new Date()
-  return [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
 }
 
 export const cobrancaStore = defineStore('cobranca', {

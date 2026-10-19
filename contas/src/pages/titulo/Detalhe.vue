@@ -10,6 +10,7 @@ import {
   formataNumeroNota,
   formataCodigo,
 } from '@components/formatters'
+import { diasEntre, hoje } from '@components/utils/datas'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useAuthStore } from 'src/stores/auth'
 import { PERMISSOES } from 'src/constants/permissoes'
@@ -284,12 +285,6 @@ const urlNotaFiscal = (codnotafiscal) =>
   codnotafiscal ? `${process.env.NOTAS_URL}/nota/${codnotafiscal}` : null
 
 // === Estilos derivados ===
-// Parseia YYYY-MM-DD como data local (evita o offset UTC do `new Date(string)`).
-function parseDateLocal(s) {
-  if (!s) return null
-  const [y, m, d] = String(s).slice(0, 10).split('-').map(Number)
-  return new Date(y, m - 1, d)
-}
 
 const movimentosOrdenados = computed(() => {
   const lista = titulo.value?.movimentos
@@ -322,11 +317,8 @@ const movimentosVisiveis = computed(() =>
 
 const classeVencimento = computed(() => {
   if (!titulo.value || Number(titulo.value.saldo) === 0) return 'text-grey-6'
-  const venc = parseDateLocal(titulo.value.vencimento)
-  if (!venc) return 'text-grey-6'
-  const hojeD = new Date()
-  hojeD.setHours(0, 0, 0, 0)
-  const atraso = Math.floor((hojeD - venc) / 86400000)
+  const atraso = diasEntre(titulo.value.vencimento, hoje())
+  if (atraso === null) return 'text-grey-6'
   if (atraso > 5) return 'text-red'
   if (atraso > 0) return 'text-orange'
   return 'text-green'

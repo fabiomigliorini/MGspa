@@ -5,6 +5,7 @@ import { api } from 'src/services/api'
 import { goBack } from 'src/utils/goBack'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInput from '@components/MgInput.vue'
+import { formataData } from '@components/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -20,7 +21,6 @@ const model = ref(null)
 const codFormatado = (v) => '#' + String(v).padStart(6, '0')
 const formataMoeda = (v) =>
   (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const formataData = (v) => (v ? new Date(v).toLocaleDateString('pt-BR') : '—')
 
 const carregar = async () => {
   loading.value = true
@@ -220,7 +220,7 @@ onMounted(carregar)
               </div>
               <div class="col-6 col-sm-3">
                 <div class="text-caption text-grey-6">Última compra</div>
-                <div class="text-subtitle1">{{ formataData(marca.dataultimacompra) }}</div>
+                <div class="text-subtitle1">{{ formataData(marca.dataultimacompra) || '—' }}</div>
               </div>
               <div class="col-6 col-sm-3">
                 <div class="text-caption text-grey-6">Estoque (dias)</div>

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { api } from 'src/services/api'
+import { hoje as dataDeHoje } from '@components/utils/datas'
 
 export const useTributacaoStore = defineStore('tributacao', {
   persist: {
@@ -80,7 +81,7 @@ export const useTributacaoStore = defineStore('tributacao', {
         if (value !== null && value !== '') {
           // Converte o filtro de vigência para o formato esperado pelo backend
           if (key === 'vigencia') {
-            const hoje = new Date().toISOString().split('T')[0] // YYYY-MM-DD
+            const hoje = dataDeHoje()
 
             if (value === 'vigente') {
               // Vigentes hoje

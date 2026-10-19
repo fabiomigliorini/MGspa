@@ -1,8 +1,7 @@
-import { formataTimestampIso } from '@components/formatters'
+import { hoje, somaDias } from '@components/utils/datas'
 import { defineStore } from 'pinia'
 import { api } from 'src/services/api'
 import { Notify } from 'quasar'
-import moment from 'moment'
 import { negocioStore } from './negocio'
 import { sincronizacaoStore } from './sincronizacao'
 
@@ -90,8 +89,8 @@ export const listagemStore = defineStore('listagem', {
       }
       const filtro = {
         codnegocio: null,
-        lancamento_de: moment().subtract(7, 'd').startOf('day').format('YYYY-MM-DD HH:mm'),
-        lancamento_ate: formataTimestampIso(moment().endOf('day').toDate()),
+        lancamento_de: `${somaDias(hoje(), -7)} 00:00`,
+        lancamento_ate: `${hoje()} 23:59:59`,
         codestoquelocal: sNegocio.padrao.codestoquelocal,
         codusuario: null,
         codnegociostatus: null,

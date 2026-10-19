@@ -15,7 +15,7 @@ import { ouvir } from '@components/cobranca/eventos.js'
 import { abrirCobrancaIntegrada } from '@components/cobranca/integrada.js'
 import PagamentoDialog from 'components/offline/PagamentoDialog.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import { formataFromNow, formataNumero } from '@components/formatters'
+import { tempoRelativo, formataNumero } from '@components/formatters'
 import emitter from '../../utils/emitter.js'
 import {
   CONDICOES,
@@ -268,7 +268,7 @@ const resumoPedido = (ped) =>
   [
     ped.parcelas > 1 ? `${ped.parcelas}x ${formataNumero(ped.valorparcela)}` : null,
     `POS ${ped.apelido}`,
-    formataFromNow(ped.criacao),
+    tempoRelativo(ped.criacao),
   ]
     .filter(Boolean)
     .join(' · ')
@@ -288,7 +288,7 @@ const cobrancas = computed(() => {
       titulo: 'PIX',
       status: c.status,
       valor: c.valororiginal,
-      resumo: formataFromNow(c.criacao),
+      resumo: tempoRelativo(c.criacao),
       abrir: () => dialogDetalhesPixCob(c),
     }))
   const pedido = (ped, chave, abrir) => ({

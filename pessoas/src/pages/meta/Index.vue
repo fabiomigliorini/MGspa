@@ -4,6 +4,7 @@ import { useQuasar } from 'quasar'
 import { useRouter } from 'vue-router'
 import { metaStore } from 'src/stores/meta'
 import { formataData } from '@components/formatters'
+import { inicioMes, somaDias, somaMeses } from '@components/utils/datas'
 import MGLayout from 'layouts/MGLayout.vue'
 import MgInputData from '@components/MgInputData.vue'
 
@@ -16,31 +17,16 @@ const dialogNovaMeta = ref(false)
 const loadingNovaMeta = ref(false)
 const modelNovaMeta = ref({ periodoinicial: '', periodofinal: '' })
 
-const formatDTLocal = (date, hours, minutes) => {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  const h = String(hours).padStart(2, '0')
-  const min = String(minutes).padStart(2, '0')
-  return `${y}-${m}-${d} ${h}:${min}`
-}
-
 const abrirNovaMeta = () => {
   let pi = ''
   let pf = ''
 
-  const ultima = sMeta.listagem[0]
-  if (ultima?.periodofinal) {
-    const partes = String(ultima.periodofinal).match(/^(\d{4})-(\d{2})-(\d{2})/)
-    if (partes) {
-      const lastEnd = new Date(parseInt(partes[1]), parseInt(partes[2]) - 1, parseInt(partes[3]))
-      const nextDay = new Date(lastEnd)
-      nextDay.setDate(nextDay.getDate() + 1)
-      pi = formatDTLocal(nextDay, 0, 0)
-
-      const endDate = new Date(nextDay.getFullYear(), nextDay.getMonth() + 1, 25)
-      pf = formatDTLocal(endDate, 23, 59)
-    }
+  // a nova começa no dia seguinte ao fim da última
+  const inicio = somaDias(sMeta.listagem[0]?.periodofinal, 1)
+  if (inicio) {
+    pi = `${inicio} 00:00`
+    // até o dia 25 do mês seguinte
+    pf = `${somaMeses(inicioMes(inicio), 1).slice(0, 7)}-25 23:59`
   }
 
   modelNovaMeta.value = { periodoinicial: pi, periodofinal: pf }

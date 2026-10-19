@@ -1,8 +1,9 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted } from 'vue'
-import { date, Notify } from 'quasar'
+import { Notify } from 'quasar'
 import { formataMesAno } from '@components/formatters'
+import { hoje, inicioMes, somaMeses } from '@components/utils/datas'
 import { useDominioStore } from '../stores/dominioStore'
 import dominioService from '../services/dominioService'
 import { notificarErro } from '../utils/notify'
@@ -12,7 +13,7 @@ const store = useDominioStore()
 
 const tab = ref('export')
 // Mês default = primeiro dia do mês anterior (formato YYYY-MM-DD)
-const mes = ref(date.formatDate(date.subtractFromDate(Date.now(), { months: 1 }), 'YYYY-MM-01'))
+const mes = ref(inicioMes(somaMeses(hoje(), -1)))
 
 const empresas = computed(() => store.empresas)
 const loading = computed(() => store.loading)

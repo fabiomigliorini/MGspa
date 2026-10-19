@@ -5,6 +5,7 @@ import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInput from '@components/MgInput.vue'
+import { inicioMes, fimMes } from '@components/utils/datas'
 
 // Form único de novo/editar contrato (recebe :cad). Cultura e safra não
 // aparecem: o contrato vive dentro da safra, então o pai força esse vínculo
@@ -48,16 +49,6 @@ const comissaoTotal = computed(() => {
   }
 })
 
-// Datas ISO (YYYY-MM-DD): primeiro e último dia do mês.
-function inicioDoMes(iso) {
-  return `${String(iso).slice(0, 7)}-01`
-}
-function fimDoMes(iso) {
-  const [a, m] = String(iso).slice(0, 10).split('-').map(Number)
-  const ultimo = new Date(a, m, 0).getDate()
-  return `${a}-${String(m).padStart(2, '0')}-${String(ultimo).padStart(2, '0')}`
-}
-
 // Auto-completa o par de embarque SÓ na digitação do usuário (não na carga da
 // edição, que antes disparava watcher e mexia no dado gravado): ao escolher um
 // lado com o OUTRO vazio, sugere o mês inteiro. Um lado invertido NÃO é corrigido
@@ -65,13 +56,13 @@ function fimDoMes(iso) {
 function onEmbarqueInicio(val) {
   cad.value.form.embarqueinicio = val
   if (val && !cad.value.form.embarquefim) {
-    cad.value.form.embarquefim = fimDoMes(val)
+    cad.value.form.embarquefim = fimMes(val)
   }
 }
 function onEmbarqueFim(val) {
   cad.value.form.embarquefim = val
   if (val && !cad.value.form.embarqueinicio) {
-    cad.value.form.embarqueinicio = inicioDoMes(val)
+    cad.value.form.embarqueinicio = inicioMes(val)
   }
 }
 

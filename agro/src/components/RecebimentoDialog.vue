@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifyError } from 'src/utils/notify'
 import { formataReal } from '@components/formatters'
+import { hoje } from '@components/utils/datas'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
@@ -28,7 +29,6 @@ function n(v) {
   return Number(v) || 0
 }
 const rs = formataReal
-const hojeIso = computed(() => new Date().toISOString().slice(0, 10))
 const saldo = computed(() => Math.max(0, n(props.fixacao?.saldoreceber)))
 
 const form = ref({ data: '', valor: null, codportador: null, observacao: '', encerrar: false })
@@ -46,7 +46,7 @@ function abrir() {
     return
   }
   form.value = {
-    data: hojeIso.value,
+    data: hoje(),
     valor: Math.round(saldo.value * 100) / 100, // pré-preenche com o saldo (total)
     codportador: null,
     observacao: '',
@@ -100,7 +100,7 @@ async function salvar() {
                 v-model="form.data"
                 label="Data"
                 type="date"
-                :max="hojeIso"
+                :max="hoje()"
                 lazy-rules
                 :rules="[(v) => !!v || 'Informe a data']"
               />

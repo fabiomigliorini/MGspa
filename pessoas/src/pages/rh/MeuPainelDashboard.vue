@@ -3,7 +3,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
-import { formataData, formataFromNow } from '@components/formatters'
+import { formataData, tempoRelativo } from '@components/formatters'
 import {
   corProgresso,
   tipoIndicadorLabel,
@@ -134,7 +134,7 @@ watch(
           <div class="text-caption text-grey" v-if="setorNome">{{ setorNome }}</div>
           <div class="text-caption text-grey" v-if="colaborador.colaborador?.contratacao">
             Contratação: {{ formataData(colaborador.colaborador.contratacao) }} ({{
-              formataFromNow(colaborador.colaborador.contratacao)
+              tempoRelativo(colaborador.colaborador.contratacao)
             }})
           </div>
         </q-item-section>

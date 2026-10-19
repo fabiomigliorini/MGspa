@@ -14,6 +14,7 @@ import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { getModeloLabel } from 'src/constants/notaFiscal'
 import { formataNumeroNota } from '@components/formatters'
+import { agora } from '@components/utils/datas'
 import { validarChaveNFe } from 'src/utils/validators'
 
 const router = useRouter()
@@ -22,20 +23,8 @@ const $q = useQuasar()
 const notaFiscalStore = useNotaFiscalStore()
 const filialStore = useSelectFilialStore()
 
-// Normaliza datetime para formato YYYY-MM-DD HH:mm:ss (aceita Date, string ISO com T, ou string com espaço)
-const normalizeIsoDateTime = (val) => {
-  if (!val) return null
-  if (val instanceof Date) {
-    const y = val.getFullYear()
-    const m = String(val.getMonth() + 1).padStart(2, '0')
-    const d = String(val.getDate()).padStart(2, '0')
-    const h = String(val.getHours()).padStart(2, '0')
-    const min = String(val.getMinutes()).padStart(2, '0')
-    const s = String(val.getSeconds()).padStart(2, '0')
-    return `${y}-${m}-${d} ${h}:${min}:${s}`
-  }
-  return String(val).replace('T', ' ')
-}
+// Normaliza datetime para formato YYYY-MM-DD HH:mm:ss (string ISO com T ou com espaço)
+const normalizeIsoDateTime = (val) => (val ? String(val).replace('T', ' ') : null)
 
 // Converte ISO com espaço para ISO com T para enviar ao backend
 const toIsoWithT = (iso) => {
@@ -154,8 +143,8 @@ const loadFormData = async () => {
     serie: 1,
     numero: 0,
     nfechave: null,
-    emissao: normalizeIsoDateTime(new Date()),
-    saida: normalizeIsoDateTime(new Date()),
+    emissao: agora(),
+    saida: agora(),
     cpf: null,
     valordesconto: null,
     valorfrete: null,

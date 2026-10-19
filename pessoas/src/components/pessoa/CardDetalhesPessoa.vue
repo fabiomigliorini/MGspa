@@ -14,8 +14,8 @@ import {
   formataTitulo,
   formataCnpj,
   formataCodigo,
-  verificaIdade,
 } from '@components/formatters'
+import { verificaIdade } from '@components/utils/datas'
 import { useAuthStore } from 'stores/index'
 import SelectGrupoEconomico from '@components/MgSelectGrupoEconomico.vue'
 import SelectCidade from '@components/MgSelectCidade.vue'

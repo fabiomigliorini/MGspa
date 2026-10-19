@@ -2,9 +2,9 @@
 import MgInput from '@components/MgInput.vue'
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { date } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero, formataData, formataDataIso } from '@components/formatters'
+import { formataNumero, formataData } from '@components/formatters'
+import { hoje, somaDias } from '@components/utils/datas'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import PessoaInfo from 'src/components/PessoaInfo.vue'
@@ -42,9 +42,6 @@ const step = ref(STEP.FILIAL)
 const carregando = ref(true)
 const saving = ref(false)
 
-const hoje = () => formataDataIso(new Date())
-const hojeMais30 = () => formataDataIso(date.addToDate(new Date(), { days: 30 }))
-
 const model = ref({
   codfilial: null,
   gerencial: null,
@@ -54,7 +51,7 @@ const model = ref({
   codpessoa: null,
   valor: null,
   emissao: hoje(),
-  vencimento: hojeMais30(),
+  vencimento: somaDias(hoje(), 30),
   observacao: '',
 })
 
@@ -365,7 +362,7 @@ async function carregarDuplicar(id) {
       codpessoa: t.codpessoa,
       valor: t.valor != null ? Math.abs(t.valor) : null,
       emissao: hoje(),
-      vencimento: hojeMais30(),
+      vencimento: somaDias(hoje(), 30),
       observacao: t.observacao || '',
     }
     labels.value = {

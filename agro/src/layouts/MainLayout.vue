@@ -1,6 +1,6 @@
 <script setup>
 import { ref, computed } from 'vue'
-import { date } from 'quasar'
+import { formataHora } from '@components/formatters'
 import MgUserMenu from '@components/MgUserMenu.vue'
 import MgAppFooter from '@components/MgAppFooter.vue'
 import MgAppsMenu from '@components/MgAppsMenu.vue'
@@ -33,7 +33,7 @@ useSincronizacaoAutomatica()
 const carga = useCargaStore()
 const sinc = useSincronizacaoStore()
 const estadoSync = computed(() => {
-  const hora = sinc.ultimoCiclo ? ` Última: ${date.formatDate(sinc.ultimoCiclo, 'HH:mm')}.` : ''
+  const hora = sinc.ultimoCiclo ? ` Última: ${formataHora(sinc.ultimoCiclo)}.` : ''
   if (sinc.sincronizando) return { icon: 'cloud_sync', color: 'white', dica: 'Sincronizando…' }
   if (!sinc.online) {
     return {

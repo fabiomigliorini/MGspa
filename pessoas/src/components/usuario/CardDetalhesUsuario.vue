@@ -1,13 +1,12 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
-import { formataTimestamp, formataDataAbreviada } from '@components/formatters'
+import { formataTimestamp, formataDataAbreviada, tempoRelativo } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import { ref } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRouter, useRoute } from 'vue-router'
 import { usuarioStore } from 'src/stores/usuario'
 import { useAuthStore } from 'src/stores'
-import moment from 'moment'
 
 const $q = useQuasar()
 const router = useRouter()
@@ -241,7 +240,7 @@ const ativar = async (codusuario) => {
         <q-item-section>
           <q-item-label class="ellipsis text-caption">
             {{ formataDataAbreviada(sUsuario.detalheUsuarios.ultimoacesso, 4) }}
-            - {{ moment(sUsuario.detalheUsuarios.ultimoacesso).fromNow() }}
+            - {{ tempoRelativo(sUsuario.detalheUsuarios.ultimoacesso) }}
           </q-item-label>
           <q-item-label caption>Último acesso</q-item-label>
         </q-item-section>

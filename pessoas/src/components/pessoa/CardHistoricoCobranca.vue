@@ -5,7 +5,7 @@ import { useQuasar, debounce } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
 import { useAuthStore } from 'src/stores'
-import { formataFromNow } from '@components/formatters'
+import { tempoRelativo } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 
 const $q = useQuasar()
@@ -231,7 +231,7 @@ watch(
               </q-item-label>
 
               <q-item-label caption>
-                {{ formataFromNow(historico.criacao) }}
+                {{ tempoRelativo(historico.criacao) }}
               </q-item-label>
             </q-item-section>
 

@@ -4,6 +4,7 @@ import { api } from 'src/services/api'
 import { notifyError } from 'src/utils/notify'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
+import { hoje } from '@components/utils/datas'
 import MgSelectMoeda from '@components/MgSelectMoeda.vue'
 
 // Modal de valores + impostos da fixação. O operador informa o preço (na moeda),
@@ -67,7 +68,6 @@ const maxQuantidade = computed(() =>
   semTeto.value || disponivelFixar.value == null ? null : disponivelFixar.value,
 )
 const dataContrato = computed(() => (props.contrato?.datacontrato || '').slice(0, 10))
-const hojeIso = computed(() => new Date().toISOString().slice(0, 10))
 // O MgInputData passa às :rules o valor de DISPLAY (BR "dd/mm/aaaa"), não o ISO —
 // então a FAIXA (não antes do contrato / não no futuro) é garantida pelo :min/
 // :max (clamp), e aqui só exigimos o preenchimento.
@@ -179,7 +179,7 @@ async function abrir() {
   }
   const real = moedas.value.find((m) => m.iso === 'BRL')
   form.value = {
-    data: dataContrato.value || hojeIso.value,
+    data: dataContrato.value || hoje(),
     datavencimento: '',
     quantidade: maxQuantidade.value,
     codmoeda: real?.codmoeda ?? null,
@@ -250,7 +250,7 @@ async function salvar() {
                 label="Data da fixação"
                 type="date"
                 :min="dataContrato || null"
-                :max="hojeIso"
+                :max="hoje()"
                 lazy-rules
                 :rules="dataRules"
               />

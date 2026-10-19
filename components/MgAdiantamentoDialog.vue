@@ -13,7 +13,8 @@ import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
-import { formataNumero, formataDataIso, formataTimestampIso } from '@components/formatters'
+import { formataNumero, formataDataIso } from '@components/formatters'
+import { agora } from '@components/utils/datas'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -55,12 +56,11 @@ const daquiA30Dias = () => {
 
 // data de outro mês avisa (DIMP e relatórios já apurados), sem bloquear
 const trocaMes = computed(
-  () => !!form.value.transacao && form.value.transacao.slice(0, 7) !== agora().slice(0, 7),
+  () => !!form.value.transacao && form.value.transacao.slice(0, 7) !== agora(false).slice(0, 7),
 )
 
 // a data de quando abriu; o que está no campo é o que vai
-const agora = () => formataTimestampIso(new Date()).slice(0, 16)
-const transacaoAbertura = ref(agora())
+const transacaoAbertura = ref(agora(false))
 
 const vazio = () => ({
   codtipotitulo: null,
@@ -115,7 +115,7 @@ watch(
   () => props.modelValue,
   async (aberto) => {
     if (!aberto) return
-    transacaoAbertura.value = agora()
+    transacaoAbertura.value = agora(false)
     form.value = vazio()
     sBaixa.iniciar({ pessoa: null, titulos: [] })
     await carregarTipos()

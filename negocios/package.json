@@ -20,7 +20,6 @@
     "dexie": "^3.2.4",
     "jsbarcode": "^3.11.6",
     "mitt": "^3.0.1",
-    "moment": "^2.29.4",
     "pinia": "^3.0.1",
     "pinia-plugin-persistedstate": "^4.7.1",
     "qrcode": "^1.5.4",

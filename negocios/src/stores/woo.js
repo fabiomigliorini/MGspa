@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
 import { api } from 'src/services/api'
 import { Notify } from 'quasar'
+import { formataData } from '@components/formatters'
+import { hoje, somaDias } from '@components/utils/datas'
 import { unionBy, orderBy } from 'lodash'
 import { negocioStore } from './negocio'
 import { sincronizacaoStore } from './sincronizacao'
-import moment from 'moment'
 const sNegocio = negocioStore()
 const sSinc = sincronizacaoStore()
 
@@ -126,8 +127,8 @@ export const wooStore = defineStore('woo', {
         id: null,
         nome: null,
         status: [],
-        criacaowoo_de: moment().subtract(7, 'd').startOf('day').format('DD/MM/YYYY'),
-        criacaowoo_ate: moment().endOf('day').format('DD/MM/YYYY'),
+        criacaowoo_de: formataData(somaDias(hoje(), -7)),
+        criacaowoo_ate: formataData(hoje()),
         valortotal_de: null,
         valortotal_ate: null,
       }

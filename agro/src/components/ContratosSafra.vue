@@ -6,6 +6,7 @@ import { useCadastro } from 'src/composables/useCadastro'
 import { notifyError } from 'src/utils/notify'
 import ContratoForm from 'components/ContratoForm.vue'
 import MgEmptyState from '@components/MgEmptyState.vue'
+import { hoje } from '@components/utils/datas'
 
 // Grid de contratos de UMA safra (encapsula tudo: lista + dialog novo/editar +
 // inativar/excluir). O contrato sempre pertence à safra, então o vínculo
@@ -55,10 +56,7 @@ async function recarregar() {
 async function novo() {
   // Rascunho: tipo neutro (a fixar). O tipo real e o resto da configuração ficam
   // pra tela do contrato — o form de criação só pede a identificação.
-  const hoje = new Date()
-  const datacontrato = `${hoje.getFullYear()}-${String(hoje.getMonth() + 1).padStart(2, '0')}-${String(
-    hoje.getDate(),
-  ).padStart(2, '0')}`
+  const datacontrato = hoje()
   // Nº Nosso sugerido (CULTURA-AA/AA-NNNN) — editável. Best-effort: se falhar, o
   // backend numera no salvar quando o campo vier vazio.
   let contrato

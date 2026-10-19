@@ -4,9 +4,9 @@ import { ref, watch, onMounted } from 'vue'
 import { useQuasar, debounce } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'src/stores/pessoa'
-import { formataData, formataDataIso } from '@components/formatters'
+import { formataData } from '@components/formatters'
+import { hoje, somaDias } from '@components/utils/datas'
 import SelectPessoas from 'components/pessoa/SelectPessoas.vue'
-import moment from 'moment'
 
 const props = defineProps({
   codgrupoeconomico: { type: Number, default: null },
@@ -107,9 +107,8 @@ const linkMgSis = (codtitulo) => {
 }
 
 const coresVencimento = (vencimento) => {
-  if (vencimento >= formataDataIso(new Date())) return 'text-green'
-  if (vencimento >= formataDataIso(moment().subtract(5, 'day').startOf('day').toDate()))
-    return 'text-orange'
+  if (vencimento >= hoje()) return 'text-green'
+  if (vencimento >= somaDias(hoje(), -5)) return 'text-orange'
   return 'text-red'
 }
 

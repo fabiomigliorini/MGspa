@@ -4,6 +4,7 @@ import { useQuasar } from 'quasar'
 import { rhStore } from 'src/stores/rh'
 import { extrairErro } from 'src/utils/rhFormatters'
 import { formataNumero, formataCnpjCpf } from '@components/formatters'
+import { hoje } from '@components/utils/datas'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -52,14 +53,6 @@ const marcados = ref({})
 const valores = ref({})
 const dia = ref(null)
 const observacao = ref('')
-
-const hojeIso = () => {
-  // Local, não toISOString(): à noite o UTC já virou o dia seguinte.
-  const d = new Date()
-  const mes = String(d.getMonth() + 1).padStart(2, '0')
-  const dias = String(d.getDate()).padStart(2, '0')
-  return `${d.getFullYear()}-${mes}-${dias}`
-}
 
 const semAcento = (texto) =>
   (texto || '')
@@ -147,7 +140,7 @@ const limpar = () => {
 
 const preparar = () => {
   busca.value = ''
-  dia.value = hojeIso()
+  dia.value = hoje()
   observacao.value = ''
   marcados.value = {}
   valores.value = {}

@@ -1,8 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
-
-const hoje = () => new Date().toISOString().slice(0, 10)
+import { hoje } from '@components/utils/datas'
 
 const defaultFilters = () => ({
   inativo: 0, // 0 = ativos | 1 = inativos | 9 = todos

@@ -5,6 +5,7 @@ import { useQuasar } from 'quasar'
 import { rhStore } from 'src/stores/rh'
 import { extrairErro } from 'src/utils/rhFormatters'
 import { formataNumero, formataData } from '@components/formatters'
+import { hoje } from '@components/utils/datas'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgSelectPortador from '@components/MgSelectPortador.vue'
@@ -37,11 +38,6 @@ const FORMA_OPTIONS = [
   { label: 'Dinheiro', value: 'D' },
   { label: 'Desconto Folha', value: 'F' },
 ]
-
-function hoje() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
-}
 
 // --- COMPUTED TOTAIS ---
 
