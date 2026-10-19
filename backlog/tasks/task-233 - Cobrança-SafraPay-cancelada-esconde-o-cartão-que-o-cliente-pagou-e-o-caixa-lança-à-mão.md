@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-17 16:28'
-updated_date: '2026-10-17 18:51'
+updated_date: '2026-10-19 22:03'
 labels:
   - negocios
 dependencies: []
@@ -37,6 +37,7 @@ Fora desta task (relatado, sem task): criação do pedido que falha/timeout é e
 - [x] #5 Botão Desistir da cobrança (vermelho) pede confirmação: só cancela depois de digitar DESISTIR
 - [x] #6 Cliente paga enquanto o caixa digita DESISTIR: a confirmação fecha junto com a cobrança, não fica aberta sobre a venda já fechada
 - [x] #7 Desistir da cobrança só aparece com a cobrança pendente; aprovada (approved) não oferece o botão
+- [x] #8 Cobrança Stone/PagarMe no mesmo modelo: botão Desistir da cobrança (vermelho), só com a cobrança pendente, pede para digitar DESISTIR e a confirmação fecha junto com a cobrança
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -60,6 +61,9 @@ Teste (PDV, venda pequena, Receber -> SafraPay):
 Reaberta (17/10/2026), relato do Fábio: cliente pagou enquanto ele digitava DESISTIR; a consulta automática fechou a cobrança e a venda, mas a confirmação ficou aberta (é um $q.dialog solto, independente do q-dialog da cobrança). E o botão aparecia em cobrança approved (v-if era status != 3).
 Correção em components/cobranca/SaurusPedidoDialog.vue: guarda o $q.dialog da confirmação e fecha no @hide da cobrança; botão Desistir com v-if status == 0 (o backend só cancela pendente).
 Teste: 1) abrir a cobrança pendente, clicar Desistir e, sem confirmar, pagar na maquininha: em até 3 s a cobrança fecha e a confirmação some junto. 2) abrir uma cobrança aprovada (pagamentos da venda): só Consultar e Fechar.
+
+Estendida para a Stone (19/10/2026), pedido do Fábio: components/cobranca/PagarMePedidoDialog.vue no mesmo modelo da Saurus. Botão 'cancelar' cinza virou 'Desistir da cobrança' vermelho, só com status 1 (pendente; antes aparecia em pago e falhou e o backend recusava); confirmação exige digitar DESISTIR e fecha no @hide da cobrança; recusa do backend reconsulta. A mensagem não repete 'a maquininha continua aceitando': na Stone o cancelamento fecha o pedido na Pagar.me.
+Teste (PDV, venda pequena, Receber -> Stone/PagarMe): 1) pendente mostra Desistir da cobrança; Desistir só habilita com DESISTIR, Voltar mantém. 2) confirmar cancela e fecha. 3) clicar Desistir e, sem confirmar, pagar na maquininha: em até 3 s a cobrança fecha e a confirmação some. 4) cobrança paga: só Consultar e Fechar.
 <!-- SECTION:NOTES:END -->
 
 ## Comments

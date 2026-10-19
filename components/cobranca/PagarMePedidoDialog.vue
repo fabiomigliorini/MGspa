@@ -2,12 +2,13 @@
 // Dialog especialista do pedido Stone/PagarMe: foca em Consultar (Enter) e consulta sozinho
 // a cada 3s enquanto o pedido estiver pendente.
 import { ref } from 'vue'
-import { debounce } from 'quasar'
+import { debounce, useQuasar } from 'quasar'
 import { pagarMeStore } from '@components/stores/pagarMeStore'
 import { formataNumero, formataTimestampCompleto } from '@components/formatters'
 import { useConsultaAutomatica } from './useConsultaAutomatica.js'
 import { avisar } from './eventos.js'
 
+const $q = useQuasar()
 const sPagarMe = pagarMeStore()
 const btnConsultarRef = ref(null)
 
@@ -37,20 +38,53 @@ const consultar = debounce(async () => {
   iniciar()
 }, 500)
 
-const cancelar = async () => {
-  await sPagarMe.cancelarPedido()
-  if (sPagarMe.pedido.status == 3) {
-    sPagarMe.dialog.detalhesPedido = false
-  }
+// mesmo modelo da Safrapay/Saurus: pede para digitar DESISTIR. O botão se chama Desistir:
+// "Cancelar" no rodapé de um dialog lê-se como fechar a janela
+// A confirmação fecha junto com a cobrança: o cliente pode pagar enquanto o caixa digita
+let confirmacao = null
+
+const desistir = () => {
+  confirmacao = $q
+    .dialog({
+      title: 'Desistir da cobrança?',
+      message: 'Digite DESISTIR para confirmar:',
+      prompt: {
+        model: '',
+        type: 'text',
+        outlined: true,
+        placeholder: 'DESISTIR',
+        isValid: (v) => (v || '').trim() === 'DESISTIR',
+      },
+      ok: { label: 'Desistir', color: 'negative', flat: true },
+      cancel: { label: 'Voltar', color: 'grey-8', flat: true },
+    })
+    .onOk(async () => {
+      const ok = await sPagarMe.cancelarPedido()
+      if (ok === false) {
+        // recusado (já pago, por exemplo): mostra o que a Stone tem
+        await sPagarMe.consultarPedido(true)
+        verificarPago()
+        return
+      }
+      if (sPagarMe.pedido.status == 3) {
+        sPagarMe.dialog.detalhesPedido = false
+      }
+    })
+    .onDismiss(() => (confirmacao = null))
 }
 
 const onShow = () => {
   btnConsultarRef.value?.$el?.focus()
   iniciar()
 }
+
+const onHide = () => {
+  parar()
+  confirmacao?.hide()
+}
 </script>
 <template>
-  <q-dialog v-model="sPagarMe.dialog.detalhesPedido" @show="onShow" @hide="parar">
+  <q-dialog v-model="sPagarMe.dialog.detalhesPedido" @show="onShow" @hide="onHide">
     <q-card flat style="width: 600px">
       <q-card-section>
         <div class="text-h6">
@@ -214,11 +248,11 @@ const onShow = () => {
       <q-card-actions align="right">
         <q-btn
           flat
-          label="cancelar"
-          color="grey-8"
-          @click="cancelar()"
+          label="Desistir da cobrança"
+          color="negative"
+          @click="desistir()"
           tabindex="-1"
-          v-if="sPagarMe.pedido.status != 3"
+          v-if="sPagarMe.pedido.status == 1"
         />
         <q-btn flat label="consultar" color="primary" @click="consultar()" ref="btnConsultarRef" />
         <q-btn
