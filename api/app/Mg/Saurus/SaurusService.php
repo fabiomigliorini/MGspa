@@ -153,6 +153,9 @@ class SaurusService
         $pdv,
         $pos
     ) {
+        // chave que nao renova e' erro na tela antes de gravar: nao fica pedido orfao
+        static::autorizar($pdv);
+
         $ped = new SaurusPedido();
         $ped->idpedido = $idpedido;
         $ped->codsauruspdv = $codsauruspdv;
@@ -169,46 +172,62 @@ class SaurusService
         $ped->criacao = $criacao;
         $ped->save();
 
-        if($pdv->vencimento < now()) {
-
-            $pessoa = Pessoa::findOrFail(Filial::findOrFail($pdv->codfilial)->codpessoa);
-
-            $responseAutorizacao = ApiService::functionAutorizacao($pdv->id, $pessoa->cnpj);
-
-            $pdv->autorizacao = $responseAutorizacao->response->chavePublica;
-            $pdv->vencimento = Carbon::parse($responseAutorizacao->response->vencimento)->subHour(1)->subMinutes(10);
-
-            $pdv->save();
-        }
-
-        // quando da timeout ou algum erro na saurus, retorna o pedido mesmo assim
+        // falha no envio nao estoura: no timeout a cobranca costuma ter chegado e
+        // ser paga (a consulta e' pelo idfaturapag). O id nulo e' o aviso, e o
+        // dialog oferece Reenviar (TASK-118)
         try {
-            $pedido = ApiService::functionPedidoCriar($ped, $pdv, $pos);
-            $ped->id = $pedido->response->id;
-            $ped->save();
+            static::enviarPedido($ped, $pdv, $pos);
         } catch (\Throwable $th) {
-            //throw $th;
         }
 
         return $ped;
     }
 
-    public static function consultarPedido($ped)
+    // Manda o pedido para a maquininha. Sem id na resposta a Saurus nao confirmou
+    // o recebimento. Reenviar nao duplica: substituir=1 com o mesmo IdPedido (TASK-118)
+    public static function enviarPedido(SaurusPedido $ped, SaurusPdv $pdv, SaurusPinPad $pos)
     {
-        
-        $pdv = SaurusPdv::findOrFail($ped->codsauruspdv);
+        static::autorizar($pdv);
+
+        try {
+            $response = ApiService::functionPedidoCriar($ped, $pdv, $pos);
+        } catch (\Throwable $th) {
+            abort(422, 'A SafraPay não respondeu. Tente reenviar.');
+        }
+
+        if (empty($response->response->id)) {
+            abort(422, 'A SafraPay não aceitou a cobrança: ' . ($response->retTexto ?? 'sem resposta'));
+        }
+
+        $ped->id = $response->response->id;
+        $ped->save();
+
+        return $ped;
+    }
+
+    // a chave de autorizacao do PDV Saurus vence: renova antes de falar com a Saurus
+    private static function autorizar(SaurusPdv $pdv)
+    {
+        if ($pdv->vencimento >= now()) {
+            return;
+        }
 
         $pessoa = Pessoa::findOrFail(Filial::findOrFail($pdv->codfilial)->codpessoa);
 
-        if($pdv->vencimento < now()) {
+        $responseAutorizacao = ApiService::functionAutorizacao($pdv->id, $pessoa->cnpj);
 
-            $responseAutorizacao = ApiService::functionAutorizacao($pdv->id, $pessoa->cnpj);
+        $pdv->autorizacao = $responseAutorizacao->response->chavePublica;
+        $pdv->vencimento = Carbon::parse($responseAutorizacao->response->vencimento)->subHour(1)->subMinutes(10);
 
-            $pdv->autorizacao = $responseAutorizacao->response->chavePublica;
-            $pdv->vencimento = Carbon::parse($responseAutorizacao->response->vencimento)->subHour(1)->subMinutes(10);
+        $pdv->save();
+    }
 
-            $pdv->save();
-        }
+    public static function consultarPedido($ped)
+    {
+
+        $pdv = SaurusPdv::findOrFail($ped->codsauruspdv);
+
+        static::autorizar($pdv);
 
         $response = ApiService::functionPagamentoConsultar($ped->idfaturapag, $pdv->autorizacao);
 

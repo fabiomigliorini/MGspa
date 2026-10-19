@@ -1,10 +1,11 @@
 ---
 id: TASK-118
 title: Cobrança na maquininha falha e o PDV não fica sabendo
-status: To Do
-assignee: []
+status: Done
+assignee:
+  - '@fabio'
 created_date: '2026-09-18 20:59'
-updated_date: '2026-10-10 17:22'
+updated_date: '2026-10-19 21:53'
 labels:
   - negocios
 dependencies: []
@@ -26,11 +27,13 @@ Proposta: dois passos. (1) backend cria o pedido local e devolve o negocio atual
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 Erro ao criar a cobrança aparece no PDV
-- [ ] #2 Envio que falha aparece como falha na lista de cobranças, com Reenviar
+- [x] #2 Cobrança que a SafraPay não confirmou avisa no dialog, com Reenviar
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 Revisão do backlog com o Fábio (10/10/2026): o #1 foi feito na TASK-188 (commit c12254f04, components/stores/cobrancaStore.js). O servidor continua igual: SaurusService::criarPedido grava o pedido e engole o erro do envio, devolvendo 200 com pedido sem id.
+
+Com o Fábio (19/10/2026): sem chamada em dois passos. O estado já existe: tblsauruspedido.id nulo = a SafraPay não confirmou o recebimento. A criação continua sem estourar (no timeout a cobrança costuma chegar e ser paga; a consulta é pelo idfaturapag): em jul/26 foram 194 pedidos sem id, 163 deles pagos; jan/26 teve 3.699 sem id. Feito: SaurusService::enviarPedido (autoriza, envia, grava o id; sem id = 422 com o retTexto da Saurus), usado pela criação e pelo Reenviar; renovação da chave junta em SaurusService::autorizar (eram três cópias; a do reenviar usava a chave velha porque o $pdv->fresh() não era atribuído) e roda antes de gravar, para não deixar pedido órfão. SaurusPedidoDialog: aviso em vermelho e foco no Reenviar quando pendente e sem id; o reenvio guarda o pedido devolvido e o aviso some. Teste: cobrar SafraPay com a URL da Saurus errada no .env local → dialog com aviso; corrigir a URL e Reenviar → aviso some e o pedido ganha id.
 <!-- SECTION:NOTES:END -->
