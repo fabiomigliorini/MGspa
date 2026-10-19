@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-19 20:33'
+updated_date: '2026-10-19 21:01'
 labels:
   - negocios
 dependencies: []
@@ -50,6 +50,7 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #16 Com outra janela do navegador sincronizando, a janela Sincronizar nem abre (botão do PDV, menu do quiosque e a sincronização ao abrir o sistema): recusa com o aviso de que já existe uma sincronização em andamento
 - [x] #17 Sincronização completa interrompida (Cancelar, F5, computador travado) deixa o PDV como nunca sincronizado: a data da última sincronização some já no começo da completa e a próxima só pode ser completa
 - [x] #18 Janela Sincronizar cabe no celular: sem o círculo grande, uma barra de progresso por linha e botões Cancelar, Completa e Incremental
+- [x] #19 Arquivos do catálogo no servidor ficam numa pasta por catálogo (produtos, pessoas), com o manifesto na raiz e o mesmo endereço de download; a troca não tira a incremental de nenhum PDV
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -68,7 +69,7 @@ Fábio (16/10/2026): a janela de 2 horas era pequena; a sincronização ao abrir
 Fábio (17/10/2026): o incremental vai por JSON cacheado no backend com diff por versão. Incremental por alteracao foi descartado: não pega exclusão física; lista de chaves e tombstone com trigger foram descartados por abrirem brecha (tabela auxiliar, trigger). LGPD (cifrar o IndexedDB) saiu para task própria, prioridade low.
 
 Implementação (17/10/2026), core da sincronização incremental:
-- Backend: job pdv:catalogo (api/app/Console/Commands/PdvCatalogoCommand.php, agendado a cada 15 min em routes/console.php, withoutOverlapping) gera em storage/app/pdv-catalogo os arquivos produtos-AAAAMMDD-HHMMSS.json.gz e .diff.gz (idem pessoas-), um registro por linha em ordem de chave, sempre, mesmo sem mudança. O diff é um merge em PHP do json novo contra o anterior ('-' saiu, '+' entrou; alterado vem nas duas), numa transação REPEATABLE READ; manifesto catalogo.json gravado por último, renames atômicos. Retenção: diffs 30 dias, jsons só os 2 últimos. Mede 7 s na primeira rodada e 3,5 s nas seguintes no dev (191 mil barras + 27,6 mil pessoas). Consultas de produto/pessoa e as de bipe/CNPJ foram para PdvCatalogoService/PdvCatalogoController; rotas paginadas produto, produto-count, pessoa, pessoa-count removidas. Registro de produto ganhou 'nome' (base, sem variação/embalagem) para a TASK-173.
+- Backend: job pdv:catalogo (api/app/Console/Commands/PdvCatalogoCommand.php, agendado a cada 15 min em routes/console.php, withoutOverlapping) gera em storage/app/pdv-catalogo, numa pasta por catálogo, os arquivos produtos/AAAAMMDD-HHMMSS.json.gz e .diff.gz (idem pessoas/), um registro por linha em ordem de chave, sempre, mesmo sem mudança. O diff é um merge em PHP do json novo contra o anterior ('-' saiu, '+' entrou; alterado vem nas duas), numa transação REPEATABLE READ; manifesto catalogo.json, na raiz, gravado por último, renames atômicos. Retenção: diffs 30 dias, jsons só os 2 últimos. Mede 7 s na primeira rodada e 3,5 s nas seguintes no dev (191 mil barras + 27,6 mil pessoas). Consultas de produto/pessoa e as de bipe/CNPJ foram para PdvCatalogoService/PdvCatalogoController; rotas paginadas produto, produto-count, pessoa, pessoa-count removidas. Registro de produto ganhou 'nome' (base, sem variação/embalagem) para a TASK-173.
 - Rotas (sem login, uuid do dispositivo como hoje): GET v1/pdv/catalogo/{tabela}/versoes?desde=V (atual com tamanho e registros, diffs com tamanho, desde.conhecida) e GET v1/pdv/catalogo/{tabela}/{versao}.json|.diff (serve o .gz com Content-Encoding gzip).
 - Front: Dexie v9 apaga produto/pessoa e v10 recria só com os índices consultados (codproduto, barras, versao, buscaArr); store sincronizacao com versao.produto/pessoa persistida, sincronizarCatalogo (full em fluxo com fetch/ReadableStream ou diffs em paralelo de 5 aplicados em ordem; full só se a versão local não é conhecida pelo servidor ou se os diffs somados passam do tamanho da full), etapas em paralelo (Promise.allSettled) com uma linha por etapa no dialog e AbortController no Cancelar/ESC; bipe, CNPJ e cadastro de pessoa carimbam a versão local no registro.
 - Teste de ponta a ponta em Chrome headless contra o quasar dev e a api-dev (17/10): full num perfil limpo em 10 s (produtos) com pessoas em paralelo, total 14 s; alteração de preço + barra nova -> diff aplicado em 1,2 s ('5 alterados, 0 excluídos'); exclusão da barra -> '4 alterados, 1 excluídos' e a barra some do IndexedDB; rodada sem mudança -> 'Nada mudou desde a última'. Sem erro de console. Critérios #3 e #4 ficam para o Fábio validar e marcar.
@@ -123,4 +124,12 @@ Fechamento (19/10/2026), para o go-live:
 - A regra ficou no CLAUDE.md (seção PDV: o uuid é a senha do dispositivo e vai só no cabeçalho X-Pdv).
 
 Fábio (19/10/2026): na completa o usuário clicava fora sem querer e perdia o processo. A q-dialog do DialogSincronizacao passa a ser persistent: ESC e clique fora não fecham, só o Cancelar (critério 11 reescrito). O @hide continua abortando, para o Cancelar e para o fechamento ao terminar.
+
+Fábio (19/10/2026): os arquivos do catálogo passam a ficar numa pasta por catálogo: pdv-catalogo/produtos/{versao}.json.gz e .diff.gz (idem pessoas/), manifesto catalogo.json na raiz. URL de download, controller e front não mudam. Só o PdvCatalogoService muda: arquivo() monta o caminho na pasta da tabela, versoes() e limpar() varrem as pastas.
+
+Transição (go-live): os arquivos do formato antigo são movidos para as pastas, sem regerar nada; versões e diffs continuam valendo e nenhum PDV perde a incremental. Sem mover, /versoes dá 500 até a próxima rodada do job, todo PDV cai na completa e os arquivos velhos ficam na raiz para sempre (a limpeza só olha as pastas). Mover junto com o git pull, fora dos minutos :00/:15/:30/:45 do job, como o usuário 82 (dono dos arquivos do job; pasta criada por root deixa o job sem gravar):
+
+    docker exec -u 82 -w /opt/www/MGspa/api/storage/app/pdv-catalogo mgspa-api sh -c 'for f in produtos-* pessoas-*; do [ -e "$f" ] || continue; mkdir -p "${f%%-*}" && mv "$f" "${f%%-*}/${f#*-}"; done'
+
+Volta atrás (se reverter o código): for d in produtos pessoas; do for f in $d/*; do mv "$f" "$d-${f##*/}"; done; rmdir $d; done (na pasta pdv-catalogo, mesmo usuário). No dev o comando foi rodado às 16:52 de 19/10: 205 arquivos em cada pasta.
 <!-- SECTION:NOTES:END -->
