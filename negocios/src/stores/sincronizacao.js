@@ -93,19 +93,25 @@ export const DISPOSITIVO_INATIVO =
 const IDADE_POSICAO = 60 * 1000
 const ESPERA_POSICAO = 10 * 1000
 let posicao = null
+let pedido = null
 
-// pedido sem timeout: quem desiste e' o localizar(), e a resposta atrasada nao se perde
-const pedirPosicao = () =>
-  new Promise((resolve, reject) => {
-    navigator.geolocation.getCurrentPosition(
-      (p) => {
-        posicao = p
-        resolve(p)
-      },
-      reject,
-      { maximumAge: IDADE_POSICAO },
-    )
-  })
+// pedido sem timeout: quem desiste e' o localizar(), e a resposta atrasada nao se perde. Um
+// pedido por vez: a janela ao abrir e a sincronizacao que abre sozinha pedem juntas
+const pedirPosicao = () => {
+  if (!pedido) {
+    pedido = new Promise((resolve, reject) => {
+      navigator.geolocation.getCurrentPosition(
+        (p) => {
+          posicao = p
+          resolve(p)
+        },
+        reject,
+        { maximumAge: IDADE_POSICAO },
+      )
+    }).finally(() => (pedido = null))
+  }
+  return pedido
+}
 
 const posicaoRecente = () => posicao && Date.now() - posicao.timestamp <= IDADE_POSICAO
 
@@ -200,8 +206,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       dialog: false,
       tempoTotal: 0,
       incremental: null, // a janela oferece a incremental? null = verificando
-      // a localizacao vem antes das etapas: a janela mostra a busca numa linha propria
-      localizacao: { buscando: false, erro: false, precisao: null },
+      // a janela mostra a busca da localizacao abaixo da ultima sincronizacao; erro = o motivo
+      localizacao: { buscando: false, erro: null, latitude: null, longitude: null, precisao: null },
       etapas: Object.fromEntries(Object.entries(ETAPAS).map(([k, l]) => [k, etapaVazia(l)])),
     },
   }),
@@ -213,24 +219,18 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.pdv.uuid = uid()
       }
 
-      const loc = this.importacao.localizacao
-      Object.assign(loc, { buscando: true, erro: false, precisao: null })
       try {
-        const pos = await localizar(signal)
+        const pos = await this.localizarDispositivo(signal)
         this.pdv.latitude = pos.coords.latitude
         this.pdv.longitude = pos.coords.longitude
         this.pdv.precisao = pos.coords.accuracy
-        loc.precisao = pos.coords.accuracy
       } catch (error) {
         // localizacao e obrigatoria: sem ela o dispositivo nao cadastra nem sincroniza.
         // Cancelada no meio nao e' erro e nao avisa
         if (!signal?.aborted) {
-          loc.erro = true
           erro(`Sem a localização do dispositivo não é possível ${acao}: ${error.message}`)
         }
         throw error
-      } finally {
-        loc.buscando = false
       }
 
       const plat = Platform.is
@@ -247,6 +247,33 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         navegador: this.pdv.navegador,
         versaonavegador: this.pdv.versaonavegador,
         plataforma: this.pdv.plataforma,
+      }
+    },
+
+    // a janela Sincronizar mostra a busca: ao abrir (os botoes so' habilitam com a posicao) e na
+    // sincronizacao, quando a de ate' 1 min ja' venceu
+    async localizarDispositivo(signal) {
+      const loc = this.importacao.localizacao
+      Object.assign(loc, {
+        buscando: true,
+        erro: null,
+        latitude: null,
+        longitude: null,
+        precisao: null,
+      })
+      try {
+        const pos = await localizar(signal)
+        loc.latitude = pos.coords.latitude
+        loc.longitude = pos.coords.longitude
+        loc.precisao = pos.coords.accuracy
+        return pos
+      } catch (error) {
+        if (!signal?.aborted) {
+          loc.erro = error.message
+        }
+        throw error
+      } finally {
+        loc.buscando = false
       }
     },
 
@@ -341,10 +368,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
           erro(EM_ANDAMENTO)
           return false
         }
-      }
-      // ja' pede a posicao: ate' o clique em Sincronizar ela costuma ter chegado
-      if (!posicaoRecente()) {
-        pedirPosicao().catch(() => {})
       }
       this.importacao.dialog = true
       return true

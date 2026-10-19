@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-19 21:01'
+updated_date: '2026-10-19 21:16'
 labels:
   - negocios
 dependencies: []
@@ -51,6 +51,7 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #17 Sincronização completa interrompida (Cancelar, F5, computador travado) deixa o PDV como nunca sincronizado: a data da última sincronização some já no começo da completa e a próxima só pode ser completa
 - [x] #18 Janela Sincronizar cabe no celular: sem o círculo grande, uma barra de progresso por linha e botões Cancelar, Completa e Incremental
 - [x] #19 Arquivos do catálogo no servidor ficam numa pasta por catálogo (produtos, pessoas), com o manifesto na raiz e o mesmo endereço de download; a troca não tira a incremental de nenhum PDV
+- [x] #20 A janela Sincronizar busca a localização ao abrir e mostra o andamento numa linha abaixo da última sincronização (buscando, disponível com latitude e longitude, ou o motivo em vermelho); Completa e Incremental só habilitam com a localização
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -124,6 +125,10 @@ Fechamento (19/10/2026), para o go-live:
 - A regra ficou no CLAUDE.md (seção PDV: o uuid é a senha do dispositivo e vai só no cabeçalho X-Pdv).
 
 Fábio (19/10/2026): na completa o usuário clicava fora sem querer e perdia o processo. A q-dialog do DialogSincronizacao passa a ser persistent: ESC e clique fora não fecham, só o Cancelar (critério 11 reescrito). O @hide continua abortando, para o Cancelar e para o fechamento ao terminar.
+
+Fábio (19/10/2026): com o persistent, o clique fora tirava o foco da Incremental e punha na Completa (o backdrop do Quasar pega o foco no mousedown e a q-dialog devolve para o primeiro botão do Tab). Com a incremental disponível, o Completa fica fora do Tab (tabindex -1): o primeiro botão do Tab passa a ser a Incremental e o foco não sai dela. O ESC não mexia no foco.
+
+Fábio (19/10/2026): a localização não é etapa da sincronização. Sai da lista (com o ícone, a barra e o toggle travado da nota de 18/10) e vira uma segunda linha abaixo da última sincronização, só texto. A janela busca a posição ao abrir e mostra o andamento: 'Buscando a localização...', 'Localização disponível: lat, long (± N m)' ou 'Sem localização: <motivo>' em vermelho; Completa e Incremental só habilitam com a posição. Store: localizarDispositivo() atualiza importacao.localizacao (agora com latitude e longitude, erro = o motivo) e serve a janela e o coletarDispositivo; pedirPosicao() faz um pedido por vez, porque a janela e a sincronização ao abrir pedem juntas; o pedido silencioso do abrirJanela saiu. A posição continua valendo até 1 min: passou disso até o clique, a sincronização busca de novo. Sem posição (recusada ou 10 s sem resposta), os botões ficam desabilitados; para tentar de novo, Cancelar e abrir a janela outra vez.
 
 Fábio (19/10/2026): os arquivos do catálogo passam a ficar numa pasta por catálogo: pdv-catalogo/produtos/{versao}.json.gz e .diff.gz (idem pessoas/), manifesto catalogo.json na raiz. URL de download, controller e front não mudam. Só o PdvCatalogoService muda: arquivo() monta o caminho na pasta da tabela, versoes() e limpar() varrem as pastas.
 
