@@ -1,6 +1,6 @@
 import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { Notify } from 'quasar'
 
 // Store do dominio "modelo de vale compras" (catalogo do kit escolar).

@@ -1,6 +1,6 @@
 // Leitura da confissão de dívida assinada (notinha da venda a prazo): foto → QR (ou OCR) → venda
 // achada → anexo da venda, que marca `tblnegocio.confissao`. O mesmo no PDV e no contas (M9 doc-3,
-// conferência da duplicata): rotas `v1/negocio/...`; o PDV manda `fixos: { pdv }`.
+// conferência da duplicata): rotas `v1/negocio/...`; o PDV se identifica pelo cabeçalho X-Pdv.
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'

@@ -5,15 +5,11 @@
 import { useRouter } from 'vue-router'
 import MgBaixaTitulos from '@components/MgBaixaTitulos.vue'
 import { negocioStore } from 'stores/negocio'
-import { sincronizacaoStore } from 'stores/sincronizacao'
 import { pagamentoStore, FORMAS_RECEBER } from 'stores/pagamento'
 
 const router = useRouter()
 const sNegocio = negocioStore()
-const sSinc = sincronizacaoStore()
 const sPagamento = pagamentoStore()
-
-const pdv = sSinc.pdv.uuid
 
 // filial e maquinetas do estoque local configurado no PDV
 const contexto = () => sNegocio.contextoCobranca(sNegocio.padrao.codestoquelocal)
@@ -30,12 +26,11 @@ const finalizado = async (pags) => {
       <MgBaixaTitulos
         :seletor="{
           endpoint: 'v1/pdv/pagamento/titulos',
-          params: { pdv },
           exigePessoa: true,
         }"
         :formas="FORMAS_RECEBER"
         :contexto="contexto"
-        :finalizar="{ url: 'v1/pdv/pagamento', extras: { pdv } }"
+        :finalizar="{ url: 'v1/pdv/pagamento' }"
         com-data
         :impressora="sNegocio.padrao.impressora"
         :padrao="sNegocio.padrao"

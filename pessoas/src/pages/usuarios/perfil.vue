@@ -1,14 +1,11 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
-import { formataDataAbreviada } from '@components/formatters'
+import { formataDataAbreviada, tempoRelativo } from '@components/formatters'
 import { ref, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { usuarioStore } from 'src/stores/usuario'
 import { useAuthStore } from 'src/stores'
 import MGLayout from 'layouts/MGLayout.vue'
-import moment from 'moment'
-import 'moment/min/locales'
-moment.locale('pt-br')
 
 const $q = useQuasar()
 const sUsuario = usuarioStore()
@@ -154,7 +151,7 @@ onMounted(async () => {
                   <q-item-section>
                     <q-item-label class="ellipsis text-caption">
                       {{ formataDataAbreviada(sUsuario.detalheUsuarios.ultimoacesso, 4) }}
-                      - {{ moment(sUsuario.detalheUsuarios.ultimoacesso).fromNow() }}
+                      - {{ tempoRelativo(sUsuario.detalheUsuarios.ultimoacesso) }}
                     </q-item-label>
                     <q-item-label caption>Último acesso</q-item-label>
                   </q-item-section>

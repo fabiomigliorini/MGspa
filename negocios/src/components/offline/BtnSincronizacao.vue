@@ -1,15 +1,15 @@
 <script setup>
 import { computed } from 'vue'
 import { Notify } from 'quasar'
+import { tempoRelativo } from '@components/formatters'
+import { paraDate } from '@components/utils/datas'
 import {
   sincronizacaoStore,
   DISPOSITIVO_NAO_CADASTRADO,
   DISPOSITIVO_INATIVO,
 } from 'stores/sincronizacao'
 import DialogSincronizacao from './DialogSincronizacao.vue'
-import moment from 'moment'
 
-moment.locale('pt-br')
 const sSinc = sincronizacaoStore()
 
 const erro = (message) =>
@@ -22,7 +22,8 @@ const erro = (message) =>
 
 // Sincronizar só sincroniza (TASK-46) e não pede usuário logado (TASK-197): o backend autoriza
 // pelo dispositivo. Com o navegador sem cadastro ou com o dispositivo inativo, só avisa e não
-// abre janela nenhuma. O cadastro e a ativação ficam no Meu Dispositivo.
+// abre janela nenhuma; com outra janela sincronizando, o abrirJanela recusa. O cadastro e a
+// ativação ficam no Meu Dispositivo.
 const abrirSincronizacao = () => {
   if (!sSinc.pdv.codpdv) {
     erro(DISPOSITIVO_NAO_CADASTRADO)
@@ -32,7 +33,7 @@ const abrirSincronizacao = () => {
     erro(DISPOSITIVO_INATIVO)
     return
   }
-  sSinc.importacao.dialog = true
+  sSinc.abrirJanela()
 }
 
 const btnSincronizarColor = computed({
@@ -40,7 +41,8 @@ const btnSincronizarColor = computed({
     if (!sSinc.ultimaSincronizacao.completa) {
       return 'red-4'
     }
-    if (moment(sSinc.ultimaSincronizacao.completa).isAfter(moment().subtract(4, 'hours'))) {
+    // até 4 horas depois da última completa o botão fica na cor normal
+    if (Date.now() - paraDate(sSinc.ultimaSincronizacao.completa) < 4 * 60 * 60 * 1000) {
       return null
     }
     return 'red-4'
@@ -69,7 +71,7 @@ const btnSincronizarColor = computed({
       </template>
       <template v-else>
         Ultima Sincronização
-        {{ moment(sSinc.ultimaSincronizacao.completa).fromNow() }}
+        {{ tempoRelativo(sSinc.ultimaSincronizacao.completa) }}
       </template>
     </q-tooltip>
   </q-btn>

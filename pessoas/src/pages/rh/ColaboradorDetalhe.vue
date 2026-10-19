@@ -4,10 +4,10 @@ import MgSelect from '@components/MgSelect.vue'
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { rhStore } from 'src/stores/rh'
 import { useAuthStore } from 'src/stores'
-import { formataCodigo, formataData, formataFromNow, formataNumero } from '@components/formatters'
+import { formataCodigo, formataData, tempoRelativo, formataNumero } from '@components/formatters'
 import { abrirPdf } from '@components/abrirPdf'
 import { tipoIndicadorLabel, extrairErro } from 'src/utils/rhFormatters'
 import DialogEditarMeta from 'src/components/rh/DialogEditarMeta.vue'
@@ -997,7 +997,7 @@ watch(
           <div v-if="colaborador?.colaborador?.contratacao" class="text-caption text-grey">
             Contratação:
             {{ formataData(colaborador.colaborador.contratacao) }}
-            ({{ formataFromNow(colaborador.colaborador.contratacao) }})
+            ({{ tempoRelativo(colaborador.colaborador.contratacao) }})
           </div>
         </q-item-section>
         <q-item-section side>

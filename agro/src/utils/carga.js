@@ -85,11 +85,7 @@ export const CONTATIPO_META = {
 
 // Ordem das opções do select (DESTINO não recebe grão de volta pro talhão —
 // o filtro fica no componente, que conhece o papel).
-export const CONTATIPOS = [
-  CONTATIPO_META.PLANTIO,
-  CONTATIPO_META.UNIDADE,
-  CONTATIPO_META.CONTRATO,
-]
+export const CONTATIPOS = [CONTATIPO_META.PLANTIO, CONTATIPO_META.UNIDADE, CONTATIPO_META.CONTRATO]
 
 export function sentidoMeta(sentido) {
   return SENTIDOS.find((s) => s.value === sentido) || SENTIDOS[0]
@@ -321,20 +317,6 @@ export function fmtNumero(v, dec = 0) {
     minimumFractionDigits: dec,
     maximumFractionDigits: dec,
   })
-}
-
-// Instante atual em wall-clock LOCAL 'YYYY-MM-DD HH:mm:ss' — MESMO formato que o
-// MgInputData (dateToIso) emite e que o backend devolve (serializeDate = Y-m-d H:i:s,
-// sem offset). Gravar UTC (new Date().toISOString()) jogava a carga da noite pro dia
-// seguinte no recorte slice(0,10) do board. Assim carga criada, editada e puxada do
-// servidor viram a MESMA string.
-export function agoraLocal() {
-  const d = new Date()
-  const p = (n) => String(n).padStart(2, '0')
-  return (
-    `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ` +
-    `${p(d.getHours())}:${p(d.getMinutes())}:${p(d.getSeconds())}`
-  )
 }
 
 // Mapeia uma carga vinda do servidor (GET /v1/carga) para o shape offline que o

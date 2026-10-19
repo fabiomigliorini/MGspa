@@ -6,6 +6,7 @@ import { useRouter, useRoute } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
 import { useAuthStore } from 'src/stores'
 import { formataData } from '@components/formatters'
+import { inicioMes, somaDias, somaMeses } from '@components/utils/datas'
 import { extrairErro } from 'src/utils/rhFormatters'
 import { useNavegacaoPeriodo } from 'src/composables/useNavegacaoPeriodo'
 import MGLayout from 'layouts/MGLayout.vue'
@@ -34,29 +35,16 @@ const statusColor = (status) => {
   return status === 'A' ? 'green' : 'grey'
 }
 
-const formatDTLocal = (date, time = '00:00') => {
-  const y = date.getFullYear()
-  const m = String(date.getMonth() + 1).padStart(2, '0')
-  const d = String(date.getDate()).padStart(2, '0')
-  return `${y}-${m}-${d} ${time}`
-}
-
 const abrirNovoPeriodo = () => {
   let pi = ''
   let pf = ''
 
-  const ultimo = sRh.periodos[0]
-  if (ultimo?.periodofinal) {
-    const partes = String(ultimo.periodofinal).match(/^(\d{4})-(\d{2})-(\d{2})/)
-    if (partes) {
-      const lastEnd = new Date(parseInt(partes[1]), parseInt(partes[2]) - 1, parseInt(partes[3]))
-      const nextDay = new Date(lastEnd)
-      nextDay.setDate(nextDay.getDate() + 1)
-      pi = formatDTLocal(nextDay, '00:00')
-
-      const endDate = new Date(nextDay.getFullYear(), nextDay.getMonth() + 1, 25)
-      pf = formatDTLocal(endDate, '23:59')
-    }
+  // o novo começa no dia seguinte ao fim do último
+  const inicio = somaDias(sRh.periodos[0]?.periodofinal, 1)
+  if (inicio) {
+    pi = `${inicio} 00:00`
+    // até o dia 25 do mês seguinte
+    pf = `${somaMeses(inicioMes(inicio), 1).slice(0, 7)}-25 23:59`
   }
 
   modelNovoPeriodo.value = {

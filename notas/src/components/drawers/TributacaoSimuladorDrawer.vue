@@ -6,6 +6,7 @@ import { useQuasar } from 'quasar'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { formataPercentual, formataNumero } from '@components/formatters'
+import { hoje } from '@components/utils/datas'
 
 const $q = useQuasar()
 
@@ -14,7 +15,7 @@ const form = ref({
   codnaturezaoperacao: null,
   codcidadedestino: null,
   barras: '',
-  data: new Date().toISOString().substring(0, 10),
+  data: hoje(),
   valorBase: null,
 })
 

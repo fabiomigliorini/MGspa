@@ -9,6 +9,7 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
+import { formataData, formataTimestamp } from '@components/formatters'
 
 const route = useRoute()
 const router = useRouter()
@@ -49,8 +50,6 @@ const tituloLocal = computed(
 const codFormatado = (v) => '#' + String(v).padStart(6, '0')
 const formataMoeda = (v) =>
   (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-const formataData = (v) => (v ? new Date(v).toLocaleDateString('pt-BR') : '—')
-const formataDataHora = (v) => (v ? new Date(v).toLocaleString('pt-BR') : '—')
 
 const corSaldo = (q) => (q > 0 ? 'green-6' : q < 0 ? 'red-6' : 'grey-5')
 
@@ -276,7 +275,7 @@ onMounted(() => {
                 <q-badge v-if="item.inativo" color="orange-7" class="q-ml-xs" label="Inativo" />
               </q-item-label>
               <q-item-label caption>
-                Última conferência: {{ formataData(item.ultimaconferencia) }}
+                Última conferência: {{ formataData(item.ultimaconferencia) || '—' }}
               </q-item-label>
             </q-item-section>
             <q-item-section side>
@@ -380,7 +379,7 @@ onMounted(() => {
                 {{ produto.localizacao.bloco ?? '—' }}
               </div>
               <div v-if="produto.localizacao.vencimento" class="text-body2">
-                Vencimento: {{ formataData(produto.localizacao.vencimento) }}
+                Vencimento: {{ formataData(produto.localizacao.vencimento) || '—' }}
               </div>
             </div>
           </div>
@@ -409,7 +408,7 @@ onMounted(() => {
                   · {{ formataMoeda(c.customedioinformado) }}
                 </q-item-label>
                 <q-item-label caption>
-                  {{ formataDataHora(c.criacao) }} · {{ c.usuario }}
+                  {{ formataTimestamp(c.criacao, 4, true) || '—' }} · {{ c.usuario }}
                 </q-item-label>
                 <q-item-label v-if="c.observacoes" caption class="text-grey-7">
                   {{ c.observacoes }}

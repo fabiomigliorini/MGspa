@@ -669,13 +669,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     // PDV (público)
     Route::group(['prefix' => 'pdv'], function () {
-        // cadastrar o navegador como dispositivo exige usuario logado; a sincronizacao, que so'
-        // atualiza o que ele sabe de si, roda sem usuario (quiosque)
+        // cadastrar o navegador como dispositivo exige usuario logado; o que roda sem usuario
+        // (sincronizacao, quiosque) fica no bloco PDV mais abaixo
         Route::post('dispositivo', '\Mg\Pdv\PdvController@postDispositivo');
-        Route::put('dispositivo', '\Mg\Pdv\PdvController@putDispositivo')
-            ->withoutMiddleware('auth:api');
-        Route::put('dispositivo/sincronizacao-completa', '\Mg\Pdv\PdvController@putSincronizacaoCompleta')
-            ->withoutMiddleware('auth:api');
         Route::get('negocio/{codnegocio}/romaneio', '\Mg\Pdv\PdvController@romaneio')
             ->name('pdv.negocio.romaneio')
             ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
@@ -882,79 +878,89 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // PDV
     // ============================================================
     Route::group(['prefix' => 'pdv'], function () {
-        // consulta de precos do quiosque e sincronizacao: sem usuario logado,
-        // o controller autoriza pelo uuid do dispositivo (PdvService::autoriza)
+        // O dispositivo se identifica pelo uuid no cabecalho X-Pdv (TASK-197): o middleware `pdv`
+        // exige o dispositivo ativo e entrega ele ao controller.
+        // Sem usuario logado (quiosque e sincronizacao)
         Route::withoutMiddleware('auth:api')->group(function () {
-            Route::get('produto-count', '\Mg\Pdv\PdvController@produtoCount');
-            Route::get('produto', '\Mg\Pdv\PdvController@produto');
-            Route::get('produto/{barras}', '\Mg\Pdv\PdvController@produtoBarras');
-            Route::get('produto/{barras}/detalhe', '\Mg\Pdv\PdvController@produtoDetalhe');
-            Route::get('pessoa-count', '\Mg\Pdv\PdvController@pessoaCount');
-            Route::get('pessoa', '\Mg\Pdv\PdvController@pessoa');
-            Route::get('natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
-            Route::get('estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
-            Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
-            // catalogo de modelos de vale compras para o cache offline do PDV
-            Route::get('vale-modelo', '\Mg\Pdv\PdvController@valeModelo');
-            Route::get('prancheta', '\Mg\Pdv\PdvController@getPrancheta');
-            Route::get('impressora', '\Mg\Pdv\PdvController@impressora');
+            Route::middleware('pdv')->group(function () {
+                // catalogo: versoes e arquivos da sincronizacao incremental, mais o bipe ao vivo
+                // que alimenta o mesmo cache
+                Route::get('catalogo/{tabela}/versoes', '\Mg\Pdv\PdvCatalogoController@versoes');
+                Route::get('catalogo/{tabela}/{versao}.{tipo}', '\Mg\Pdv\PdvCatalogoController@arquivo')
+                    ->where(['versao' => '\d{8}-\d{6}', 'tipo' => 'json|diff']);
+                Route::get('produto/{barras}', '\Mg\Pdv\PdvCatalogoController@produtoBarras');
+                Route::get('produto/{barras}/detalhe', '\Mg\Pdv\PdvController@produtoDetalhe');
+                Route::get('natureza-operacao', '\Mg\Pdv\PdvController@naturezaOperacao');
+                Route::get('estoque-local', '\Mg\Pdv\PdvController@estoqueLocal');
+                Route::get('forma-pagamento', '\Mg\Pdv\PdvController@formaPagamento');
+                // catalogo de modelos de vale compras para o cache offline do PDV
+                Route::get('vale-modelo', '\Mg\Pdv\PdvController@valeModelo');
+                Route::get('prancheta', '\Mg\Pdv\PdvController@getPrancheta');
+                Route::get('impressora', '\Mg\Pdv\PdvController@impressora');
+                Route::put('dispositivo/sincronizacao-completa', '\Mg\Pdv\PdvController@putSincronizacaoCompleta');
+            });
+            // fora do middleware: a sincronizacao atualiza o que o navegador sabe de si mesmo
+            // inativo (para ele saber que esta' inativo); a pagina do dispositivo, o proprio ve
+            // mesmo inativo e os outros, so' Administrador ou Gerente
+            Route::put('dispositivo', '\Mg\Pdv\PdvController@putDispositivo');
+            Route::get('dispositivo/{codpdv}', '\Mg\Pdv\PdvController@showDispositivo')->whereNumber('codpdv');
+            Route::get('dispositivo/{codpdv}/registros', '\Mg\Pdv\PdvController@registrosDispositivo')
+                ->whereNumber('codpdv');
         });
-        Route::get('pessoa/cnpj/{cnpj}', '\Mg\Pdv\PdvController@pessoaPeloCnpj');
-        Route::post('pessoa', '\Mg\Pdv\PdvController@postPessoa');
-        Route::put('prancheta', '\Mg\Pdv\PdvController@putPrancheta');
-        Route::put('negocio', '\Mg\Pdv\PdvController@putNegocio');
-        Route::get('negocio', '\Mg\Pdv\PdvController@getNegocios');
-        Route::get('negocio/relatorio', '\Mg\Pdv\PdvController@relatorioNegocios');
-        Route::get('negocio/{codnegocio}', '\Mg\Pdv\PdvController@getNegocio');
-        Route::delete('negocio/{codnegocio}', '\Mg\Pdv\PdvController@deleteNegocio');
-        Route::post('negocio/{codnegocio}/apropriar', '\Mg\Pdv\PdvController@apropriar');
-        Route::post('negocio/{codnegocio}/fechar', '\Mg\Pdv\PdvController@fecharNegocio');
-        Route::post('negocio/{codnegocio}/reabrir', '\Mg\Pdv\PdvController@reabrirNegocio');
+        // Com usuario logado
+        Route::middleware('pdv')->group(function () {
+            Route::get('pessoa/cnpj/{cnpj}', '\Mg\Pdv\PdvCatalogoController@pessoaPeloCnpj');
+            Route::post('pessoa', '\Mg\Pdv\PdvController@postPessoa');
+            Route::put('prancheta', '\Mg\Pdv\PdvController@putPrancheta');
+            Route::put('negocio', '\Mg\Pdv\PdvController@putNegocio');
+            Route::get('negocio', '\Mg\Pdv\PdvController@getNegocios');
+            Route::get('negocio/relatorio', '\Mg\Pdv\PdvController@relatorioNegocios');
+            Route::get('negocio/{codnegocio}', '\Mg\Pdv\PdvController@getNegocio');
+            Route::delete('negocio/{codnegocio}', '\Mg\Pdv\PdvController@deleteNegocio');
+            Route::post('negocio/{codnegocio}/apropriar', '\Mg\Pdv\PdvController@apropriar');
+            Route::post('negocio/{codnegocio}/fechar', '\Mg\Pdv\PdvController@fecharNegocio');
+            Route::post('negocio/{codnegocio}/reabrir', '\Mg\Pdv\PdvController@reabrirNegocio');
+            Route::post('negocio/{codnegocio}/unificar/{codnegociocomanda}', '\Mg\Pdv\PdvController@unificarComanda');
+            Route::post('negocio/{codnegocio}/devolucao', '\Mg\Pdv\PdvController@devolucao');
+            Route::post('negocio/{codnegocio}/nota-fiscal', '\Mg\Pdv\PdvController@notaFiscal');
+            Route::get('orcamento', '\Mg\Pdv\PdvController@getOrcamentos');
+            Route::post('pix/cob', '\Mg\Pdv\PdvController@criarPixCob');
+            Route::post('pagar-me/pedido', '\Mg\Pdv\PdvController@criarPagarMePedido');
+            Route::post('saurus/pedido', '\Mg\Pdv\PdvController@criarSaurusPedido');
+            // consumo de vale por escopo (escola / turma), em FIFO
+            Route::get('vale-escopo/favorecido', '\Mg\Pdv\PdvController@valeEscopoFavorecidos');
+            Route::get('vale-escopo/favorecido/{codpessoafavorecido}/turma', '\Mg\Pdv\PdvController@valeEscopoTurmas');
+            Route::get('vale-escopo/selecionar', '\Mg\Pdv\PdvController@valeEscopoSelecionar');
+            // pagamentos do PDV, receber titulo e pagar vale (M6.1 doc-3)
+            Route::get('pagamento', '\Mg\Pdv\PdvPagamentoController@index');
+            Route::get('pagamento/titulos', '\Mg\Pdv\PdvPagamentoController@titulos');
+            Route::get('pagamento/originais', '\Mg\Pdv\PdvPagamentoController@originais');
+            Route::get('pagamento/{id}', '\Mg\Pdv\PdvPagamentoController@show')->whereNumber('id');
+            Route::post('pagamento', '\Mg\Pdv\PdvPagamentoController@store');
+            Route::post('pagamento/{id}/cancelar', '\Mg\Pdv\PdvPagamentoController@cancelar')->whereNumber('id');
+            Route::put('pagamento/{id}/referente', '\Mg\Pdv\PdvPagamentoController@referente')->whereNumber('id');
+            Route::post('pagamento/recibo/{impressora}', '\Mg\Pdv\PdvPagamentoController@imprimirRecibo');
+            // vale colaborador e adiantamentos (M8 doc-3)
+            Route::post('titulo', '\Mg\Pdv\PdvTituloController@store');
+            // caixa: a gaveta do PDV e se esta' aberta (M9; a tela do caixa usa
+            // as rotas v1/caixa desde o M13 doc-3)
+            Route::get('caixa', '\Mg\Caixa\CaixaController@status');
+        });
+        // Com usuario logado, sem exigir o dispositivo
         Route::post('negocio/{codnegocio}/romaneio/{impressora}', '\Mg\Pdv\PdvController@imprimirRomaneio');
         Route::post('negocio/{codnegocio}/vale/{impressora}', '\Mg\Pdv\PdvController@imprimirVale');
         Route::post('negocio/{codnegocio}/comanda/{impressora}', '\Mg\Pdv\PdvController@imprimirComanda');
-        Route::post('negocio/{codnegocio}/unificar/{codnegociocomanda}', '\Mg\Pdv\PdvController@unificarComanda');
-        Route::post('negocio/{codnegocio}/devolucao', '\Mg\Pdv\PdvController@devolucao');
-        Route::get('orcamento', '\Mg\Pdv\PdvController@getOrcamentos');
-        Route::post('pix/cob', '\Mg\Pdv\PdvController@criarPixCob');
-        Route::post('pagar-me/pedido', '\Mg\Pdv\PdvController@criarPagarMePedido');
         Route::post('pagar-me/pedido/{codpagarmepedido}/consultar', '\Mg\Pdv\PdvController@consultarPagarMePedido');
         Route::patch('pagar-me/pedido/pendentes', '\Mg\Pdv\PdvController@importarPagarMePedidosPendentes');
         Route::get('pagar-me/pedido/pendentes', '\Mg\Pdv\PdvController@pagarMePedidosPendentes');
         Route::delete('pagar-me/pedido/{codpagarmepedido}', '\Mg\Pdv\PdvController@cancelarPagarMePedido');
-        Route::post('negocio/{codnegocio}/nota-fiscal', '\Mg\Pdv\PdvController@notaFiscal');
         Route::get('dispositivo', '\Mg\Pdv\PdvController@getDispositivo');
-        // o proprio dispositivo se ve sem login (quiosque); os outros, Administrador ou Gerente
-        Route::get('dispositivo/{codpdv}', '\Mg\Pdv\PdvController@showDispositivo')
-            ->whereNumber('codpdv')->withoutMiddleware('auth:api');
-        Route::get('dispositivo/{codpdv}/registros', '\Mg\Pdv\PdvController@registrosDispositivo')
-            ->whereNumber('codpdv')->withoutMiddleware('auth:api');
         Route::post('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@inativar');
         Route::delete('dispositivo/{codpdv}/inativo', '\Mg\Pdv\PdvController@ativar');
         Route::put('dispositivo/{codpdv}', '\Mg\Pdv\PdvController@update')->whereNumber('codpdv');
         Route::get('vale/{codtitulo}', '\Mg\Pdv\PdvController@buscarVale');
-
-        // consumo de vale por escopo (escola / turma), em FIFO
-        Route::get('vale-escopo/favorecido', '\Mg\Pdv\PdvController@valeEscopoFavorecidos');
-        Route::get('vale-escopo/favorecido/{codpessoafavorecido}/turma', '\Mg\Pdv\PdvController@valeEscopoTurmas');
-        Route::get('vale-escopo/selecionar', '\Mg\Pdv\PdvController@valeEscopoSelecionar');
-        // pagamentos do PDV, receber titulo e pagar vale (M6.1 doc-3)
-        Route::get('pagamento', '\Mg\Pdv\PdvPagamentoController@index');
-        Route::get('pagamento/titulos', '\Mg\Pdv\PdvPagamentoController@titulos');
-        Route::get('pagamento/originais', '\Mg\Pdv\PdvPagamentoController@originais');
-        Route::get('pagamento/{id}', '\Mg\Pdv\PdvPagamentoController@show')->whereNumber('id');
-        Route::post('pagamento', '\Mg\Pdv\PdvPagamentoController@store');
-        Route::post('pagamento/{id}/cancelar', '\Mg\Pdv\PdvPagamentoController@cancelar')->whereNumber('id');
-        Route::put('pagamento/{id}/referente', '\Mg\Pdv\PdvPagamentoController@referente')->whereNumber('id');
-        Route::post('pagamento/recibo/{impressora}', '\Mg\Pdv\PdvPagamentoController@imprimirRecibo');
-        // vale colaborador e adiantamentos (M8 doc-3)
-        Route::post('titulo', '\Mg\Pdv\PdvTituloController@store');
         Route::post('titulo/{codtitulo}/vale/{impressora}', '\Mg\Pdv\PdvController@imprimirValeTitulo')->where('codtitulo', '[0-9]+');
-        // caixa: a gaveta do PDV e se esta' aberta (M9; a tela do caixa usa
-        // as rotas v1/caixa desde o M13 doc-3)
-        Route::get('caixa', '\Mg\Caixa\CaixaController@status');
         // Saurus
-        Route::post('saurus/pedido', '\Mg\Pdv\PdvController@criarSaurusPedido');
         Route::post('saurus/pedido/{codsauruspedido}/consultar', '\Mg\Pdv\PdvController@consultarSaurusPedido');
         Route::delete('saurus/pedido/{codsauruspedido}', '\Mg\Pdv\PdvController@cancelarSaurusPedido');
         Route::get('saurus/pedido/{codsauruspedido}/reenviar', '\Mg\Pdv\PdvController@reenviarSaurusPedido');
@@ -1429,9 +1435,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('filial/{codfilial}/painel', '\Mg\Painel\PainelController@show')->whereNumber('codfilial');
 
     // Mercos
-    Route::post('pdv/mercos/pedido/importar/{alterado_apos?}', '\Mg\Pdv\PdvMercosController@importarPedido');
-    Route::get('pdv/mercos/pedido/', '\Mg\Pdv\PdvMercosController@listagemPedido');
-    Route::post('pdv/negocio/{codnegocio}/mercos/{codpedido}/reimportar', '\Mg\Pdv\PdvMercosController@reimportar');
+    Route::post('pdv/mercos/pedido/importar/{alterado_apos?}', '\Mg\Pdv\PdvMercosController@importarPedido')
+        ->middleware('pdv');
+    Route::get('pdv/mercos/pedido/', '\Mg\Pdv\PdvMercosController@listagemPedido')->middleware('pdv');
+    Route::post('pdv/negocio/{codnegocio}/mercos/{codpedido}/reimportar', '\Mg\Pdv\PdvMercosController@reimportar')
+        ->middleware('pdv');
     Route::post('pdv/negocio/{codnegocio}/mercos/{codpedido}/faturamento', '\Mg\Pdv\PdvMercosController@exportarFaturamento');
 
     // RH

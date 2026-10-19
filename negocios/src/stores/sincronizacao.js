@@ -1,10 +1,11 @@
 import { defineStore } from 'pinia'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { db } from 'boot/db'
 import { uid } from 'quasar'
 import { Platform } from 'quasar'
 import { Notify } from 'quasar'
-import moment from 'moment'
+import { formataDataIso } from '@components/formatters'
+import { hoje, paraDate } from '@components/utils/datas'
 
 // o negocio.js chama sincronizacaoStore() no topo do modulo: importar ele daqui de forma
 // estatica fecha um ciclo que quebra quando a sincronizacao carrega primeiro (Meu Dispositivo
@@ -14,10 +15,121 @@ const negocio = async () => (await import('stores/negocio')).negocioStore()
 // a sincronizacao ao abrir roda uma vez por carga do app, nao a cada tela que mostra a janela
 let verificadaAoAbrir = false
 
+// Catalogo (TASK-197): produto e pessoa vem do json/diff que o job pdv:catalogo gera no
+// servidor. Full baixa o json atual em fluxo; incremental aplica os diffs depois da versao
+// local. chave = tabela local; tabela = nome no servidor; pk = primeiro campo de cada linha
+const CATALOGO = {
+  produto: { tabela: 'produtos', pk: 'codprodutobarra' },
+  pessoa: { tabela: 'pessoas', pk: 'codpessoa' },
+}
+// um .diff.gz sem linha nenhuma tem 20 bytes: abaixo disto nao vale uma requisicao
+const DIFF_VAZIO = 32
+// a full grava e mostra o progresso a cada LOTE registros: lote grande parece travado
+const LOTE = 2000
+// etapas da sincronizacao: cada uma e' uma linha do dialog e roda em paralelo com as outras
+export const ETAPAS = {
+  config: 'Configurações',
+  pessoa: 'Pessoas',
+  produto: 'Produtos',
+  prancheta: 'Prancheta',
+  valeModelo: 'Modelos de Vale',
+}
+const etapaVazia = (label) => ({
+  label,
+  rodando: false,
+  concluida: false,
+  erro: false,
+  modo: null, // 'full' | 'diff'
+  total: 0, // registros esperados na full, diffs a aplicar no incremental
+  registros: 0, // gravados na full, diffs aplicados no incremental
+  alterados: 0,
+  excluidos: 0,
+})
+// '20261017-135607' -> '2026-10-17 13:56:07', o formato que o dialog e o backend ja usam
+const dataDaVersao = (v) =>
+  v.replace(/^(\d{4})(\d{2})(\d{2})-(\d{2})(\d{2})(\d{2})$/, '$1-$2-$3 $4:$5:$6')
+// aborta os downloads de todas as etapas de uma vez (Cancelar, ESC, clique fora)
+let abortador = null
+// verificacao da incremental em andamento: abrir a janela e a sincronizacao ao abrir pedem juntas
+let verificacao = null
+// dias desde a ultima completa que a incremental ainda vale
+const DIAS_INCREMENTAL = 7
+// no maximo n downloads ao mesmo tempo; cada chamada devolve a promessa do seu download
+const limitar = (n) => {
+  let ativos = 0
+  const fila = []
+  const proximo = () => {
+    if (ativos >= n || !fila.length) {
+      return
+    }
+    ativos++
+    const { fn, resolve, reject } = fila.shift()
+    fn()
+      .then(resolve, reject)
+      .finally(() => {
+        ativos--
+        proximo()
+      })
+  }
+  return (fn) =>
+    new Promise((resolve, reject) => {
+      fila.push({ fn, resolve, reject })
+      proximo()
+    })
+}
+
 export const DISPOSITIVO_NAO_CADASTRADO =
   'Este navegador não está cadastrado como dispositivo. Abra o Meu Dispositivo e clique em Cadastrar.'
+// trava do Web Locks: uma sincronizacao por vez entre as janelas do navegador
+const TRAVA = 'sincronizacao'
+const EM_ANDAMENTO = 'Já existe uma sincronização em andamento, nesta ou em outra janela.'
+
 export const DISPOSITIVO_INATIVO =
   'Dispositivo inativo. Abra o Meu Dispositivo e peça a um administrador para ativá-lo.'
+
+// Localizacao (obrigatoria): vale a posicao de ate' 1 min, nunca mais velha. Cada tentativa
+// espera o navegador por 10 s; a resposta que chegar depois fica guardada so' em memoria e serve
+// para a proxima tentativa enquanto tiver ate' 1 min (TASK-197)
+const IDADE_POSICAO = 60 * 1000
+const ESPERA_POSICAO = 10 * 1000
+let posicao = null
+
+// pedido sem timeout: quem desiste e' o localizar(), e a resposta atrasada nao se perde
+const pedirPosicao = () =>
+  new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      (p) => {
+        posicao = p
+        resolve(p)
+      },
+      reject,
+      { maximumAge: IDADE_POSICAO },
+    )
+  })
+
+const posicaoRecente = () => posicao && Date.now() - posicao.timestamp <= IDADE_POSICAO
+
+// desiste em 10 s ou quando a sincronizacao e' cancelada (signal)
+const localizar = async (signal) => {
+  if (posicaoRecente()) {
+    return posicao
+  }
+  let espera
+  try {
+    return await Promise.race([
+      pedirPosicao(),
+      new Promise((_, reject) => {
+        espera = setTimeout(
+          () => reject(new Error('o navegador não respondeu em 10 segundos')),
+          ESPERA_POSICAO,
+        )
+        signal?.addEventListener('abort', () => reject(signal.reason), { once: true })
+      }),
+    ])
+  } finally {
+    clearTimeout(espera)
+  }
+}
 
 const erro = (message) => {
   Notify.create({
@@ -31,7 +143,7 @@ const erro = (message) => {
 
 export const sincronizacaoStore = defineStore('sincronizacao', {
   persist: {
-    pick: ['ultimaSincronizacao', 'pdv', 'configuracaoMigrada'],
+    pick: ['ultimaSincronizacao', 'versao', 'pdv', 'configuracaoMigrada'],
   },
 
   state: () => ({
@@ -54,7 +166,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       prancheta: null,
       completa: null,
     },
-    labelSincronizacao: '',
+    // versao do catalogo que cada tabela local tem (TASK-197); vazia = nunca baixou = full
+    versao: {
+      produto: null,
+      pessoa: null,
+    },
     pdv: {
       // envia para api
       uuid: null,
@@ -78,41 +194,43 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     // a configuracao que ficava so' no navegador ja foi enviada ao backend (TASK-46)
     configuracaoMigrada: false,
     importacao: {
-      totalRegistros: null,
-      totalSincronizados: null,
       progresso: 0,
       rodando: false,
       erro: false,
       dialog: false,
-      requisicoes: null,
-      tempoTotal: null,
-      maxRequisicoes: 1000,
-      limiteRequisicao: 3000,
+      tempoTotal: 0,
+      incremental: null, // a janela oferece a incremental? null = verificando
+      // a localizacao vem antes das etapas: a janela mostra a busca numa linha propria
+      localizacao: { buscando: false, erro: false, precisao: null },
+      etapas: Object.fromEntries(Object.entries(ETAPAS).map(([k, l]) => [k, etapaVazia(l)])),
     },
   }),
 
   actions: {
     // o que o navegador sabe de si: uuid, localizacao (obrigatoria) e plataforma
-    async coletarDispositivo(acao) {
+    async coletarDispositivo(acao, signal) {
       if (!this.pdv.uuid) {
         this.pdv.uuid = uid()
       }
 
+      const loc = this.importacao.localizacao
+      Object.assign(loc, { buscando: true, erro: false, precisao: null })
       try {
-        const pos = await new Promise((resolve, reject) => {
-          // sem timeout o Chrome pode nunca responder, mesmo com a permissao concedida
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            timeout: 10000,
-            maximumAge: 10 * 60 * 1000,
-          })
-        })
+        const pos = await localizar(signal)
         this.pdv.latitude = pos.coords.latitude
         this.pdv.longitude = pos.coords.longitude
         this.pdv.precisao = pos.coords.accuracy
+        loc.precisao = pos.coords.accuracy
       } catch (error) {
-        // localizacao e obrigatoria: sem ela o dispositivo nao cadastra nem sincroniza
-        erro(`Sem a localização do dispositivo não é possível ${acao}: ${error.message}`)
+        // localizacao e obrigatoria: sem ela o dispositivo nao cadastra nem sincroniza.
+        // Cancelada no meio nao e' erro e nao avisa
+        if (!signal?.aborted) {
+          loc.erro = true
+          erro(`Sem a localização do dispositivo não é possível ${acao}: ${error.message}`)
+        }
         throw error
+      } finally {
+        loc.buscando = false
       }
 
       const plat = Platform.is
@@ -149,8 +267,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     // sincronizacao: atualiza o que o backend sabe do navegador e traz de volta o cadastro e a
     // configuracao; navegador nao cadastrado leva 404
-    async dispositivo() {
-      const params = await this.coletarDispositivo('sincronizar')
+    async dispositivo(signal) {
+      const params = await this.coletarDispositivo('sincronizar', signal)
       // uma vez so': o backend preenche com isto as colunas de configuracao ainda vazias
       if (!this.configuracaoMigrada) {
         const padrao = (await negocio()).padrao
@@ -204,16 +322,73 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
       const completa = this.ultimaSincronizacao.completa
-      if (completa && moment(completa).isSame(moment(), 'day')) {
+      if (completa && formataDataIso(completa) === hoje()) {
         return
       }
+      if (!(await this.abrirJanela())) {
+        return
+      }
+      await this.verificarIncremental()
+      await this.sincronizar(!this.importacao.incremental)
+    },
+
+    // com outra janela sincronizando, a janela Sincronizar nem abre: recusa com o mesmo aviso do
+    // sincronizar(), consultando a mesma trava. Na corrida, o sincronizar() ainda recusa no clique
+    async abrirJanela() {
+      if (navigator.locks) {
+        const { held } = await navigator.locks.query()
+        if (held.some((t) => t.name === TRAVA)) {
+          erro(EM_ANDAMENTO)
+          return false
+        }
+      }
+      // ja' pede a posicao: ate' o clique em Sincronizar ela costuma ter chegado
+      if (!posicaoRecente()) {
+        pedirPosicao().catch(() => {})
+      }
       this.importacao.dialog = true
-      await this.sincronizar()
+      return true
+    },
+
+    // a incremental so' vale se, em pessoas e produtos, o servidor ainda conhece a versao local,
+    // os diffs somados sao menores que a completa e a ultima completa tem ate' DIAS_INCREMENTAL;
+    // senao a janela so' oferece a completa
+    verificarIncremental() {
+      if (!verificacao) {
+        this.importacao.incremental = null
+        verificacao = Promise.all(Object.keys(CATALOGO).map((c) => this.incrementalDisponivel(c)))
+          .then((disponiveis) => disponiveis.every(Boolean))
+          .catch(() => false)
+          .then((disponivel) => (this.importacao.incremental = disponivel))
+          .finally(() => (verificacao = null))
+      }
+      return verificacao
+    },
+
+    async incrementalDisponivel(chave) {
+      const local = this.versao[chave]
+      if (!local) {
+        return false
+      }
+      // a completa carimba todos os registros com a versao dela e o diff so' os que mudaram: a
+      // menor versao da tabela e' a da ultima completa
+      const maisAntigo = await db[chave].orderBy('versao').first()
+      const limite = Date.now() - DIAS_INCREMENTAL * 24 * 60 * 60 * 1000
+      if (!maisAntigo || paraDate(dataDaVersao(maisAntigo.versao)) < limite) {
+        return false
+      }
+      const { data } = await api.get(`/v1/pdv/catalogo/${CATALOGO[chave].tabela}/versoes`, {
+        params: { desde: local },
+      })
+      const somaDiffs = data.diffs.reduce((soma, d) => soma + d.tamanho, 0)
+      return !!data.desde?.conhecida && somaDiffs < data.atual.tamanho
     },
 
     // Uma sincronizacao por vez, entre todas as janelas do navegador (TASK-197): a trava do
     // Web Locks vale para as abas do mesmo site e solta sozinha se a janela que sincroniza fechar
-    async sincronizar() {
+    // full = botao Sincronizacao completa: pessoas e produtos vem pelo arquivo inteiro; sem ele,
+    // so' os diffs (incremental)
+    async sincronizar(full = false) {
       if (this.importacao.rodando) {
         return
       }
@@ -223,34 +398,36 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
       // sem Web Locks (navegador antigo ou pagina sem https) sincroniza sem a trava
       if (!navigator.locks) {
-        await this.executarSincronizacao()
+        await this.executarSincronizacao(full)
         return
       }
-      const rodou = await navigator.locks.request(
-        'sincronizacao',
-        { ifAvailable: true },
-        async (trava) => {
-          if (!trava) {
-            return false
-          }
-          await this.executarSincronizacao()
-          return true
-        },
-      )
+      const rodou = await navigator.locks.request(TRAVA, { ifAvailable: true }, async (trava) => {
+        if (!trava) {
+          return false
+        }
+        await this.executarSincronizacao(full)
+        return true
+      })
       if (!rodou) {
         this.importacao.rodando = false
         this.importacao.dialog = false
-        erro('Já existe uma sincronização em andamento, nesta ou em outra janela.')
+        erro(EM_ANDAMENTO)
       }
     },
 
-    async executarSincronizacao() {
+    async executarSincronizacao(full) {
+      // o Cancelar aborta da espera da localizacao ate' os downloads de todas as etapas
+      abortador = new AbortController()
       // verifica se PDV pode acessar API (o dispositivo() ja avisou o erro)
       try {
-        await this.dispositivo()
+        await this.dispositivo(abortador.signal)
       } catch (error) {
         console.log(error)
         this.importacao.rodando = false
+        return
+      }
+      // cancelada enquanto o backend respondia o dispositivo
+      if (!this.importacao.rodando) {
         return
       }
       if (this.pdv.inativo) {
@@ -259,37 +436,41 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // roda as importacoes
-      try {
-        if (this.sincronizacao.config) {
-          await this.sincronizarImpressora()
-          await this.sincronizarFormaPagamento()
-          await this.sincronizarEstoqueLocal()
-          await this.sincronizarNaturezaOperacao()
-        }
-        if (this.sincronizacao.pessoa) {
-          await this.sincronizarPessoa()
-        }
-        if (this.sincronizacao.produto) {
-          await this.sincronizarProduto()
-        }
-        if (this.sincronizacao.prancheta) {
-          await this.sincronizarPrancheta()
-        }
-        if (this.sincronizacao.valeModelo) {
-          await this.sincronizarValeModelo()
-        }
-      } catch (error) {
-        console.log(error)
-        this.importacao.erro = true
+      // Etapas em paralelo (TASK-197): cada uma e' uma linha do dialog, erro numa nao derruba
+      // as outras, e o Cancelar aborta os downloads de todas pelo mesmo controlador
+      const inicio = performance.now()
+      const cronometro = setInterval(() => {
+        this.importacao.tempoTotal = Math.round((performance.now() - inicio) / 1000)
+      }, 500)
+      const etapas = []
+      if (this.sincronizacao.config) {
+        etapas.push(this.rodarEtapa('config', () => this.sincronizarConfig()))
       }
+      if (this.sincronizacao.pessoa) {
+        etapas.push(this.rodarEtapa('pessoa', () => this.sincronizarCatalogo('pessoa', full)))
+      }
+      if (this.sincronizacao.produto) {
+        etapas.push(this.rodarEtapa('produto', () => this.sincronizarCatalogo('produto', full)))
+      }
+      if (this.sincronizacao.prancheta) {
+        etapas.push(this.rodarEtapa('prancheta', () => this.sincronizarPrancheta()))
+      }
+      if (this.sincronizacao.valeModelo) {
+        etapas.push(this.rodarEtapa('valeModelo', () => this.sincronizarValeModelo()))
+      }
+      await Promise.allSettled(etapas)
+      clearInterval(cronometro)
 
       // esconde janela de progresso; com erro ela fica aberta, junto dos avisos
       // (cancelada pelo usuario, rodando ja e false e a janela segue fechada)
       const manterAberta = this.importacao.erro && this.importacao.rodando
+      const finalizada = !this.importacao.erro && this.importacao.rodando
       this.inicializaVars()
       if (manterAberta) {
         this.importacao.dialog = true
+      }
+      if (finalizada) {
+        Notify.create({ message: 'Sincronização finalizada', color: 'green-5', icon: 'done' })
       }
       await this.avisarSincronizacaoCompleta()
     },
@@ -302,7 +483,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
       try {
         await api.put('/v1/pdv/dispositivo/sincronizacao-completa', {
-          pdv: this.pdv.uuid,
           completa: this.ultimaSincronizacao.completa,
         })
       } catch (error) {
@@ -311,33 +491,242 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     },
 
     async inicializaVars() {
-      this.inicializaProgresso(null)
+      this.importacao.progresso = 0
       this.importacao.dialog = false
       this.importacao.rodando = false
-      this.ultimaSincronizacao.completa = [
-        this.ultimaSincronizacao.impressora,
-        this.ultimaSincronizacao.formaPagamento,
-        this.ultimaSincronizacao.estoqueLocal,
-        this.ultimaSincronizacao.naturezaOperacao,
-        this.ultimaSincronizacao.valeModelo,
-        this.ultimaSincronizacao.pessoa,
-        this.ultimaSincronizacao.produto,
-        this.ultimaSincronizacao.prancheta,
+      // sem pessoas ou produtos (completa nunca feita ou interrompida) o PDV nao esta' sincronizado:
+      // o null iria para o fim do sort e valeria a data das outras etapas
+      const u = this.ultimaSincronizacao
+      if (!u.pessoa || !u.produto) {
+        u.completa = null
+        return
+      }
+      u.completa = [
+        u.impressora,
+        u.formaPagamento,
+        u.estoqueLocal,
+        u.naturezaOperacao,
+        u.valeModelo,
+        u.pessoa,
+        u.produto,
+        u.prancheta,
       ].sort()[0]
     },
 
     async abortarSincronizacao() {
       this.importacao.rodando = false
       this.importacao.dialog = false
+      abortador?.abort()
     },
 
-    inicializaProgresso(label) {
-      this.importacao.progresso = 0
-      this.importacao.totalRegistros = 0
-      this.importacao.totalSincronizados = 0
-      this.importacao.requisicoes = 0
-      this.importacao.tempoTotal = 0
-      this.labelSincronizacao = label
+    // uma etapa = uma linha do dialog; fn devolve false (ou lanca) quando falhou
+    async rodarEtapa(chave, fn) {
+      const etapa = this.importacao.etapas[chave]
+      Object.assign(etapa, etapaVazia(etapa.label), { rodando: true })
+      let ok = false
+      try {
+        ok = (await fn()) !== false
+      } catch (error) {
+        // cancelada no meio nao e' erro; as funcoes de configuracao avisam sozinhas
+        if (!['AbortError', 'CanceledError'].includes(error?.name)) {
+          console.log(error)
+          erro(`${etapa.label}: ${error?.response?.data?.message ?? error?.message}`)
+        }
+      }
+      etapa.rodando = false
+      etapa.concluida = ok
+      if (!ok && this.importacao.rodando) {
+        etapa.erro = true
+        this.importacao.erro = true
+      }
+      return ok
+    },
+
+    // progresso geral (botao e circulo do dialog): gravados sobre esperados, todas as etapas
+    atualizarProgresso() {
+      let total = 0
+      let feito = 0
+      for (const e of Object.values(this.importacao.etapas)) {
+        total += e.total
+        feito += Math.min(e.registros, e.total)
+      }
+      this.importacao.progresso = total ? Math.round((feito * 100) / total) : 0
+    },
+
+    // registro que veio ao vivo (bipe, CNPJ, cadastro) leva a versao local da tabela: sem isso
+    // ele nao entraria no indice e sobreviveria a' limpeza da proxima full
+    carimbar(chave, registros) {
+      const versao = this.versao[chave] ?? '0'
+      registros.forEach((r) => (r.versao = versao))
+      return registros
+    },
+
+    // as quatro de configuracao, em sequencia, numa linha so' do dialog
+    async sincronizarConfig() {
+      const etapa = this.importacao.etapas.config
+      etapa.total = 4
+      let ok = true
+      for (const fn of [
+        this.sincronizarImpressora,
+        this.sincronizarFormaPagamento,
+        this.sincronizarEstoqueLocal,
+        this.sincronizarNaturezaOperacao,
+      ]) {
+        if ((await fn.call(this)) === false) {
+          ok = false
+        }
+        etapa.registros++
+        this.atualizarProgresso()
+      }
+      return ok
+    },
+
+    // ---- Catalogo (TASK-197) --------------------------------------------------------------
+
+    urlCatalogo(tabela, caminho) {
+      return api.getUri({
+        url: `/v1/pdv/catalogo/${tabela}/${caminho}`,
+      })
+    },
+
+    // resposta de um arquivo do catalogo; o navegador descomprime o gzip sozinho. Fora do axios:
+    // o cabecalho do dispositivo vai a mao
+    async baixarCatalogo(tabela, versao, tipo) {
+      const resposta = await fetch(this.urlCatalogo(tabela, `${versao}.${tipo}`), {
+        headers: { 'X-Pdv': this.pdv.uuid },
+        signal: abortador?.signal,
+      })
+      if (!resposta.ok) {
+        const corpo = await resposta.json().catch(() => ({}))
+        throw new Error(corpo.message ?? `${resposta.status} ${resposta.statusText}`)
+      }
+      return resposta
+    },
+
+    async sincronizarCatalogo(chave, full) {
+      const { tabela, pk } = CATALOGO[chave]
+      const etapa = this.importacao.etapas[chave]
+      const local = this.versao[chave]
+      const { data: versoes } = await api.get(`/v1/pdv/catalogo/${tabela}/versoes`, {
+        params: { desde: local ?? undefined },
+        signal: abortador?.signal,
+      })
+      const { atual, diffs } = versoes
+      if (full) {
+        return await this.aplicarFull(chave, etapa, tabela, atual)
+      }
+      // a janela so' oferece a incremental se o servidor conhece a versao local; se ela saiu de
+      // la' depois disso, recusa em vez de baixar tudo por conta propria
+      if (!versoes.desde?.conhecida) {
+        throw new Error(
+          'a versão deste PDV não está mais no servidor, use a Sincronização completa',
+        )
+      }
+      return await this.aplicarDiffs(chave, pk, etapa, tabela, atual, diffs)
+    },
+
+    // baixa ate' 5 diffs por vez e aplica na ordem das versoes: '-' e' chave que saiu, '+' e'
+    // registro que entrou ou mudou (o mudado vem nas duas e o bulkPut sobrescreve)
+    async aplicarDiffs(chave, pk, etapa, tabela, atual, diffs) {
+      etapa.modo = 'diff'
+      const uteis = diffs.filter((d) => d.tamanho > DIFF_VAZIO)
+      etapa.total = uteis.length
+      const baixar = limitar(5)
+      const textos = uteis.map((d) =>
+        baixar(async () => (await this.baixarCatalogo(tabela, d.versao, 'diff')).text()),
+      )
+      // uma falha derruba a etapa no await dela; as outras nao podem virar rejeicao solta
+      textos.forEach((t) => t.catch(() => {}))
+      for (let i = 0; i < uteis.length; i++) {
+        const texto = await textos[i]
+        if (!this.importacao.rodando) {
+          return false
+        }
+        const incluir = []
+        const saindo = []
+        for (const linha of texto.split('\n')) {
+          if (linha.startsWith('+{')) {
+            const registro = JSON.parse(linha.slice(1))
+            registro.versao = uteis[i].versao
+            incluir.push(registro)
+          } else if (linha.startsWith('-{')) {
+            saindo.push(parseInt(linha.slice(linha.indexOf(':') + 1)))
+          }
+        }
+        const voltou = new Set(incluir.map((r) => r[pk]))
+        const excluir = saindo.filter((k) => !voltou.has(k))
+        await db[chave].bulkDelete(excluir)
+        await db[chave].bulkPut(incluir)
+        etapa.alterados += incluir.length
+        etapa.excluidos += excluir.length
+        etapa.registros++
+        this.versao[chave] = uteis[i].versao
+        this.ultimaSincronizacao[chave] = dataDaVersao(uteis[i].versao)
+        this.atualizarProgresso()
+      }
+      // os diffs vazios depois do ultimo util tambem contam: o local ja e' igual ao json atual
+      this.versao[chave] = atual.versao
+      this.ultimaSincronizacao[chave] = dataDaVersao(atual.versao)
+      return true
+    },
+
+    // baixa o json atual em fluxo, um registro por linha, gravando a cada LOTE; no fim o que
+    // ficou com versao velha nao existe mais no servidor
+    async aplicarFull(chave, etapa, tabela, atual) {
+      etapa.modo = 'full'
+      etapa.total = atual.registros ?? 0
+      // antes de comecar: a completa interrompida (Cancelar, F5, travamento) deixa a tabela pela
+      // metade, e ate' ela terminar o PDV fica como nunca sincronizado, so' com a completa
+      this.versao[chave] = null
+      this.ultimaSincronizacao[chave] = null
+      this.ultimaSincronizacao.completa = null
+      const resposta = await this.baixarCatalogo(tabela, atual.versao, 'json')
+      const leitor = resposta.body.getReader()
+      const decodificador = new TextDecoder()
+      let resto = ''
+      let lote = []
+      const gravar = async () => {
+        if (!lote.length) {
+          return
+        }
+        await db[chave].bulkPut(lote)
+        etapa.registros += lote.length
+        lote = []
+        this.atualizarProgresso()
+      }
+      const empilhar = (linha) => {
+        if (!linha) {
+          return
+        }
+        const registro = JSON.parse(linha)
+        registro.versao = atual.versao
+        lote.push(registro)
+      }
+      for (;;) {
+        const { done, value } = await leitor.read()
+        if (!this.importacao.rodando) {
+          await leitor.cancel()
+          return false
+        }
+        if (done) {
+          break
+        }
+        // a ultima linha do pedaco pode vir cortada: fica para o proximo
+        const linhas = (resto + decodificador.decode(value, { stream: true })).split('\n')
+        resto = linhas.pop()
+        for (const linha of linhas) {
+          empilhar(linha)
+          if (lote.length >= LOTE) {
+            await gravar()
+          }
+        }
+      }
+      empilhar(resto + decodificador.decode())
+      await gravar()
+      await db[chave].where('versao').below(atual.versao).delete()
+      this.versao[chave] = atual.versao
+      this.ultimaSincronizacao[chave] = dataDaVersao(atual.versao)
+      return true
     },
 
     async sincronizarImpressora() {
@@ -345,15 +734,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Impressoras')
       let sincronizado = null
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/impressora', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/impressora')
 
         // insere dados no banco local indexeddb
         await db.impressora.bulkPut(data)
@@ -370,10 +755,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.importacao.erro = true
         Notify.create({
           type: 'negative',
-          message: error.response.data.message,
+          message: error?.response?.data?.message ?? error.message,
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        return false
       }
     },
 
@@ -382,15 +768,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Formas de Pagamento')
       let sincronizado = null
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/forma-pagamento', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/forma-pagamento')
 
         // insere dados no banco local indexeddb
         await db.formaPagamento.bulkPut(data)
@@ -407,10 +789,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.importacao.erro = true
         Notify.create({
           type: 'negative',
-          message: error.response.data.message,
+          message: error?.response?.data?.message ?? error.message,
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        return false
       }
     },
 
@@ -419,15 +802,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Locais de Estoque')
       let sincronizado = null
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/estoque-local', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/estoque-local')
 
         // insere dados no banco local indexeddb
         await db.estoqueLocal.bulkPut(data)
@@ -444,19 +823,18 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.importacao.erro = true
         Notify.create({
           type: 'negative',
-          message: error.response.data.message,
+          message: error?.response?.data?.message ?? error.message,
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        return false
       }
     },
 
     async silentSincronizarEstoqueLocal() {
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/estoque-local', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/estoque-local')
 
         // insere dados no banco local indexeddb
         await db.estoqueLocal.bulkPut(data)
@@ -482,15 +860,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Natureza De Operação')
       let sincronizado = null
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/natureza-operacao', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/natureza-operacao')
 
         // insere dados no banco local indexeddb
         await db.naturezaOperacao.bulkPut(data)
@@ -507,10 +881,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.importacao.erro = true
         Notify.create({
           type: 'negative',
-          message: error.response.data.message,
+          message: error?.response?.data?.message ?? error.message,
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        return false
       }
     },
 
@@ -527,15 +902,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Modelos de Vale')
       let sincronizado = null
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/vale-modelo', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/vale-modelo')
 
         // catalogo vazio: limpa o cache local (nenhum modelo ativo la') e
         // sai sem carimbar data, que so' existe quando veio registro.
@@ -563,174 +934,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
-      }
-    },
-
-    async sincronizarPessoa() {
-      if (!this.importacao.rodando) {
-        return
-      }
-
-      // inicializa progresso
-      this.inicializaProgresso('Pessoas')
-
-      // descobre o total de registros pra sincronizar
-      try {
-        let { data } = await api.get('/v1/pdv/pessoa-count', {
-          params: { pdv: this.pdv.uuid },
-        })
-        this.importacao.totalRegistros = data.count
-        this.importacao.limiteRequisicao = Math.round(this.importacao.totalRegistros / 10)
-      } catch (error) {
-        console.log(error)
-        console.log('Impossível acessar API')
-        this.importacao.erro = true
-        Notify.create({
-          type: 'negative',
-          message: error.response.data.message,
-          timeout: 0, // 20 minutos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-      }
-
-      let sincronizado = null
-      let inicio = performance.now()
-      let codpessoa = 0
-
-      do {
-        // busca dados na api
-        var { data } = await api.get('/v1/pdv/pessoa', {
-          params: {
-            pdv: this.pdv.uuid,
-            codpessoa: codpessoa,
-            limite: this.importacao.limiteRequisicao,
-          },
-        })
-
-        // se nao veio nada interrompe o loop
-        if (data.length == 0) {
-          break
-        }
-
-        // incrementa numero de requisicoes
-        this.importacao.requisicoes++
-
-        // insere dados no banco local indexeddb
-        try {
-          await db.pessoa.bulkPut(data)
-        } catch (error) {
-          console.log(error.stack || error)
-        }
-
-        if (sincronizado == null) {
-          sincronizado = data[0].sincronizado
-        }
-
-        // busca codigo do ultimo registro
-        codpessoa = data.slice(-1)[0].codpessoa
-
-        //monta status de progresso
-        this.importacao.totalSincronizados += data.length
-        this.importacao.progresso = Math.round(
-          (this.importacao.totalSincronizados * 100) / this.importacao.totalRegistros,
-        )
-        this.importacao.tempoTotal = Math.round((performance.now() - inicio) / 1000)
-
-        // loop enquanto nao tiver buscado menos registros que o limite
-      } while (
-        data.length >= this.importacao.limiteRequisicao &&
-        this.importacao.requisicoes <= this.importacao.maxRequisicoes &&
-        this.importacao.rodando
-      )
-
-      // exclui registros que nao vieram na importacao
-      if (this.importacao.rodando) {
-        db.pessoa.where('sincronizado').below(sincronizado).delete()
-        this.ultimaSincronizacao.pessoa = sincronizado
-      }
-    },
-
-    async sincronizarProduto() {
-      if (!this.importacao.rodando) {
-        return
-      }
-
-      // inicializa progresso
-      this.inicializaProgresso('Produtos')
-
-      // descobre o total de registros pra sincronizar
-      try {
-        let { data } = await api.get('/v1/pdv/produto-count', {
-          params: { pdv: this.pdv.uuid },
-        })
-        this.importacao.totalRegistros = data.count
-        this.importacao.limiteRequisicao = Math.round(this.importacao.totalRegistros / 50)
-      } catch (error) {
-        console.log(error)
-        console.log('Impossível acessar API')
-        this.importacao.erro = true
-        Notify.create({
-          type: 'negative',
-          message: error.response.data.message,
-          timeout: 0, // 20 minutos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-      }
-
-      let sincronizado = null
-      let inicio = performance.now()
-      let codprodutobarra = 0
-
-      do {
-        // busca dados na api
-        var { data } = await api.get('/v1/pdv/produto', {
-          params: {
-            pdv: this.pdv.uuid,
-            codprodutobarra: codprodutobarra,
-            limite: this.importacao.limiteRequisicao,
-          },
-        })
-
-        // se nao veio nada interrompe o loop
-        if (data.length == 0) {
-          break
-        }
-
-        // incrementa numero de requisicoes
-        this.importacao.requisicoes++
-
-        // insere dados no banco local indexeddb
-        try {
-          await db.produto.bulkPut(data)
-        } catch (error) {
-          console.log(error.stack || error)
-        }
-
-        if (sincronizado == null) {
-          sincronizado = data[0].sincronizado
-        }
-
-        // busca codigo do ultimo registro
-        codprodutobarra = data.slice(-1)[0].codprodutobarra
-
-        //monta status de progresso
-        this.importacao.totalSincronizados += data.length
-        this.importacao.progresso = Math.round(
-          (this.importacao.totalSincronizados * 100) / this.importacao.totalRegistros,
-        )
-        this.importacao.tempoTotal = Math.round((performance.now() - inicio) / 1000)
-
-        // loop enquanto nao tiver buscado menos registros que o limite
-      } while (
-        data.length >= this.importacao.limiteRequisicao &&
-        this.importacao.requisicoes <= this.importacao.maxRequisicoes &&
-        this.importacao.rodando
-      )
-
-      // exclui registros que nao vieram na importacao
-      if (this.importacao.rodando) {
-        db.produto.where('sincronizado').below(sincronizado).delete()
-        this.ultimaSincronizacao.produto = sincronizado
+        return false
       }
     },
 
@@ -739,15 +943,11 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
 
-      // inicializa progresso
-      this.inicializaProgresso('Prancheta')
       let sincronizado = null
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/prancheta', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/prancheta')
 
         // insere dados no banco local indexeddb
         await db.prancheta.bulkPut(data)
@@ -764,16 +964,16 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         this.importacao.erro = true
         Notify.create({
           type: 'negative',
-          message: error.response.data.message,
+          message: error?.response?.data?.message ?? error.message,
           timeout: 0, // 20 minutos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        return false
       }
     },
 
     async putNegocio(negocio) {
       const params = {
-        pdv: this.pdv.uuid,
         negocio: negocio,
       }
       try {
@@ -806,11 +1006,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     async getNegocio(codOrUuid) {
       try {
-        const { data } = await api.get('/v1/pdv/negocio/' + codOrUuid, {
-          params: {
-            pdv: this.pdv.uuid,
-          },
-        })
+        const { data } = await api.get('/v1/pdv/negocio/' + codOrUuid)
         return data.data
       } catch (error) {
         console.log(error)
@@ -830,9 +1026,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     async postApropriar(codnegocio) {
       try {
-        const { data } = await api.post('/v1/pdv/negocio/' + codnegocio + '/apropriar', {
-          pdv: this.pdv.uuid,
-        })
+        const { data } = await api.post('/v1/pdv/negocio/' + codnegocio + '/apropriar')
         return data.data
       } catch (error) {
         console.log(error)
@@ -854,7 +1048,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       try {
         // com impressora, o backend imprime sozinho os vales e contra vales com saldo
         const { data } = await api.post('/v1/pdv/negocio/' + codnegocio + '/fechar', {
-          pdv: this.pdv.uuid,
           impressora,
         })
         return data.data
@@ -878,7 +1071,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     async reabrirNegocio(codnegocio, justificativa) {
       try {
         const { data } = await api.post('/v1/pdv/negocio/' + codnegocio + '/reabrir', {
-          pdv: this.pdv.uuid,
           justificativa,
         })
         return data.data
@@ -902,7 +1094,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       try {
         const { data } = await api.delete('/v1/pdv/negocio/' + codnegocio, {
           params: {
-            pdv: this.pdv.uuid,
             justificativa: justificativa,
           },
         })
@@ -928,7 +1119,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         const { data } = await api.post(
           `/v1/pdv/negocio/${codnegocio}/unificar/${codnegociocomanda}`,
           {
-            pdv: this.pdv.uuid,
             ...escolhas,
           },
         )
@@ -953,7 +1143,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       try {
         // com impressora, o backend imprime sozinho o vale de credito da devolucao
         const ret = await api.post('/v1/pdv/negocio/' + codnegocio + '/devolucao', {
-          pdv: this.pdv.uuid,
           devolucao: arrDevolucao,
           impressora,
         })
@@ -1018,7 +1207,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     async uploadAnexo(codnegocio, pasta, ratio, anexoBase64) {
       try {
         const ret = await api.post('/v1/negocio/' + codnegocio + '/anexo', {
-          pdv: this.pdv.uuid,
           pasta: pasta,
           ratio: ratio,
           anexoBase64: anexoBase64,
@@ -1044,11 +1232,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       try {
         const { data } = await api.delete(
           '/v1/negocio/' + codnegocio + '/anexo/' + pasta + '/' + anexo,
-          {
-            params: {
-              pdv: this.pdv.uuid,
-            },
-          },
         )
         return data
       } catch (error) {
@@ -1065,9 +1248,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     async postPessoa(pessoa) {
       try {
-        pessoa.pdv = this.pdv.uuid
         var { data } = await api.post('/v1/pdv/pessoa', pessoa)
-        await db.pessoa.bulkPut(data)
+        await db.pessoa.bulkPut(this.carimbar('pessoa', data))
         return data[0].codpessoa
       } catch (error) {
         let message = 'Falha ao salvar a pessoa!'
@@ -1096,10 +1278,8 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     async pessoaPeloCnpj(cnpj) {
       try {
-        var { data } = await api.get('/v1/pdv/pessoa/cnpj/' + cnpj, {
-          params: { pdv: this.pdv.uuid },
-        })
-        await db.pessoa.bulkPut(data)
+        var { data } = await api.get('/v1/pdv/pessoa/cnpj/' + cnpj)
+        await db.pessoa.bulkPut(this.carimbar('pessoa', data))
         return data.length
       } catch (error) {
         console.log(error)

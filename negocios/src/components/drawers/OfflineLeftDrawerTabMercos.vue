@@ -1,12 +1,10 @@
 <script setup>
-import { formataNumero } from '@components/formatters'
+import { formataNumero, tempoRelativo } from '@components/formatters'
 import { onMounted, onUnmounted } from 'vue'
 import { Dialog } from 'quasar'
 import emitter from 'src/utils/emitter'
 import { mercosStore } from 'stores/mercos'
 import { sincronizacaoStore } from 'stores/sincronizacao'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
 
 const sMercos = mercosStore()
 const sSinc = sincronizacaoStore()
@@ -59,7 +57,7 @@ onUnmounted(() => {
             {{ n.condicaopagamento }}
           </q-item-label>
           <q-item-label caption>
-            #{{ n.numero }} {{ moment(n.ultimaalteracaomercos).fromNow() }}
+            #{{ n.numero }} {{ tempoRelativo(n.ultimaalteracaomercos) }}
           </q-item-label>
         </q-item-section>
         <q-item-section side class="text-bold">

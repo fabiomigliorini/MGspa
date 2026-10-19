@@ -50,7 +50,7 @@ As decisões novas são estas:
 | D12 | **(29/09) O contrato pode ser carregado além do saldo.** O caminhão completa a carga para aproveitar o frete, e o comprador aceita. O servidor **não bloqueia**; o pátio avisa quanto passa e a tela mostra "Entregue a mais". Substitui a trava do 3.2 | Fase 3 |
 
 O que a bateria validou, o que é regra aceita e o que é defeito, confirmado em 29/09/2026:
-`backlog/docs/doc-3`.
+`backlog/docs/doc-5`.
 
 ---
 

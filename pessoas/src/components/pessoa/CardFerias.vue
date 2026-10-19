@@ -1,13 +1,11 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import { formataDataAbreviada, formataMesAno } from '@components/formatters'
+import { formataDataAbreviada, formataMesAno, formataDataIso } from '@components/formatters'
 import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { colaboradorStore } from 'stores/colaborador'
-import moment from 'moment'
-import 'moment/min/locales'
-moment.locale('pt-br')
+import { hoje, lerDataBr, somaAnos, somaDias } from '@components/utils/datas'
 import MgInputData from '@components/MgInputData.vue'
 
 const props = defineProps(['colaborador'])
@@ -38,48 +36,46 @@ const brasil = {
 }
 
 function calculaPeriodoAquisitivo(colaborador) {
-  var inicio = moment(colaborador.contratacao)
+  var inicio = formataDataIso(colaborador.contratacao)
   var dias = 0
   colaborador.Ferias.forEach((ferias) => {
-    var ultima = moment(ferias.aquisitivoinicio)
-    if (inicio.isSame(ultima)) {
+    var ultima = formataDataIso(ferias.aquisitivoinicio)
+    if (inicio === ultima) {
       dias += ferias.dias
-    } else if (inicio.isBefore(ultima)) {
+    } else if (inicio < ultima) {
       inicio = ultima
       dias = ferias.dias
     }
   })
   if (dias >= 30) {
-    inicio.add(1, 'year')
+    inicio = somaAnos(inicio, 1)
     dias = 30
   } else {
     dias = 30 - dias
   }
   return {
     inicio: inicio,
-    fim: inicio.clone().add(1, 'year').subtract(1, 'day'),
+    fim: somaDias(somaAnos(inicio, 1), -1),
     dias: dias,
   }
 }
 
 function sugereAquisitivoFim() {
   if (!model.value.aquisitivoinicio) return
-  const inicio = moment(model.value.aquisitivoinicio, 'YYYY-MM-DD', true)
-  if (!inicio.isValid()) return
-  model.value.aquisitivofim = inicio.add(1, 'year').subtract(1, 'day').format('YYYY-MM-DD')
+  const fim = somaDias(somaAnos(model.value.aquisitivoinicio, 1), -1)
+  if (!fim) return
+  model.value.aquisitivofim = fim
   sugereGozo()
 }
 
 function sugereGozo() {
   if (!model.value.aquisitivofim) return
-  const fim = moment(model.value.aquisitivofim, 'YYYY-MM-DD', true)
-  if (!fim.isValid()) return
+  const from = somaDias(model.value.aquisitivofim, 1)
+  if (!from) return
   const dias = model.value.diasgozo || model.value.dias || 30
-  const from = fim.clone().add(1, 'day')
-  const to = from.clone().add(dias - 1, 'days')
   model.value.gozo = {
-    from: from.format('YYYY-MM-DD'),
-    to: to.format('YYYY-MM-DD'),
+    from,
+    to: somaDias(from, dias - 1),
   }
 }
 
@@ -90,15 +86,15 @@ function nova(colaborador) {
   const aquisitivoinicio = aquisitivo.inicio
   const aquisitivofim = aquisitivo.fim
   const dias = aquisitivo.dias
-  const gozoinicio = aquisitivofim.clone().add(1, 'day')
-  const gozofim = gozoinicio.clone().add(dias, 'day')
+  const gozoinicio = somaDias(aquisitivofim, 1)
+  const gozofim = somaDias(gozoinicio, dias)
   model.value = {
     codcolaborador: colaborador.codcolaborador,
-    aquisitivoinicio: aquisitivoinicio.format('YYYY-MM-DD'),
-    aquisitivofim: aquisitivofim.format('YYYY-MM-DD'),
+    aquisitivoinicio,
+    aquisitivofim,
     gozo: {
-      from: gozoinicio.format('YYYY-MM-DD'),
-      to: gozofim.format('YYYY-MM-DD'),
+      from: gozoinicio,
+      to: gozofim,
     },
     dias: dias,
     diasabono: 0,
@@ -232,8 +228,7 @@ function validaData(value) {
   if (!value) {
     return true
   }
-  const data = moment(value, 'DD/MM/YYYY', true)
-  if (!data.isValid()) {
+  if (!lerDataBr(value)) {
     return 'Data Inválida!'
   }
   return true
@@ -243,13 +238,13 @@ function validaAqInicio(value) {
   if (!value) {
     return true
   }
-  const inicio = moment(value, 'DD/MM/YYYY', true)
-  if (!inicio.isValid()) {
+  const inicio = lerDataBr(value)
+  if (!inicio) {
     return true
   }
   const colaborador = sColaborador.findColaborador(model.value.codcolaborador)
   const contratacao = colaborador?.contratacao?.substring(0, 10)
-  if (contratacao && inicio.format('YYYY-MM-DD') < contratacao) {
+  if (contratacao && inicio < contratacao) {
     return 'Aquisitivo início não pode ser anterior a contratação!'
   }
   return true
@@ -259,11 +254,10 @@ function validaAqFim(value) {
   if (!value) {
     return true
   }
-  const aqFim = moment(value, 'DD/MM/YYYY', true)
-  if (!aqFim.isValid()) {
+  const aqFimISO = lerDataBr(value)
+  if (!aqFimISO) {
     return true
   }
-  const aqFimISO = aqFim.format('YYYY-MM-DD')
   const colaborador = sColaborador.findColaborador(model.value.codcolaborador)
   const rescisao = colaborador?.rescisao?.substring(0, 10)
   if (rescisao && aqFimISO > rescisao) {
@@ -294,8 +288,7 @@ function calculaDiasGozo() {
   var diasgozo = model.value.dias - model.value.diasabono - model.value.diasdescontados
   model.value.diasgozo = diasgozo
   if (!model.value.gozo?.from) return
-  const inicio = moment(model.value.gozo.from, 'YYYY-MM-DD', true)
-  model.value.gozo.to = inicio.add(diasgozo - 1, 'days').format('YYYY-MM-DD')
+  model.value.gozo.to = somaDias(model.value.gozo.from, diasgozo - 1)
 }
 
 function calculaFimGozo() {
@@ -305,19 +298,18 @@ function calculaFimGozo() {
   var mFrom
   switch (typeof model.value.gozo) {
     case 'string':
-      mFrom = moment(model.value.gozo, 'YYYY-MM-DD', true)
+      mFrom = model.value.gozo
       break
     case 'object':
-      mFrom = moment(model.value.gozo.from, 'YYYY-MM-DD', true)
+      mFrom = model.value.gozo.from
       break
     default:
-      mFrom = moment()
+      mFrom = hoje()
       break
   }
-  const mTo = mFrom.clone().add(model.value.diasgozo - 1, 'days')
   model.value.gozo = {
-    from: mFrom.format('YYYY-MM-DD'),
-    to: mTo.format('YYYY-MM-DD'),
+    from: mFrom,
+    to: somaDias(mFrom, model.value.diasgozo - 1),
   }
 }
 

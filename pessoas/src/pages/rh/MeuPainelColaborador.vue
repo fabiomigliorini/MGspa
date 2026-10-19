@@ -3,7 +3,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 import { rhStore } from 'src/stores/rh'
-import { formataData, formataFromNow } from '@components/formatters'
+import { formataData, tempoRelativo } from '@components/formatters'
 import { extrairErro } from 'src/utils/rhFormatters'
 import CardIndicadores from 'src/components/rh/CardIndicadores.vue'
 import CardRubricas from 'src/components/rh/CardRubricas.vue'
@@ -68,7 +68,7 @@ onMounted(() => carregar())
           <div class="text-caption text-grey" v-if="setorNome">{{ setorNome }}</div>
           <div class="text-caption text-grey" v-if="colaborador.colaborador?.contratacao">
             Contratação: {{ formataData(colaborador.colaborador.contratacao) }} ({{
-              formataFromNow(colaborador.colaborador.contratacao)
+              tempoRelativo(colaborador.colaborador.contratacao)
             }})
           </div>
         </q-item-section>

@@ -1,12 +1,11 @@
 <script setup>
-import { formataDataIso } from '@components/formatters'
+import { hoje, inicioAno, inicioMes, somaAnos } from '@components/utils/datas'
 import { ref, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { GrupoEconomicoStore } from 'src/stores/GrupoEconomico'
 import Chart from 'chart.js/auto'
 import SelectPessoas from 'components/pessoa/SelectPessoas.vue'
-import moment from 'moment'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -15,22 +14,22 @@ const sGrupoEconomico = GrupoEconomicoStore()
 const canvasRef = ref(null)
 const graficoInstance = ref(null)
 const filtroPessoa = ref({
-  desde: formataDataIso(moment().subtract(1, 'year').startOf('month').toDate()),
+  desde: inicioMes(somaAnos(hoje(), -1)),
   codpessoa: null,
 })
 
 const opcoesDesde = [
   {
     label: 'Este Ano',
-    value: formataDataIso(moment().startOf('year').toDate()),
+    value: inicioAno(hoje()),
   },
   {
     label: '1 Ano',
-    value: formataDataIso(moment().subtract(1, 'year').startOf('month').toDate()),
+    value: inicioMes(somaAnos(hoje(), -1)),
   },
   {
     label: '2 Anos',
-    value: formataDataIso(moment().subtract(2, 'year').startOf('month').toDate()),
+    value: inicioMes(somaAnos(hoje(), -2)),
   },
   { label: 'Tudo', value: null },
 ]

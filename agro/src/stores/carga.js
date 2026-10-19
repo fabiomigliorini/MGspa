@@ -12,9 +12,9 @@ import {
   novoPonto,
   pontoCompleto,
   ratearPontos,
-  agoraLocal,
   CAMPOS_MOTORISTA_SEM_CADASTRO,
 } from 'src/utils/carga'
+import { agora } from '@components/utils/datas'
 import { notifyError } from 'src/utils/notify'
 
 // Constantes e helpers puros do domínio vivem em utils/carga.js (importáveis
@@ -414,7 +414,7 @@ export const useCargaStore = defineStore('carga', () => {
       codsafra: null,
       sentido: s,
       etapa: ETAPAS_POR_SENTIDO[s][0],
-      data: agoraLocal(),
+      data: agora(),
       codveiculo: null,
       placa: null,
       placacarreta: null,
@@ -493,7 +493,7 @@ export const useCargaStore = defineStore('carga', () => {
   }
 
   async function inativar(carga) {
-    carga.inativo = agoraLocal()
+    carga.inativo = agora()
     await salvar(carga)
   }
 

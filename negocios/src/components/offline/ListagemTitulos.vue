@@ -1,11 +1,9 @@
 <script setup>
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { abrirVale } from '@components/abrirVale'
-import { formataNumero, formataCodigo, formataData } from '@components/formatters'
+import { formataNumero, formataCodigo, formataData, tempoRelativo } from '@components/formatters'
 import { negocioStore } from 'stores/negocio'
 import { pagamentoStore } from 'stores/pagamento'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
 
 const sNegocio = negocioStore()
 const sPagamento = pagamentoStore()
@@ -49,7 +47,7 @@ const abrir = (codtitulo) => abrirVale(api, codtitulo, () => sPagamento.imprimir
             {{ formataData(titulo.vencimento) }}
           </q-item-label>
           <q-item-label class="ellipsis" caption lines="1">
-            {{ moment(titulo.vencimento).fromNow() }}
+            {{ tempoRelativo(titulo.vencimento) }}
           </q-item-label>
         </q-item-section>
       </q-item>

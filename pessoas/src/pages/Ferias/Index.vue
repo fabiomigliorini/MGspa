@@ -54,8 +54,8 @@
                 </q-td>
 
                 <q-td
-                  :key="this.ano == moment().year() ? 'janeiro' : 'dezembro'"
-                  :colspan="this.ano == moment().year() ? '14' : '14'"
+                  :key="this.ano == new Date().getFullYear() ? 'janeiro' : 'dezembro'"
+                  :colspan="this.ano == new Date().getFullYear() ? '14' : '14'"
                   :props="ferias"
                 >
                   <div v-for="f in ferias.row.ferias" v-bind:key="f.codferias">
@@ -107,7 +107,7 @@
 <script>
 import MgInput from '@components/MgInput.vue'
 import { ref, defineAsyncComponent } from 'vue'
-import moment from 'moment'
+import { hoje, inicioAno, somaDias } from '@components/utils/datas'
 import { pessoaStore } from 'src/stores/pessoa'
 import { useAuthStore } from 'src/stores'
 import { useRoute, useRouter } from 'vue-router'
@@ -126,14 +126,9 @@ export default {
       ferias.range = range
       ferias.diagozoinicio = range.min
       ferias.diagozofim = range.max
-      const gozoinicio = moment()
-        .startOf('year')
-        .add(range.min - 1, 'days')
-      const gozofim = moment()
-        .startOf('year')
-        .add(range.max - 1, 'days')
-      ferias.gozoinicio = gozoinicio.format('YYYY-MM-DD')
-      ferias.gozofim = gozofim.format('YYYY-MM-DD')
+      // range = dias do ano corrente (1 = 1º de janeiro)
+      ferias.gozoinicio = somaDias(inicioAno(hoje()), range.min - 1)
+      ferias.gozofim = somaDias(inicioAno(hoje()), range.max - 1)
     },
 
     async filtroAno(anoFiltro) {
@@ -216,7 +211,7 @@ export default {
           }
 
           if (
-            this.ano !== moment().year() &&
+            this.ano !== new Date().getFullYear() &&
             ferias.diagozoinicio > 335 &&
             ferias.diagozofim < 31
           ) {
@@ -372,7 +367,6 @@ export default {
     ]
 
     return {
-      moment,
       modelRange,
       sPessoa,
       ferias,
@@ -393,10 +387,10 @@ export default {
     }
   },
   async mounted() {
-    var year = moment().year()
+    var year = new Date().getFullYear()
     this.ano = year
     this.atualizaAno()
-    var bissexto = moment([year]).isLeapYear()
+    var bissexto = new Date(year, 1, 29).getDate() === 29
     if (bissexto) {
       this.max = 397 // dias totais do ano todo + o mes de janeiro
     } else {

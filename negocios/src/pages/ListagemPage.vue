@@ -4,13 +4,11 @@ import { abrirPdf } from '@components/abrirPdf'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import { ref, watch } from 'vue'
 import { debounce } from 'quasar'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { iconeNegocio, corIconeNegocio } from '../utils/iconeNegocio.js'
 import { listagemStore } from 'src/stores/listagem'
-import { sincronizacaoStore } from 'stores/sincronizacao'
 
 const sListagem = listagemStore()
-const sSinc = sincronizacaoStore()
 const scrollRef = ref(null)
 
 const onLoad = async (index, done) => {
@@ -49,7 +47,7 @@ const relatorio = () =>
   abrirPdf(
     api,
     'v1/pdv/negocio/relatorio',
-    { ...sListagem.filtro, pdv: sSinc.pdv.uuid },
+    { ...sListagem.filtro },
     { title: 'Relatório de Negócios' },
   )
 </script>
@@ -57,60 +55,63 @@ const relatorio = () =>
   <q-page>
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
       <q-infinite-scroll @load="onLoad" ref="scrollRef" :offset="250">
-        <q-list
-          v-if="sListagem.negocios.length"
-          bordered
-          separator
-          class="bg-white rounded-borders overflow-hidden"
-        >
-          <q-item
-            v-for="item in sListagem.negocios"
-            :key="item.codnegocio"
-            :to="'/negocio/' + item.codnegocio"
-            :class="CLASSE_LINHA[item.codnegociostatus]"
-          >
-            <q-item-section avatar>
-              <q-avatar
-                :icon="iconeNegocio(item)"
-                :color="corIconeNegocio(item)"
-                text-color="white"
-              />
-            </q-item-section>
+        <!-- overflow-hidden: o fundo amarelo/vermelho da 1ª e da última linha não passa do
+             canto arredondado do card -->
+        <q-card v-if="sListagem.negocios.length" flat bordered class="overflow-hidden">
+          <q-list separator>
+            <q-item
+              v-for="item in sListagem.negocios"
+              :key="item.codnegocio"
+              :to="'/negocio/' + item.codnegocio"
+              :class="CLASSE_LINHA[item.codnegociostatus]"
+            >
+              <q-item-section avatar>
+                <q-avatar
+                  :icon="iconeNegocio(item)"
+                  :color="corIconeNegocio(item)"
+                  text-color="white"
+                />
+              </q-item-section>
 
-            <!-- pessoa, natureza e vendedor -->
-            <q-item-section style="min-width: 0">
-              <q-item-label class="text-weight-medium ellipsis">
-                {{ item.fantasia || '—' }}
-              </q-item-label>
-              <q-item-label caption class="ellipsis">
-                {{ formataCodigo(item.codnegocio) }} · {{ item.naturezaoperacao }}
-              </q-item-label>
-              <q-item-label caption class="ellipsis" v-if="item.fantasiavendedor">
-                {{ item.fantasiavendedor }}
-              </q-item-label>
-            </q-item-section>
+              <!-- pessoa, vendedor e natureza -->
+              <q-item-section style="min-width: 0">
+                <q-item-label class="text-weight-medium ellipsis">
+                  {{ item.fantasia || '—' }}
+                </q-item-label>
+                <q-item-label caption class="ellipsis">
+                  {{
+                    [formataCodigo(item.codnegocio), item.fantasiavendedor]
+                      .filter(Boolean)
+                      .join(' · ')
+                  }}
+                </q-item-label>
+                <q-item-label caption class="ellipsis">{{ item.naturezaoperacao }}</q-item-label>
+              </q-item-section>
 
-            <!-- local, usuário, PDV -->
-            <q-item-section class="gt-xs" style="flex: 0 0 200px; min-width: 0">
-              <q-item-label class="ellipsis">{{ item.estoquelocal }}</q-item-label>
-              <q-item-label caption class="ellipsis">{{ item.usuario }}</q-item-label>
-              <q-item-label caption class="ellipsis" v-if="item.pdv">
-                {{ [item.pdv, item.setor].filter(Boolean).join(' · ') }}
-              </q-item-label>
-            </q-item-section>
+              <!-- local, usuário, PDV -->
+              <q-item-section class="gt-xs" style="flex: 0 0 200px; min-width: 0">
+                <q-item-label class="ellipsis">{{ item.estoquelocal }}</q-item-label>
+                <q-item-label caption class="ellipsis">{{ item.usuario }}</q-item-label>
+                <q-item-label caption class="ellipsis" v-if="item.pdv">
+                  {{ [item.pdv, item.setor].filter(Boolean).join(' · ') }}
+                </q-item-label>
+              </q-item-section>
 
-            <!-- total, data e status -->
-            <q-item-section side style="min-width: 130px">
-              <q-item-label class="text-weight-bold text-grey-9">
-                R$ {{ formataNumero(item.valortotal) }}
-              </q-item-label>
-              <q-item-label caption>{{ formataTimestamp(item.lancamento, 4, true) }}</q-item-label>
-              <q-item-label caption>
-                <q-badge :color="COR_STATUS[item.codnegociostatus]" :label="item.negociostatus" />
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-list>
+              <!-- total, data e status -->
+              <q-item-section side style="min-width: 130px">
+                <q-item-label class="text-weight-bold text-grey-9">
+                  R$ {{ formataNumero(item.valortotal) }}
+                </q-item-label>
+                <q-item-label caption>
+                  {{ formataTimestamp(item.lancamento, 4, true) }}
+                </q-item-label>
+                <q-item-label caption>
+                  <q-badge :color="COR_STATUS[item.codnegociostatus]" :label="item.negociostatus" />
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card>
 
         <MgEmptyState v-else-if="!sListagem.carregando" icon="shopping_cart">
           Nenhum negócio no período e filtros escolhidos.
@@ -126,6 +127,9 @@ const relatorio = () =>
           </div>
         </template>
       </q-infinite-scroll>
+
+      <!-- o respiro para o botão de imprimir não cobrir o fim da lista -->
+      <div class="q-py-xl" />
     </div>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">

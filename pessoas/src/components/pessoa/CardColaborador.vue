@@ -1,14 +1,12 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
-import { formataDataIso, formataDataAbreviada } from '@components/formatters'
+import { formataDataAbreviada } from '@components/formatters'
 import { ref, computed, onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { colaboradorStore } from 'stores/colaborador'
-import moment from 'moment'
-import 'moment/min/locales'
-moment.locale('pt-br')
+import { diasEntre, duracao, hoje, lerDataBr, somaDias } from '@components/utils/datas'
 
 const DIAS_EXPERIENCIA = 30
 
@@ -109,22 +107,13 @@ const novoColaboradorCargo = (iColaborador, colaborador) => {
 const preencheExperiencia = () => {
   const diasExp = modelColaborador.value.diasExperiencia || DIAS_EXPERIENCIA
   modelColaborador.value.diasExperiencia = diasExp
-  modelColaborador.value.experiencia = moment(
-    modelColaborador.value.contratacao,
-    'YYYY-MM-DD',
-    true,
-  )
-    .add(diasExp - 1, 'days')
-    .format('YYYY-MM-DD')
+  modelColaborador.value.experiencia = somaDias(modelColaborador.value.contratacao, diasExp - 1)
   const diasRen = modelColaborador.value.diasRenovacao || DIAS_EXPERIENCIA
   modelColaborador.value.diasRenovacao = diasRen
-  modelColaborador.value.renovacaoexperiencia = moment(
+  modelColaborador.value.renovacaoexperiencia = somaDias(
     modelColaborador.value.experiencia,
-    'YYYY-MM-DD',
-    true,
+    diasRen,
   )
-    .add(diasRen, 'days')
-    .format('YYYY-MM-DD')
 }
 
 const alterouDiasExperiencia = () => {
@@ -134,11 +123,12 @@ const alterouDiasExperiencia = () => {
     return
   }
   if (modelColaborador.value.contratacao) {
-    const contratacao = moment(modelColaborador.value.contratacao, 'YYYY-MM-DD', true)
-    if (contratacao.isValid()) {
-      modelColaborador.value.experiencia = contratacao
-        .add(modelColaborador.value.diasExperiencia - 1, 'days')
-        .format('YYYY-MM-DD')
+    const experiencia = somaDias(
+      modelColaborador.value.contratacao,
+      modelColaborador.value.diasExperiencia - 1,
+    )
+    if (experiencia) {
+      modelColaborador.value.experiencia = experiencia
       alterouDiasRenovacao()
     }
   }
@@ -151,21 +141,21 @@ const alterouDiasRenovacao = () => {
     return
   }
   if (modelColaborador.value.experiencia) {
-    const experiencia = moment(modelColaborador.value.experiencia, 'YYYY-MM-DD', true)
-    if (experiencia.isValid()) {
-      modelColaborador.value.renovacaoexperiencia = experiencia
-        .add(modelColaborador.value.diasRenovacao, 'days')
-        .format('YYYY-MM-DD')
+    const renovacao = somaDias(
+      modelColaborador.value.experiencia,
+      modelColaborador.value.diasRenovacao,
+    )
+    if (renovacao) {
+      modelColaborador.value.renovacaoexperiencia = renovacao
     }
   }
 }
 
 const alterouExperiencia = () => {
   if (modelColaborador.value.contratacao && modelColaborador.value.experiencia) {
-    const contratacao = moment(modelColaborador.value.contratacao, 'YYYY-MM-DD', true)
-    const experiencia = moment(modelColaborador.value.experiencia, 'YYYY-MM-DD', true)
-    if (contratacao.isValid() && experiencia.isValid()) {
-      modelColaborador.value.diasExperiencia = experiencia.diff(contratacao, 'days') + 1
+    const dias = diasEntre(modelColaborador.value.contratacao, modelColaborador.value.experiencia)
+    if (dias !== null) {
+      modelColaborador.value.diasExperiencia = dias + 1
     }
   }
   alterouDiasRenovacao()
@@ -173,10 +163,12 @@ const alterouExperiencia = () => {
 
 const alterouRenovacao = () => {
   if (modelColaborador.value.experiencia && modelColaborador.value.renovacaoexperiencia) {
-    const experiencia = moment(modelColaborador.value.experiencia, 'YYYY-MM-DD', true)
-    const renovacao = moment(modelColaborador.value.renovacaoexperiencia, 'YYYY-MM-DD', true)
-    if (experiencia.isValid() && renovacao.isValid()) {
-      modelColaborador.value.diasRenovacao = renovacao.diff(experiencia, 'days')
+    const dias = diasEntre(
+      modelColaborador.value.experiencia,
+      modelColaborador.value.renovacaoexperiencia,
+    )
+    if (dias !== null) {
+      modelColaborador.value.diasRenovacao = dias
     }
   }
 }
@@ -305,17 +297,18 @@ const editarColaborador = (
   }
 
   if (contratacao && experiencia) {
-    const cont = moment(modelColaborador.value.contratacao, 'YYYY-MM-DD', true)
-    const exp = moment(modelColaborador.value.experiencia, 'YYYY-MM-DD', true)
-    if (cont.isValid() && exp.isValid()) {
-      modelColaborador.value.diasExperiencia = exp.diff(cont, 'days') + 1
+    const dias = diasEntre(modelColaborador.value.contratacao, modelColaborador.value.experiencia)
+    if (dias !== null) {
+      modelColaborador.value.diasExperiencia = dias + 1
     }
   }
   if (experiencia && renovacaoexperiencia) {
-    const exp = moment(modelColaborador.value.experiencia, 'YYYY-MM-DD', true)
-    const ren = moment(modelColaborador.value.renovacaoexperiencia, 'YYYY-MM-DD', true)
-    if (exp.isValid() && ren.isValid()) {
-      modelColaborador.value.diasRenovacao = ren.diff(exp, 'days')
+    const dias = diasEntre(
+      modelColaborador.value.experiencia,
+      modelColaborador.value.renovacaoexperiencia,
+    )
+    if (dias !== null) {
+      modelColaborador.value.diasRenovacao = dias
     }
   }
 }
@@ -331,8 +324,7 @@ const validaData = (value) => {
   if (!value) {
     return true
   }
-  const data = moment(value, 'DD/MM/YYYY', true)
-  if (!data.isValid()) {
+  if (!lerDataBr(value)) {
     return 'Data Inválida!'
   }
   return true
@@ -340,10 +332,9 @@ const validaData = (value) => {
 
 const validaContratacao = (value) => {
   if (!value) return true
-  const cont = moment(value, 'DD/MM/YYYY', true)
-  if (!cont.isValid()) return true
-  const maximo = moment().add(7, 'days')
-  if (maximo.isBefore(cont)) {
+  const cont = lerDataBr(value)
+  if (!cont) return true
+  if (cont > somaDias(hoje(), 7)) {
     return 'Data Muito no Futuro!'
   }
   return true
@@ -351,12 +342,10 @@ const validaContratacao = (value) => {
 
 const validaPeriodo = (value, dataBase, msgAnterior) => {
   if (!value || !dataBase) return true
-  const data = moment(value, 'DD/MM/YYYY', true)
-  if (!data.isValid()) return true
-  const dataISO = data.format('YYYY-MM-DD')
+  const dataISO = lerDataBr(value)
+  if (!dataISO) return true
   if (dataISO < dataBase) return msgAnterior
-  const limite = moment(dataBase, 'YYYY-MM-DD', true).add(60, 'days').format('YYYY-MM-DD')
-  if (dataISO > limite) return 'Data Muito no Futuro!'
+  if (dataISO > somaDias(dataBase, 60)) return 'Data Muito no Futuro!'
   return true
 }
 
@@ -380,9 +369,8 @@ const validaRescisao = (value) => {
   if (!value) {
     return true
   }
-  const res = moment(value, 'DD/MM/YYYY', true)
-  if (!res.isValid()) return true
-  const resISO = res.format('YYYY-MM-DD')
+  const resISO = lerDataBr(value)
+  if (!resISO) return true
   const contratacao = modelColaborador.value.contratacao
   if (contratacao && contratacao > resISO) {
     return 'Rescisão não pode ser anterior à Contratação!'
@@ -421,7 +409,7 @@ const alterouVinculo = () => {
 const abrirNovoColaborador = () => {
   editColaborador.value = false
   modelColaborador.value = {
-    contratacao: formataDataIso(new Date()),
+    contratacao: hoje(),
     vinculo: 1,
     diasExperiencia: DIAS_EXPERIENCIA,
     diasRenovacao: DIAS_EXPERIENCIA,
@@ -441,11 +429,7 @@ const colaboradoresOrdenados = computed(() =>
 )
 
 function formataDuracao(inicio, fim) {
-  const start = moment(inicio)
-  const end = moment(fim)
-  const anos = end.diff(start, 'years')
-  const meses = end.diff(start.clone().add(anos, 'years'), 'months')
-  const dias = end.diff(start.clone().add(anos, 'years').add(meses, 'months'), 'days')
+  const { anos, meses, dias } = duracao(inicio, fim) ?? {}
   const partes = []
   if (anos > 0) partes.push(`${anos} ${anos === 1 ? 'ano' : 'anos'}`)
   if (meses > 0) partes.push(`${meses} ${meses === 1 ? 'mês' : 'meses'}`)
@@ -579,7 +563,7 @@ watch(
           </div>
           <div class="text-caption text-grey-7">
             <template v-if="!colaborador.rescisao">
-              {{ formataDuracao(colaborador.contratacao, moment()) }}
+              {{ formataDuracao(colaborador.contratacao, hoje()) }}
             </template>
             <template v-else>
               {{ formataDuracao(colaborador.contratacao, colaborador.rescisao) }}
@@ -597,16 +581,11 @@ watch(
             </template>
           </div>
           <div class="text-caption text-grey-7">
-            {{ moment(colaborador.experiencia).diff(moment(colaborador.contratacao), 'days') + 1 }}
+            {{ diasEntre(colaborador.contratacao, colaborador.experiencia) + 1 }}
             dias
             <template v-if="colaborador.renovacaoexperiencia">
               +
-              {{
-                moment(colaborador.renovacaoexperiencia).diff(
-                  moment(colaborador.experiencia),
-                  'days',
-                )
-              }}
+              {{ diasEntre(colaborador.experiencia, colaborador.renovacaoexperiencia) }}
               dias
             </template>
           </div>

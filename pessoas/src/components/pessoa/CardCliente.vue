@@ -6,8 +6,9 @@ import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
 import { useAuthStore } from 'src/stores'
-import { formataFromNow, verificaPassadoFuturo } from '@components/formatters'
-import { api } from 'src/boot/axios'
+import { tempoRelativo } from '@components/formatters'
+import { verificaPassadoFuturo } from '@components/utils/datas'
+import { api } from 'src/services/api'
 
 import SelectGrupoCliente from '@components/MgSelectGrupoCliente.vue'
 import SelectFormaPagamento from '@components/MgSelectFormaPagamento.vue'
@@ -135,11 +136,11 @@ const fecharRelatorio = () => {
           <div>
             <span v-if="verificaPassadoFuturo(sPessoa.item.aberto.vencimento)" class="text-red-14">
               Mais atrasado vencido
-              {{ formataFromNow(sPessoa.item.aberto.vencimento) }}
+              {{ tempoRelativo(sPessoa.item.aberto.vencimento) }}
             </span>
             <span v-else>
               Primeiro Vencimento
-              {{ formataFromNow(sPessoa.item.aberto.vencimento) }}
+              {{ tempoRelativo(sPessoa.item.aberto.vencimento) }}
             </span>
           </div>
         </div>

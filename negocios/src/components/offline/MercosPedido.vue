@@ -1,13 +1,11 @@
 <script setup>
 import { Dialog, Notify } from 'quasar'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { negocioStore } from 'stores/negocio'
 import { mercosStore } from 'stores/mercos'
-import { sincronizacaoStore } from 'src/stores/sincronizacao'
 
 const sNegocio = negocioStore()
 const sMercos = mercosStore()
-const sSinc = sincronizacaoStore()
 
 const informarFaturamento = async (mp) => {
   try {
@@ -17,7 +15,6 @@ const informarFaturamento = async (mp) => {
         '/mercos/' +
         mp.codmercospedido +
         '/faturamento',
-      { pdv: sSinc.pdv.uuid },
     )
     sNegocio.atualizarNegocioPeloObjeto(data.data)
     Notify.create({
@@ -61,7 +58,6 @@ const reimportar = async (mp) => {
         '/mercos/' +
         mp.codmercospedido +
         '/reimportar',
-      { pdv: sSinc.pdv.uuid },
     )
     await sNegocio.atualizarNegocioPeloObjeto(data.data)
     sNegocio.recalcularValorTotal()

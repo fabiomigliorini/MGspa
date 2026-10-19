@@ -6,7 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-09-24 21:44'
-updated_date: '2026-10-05 21:53'
+updated_date: '2026-10-17 19:49'
 labels:
   - negocios
   - components
@@ -43,3 +43,9 @@ Decisoes de tela (agrupar, e como escolher a embalagem depois) a combinar antes 
 - [ ] #4 O que hoje so existe numa das duas (ordem por Relevancia e infinite scroll de um lado, leitor de camera do outro) fica disponivel nas duas ou tem motivo registrado para nao ficar
 - [ ] #5 A grade de pesquisa serve de prancheta digital: da para achar pelo nome e pela foto o produto que nao tem codigo de barras para bipar, aposentando as pranchetas impressas do balcao (era a TASK-49)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Fábio (17/10/2026), decisões de tela fechadas na conversa da TASK-197: a grade agrupa o resultado da pesquisa por codproduto, depois pelo texto da variação, depois por embalagem (sigla + quantidade). Só aparece o que casou com o texto: pesquisou 'verde', não mostra a azul; sem buscar irmãos que não casaram. Escolha em etapas, que colapsam quando há uma opção só: 1ª clique no card do produto; 2ª na variação, se houver mais de uma; 3ª na embalagem, se houver mais de uma. A 3ª é por embalagem, não por barra: a mesma embalagem pode ter dois códigos de barras (critério #2) e aparece uma vez; o item do negócio leva qualquer barra dela, o preço é o mesmo. Teclado: setas andam pelas opções da etapa, Enter avança, Esc volta uma etapa. Depende do campo nome (nome base do produto, sem variação e embalagem) que o catálogo da TASK-197 passa a trazer em cada barra; variacao, sigla, quantidade e codimagem já vêm hoje e bastam para agrupar.
+<!-- SECTION:NOTES:END -->

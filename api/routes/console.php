@@ -31,6 +31,8 @@ Schedule::command('boleto-bb:consultar-liquidados')->twiceDaily(4, 13);
 Schedule::command('pix:consultar --horas=36')->everyTenMinutes();
 // Livro de ocorrencias (TASK-205): negocio aberto parado alem do tempo do PDV
 Schedule::command('ocorrencia:negocio-esquecido')->everyTenMinutes()->withoutOverlapping();
+// Catálogo do PDV (TASK-197): json e diff de produtos e pessoas a cada rodada, sempre
+Schedule::command('pdv:catalogo')->everyFifteenMinutes()->withoutOverlapping();
 Schedule::command('aniversariantes:individual')->dailyAt('08:00');
 Schedule::command('aniversariantes:geral')->dailyAt('08:00');
 Schedule::command('ranking-produto:refresh')

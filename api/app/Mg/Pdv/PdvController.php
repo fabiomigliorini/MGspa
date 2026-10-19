@@ -65,8 +65,9 @@ class PdvController
         if ($request->ip) {
             $query->whereHas('PdvLocalizacaoS', fn ($q) => $q->whereRaw('host(ip) ilike ?', ["%{$request->ip}%"]));
         }
-        if ($request->uuid) {
-            $query->where('uuid', 'ilike', "%{$request->uuid}%");
+        // o uuid nao sai na lista nem filtra: e' a senha do dispositivo (TASK-197)
+        if ($request->codpdv) {
+            $query->where('codpdv', (int) $request->codpdv);
         }
         if ($request->codsetor) {
             $query->where('codsetor', $request->codsetor);
@@ -77,9 +78,9 @@ class PdvController
     public function showDispositivo(Request $request, $codpdv)
     {
         $pdv = Pdv::findOrFail($codpdv);
-        // o proprio dispositivo se ve mesmo inativo (mostra o UUID para pedir a
-        // ativacao)
-        if (empty($request->pdv) || $request->pdv !== $pdv->uuid) {
+        // o proprio dispositivo se ve mesmo inativo (mostra o codigo para pedir a ativacao)
+        $uuid = PdvService::uuid($request);
+        if (empty($uuid) || $uuid !== $pdv->uuid) {
             PdvAutorizador::autorizar($pdv->codfilial);
         }
         // a tela so' mostra os botoes; quem garante e' cada rota. Sem login (quiosque) a
@@ -87,7 +88,7 @@ class PdvController
         $logado = !empty(Auth::user() ?? Auth::guard('api')->user());
         $gestor = $logado && PdvAutorizador::pode($pdv->codfilial);
         return (new PdvResource($pdv))->additional(['pode' => [
-            'editar' => $gestor || ($logado && PdvAutorizador::proprio($pdv, $request->pdv)),
+            'editar' => $gestor || ($logado && PdvAutorizador::proprio($pdv, $uuid)),
             'cadastro' => $gestor,
             'ativar' => $logado && Autorizador::pode([]),
         ]]);
@@ -96,7 +97,8 @@ class PdvController
     public function registrosDispositivo(Request $request, $codpdv)
     {
         $pdv = Pdv::findOrFail($codpdv);
-        if (empty($request->pdv) || $request->pdv !== $pdv->uuid) {
+        $uuid = PdvService::uuid($request);
+        if (empty($uuid) || $uuid !== $pdv->uuid) {
             PdvAutorizador::autorizar($pdv->codfilial);
         }
         return response()->json(PdvService::registros($pdv->codpdv));
@@ -149,11 +151,11 @@ class PdvController
         return new PdvResource($pdv);
     }
 
-    // fim da sincronizacao: sem usuario (quiosque), autoriza pelo uuid do dispositivo
+    // fim da sincronizacao: sem usuario (quiosque), autoriza pelo dispositivo (middleware `pdv`)
     public function putSincronizacaoCompleta(Request $request)
     {
         $request->validate(['completa' => 'required|date']);
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $pdv = PdvService::sincronizacaoCompleta($pdv, $request->completa);
         return new PdvResource($pdv);
     }
@@ -182,60 +184,13 @@ class PdvController
         return new PdvResource($pdv);
     }
 
-    public function produtoCount(PdvRequest $request)
+    public function produtoDetalhe(Request $request, $barras)
     {
-        PdvService::autoriza($request->pdv);
-        return PdvService::produtoCount();
-    }
-
-    public function produto(PdvRequest $request)
-    {
-        PdvService::autoriza($request->pdv);
-        $codprodutobarra = $request->codprodutobarra ?? 0;
-        $limite = $request->limite ?? 10000;
-        return PdvService::produto($codprodutobarra, $limite);
-    }
-
-    public function produtoBarras(PdvRequest $request, $barras)
-    {
-        PdvService::autoriza($request->pdv);
-        $codprodutobarra = -1;
-        if ($pb = ProdutoService::buscaPorBarras($barras)) {
-            $codprodutobarra = $pb->codprodutobarra;
-        }
-        return PdvService::produto($codprodutobarra, 1);
-    }
-
-    public function produtoDetalhe(PdvRequest $request, $barras)
-    {
-        PdvService::autoriza($request->pdv);
         return ProdutoService::detalheQuiosque($barras);
     }
 
-    public function pessoaCount(PdvRequest $request)
+    public function postPessoa(Request $request)
     {
-        PdvService::autoriza($request->pdv);
-        return PdvService::pessoaCount();
-    }
-
-    public function pessoa(PdvRequest $request)
-    {
-        PdvService::autoriza($request->pdv);
-        $codpessoa = $request->codpessoa ?? 0;
-        $limite = $request->limite ?? 10000;
-        return PdvService::pessoa($codpessoa, null, $limite);
-    }
-
-    public function pessoaPeloCnpj(PdvRequest $request, $cnpj)
-    {
-        PdvService::autoriza($request->pdv);
-        return PdvService::pessoa(null, $cnpj, 999999);
-    }
-
-    public function postPessoa(PdvRequest $request)
-    {
-        PdvService::autoriza($request->pdv);
-
         // caso tenha IE
         if (!empty($request->ie)) {
 
@@ -272,64 +227,57 @@ class PdvController
         DB::commit();
 
         // retorna pessoa salva
-        return PdvService::pessoa($pessoa->codpessoa, null, 1);
+        return PdvCatalogoService::pessoa($pessoa->codpessoa, null, 1);
     }
 
-    public function naturezaOperacao(PdvRequest $request)
+    public function naturezaOperacao(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         return PdvService::naturezaOperacao();
     }
 
-    public function estoqueLocal(PdvRequest $request)
+    public function estoqueLocal(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         return PdvService::estoqueLocal();
     }
 
-    public function formaPagamento(PdvRequest $request)
+    public function formaPagamento(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         return PdvService::formaPagamento();
     }
 
-    public function valeModelo(PdvRequest $request)
+    public function valeModelo(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         return PdvService::valeModelo();
     }
 
-    public function impressora(PdvRequest $request)
+    public function impressora(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         return PdvService::impressora();
     }
 
-    public function getPrancheta(PdvRequest $request)
+    public function getPrancheta(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         return PdvPranchetaService::getPrancheta();
     }
 
-    public function putPrancheta(PdvRequest $request)
+    public function putPrancheta(Request $request)
     {
         DB::beginTransaction();
-        PdvService::autoriza($request->pdv);
         PdvPranchetaService::updatePrancheta($request->prancheta);
         DB::commit();
         return true;
     }
 
-    public function putNegocio(PdvRequest $request)
+    public function putNegocio(Request $request)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         DB::beginTransaction();
         $negocio = PdvNegocioService::negocio($request->negocio, $pdv);
         DB::commit();
         return new NegocioResource($negocio);
     }
 
-    public function deleteNegocio(PdvRequest $request, $codnegocio)
+    public function deleteNegocio(Request $request, $codnegocio)
     {
         $request->validate([
             'justificativa' => [
@@ -338,7 +286,7 @@ class PdvController
                 'min:15',
             ]
         ]);
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $negocio = Negocio::findOrFail($codnegocio);
         DB::beginTransaction();
         $negocio = PdvNegocioService::cancelar($negocio, $pdv, $request->justificativa);
@@ -347,9 +295,8 @@ class PdvController
         return new NegocioResource($negocio);
     }
 
-    public function getNegocio(PdvRequest $request, $codnegocio)
+    public function getNegocio(Request $request, $codnegocio)
     {
-        PdvService::autoriza($request->pdv);
         if (preg_match('/^[a-f\d]{8}(-[a-f\d]{4}){4}[a-f\d]{8}$/i', $codnegocio)) {
             $negocio = Negocio::where(['uuid' => $codnegocio])->firstOrFail();
         } else {
@@ -358,10 +305,8 @@ class PdvController
         return new NegocioResource($negocio);
     }
 
-    public function getNegocios(PdvRequest $request)
+    public function getNegocios(Request $request)
     {
-        PdvService::autoriza($request->pdv);
-
         $qry = Negocio::query();
         PdvNegocioListagemService::filtrar($qry, $request->all());
         $qry->orderBy('lancamento', 'desc')->orderBy('codnegocio', 'desc');
@@ -369,9 +314,8 @@ class PdvController
     }
 
     // Relatorio de negocios do MGsis, com os filtros da listagem (TASK-189)
-    public function relatorioNegocios(PdvRequest $request)
+    public function relatorioNegocios(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         $filtros = $request->all();
         if ($request->boolean('html')) {
             return response(PdvNegocioRelatorioService::html($filtros), 200, ['Content-Type' => 'text/html; charset=UTF-8']);
@@ -382,17 +326,16 @@ class PdvController
         ]);
     }
 
-    public function getOrcamentos(PdvRequest $request)
+    public function getOrcamentos(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         $qry = Negocio::where('codnegociostatus', 1)->where('uuid', 'ilike', "{$request->uuid}%");
         $qry->orderBy('lancamento', 'desc')->orderBy('codnegocio', 'desc');
         return NegocioListagemResource::collection($qry->limit(50)->get());
     }
 
-    public function fecharNegocio(PdvRequest $request, $codnegocio)
+    public function fecharNegocio(Request $request, $codnegocio)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $negocio = Negocio::findOrFail($codnegocio);
         $negocio = PdvNegocioService::fechar($negocio, $pdv);
         // vales e contra vales com saldo saem sozinhos na termica do caixa
@@ -404,7 +347,7 @@ class PdvController
 
     // venda fechada ou cancelada reaberta pelo gerente (TASK-30): so' reabre; quem
     // reconcilia o resto e' o F3. O motivo vai para a auditoria (TASK-209)
-    public function reabrirNegocio(PdvRequest $request, $codnegocio)
+    public function reabrirNegocio(Request $request, $codnegocio)
     {
         $request->validate([
             'justificativa' => [
@@ -413,15 +356,14 @@ class PdvController
                 'min:15',
             ]
         ]);
-        PdvService::autoriza($request->pdv);
         $negocio = Negocio::findOrFail($codnegocio);
         $negocio = DB::transaction(fn () => PdvNegocioReaberturaService::reabrir($negocio, $request->justificativa));
         return new NegocioResource($negocio->fresh());
     }
 
-    public function apropriar(PdvRequest $request, $codnegocio)
+    public function apropriar(Request $request, $codnegocio)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $negocio = Negocio::findOrFail($codnegocio);
         $negocio = PdvNegocioService::apropriar($negocio, $pdv);
         return new NegocioResource($negocio);
@@ -482,7 +424,7 @@ class PdvController
 
     public function unificarComanda(PdvUnificarComandaRequest $request, $codnegocio, $codnegociocomanda)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $negocio = Negocio::findOrFail($codnegocio);
         $negocioComanda = Negocio::findOrFail($codnegociocomanda);
         // só manda o que o usuario escolheu na tela de conflito
@@ -503,23 +445,22 @@ class PdvController
     // nao ser negocio (codnegocio nulo, com a pessoa que paga). Devolve a
     // cobranca criada.
     // cobranca integrada do wizard (M5/M6.1 doc-3): o negocio ou nenhum
-    public function criarPixCob(PdvRequest $request)
+    public function criarPixCob(Request $request)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $cob = CobrancaService::pix($request->all(), $pdv);
         return new PixCobResource($cob->fresh());
     }
 
-    public function criarPagarMePedido(PdvRequest $request)
+    public function criarPagarMePedido(Request $request)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $ped = CobrancaService::pagarMe($request->all(), $pdv);
         return new PagarMePedidoResource($ped->fresh());
     }
 
-    public function criarSaurusPedido(PdvRequest $request)
+    public function criarSaurusPedido(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         $ped = CobrancaService::saurus($request->all());
         return new SaurusPedidoResource($ped->fresh());
     }
@@ -606,9 +547,8 @@ class PdvController
         return PagarMePedidoResource::collection($peds);
     }
 
-    public function  notaFiscal(PdvRequest $request, $codnegocio)
+    public function  notaFiscal(Request $request, $codnegocio)
     {
-        PdvService::autoriza($request->pdv);
         // sem modelo (fechamento automatico), o backend escolhe pelo cliente
         $modelo = empty($request->modelo) ? null : intval($request->modelo);
         $negocio = Negocio::findOrFail($request->codnegocio);
@@ -629,7 +569,7 @@ class PdvController
             if ($codfilial != $pdv->codfilial) {
                 PdvAutorizador::autorizar($codfilial);
             }
-        } elseif (PdvAutorizador::proprio($pdv, $request->pdv)) {
+        } elseif (PdvAutorizador::proprio($pdv, PdvService::uuid($request))) {
             if ($request->hasAny(PdvService::CAMPOS_CADASTRO)) {
                 abort(403, 'Só Administrador ou Gerente da filial altera o cadastro do dispositivo!');
             }
@@ -644,9 +584,9 @@ class PdvController
         return new PdvResource($pdv);
     }
 
-    public function devolucao(PdvRequest $request, $codnegocio)
+    public function devolucao(Request $request, $codnegocio)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $negocioOriginal = Negocio::findOrFail($codnegocio);
         DB::beginTransaction();
         $negocioDev = PdvNegocioDevolucaoService::gerarDevolucao($pdv, $negocioOriginal, $request->devolucao);
@@ -662,9 +602,8 @@ class PdvController
     /**
      * Escolas com credito de vale em aberto (consumo por escopo).
      */
-    public function valeEscopoFavorecidos(PdvRequest $request)
+    public function valeEscopoFavorecidos(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         return response()->json(
             PdvValeEscopoService::favorecidos($request->input('busca')),
             200
@@ -672,9 +611,8 @@ class PdvController
     }
 
     /** Turmas com credito em aberto dentro de uma escola. */
-    public function valeEscopoTurmas(PdvRequest $request, $codpessoafavorecido)
+    public function valeEscopoTurmas(Request $request, $codpessoafavorecido)
     {
-        PdvService::autoriza($request->pdv);
         return response()->json(
             PdvValeEscopoService::turmas($codpessoafavorecido),
             200
@@ -687,9 +625,8 @@ class PdvController
      * A escolha nao reserva nada: quem garante que o saldo ainda existe no
      * fechamento e' o PdvValeEscopoService::reconferirSaldos(), com lock.
      */
-    public function valeEscopoSelecionar(PdvRequest $request)
+    public function valeEscopoSelecionar(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         $request->validate([
             'codpessoafavorecido' => 'required|integer',
             'valor' => 'required|numeric',

@@ -564,10 +564,32 @@ class PagamentoTituloService
         return PagamentoListaService::carregar($pag->codpagamento);
     }
 
-    // O lapis do pagamento: pessoa e observacao; a data so' do pagamento
-    // manual (a do integrado e' a do banco/maquineta), pelo alterar data
-    // (periodo, razao, titulos, com justificativa na auditoria, TASK-204).
-    // Meio e portador nao mudam: sao o fato; errou, cancela e lanca de novo.
+    // O portador que se troca por outro do mesmo tipo no lapis (TASK-236): o
+    // pagamento lancado a mao em dinheiro, banco ou cartao da empresa. O
+    // integrado fica no portador do fato; o cartao recebido vem da maquineta;
+    // cheque, encontro de contas e devolucao nao trocam.
+    public static function portadorTrocavel(Pagamento $pag): bool
+    {
+        if ($pag->estado != PagamentoService::ESTADO_EFETIVADO
+            || !empty($pag->codnegocio)
+            || !empty($pag->codperiodocolaboradoracerto)
+            || !empty($pag->codpagamentoorigem)
+            || empty($pag->codportadorDoPagamento())
+            || !static::manual($pag)) {
+            return false;
+        }
+        $meio = (int) $pag->meio;
+        if ($meio == PagamentoService::MEIO_DINHEIRO || in_array($meio, static::MEIOS_BANCO)) {
+            return true;
+        }
+        return in_array($meio, PagamentoService::MEIOS_CARTAO) && !$pag->entrada();
+    }
+
+    // O lapis do pagamento: pessoa e observacao; a data so' do
+    // pagamento manual (a do integrado e' a do banco/maquineta), pelo alterar
+    // data (TASK-204); o portador por outro do mesmo tipo (TASK-236). Data e
+    // portador pedem justificativa e vao para a auditoria. O meio nao muda:
+    // errou, cancela e usa o Duplicar.
     public static function atualizar(Pagamento $pag, array $dados): Pagamento
     {
         if ($pag->estado != PagamentoService::ESTADO_EFETIVADO) {
@@ -579,10 +601,8 @@ class PagamentoTituloService
         if (!empty($pag->codperiodocolaboradoracerto)) {
             abort(422, 'Pagamento de acerto de RH: altere pelo acerto.');
         }
-        $atual = $pag->codportadorDoPagamento();
-        if ((!empty($dados['meio']) && (int) $dados['meio'] != $pag->meio)
-            || (!empty($dados['codportador']) && (int) $dados['codportador'] != $atual)) {
-            abort(422, 'Meio e portador não mudam: cancele e lance de novo.');
+        if (!empty($dados['meio']) && (int) $dados['meio'] != $pag->meio) {
+            abort(422, 'O meio não muda: cancele e use o Duplicar.');
         }
         if (!empty($dados['transacao'])) {
             $transacao = Carbon::parse($dados['transacao'])->startOfMinute();
@@ -594,6 +614,11 @@ class PagamentoTituloService
                 LancamentoDataService::alterarPagamento($pag, $transacao, $dados['justificativa'] ?? null);
                 $pag->refresh();
             }
+        }
+        // depois da data: o portador novo na data nova
+        if (!empty($dados['codportador']) && (int) $dados['codportador'] != $pag->codportadorDoPagamento()) {
+            LancamentoDataService::alterarPortador($pag, (int) $dados['codportador'], $dados['justificativa'] ?? null);
+            $pag->refresh();
         }
         $pag->codpessoa = !empty($dados['codpessoa']) ? (int) $dados['codpessoa'] : $pag->codpessoa;
         $pag->observacoes = $dados['observacao'] ?? null;

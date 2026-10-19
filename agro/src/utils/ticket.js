@@ -4,6 +4,7 @@
 //
 // Nomenclatura: pbt = caminhão+carga; tara = caminhão vazio; bruto = pbt - tara
 // (grão); desconto = classificação; liquido = bruto - desconto.
+import { formataTimestamp } from '@components/formatters'
 
 function fmt(v, dec = 0) {
   if (v === null || v === undefined || v === '') return '—'
@@ -11,12 +12,6 @@ function fmt(v, dec = 0) {
     minimumFractionDigits: dec,
     maximumFractionDigits: dec,
   })
-}
-
-function dataHora(iso) {
-  if (!iso) return ''
-  const d = new Date(iso)
-  return d.toLocaleString('pt-BR')
 }
 
 function linha(rotulo, valor) {
@@ -43,7 +38,9 @@ const ASSINATURAS_PADRAO = ['Classificador', 'Motorista', 'Recebedor']
 // outra lado a lado na mesma carga.
 export function ticketDoServidor(c) {
   const pontos = c.CargaPontoS || []
-  const itensFonte = pontos.filter((p) => p.papel === (c.sentido === 'SAIDA' ? 'DESTINO' : 'ORIGEM'))
+  const itensFonte = pontos.filter(
+    (p) => p.papel === (c.sentido === 'SAIDA' ? 'DESTINO' : 'ORIGEM'),
+  )
 
   // CUIDADO com o casing: `Safra`, `Veiculo` e `Plantio` são PascalCase porque
   // os Resources os expõem na mão; as relações DENTRO deles (`cultura`,
@@ -109,7 +106,7 @@ export function imprimirTicket(t) {
       <div class="cab">
         <div class="faz">${t.fazenda || 'MG Agro'}</div>
         <div class="tit">${t.titulo || 'ROMANEIO'}</div>
-        <div class="num">${numero} &middot; ${dataHora(t.data)}</div>
+        <div class="num">${numero} &middot; ${formataTimestamp(t.data, 4, true)}</div>
       </div>
       <table>
         ${linha('Placa', t.placa || '—')}

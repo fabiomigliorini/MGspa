@@ -6,7 +6,7 @@ import { useRoute } from 'vue-router'
 import { pessoaStore } from 'stores/pessoa'
 import { useAuthStore } from 'src/stores'
 import {
-  formataFromNow,
+  tempoRelativo,
   formataCpf,
   formataCnpj,
   formataTelefone,
@@ -522,7 +522,7 @@ const submit = () => {
               {{ contas.observacoes }}
             </q-item-label>
             <q-item-label caption class="text-red-14" v-if="contas.inativo">
-              Inativo {{ formataFromNow(contas.inativo) }}
+              Inativo {{ tempoRelativo(contas.inativo) }}
             </q-item-label>
           </q-item-section>
 

@@ -4,6 +4,7 @@ import { api } from 'src/services/api'
 import { normalizarCargaParaExibicao } from 'src/utils/carga'
 import { abrirPdf } from 'src/utils/abrirPdf'
 import { notifyError } from 'src/utils/notify'
+import { hoje, inicioMes } from '@components/utils/datas'
 
 // Consulta do HISTÓRICO de romaneios — tela /cargas.
 //
@@ -14,11 +15,6 @@ import { notifyError } from 'src/utils/notify'
 // e ter o Dexie vazio.
 
 const PER_PAGE = 50
-
-function primeiroDiaDoMes() {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-01`
-}
 
 function filtrosVazios() {
   return {
@@ -51,7 +47,7 @@ export const useCargaListagemStore = defineStore(
     const cargas = ref([])
     const totais = ref({ qtd: 0, bruto: 0, desconto: 0, liquido: 0, sentidos: {} })
     const paginacao = ref({ page: 1, perPage: PER_PAGE, hasMore: true, loading: false, total: 0 })
-    const filtros = ref({ ...filtrosVazios(), data_inicio: primeiroDiaDoMes() })
+    const filtros = ref({ ...filtrosVazios(), data_inicio: inicioMes(hoje()) })
     const carregadoUmaVez = ref(false)
 
     // Cadastros dos selects (online).

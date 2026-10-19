@@ -3,11 +3,11 @@ id: TASK-233
 title: >-
   Cobrança SafraPay cancelada esconde o cartão que o cliente pagou e o caixa
   lança à mão
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-17 16:28'
-updated_date: '2026-10-17 16:47'
+updated_date: '2026-10-17 18:51'
 labels:
   - negocios
 dependencies: []
@@ -30,11 +30,13 @@ Fora desta task (relatado, sem task): criação do pedido que falha/timeout é e
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Consultar sempre pergunta à Saurus, qualquer que seja o status local do pedido; pedido cancelado que a Saurus diz pago vira aprovado e gera o pagamento do cartão na venda
-- [ ] #2 Botão Cancelar consulta a Saurus antes e recusa o cancelamento quando o pedido já foi pago
-- [ ] #3 Cancelar ou fechar a venda cancela sozinho os pedidos SafraPay ainda abertos dela, consultando antes
-- [ ] #4 Criar cobrança nova no mesmo PDV Saurus não cancela mais a anterior; só fechar ou cancelar a venda cancela (na Stone a dinâmica é outra e continua como está)
-- [ ] #5 Botão Desistir da cobrança (vermelho) pede confirmação: só cancela depois de digitar DESISTIR
+- [x] #1 Consultar sempre pergunta à Saurus, qualquer que seja o status local do pedido; pedido cancelado que a Saurus diz pago vira aprovado e gera o pagamento do cartão na venda
+- [x] #2 Botão Cancelar consulta a Saurus antes e recusa o cancelamento quando o pedido já foi pago
+- [x] #3 Cancelar ou fechar a venda cancela sozinho os pedidos SafraPay ainda abertos dela, consultando antes
+- [x] #4 Criar cobrança nova no mesmo PDV Saurus não cancela mais a anterior; só fechar ou cancelar a venda cancela (na Stone a dinâmica é outra e continua como está)
+- [x] #5 Botão Desistir da cobrança (vermelho) pede confirmação: só cancela depois de digitar DESISTIR
+- [x] #6 Cliente paga enquanto o caixa digita DESISTIR: a confirmação fecha junto com a cobrança, não fica aberta sobre a venda já fechada
+- [x] #7 Desistir da cobrança só aparece com a cobrança pendente; aprovada (approved) não oferece o botão
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -54,6 +56,10 @@ Teste (PDV, venda pequena, Receber -> SafraPay):
 3. Com a cobrança pendente, criar outra no mesmo PDV Saurus: a primeira continua pendente (não cancela mais).
 4. Com cobrança pendente e sem pagar, fechar a venda com dinheiro (F3) ou cancelar a venda: a cobrança aparece cancelada.
 5. Cancelado e pago antes da correção: abrir a cobrança e Consultar puxa o cartão; se já havia cartão à mão com outra autorização, a venda fica com dois e o manual precisa ser cancelado.
+
+Reaberta (17/10/2026), relato do Fábio: cliente pagou enquanto ele digitava DESISTIR; a consulta automática fechou a cobrança e a venda, mas a confirmação ficou aberta (é um $q.dialog solto, independente do q-dialog da cobrança). E o botão aparecia em cobrança approved (v-if era status != 3).
+Correção em components/cobranca/SaurusPedidoDialog.vue: guarda o $q.dialog da confirmação e fecha no @hide da cobrança; botão Desistir com v-if status == 0 (o backend só cancela pendente).
+Teste: 1) abrir a cobrança pendente, clicar Desistir e, sem confirmar, pagar na maquininha: em até 3 s a cobrança fecha e a confirmação some junto. 2) abrir uma cobrança aprovada (pagamentos da venda): só Consultar e Fechar.
 <!-- SECTION:NOTES:END -->
 
 ## Comments

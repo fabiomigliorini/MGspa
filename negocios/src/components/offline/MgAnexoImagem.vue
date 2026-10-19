@@ -1,6 +1,6 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { blobUrlFromApi } from '@components/blobUrlFromApi'
 import { negocioStore } from 'stores/negocio'
 

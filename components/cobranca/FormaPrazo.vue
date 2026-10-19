@@ -5,16 +5,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { Notify } from 'quasar'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
-import { formataNumero } from '@components/formatters'
+import { formataNumero, formataDataAbreviada } from '@components/formatters'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import { calcularParcelas } from './parcelamento.js'
 import { CONDICAO, VISUAL, vencimentoSugerido } from './pagamento.js'
 import ListaOpcoes from './ListaOpcoes.vue'
-
-const MESES = ['jan', 'fev', 'mar', 'abr', 'mai', 'jun', 'jul', 'ago', 'set', 'out', 'nov', 'dez']
-// 'YYYY-MM-DD' → '30/nov'
-const diaMes = (d) => String(d).substr(8, 2) + '/' + MESES[parseInt(String(d).substr(5, 2)) - 1]
 
 const emit = defineEmits(['parcelas'])
 
@@ -108,7 +104,9 @@ const planos = computed(() => {
   }).forEach((p) => {
     let label
     if (f.valor === CONDICAO.FECHAMENTO) {
-      label = vencimentos(f.valor, p.parcelas, 30).map(diaMes).join(' / ')
+      label = vencimentos(f.valor, p.parcelas, 30)
+        .map((d) => formataDataAbreviada(d, 0))
+        .join(' / ')
     } else {
       label = p.parcelas === 1 ? '30 dias' : `${p.parcelas}x a cada 30 dias`
     }

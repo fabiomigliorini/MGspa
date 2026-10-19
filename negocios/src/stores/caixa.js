@@ -2,8 +2,7 @@
 // a do período do portador do contas, só com o período aberto (@components/portador).
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
-import { api } from 'boot/axios'
-import { sincronizacaoStore } from 'stores/sincronizacao'
+import { api } from 'src/services/api'
 
 export const caixaStore = defineStore('caixa', {
   state: () => ({
@@ -12,14 +11,10 @@ export const caixaStore = defineStore('caixa', {
   }),
 
   actions: {
-    pdv() {
-      return sincronizacaoStore().pdv.uuid
-    },
-
     async status() {
       this.carregando = true
       try {
-        const { data } = await api.get('/v1/pdv/caixa', { params: { pdv: this.pdv() } })
+        const { data } = await api.get('/v1/pdv/caixa')
         this.gaveta = data.data.gaveta
         return data.data
       } catch (error) {
@@ -40,7 +35,6 @@ export const caixaStore = defineStore('caixa', {
     async bloqueioDinheiro() {
       try {
         const { data } = await api.get('/v1/pdv/caixa', {
-          params: { pdv: this.pdv() },
           timeout: 3000,
           skipLoading: true,
         })

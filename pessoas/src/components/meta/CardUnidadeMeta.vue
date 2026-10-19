@@ -4,6 +4,7 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { metaStore } from 'src/stores/meta'
 import { formataNumero, formataPercentual, formataDataAbreviada } from '@components/formatters'
+import { diasEntre, paraDate } from '@components/utils/datas'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -64,10 +65,10 @@ const siglaFuncao = (pessoa) => {
 
 const formataPeriodoPessoa = (di, df) => {
   if (!di || !df) return ''
-  const dateI = new Date(String(di).slice(0, 10) + 'T12:00:00')
-  const dateF = new Date(String(df).slice(0, 10) + 'T12:00:00')
-  if (isNaN(dateI) || isNaN(dateF)) return `${di} a ${df}`
-  const dias = Math.round((dateF - dateI) / 86400000) + 1
+  const dateI = paraDate(di)
+  const dateF = paraDate(df)
+  if (!dateI || !dateF) return `${di} a ${df}`
+  const dias = diasEntre(di, df) + 1
   const mesmoMes =
     dateI.getMonth() === dateF.getMonth() && dateI.getFullYear() === dateF.getFullYear()
   const inicio = mesmoMes ? String(dateI.getDate()) : formataDataAbreviada(dateI, 0)

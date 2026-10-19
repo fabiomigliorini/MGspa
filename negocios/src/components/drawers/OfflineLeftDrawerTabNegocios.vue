@@ -1,13 +1,11 @@
 <script setup>
-import { formataNumero } from '@components/formatters'
+import { formataNumero, tempoRelativo } from '@components/formatters'
 import { onMounted, ref } from 'vue'
 import { Dialog, Notify } from 'quasar'
 import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
 import { useRouter } from 'vue-router'
 import { iconeNegocio, corIconeNegocio } from 'src/utils/iconeNegocio.js'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
 
 const reconsultandoAbertos = ref(false)
 const sNegocio = negocioStore()
@@ -107,7 +105,7 @@ onMounted(async () => {
             {{ n.fantasiavendedor }}
           </q-item-label>
           <q-item-label caption v-if="n.lancamento">
-            {{ moment(n.lancamento).fromNow() }}
+            {{ tempoRelativo(n.lancamento) }}
           </q-item-label>
         </q-item-section>
         <q-item-section side class="text-bold">
@@ -154,7 +152,7 @@ onMounted(async () => {
             {{ n.fantasiavendedor }}
           </q-item-label>
           <q-item-label caption v-if="n.lancamento">
-            {{ moment(n.lancamento).fromNow() }}
+            {{ tempoRelativo(n.lancamento) }}
           </q-item-label>
         </q-item-section>
         <q-item-section side class="text-bold">

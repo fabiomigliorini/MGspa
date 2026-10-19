@@ -1,11 +1,9 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { wooStore } from 'src/stores/woo'
-import { formataNumero } from '@components/formatters'
+import { formataNumero, tempoRelativo } from '@components/formatters'
 import { Notify } from 'quasar'
-import moment from 'moment/min/moment-with-locales'
 import WooInfoModal from 'src/components/modals/WooInfoModal.vue'
-moment.locale('pt-br')
 
 const sWoo = wooStore()
 
@@ -136,7 +134,7 @@ const refresh = async () => {
                       {{ pedido.nome }}
                     </div>
                     <div class="text-caption text-grey-7">
-                      {{ moment(pedido.alteracaowoo).fromNow() }}
+                      {{ tempoRelativo(pedido.alteracaowoo) }}
                     </div>
                   </q-card-section>
                 </q-card>

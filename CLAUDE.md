@@ -182,3 +182,39 @@ Troca 1:1: repassa os atributos e **todos** os slots (`option`, `selected-item`,
 `resetValidation`. `outlined` já vem ligado. Desde a TASK-174 (10/10/2026) não sobrou `q-select`
 cru com `clearable`; o cru sem `clearable` passa para `MgSelect` quando a tela receber
 manutenção. Select novo nasce em `MgSelect`.
+
+## Axios — a instância mora em `src/services/api.js`, nunca no boot
+
+**Quem precisa do axios importa de `src/services/api`.** Ali nasce a instância de cada app:
+`baseURL`, timeout de 15 s e o dedup de double-submit. O arquivo é JavaScript puro, sem Vue,
+Quasar nem store. O `src/boot/axios.js` importa dali, instala os interceptors (token e erros)
+dentro do `defineBoot` e registra `$axios`/`$api` — e não exporta nada.
+
+**Por que não importar do boot.** O Quasar carrega cada boot com `import()` dinâmico, para ele
+virar um chunk próprio. Store ou página que importa o boot faz o build avisar
+`INEFFECTIVE_DYNAMIC_IMPORT`, e já derrubou o negocios ao puxar o boot antes do Pinia existir
+(TASK-207). A doc oficial do Quasar ainda ensina exportar o axios do boot; aqui não. Os seis apps
+estão nesse formato desde a **TASK-237** (18/10/2026): `import … from 'boot/axios'` que aparecer
+num diff é regressão.
+
+**Boot, router e store usam `#q-app/wrappers`** (`defineBoot`, `defineRouter`, `defineStore`).
+Os de `quasar/wrappers` são descontinuados desde o app-vite 2.
+
+## Datas — conta em `@components/utils/datas.js`, tela em `@components/formatters`
+
+**Conta com data é `@components/utils/datas.js`; mostrar data é o `@components/formatters`.**
+As funções recebem `'YYYY-MM-DD'`, `'YYYY-MM-DD HH:mm:ss'` (o formato da API e do `MgInputData`)
+ou `Date`, e devolvem `'YYYY-MM-DD'` no horário local: `hoje`, `agora`, `somaDias`, `somaMeses`,
+`somaAnos`, `inicioMes`, `fimMes`, `inicioAno`, `diasEntre`, `duracao`, `paraDate`, `lerDataBr`
+(o `'DD/MM/YYYY'` que as `:rules` recebem do `MgInputData`), `verificaIdade` e
+`verificaPassadoFuturo` ("já venceu?"). Texto `'YYYY-MM-DD'` se compara com
+`<` e `>`. Conta de uma linha (ano atual, "faz mais de 4 horas?") fica em JavaScript puro.
+
+**Por que não `new Date(texto)`, `toISOString()` nem o `date` do Quasar.** Data sem hora
+(`'2026-10-18'`) é lida como meia-noite UTC — em Cuiabá, o dia 17 às 20h — e o `toISOString()`
+depois das 20h já é amanhã; o `date` do Quasar faz `new Date(texto)` por dentro e herda as duas.
+Por dentro o `datas.js` é `Date` puro, sem biblioteca: quando o Safari tiver o Temporal, troca o
+miolo dele e as telas nem percebem. O moment saiu do Negócios e do Pessoas na **TASK-243**
+(18/10/2026), e as cópias de "hoje", "agora", início/fim de mês e dias entre datas dos seis apps
+foram para o `datas.js`: `moment`, `date` do Quasar ou `toISOString().slice(0, 10)` que aparecer
+num diff é regressão.

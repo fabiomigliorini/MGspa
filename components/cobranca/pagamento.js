@@ -1,6 +1,7 @@
 // Pagamento e parcela do negócio no formato novo (M5 do plano doc-3): meio do pagamento
 // (código tPag da NF-e) e condição da parcela. Apresentação no drawer de totais e nos dialogs.
 import { formataData, formataNumero } from '@components/formatters'
+import { hoje, somaDias, somaMeses, inicioMes, fimMes, paraDate } from '@components/utils/datas'
 import cartoesManuais from './cartoes-manuais.json'
 import { logo } from './logos.js'
 
@@ -189,58 +190,30 @@ export const resumoParcelas = (grupo) => {
   if (ps.length === 1) {
     return 'vence ' + formataData(ps[0].vencimento)
   }
-  const ddmm = (v) => String(v).substr(8, 2) + '/' + String(v).substr(5, 2)
-  return `${ps.length}x · ` + ps.map((p) => ddmm(p.vencimento)).join(' · ')
+  return `${ps.length}x · ` + ps.map((p) => formataData(p.vencimento, 0)).join(' · ')
 }
 
 // ---- vencimento sugerido pela condição (mesma regra do NegocioParcelaService) ----
 
-const iso = (d) =>
-  [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
-
-// data local (sem hora) de 'YYYY-MM-DD', Date ou hoje
-const dia = (base) => {
-  if (!base) {
-    const hoje = new Date()
-    return new Date(hoje.getFullYear(), hoje.getMonth(), hoje.getDate())
-  }
-  if (base instanceof Date) {
-    return new Date(base.getFullYear(), base.getMonth(), base.getDate())
-  }
-  const [a, m, d] = String(base).substr(0, 10).split('-').map(Number)
-  return new Date(a, m - 1, d)
-}
-
-// mesmo dia `meses` depois; dia que não existe no mês cai no último (31/01 + 1 = 28/02)
-const somaMeses = (d, meses) => {
-  const ultimo = new Date(d.getFullYear(), d.getMonth() + meses + 1, 0).getDate()
-  return new Date(d.getFullYear(), d.getMonth() + meses, Math.min(d.getDate(), ultimo))
-}
-
-// último dia útil do mês (segunda a sábado, sem feriado), como o RH conta
+// último dia útil do mês (segunda a sábado, sem feriado), como o RH conta; sem mês, o de hoje
 export const ultimoDiaUtil = (mes, feriados = []) => {
-  const m = dia(mes)
-  const d = new Date(m.getFullYear(), m.getMonth() + 1, 0)
-  while (d.getDay() === 0 || feriados.includes(iso(d))) {
-    d.setDate(d.getDate() - 1)
+  let d = fimMes(mes || hoje())
+  while (paraDate(d).getDay() === 0 || feriados.includes(d)) {
+    d = somaDias(d, -1)
   }
-  return iso(d)
+  return d
 }
 
-// parcela `numero` (1, 2…); dias = 30 conta meses; sem dias vence no dia
+// parcela `numero` (1, 2…); dias = 30 conta meses; sem dias vence no dia; sem base, de hoje
 export const vencimentoSugerido = (condicao, numero, dias, feriados = [], base = null) => {
-  const b = dia(base)
+  const b = base || hoje()
   if (condicao === CONDICAO.FECHAMENTO) {
-    return ultimoDiaUtil(new Date(b.getFullYear(), b.getMonth() + numero, 1), feriados)
+    return ultimoDiaUtil(somaMeses(inicioMes(b), numero), feriados)
   }
   if (dias == 30) {
-    return iso(somaMeses(b, numero))
+    return somaMeses(b, numero)
   }
-  return iso(new Date(b.getFullYear(), b.getMonth(), b.getDate() + (dias ?? 0) * numero))
+  return somaDias(b, (dias ?? 0) * numero)
 }
 
 // orçamento impresso: uma linha por pagamento e uma por condição a prazo

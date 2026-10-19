@@ -1,7 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { Notify } from 'quasar'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { negocioStore } from 'stores/negocio'
 import SelectImpressora from 'components/selects/SelectImpressora.vue'
 import SelectPessoa from 'src/components/selects/SelectPessoa.vue'

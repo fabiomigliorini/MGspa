@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
 import axios from 'axios'
 
-// As chamadas de auth NAO passam pela instancia `api` (boot/axios.js) porque vao
+// As chamadas de auth NAO passam pela instancia `api` (services/api.js) porque vao
 // para o API_AUTH_URL e nao podem carregar o interceptor de 401 — sem timeout
 // explicito herdariam o default do axios, que e 0 = esperar para sempre.
 // Uma lentidao pontual da API deixava a janela morta em definitivo: a

@@ -5,6 +5,7 @@ import { api } from 'src/services/api'
 import { useMarcaStore } from 'src/stores/marcaStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInput from '@components/MgInput.vue'
+import { formataData } from '@components/formatters'
 
 const $q = useQuasar()
 const store = useMarcaStore()
@@ -29,8 +30,6 @@ const codFormatado = (v) => '#' + String(v).padStart(6, '0')
 
 const formataMoeda = (v) =>
   (Number(v) || 0).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
-
-const formataData = (v) => (v ? new Date(v).toLocaleDateString('pt-BR') : '—')
 
 const abrirNovo = () => {
   isNovo.value = true
@@ -196,7 +195,7 @@ onMounted(() => store.fetchItems(true))
                   </span>
                 </div>
                 <div class="text-caption text-grey-6">
-                  Última compra: {{ formataData(item.dataultimacompra) }}
+                  Última compra: {{ formataData(item.dataultimacompra) || '—' }}
                 </div>
               </q-card-section>
 

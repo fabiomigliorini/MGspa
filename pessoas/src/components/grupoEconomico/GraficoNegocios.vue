@@ -1,12 +1,12 @@
 <script setup>
-import { formataDataIso, formataMesAno } from '@components/formatters'
+import { formataMesAno } from '@components/formatters'
+import { hoje, inicioAno, inicioMes, somaAnos, somaMeses } from '@components/utils/datas'
 import { ref, watch, onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { GrupoEconomicoStore } from 'src/stores/GrupoEconomico'
 import Chart from 'chart.js/auto'
 import SelectPessoas from 'components/pessoa/SelectPessoas.vue'
-import moment from 'moment'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -15,22 +15,22 @@ const sGrupoEconomico = GrupoEconomicoStore()
 const canvasRef = ref(null)
 const graficoInstance = ref(null)
 const filtroPessoa = ref({
-  desde: formataDataIso(moment().subtract(1, 'year').startOf('month').toDate()),
+  desde: inicioMes(somaAnos(hoje(), -1)),
   codpessoa: null,
 })
 
 const opcoesDesde = [
   {
     label: 'Este Ano',
-    value: formataDataIso(moment().startOf('year').toDate()),
+    value: inicioAno(hoje()),
   },
   {
     label: '1 Ano',
-    value: formataDataIso(moment().subtract(1, 'year').startOf('month').toDate()),
+    value: inicioMes(somaAnos(hoje(), -1)),
   },
   {
     label: '2 Anos',
-    value: formataDataIso(moment().subtract(2, 'year').startOf('month').toDate()),
+    value: inicioMes(somaAnos(hoje(), -2)),
   },
   { label: 'Tudo', value: null },
 ]
@@ -39,7 +39,7 @@ const montaGrafico = async () => {
   try {
     const ret = await sGrupoEconomico.getNegocios(route.params.id, filtroPessoa.value)
 
-    let mes = moment().startOf('month')
+    let mes = inicioMes(hoje())
     let primeiroMes = filtroPessoa.value.desde
     if (!primeiroMes) {
       primeiroMes = ret.data.map((item) => item.mes).sort()[0]
@@ -47,9 +47,9 @@ const montaGrafico = async () => {
 
     const meses = []
     do {
-      meses.unshift(mes.format('YYYY-MM-DD 00:00:00'))
-      mes = mes.subtract(1, 'month').startOf('month')
-    } while (mes.format('YYYY-MM-DD') > primeiroMes)
+      meses.unshift(`${mes} 00:00:00`)
+      mes = somaMeses(mes, -1)
+    } while (mes > primeiroMes)
 
     const naturezas = [...new Set(ret.data.slice(1).map((e) => e.naturezaoperacao))]
 

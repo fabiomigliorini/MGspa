@@ -4,10 +4,8 @@ import { ref, computed } from 'vue'
 import { useQuasar } from 'quasar'
 import { colaboradorStore } from 'stores/colaborador'
 import { pessoaStore } from 'stores/pessoa'
-import { tempoRelativo, formataDataIso, formataDataAbreviada } from '@components/formatters'
-import moment from 'moment'
-import 'moment/min/locales'
-moment.locale('pt-br')
+import { tempoRelativo, formataDataAbreviada } from '@components/formatters'
+import { hoje, lerDataBr } from '@components/utils/datas'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgSelectCargo from '@components/MgSelectCargo.vue'
@@ -52,7 +50,7 @@ const editarCargo = ref(false)
 function preencheCargo(colaborador) {
   if (colaborador.ColaboradorCargo.length > 0) {
     modelColaboradorCargo.value = {
-      inicio: formataDataIso(new Date()),
+      inicio: hoje(),
       codcolaborador: colaborador.codcolaborador,
     }
   } else {
@@ -182,8 +180,7 @@ function validaDataValida(value) {
   if (!value) {
     return true
   }
-  const data = moment(value, 'DD/MM/YYYY', true)
-  if (!data.isValid()) {
+  if (!lerDataBr(value)) {
     return 'Data Inválida!'
   }
   return true
@@ -193,12 +190,12 @@ function validaInicio(value) {
   if (!value) {
     return true
   }
-  const inicio = moment(value, 'DD/MM/YYYY', true)
-  if (!inicio.isValid()) {
+  const inicio = lerDataBr(value)
+  if (!inicio) {
     return true
   }
   const contratacao = props.colaboradorCargos.contratacao?.substring(0, 10)
-  if (contratacao && inicio.format('YYYY-MM-DD') < contratacao) {
+  if (contratacao && inicio < contratacao) {
     return 'Inicio não pode ser anterior á Contratação!'
   }
   return true
@@ -208,12 +205,12 @@ function validaFim(value) {
   if (!value) {
     return true
   }
-  const fim = moment(value, 'DD/MM/YYYY', true)
-  if (!fim.isValid()) {
+  const fim = lerDataBr(value)
+  if (!fim) {
     return true
   }
   const inicio = modelColaboradorCargo.value.inicio
-  if (inicio && fim.format('YYYY-MM-DD') < inicio) {
+  if (inicio && fim < inicio) {
     return 'Fim não pode ser anterior ao inicio!'
   }
   return true

@@ -3,6 +3,8 @@
 // Importar como: import { ... } from '@components/formatters'
 // =====================================================================
 
+import { paraDate } from "./utils/datas.js";
+
 // ---------- Números / Moeda ----------
 
 // Converte qualquer entrada (number ou string "1.234,56") em number; NaN se inválido.
@@ -54,14 +56,12 @@ export function arredonda(valor, casas = 2) {
 
 // ---------- Datas ----------
 
-// Helper interno: cria Date evitando shift de TZ para strings YYYY-MM-DD puras.
-// new Date("2026-05-16") interpreta UTC 00:00, que em GMT-3 vira 2026-05-15 21:00.
-// Aqui forçamos meio-dia local para strings que são só data.
+// Helper interno: Date no horário local (paraDate, de @components/utils/datas); null se não for
+// data. String que é só data ("YYYY-MM-DD") conta do meio-dia, como sempre contou no tempo relativo.
 function parseLocalDate(data) {
-  if (data instanceof Date) return data;
-  const s = String(data);
-  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return new Date(s + "T12:00:00");
-  return new Date(s);
+  const d = paraDate(data);
+  if (d && /^\d{4}-\d{2}-\d{2}$/.test(String(data))) d.setHours(12);
+  return d;
 }
 
 // Helper: monta a parte do ano conforme digitosAno (4 = YYYY, 2 = YY, 0 = sem ano)
@@ -89,7 +89,7 @@ const DIAS_LONGO = [
 export function formataData(data, digitosAno = 4) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  if (isNaN(d.getTime())) return "";
+  if (!d) return "";
   const dd = String(d.getDate()).padStart(2, "0");
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const ano = anoStr(d, digitosAno);
@@ -100,7 +100,7 @@ export function formataData(data, digitosAno = 4) {
 export function formataTimestamp(data, digitosAno = 4, segundos = false) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  if (isNaN(d.getTime())) return "";
+  if (!d) return "";
   const base = formataData(d, digitosAno);
   const hora = formataHora(d, segundos);
   return `${base} ${hora}`;
@@ -110,7 +110,7 @@ export function formataTimestamp(data, digitosAno = 4, segundos = false) {
 export function formataHora(data, segundos = false) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  if (isNaN(d.getTime())) return "";
+  if (!d) return "";
   const hh = String(d.getHours()).padStart(2, "0");
   const ii = String(d.getMinutes()).padStart(2, "0");
   if (!segundos) return `${hh}:${ii}`;
@@ -122,7 +122,7 @@ export function formataHora(data, segundos = false) {
 export function formataDataAbreviada(data, digitosAno = 2) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  if (isNaN(d.getTime())) return "";
+  if (!d) return "";
   const dd = String(d.getDate()).padStart(2, "0");
   const mmm = MESES_ABREV[d.getMonth()];
   const ano = anoStr(d, digitosAno);
@@ -133,7 +133,7 @@ export function formataDataAbreviada(data, digitosAno = 2) {
 export function formataMesAno(data, digitosAno = 4) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  if (isNaN(d.getTime())) return "";
+  if (!d) return "";
   const mmm = MESES_ABREV[d.getMonth()];
   const ano = anoStr(d, digitosAno);
   return ano ? `${mmm}/${ano}` : mmm;
@@ -143,7 +143,7 @@ export function formataMesAno(data, digitosAno = 4) {
 export function formataDiaSemana(data, short = true) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  if (isNaN(d.getTime())) return "";
+  if (!d) return "";
   return short ? DIAS_ABREV[d.getDay()] : DIAS_LONGO[d.getDay()];
 }
 
@@ -151,7 +151,7 @@ export function formataDiaSemana(data, short = true) {
 export function formataDataCompleta(data) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  if (isNaN(d.getTime())) return "";
+  if (!d) return "";
   const semana = DIAS_LONGO[d.getDay()];
   const dd = d.getDate();
   const mes = MESES_LONGO[d.getMonth()];
@@ -162,7 +162,7 @@ export function formataDataCompleta(data) {
 export function formataTimestampCompleto(data) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  if (isNaN(d.getTime())) return "";
+  if (!d) return "";
   return `${formataDataCompleta(d)} ${formataHora(d)}`;
 }
 
@@ -170,7 +170,7 @@ export function formataTimestampCompleto(data) {
 export function formataDataIso(data) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  if (isNaN(d.getTime())) return "";
+  if (!d) return "";
   const yyyy = d.getFullYear();
   const mm = String(d.getMonth() + 1).padStart(2, "0");
   const dd = String(d.getDate()).padStart(2, "0");
@@ -181,7 +181,7 @@ export function formataDataIso(data) {
 export function formataTimestampIso(data) {
   if (!data) return "";
   const d = parseLocalDate(data);
-  if (isNaN(d.getTime())) return "";
+  if (!d) return "";
   const base = formataDataIso(d);
   const hh = String(d.getHours()).padStart(2, "0");
   const ii = String(d.getMinutes()).padStart(2, "0");
@@ -196,7 +196,9 @@ const rtf = new Intl.RelativeTimeFormat(
 
 export function tempoRelativo(dataStr) {
   if (!dataStr) return "";
-  const diff = parseLocalDate(dataStr) - new Date();
+  const d = parseLocalDate(dataStr);
+  if (!d) return "";
+  const diff = d - new Date();
   const seconds = Math.round(diff / 1000);
   const minutes = Math.round(diff / 60000);
   const hours = Math.round(diff / 3600000);
@@ -212,22 +214,6 @@ export function tempoRelativo(dataStr) {
   return rtf.format(years, "year");
 }
 
-export const formataFromNow = tempoRelativo;
-
-export function verificaPassadoFuturo(data) {
-  if (!data) return null;
-  return parseLocalDate(data).getTime() < Date.now();
-}
-
-export function verificaIdade(dataNascimento) {
-  if (!dataNascimento) return null;
-  const nasc = parseLocalDate(dataNascimento);
-  const hoje = new Date();
-  let idade = hoje.getFullYear() - nasc.getFullYear();
-  const m = hoje.getMonth() - nasc.getMonth();
-  if (m < 0 || (m === 0 && hoje.getDate() < nasc.getDate())) idade--;
-  return idade;
-}
 
 // ---------- Documentos ----------
 

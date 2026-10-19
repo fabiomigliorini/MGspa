@@ -12,12 +12,10 @@ import PixCobDialog from '@components/cobranca/PixCobDialog.vue'
 import PagarMePedidoDialog from '@components/cobranca/PagarMePedidoDialog.vue'
 import SaurusPedidoDialog from '@components/cobranca/SaurusPedidoDialog.vue'
 import MgAdiantamentoDialog from '@components/MgAdiantamentoDialog.vue'
-import { sincronizacaoStore } from 'stores/sincronizacao'
 
 const store = configurarPagamentoLista()
 const sPagamento = pagamentoStore()
 const sNegocio = negocioStore()
-const pdv = sincronizacaoStore().pdv.uuid
 
 // filial e maquinetas do estoque local configurado no PDV (a filial do lançamento é a do PDV)
 const contexto = () => sNegocio.contextoCobranca(sNegocio.padrao.codestoquelocal)
@@ -59,7 +57,7 @@ const adiantamentoLancado = async (pags) => {
       v-model="sPagamento.dialogAdiantamento"
       :formas="FORMAS_ADIANTAMENTO"
       :contexto="contexto"
-      :finalizar="{ url: 'v1/pdv/titulo', extras: { pdv } }"
+      :finalizar="{ url: 'v1/pdv/titulo' }"
       com-data
       :padrao="sNegocio.padrao"
       @finalizado="adiantamentoLancado"

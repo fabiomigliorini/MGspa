@@ -3,8 +3,6 @@ import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { db } from 'boot/db'
 import { negocioStore } from 'src/stores/negocio'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
 import {
   formataCnpjCpf,
   formataCnpj,

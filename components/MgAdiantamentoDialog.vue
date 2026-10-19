@@ -13,7 +13,8 @@ import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
-import { formataNumero, formataDataIso, formataTimestampIso } from '@components/formatters'
+import { formataNumero } from '@components/formatters'
+import { agora, hoje, somaDias } from '@components/utils/datas'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -47,26 +48,19 @@ const CONTA_PADRAO = { 120: 42, 121: 1, 211: 2 }
 const sBaixa = baixaTitulosStore()
 const selectCache = useSelectCacheStore()
 
-const daquiA30Dias = () => {
-  const d = new Date()
-  d.setDate(d.getDate() + 30)
-  return formataDataIso(d)
-}
-
 // data de outro mês avisa (DIMP e relatórios já apurados), sem bloquear
 const trocaMes = computed(
-  () => !!form.value.transacao && form.value.transacao.slice(0, 7) !== agora().slice(0, 7),
+  () => !!form.value.transacao && form.value.transacao.slice(0, 7) !== agora(false).slice(0, 7),
 )
 
 // a data de quando abriu; o que está no campo é o que vai
-const agora = () => formataTimestampIso(new Date()).slice(0, 16)
-const transacaoAbertura = ref(agora())
+const transacaoAbertura = ref(agora(false))
 
 const vazio = () => ({
   codtipotitulo: null,
   codpessoa: props.pix?.codpessoa ?? null,
   valor: props.pix?.valor ?? null,
-  vencimento: daquiA30Dias(),
+  vencimento: somaDias(hoje(), 30),
   codcontacontabil: null,
   codfilial: props.filialPadrao,
   transacao: transacaoAbertura.value,
@@ -115,7 +109,7 @@ watch(
   () => props.modelValue,
   async (aberto) => {
     if (!aberto) return
-    transacaoAbertura.value = agora()
+    transacaoAbertura.value = agora(false)
     form.value = vazio()
     sBaixa.iniciar({ pessoa: null, titulos: [] })
     await carregarTipos()

@@ -1,4 +1,5 @@
-import { formataDataIso, formataTimestampIso } from '@components/formatters'
+import { formataTimestampIso } from '@components/formatters'
+import { hoje, somaAnos } from '@components/utils/datas'
 import { defineStore } from 'pinia'
 import { toRaw } from 'vue'
 import { db } from 'boot/db'
@@ -12,6 +13,10 @@ import { falar } from '../utils/falar.js'
 import { CONDICOES, MEIO, MEIOS, totalPagamento } from '@components/cobranca/pagamento.js'
 
 const sSinc = sincronizacaoStore()
+
+// o que o card do negocio mostra do PDV. So' isto: o negocio vai inteiro no PUT e fica no
+// IndexedDB, e o uuid e' a senha do dispositivo (TASK-197)
+const pdvDoNegocio = () => ({ apelido: sSinc.pdv.apelido, setor: sSinc.pdv.setor })
 const sCobranca = cobrancaStore()
 
 const arredonda = (v) => Math.round((parseFloat(v) || 0) * 100) / 100
@@ -490,7 +495,7 @@ export const negocioStore = defineStore('negocio', {
         titulos: [],
         notas: [],
         codpdv: sSinc.pdv.codpdv,
-        Pdv: { ...sSinc.pdv },
+        Pdv: pdvDoNegocio(),
       }
       db.negocio.add(negocio, uuid)
       this.negocio = { ...negocio }
@@ -760,7 +765,7 @@ export const negocioStore = defineStore('negocio', {
       negocio.alteracao = formataTimestampIso(new Date())
       negocio.sincronizado = false
       negocio.codpdv = sSinc.pdv.codpdv
-      negocio.Pdv = { ...sSinc.pdv }
+      negocio.Pdv = pdvDoNegocio()
       negocio.pagamentos = []
       negocio.parcelas = []
       negocio.titulos = []
@@ -1335,8 +1340,6 @@ export const negocioStore = defineStore('negocio', {
             : parseFloat(valoravulso) || 0
 
         // validade informativa: 1 ano da emissao (decisao 8)
-        const validade = new Date()
-        validade.setFullYear(validade.getFullYear() + 1)
 
         const agora = formataTimestampIso(new Date())
         const vale = {
@@ -1359,7 +1362,7 @@ export const negocioStore = defineStore('negocio', {
           valoroutras: null,
           valorjuros: null,
           valortotal: 0,
-          validade: formataDataIso(validade),
+          validade: somaAnos(hoje(), 1),
           codvalecompra: null,
           observacoes: null,
           criacao: agora,

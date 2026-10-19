@@ -23,6 +23,7 @@ import {
   formataTimestampIso,
 } from '@components/formatters'
 import { periodoStore, linhasDoItem, linhasParaSalvar } from '@components/stores/periodoStore'
+import { hoje, somaMeses, fimMes } from '@components/utils/datas'
 
 const router = useRouter()
 const $q = useQuasar()
@@ -67,7 +68,6 @@ const titulo = computed(() => {
   return caixa.value ? formataData(p.inicio) : p.descricao
 })
 
-const iso = (d) => formataTimestampIso(d ? new Date(d) : new Date())
 const limpa = (contagem) =>
   Object.fromEntries(Object.entries(contagem || {}).filter(([, q]) => Number(q) > 0))
 
@@ -170,8 +170,8 @@ const datas = ref({ inicio: null, fim: null, observacoes: null })
 function prepararDatas() {
   const p = periodo.value
   datas.value = {
-    inicio: iso(p.inicio),
-    fim: p.fim ? iso(p.fim) : null,
+    inicio: formataTimestampIso(p.inicio),
+    fim: p.fim ? formataTimestampIso(p.fim) : null,
     observacoes: p.observacoes,
   }
   dialogDatas.value = true
@@ -274,13 +274,7 @@ const dialogCorte = ref(false)
 const corte = ref(null)
 
 function prepararCorte() {
-  const hoje = new Date()
-  const d = new Date(hoje.getFullYear(), hoje.getMonth(), 0)
-  corte.value = [
-    d.getFullYear(),
-    String(d.getMonth() + 1).padStart(2, '0'),
-    String(d.getDate()).padStart(2, '0'),
-  ].join('-')
+  corte.value = fimMes(somaMeses(hoje(), -1))
   dialogCorte.value = true
 }
 

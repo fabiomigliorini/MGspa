@@ -3,6 +3,7 @@ import { ref, computed, watch } from 'vue'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifyError } from 'src/utils/notify'
 import { formataReal } from '@components/formatters'
+import { hoje } from '@components/utils/datas'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
 import ResumoImposto from 'components/ResumoImposto.vue'
@@ -43,7 +44,6 @@ const valorBrl = computed(() => n(form.value.valor) * n(form.value.cotacao))
 const sacasTranche = computed(() =>
   n(props.fixacao?.preco) > 0 ? n(form.value.valor) / n(props.fixacao.preco) : 0,
 )
-const hojeIso = computed(() => new Date().toISOString().slice(0, 10))
 
 function abrir() {
   if (editando.value) {
@@ -57,7 +57,7 @@ function abrir() {
     return
   }
   form.value = {
-    data: hojeIso.value,
+    data: hoje(),
     valor: Math.round(disponivel.value * 100) / 100, // pré-preenche com o saldo
     cotacao: null,
     observacao: '',
@@ -111,7 +111,7 @@ async function salvar() {
                     v-model="form.data"
                     label="Data da trava"
                     type="date"
-                    :max="hojeIso"
+                    :max="hoje()"
                     lazy-rules
                     :rules="[(v) => !!v || 'Informe a data']"
                   />

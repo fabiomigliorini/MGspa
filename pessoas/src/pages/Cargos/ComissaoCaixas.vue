@@ -1,20 +1,20 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
-import { formataTimestampIso } from '@components/formatters'
+import { fimMes, hoje, inicioMes, somaDias } from '@components/utils/datas'
 import { ref, onMounted, watch } from 'vue'
 import { debounce } from 'quasar'
 import { useAuthStore } from 'src/stores'
 import MGLayout from 'src/layouts/MGLayout.vue'
 import MgInputData from '@components/MgInputData.vue'
-import moment from 'moment'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 
 const user = useAuthStore()
 const caixas = ref([])
 
 const filtro = ref({
-  inicio: formataTimestampIso(moment().add(-10, 'days').startOf('month').toDate()),
-  fim: formataTimestampIso(moment().add(-10, 'days').endOf('month').toDate()),
+  // o mês de 10 dias atrás
+  inicio: `${inicioMes(somaDias(hoje(), -10))} 00:00:00`,
+  fim: `${fimMes(somaDias(hoje(), -10))} 23:59:59`,
 })
 
 const buscar = debounce(async () => {

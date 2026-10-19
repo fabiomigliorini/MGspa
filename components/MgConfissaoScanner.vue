@@ -2,7 +2,7 @@
 // Escanear a confissão de dívida assinada (PDV → Confissão de Dívida; contas → Fechamentos, na
 // conferência da duplicata). Foto → o servidor lê o QR (ou o texto) e acha a venda → Anexar. Se
 // não achar, digita o código da venda e o valor e procura. Quem usa chama
-// `confissaoStore().configurar({ fixos })` antes (o PDV manda o uuid do dispositivo).
+// `confissaoStore().configurar({ fixos })` antes (o PDV se identifica pelo cabeçalho X-Pdv).
 import { ref, watch } from 'vue'
 import { confissaoStore } from '@components/stores/confissaoStore'
 import MgSlim from '@components/MgSlim.vue'

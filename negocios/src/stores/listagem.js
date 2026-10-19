@@ -1,14 +1,11 @@
-import { formataTimestampIso } from '@components/formatters'
+import { hoje, somaDias } from '@components/utils/datas'
 import { defineStore } from 'pinia'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { Notify } from 'quasar'
-import moment from 'moment'
 import { negocioStore } from './negocio'
-import { pdvStore } from './pdv'
 import { sincronizacaoStore } from './sincronizacao'
 
 const sNegocio = negocioStore()
-const sPdv = pdvStore()
 const sSinc = sincronizacaoStore()
 
 export const listagemStore = defineStore('listagem', {
@@ -92,8 +89,8 @@ export const listagemStore = defineStore('listagem', {
       }
       const filtro = {
         codnegocio: null,
-        lancamento_de: moment().subtract(7, 'd').startOf('day').format('YYYY-MM-DD HH:mm'),
-        lancamento_ate: formataTimestampIso(moment().endOf('day').toDate()),
+        lancamento_de: `${somaDias(hoje(), -7)} 00:00`,
+        lancamento_ate: `${hoje()} 23:59:59`,
         codestoquelocal: sNegocio.padrao.codestoquelocal,
         codusuario: null,
         codnegociostatus: null,
@@ -109,12 +106,11 @@ export const listagemStore = defineStore('listagem', {
         valor_de: null,
         valor_ate: null,
       }
-      const pdv = await sPdv.findByUuid(sSinc.pdv.uuid)
-      if (pdv) {
-        filtro.codpdv = pdv.codpdv
+      if (sSinc.pdv.codpdv) {
+        filtro.codpdv = sSinc.pdv.codpdv
       }
+      // a ListagemPage observa o filtro e busca; buscar aqui também pedia 2 vezes
       this.filtro = filtro
-      await this.getNegocios()
     },
 
     async getNegocios() {
@@ -131,7 +127,6 @@ export const listagemStore = defineStore('listagem', {
       this.carregando = true
       try {
         const filtro = { ...this.filtro }
-        filtro.pdv = sSinc.pdv.uuid
         filtro.page = this.paginacao.current_page + 1
         const { data } = await api.get('/v1/pdv/negocio', {
           params: filtro,
@@ -153,6 +148,9 @@ export const listagemStore = defineStore('listagem', {
           timeout: 3000, // 3 segundos
           actions: [{ icon: 'close', color: 'white' }],
         })
+        // para de paginar: senão o infinite scroll pede de novo na hora, sem
+        // parar. Mudar um filtro chama o getNegocios, que recomeça da 1ª página
+        this.paginacao.last_page = this.paginacao.current_page
         return false
       } finally {
         this.carregando = false
@@ -163,7 +161,6 @@ export const listagemStore = defineStore('listagem', {
       try {
         const { data } = await api.get('/v1/pdv/orcamento', {
           params: {
-            pdv: sSinc.pdv.uuid,
             uuid: uuid,
           },
         })

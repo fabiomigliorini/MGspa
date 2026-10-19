@@ -6,14 +6,15 @@
 // banco/maquineta confirma). Títulos que se anulam não pedem forma: é o encontro de contas. Cada
 // app informa onde busca os títulos, as formas, o contexto do wizard (PDV ou contas) e para onde
 // manda a baixa. Com `pix` (vindo da tela PIX, TASK-219), a baixa usa o PIX que caiu na conta:
-// inteiro, na data e na conta dele.
+// inteiro, na data e na conta dele. Com `inicial` (o Duplicar do contas, TASK-236), abre com os
+// títulos, valores, pessoa, data, "referente a" e observação de outro pagamento; a forma se escolhe
+// de novo.
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
-import { formataNumero, formataTimestampIso } from '@components/formatters'
-import MgInput from '@components/MgInput.vue'
-import MgInputData from '@components/MgInputData.vue'
-import MgSelectPessoa from '@components/MgSelectPessoa.vue'
+import { formataNumero } from '@components/formatters'
+import { agora } from '@components/utils/datas'
+import MgPagamentoForm from '@components/MgPagamentoForm.vue'
 import MgSeletorTitulosAbertos from '@components/MgSeletorTitulosAbertos.vue'
 import MgCobrancaDialog from '@components/MgCobrancaDialog.vue'
 import PixCobDialog from '@components/cobranca/PixCobDialog.vue'
@@ -61,22 +62,26 @@ const props = defineProps({
     type: Object,
     default: null,
   },
+  // a baixa já preenchida (Duplicar): { titulos (no formato do seletor), codpessoa, transacao,
+  // referente, observacao }
+  inicial: {
+    type: Object,
+    default: null,
+  },
 })
 
 const emit = defineEmits(['finalizado'])
 
 const sBaixa = baixaTitulosStore()
 
-const agora = () => formataTimestampIso(new Date()).slice(0, 16)
-
-const titulos = ref([])
-const codpessoaFiltro = ref(props.pix?.codpessoa ?? null)
-const codpessoa = ref(null)
-const transacao = ref(agora())
-// a data só fica parada se a pessoa mexeu nela
-const transacaoMexida = ref(false)
-const referente = ref('')
-const observacao = ref('')
+const titulos = ref(props.inicial?.titulos ?? [])
+const codpessoaFiltro = ref(props.pix?.codpessoa ?? props.inicial?.codpessoa ?? null)
+const codpessoa = ref(props.inicial?.codpessoa ?? null)
+const transacao = ref(props.inicial?.transacao ?? agora(false))
+// a data só fica parada se a pessoa mexeu nela (ou se veio do pagamento duplicado)
+const transacaoMexida = ref(!!props.inicial?.transacao)
+const referente = ref(props.inicial?.referente ?? '')
+const observacao = ref(props.inicial?.observacao ?? '')
 // data, pessoa, "referente a" e observação ficam no diálogo do FAB, à vista com a lista rolada
 const dialog = ref(false)
 
@@ -148,7 +153,9 @@ const aplicarPix = () => {
 // títulos escolhidos: a pessoa é a deles quando é uma só (várias ou nenhuma: vazia), refeita só
 // quando mudam as pessoas dos títulos (editar juros ou total não apaga a escolhida à mão);
 // mudar a seleção ou os valores recomeça a forma
-let pessoasDosTitulos = ''
+const pessoasDe = (lista) => [...new Set(lista.map((t) => t.codpessoa).filter(Boolean))].sort()
+// o duplicado já vem com a pessoa dele: só muda se mudarem as pessoas dos títulos
+let pessoasDosTitulos = pessoasDe(titulos.value).join(',')
 watch(
   titulos,
   (lista) => {
@@ -160,7 +167,7 @@ watch(
         timeout: 3000,
       })
     }
-    const pessoas = [...new Set(lista.map((t) => t.codpessoa).filter(Boolean))].sort()
+    const pessoas = pessoasDe(lista)
     if (pessoas.join(',') !== pessoasDosTitulos) {
       pessoasDosTitulos = pessoas.join(',')
       codpessoa.value = pessoas.length === 1 ? pessoas[0] : null
@@ -181,7 +188,7 @@ watch(codpessoa, (v) => {
 // abre o diálogo com a hora de agora, se ninguém mexeu na data
 const abrirDialog = () => {
   if (!transacaoMexida.value) {
-    transacao.value = agora()
+    transacao.value = agora(false)
   }
   dialog.value = true
 }
@@ -240,7 +247,12 @@ watch(
   },
 )
 
-onMounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
+onMounted(() =>
+  sBaixa.iniciar({
+    pessoa: codpessoa.value ? { codpessoa: codpessoa.value } : null,
+    titulos: titulos.value.map((t) => ({ ...t })),
+  }),
+)
 onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
 </script>
 
@@ -258,53 +270,19 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
     />
 
     <q-dialog v-model="dialog">
-      <q-card flat style="width: 600px; max-width: 90vw">
-        <q-form @submit.prevent="gravar">
-          <q-card-section class="text-grey-9 text-overline row items-center">
-            {{ descricao.toUpperCase() }}
-            <q-space />
-            <span class="text-h6">R$ {{ formataNumero(sBaixa.totalLiquido) }}</span>
-          </q-card-section>
-          <q-separator inset />
-          <q-card-section>
-            <div class="row q-col-gutter-md">
-              <div class="col-xs-12 col-sm-4" v-if="comData && !pix">
-                <MgInputData
-                  :model-value="transacao"
-                  @update:model-value="mudouData"
-                  type="timestamp"
-                  default-time="keep"
-                  :seconds="false"
-                  label="Data"
-                  :bottom-slots="false"
-                />
-              </div>
-              <div class="col-xs-12" :class="comData && !pix ? 'col-sm-8' : ''">
-                <MgSelectPessoa
-                  v-model="codpessoa"
-                  label="Pessoa"
-                  :autofocus="foco === 'pessoa'"
-                  :bottom-slots="false"
-                />
-              </div>
-              <div class="col-12">
-                <MgInput
-                  v-model="referente"
-                  label="Referente a (sai no recibo)"
-                  maxlength="255"
-                  :bottom-slots="false"
-                />
-              </div>
-              <div class="col-12">
-                <MgInput
-                  v-model="observacao"
-                  label="Observação (interna)"
-                  maxlength="300"
-                  :bottom-slots="false"
-                />
-              </div>
-            </div>
-          </q-card-section>
+      <MgPagamentoForm
+        :titulo="descricao"
+        :valor="sBaixa.totalLiquido"
+        :com-data="comData && !pix"
+        :foco-pessoa="foco === 'pessoa'"
+        :transacao="transacao"
+        @update:transacao="mudouData"
+        v-model:codpessoa="codpessoa"
+        v-model:referente="referente"
+        v-model:observacao="observacao"
+        @submit="gravar"
+      >
+        <template #rodape>
           <q-list v-if="sBaixa.forma" separator>
             <q-item>
               <q-item-section>{{ sBaixa.forma.descricao }}</q-item-section>
@@ -319,30 +297,29 @@ onUnmounted(() => sBaixa.iniciar({ pessoa: null, titulos: [] }))
           <q-card-section v-if="problemaPix" class="text-caption text-negative">
             {{ problemaPix }}
           </q-card-section>
-          <q-separator inset />
-          <q-card-actions align="right">
-            <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-            <q-btn
-              v-if="temWizard"
-              flat
-              :label="descricao"
-              color="primary"
-              :disable="sBaixa.finalizando"
-              :autofocus="foco === 'wizard'"
-              @click="abrirWizard"
-            />
-            <q-btn
-              flat
-              label="Gravar"
-              type="submit"
-              color="primary"
-              :autofocus="foco === 'gravar'"
-              :disable="!sBaixa.pronto || !!problemaPix"
-              :loading="sBaixa.finalizando"
-            />
-          </q-card-actions>
-        </q-form>
-      </q-card>
+        </template>
+        <template #acoes>
+          <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
+          <q-btn
+            v-if="temWizard"
+            flat
+            :label="descricao"
+            color="primary"
+            :disable="sBaixa.finalizando"
+            :autofocus="foco === 'wizard'"
+            @click="abrirWizard"
+          />
+          <q-btn
+            flat
+            label="Gravar"
+            type="submit"
+            color="primary"
+            :autofocus="foco === 'gravar'"
+            :disable="!sBaixa.pronto || !!problemaPix"
+            :loading="sBaixa.finalizando"
+          />
+        </template>
+      </MgPagamentoForm>
     </q-dialog>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">

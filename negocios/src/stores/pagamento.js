@@ -3,8 +3,7 @@
 // MgAdiantamentoDialog, o mesmo do contas), o recibo e o vale de crédito na térmica.
 import { defineStore } from 'pinia'
 import { Notify } from 'quasar'
-import { api } from 'boot/axios'
-import { sincronizacaoStore } from 'stores/sincronizacao'
+import { api } from 'src/services/api'
 import { negocioStore } from 'stores/negocio'
 
 // formas que o caixa usa: recebe o que se confirma na hora; paga vale em dinheiro ou registrando
@@ -69,7 +68,6 @@ export const pagamentoStore = defineStore('pagamento', {
       }
       try {
         await api.post('/v1/pdv/pagamento/recibo/' + impressora, {
-          pdv: sincronizacaoStore().pdv.uuid,
           codpagamento: codpagamentos,
         })
       } catch (error) {

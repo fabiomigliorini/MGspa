@@ -1,5 +1,5 @@
 ---
-id: doc-3
+id: doc-5
 title: 'Agro: o que a bateria de conferência validou e as regras aceitas'
 type: specification
 created_date: '2026-09-29 13:37'
@@ -9,6 +9,9 @@ created_date: '2026-09-29 13:37'
 
 **Origem:** bateria `api/tests/agro/` (TASK-184), com linha de base em 28/09/2026. Ela
 repete no dev o que o pátio faz e confere os números contra as regras decididas.
+
+**Numeração:** era doc-3 até 18/10/2026, quando foi renumerado para doc-5 porque o número
+colidia com o plano do fechamento de caixa; commits anteriores citam este doc como doc-3.
 
 **Classificação:** confirmada com quem prioriza em 29/09/2026. Este é o registro de
 referência para separar **defeito** de **forma de trabalhar aceita**. Antes de tratar um

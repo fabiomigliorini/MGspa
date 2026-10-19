@@ -4,6 +4,7 @@ import { storeToRefs } from 'pinia'
 import { useExtratoStore } from 'src/stores/extrato'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInput from '@components/MgInput.vue'
+import { formataData } from '@components/formatters'
 
 // Store da tela Estoque & Extrato: única fonte dos dados. A página só lê via
 // storeToRefs e chama as actions.
@@ -172,7 +173,7 @@ onMounted(async () => {
                 <q-badge v-if="m.manual" color="deep-purple-6" label="manual" class="q-ml-xs" />
               </q-item-label>
               <q-item-label caption>
-                {{ m.papel }} · {{ new Date(m.data).toLocaleDateString('pt-BR') }}
+                {{ m.papel }} · {{ formataData(m.data) }}
                 <span v-if="m.observacao"> · {{ m.observacao }}</span>
               </q-item-label>
             </q-item-section>

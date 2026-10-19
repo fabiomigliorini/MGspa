@@ -15,6 +15,7 @@ class PdvResource extends JsonResource
      */
     public function toArray($request)
     {
+        // sem o uuid: o model esconde (Pdv::$hidden)
         $ret = parent::toArray($request);
 
         // Chave Extrangeira

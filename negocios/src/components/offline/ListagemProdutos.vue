@@ -1,11 +1,14 @@
 <script setup>
-import { formataNumero, formataNumeroInteligente, formataCodigo } from '@components/formatters'
+import {
+  formataNumero,
+  formataNumeroInteligente,
+  formataCodigo,
+  tempoRelativo,
+} from '@components/formatters'
 import { ref, computed } from 'vue'
 import { produtoStore } from 'stores/produto'
 import { negocioStore } from 'stores/negocio'
 import { Dialog } from 'quasar'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
 import MgInputValor from '@components/MgInputValor.vue'
 
 const sProduto = produtoStore()
@@ -445,7 +448,7 @@ const linkProduto = (codproduto) => {
                 {{ formataNumero(devolucao.quantidade, 3) }}
               </q-item-label>
               <q-item-label>
-                {{ moment(devolucao.lancamento).fromNow() }} em
+                {{ tempoRelativo(devolucao.lancamento) }} em
                 {{ formataCodigo(devolucao.codnegocio) }}
               </q-item-label>
             </q-item-section>

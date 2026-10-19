@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { db } from 'boot/db'
 import { Notify, LoadingBar } from 'quasar'
 import { sincronizacaoStore } from './sincronizacao'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 
 const sSinc = sincronizacaoStore()
 
@@ -177,14 +177,11 @@ export const produtoStore = defineStore('produto', {
     async sincroniza(barras) {
       try {
         var { data } = await api.get('/v1/pdv/produto/' + barras, {
-          params: {
-            pdv: sSinc.pdv.uuid,
-          },
           // backend pendurado nao pode segurar o "Nao encontrei" do caixa
           timeout: 3000,
         })
         if (data.length > 0) {
-          await db.produto.bulkPut(data)
+          await db.produto.bulkPut(sSinc.carimbar('produto', data))
         }
         return data
       } catch (error) {

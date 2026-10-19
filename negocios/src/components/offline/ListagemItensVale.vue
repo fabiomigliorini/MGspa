@@ -11,7 +11,7 @@
 // bipagem normal.
 import { ref, computed } from 'vue'
 import { Dialog, Notify } from 'quasar'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
 import { produtoStore } from 'stores/produto'
 import { negocioStore } from 'stores/negocio'

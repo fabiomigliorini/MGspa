@@ -2,8 +2,10 @@
 
 namespace Mg\Pdv;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Mg\Filial\Setor;
 use Mg\Portador\Portador;
 use Mg\PagarMe\PagarMePos;
@@ -251,16 +253,27 @@ class PdvService
         ];
     }
 
+    // O uuid e' a senha do dispositivo (TASK-197): vem no cabecalho X-Pdv, nunca na query
+    // string (que vai para o log), e nao aparece em tela, lista nem cobranca
+    public static function uuid(Request $request): ?string
+    {
+        return $request->header('X-Pdv');
+    }
+
     // dispositivo ativo (inativo vazio) com este uuid; com uuid repetido, vale o ativo
     public static function podeAcessar($uuid)
     {
+        if (!Str::isUuid((string) $uuid)) {
+            return false;
+        }
         $pdv = Pdv::where('uuid', $uuid)->whereNull('inativo')->first();
         return $pdv ?: false;
     }
 
-    public static function autoriza($uuid)
+    // o middleware `pdv` chama nas rotas que exigem o dispositivo
+    public static function autoriza(Request $request)
     {
-        if (!$pdv = static::podeAcessar($uuid)) {
+        if (!$pdv = static::podeAcessar(static::uuid($request))) {
             abort(403, 'Dispositivo não cadastrado ou inativo! Abra o Meu Dispositivo.');
         }
         return $pdv;
@@ -291,165 +304,6 @@ class PdvService
     {
         $pdv->update(['inativo' => Carbon::now()]);
         return $pdv;
-    }
-
-    public static function produtoCount()
-    {
-        $sql = '
-            select
-            	count(pb.codprodutobarra) as count
-            from tblprodutobarra pb 
-        ';
-        $regs = DB::select($sql);
-        return $regs[0];
-    }
-
-    public static function produto($codprodutobarra, $limite)
-    {
-        $sincronizado = date('Y-m-d H:i:s');
-        $sql = '
-            select
-            	pb.codprodutobarra,
-                p.codproduto,
-            	pb.barras,
-                p.produto,
-                pv.variacao,
-                p.abc,
-            	coalesce(ume.sigla, um.sigla) as sigla,
-            	pe.quantidade,
-            	pri.codimagem,
-            	coalesce(pe.preco, p.preco * coalesce(pe.quantidade, 1)) as preco,
-            	coalesce(pv.inativo, p.inativo) as inativo,
-                :sincronizado as sincronizado
-            from tblproduto p
-            inner join tblunidademedida um on (um.codunidademedida = p.codunidademedida)
-            inner join tblprodutovariacao pv  on (pv.codproduto = p.codproduto)
-            inner join tblprodutobarra pb on (pb.codprodutovariacao = pv.codprodutovariacao)
-            left join tblprodutoembalagem pe on (pe.codprodutoembalagem = pb.codprodutoembalagem)
-            left join tblunidademedida ume on (ume.codunidademedida = pe.codunidademedida)
-            left join tblprodutoimagem pri on (pri.codprodutoimagem = pv.codprodutoimagem)
-        ';
-        if ($limite == 1) {
-            $sql .= '
-                where pb.codprodutobarra = :codprodutobarra
-                order by pb.codprodutobarra
-                limit :limite
-            ';
-        } else {
-            $sql .= '
-                where pb.codprodutobarra > :codprodutobarra
-                order by pb.codprodutobarra
-                limit :limite
-            ';
-        }
-        $regs = DB::select($sql, [
-            'codprodutobarra' => $codprodutobarra,
-            'limite' => $limite,
-            'sincronizado' => $sincronizado
-        ]);
-        return array_map(function ($item) {
-            if ($item->quantidade) {
-                $item->quantidade = floatval($item->quantidade);
-            }
-            $item->preco = floatval($item->preco);
-            $item->produto = static::montarDescricaoProduto($item->produto, $item->variacao, $item->sigla, $item->quantidade);
-            $item->busca =
-                $item->produto . ' ' .
-                number_format($item->preco, 2, ',', '')  . ' ' .
-                $item->barras  . ' ' .
-                substr($item->barras, -6, 6);
-            $item->buscaArr = array_values(array_unique(explode(' ', $item->busca)));
-            return $item;
-        }, $regs);
-        return $regs;
-    }
-
-    public static function montarDescricaoProduto($produto, $variacao, $unidade, $quantidade)
-    {
-        $descricao = $produto;
-        if (!empty($variacao)) {
-            $descricao .= ' ' . $variacao;
-        }
-        $descricao .= ' ' . $unidade;
-        if (!empty($quantidade)) {
-            $descricao .= ' C/' . intval($quantidade);
-        }
-        return $descricao;
-    }
-
-    public static function pessoaCount()
-    {
-        $sql = '
-            select
-            	count(p.codpessoa) as count
-            from tblpessoa p
-        ';
-        $regs = DB::select($sql);
-        return $regs[0];
-    }
-
-    public static function pessoa($codpessoa, $cnpj, $limite)
-    {
-        $sincronizado = date('Y-m-d H:i:s');
-        $params = [
-            'sincronizado' => $sincronizado,
-            'limite' => $limite,
-        ];
-        $sql = '
-            select 
-                p.codpessoa,
-                p.pessoa,
-                p.fantasia,
-                case when p.fisica then to_char(p.cnpj, \'FM00000000000\') else to_char(p.cnpj, \'FM00000000000000\') end as cnpj,
-                p.ie,
-                p.fisica,
-                p.endereco,
-                p.numero,
-                p.bairro,
-                p.complemento,
-                c.cidade,
-                e.sigla as uf,
-                p.vendedor,
-                p.inativo,
-                p.mensagemvenda,
-                p.codformapagamento,
-                p.desconto,
-                :sincronizado as sincronizado
-            from tblpessoa p
-            left join tblcidade c on (c.codcidade = p.codcidade)
-            left join tblestado e on (e.codestado = c.codestado)
-        ';
-        if (!empty($cnpj)) {
-            $params['cnpj'] = "%{$cnpj}%";
-            $sql .= '
-                where to_char(cnpj, \'FM00000000000000\') ilike :cnpj
-            ';
-        } else {
-            $params['codpessoa'] = $codpessoa;
-            if ($limite == 1) {
-                $sql .= '
-                    where codpessoa = :codpessoa
-                ';
-            } else {
-                $sql .= '
-                    where codpessoa > :codpessoa
-                ';
-            }
-        }
-        $sql .= '
-            order by codpessoa
-            limit :limite
-        ';
-        $regs = DB::select($sql, $params);
-        $regs = array_map(function ($item) {
-            $busca = "{$item->pessoa} . {$item->fantasia} . {$item->cnpj} " . str_pad($item->codpessoa, 8, "0", STR_PAD_LEFT);
-            $busca = trim(preg_replace('/[^A-Za-z0-9 ]/', '', $busca));
-            $busca = preg_replace('/\s+/', ' ', $busca);
-            $item->busca = $busca;
-            $item->buscaArr = array_values(array_unique(explode(' ', $item->busca)));
-            return $item;
-        }, $regs);
-        return $regs;
     }
 
     public static function naturezaOperacao()

@@ -7,6 +7,7 @@ import { useCadastro } from 'src/composables/useCadastro'
 import { useContratoDetalheStore } from 'src/stores/contratoDetalhe'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { formataData, formataNumero, formataReal } from '@components/formatters'
+import { diasEntre, hoje } from '@components/utils/datas'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import ContratoForm from 'components/ContratoForm.vue'
 import ContratoDados from 'components/ContratoDados.vue'
@@ -67,17 +68,9 @@ const embarqueInicioFmt = computed(() =>
 const embarqueFimFmt = computed(() =>
   contrato.value?.embarquefim ? formataData(contrato.value.embarquefim) : '—',
 )
-function diasAteHoje(iso) {
-  if (!iso) return null
-  const alvo = new Date(`${String(iso).slice(0, 10)}T00:00:00`)
-  if (isNaN(alvo.getTime())) return null
-  const hoje = new Date()
-  hoje.setHours(0, 0, 0, 0)
-  return Math.round((alvo - hoje) / 86400000)
-}
 const embarquePrazoLabel = computed(() => {
   if (!contrato.value?.embarquefim) return 'Sem janela definida'
-  const d = diasAteHoje(contrato.value.embarquefim)
+  const d = diasEntre(hoje(), contrato.value.embarquefim)
   if (d === null) return 'Sem janela definida'
   if (d > 0) return `Faltam ${d} dia${d === 1 ? '' : 's'} p/ encerrar`
   if (d === 0) return 'Encerra hoje'

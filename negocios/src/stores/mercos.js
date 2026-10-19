@@ -1,9 +1,6 @@
 import { defineStore } from 'pinia'
-import { sincronizacaoStore } from './sincronizacao'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { Notify } from 'quasar'
-
-const sSinc = sincronizacaoStore()
 
 export const mercosStore = defineStore('mercos', {
   // persist: {
@@ -23,9 +20,7 @@ export const mercosStore = defineStore('mercos', {
   actions: {
     async importarPedido() {
       try {
-        const { data } = await api.post('/v1/pdv/mercos/pedido/importar', {
-          pdv: sSinc.pdv.uuid,
-        })
+        const { data } = await api.post('/v1/pdv/mercos/pedido/importar')
         let message = 'Importadas ' + data.importados + ' vendas!'
         Notify.create({
           type: 'positive',
@@ -62,9 +57,7 @@ export const mercosStore = defineStore('mercos', {
 
     async atualizarListagem() {
       try {
-        const { data } = await api.get('/v1/pdv/mercos/pedido', {
-          params: { pdv: sSinc.pdv.uuid },
-        })
+        const { data } = await api.get('/v1/pdv/mercos/pedido')
         this.pedidos = data
         return true
       } catch (error) {

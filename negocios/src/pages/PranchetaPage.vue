@@ -3,7 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { db } from 'src/boot/db'
 import { produtoStore } from 'src/stores/produto'
 import { uid, Dialog, Notify } from 'quasar'
-import { api } from 'src/boot/axios'
+import { api } from 'src/services/api'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInput from '@components/MgInput.vue'
@@ -64,7 +64,6 @@ const salvar = async () => {
     try {
       let data = {
         prancheta: JSON.parse(JSON.stringify(prancheta.value)),
-        pdv: sSinc.pdv.uuid,
       }
       await api.put('/v1/pdv/prancheta/', data)
       await sSinc.sincronizarPrancheta(true)

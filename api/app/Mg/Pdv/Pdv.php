@@ -48,6 +48,10 @@ class Pdv extends MgModel
         'versaonavegador'
     ];
 
+    // o uuid e' a senha do dispositivo (TASK-197): nao sai em resposta nenhuma (o PdvResource e o
+    // Pdv dentro do NegocioResource), so' o proprio navegador conhece o dele
+    protected $hidden = ['uuid'];
+
     protected $casts = [
         'alteracao' => 'datetime',
         'codestoquelocal' => 'integer',

@@ -39,6 +39,8 @@ class AuditoriaService
     const TIPO_PARCELA_REATIVADA = 19;
     // todo fechamento, inclusive o da reaberta (TASK-209)
     const TIPO_NEGOCIO_FECHADO = 20;
+    // o pagamento foi para outro portador do mesmo tipo (TASK-236)
+    const TIPO_PORTADOR_ALTERADO = 21;
 
     const TIPOS = [
         self::TIPO_DATA_ALTERADA => 'Data alterada',
@@ -61,6 +63,7 @@ class AuditoriaService
         self::TIPO_PARCELA_INATIVADA_REABERTURA => 'Parcela inativada na reabertura',
         self::TIPO_PARCELA_REATIVADA => 'Parcela reativada',
         self::TIPO_NEGOCIO_FECHADO => 'Negócio fechado',
+        self::TIPO_PORTADOR_ALTERADO => 'Portador alterado',
     ];
 
     // o historico do registro traz tambem a auditoria destes filhos (TASK-209);

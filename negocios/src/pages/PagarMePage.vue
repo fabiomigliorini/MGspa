@@ -1,10 +1,8 @@
 <script setup>
-import { formataNumero, formataTimestampCompleto } from '@components/formatters'
+import { formataNumero, formataTimestampCompleto, tempoRelativo } from '@components/formatters'
 import { onMounted, ref } from 'vue'
 import { Notify } from 'quasar'
 import { pagarMeStore } from '@components/stores/pagarMeStore'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
 
 const sPagarMe = pagarMeStore()
 // qual botão está rodando: só ele gira, os outros esperam
@@ -135,7 +133,7 @@ onMounted(() => {
                 Negócio {{ ped.codnegocio }}
               </q-item-label>
               <q-item-label caption>
-                {{ moment(ped.criacao).fromNow() }}
+                {{ tempoRelativo(ped.criacao) }}
                 {{ formataTimestampCompleto(ped.criacao) }}
               </q-item-label>
             </q-item-section>

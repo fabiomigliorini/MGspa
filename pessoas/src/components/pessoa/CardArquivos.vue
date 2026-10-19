@@ -5,8 +5,8 @@ import { useQuasar } from 'quasar'
 import { ref } from 'vue'
 import { useAuthStore } from 'src/stores'
 import { pessoaStore } from 'stores/pessoa'
-import { api } from 'src/boot/axios'
-import { formataFromNow, formataTimestampCompleto } from '@components/formatters'
+import { api } from 'src/services/api'
+import { tempoRelativo, formataTimestampCompleto } from '@components/formatters'
 
 const $q = useQuasar()
 const sPessoa = pessoaStore()
@@ -437,7 +437,7 @@ const buscarListagem = async () => {
                 {{ arquivo.observacoes }}
               </q-item-label>
               <q-item-label caption>
-                {{ fileSize(arquivo.size) }} | {{ formataFromNow(arquivo.lastModified) }} |
+                {{ fileSize(arquivo.size) }} | {{ tempoRelativo(arquivo.lastModified) }} |
                 {{ formataTimestampCompleto(arquivo.lastModified) }}
               </q-item-label>
             </q-item-section>
@@ -490,7 +490,7 @@ const buscarListagem = async () => {
                 {{ arquivo.observacoes }}
               </q-item-label>
               <q-item-label caption>
-                {{ fileSize(arquivo.size) }} | {{ formataFromNow(arquivo.lastModified) }} |
+                {{ fileSize(arquivo.size) }} | {{ tempoRelativo(arquivo.lastModified) }} |
                 {{ formataTimestampCompleto(arquivo.lastModified) }}
               </q-item-label>
             </q-item-section>

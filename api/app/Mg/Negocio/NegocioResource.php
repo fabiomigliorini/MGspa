@@ -75,7 +75,7 @@ class NegocioResource extends Resource
         $ret['SaurusPedidoS'] = SaurusPedidoResource::collection($this->SaurusPedidoS()->orderBy('criacao', 'desc')->get());
         $ret['titulos'] = TituloResource::collection(NegocioParcelaService::titulos($this->resource));
         $ret['notas'] = NotaFiscalResource::collection(
-            NotaFiscal::with(['Filial', 'Pessoa.Cidade.Estado', 'NaturezaOperacao', 'Operacao'])
+            NotaFiscal::with(['Filial', 'Pessoa', 'NaturezaOperacao', 'Operacao'])
                 ->whereIn('codnotafiscal', function ($query) {
                     $query->select('nfpb.codnotafiscal')
                         ->distinct()

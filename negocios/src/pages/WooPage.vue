@@ -1,11 +1,9 @@
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { wooStore } from 'src/stores/woo'
-import { formataNumero, formataTimestampCompleto } from '@components/formatters'
+import { formataNumero, formataTimestampCompleto, tempoRelativo } from '@components/formatters'
 import { debounce } from 'quasar'
-import moment from 'moment/min/moment-with-locales'
 import WooInfoModal from 'src/components/modals/WooInfoModal.vue'
-moment.locale('pt-br')
 
 const sWoo = wooStore()
 const scrollRef = ref(null)
@@ -85,7 +83,7 @@ function openPedido(p) {
                   </q-item-label>
                   <q-item-label caption class="text-grey-8">
                     {{ sWoo.statusLabel(pedido.status) }} •
-                    {{ moment(pedido.alteracaowoo).fromNow() }}
+                    {{ tempoRelativo(pedido.alteracaowoo) }}
                   </q-item-label>
                 </q-item-section>
               </q-item>

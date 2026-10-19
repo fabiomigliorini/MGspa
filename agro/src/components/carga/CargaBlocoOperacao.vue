@@ -26,8 +26,8 @@ import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import { useCargaStore } from 'src/stores/carga'
 import { useSincronizacaoStore } from 'src/stores/sincronizacao'
+import { agora } from '@components/utils/datas'
 import {
-  agoraLocal,
   cargaFinalizada,
   sentidoMeta,
   PLACA_RE,
@@ -73,7 +73,7 @@ const proximoPasso = inject('proximoPasso')
 const carga = computed(() => props.carga)
 
 // Máximo do campo de chegada = agora (não deixa lançar no futuro).
-const dataMax = agoraLocal()
+const dataMax = agora()
 
 // Finalizada: o romaneio fechado não muda mais de operação nem de safra
 // (TASK-141 abriu a troca ATÉ finalizar, não depois).
@@ -332,7 +332,11 @@ function onMotoristaClear() {
 function acoesMotorista(busca, { erro = false } = {}) {
   if ((busca || '').length < 2) return []
   const acoes = [
-    { acao: 'semcadastro', label: `Usar “${busca}” sem cadastro, só nesta carga`, icon: 'edit_note' },
+    {
+      acao: 'semcadastro',
+      label: `Usar “${busca}” sem cadastro, só nesta carga`,
+      icon: 'edit_note',
+    },
   ]
   if (!offline.value && !erro) {
     acoes.push({
@@ -396,7 +400,8 @@ function onMotoristaExistente(p) {
     $q.notify({
       type: 'warning',
       message: `CPF de ${nome}, que está INATIVO no cadastro.`,
-      caption: 'O motorista fica sem cadastro nesta carga. Para usar o cadastro, reative no app Pessoas.',
+      caption:
+        'O motorista fica sem cadastro nesta carga. Para usar o cadastro, reative no app Pessoas.',
     })
     return
   }
@@ -538,11 +543,7 @@ async function salvar() {
     </q-card-section>
   </q-card>
 
-  <q-dialog
-    v-model="dialogAberto"
-    :maximized="$q.screen.lt.sm"
-    @hide="emit('fechado', salvou)"
-  >
+  <q-dialog v-model="dialogAberto" :maximized="$q.screen.lt.sm" @hide="emit('fechado', salvou)">
     <!-- F3 aqui confirma ESTE dialog; o .stop segura o F3 da página. -->
     <q-card
       flat

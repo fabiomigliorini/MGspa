@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import { ref } from 'vue'
 
 export const pessoaStore = defineStore('pessoa', {

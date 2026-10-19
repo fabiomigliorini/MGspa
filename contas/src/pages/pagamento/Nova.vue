@@ -4,11 +4,14 @@
 // do cofre, troco, caixa ou gaveta; cheque; cartão da empresa; compensação). Maquinetas de
 // todas as filiais (o financeiro conserta lançamento de qualquer loja).
 // Com ?codpix= (vindo da tela PIX, TASK-219), usa o PIX inteiro, na data e na conta dele.
+// Com ?duplicar= (o Duplicar do detalhe, TASK-236), abre com os títulos, valores, pessoa, data,
+// "referente a" e observação do pagamento cancelado; a forma se escolhe de novo. O original que
+// ainda vale é recusado: os títulos dele continuam baixados (cancelar é outro botão).
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
-import { formataNumero, formataTimestamp } from '@components/formatters'
+import { formataNumero, formataTimestamp, formataTimestampIso } from '@components/formatters'
 import MgBaixaTitulos from '@components/MgBaixaTitulos.vue'
 import { contextoCobranca, FORMAS_TITULOS } from 'src/utils/cobranca'
 
@@ -17,7 +20,9 @@ const router = useRouter()
 
 // o PIX que veio para ser usado
 const pix = ref(null)
-const pronto = ref(!route.query.codpix)
+// a baixa do pagamento duplicado
+const inicial = ref(null)
+const pronto = ref(!route.query.codpix && !route.query.duplicar)
 
 const avisar = (message) =>
   Notify.create({ type: 'negative', message, color: 'red-5', icon: 'error' })
@@ -48,8 +53,57 @@ const carregarPix = async () => {
   }
 }
 
+const carregarDuplicar = async () => {
+  try {
+    const { data } = await api.get(`v1/pagamento/${route.query.duplicar}`)
+    const p = data.data
+    if (!p.duplicavel) {
+      avisar(`O pagamento #${p.codpagamento} não é uma baixa de títulos.`)
+      return
+    }
+    if (p.estado !== 'C') {
+      avisar(
+        `Cancele o pagamento #${p.codpagamento} antes de duplicar: os títulos dele continuam baixados.`,
+      )
+      return
+    }
+    inicial.value = {
+      codpessoa: p.codpessoa,
+      transacao: formataTimestampIso(p.transacao).slice(0, 16),
+      referente: p.referente ?? '',
+      observacao: p.observacoes ?? '',
+      // no formato do seletor: saldo = o capital baixado
+      titulos: p.movimentos
+        .filter((m) => m.duplicavel && m.titulo)
+        .map((m) => ({
+          codtitulo: m.codtitulo,
+          numero: m.titulo.numero,
+          fatura: m.titulo.fatura,
+          vencimento: m.titulo.vencimento,
+          codpessoa: m.titulo.codpessoa,
+          fantasia: m.titulo.fantasia,
+          codfilial: m.titulo.codfilial,
+          filial: m.titulo.filial,
+          gerencial: m.titulo.gerencial,
+          boleto: m.titulo.boleto,
+          operacao: m.titulo.operacao,
+          saldo: m.principal,
+          juros: m.juros || null,
+          multa: m.multa || null,
+          desconto: m.desconto || null,
+          total: m.total,
+        })),
+    }
+  } catch (e) {
+    avisar(e?.response?.data?.message ?? 'Erro ao carregar o pagamento.')
+  } finally {
+    pronto.value = true
+  }
+}
+
 onMounted(async () => {
   if (route.query.codpix) await carregarPix()
+  if (route.query.duplicar) await carregarDuplicar()
 })
 
 const finalizado = (pags) =>
@@ -74,6 +128,7 @@ const finalizado = (pags) =>
         :contexto="contextoCobranca"
         :finalizar="{ url: 'v1/pagamento', extras: {} }"
         :pix="pix"
+        :inicial="inicial"
         com-data
         @finalizado="finalizado"
       />

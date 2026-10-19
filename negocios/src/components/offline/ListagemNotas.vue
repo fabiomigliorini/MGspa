@@ -5,17 +5,14 @@ import {
   formataCodigo,
   formataTimestampCompleto,
   formataNumeroNota,
+  tempoRelativo,
 } from '@components/formatters'
 import { Notify } from 'quasar'
-import { api } from 'boot/axios'
+import { api } from 'src/services/api'
 import MgNotaFiscalAcoes from '@components/MgNotaFiscalAcoes.vue'
 import { negocioStore } from 'stores/negocio'
-import { sincronizacaoStore } from 'src/stores/sincronizacao'
-import moment from 'moment/min/moment-with-locales'
-moment.locale('pt-br')
 
 const sNegocio = negocioStore()
-const sSinc = sincronizacaoStore()
 
 const STATUS_OPTIONS = [
   { label: 'Lançada', value: 'LAN', icon: 'description', color: 'blue-grey' },
@@ -65,7 +62,6 @@ const nova = async (modelo) => {
   try {
     // busca registros na ApI
     const { data } = await api.post(`/v1/pdv/negocio/${sNegocio.negocio.codnegocio}/nota-fiscal`, {
-      pdv: sSinc.pdv.uuid,
       modelo,
     })
     Notify.create({
@@ -159,7 +155,7 @@ defineExpose({
             {{ nota.filial?.filial }}
           </q-item-label>
           <q-item-label caption>
-            {{ moment(nota.saida).fromNow() }},
+            {{ tempoRelativo(nota.saida) }},
             {{ formataTimestampCompleto(nota.saida) }}
           </q-item-label>
         </q-item-section>

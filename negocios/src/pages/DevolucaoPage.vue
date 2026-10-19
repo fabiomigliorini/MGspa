@@ -6,9 +6,7 @@ import { useRoute } from 'vue-router'
 import { produtoStore } from 'src/stores/produto'
 import { Dialog } from 'quasar'
 import { useRouter } from 'vue-router'
-import moment from 'moment/min/moment-with-locales'
 import MgInputValor from '@components/MgInputValor.vue'
-moment.locale('pt-br')
 
 const route = useRoute()
 const router = useRouter()

@@ -71,7 +71,6 @@ const grupos = computed(() => [
     campos: [
       { label: 'Apelido', valor: vazio(d.value.apelido), icone: 'badge' },
       { label: 'Observações', valor: vazio(d.value.observacoes), icone: 'notes', classe: '' },
-      { label: 'UUID', valor: d.value.uuid, icone: 'fingerprint', classe: 'text-caption' },
       {
         label: 'Navegador',
         valor: `${d.value.plataforma} ${d.value.navegador} ${d.value.versaonavegador}`,
@@ -277,7 +276,8 @@ onMounted(carregar)
             <q-icon name="hourglass_empty" color="orange-8" />
           </template>
           Este dispositivo está inativo: não vende nem sincroniza. Peça a um administrador para
-          ativá-lo aqui nesta página ou na lista de Dispositivos, pelo UUID {{ d.uuid }}.
+          ativá-lo aqui nesta página ou na lista de Dispositivos, pelo código
+          {{ formataCodigo(d.codpdv) }}.
         </q-banner>
 
         <!-- os mesmos grupos e a mesma ordem do formulário -->

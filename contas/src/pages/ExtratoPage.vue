@@ -1,7 +1,6 @@
 <script setup>
 import { ref, watch, onMounted, nextTick } from 'vue'
 import { useRoute } from 'vue-router'
-import { date } from 'quasar'
 import { formataNumero, formataData } from '@components/formatters'
 import { useExtratoStore } from 'src/stores/extratoStore'
 
@@ -49,7 +48,7 @@ function cellClass(row, col) {
 
 function scrollParaDia(dia) {
   if (!dia || !tabela.value) return
-  const idx = store.linhas.findIndex((l) => date.formatDate(l.dia, 'DD') === dia)
+  const idx = store.linhas.findIndex((l) => formataData(l.dia, 0).slice(0, 2) === dia)
   if (idx >= 0) tabela.value.scrollTo(idx, 'start-force')
 }
 
