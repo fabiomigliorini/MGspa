@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-19 02:12'
+updated_date: '2026-10-19 02:29'
 labels:
   - negocios
 dependencies: []
@@ -32,7 +32,7 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Quem só conhece o uuid de um PDV não se passa por ele: o PDV manda o uuid escondido no cabeçalho de cada chamada (nunca no endereço, que fica no log) e o uuid não aparece em tela, na lista de Dispositivos nem na cobrança PIX; quiosque e sincronização seguem sem usuário logado
+- [x] #1 Quem só conhece o uuid de um PDV não se passa por ele: o PDV manda o uuid escondido no cabeçalho de cada chamada (nunca no endereço, que fica no log) e o uuid não aparece em tela, na lista de Dispositivos nem na cobrança PIX; quiosque e sincronização seguem sem usuário logado
 - [x] #2 Sincronização roda sozinha ao iniciar o sistema, sem clicar no botão (ex-TASK-54)
 - [x] #3 Sincronização incremental traz só o que mudou desde a última, inclusive cadastro recém-feito de pessoa (ex-TASK-36), produto e preço
 - [x] #4 Sincronização incremental só fica disponível quando compensa: o servidor ainda tem a versão do PDV, os diffs somados são menores que a completa e a última completa tem até 7 dias; senão só a Sincronização completa fica disponível, já com o foco (a que abre sozinha ao iniciar segue a mesma regra)
@@ -45,11 +45,11 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #11 Fechar a janela Sincronizar com ESC ou clicando fora para a sincronização, igual ao Cancelar: ela não continua rodando escondida e travando o PDV
 - [x] #12 A janela Sincronizar mostra a data e a hora (com segundos) da última sincronização
 - [x] #13 Botões Completa e Incremental na janela Sincronizar; com a incremental disponível o foco vai nela, e a completa baixa a base inteira de pessoas e produtos mesmo assim
-- [ ] #14 Durante a sincronização cada linha mostra só a contagem (ex.: 28.195 / 28.195) numa linha e a sua barra de progresso, sempre visível; a completa avança de 2 em 2 mil e a janela não muda de tamanho enquanto roda
+- [x] #14 Durante a sincronização cada linha mostra só a contagem (ex.: 28.195 / 28.195) numa linha e a sua barra de progresso, sempre visível; a completa avança de 2 em 2 mil e a janela não muda de tamanho enquanto roda
 - [x] #15 Ao terminar sem erro a janela fecha e avisa 'Sincronização finalizada'; cancelada não avisa
 - [x] #16 Com outra janela do navegador sincronizando, a janela Sincronizar nem abre (botão do PDV, menu do quiosque e a sincronização ao abrir o sistema): recusa com o aviso de que já existe uma sincronização em andamento
-- [ ] #17 Sincronização completa interrompida (Cancelar, F5, computador travado) deixa o PDV como nunca sincronizado: a data da última sincronização some já no começo da completa e a próxima só pode ser completa
-- [ ] #18 Janela Sincronizar cabe no celular: sem o círculo grande, uma barra de progresso por linha e botões Cancelar, Completa e Incremental
+- [x] #17 Sincronização completa interrompida (Cancelar, F5, computador travado) deixa o PDV como nunca sincronizado: a data da última sincronização some já no começo da completa e a próxima só pode ser completa
+- [x] #18 Janela Sincronizar cabe no celular: sem o círculo grande, uma barra de progresso por linha e botões Cancelar, Completa e Incremental
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -104,4 +104,6 @@ Fábio (18/10/2026), critério #1: a credencial própria (segredo gerado pelo se
 - Front: o boot/axios.js põe o X-Pdv em toda chamada e o fetch do catálogo põe à mão; o `pdv` saiu dos parâmetros e corpos (negocios e @components: cobrança, estorno, listagem de pagamentos, confissão). Listagem e Woo filtram pelo codpdv da sincronização, em vez de baixar a lista de Dispositivos (só de Administrador/Gerente) para achar o uuid: para o usuário comum a listagem passa a vir filtrada no PDV dele, como já vinha para o gerente. stores/pdv.js removido.
 - Fica: os uuids já vistos (lista, logs antigos, cobranças PIX antigas) continuam valendo. Se algum preocupar, um cadastro novo gera outro uuid.
 - Teste (18/10): curl na api-dev (sem cabeçalho, com o ?pdv= antigo, com dispositivo inativo e com valor inválido: 403; com o cabeçalho: 200; o preflight de CORS aceita x-pdv) e Chrome headless contra o quasar dev (negocios-dev:9900): completa ao abrir sem login, com 24 pedidos, todos com X-Pdv e nenhum com o uuid no endereço ou no corpo; quiosque consulta o produto; Meu Dispositivo sem o UUID e com o código; dispositivo inativo pede a ativação pelo código. Não testado: os fluxos com login (venda, pagamento, anexos, lista de Dispositivos) e a mensagem do PIX.
+
+Fábio (18/10/2026): finalizar a task. #1, #14, #17 e #18 conferidos e marcados (#14: contagem x / y e barra por linha, completa de 2 em 2 mil; #17: aplicarFull apaga versão e data da completa antes de baixar; #18: sem o círculo, botões Cancelar, Completa e Incremental). #6 não foi feito: sem resposta do backend o Quiosque ainda mostra o saldo do cache (ou zero sem cache); a task fica em andamento até a decisão sobre ele.
 <!-- SECTION:NOTES:END -->
