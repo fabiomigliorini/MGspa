@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-18 14:09'
-updated_date: '2026-10-19 02:53'
+updated_date: '2026-10-19 10:06'
 labels:
   - negocios
   - pessoas
@@ -70,4 +70,6 @@ Relatado, sem task: (a) no MgInputData das telas de colaborador, o aviso da regr
 Teste (18/10/2026, TZ=America/Cuiaba, relógio fixado em 7 instantes: manhã, 21h30, fim de mês, fim de ano, 29/02, virada, 1º de março): datas.js 11/11 (somaMeses igual ao moment em 37 mil casos; duracao igual ao moment em 24 mil pares — no fuso local o moment errava 1 dia quando o intervalo pegava o início do antigo horário de verão, ex. 16/06 a 06/11/2016); formatters, vencimento sugerido, último dia útil e juros antes x depois iguais em ~80 mil casos (8/8); trechos das telas antes (HEAD) x depois 19/19, inclusive aniversários (3 mil pessoas, 2 anos de dias selecionados), período aquisitivo/gozo, experiência/renovação e validações, sincronização (completa hoje, incremental 7 dias, 4 h), confissão faltando e filtros. eslint e prettier limpos. quasar build -m pwa dos seis apps num worktree só com estas alterações: todos passam, sem moment nos pacotes; JS do negocios 1614 -> 1552 KB e do pessoas 1468 -> 1405 KB.
 
 Roteiro na tela: Negócios — tooltip e cor do Sincronizar, tempo relativo nas listas (drawers, títulos, notas, devoluções, orçamentos, Woo, PagarMe, total do negócio), Confissão faltando, filtro inicial da listagem; recebimento à vista e a prazo (vencimentos sugeridos, fechamento no último dia útil), cheque (Bom para = hoje, à noite). Pessoas — aniversários, férias do ano, colaborador (experiência/renovação, tempo de casa, validações), cargo, férias (aquisitivo e gozo), grupo econômico, comissão dos caixas, metas e período do RH (sugestão do próximo). Contas — extrato (meses do filtro, rolar até o dia), título novo (vencimento +30), cor do vencimento, agrupamento (parcelas), baixa e adiantamento (hora de agora), fechar banco com corte (último dia do mês anterior). Agro — câmbio/recebimento/fixação depois das 20h (máximo = hoje), contrato (dias para o embarque), cargas (filtro do mês, hora do ciclo, ticket). Estoque — conferência, marcas, produto. Notas — tributação vigente, simulador, NF-e de terceiro (entrada, guia ST), nota nova (emissão/saída), inutilização por mês, Domínio (mês anterior).
+
+19/10/2026: o moment saiu também do node_modules do negocios e do pessoas (a pasta e a entrada no node_modules/.package-lock.json, pelo container; sem npm prune, que instalaria junto 103 pacotes opcionais de outra plataforma). npm ls sem pacote faltando, sobrando ou inválido. Sem o pacote no disco: eslint de todo o src dos dois apps limpo, quasar build -m pwa dos dois sem aviso e sem moment no pacote, testes no navegador (aniversários, colaborador, botão Sincronizar, confissão faltando) e os 43 de Node passando.
 <!-- SECTION:NOTES:END -->
