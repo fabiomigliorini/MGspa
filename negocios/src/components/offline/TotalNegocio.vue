@@ -375,16 +375,20 @@ const temLancamento = computed(
     cobrancas.value.length > 0,
 )
 
-// só aparece quando há o que receber (venda vazia não mostra o botão)
-const mostrarReceber = computed(
-  () =>
-    sNegocio.negocio.financeiro && sNegocio.podeEditar && !temLancamento.value && faltando.value,
-)
-
 // só pagamento efetivado conta (TASK-234): o cancelado e a cobrança pendente ficam na lista,
 // mas não ligam o Faltando
 const temPagamentoEfetivado = computed(
   () => sNegocio.pagamentosAtivos.length > 0 || sNegocio.parcelasAtivas.length > 0,
+)
+
+// a porta de entrada do Receber quando não há saldo na tela: sem nada efetivado e com o que
+// receber (venda vazia não mostra o botão). Com efetivado quem recebe é o Faltando (mostrarSaldo)
+const mostrarReceber = computed(
+  () =>
+    sNegocio.negocio.financeiro &&
+    sNegocio.podeEditar &&
+    !temPagamentoEfetivado.value &&
+    faltando.value,
 )
 
 const mostrarSaldo = computed(
@@ -644,7 +648,7 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
       </q-item>
     </q-list>
 
-    <!-- RECEBER: sem nenhum lançamento ainda, o botão é a porta de entrada -->
+    <!-- RECEBER: sem nenhum pagamento efetivado ainda, o botão é a porta de entrada -->
     <div class="q-px-md q-pt-sm" v-if="mostrarReceber">
       <q-btn
         outline
