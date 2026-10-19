@@ -1,8 +1,8 @@
 <script setup>
 // Pagamento: o detalhe compartilhado (MgPagamentoDetalhe, com os recibos e o "Referente a") e o que
 // é do contas: o lápis e o Duplicar. O lápis usa o mesmo formulário do Receber (MgPagamentoForm):
-// pessoa e observação; o referente em somente leitura (muda no botão próprio do detalhe, que vale
-// também para venda e acerto); a data só do pagamento manual (a do integrado é a do
+// pessoa e observação; sem o referente (muda só no botão próprio do detalhe, que vale também
+// para venda e acerto); a data só do pagamento manual (a do integrado é a do
 // banco/maquineta, TASK-204); o portador por outro do mesmo tipo, só no manual em dinheiro, banco ou
 // cartão da empresa (TASK-236). O que não muda fica em somente leitura. Data ou portador mudou: pede
 // justificativa. O meio não muda: cancela e usa o Duplicar, que abre a baixa com os mesmos títulos
@@ -62,7 +62,6 @@ function abrirDialogEditar() {
     codpessoa: pag.value.codpessoa,
     transacao: formataTimestampIso(pag.value.transacao).slice(0, 16),
     codportador: pag.value.codportador,
-    referente: pag.value.referente ?? '',
     observacao: pag.value.observacoes ?? '',
     justificativa: '',
   }
@@ -166,11 +165,10 @@ watch(() => route.fullPath, carregar)
         titulo="Editar"
         :valor="pag.total"
         :data-readonly="!pag.manual"
-        referente-readonly
+        :com-referente="false"
         foco-pessoa
         v-model:transacao="editar.transacao"
         v-model:codpessoa="editar.codpessoa"
-        v-model:referente="editar.referente"
         v-model:observacao="editar.observacao"
         @submit="salvarEdicao"
       >

@@ -1,7 +1,8 @@
 <script setup>
 // O formulário do pagamento, o mesmo no Receber/Pagar Títulos (contas e PDV) e no Editar do
 // detalhe do pagamento (TASK-236): título e valor no topo, data e pessoa, "referente a" e
-// observação. O que não pode mudar aparece em somente leitura, sem sumir da tela. Cada tela põe
+// observação. O que não pode mudar aparece em somente leitura, sem sumir da tela; o "referente a"
+// não aparece no Editar, porque muda só no botão próprio do detalhe. Cada tela põe
 // os campos dela no slot padrão (o portador e a justificativa do Editar), o que vem depois dos
 // campos no slot `rodape` (a forma escolhida no Receber) e os botões no slot `acoes`.
 import { formataNumero } from '@components/formatters'
@@ -15,8 +16,8 @@ defineProps({
   // a data aparece (o PIX usado na baixa tem a data dele e não mostra)
   comData: { type: Boolean, default: true },
   dataReadonly: { type: Boolean, default: false },
-  // o Editar mostra o referente sem mudar: ele muda no botão próprio do detalhe
-  referenteReadonly: { type: Boolean, default: false },
+  // o Editar não mostra o referente: ele muda no botão próprio do detalhe
+  comReferente: { type: Boolean, default: true },
   focoPessoa: { type: Boolean, default: false },
 })
 
@@ -59,12 +60,11 @@ const observacao = defineModel('observacao', { type: String, default: '' })
             />
           </div>
           <slot />
-          <div class="col-12">
+          <div class="col-12" v-if="comReferente">
             <MgInput
               v-model="referente"
               label="Referente a (sai no recibo)"
               maxlength="255"
-              :readonly="referenteReadonly"
               :bottom-slots="false"
             />
           </div>

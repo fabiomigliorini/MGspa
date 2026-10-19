@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-17 19:58'
-updated_date: '2026-10-18 13:36'
+updated_date: '2026-10-19 21:02'
 labels:
   - contas
 dependencies: []
@@ -30,6 +30,7 @@ Decisão: a forma não se troca no lugar. Ficam duas ações independentes no de
 - [x] #2 Duplicar não cancela o original; com o original ainda valendo, recusa dizendo para cancelar antes
 - [x] #3 No Editar do pagamento lançado à mão em dinheiro, banco ou cartão da empresa, o portador troca por outro do mesmo tipo: o razão sai de um e entra no outro, as baixas acompanham e a auditoria guarda o antes e o depois com justificativa; período igual ao alterar data (operador com os dois abertos, gestor também pendente, fechado ninguém)
 - [x] #4 Editar e Receber/Pagar usam o mesmo formulário (mesma aparência e campos: data, pessoa, referente, observação); o que não pode mudar fica em somente leitura
+- [x] #5 No Editar do detalhe o Referente a não aparece: muda só no botão próprio do detalhe, sem ficar duplicado
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -82,4 +83,8 @@ Testes (tinker, transação desfeita)
 Correção (17/10/2026, Fábio no teste em produção): o Referente a tinha ficado editável em dois lugares (lápis e botão próprio). Volta a mudar só no botão próprio do detalhe; no Editar aparece em somente leitura. Saiu do lápis no servidor (atualizar e UpdateRequest).
 
 Validado pelo Fábio em produção (18/10/2026).
+
+Correção (19/10/2026, pedido do Fábio): o Referente a sai do Editar (não aparece mais, nem em somente leitura); continua mudando só no botão próprio do detalhe, que alcança venda, acerto e PDV. MgPagamentoForm: prop referenteReadonly vira comReferente (padrão ligado; o Receber/Pagar continua com o campo). contas pagamento/Detalhe.vue: :com-referente="false" e o referente saiu do payload do Editar (o servidor já não aceitava desde 17/10). Aguardando teste do Fábio; nada commitado.
+
+Validado pelo Fábio no dev (19/10/2026): o Editar não mostra mais o Referente a. (O quasar dev do contas tinha servido o MgPagamentoForm pela metade, script novo com template antigo; resolveu ao reiniciar.)
 <!-- SECTION:NOTES:END -->
