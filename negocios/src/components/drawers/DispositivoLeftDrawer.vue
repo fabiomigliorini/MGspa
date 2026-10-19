@@ -49,6 +49,16 @@ const statusOptions = [
       </MgInput>
     </FilterGroup>
 
+    <FilterGroup title="Código">
+      <MgInput
+        v-model="sDispositivo.filtros.codpdv"
+        clearable
+        :bottom-slots="false"
+        label="Código"
+        type="number"
+      />
+    </FilterGroup>
+
     <FilterGroup title="Onde">
       <div class="row q-col-gutter-sm">
         <div class="col-12">
@@ -68,14 +78,6 @@ const statusOptions = [
       <div class="row q-col-gutter-sm">
         <div class="col-12">
           <MgInput v-model="sDispositivo.filtros.ip" clearable :bottom-slots="false" label="IP" />
-        </div>
-        <div class="col-12">
-          <MgInput
-            v-model="sDispositivo.filtros.uuid"
-            clearable
-            :bottom-slots="false"
-            label="UUID"
-          />
         </div>
       </div>
     </FilterGroup>

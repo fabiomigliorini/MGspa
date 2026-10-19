@@ -64,7 +64,6 @@ const salvar = async () => {
     try {
       let data = {
         prancheta: JSON.parse(JSON.stringify(prancheta.value)),
-        pdv: sSinc.pdv.uuid,
       }
       await api.put('/v1/pdv/prancheta/', data)
       await sSinc.sincronizarPrancheta(true)

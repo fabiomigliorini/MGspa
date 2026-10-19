@@ -17,7 +17,6 @@ class TituloAdiantamentoStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pdv'                             => 'nullable|uuid',
             'codfilial'                       => 'nullable|integer|exists:tblfilial,codfilial',
             'transacao'                       => 'nullable|date',
             'codtipotitulo'                   => 'required|integer|exists:tbltipotitulo,codtipotitulo',

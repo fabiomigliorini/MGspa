@@ -22,7 +22,7 @@ onMounted(async () => {
   carregando.value = true
   try {
     const { data } = await api.get('/v1/pdv/pagamento/originais', {
-      params: { pdv: sCobranca.contexto?.pdv, codpessoa: sCobranca.pessoa?.codpessoa },
+      params: { codpessoa: sCobranca.pessoa?.codpessoa },
     })
     originais.value = data.data ?? []
   } catch (error) {

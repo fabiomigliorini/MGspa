@@ -3,11 +3,9 @@ import { api } from 'src/services/api'
 import { Notify } from 'quasar'
 import { unionBy, orderBy } from 'lodash'
 import { negocioStore } from './negocio'
-import { pdvStore } from './pdv'
 import { sincronizacaoStore } from './sincronizacao'
 import moment from 'moment'
 const sNegocio = negocioStore()
-const sPdv = pdvStore()
 const sSinc = sincronizacaoStore()
 
 export const wooStore = defineStore('woo', {
@@ -133,9 +131,8 @@ export const wooStore = defineStore('woo', {
         valortotal_de: null,
         valortotal_ate: null,
       }
-      const pdv = await sPdv.findByUuid(sSinc.pdv.uuid)
-      if (pdv) {
-        filtro.codpdv = pdv.codpdv
+      if (sSinc.pdv.codpdv) {
+        filtro.codpdv = sSinc.pdv.codpdv
       }
       this.filtro = filtro
       await this.getPedidos()

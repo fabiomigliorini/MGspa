@@ -17,7 +17,7 @@ class PdvMercosController
 
     public function importarPedido(Request $request, $alterado_apos = 'ultima')
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         DB::beginTransaction();
         if ($alterado_apos != 'ultima') {
             $alterado_apos = Carbon::createFromFormat('Y-m-d H:i:s', $alterado_apos);
@@ -29,7 +29,6 @@ class PdvMercosController
 
     public function reimportar(Request $request, $codnegocio, $codmercospedido)
     {
-        $pdv = PdvService::autoriza($request->pdv);
         $n = Negocio::findOrFail($codnegocio);
         if ($n->codnegociostatus != 1) {
             throw new Exception("Negócio com status diferente de Aberto!", 1);
@@ -44,7 +43,6 @@ class PdvMercosController
 
     public function listagemPedido(Request $request, $alterado_apos = 'ultima')
     {
-        $pdv = PdvService::autoriza($request->pdv);
         $ret = MercosPedidoService::listagem();
         return response()->json($ret);
     }

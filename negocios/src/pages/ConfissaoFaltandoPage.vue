@@ -7,12 +7,9 @@ import {
 } from '@components/formatters'
 import { onMounted, ref, watch } from 'vue'
 import { exportFile, Notify, Dialog } from 'quasar'
-import { sincronizacaoStore } from 'src/stores/sincronizacao'
 import { api } from 'src/services/api'
 
 import moment from 'moment'
-
-const sSinc = sincronizacaoStore()
 
 const anos = ref([])
 const ano = ref(null)
@@ -112,11 +109,7 @@ const decideDia = () => {
 
 const buscaFaltando = async () => {
   try {
-    const ret = await api.get('/v1/negocio/anexo/faltando/' + ano.value + '/' + mes.value, {
-      params: {
-        pdv: sSinc.pdv.uuid,
-      },
-    })
+    const ret = await api.get('/v1/negocio/anexo/faltando/' + ano.value + '/' + mes.value)
     // datasFaltando.value = ret.data.resumo;
     datasFaltando.value = []
     ret.data.resumo.forEach((d) => {
@@ -217,9 +210,7 @@ const ignorar = (codnegocio) => {
     ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async () => {
     try {
-      const ret = await api.post('/v1/negocio/' + codnegocio + '/ignorar-confissao', {
-        pdv: sSinc.pdv.uuid,
-      })
+      const ret = await api.post('/v1/negocio/' + codnegocio + '/ignorar-confissao')
       datasFaltando.value = []
       ret.data.resumo.forEach((d) => {
         datasFaltando.value.push(moment(d).format('YYYY/MM/DD'))

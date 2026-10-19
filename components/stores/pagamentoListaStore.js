@@ -1,8 +1,8 @@
 // Listagem única de pagamentos (MgPagamentoLista, M6.1 do plano doc-3): venda, título,
 // transferência e avulso, com os filtros do plano. O app configura onde busca:
 //   contas:   { endpoint: 'v1/pagamento', padrao: { codfilial } }
-//   negocios: { endpoint: 'v1/pdv/pagamento', fixos: { pdv: uuid }, travadoPdv: true }
-// O PDV fica travado no servidor (v1/pdv/pagamento força o PDV do dispositivo).
+//   negocios: { endpoint: 'v1/pdv/pagamento', travadoPdv: true }
+// O PDV fica travado no servidor (v1/pdv/pagamento força o PDV do cabeçalho X-Pdv).
 import { defineStore } from 'pinia'
 import { api } from 'src/services/api'
 

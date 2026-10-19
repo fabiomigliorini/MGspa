@@ -1,10 +1,7 @@
 import { defineStore } from 'pinia'
 import { db } from 'boot/db'
 import { api } from 'src/services/api'
-import { sincronizacaoStore } from './sincronizacao'
 import { produtoStore } from './produto'
-
-const sSinc = sincronizacaoStore()
 
 export const quiosqueStore = defineStore('quiosque', {
   state: () => ({
@@ -68,9 +65,7 @@ export const quiosqueStore = defineStore('quiosque', {
     async enriquecer(barras) {
       this.atualizando = true
       try {
-        const { data } = await api.get('/v1/pdv/produto/' + barras + '/detalhe', {
-          params: { pdv: sSinc.pdv.uuid },
-        })
+        const { data } = await api.get('/v1/pdv/produto/' + barras + '/detalhe')
 
         // so aplica se ainda estamos na mesma consulta (evita corrida entre scans)
         if (this.barrasConsultada != barras) {

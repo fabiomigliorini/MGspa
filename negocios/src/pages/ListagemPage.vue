@@ -7,10 +7,8 @@ import { debounce } from 'quasar'
 import { api } from 'src/services/api'
 import { iconeNegocio, corIconeNegocio } from '../utils/iconeNegocio.js'
 import { listagemStore } from 'src/stores/listagem'
-import { sincronizacaoStore } from 'stores/sincronizacao'
 
 const sListagem = listagemStore()
-const sSinc = sincronizacaoStore()
 const scrollRef = ref(null)
 
 const onLoad = async (index, done) => {
@@ -49,7 +47,7 @@ const relatorio = () =>
   abrirPdf(
     api,
     'v1/pdv/negocio/relatorio',
-    { ...sListagem.filtro, pdv: sSinc.pdv.uuid },
+    { ...sListagem.filtro },
     { title: 'Relatório de Negócios' },
   )
 </script>

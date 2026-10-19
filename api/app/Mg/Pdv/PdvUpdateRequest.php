@@ -6,7 +6,7 @@ use Illuminate\Foundation\Http\FormRequest;
 
 // Editar o dispositivo (TASK-46): cadastro (so' Administrador/Gerente manda) e configuracao.
 // A filial nao vem: e' a do local de estoque.
-// `pdv` e' o uuid de quem pede: o proprio dispositivo altera a configuracao dele.
+// O proprio dispositivo (cabecalho X-Pdv) altera a configuracao dele.
 class PdvUpdateRequest extends FormRequest
 {
     public function authorize(): bool
@@ -17,7 +17,6 @@ class PdvUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'pdv' => 'nullable|uuid',
             // cadastro
             'apelido' => 'nullable|string|max:100',
             'codsetor' => 'sometimes|required|integer|exists:tblsetor,codsetor',

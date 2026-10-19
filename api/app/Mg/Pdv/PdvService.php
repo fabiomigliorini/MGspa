@@ -2,8 +2,10 @@
 
 namespace Mg\Pdv;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Mg\Filial\Setor;
 use Mg\Portador\Portador;
 use Mg\PagarMe\PagarMePos;
@@ -251,16 +253,27 @@ class PdvService
         ];
     }
 
+    // O uuid e' a senha do dispositivo (TASK-197): vem no cabecalho X-Pdv, nunca na query
+    // string (que vai para o log), e nao aparece em tela, lista nem cobranca
+    public static function uuid(Request $request): ?string
+    {
+        return $request->header('X-Pdv');
+    }
+
     // dispositivo ativo (inativo vazio) com este uuid; com uuid repetido, vale o ativo
     public static function podeAcessar($uuid)
     {
+        if (!Str::isUuid((string) $uuid)) {
+            return false;
+        }
         $pdv = Pdv::where('uuid', $uuid)->whereNull('inativo')->first();
         return $pdv ?: false;
     }
 
-    public static function autoriza($uuid)
+    // o middleware `pdv` chama nas rotas que exigem o dispositivo
+    public static function autoriza(Request $request)
     {
-        if (!$pdv = static::podeAcessar($uuid)) {
+        if (!$pdv = static::podeAcessar(static::uuid($request))) {
             abort(403, 'Dispositivo não cadastrado ou inativo! Abra o Meu Dispositivo.');
         }
         return $pdv;

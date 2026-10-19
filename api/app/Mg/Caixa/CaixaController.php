@@ -2,9 +2,8 @@
 
 namespace Mg\Caixa;
 
+use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Mg\Pdv\PdvRequest;
-use Mg\Pdv\PdvService;
 use Mg\Portador\PortadorPeriodo;
 
 /**
@@ -16,9 +15,9 @@ class CaixaController extends Controller
 {
     // PDV: a gaveta do dispositivo e se o caixa esta' aberto (o wizard
     // bloqueia o Dinheiro com o caixa fechado)
-    public function status(PdvRequest $request)
+    public function status(Request $request)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $gaveta = $pdv->Portador;
         if (!$gaveta) {
             return ['data' => ['gaveta' => null, 'sessao' => null]];

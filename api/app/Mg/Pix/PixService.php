@@ -129,12 +129,15 @@ class PixService
             }
         }
 
-        // Texto para ser apresentado pro cliente
+        // Texto para ser apresentado pro cliente. O PDV vai pelo codigo: o uuid e' a senha do
+        // dispositivo (TASK-197)
         if ($negocio && $pdv) {
             $codnegocio = str_pad($negocio->codnegocio, 8, '0', STR_PAD_LEFT);
-            $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio} PDV #{$pdv->uuid}!";
+            $codpdv = str_pad($pdv->codpdv, 8, '0', STR_PAD_LEFT);
+            $cob->solicitacaopagador = "MG Papelaria! Pagamento referente negócio #{$codnegocio} PDV #{$codpdv}!";
         } elseif ($pdv) {
-            $cob->solicitacaopagador = "MG Papelaria! Pagamento PDV #{$pdv->uuid}!";
+            $codpdv = str_pad($pdv->codpdv, 8, '0', STR_PAD_LEFT);
+            $cob->solicitacaopagador = "MG Papelaria! Pagamento PDV #{$codpdv}!";
         } else {
             $cob->solicitacaopagador = "MG Papelaria! Pagamento de títulos!";
         }

@@ -4,11 +4,9 @@ import { api } from 'src/services/api'
 import { Notify } from 'quasar'
 import moment from 'moment'
 import { negocioStore } from './negocio'
-import { pdvStore } from './pdv'
 import { sincronizacaoStore } from './sincronizacao'
 
 const sNegocio = negocioStore()
-const sPdv = pdvStore()
 const sSinc = sincronizacaoStore()
 
 export const listagemStore = defineStore('listagem', {
@@ -109,9 +107,8 @@ export const listagemStore = defineStore('listagem', {
         valor_de: null,
         valor_ate: null,
       }
-      const pdv = await sPdv.findByUuid(sSinc.pdv.uuid)
-      if (pdv) {
-        filtro.codpdv = pdv.codpdv
+      if (sSinc.pdv.codpdv) {
+        filtro.codpdv = sSinc.pdv.codpdv
       }
       // a ListagemPage observa o filtro e busca; buscar aqui também pedia 2 vezes
       this.filtro = filtro
@@ -131,7 +128,6 @@ export const listagemStore = defineStore('listagem', {
       this.carregando = true
       try {
         const filtro = { ...this.filtro }
-        filtro.pdv = sSinc.pdv.uuid
         filtro.page = this.paginacao.current_page + 1
         const { data } = await api.get('/v1/pdv/negocio', {
           params: filtro,
@@ -166,7 +162,6 @@ export const listagemStore = defineStore('listagem', {
       try {
         const { data } = await api.get('/v1/pdv/orcamento', {
           params: {
-            pdv: sSinc.pdv.uuid,
             uuid: uuid,
           },
         })

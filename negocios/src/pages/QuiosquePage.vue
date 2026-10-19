@@ -216,9 +216,9 @@ onUnmounted(() => {
         color="grey-3"
         text-color="grey-9"
         size="lg"
-        v-if="sSinc.pdv.uuid"
+        v-if="sSinc.pdv.codpdv"
       >
-        UUID: {{ sSinc.pdv.uuid || '—' }}
+        Dispositivo {{ formataCodigo(sSinc.pdv.codpdv) }}
       </q-chip>
       <q-btn
         flat

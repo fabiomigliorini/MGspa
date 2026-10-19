@@ -43,9 +43,11 @@ return Application::configure(basePath: dirname(__DIR__))
 
         // Rotas baixadas pelo MGprint (signed URL anônima) e também pelo
         // frontend (Bearer). Cai no primeiro ramo que validar.
+        // `pdv`: rotas que exigem o dispositivo ativo, pelo cabeçalho X-Pdv (TASK-197)
         $middleware->alias([
             'auth_or_signed' => \App\Http\Middleware\AuthOrSigned::class,
             'auth_or_cookie' => \App\Http\Middleware\AuthOrCookie::class,
+            'pdv' => \App\Http\Middleware\AutorizaPdv::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

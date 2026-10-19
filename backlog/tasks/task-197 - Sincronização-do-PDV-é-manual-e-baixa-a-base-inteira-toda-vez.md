@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-18 14:54'
+updated_date: '2026-10-19 02:12'
 labels:
   - negocios
 dependencies: []
@@ -32,7 +32,7 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 PDV autorizado se autentica com credencial própria (não só o uuid na query string) nas rotas usadas sem usuário logado: quiosque e sincronização
+- [ ] #1 Quem só conhece o uuid de um PDV não se passa por ele: o PDV manda o uuid escondido no cabeçalho de cada chamada (nunca no endereço, que fica no log) e o uuid não aparece em tela, na lista de Dispositivos nem na cobrança PIX; quiosque e sincronização seguem sem usuário logado
 - [x] #2 Sincronização roda sozinha ao iniciar o sistema, sem clicar no botão (ex-TASK-54)
 - [x] #3 Sincronização incremental traz só o que mudou desde a última, inclusive cadastro recém-feito de pessoa (ex-TASK-36), produto e preço
 - [x] #4 Sincronização incremental só fica disponível quando compensa: o servidor ainda tem a versão do PDV, os diffs somados são menores que a completa e a última completa tem até 7 dias; senão só a Sincronização completa fica disponível, já com o foco (a que abre sozinha ao iniciar segue a mesma regra)
@@ -97,4 +97,11 @@ Teste em Chrome headless contra o quasar dev e a api-dev (18/10/2026, dispositiv
 O banco registrou no histórico do 511 cada posição enviada.
 
 Bug achado no teste e corrigido: Cancelar (ou ESC, clique fora) durante a busca da localização fechava a janela, mas a sincronização seguia esperando escondida, mandava o PUT do dispositivo quando a posição chegava e segurava a trava; reabrir a janela recusava com 'Já existe uma sincronização em andamento'. Agora o AbortController nasce antes do dispositivo(): o Cancelar interrompe a espera da localização sem aviso, nada é enviado e a janela reabre na hora. Se cancelar enquanto o PUT do dispositivo responde, as etapas não começam.
+
+Fábio (18/10/2026), critério #1: a credencial própria (segredo gerado pelo servidor) foi descartada. O uuid já é aleatório; o furo era ele aparecer (Meu Dispositivo, Quiosque inativo, lista de Dispositivos, mensagem da cobrança PIX no app do banco do cliente) e ir na query string, que fica no log do servidor. Esconder o uuid faz dele a senha do dispositivo, sem mexer no cadastro nem na ativação. Base64 ou criptografia no front foram descartados: não escondem nada.
+- Backend: middleware `pdv` (App\Http\Middleware\AutorizaPdv, alias no bootstrap/app.php) lê o cabeçalho X-Pdv (PdvService::uuid), exige o dispositivo ativo e entrega o Pdv em $request->attributes->get('pdv'). Vale só nas rotas que chamavam PdvService::autoriza (45 métodos, conferidos no route:list); as rotas sem login foram para um bloco só no routes/api.php. Fora do middleware, pela mesma função: anexos do negócio (PDV pelo cabeçalho; sem ele, usuário Financeiro/Gerente no contas), página e registros do dispositivo (o próprio ou Administrador/Gerente) e o PUT dispositivo, que aceita inativo. No cadastro e na sincronização o uuid continua no corpo. PdvRequest removido; a regra `pdv` saiu do PdvUpdateRequest e do TituloAdiantamentoStoreRequest. O podeAcessar recusa valor que não é uuid (antes ia ao Postgres).
+- uuid escondido: o PdvResource não devolve o uuid; o filtro UUID da lista de Dispositivos virou Código; a página do dispositivo e o Quiosque inativo pedem a ativação pelo código; a cobrança PIX mostra PDV #código.
+- Front: o boot/axios.js põe o X-Pdv em toda chamada e o fetch do catálogo põe à mão; o `pdv` saiu dos parâmetros e corpos (negocios e @components: cobrança, estorno, listagem de pagamentos, confissão). Listagem e Woo filtram pelo codpdv da sincronização, em vez de baixar a lista de Dispositivos (só de Administrador/Gerente) para achar o uuid: para o usuário comum a listagem passa a vir filtrada no PDV dele, como já vinha para o gerente. stores/pdv.js removido.
+- Fica: os uuids já vistos (lista, logs antigos, cobranças PIX antigas) continuam valendo. Se algum preocupar, um cadastro novo gera outro uuid.
+- Teste (18/10): curl na api-dev (sem cabeçalho, com o ?pdv= antigo, com dispositivo inativo e com valor inválido: 403; com o cabeçalho: 200; o preflight de CORS aceita x-pdv) e Chrome headless contra o quasar dev (negocios-dev:9900): completa ao abrir sem login, com 24 pedidos, todos com X-Pdv e nenhum com o uuid no endereço ou no corpo; quiosque consulta o produto; Meu Dispositivo sem o UUID e com o código; dispositivo inativo pede a ativação pelo código. Não testado: os fluxos com login (venda, pagamento, anexos, lista de Dispositivos) e a mensagem do PIX.
 <!-- SECTION:NOTES:END -->

@@ -2,6 +2,7 @@
 
 namespace Mg\Pdv;
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mg\Pagamento\PagamentoDetalheResource;
 use Mg\Pagamento\PagamentoListaResource;
@@ -13,30 +14,29 @@ use Mg\Titulo\TituloAbertosFechamentoService;
 /**
  * Pagamentos vistos e feitos no PDV (M6.1 doc-3): a listagem unica travada
  * no PDV, receber titulo / pagar vale do cliente, estorno e recibo termico.
- * Rotas v1/pdv/pagamento; o dispositivo autoriza.
+ * Rotas v1/pdv/pagamento; o dispositivo autoriza (middleware `pdv`).
  */
 class PdvPagamentoController
 {
-    public function index(PdvRequest $request)
+    public function index(Request $request)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $filtros = $request->only(PagamentoListaService::FILTROS);
         $filtros['codpdv'] = $pdv->codpdv;
         unset($filtros['codfilial']);
         return PagamentoListaResource::collection(PagamentoListaService::listar($filtros));
     }
 
-    public function show(PdvRequest $request, int $id)
+    public function show(Request $request, int $id)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         return new PagamentoDetalheResource(PdvPagamentoService::carregar($pdv, $id));
     }
 
     // títulos abertos para o seletor (os mesmos filtros e formato do contas); no PDV só com
     // pessoa ou grupo econômico
-    public function titulos(PdvRequest $request)
+    public function titulos(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         if (empty($request->codpessoa) && empty($request->codgrupoeconomico)) {
             abort(422, 'Informe a pessoa ou o grupo econômico!');
         }
@@ -47,16 +47,15 @@ class PdvPagamentoController
         ]))];
     }
 
-    public function originais(PdvRequest $request)
+    public function originais(Request $request)
     {
-        PdvService::autoriza($request->pdv);
         $request->validate(['codpessoa' => 'required|integer']);
         return ['data' => PdvPagamentoService::originais((int) $request->codpessoa)];
     }
 
     public function store(PagamentoTituloStoreRequest $request)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         DB::beginTransaction();
         $pags = PdvPagamentoService::baixar($pdv, $request->validated());
         DB::commit();
@@ -64,9 +63,9 @@ class PdvPagamentoController
     }
 
     // o "Referente a" (sai no recibo), em qualquer pagamento efetivado que o PDV ve
-    public function referente(PdvRequest $request, int $id)
+    public function referente(Request $request, int $id)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $request->validate(['referente' => 'nullable|string|max:255']);
         DB::beginTransaction();
         $pag = PagamentoTituloService::alterarReferente(PdvPagamentoService::carregar($pdv, $id), $request->referente);
@@ -75,9 +74,9 @@ class PdvPagamentoController
     }
 
     // cancelar: estorna as baixas junto (TASK-218)
-    public function cancelar(PdvRequest $request, int $id)
+    public function cancelar(Request $request, int $id)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $request->validate(['justificativa' => 'required|string|min:5|max:300']);
         DB::beginTransaction();
         $pag = PdvPagamentoService::cancelar($pdv, $id, $request->justificativa);
@@ -86,9 +85,9 @@ class PdvPagamentoController
     }
 
     // recibo termico de um recebimento (um ou mais pagamentos)
-    public function imprimirRecibo(PdvRequest $request, string $impressora)
+    public function imprimirRecibo(Request $request, string $impressora)
     {
-        $pdv = PdvService::autoriza($request->pdv);
+        $pdv = $request->attributes->get('pdv');
         $request->validate(['codpagamento' => 'required|array|min:1', 'codpagamento.*' => 'integer']);
         foreach ($request->codpagamento as $cod) {
             PdvPagamentoService::carregar($pdv, (int) $cod);

@@ -13,7 +13,8 @@
 //   atualizar(): recarrega o documento depois de criar a cobrança
 //
 // contexto = onde acontece (o app injeta o que é dele):
-//   { pdv: uuid do PDV (null no contas), codfilial,
+//   { pdv: uuid do PDV (null no contas): escolhe as rotas v1/pdv, que o cabeçalho X-Pdv autoriza,
+//     codfilial,
 //     carregarMaquinetas: async (aoAtualizar) => maquinetas da filial (cadastro único, formato
 //       paraPdv); aoAtualizar(lista) quando uma lista mais nova chega depois,
 //     portadores: portadores que o contas pode usar (dinheiro, banco, cartão da empresa),
@@ -203,9 +204,7 @@ export const cobrancaStore = defineStore('cobranca', {
         codpessoa: this.pessoa?.codpessoa ?? null,
       }
       const pdv = this.contexto.pdv
-      const { data } = pdv
-        ? await api.post(rotaPdv, { ...corpo, pdv })
-        : await api.post(rotaSemPdv, corpo)
+      const { data } = pdv ? await api.post(rotaPdv, corpo) : await api.post(rotaSemPdv, corpo)
       return data.data
     },
 

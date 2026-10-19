@@ -1,6 +1,7 @@
 import { defineBoot } from '#q-app/wrappers'
 import axios from 'axios'
 import { useAuthStore } from 'stores/auth'
+import { sincronizacaoStore } from 'stores/sincronizacao'
 import { api } from 'src/services/api'
 
 // A instância nasce em src/services/api.js; aqui só os interceptors e o $api.
@@ -16,6 +17,13 @@ export default defineBoot(({ app }) => {
 
       if (sAuth.token.access_token) {
         config.headers['Authorization'] = 'Bearer ' + sAuth.token.access_token
+      }
+
+      // o uuid do dispositivo e' a senha dele (TASK-197): vai no cabecalho, nunca na query
+      // string, que fica no log do servidor
+      const uuid = sincronizacaoStore().pdv.uuid
+      if (uuid) {
+        config.headers['X-Pdv'] = uuid
       }
       return config
     },

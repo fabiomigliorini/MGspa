@@ -1,10 +1,9 @@
 <script setup>
 import MgConfissaoScanner from '@components/MgConfissaoScanner.vue'
 import { confissaoStore } from '@components/stores/confissaoStore'
-import { sincronizacaoStore } from 'src/stores/sincronizacao'
 
-const sSinc = sincronizacaoStore()
-confissaoStore().configurar({ fixos: { pdv: sSinc.pdv.uuid } })
+// o PDV se identifica pelo cabecalho X-Pdv (boot/axios)
+confissaoStore().configurar()
 </script>
 <template>
   <q-page>

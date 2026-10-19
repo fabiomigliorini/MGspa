@@ -17,6 +17,10 @@ class PdvResource extends JsonResource
     {
         $ret = parent::toArray($request);
 
+        // o uuid e' a senha do dispositivo (TASK-197): nao sai em resposta nenhuma; o
+        // navegador ja tem o dele
+        unset($ret['uuid']);
+
         // Chave Extrangeira
         $ret['filial'] = @$this->Filial->filial;
         $ret['setor'] = $this->Setor?->setor ?? null;

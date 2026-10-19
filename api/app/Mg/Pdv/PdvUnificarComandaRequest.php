@@ -2,8 +2,15 @@
 
 namespace Mg\Pdv;
 
-class PdvUnificarComandaRequest extends PdvRequest
+use Illuminate\Foundation\Http\FormRequest;
+
+class PdvUnificarComandaRequest extends FormRequest
 {
+    public function authorize()
+    {
+        return true;
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -11,9 +18,9 @@ class PdvUnificarComandaRequest extends PdvRequest
      */
     public function rules()
     {
-        return array_merge(parent::rules(), [
+        return [
             'codpessoa' => 'nullable|integer',
             'codpessoavendedor' => 'nullable|integer',
-        ]);
+        ];
     }
 }

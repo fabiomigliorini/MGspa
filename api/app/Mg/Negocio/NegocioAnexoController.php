@@ -10,15 +10,15 @@ use Mg\Usuario\Autorizador;
 
 /**
  * Anexos do negocio (confissao, imagem, pdf) e leitura da confissao. Uma
- * rota so' para o PDV e o contas (M9 doc-3): com `pdv` autoriza pelo
- * dispositivo; sem ele, pelo usuario (quem confere a filial do negocio).
+ * rota so' para o PDV e o contas (M9 doc-3): com o cabecalho X-Pdv autoriza
+ * pelo dispositivo; sem ele, pelo usuario (quem confere a filial do negocio).
  */
 class NegocioAnexoController
 {
     private function autorizarNegocio(Request $request, int $codnegocio): void
     {
-        if (!empty($request->pdv)) {
-            PdvService::autoriza($request->pdv);
+        if (PdvService::uuid($request)) {
+            PdvService::autoriza($request);
             return;
         }
         $negocio = Negocio::findOrFail($codnegocio);
@@ -28,8 +28,8 @@ class NegocioAnexoController
     // leitura e busca sem negocio definido: PDV ou quem confere
     private function autorizar(Request $request): void
     {
-        if (!empty($request->pdv)) {
-            PdvService::autoriza($request->pdv);
+        if (PdvService::uuid($request)) {
+            PdvService::autoriza($request);
             return;
         }
         Autorizador::autoriza(['Financeiro', 'Gerente']);

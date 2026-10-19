@@ -377,7 +377,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return false
       }
       const { data } = await api.get(`/v1/pdv/catalogo/${CATALOGO[chave].tabela}/versoes`, {
-        params: { pdv: this.pdv.uuid, desde: local },
+        params: { desde: local },
       })
       const somaDiffs = data.diffs.reduce((soma, d) => soma + d.tamanho, 0)
       return !!data.desde?.conhecida && somaDiffs < data.atual.tamanho
@@ -482,7 +482,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       }
       try {
         await api.put('/v1/pdv/dispositivo/sincronizacao-completa', {
-          pdv: this.pdv.uuid,
           completa: this.ultimaSincronizacao.completa,
         })
       } catch (error) {
@@ -586,13 +585,14 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     urlCatalogo(tabela, caminho) {
       return api.getUri({
         url: `/v1/pdv/catalogo/${tabela}/${caminho}`,
-        params: { pdv: this.pdv.uuid },
       })
     },
 
-    // resposta de um arquivo do catalogo; o navegador descomprime o gzip sozinho
+    // resposta de um arquivo do catalogo; o navegador descomprime o gzip sozinho. Fora do axios:
+    // o cabecalho do dispositivo vai a mao
     async baixarCatalogo(tabela, versao, tipo) {
       const resposta = await fetch(this.urlCatalogo(tabela, `${versao}.${tipo}`), {
+        headers: { 'X-Pdv': this.pdv.uuid },
         signal: abortador?.signal,
       })
       if (!resposta.ok) {
@@ -607,7 +607,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       const etapa = this.importacao.etapas[chave]
       const local = this.versao[chave]
       const { data: versoes } = await api.get(`/v1/pdv/catalogo/${tabela}/versoes`, {
-        params: { pdv: this.pdv.uuid, desde: local ?? undefined },
+        params: { desde: local ?? undefined },
         signal: abortador?.signal,
       })
       const { atual, diffs } = versoes
@@ -737,9 +737,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/impressora', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/impressora')
 
         // insere dados no banco local indexeddb
         await db.impressora.bulkPut(data)
@@ -773,9 +771,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/forma-pagamento', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/forma-pagamento')
 
         // insere dados no banco local indexeddb
         await db.formaPagamento.bulkPut(data)
@@ -809,9 +805,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/estoque-local', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/estoque-local')
 
         // insere dados no banco local indexeddb
         await db.estoqueLocal.bulkPut(data)
@@ -839,9 +833,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     async silentSincronizarEstoqueLocal() {
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/estoque-local', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/estoque-local')
 
         // insere dados no banco local indexeddb
         await db.estoqueLocal.bulkPut(data)
@@ -871,9 +863,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/natureza-operacao', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/natureza-operacao')
 
         // insere dados no banco local indexeddb
         await db.naturezaOperacao.bulkPut(data)
@@ -915,9 +905,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/vale-modelo', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/vale-modelo')
 
         // catalogo vazio: limpa o cache local (nenhum modelo ativo la') e
         // sai sem carimbar data, que so' existe quando veio registro.
@@ -958,9 +946,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
       try {
         // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/prancheta', {
-          params: { pdv: this.pdv.uuid },
-        })
+        let { data } = await api.get('/v1/pdv/prancheta')
 
         // insere dados no banco local indexeddb
         await db.prancheta.bulkPut(data)
@@ -987,7 +973,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     async putNegocio(negocio) {
       const params = {
-        pdv: this.pdv.uuid,
         negocio: negocio,
       }
       try {
@@ -1020,11 +1005,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     async getNegocio(codOrUuid) {
       try {
-        const { data } = await api.get('/v1/pdv/negocio/' + codOrUuid, {
-          params: {
-            pdv: this.pdv.uuid,
-          },
-        })
+        const { data } = await api.get('/v1/pdv/negocio/' + codOrUuid)
         return data.data
       } catch (error) {
         console.log(error)
@@ -1044,9 +1025,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     async postApropriar(codnegocio) {
       try {
-        const { data } = await api.post('/v1/pdv/negocio/' + codnegocio + '/apropriar', {
-          pdv: this.pdv.uuid,
-        })
+        const { data } = await api.post('/v1/pdv/negocio/' + codnegocio + '/apropriar')
         return data.data
       } catch (error) {
         console.log(error)
@@ -1068,7 +1047,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       try {
         // com impressora, o backend imprime sozinho os vales e contra vales com saldo
         const { data } = await api.post('/v1/pdv/negocio/' + codnegocio + '/fechar', {
-          pdv: this.pdv.uuid,
           impressora,
         })
         return data.data
@@ -1092,7 +1070,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     async reabrirNegocio(codnegocio, justificativa) {
       try {
         const { data } = await api.post('/v1/pdv/negocio/' + codnegocio + '/reabrir', {
-          pdv: this.pdv.uuid,
           justificativa,
         })
         return data.data
@@ -1116,7 +1093,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       try {
         const { data } = await api.delete('/v1/pdv/negocio/' + codnegocio, {
           params: {
-            pdv: this.pdv.uuid,
             justificativa: justificativa,
           },
         })
@@ -1142,7 +1118,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         const { data } = await api.post(
           `/v1/pdv/negocio/${codnegocio}/unificar/${codnegociocomanda}`,
           {
-            pdv: this.pdv.uuid,
             ...escolhas,
           },
         )
@@ -1167,7 +1142,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       try {
         // com impressora, o backend imprime sozinho o vale de credito da devolucao
         const ret = await api.post('/v1/pdv/negocio/' + codnegocio + '/devolucao', {
-          pdv: this.pdv.uuid,
           devolucao: arrDevolucao,
           impressora,
         })
@@ -1232,7 +1206,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     async uploadAnexo(codnegocio, pasta, ratio, anexoBase64) {
       try {
         const ret = await api.post('/v1/negocio/' + codnegocio + '/anexo', {
-          pdv: this.pdv.uuid,
           pasta: pasta,
           ratio: ratio,
           anexoBase64: anexoBase64,
@@ -1258,11 +1231,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       try {
         const { data } = await api.delete(
           '/v1/negocio/' + codnegocio + '/anexo/' + pasta + '/' + anexo,
-          {
-            params: {
-              pdv: this.pdv.uuid,
-            },
-          },
         )
         return data
       } catch (error) {
@@ -1279,7 +1247,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     async postPessoa(pessoa) {
       try {
-        pessoa.pdv = this.pdv.uuid
         var { data } = await api.post('/v1/pdv/pessoa', pessoa)
         await db.pessoa.bulkPut(this.carimbar('pessoa', data))
         return data[0].codpessoa
@@ -1310,9 +1277,7 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
 
     async pessoaPeloCnpj(cnpj) {
       try {
-        var { data } = await api.get('/v1/pdv/pessoa/cnpj/' + cnpj, {
-          params: { pdv: this.pdv.uuid },
-        })
+        var { data } = await api.get('/v1/pdv/pessoa/cnpj/' + cnpj)
         await db.pessoa.bulkPut(this.carimbar('pessoa', data))
         return data.length
       } catch (error) {

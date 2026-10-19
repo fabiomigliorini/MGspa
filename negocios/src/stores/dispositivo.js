@@ -6,7 +6,8 @@ import { sincronizacaoStore } from 'stores/sincronizacao'
 
 // Store do dominio "dispositivo" (PDV, tblpdv — TASK-46). Serve a lista com filtro na
 // drawer e a pagina de cada dispositivo: dados, configuracao, cadastro e ultimos registros.
-// Toda chamada leva o uuid deste navegador (`pdv`): o backend reconhece o proprio dispositivo.
+// Toda chamada leva o uuid deste navegador no cabecalho X-Pdv (boot/axios): o backend reconhece o
+// proprio dispositivo.
 
 const notificar = (type, message) =>
   Notify.create({
@@ -29,7 +30,7 @@ const filtrosVazios = () => ({
   codsetor: null,
   status: '',
   ip: null,
-  uuid: null,
+  codpdv: null,
 })
 
 // os mesmos grupos do PdvService: o cadastro so' Administrador/Gerente altera. A filial nao vai:
@@ -104,9 +105,7 @@ export const dispositivoStore = defineStore(
       pode.value = {}
       erro.value = null
       try {
-        const { data } = await api.get(`/v1/pdv/dispositivo/${codpdv}`, {
-          params: { pdv: sSinc.pdv.uuid },
-        })
+        const { data } = await api.get(`/v1/pdv/dispositivo/${codpdv}`)
         dispositivo.value = data.data
         pode.value = data.pode
         // o proprio: status, cadastro e configuracao locais em dia (o redirecionamento da
@@ -122,9 +121,7 @@ export const dispositivoStore = defineStore(
     async function carregarRegistros(codpdv) {
       registros.value = registrosVazios()
       try {
-        const { data } = await api.get(`/v1/pdv/dispositivo/${codpdv}/registros`, {
-          params: { pdv: sSinc.pdv.uuid },
-        })
+        const { data } = await api.get(`/v1/pdv/dispositivo/${codpdv}/registros`)
         registros.value = data
       } catch (error) {
         notificar('negative', mensagemErro(error, 'Falha ao carregar os registros'))
@@ -176,7 +173,6 @@ export const dispositivoStore = defineStore(
         : CAMPOS_CONFIGURACAO
       try {
         const { data } = await api.put(`/v1/pdv/dispositivo/${model.codpdv}`, {
-          pdv: sSinc.pdv.uuid,
           ...Object.fromEntries(campos.map((c) => [c, model[c] ?? null])),
         })
         // salvo pela tela, a configuracao do servidor vale: a 1a sincronizacao nao manda mais o

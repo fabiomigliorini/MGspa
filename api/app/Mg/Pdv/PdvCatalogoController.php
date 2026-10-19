@@ -2,12 +2,13 @@
 
 namespace Mg\Pdv;
 
+use Illuminate\Http\Request;
 use Mg\Produto\ProdutoService;
 
 /**
  * Catálogo do PDV (TASK-197): versões e arquivos da sincronização incremental, e as consultas
  * ao vivo que alimentam o mesmo cache offline (bipe de barras, pesquisa por CNPJ/CPF). Roda
- * sem usuário logado: autoriza pelo dispositivo.
+ * sem usuário logado: autoriza pelo dispositivo (middleware `pdv`).
  */
 class PdvCatalogoController
 {
@@ -20,17 +21,15 @@ class PdvCatalogoController
     }
 
     // ?desde=AAAAMMDD-HHMMSS devolve só as versões mais novas que a do PDV
-    public function versoes(PdvRequest $request, $tabela)
+    public function versoes(Request $request, $tabela)
     {
-        PdvService::autoriza($request->pdv);
         $desde = preg_match('/^\d{8}-\d{6}$/', (string) $request->desde) ? $request->desde : null;
         return PdvCatalogoService::versoes(static::tabela($tabela), $desde);
     }
 
     // devolve o .gz como está, com Content-Encoding: o navegador descomprime sozinho
-    public function arquivo(PdvRequest $request, $tabela, $versao, $tipo)
+    public function arquivo(Request $request, $tabela, $versao, $tipo)
     {
-        PdvService::autoriza($request->pdv);
         $arquivo = PdvCatalogoService::arquivo(static::tabela($tabela), $versao, $tipo);
         if (!is_file($arquivo)) {
             abort(404, "A versão {$versao} do catálogo de {$tabela} não está mais no servidor.");
@@ -41,9 +40,8 @@ class PdvCatalogoController
         ]);
     }
 
-    public function produtoBarras(PdvRequest $request, $barras)
+    public function produtoBarras(Request $request, $barras)
     {
-        PdvService::autoriza($request->pdv);
         $codprodutobarra = -1;
         if ($pb = ProdutoService::buscaPorBarras($barras)) {
             $codprodutobarra = $pb->codprodutobarra;
@@ -51,9 +49,8 @@ class PdvCatalogoController
         return PdvCatalogoService::produto($codprodutobarra, 1);
     }
 
-    public function pessoaPeloCnpj(PdvRequest $request, $cnpj)
+    public function pessoaPeloCnpj(Request $request, $cnpj)
     {
-        PdvService::autoriza($request->pdv);
         return PdvCatalogoService::pessoa(null, $cnpj, 999999);
     }
 }
