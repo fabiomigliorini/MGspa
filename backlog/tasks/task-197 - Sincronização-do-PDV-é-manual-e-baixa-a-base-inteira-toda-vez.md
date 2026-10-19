@@ -42,7 +42,7 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #8 Ao abrir o sistema sem ter sincronizado hoje (última sincronização de outro dia, ou nunca feita), a janela Sincronizar abre e já sincroniza sozinha
 - [x] #9 Duas janelas do mesmo navegador nunca sincronizam ao mesmo tempo: a segunda recusa avisando que outra já está sincronizando
 - [x] #10 Ao abrir sem usuário logado (ou com a sessão vencida), o PDV não abre negócio sozinho e o login não aparece; F2/Novo continuam abrindo, inclusive sem login e sem rede
-- [x] #11 Fechar a janela Sincronizar com ESC ou clicando fora para a sincronização, igual ao Cancelar: ela não continua rodando escondida e travando o PDV
+- [x] #11 A janela Sincronizar só fecha pelo Cancelar (ESC e clique fora não fecham, para ninguém perder a completa sem querer), e fechar para a sincronização: ela não continua rodando escondida e travando o PDV
 - [x] #12 A janela Sincronizar mostra a data e a hora (com segundos) da última sincronização
 - [x] #13 Botões Completa e Incremental na janela Sincronizar; com a incremental disponível o foco vai nela, e a completa baixa a base inteira de pessoas e produtos mesmo assim
 - [x] #14 Durante a sincronização cada linha mostra só a contagem (ex.: 28.195 / 28.195) numa linha e a sua barra de progresso, sempre visível; a completa avança de 2 em 2 mil e a janela não muda de tamanho enquanto roda
@@ -121,4 +121,6 @@ Fechamento (19/10/2026), para o go-live:
 - Não testado: anexos da confissão no PDV e a mensagem da cobrança PIX (agora PDV #código).
 - Fica: os uuids já vistos (lista, logs, cobranças PIX antigas) continuam valendo; os negócios antigos no IndexedDB guardam o Pdv completo até a próxima sincronização deles.
 - A regra ficou no CLAUDE.md (seção PDV: o uuid é a senha do dispositivo e vai só no cabeçalho X-Pdv).
+
+Fábio (19/10/2026): na completa o usuário clicava fora sem querer e perdia o processo. A q-dialog do DialogSincronizacao passa a ser persistent: ESC e clique fora não fecham, só o Cancelar (critério 11 reescrito). O @hide continua abortando, para o Cancelar e para o fechamento ao terminar.
 <!-- SECTION:NOTES:END -->

@@ -74,10 +74,11 @@ const progressoEtapa = (etapa) => {
 </script>
 
 <template>
-  <!-- fechar por qualquer caminho (Cancelar, ESC, clique fora) para a sincronizacao: ela nao
-  pode seguir rodando escondida -->
+  <!-- persistent: ESC e clique fora nao fecham, para ninguem perder a completa sem querer; so' o
+  Cancelar fecha, e fechar para a sincronizacao: ela nao pode seguir rodando escondida -->
   <q-dialog
     v-model="sSinc.importacao.dialog"
+    persistent
     @show="aoMostrar()"
     @hide="sSinc.abortarSincronizacao()"
   >
