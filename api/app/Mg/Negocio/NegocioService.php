@@ -125,16 +125,16 @@ class NegocioService
 
     }
 
-    // Troca de PDV ou usuario, em qualquer venda, e de vendedor, filial,
-    // natureza ou pessoa depois do fechamento (fechada, cancelada ou reaberta
-    // pelo gerente) grava quem e quando (TASK-29). Com a venda aberta,
-    // vendedor, filial, natureza e pessoa sao o atendimento: nao grava.
-    // Chamado pelo Negocio::booted, depois do save.
+    // Troca de PDV ou usuario, em qualquer venda, e de vendedor, filial, local
+    // de estoque, natureza ou pessoa depois do fechamento (fechada, cancelada
+    // ou reaberta pelo gerente) grava quem e quando (TASK-29). Com a venda
+    // aberta, esses sao o atendimento: nao grava. Chamado pelo
+    // Negocio::booted, depois do save.
     public static function auditarTroca(Negocio $negocio)
     {
         $campos = ['codpdv', 'codusuario'];
         if ($negocio->getOriginal('codnegociostatus') != static::STATUS_ABERTO || !empty($negocio->getOriginal('reabertura'))) {
-            $campos = array_merge($campos, ['codpessoavendedor', 'codfilial', 'codnaturezaoperacao', 'codpessoa']);
+            $campos = array_merge($campos, ['codpessoavendedor', 'codfilial', 'codestoquelocal', 'codnaturezaoperacao', 'codpessoa']);
         }
         $campos = array_intersect($campos, array_keys($negocio->getChanges()));
         if (empty($campos)) {

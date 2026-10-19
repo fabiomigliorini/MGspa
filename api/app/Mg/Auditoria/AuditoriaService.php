@@ -41,8 +41,8 @@ class AuditoriaService
     const TIPO_NEGOCIO_FECHADO = 20;
     // o pagamento foi para outro portador do mesmo tipo (TASK-236)
     const TIPO_PORTADOR_ALTERADO = 21;
-    // PDV ou usuario da venda; vendedor, filial, natureza ou pessoa da venda
-    // fechada (TASK-29)
+    // PDV ou usuario da venda; vendedor, filial, local de estoque, natureza ou
+    // pessoa da venda fechada (TASK-29)
     const TIPO_NEGOCIO_ALTERADO = 22;
 
     const TIPOS = [
