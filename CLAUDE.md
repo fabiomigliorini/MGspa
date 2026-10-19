@@ -205,8 +205,9 @@ Os de `quasar/wrappers` são descontinuados desde o app-vite 2.
 **Conta com data é `@components/utils/datas.js`; mostrar data é o `@components/formatters`.**
 As funções recebem `'YYYY-MM-DD'`, `'YYYY-MM-DD HH:mm:ss'` (o formato da API e do `MgInputData`)
 ou `Date`, e devolvem `'YYYY-MM-DD'` no horário local: `hoje`, `agora`, `somaDias`, `somaMeses`,
-`somaAnos`, `inicioMes`, `fimMes`, `inicioAno`, `diasEntre`, `duracao`, `paraDate` e `lerDataBr`
-(o `'DD/MM/YYYY'` que as `:rules` recebem do `MgInputData`). Texto `'YYYY-MM-DD'` se compara com
+`somaAnos`, `inicioMes`, `fimMes`, `inicioAno`, `diasEntre`, `duracao`, `paraDate`, `lerDataBr`
+(o `'DD/MM/YYYY'` que as `:rules` recebem do `MgInputData`), `verificaIdade` e
+`verificaPassadoFuturo` ("já venceu?"). Texto `'YYYY-MM-DD'` se compara com
 `<` e `>`. Conta de uma linha (ano atual, "faz mais de 4 horas?") fica em JavaScript puro.
 
 **Por que não `new Date(texto)`, `toISOString()` nem o `date` do Quasar.** Data sem hora

@@ -3,6 +3,7 @@ import { onMounted } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute } from 'vue-router'
 import { formataNumero, tempoRelativo, formataData, formataCodigo } from '@components/formatters'
+import { verificaPassadoFuturo } from '@components/utils/datas'
 import { useTituloStore } from 'src/stores/tituloStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
@@ -32,7 +33,7 @@ function gerarPdf(detalhado) {
 
 function classeVencimento(t) {
   if (!t.saldo || Number(t.saldo) === 0) return 'text-grey'
-  if (new Date(t.vencimento) < new Date()) return 'text-red'
+  if (verificaPassadoFuturo(t.vencimento)) return 'text-red'
   return 'text-green'
 }
 
@@ -43,7 +44,7 @@ function classeValor(t) {
 function statusIcon(t) {
   if (t.estornado) return { icon: 'undo', color: 'grey' }
   if (Number(t.saldo) === 0) return { icon: 'done_all', color: 'green' }
-  if (new Date(t.vencimento) < new Date()) return { icon: 'warning', color: 'red' }
+  if (verificaPassadoFuturo(t.vencimento)) return { icon: 'warning', color: 'red' }
   return { icon: 'receipt_long', color: 'primary' }
 }
 

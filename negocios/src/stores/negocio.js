@@ -1,4 +1,5 @@
-import { formataDataIso, formataTimestampIso } from '@components/formatters'
+import { formataTimestampIso } from '@components/formatters'
+import { hoje, somaAnos } from '@components/utils/datas'
 import { defineStore } from 'pinia'
 import { toRaw } from 'vue'
 import { db } from 'boot/db'
@@ -1335,8 +1336,6 @@ export const negocioStore = defineStore('negocio', {
             : parseFloat(valoravulso) || 0
 
         // validade informativa: 1 ano da emissao (decisao 8)
-        const validade = new Date()
-        validade.setFullYear(validade.getFullYear() + 1)
 
         const agora = formataTimestampIso(new Date())
         const vale = {
@@ -1359,7 +1358,7 @@ export const negocioStore = defineStore('negocio', {
           valoroutras: null,
           valorjuros: null,
           valortotal: 0,
-          validade: formataDataIso(validade),
+          validade: somaAnos(hoje(), 1),
           codvalecompra: null,
           observacoes: null,
           criacao: agora,

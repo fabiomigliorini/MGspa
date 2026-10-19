@@ -1,6 +1,7 @@
 <script setup>
 import { onMounted, computed } from 'vue'
 import { formataNumero, formataData } from '@components/formatters'
+import { diasEntre, hoje } from '@components/utils/datas'
 import { useAgrupamentoPendenteStore } from 'src/stores/agrupamentoPendenteStore'
 import { abrirPdf } from 'src/utils/abrirPdf'
 
@@ -8,11 +9,8 @@ const store = useAgrupamentoPendenteStore()
 const PESSOAS_URL = process.env.PESSOAS_URL
 
 function classeVencimento(v) {
-  if (!v) return ''
-  const d = new Date(String(v).slice(0, 10))
-  const hoje = new Date()
-  hoje.setHours(0, 0, 0, 0)
-  const diff = Math.floor((d - hoje) / 86400000)
+  const diff = diasEntre(hoje(), v)
+  if (diff === null) return ''
   if (diff < -30) return 'text-red'
   if (diff > 45) return 'text-green'
   return 'text-orange'

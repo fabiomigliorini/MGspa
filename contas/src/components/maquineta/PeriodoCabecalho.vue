@@ -15,6 +15,7 @@ import {
   formataTimestamp,
   formataTimestampIso,
 } from '@components/formatters'
+import { diasEntre, hoje } from '@components/utils/datas'
 import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 import { linhasDoPeriodo } from 'components/maquineta/linhas'
 import PeriodoResumo from 'components/maquineta/PeriodoResumo.vue'
@@ -53,11 +54,7 @@ const linhas = computed(() => {
 const ms = (d) => new Date(String(d).replace(' ', 'T')).getTime()
 const dias = computed(() => {
   const p = periodo.value
-  const ini = new Date(ms(p.abertura))
-  const fim = p.fim ? new Date(ms(p.fim)) : new Date()
-  ini.setHours(0, 0, 0, 0)
-  fim.setHours(0, 0, 0, 0)
-  return Math.round((fim - ini) / 86400000) + 1
+  return diasEntre(p.abertura, p.fim || hoje()) + 1
 })
 const avisoDias = computed(() =>
   naoConferido.value && dias.value > 1

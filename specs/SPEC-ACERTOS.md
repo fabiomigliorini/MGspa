@@ -113,7 +113,7 @@ Models já regenerados via `php artisan gerador:model tblperiodo` e `php artisan
 ### 5.1 Cabeçalho
 - Nome do colaborador
 - Cargo (tblcolaboradorcargo mais recente)
-- Tempo de casa (calculado a partir de tblcolaborador.contratacao, formato moment().fromNow)
+- Tempo de casa (calculado a partir de tblcolaborador.contratacao, formato `tempoRelativo` do `@components/formatters`)
 
 ### 5.2 Tabela de Títulos
 

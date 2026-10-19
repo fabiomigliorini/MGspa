@@ -13,8 +13,8 @@ import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { baixaTitulosStore } from '@components/stores/baixaTitulosStore'
-import { formataNumero, formataDataIso } from '@components/formatters'
-import { agora } from '@components/utils/datas'
+import { formataNumero } from '@components/formatters'
+import { agora, hoje, somaDias } from '@components/utils/datas'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -48,12 +48,6 @@ const CONTA_PADRAO = { 120: 42, 121: 1, 211: 2 }
 const sBaixa = baixaTitulosStore()
 const selectCache = useSelectCacheStore()
 
-const daquiA30Dias = () => {
-  const d = new Date()
-  d.setDate(d.getDate() + 30)
-  return formataDataIso(d)
-}
-
 // data de outro mês avisa (DIMP e relatórios já apurados), sem bloquear
 const trocaMes = computed(
   () => !!form.value.transacao && form.value.transacao.slice(0, 7) !== agora(false).slice(0, 7),
@@ -66,7 +60,7 @@ const vazio = () => ({
   codtipotitulo: null,
   codpessoa: props.pix?.codpessoa ?? null,
   valor: props.pix?.valor ?? null,
-  vencimento: daquiA30Dias(),
+  vencimento: somaDias(hoje(), 30),
   codcontacontabil: null,
   codfilial: props.filialPadrao,
   transacao: transacaoAbertura.value,
