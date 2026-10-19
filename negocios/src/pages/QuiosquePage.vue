@@ -1,7 +1,7 @@
 <script setup>
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue'
 import { useQuasar } from 'quasar'
-import { formataNumero, formataCodigo } from '@components/formatters'
+import { formataNumero, formataCodigo, formataTimestamp } from '@components/formatters'
 import { quiosqueStore } from 'stores/quiosque'
 import { produtoStore } from 'stores/produto'
 import { sincronizacaoStore } from 'stores/sincronizacao'
@@ -55,6 +55,13 @@ const variacoes = computed(() => {
   return arr
 })
 const temEstoque = computed(() => estoquelocais.value.length > 0 && variacoes.value.length > 0)
+
+// sem resposta do backend (offline, rede caida, PDV nao autorizado) o estoque nao e' o atual: o do
+// cache sai como nao confirmado, com a data; sem cache, indisponivel em vez de nada (TASK-197)
+const semConfirmacao = computed(() => !sQuiosque.atualizando && !sQuiosque.confirmado)
+const dataCache = computed(() =>
+  detalhe.value?.sincronizado ? formataTimestamp(new Date(detalhe.value.sincronizado)) : null,
+)
 
 const descricaoLinhas = computed(() => {
   const txt = detalhe.value?.descricaosite
@@ -462,6 +469,18 @@ onUnmounted(() => {
 
             <!-- ESTOQUE (2o mais importante, logo abaixo do preco - rolavel) -->
             <q-card v-if="temEstoque" flat class="rounded-borders shadow-2">
+              <q-card-section
+                v-if="semConfirmacao"
+                class="row items-center no-wrap bg-orange-1 text-orange-10"
+              >
+                <q-icon name="cloud_off" size="sm" class="q-mr-sm" />
+                <div>
+                  <div class="text-weight-bold">Estoque não confirmado</div>
+                  <div class="text-caption" v-if="dataCache">
+                    Sem resposta do servidor. Saldo da consulta de {{ dataCache }}.
+                  </div>
+                </div>
+              </q-card-section>
               <!-- <q-card-section class="q-pb-none">
               <div class="text-overline text-grey-6">Estoque</div>
             </q-card-section> -->
@@ -517,6 +536,17 @@ onUnmounted(() => {
                   </tr>
                 </tbody>
               </q-markup-table>
+            </q-card>
+            <q-card v-else-if="semConfirmacao" flat class="rounded-borders shadow-2">
+              <q-card-section class="row items-center no-wrap text-grey-7">
+                <q-icon name="cloud_off" size="sm" class="q-mr-sm" />
+                <div>
+                  <div class="text-weight-bold">Estoque indisponível</div>
+                  <div class="text-caption">
+                    Sem resposta do servidor e sem consulta anterior deste produto.
+                  </div>
+                </div>
+              </q-card-section>
             </q-card>
 
             <!-- DESCRICAO DO SITE -->

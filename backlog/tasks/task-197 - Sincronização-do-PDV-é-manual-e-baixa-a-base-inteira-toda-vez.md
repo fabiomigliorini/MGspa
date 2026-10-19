@@ -1,11 +1,11 @@
 ---
 id: TASK-197
 title: Sincronização do PDV é manual e baixa a base inteira toda vez
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-19 10:00'
+updated_date: '2026-10-19 10:03'
 labels:
   - negocios
 dependencies: []
@@ -37,7 +37,7 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #3 Sincronização incremental traz só o que mudou desde a última, inclusive cadastro recém-feito de pessoa (ex-TASK-36), produto e preço
 - [x] #4 Sincronização incremental só fica disponível quando compensa: o servidor ainda tem a versão do PDV, os diffs somados são menores que a completa e a última completa tem até 7 dias; senão só a Sincronização completa fica disponível, já com o foco (a que abre sozinha ao iniciar segue a mesma regra)
 - [x] #5 Sincronização não fica esperando a localização: hoje o Chrome no Linux às vezes não devolve a posição (mesmo com permissão) e a sincronização recusa depois de 10 s; localização continua obrigatória
-- [ ] #6 Quiosque sem resposta do backend (offline, rede caída, PDV não autorizado) não mostra o saldo do cache como estoque atual: avisa que é estoque não confirmado e de quando é; sem cache, mostra estoque indisponível (não zero) (ex-TASK-154)
+- [x] #6 Quiosque sem resposta do backend (offline, rede caída, PDV não autorizado) não mostra o saldo do cache como estoque atual: avisa que é estoque não confirmado e de quando é; sem cache, mostra estoque indisponível (não zero) (ex-TASK-154)
 - [x] #7 Sincronizar funciona sem usuário logado: o botão não fica desabilitado nem avisa de login ou de sessão expirada
 - [x] #8 Ao abrir o sistema sem ter sincronizado hoje (última sincronização de outro dia, ou nunca feita), a janela Sincronizar abre e já sincroniza sozinha
 - [x] #9 Duas janelas do mesmo navegador nunca sincronizam ao mesmo tempo: a segunda recusa avisando que outra já está sincronizando
@@ -112,4 +112,6 @@ O teste achou três lugares que ainda mostravam ou mandavam o uuid, corrigidos:
 - NegocioResource devolvia o Pdv inteiro (toArray), com o uuid: quem abria qualquer negócio via o uuid do PDV que o criou. O uuid ficou escondido no próprio model (Pdv::$hidden), que cobre também o PdvResource.
 - O card do PDV no negócio (DetalheNegocio) mostrava o uuid e o menu do usuário (MgUserMenu) mostrava 'PDV <uuid>': agora mostram o código (o menu, código e apelido).
 - O negócio novo copiava o dispositivo inteiro (uuid, latitude, longitude) no campo Pdv, que ia no corpo do PUT e ficava no IndexedDB: agora só apelido e setor, o que o card mostra.
+
+Fábio (19/10/2026), critério #6 (opção A): a store do quiosque guarda se o backend respondeu nesta consulta (confirmado). Sem resposta (offline, rede caída, PDV não autorizado), a tabela de estoque do cache ganha o aviso 'Estoque não confirmado', com a data em que o saldo foi guardado (detalhe.sincronizado); sem cache, aparece 'Estoque indisponível' em vez de nada. Enquanto a consulta ao servidor está em andamento vale o chip 'atualizando…', sem o aviso. Teste em Chrome headless contra o quasar dev, com o detalhe bloqueado pelo navegador para simular o servidor fora (7/7): online sem aviso; fora com cache, aviso com a data e a tabela; fora sem cache, 'Estoque indisponível' com o preço da base local; servidor de volta, confirmado sem aviso. Task concluída.
 <!-- SECTION:NOTES:END -->

@@ -9,6 +9,9 @@ export const quiosqueStore = defineStore('quiosque', {
     produto: null,
     // detalhe rico (embalagens, estoque, breadcrumb, imagens) - cache + backend
     detalhe: null,
+    // o backend respondeu nesta consulta: so' entao o estoque e' o atual (TASK-197); sem ele, o
+    // do cache vale como nao confirmado, com a data de quando foi guardado (detalhe.sincronizado)
+    confirmado: false,
     buscando: false,
     atualizando: false,
     semResultado: false,
@@ -19,6 +22,7 @@ export const quiosqueStore = defineStore('quiosque', {
     limpar() {
       this.produto = null
       this.detalhe = null
+      this.confirmado = false
       this.semResultado = false
       this.barrasConsultada = null
       this.buscando = false
@@ -37,6 +41,7 @@ export const quiosqueStore = defineStore('quiosque', {
       this.buscando = true
       this.semResultado = false
       this.detalhe = null
+      this.confirmado = false
       this.barrasConsultada = barras
 
       // 1) Base local enxuta (instantaneo, offline) -> preco/descricao/imagem
@@ -75,6 +80,7 @@ export const quiosqueStore = defineStore('quiosque', {
         if (data?.resultado && data.produto) {
           const detalhe = { ...data.produto, sincronizado: Date.now() }
           this.detalhe = detalhe
+          this.confirmado = true
           await db.produtoDetalhe.put(detalhe)
 
           // se nao tinha base local, exibe o basico vindo do backend
