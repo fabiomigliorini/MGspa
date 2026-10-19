@@ -504,7 +504,7 @@ const apropriar = () => {
               {{ sNegocio.negocio.Pdv.apelido }}
             </q-item-label>
             <q-item-label caption>
-              {{ sNegocio.negocio.Pdv.uuid }}
+              {{ formataCodigo(sNegocio.negocio.codpdv) }}
             </q-item-label>
             <q-item-label caption v-if="sNegocio.negocio.Pdv.setor">
               {{ sNegocio.negocio.Pdv.setor }}

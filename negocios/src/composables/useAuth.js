@@ -2,6 +2,7 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAuthStore } from 'stores/auth'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
+import { formataCodigo } from '@components/formatters'
 
 export function useAuth() {
   const store = useAuthStore()
@@ -15,7 +16,12 @@ export function useAuth() {
   const ehAdmin = computed(() => permissoes.value.includes('Administrador'))
   const estaAutenticado = computed(() => !!usuario.value)
   const expiresAt = computed(() => token.value?.expires_at || null)
-  const uuidPdv = computed(() => sSinc.pdv?.uuid || null)
+  // o uuid e' a senha do dispositivo (TASK-197): o menu mostra o codigo e o apelido
+  const pdv = computed(() =>
+    sSinc.pdv?.codpdv
+      ? [formataCodigo(sSinc.pdv.codpdv), sSinc.pdv.apelido].filter(Boolean).join(' ')
+      : null,
+  )
 
   function logout() {
     return store.logout()
@@ -45,7 +51,7 @@ export function useAuth() {
     ehAdmin,
     estaAutenticado,
     expiresAt,
-    uuidPdv,
+    pdv,
     permiteLogin: true,
     logout,
     renovarToken,

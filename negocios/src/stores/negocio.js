@@ -13,6 +13,10 @@ import { falar } from '../utils/falar.js'
 import { CONDICOES, MEIO, MEIOS, totalPagamento } from '@components/cobranca/pagamento.js'
 
 const sSinc = sincronizacaoStore()
+
+// o que o card do negocio mostra do PDV. So' isto: o negocio vai inteiro no PUT e fica no
+// IndexedDB, e o uuid e' a senha do dispositivo (TASK-197)
+const pdvDoNegocio = () => ({ apelido: sSinc.pdv.apelido, setor: sSinc.pdv.setor })
 const sCobranca = cobrancaStore()
 
 const arredonda = (v) => Math.round((parseFloat(v) || 0) * 100) / 100
@@ -491,7 +495,7 @@ export const negocioStore = defineStore('negocio', {
         titulos: [],
         notas: [],
         codpdv: sSinc.pdv.codpdv,
-        Pdv: { ...sSinc.pdv },
+        Pdv: pdvDoNegocio(),
       }
       db.negocio.add(negocio, uuid)
       this.negocio = { ...negocio }
@@ -761,7 +765,7 @@ export const negocioStore = defineStore('negocio', {
       negocio.alteracao = formataTimestampIso(new Date())
       negocio.sincronizado = false
       negocio.codpdv = sSinc.pdv.codpdv
-      negocio.Pdv = { ...sSinc.pdv }
+      negocio.Pdv = pdvDoNegocio()
       negocio.pagamentos = []
       negocio.parcelas = []
       negocio.titulos = []

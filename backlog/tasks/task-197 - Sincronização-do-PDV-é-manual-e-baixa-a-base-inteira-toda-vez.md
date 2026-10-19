@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-19 02:29'
+updated_date: '2026-10-19 10:00'
 labels:
   - negocios
 dependencies: []
@@ -106,4 +106,10 @@ Fábio (18/10/2026), critério #1: a credencial própria (segredo gerado pelo se
 - Teste (18/10): curl na api-dev (sem cabeçalho, com o ?pdv= antigo, com dispositivo inativo e com valor inválido: 403; com o cabeçalho: 200; o preflight de CORS aceita x-pdv) e Chrome headless contra o quasar dev (negocios-dev:9900): completa ao abrir sem login, com 24 pedidos, todos com X-Pdv e nenhum com o uuid no endereço ou no corpo; quiosque consulta o produto; Meu Dispositivo sem o UUID e com o código; dispositivo inativo pede a ativação pelo código. Não testado: os fluxos com login (venda, pagamento, anexos, lista de Dispositivos) e a mensagem do PIX.
 
 Fábio (18/10/2026): finalizar a task. #1, #14, #17 e #18 conferidos e marcados (#14: contagem x / y e barra por linha, completa de 2 em 2 mil; #17: aplicarFull apaga versão e data da completa antes de baixar; #18: sem o círculo, botões Cancelar, Completa e Incremental). #6 não foi feito: sem resposta do backend o Quiosque ainda mostra o saldo do cache (ou zero sem cache); a task fica em andamento até a decisão sobre ele.
+
+Teste com login (19/10/2026, usuário fabio no dev, Chrome headless contra o quasar dev): sincronização completa, login pelo diálogo, F2, bipe, F8 > Dinheiro com R$ 10,00 recebido (troco R$ 1,50), venda fechada sozinha; listagem de negócios filtrada no PDV 511, listagem de pagamentos, lista de Dispositivos sem o uuid e filtro Código; a venda de teste e as sobras das rodadas interrompidas foram canceladas e o logout revogou o token. Todo pedido à api com X-Pdv, nenhum com o uuid no endereço, no corpo ou na resposta, nenhum 4xx/5xx (29/29; sem login, 18/18).
+O teste achou três lugares que ainda mostravam ou mandavam o uuid, corrigidos:
+- NegocioResource devolvia o Pdv inteiro (toArray), com o uuid: quem abria qualquer negócio via o uuid do PDV que o criou. O uuid ficou escondido no próprio model (Pdv::$hidden), que cobre também o PdvResource.
+- O card do PDV no negócio (DetalheNegocio) mostrava o uuid e o menu do usuário (MgUserMenu) mostrava 'PDV <uuid>': agora mostram o código (o menu, código e apelido).
+- O negócio novo copiava o dispositivo inteiro (uuid, latitude, longitude) no campo Pdv, que ia no corpo do PUT e ficava no IndexedDB: agora só apelido e setor, o que o card mostra.
 <!-- SECTION:NOTES:END -->

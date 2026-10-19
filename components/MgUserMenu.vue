@@ -15,7 +15,7 @@ const usuario = computed(() => unref(props.auth.usuario))
 const permissoes = computed(() => unref(props.auth.permissoes) || [])
 const ehAdmin = computed(() => !!unref(props.auth.ehAdmin))
 const expiresAt = computed(() => unref(props.auth.expiresAt))
-const uuidPdv = computed(() => unref(props.auth.uuidPdv))
+const pdv = computed(() => unref(props.auth.pdv))
 const permiteLogin = computed(() => !!unref(props.auth.permiteLogin))
 
 const nome = computed(() => usuario.value?.usuario || '')
@@ -105,8 +105,8 @@ const perfilUrl = computed(() => (PESSOAS_URL ? `${PESSOAS_URL}/perfil` : '/perf
                 Expira {{ tempoRelativo(expiresAt) }}
                 <q-btn flat dense size="sm" @click="renovar" icon="refresh"></q-btn>
               </q-item-label>
-              <q-item-label v-if="uuidPdv" caption class="text-grey-7 ellipsis">
-                PDV {{ uuidPdv }}
+              <q-item-label v-if="pdv" caption class="text-grey-7 ellipsis">
+                PDV {{ pdv }}
               </q-item-label>
             </q-item-section>
           </q-item>

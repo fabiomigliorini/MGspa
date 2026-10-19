@@ -15,11 +15,8 @@ class PdvResource extends JsonResource
      */
     public function toArray($request)
     {
+        // sem o uuid: o model esconde (Pdv::$hidden)
         $ret = parent::toArray($request);
-
-        // o uuid e' a senha do dispositivo (TASK-197): nao sai em resposta nenhuma; o
-        // navegador ja tem o dele
-        unset($ret['uuid']);
 
         // Chave Extrangeira
         $ret['filial'] = @$this->Filial->filial;
