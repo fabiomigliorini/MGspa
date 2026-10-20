@@ -1,17 +1,19 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
-import { ref, computed, watch, nextTick } from 'vue'
-import { useQuasar } from 'quasar'
+import MgGradeProduto from '@components/MgGradeProduto.vue'
+import MgSelect from '@components/MgSelect.vue'
+import { ref, watch, nextTick } from 'vue'
 import { api } from 'src/services/api'
-import { formataNumero } from '@components/formatters'
 
 // Pesquisa de produto em grade de cards, no formato da pesquisa do PDV.
-// Diferença: esta é sempre online -- lê v1/select/produto-barra direto,
-// sem base offline. Emite o produto escolhido no mesmo shape do select.
+// Diferença: esta é sempre online -- lê v1/select/produto-barra/pesquisa
+// direto, sem base offline. Emite o código de barras escolhido no mesmo shape
+// do select.
 //
-// Navegação por teclado: o foco fica no campo de pesquisa o tempo todo.
-// Enter pesquisa; a partir daí as setas andam pela grade e o Enter escolhe
-// o card em destaque. Esc volta da grade para o campo.
+// A grade, o agrupamento por produto e a navegação por teclado são do
+// @components/MgGradeProduto, o mesmo da pesquisa do PDV: o foco fica no campo
+// de pesquisa o tempo todo; Enter pesquisa, as setas andam pela grade, Enter
+// avança e Esc volta uma etapa.
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   // texto já digitado no campo de barras, para abrir com a busca pronta
@@ -20,8 +22,8 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue', 'select'])
 
+// produtos por página, não barras: a página traz todas as barras de cada um
 const PER_PAGE = 20
-const $q = useQuasar()
 
 const busca = ref('')
 // o texto que gerou a lista que está na tela
@@ -48,26 +50,17 @@ const pagina = ref(1)
 const temMais = ref(false)
 const pesquisou = ref(false)
 
-// -1 = nenhum card em destaque, o teclado ainda é do campo de pesquisa
-const focado = ref(-1)
-const cardRefs = ref([])
-const setCardRef = (el, i) => {
-  if (el) cardRefs.value[i] = el
-}
+const grade = ref(null)
 
-// quantos cards cabem por linha -- tem que bater com as classes col-* do
-// template, senão as setas de cima/baixo pulam errado
-const porLinha = computed(() => {
-  switch ($q.screen.name) {
-    case 'xs':
-      return 2
-    case 'sm':
-    case 'md':
-      return 4
-    default:
-      return 6
-  }
-})
+// O teclado só funciona com o foco no campo (o keydown sobe dele): clicar
+// na grade ou no fundo devolve o foco para lá. O q-select é a exceção, porque
+// tem navegação própria e abre o menu fora do dialog.
+const refPesquisa = ref(null)
+const manterFoco = (evento) => {
+  if (!props.modelValue) return
+  if (evento.relatedTarget?.closest?.('.q-select, .q-menu')) return
+  nextTick(() => refPesquisa.value?.focus())
+}
 
 const fechar = () => emit('update:modelValue', false)
 
@@ -76,26 +69,25 @@ async function pesquisar(proximaPagina = false) {
   carregando.value = true
   try {
     pagina.value = proximaPagina ? pagina.value + 1 : 1
-    const { data } = await api.get('v1/select/produto-barra', {
+    const { data } = await api.get('v1/select/produto-barra/pesquisa', {
       params: { busca: busca.value, page: pagina.value, ordem: ordem.value?.value },
     })
     const rows = Array.isArray(data) ? data : data?.data || []
+    // a página seguinte entra na MESMA lista, para a grade não recomeçar
     if (proximaPagina) {
-      itens.value = itens.value.concat(rows)
+      itens.value.push(...rows)
     } else {
       itens.value = rows
-      cardRefs.value = []
-      focado.value = -1
       buscaPesquisada.value = busca.value
     }
-    temMais.value = rows.length === PER_PAGE
+    temMais.value = new Set(rows.map((r) => r.codproduto)).size === PER_PAGE
     pesquisou.value = true
   } finally {
     carregando.value = false
   }
 }
 
-const carregarMais = async (indice, done) => {
+const carregarMais = async (done) => {
   if (!temMais.value) {
     done(true)
     return
@@ -104,98 +96,33 @@ const carregarMais = async (indice, done) => {
   done(!temMais.value)
 }
 
-const escolher = (produto) => {
-  emit('select', produto)
+const escolher = (barra) => {
+  emit('select', barra)
   fechar()
-}
-
-// Zoom de 15% no card em destaque. Quasar nao tem classe de escala, entao
-// vai inline. O z-index sobe para o card crescer por cima dos vizinhos.
-const estiloCard = (i) =>
-  i === focado.value
-    ? 'transition: transform .15s; transform: scale(1.15); position: relative; z-index: 1'
-    : 'transition: transform .15s'
-
-// Mouse e teclado mexem no MESMO destaque. Aqui não se usa focar(), porque
-// ele rola o card para dentro da tela -- sob o ponteiro isso seria um
-// solavanco, e o card já está visível de qualquer forma.
-const aoPassarMouse = (indice) => {
-  focado.value = indice
-}
-
-const focar = (indice) => {
-  const total = itens.value.length
-  if (!total) return
-  focado.value = Math.max(0, Math.min(indice, total - 1))
-  nextTick(() => cardRefs.value[focado.value]?.scrollIntoView({ block: 'nearest' }))
 }
 
 // Um handler só, no card do diálogo: o keydown sobe do campo de pesquisa.
 const aoTeclar = (evento) => {
   // o q-select tem navegação própria nas opções; não roubar as teclas dele
   if (evento.target?.closest?.('.q-select')) return
-
-  const total = itens.value.length
-  const atual = focado.value
-
-  // Esc com card em destaque só sai da grade. O stopPropagation é o que
-  // impede o q-dialog de fechar junto -- ele escuta o Esc lá no document.
-  if (evento.key === 'Escape' && atual >= 0) {
-    evento.preventDefault()
-    evento.stopPropagation()
-    focado.value = -1
-    return
-  }
+  if (grade.value?.teclar(evento)) return
   if (evento.key === 'Enter') {
     evento.preventDefault()
-    if (atual >= 0 && itens.value[atual]) escolher(itens.value[atual])
-    else pesquisar()
-    return
-  }
-  if (!total) return
-
-  // com nenhum card em destaque, só para baixo entra na grade -- assim as
-  // setas de lado continuam movendo o cursor dentro do texto digitado
-  if (atual < 0) {
-    if (evento.key === 'ArrowDown') {
-      evento.preventDefault()
-      focar(0)
-    }
-    return
-  }
-
-  switch (evento.key) {
-    case 'ArrowRight':
-      evento.preventDefault()
-      focar(atual + 1)
-      break
-    case 'ArrowLeft':
-      evento.preventDefault()
-      if (atual === 0) focado.value = -1
-      else focar(atual - 1)
-      break
-    case 'ArrowDown':
-      evento.preventDefault()
-      focar(atual + porLinha.value)
-      break
-    case 'ArrowUp':
-      evento.preventDefault()
-      if (atual < porLinha.value) focado.value = -1
-      else focar(atual - porLinha.value)
-      break
+    pesquisar()
   }
 }
 
 // Editar o texto desfaz o destaque: a lista na tela passou a ser de outra
 // busca, e o Enter tem que voltar a significar "pesquisar" e não "escolher".
 watch(busca, (valor) => {
-  if (valor !== buscaPesquisada.value) focado.value = -1
+  if (valor !== buscaPesquisada.value) grade.value?.soltar()
 })
 
 // Ao abrir: se veio termo novo do campo de barras, pesquisa ele. Senão,
-// reabre exatamente como estava -- texto, ordem, resultados e destaque.
-// O componente nunca é destruído (o q-dialog só esconde), então o estado
-// anterior continua nos refs; o cache é não jogar fora.
+// reabre como estava -- texto, ordem e resultados. O componente nunca é
+// destruído (o q-dialog só esconde), então o estado anterior continua nos
+// refs; o cache é não jogar fora. A grade, que fica dentro do q-dialog, nasce
+// de novo: volta para os produtos, sem destaque.
 watch(
   () => props.modelValue,
   (aberto) => {
@@ -223,7 +150,16 @@ watch(
     <q-card class="column full-height" @keydown="aoTeclar">
       <q-card-section class="bg-primary text-white col-auto">
         <div class="row q-col-gutter-sm">
-          <MgInput v-model="busca" outlined autofocus bg-color="white" label="Pesquisa" class="col">
+          <MgInput
+            ref="refPesquisa"
+            v-model="busca"
+            outlined
+            autofocus
+            bg-color="white"
+            label="Pesquisa"
+            class="col"
+            @blur="manterFoco"
+          >
             <template #append>
               <q-btn round flat icon="close" tabindex="-1" @click="busca = ''">
                 <q-tooltip>Limpar</q-tooltip>
@@ -236,9 +172,8 @@ watch(
               </q-btn>
             </template>
           </MgInput>
-          <q-select
+          <MgSelect
             v-model="ordem"
-            outlined
             bg-color="white"
             label="Ordem"
             :options="ORDENS"
@@ -247,62 +182,28 @@ watch(
           />
         </div>
         <div class="text-caption q-mt-xs">
-          Enter pesquisa · setas andam pelos produtos · Enter escolhe o que estiver em destaque
+          Enter pesquisa · setas andam pelos produtos · Enter abre o que estiver em destaque · Esc
+          volta
         </div>
       </q-card-section>
 
       <q-card-section class="q-pa-none col scroll">
-        <q-infinite-scroll @load="carregarMais" :offset="250">
-          <div class="row q-pa-md q-col-gutter-md">
-            <div
-              v-for="(produto, i) in itens"
-              :key="produto.codprodutobarra"
-              :ref="(el) => setCardRef(el, i)"
-              class="col-xs-6 col-sm-3 col-md-3 col-lg-2 col-xl-2"
-            >
-              <q-card
-                v-ripple
-                class="cursor-pointer"
-                :class="i === focado ? 'bg-blue-1' : ''"
-                :style="estiloCard(i)"
-                :bordered="i === focado"
-                @mouseenter="aoPassarMouse(i)"
-                @click="escolher(produto)"
-              >
-                <q-img ratio="1" :src="produto.imagem" />
-                <q-card-section>
-                  <div class="absolute" style="top: 0; right: 5px; transform: translateY(-37px)">
-                    <q-chip color="grey-2" text-color="grey-7">
-                      {{ produto.sigla }}
-                    </q-chip>
-                  </div>
-                  <div class="text-h5">
-                    <small class="text-grey-7">R$</small>
-                    {{ formataNumero(produto.preco) }}
-                  </div>
-                  <div class="text-caption text-grey-7">
-                    {{ produto.barras }} | {{ produto.descricao }}
-                  </div>
-                </q-card-section>
-              </q-card>
-            </div>
-          </div>
+        <MgGradeProduto
+          ref="grade"
+          :barras="itens"
+          :tem-mais="temMais"
+          @select="escolher"
+          @carregar="carregarMais"
+        />
 
-          <div v-if="pesquisou && !itens.length" class="text-center text-grey-6 q-py-xl">
-            <q-icon name="search_off" size="40px" class="text-grey-4 q-mb-sm" />
-            <div>Nenhum produto encontrado. Melhore sua pesquisa.</div>
-          </div>
-          <div v-if="!pesquisou && !carregando" class="text-center text-grey-6 q-py-xl">
-            <q-icon name="search" size="40px" class="text-grey-4 q-mb-sm" />
-            <div>Digite o que procura e tecle Enter.</div>
-          </div>
-
-          <template #loading>
-            <div class="row justify-center q-my-md">
-              <q-spinner-dots color="primary" size="32px" />
-            </div>
-          </template>
-        </q-infinite-scroll>
+        <div v-if="pesquisou && !itens.length" class="text-center text-grey-6 q-py-xl">
+          <q-icon name="search_off" size="40px" class="text-grey-4 q-mb-sm" />
+          <div>Nenhum produto encontrado. Melhore sua pesquisa.</div>
+        </div>
+        <div v-if="!pesquisou && !carregando" class="text-center text-grey-6 q-py-xl">
+          <q-icon name="search" size="40px" class="text-grey-4 q-mb-sm" />
+          <div>Digite o que procura e tecle Enter.</div>
+        </div>
       </q-card-section>
     </q-card>
   </q-dialog>
