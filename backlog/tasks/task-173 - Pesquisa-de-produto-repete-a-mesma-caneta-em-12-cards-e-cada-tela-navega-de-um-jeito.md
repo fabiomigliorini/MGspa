@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-24 21:44'
-updated_date: '2026-10-19 23:35'
+updated_date: '2026-10-20 16:12'
 labels:
   - negocios
   - components
@@ -51,4 +51,6 @@ Decisoes de tela (agrupar, e como escolher a embalagem depois) a combinar antes 
 Fábio (17/10/2026), decisões de tela fechadas na conversa da TASK-197: a grade agrupa o resultado da pesquisa por codproduto, depois pelo texto da variação, depois por embalagem (sigla + quantidade). Só aparece o que casou com o texto: pesquisou 'verde', não mostra a azul; sem buscar irmãos que não casaram. Escolha em etapas, que colapsam quando há uma opção só: 1ª clique no card do produto; 2ª na variação, se houver mais de uma; 3ª na embalagem, se houver mais de uma. A 3ª é por embalagem, não por barra: a mesma embalagem pode ter dois códigos de barras (critério #2) e aparece uma vez; o item do negócio leva qualquer barra dela, o preço é o mesmo. Teclado: setas andam pelas opções da etapa, Enter avança, Esc volta uma etapa. Depende do campo nome (nome base do produto, sem variação e embalagem) que o catálogo da TASK-197 passa a trazer em cada barra; variacao, sigla, quantidade e codimagem já vêm hoje e bastam para agrupar.
 
 Implementação #1/#2 (19/10/2026, aguardando validação): grade compartilhada components/MgGradeProduto.vue (agrupa produto -> variação -> embalagem sigla+quantidade, etapas que colapsam, teclado: setas, Enter avança, Esc volta uma etapa; infinite scroll desligado nas etapas 2/3), usada por negocios/src/components/offline/DialogPesquisaProduto.vue (PDV e quiosque) e components/MgDialogPesquisaProduto.vue (online). Card do produto lista as embalagens que casaram, uma por linha com o preço (Fábio, 19/10); opção única fica no card de antes. Online: rota nova GET v1/select/produto-barra/pesquisa (SelectProdutoBarraController::pesquisa) pagina 20 PRODUTOS com todas as barras deles que casaram; filtro extraído para filtro(), comum ao index (select segue igual). PDV: teto de 200 passa a ser de produtos (stores/produto.js). Ordem dos dois diálogos virou MgSelect; o online ganhou o manterFoco do PDV.
+
+Fábio (20/10/2026): variação e embalagem saem da grade e vão para uma janela própria, de duas colunas: à esquerda q-list das variações (foto + nome), à direita as embalagens com o preço, que acompanham a variação em que o cursor está. Enter na variação passa para a direita (com uma embalagem só, já escolhe), Enter na embalagem escolhe, Esc da direita volta para a esquerda e da esquerda fecha a janela. Uma variação só: a janela abre com o cursor na direita. Opção única sai direto da grade.
 <!-- SECTION:NOTES:END -->

@@ -13,7 +13,7 @@ import { api } from 'src/services/api'
 // A grade, o agrupamento por produto e a navegação por teclado são do
 // @components/MgGradeProduto, o mesmo da pesquisa do PDV: o foco fica no campo
 // de pesquisa o tempo todo; Enter pesquisa, as setas andam pela grade, Enter
-// avança e Esc volta uma etapa.
+// abre o produto, numa janela com as variações e as embalagens.
 const props = defineProps({
   modelValue: { type: Boolean, default: false },
   // texto já digitado no campo de barras, para abrir com a busca pronta
@@ -54,11 +54,13 @@ const grade = ref(null)
 
 // O teclado só funciona com o foco no campo (o keydown sobe dele): clicar
 // na grade ou no fundo devolve o foco para lá. O q-select é a exceção, porque
-// tem navegação própria e abre o menu fora do dialog.
+// tem navegação própria e abre o menu fora do dialog; e a janela do produto
+// que a grade abre, que tem teclado próprio.
 const refPesquisa = ref(null)
 const manterFoco = (evento) => {
   if (!props.modelValue) return
   if (evento.relatedTarget?.closest?.('.q-select, .q-menu')) return
+  if (grade.value?.aberto) return
   nextTick(() => refPesquisa.value?.focus())
 }
 

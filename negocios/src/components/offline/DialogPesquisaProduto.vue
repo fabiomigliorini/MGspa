@@ -11,7 +11,7 @@ import MgSelect from '@components/MgSelect.vue'
 // A grade, o agrupamento por produto e a navegação por teclado são do
 // @components/MgGradeProduto, o mesmo da pesquisa das telas online: o foco fica
 // no campo de pesquisa o tempo todo; Enter pesquisa, as setas andam pela grade,
-// Enter avança e Esc volta uma etapa.
+// Enter abre o produto, numa janela com as variações e as embalagens.
 //
 // Fecha sozinho depois de TEMPO_INATIVIDADE sem uso; qualquer toque, tecla ou
 // rolagem reinicia a contagem.
@@ -26,11 +26,13 @@ const grade = ref(null)
 
 // O teclado só funciona com o foco no campo (o keydown sobe dele): clicar
 // na grade ou no fundo devolve o foco para lá. O q-select é a exceção, porque
-// tem navegação própria e abre o menu fora do dialog.
+// tem navegação própria e abre o menu fora do dialog; e a janela do produto
+// que a grade abre, que tem teclado próprio.
 const refPesquisa = ref(null)
 const manterFoco = (evento) => {
   if (!sProduto.dialogPesquisa) return
   if (evento.relatedTarget?.closest?.('.q-select, .q-menu')) return
+  if (grade.value?.aberto) return
   nextTick(() => refPesquisa.value?.focus())
 }
 
