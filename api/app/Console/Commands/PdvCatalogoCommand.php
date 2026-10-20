@@ -6,9 +6,9 @@ use Illuminate\Console\Command;
 use Mg\Pdv\PdvCatalogoService;
 
 /**
- * Catálogo do PDV (TASK-197): a cada rodada gera o json e o diff de produtos e pessoas em
- * storage/app/pdv-catalogo, sempre, mesmo sem mudança. É o que a sincronização incremental
- * do negocios consome. Agendado no routes/console.php.
+ * Catálogo do PDV (TASK-197): a cada rodada gera o json de produtos e pessoas em
+ * storage/app/pdv-catalogo, sempre, e o diff só do que mudou. É o que a sincronização
+ * incremental do negocios consome. Agendado no routes/console.php.
  */
 class PdvCatalogoCommand extends Command
 {

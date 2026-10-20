@@ -11,9 +11,14 @@ import { avisar } from './eventos.js'
 const $q = useQuasar()
 const sSaurus = saurusStore()
 const btnConsultarRef = ref(null)
+const btnReenviarRef = ref(null)
 
 // 0 pendente · 2 aprovado · 3 cancelado
 const pendente = () => sSaurus.pedido?.status == 0
+
+// sem id a SafraPay não confirmou que recebeu: no timeout pode ter chegado, então segue
+// consultando, mas o caixa sabe que pode Reenviar (TASK-118)
+const naoConfirmado = () => pendente() && !sSaurus.pedido?.id
 
 const verificarPago = () => {
   if (sSaurus.pedido.status == 2) {
@@ -80,7 +85,8 @@ const desistir = () => {
 }
 
 const onShow = () => {
-  btnConsultarRef.value?.$el?.focus()
+  const btn = naoConfirmado() ? btnReenviarRef : btnConsultarRef
+  btn.value?.$el?.focus()
   iniciar()
 }
 
@@ -100,6 +106,10 @@ const onHide = () => {
         <div class="text-subtitle2 text-grey text-uppercase">
           {{ sSaurus.pedido.statusdescricao }}
           <span v-if="pendente()" class="text-lowercase"> · consultando automaticamente</span>
+        </div>
+        <div v-if="naoConfirmado()" class="text-negative">
+          A SafraPay não confirmou que a cobrança chegou na maquininha. Se não apareceu lá,
+          Reenviar.
         </div>
 
         <!-- PAGAMENTOS -->
@@ -267,7 +277,7 @@ const onHide = () => {
           label="Reenviar"
           color="primary"
           @click="reenviar()"
-          tabindex="-1"
+          ref="btnReenviarRef"
         />
         <q-btn
           flat

@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-05 15:40'
-updated_date: '2026-10-19 10:03'
+updated_date: '2026-10-19 21:39'
 labels:
   - negocios
 dependencies: []
@@ -42,7 +42,7 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #8 Ao abrir o sistema sem ter sincronizado hoje (última sincronização de outro dia, ou nunca feita), a janela Sincronizar abre e já sincroniza sozinha
 - [x] #9 Duas janelas do mesmo navegador nunca sincronizam ao mesmo tempo: a segunda recusa avisando que outra já está sincronizando
 - [x] #10 Ao abrir sem usuário logado (ou com a sessão vencida), o PDV não abre negócio sozinho e o login não aparece; F2/Novo continuam abrindo, inclusive sem login e sem rede
-- [x] #11 Fechar a janela Sincronizar com ESC ou clicando fora para a sincronização, igual ao Cancelar: ela não continua rodando escondida e travando o PDV
+- [x] #11 A janela Sincronizar só fecha pelo Cancelar (ESC e clique fora não fecham, para ninguém perder a completa sem querer), e fechar para a sincronização: ela não continua rodando escondida e travando o PDV
 - [x] #12 A janela Sincronizar mostra a data e a hora (com segundos) da última sincronização
 - [x] #13 Botões Completa e Incremental na janela Sincronizar; com a incremental disponível o foco vai nela, e a completa baixa a base inteira de pessoas e produtos mesmo assim
 - [x] #14 Durante a sincronização cada linha mostra só a contagem (ex.: 28.195 / 28.195) numa linha e a sua barra de progresso, sempre visível; a completa avança de 2 em 2 mil e a janela não muda de tamanho enquanto roda
@@ -50,6 +50,9 @@ Consolida TASK-36 (sincronizar pessoas novas) e TASK-54 (forçar sincronização
 - [x] #16 Com outra janela do navegador sincronizando, a janela Sincronizar nem abre (botão do PDV, menu do quiosque e a sincronização ao abrir o sistema): recusa com o aviso de que já existe uma sincronização em andamento
 - [x] #17 Sincronização completa interrompida (Cancelar, F5, computador travado) deixa o PDV como nunca sincronizado: a data da última sincronização some já no começo da completa e a próxima só pode ser completa
 - [x] #18 Janela Sincronizar cabe no celular: sem o círculo grande, uma barra de progresso por linha e botões Cancelar, Completa e Incremental
+- [x] #19 Arquivos do catálogo no servidor ficam numa pasta por catálogo (produtos, pessoas), com o manifesto na raiz e o mesmo endereço de download; a troca não tira a incremental de nenhum PDV
+- [x] #20 A janela Sincronizar busca a localização ao abrir e mostra o andamento numa linha abaixo da última sincronização (buscando, disponível com latitude e longitude, ou o motivo em vermelho); Completa e Incremental só habilitam com a localização
+- [x] #21 Rodada sem mudança num catálogo não deixa arquivo de diff vazio no servidor, e os diffs ficam só 8 dias (1 além dos 7 da completa); a incremental continua valendo para todo PDV
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -68,7 +71,7 @@ Fábio (16/10/2026): a janela de 2 horas era pequena; a sincronização ao abrir
 Fábio (17/10/2026): o incremental vai por JSON cacheado no backend com diff por versão. Incremental por alteracao foi descartado: não pega exclusão física; lista de chaves e tombstone com trigger foram descartados por abrirem brecha (tabela auxiliar, trigger). LGPD (cifrar o IndexedDB) saiu para task própria, prioridade low.
 
 Implementação (17/10/2026), core da sincronização incremental:
-- Backend: job pdv:catalogo (api/app/Console/Commands/PdvCatalogoCommand.php, agendado a cada 15 min em routes/console.php, withoutOverlapping) gera em storage/app/pdv-catalogo os arquivos produtos-AAAAMMDD-HHMMSS.json.gz e .diff.gz (idem pessoas-), um registro por linha em ordem de chave, sempre, mesmo sem mudança. O diff é um merge em PHP do json novo contra o anterior ('-' saiu, '+' entrou; alterado vem nas duas), numa transação REPEATABLE READ; manifesto catalogo.json gravado por último, renames atômicos. Retenção: diffs 30 dias, jsons só os 2 últimos. Mede 7 s na primeira rodada e 3,5 s nas seguintes no dev (191 mil barras + 27,6 mil pessoas). Consultas de produto/pessoa e as de bipe/CNPJ foram para PdvCatalogoService/PdvCatalogoController; rotas paginadas produto, produto-count, pessoa, pessoa-count removidas. Registro de produto ganhou 'nome' (base, sem variação/embalagem) para a TASK-173.
+- Backend: job pdv:catalogo (api/app/Console/Commands/PdvCatalogoCommand.php, agendado a cada 15 min em routes/console.php, withoutOverlapping) gera em storage/app/pdv-catalogo, numa pasta por catálogo, os arquivos produtos/AAAAMMDD-HHMMSS.json.gz e .diff.gz (idem pessoas/), um registro por linha em ordem de chave, sempre, mesmo sem mudança. O diff é um merge em PHP do json novo contra o anterior ('-' saiu, '+' entrou; alterado vem nas duas), numa transação REPEATABLE READ; manifesto catalogo.json, na raiz, gravado por último, renames atômicos. Retenção: diffs 30 dias, jsons só os 2 últimos. Mede 7 s na primeira rodada e 3,5 s nas seguintes no dev (191 mil barras + 27,6 mil pessoas). Consultas de produto/pessoa e as de bipe/CNPJ foram para PdvCatalogoService/PdvCatalogoController; rotas paginadas produto, produto-count, pessoa, pessoa-count removidas. Registro de produto ganhou 'nome' (base, sem variação/embalagem) para a TASK-173.
 - Rotas (sem login, uuid do dispositivo como hoje): GET v1/pdv/catalogo/{tabela}/versoes?desde=V (atual com tamanho e registros, diffs com tamanho, desde.conhecida) e GET v1/pdv/catalogo/{tabela}/{versao}.json|.diff (serve o .gz com Content-Encoding gzip).
 - Front: Dexie v9 apaga produto/pessoa e v10 recria só com os índices consultados (codproduto, barras, versao, buscaArr); store sincronizacao com versao.produto/pessoa persistida, sincronizarCatalogo (full em fluxo com fetch/ReadableStream ou diffs em paralelo de 5 aplicados em ordem; full só se a versão local não é conhecida pelo servidor ou se os diffs somados passam do tamanho da full), etapas em paralelo (Promise.allSettled) com uma linha por etapa no dialog e AbortController no Cancelar/ESC; bipe, CNPJ e cadastro de pessoa carimbam a versão local no registro.
 - Teste de ponta a ponta em Chrome headless contra o quasar dev e a api-dev (17/10): full num perfil limpo em 10 s (produtos) com pessoas em paralelo, total 14 s; alteração de preço + barra nova -> diff aplicado em 1,2 s ('5 alterados, 0 excluídos'); exclusão da barra -> '4 alterados, 1 excluídos' e a barra some do IndexedDB; rodada sem mudança -> 'Nada mudou desde a última'. Sem erro de console. Critérios #3 e #4 ficam para o Fábio validar e marcar.
@@ -114,4 +117,42 @@ O teste achou três lugares que ainda mostravam ou mandavam o uuid, corrigidos:
 - O negócio novo copiava o dispositivo inteiro (uuid, latitude, longitude) no campo Pdv, que ia no corpo do PUT e ficava no IndexedDB: agora só apelido e setor, o que o card mostra.
 
 Fábio (19/10/2026), critério #6 (opção A): a store do quiosque guarda se o backend respondeu nesta consulta (confirmado). Sem resposta (offline, rede caída, PDV não autorizado), a tabela de estoque do cache ganha o aviso 'Estoque não confirmado', com a data em que o saldo foi guardado (detalhe.sincronizado); sem cache, aparece 'Estoque indisponível' em vez de nada. Enquanto a consulta ao servidor está em andamento vale o chip 'atualizando…', sem o aviso. Teste em Chrome headless contra o quasar dev, com o detalhe bloqueado pelo navegador para simular o servidor fora (7/7): online sem aviso; fora com cache, aviso com a data e a tabela; fora sem cache, 'Estoque indisponível' com o preço da base local; servidor de volta, confirmado sem aviso. Task concluída.
+
+Fechamento (19/10/2026), para o go-live:
+- Back e front sobem juntos. O backend novo recusa o front antigo (que manda o ?pdv=): até o PDV recarregar a página (F5 ou a tarja de nova versão), as chamadas dele dão 403 'Dispositivo não cadastrado ou inativo'. Sem DDL.
+- Para o usuário comum, a Listagem de negócios passa a abrir filtrada no PDV dele (antes o filtro falhava em silêncio, porque a lista de Dispositivos é só de Administrador/Gerente).
+- Não testado: anexos da confissão no PDV e a mensagem da cobrança PIX (agora PDV #código).
+- Fica: os uuids já vistos (lista, logs, cobranças PIX antigas) continuam valendo; os negócios antigos no IndexedDB guardam o Pdv completo até a próxima sincronização deles.
+- A regra ficou no CLAUDE.md (seção PDV: o uuid é a senha do dispositivo e vai só no cabeçalho X-Pdv).
+
+Fábio (19/10/2026): na completa o usuário clicava fora sem querer e perdia o processo. A q-dialog do DialogSincronizacao passa a ser persistent: ESC e clique fora não fecham, só o Cancelar (critério 11 reescrito). O @hide continua abortando, para o Cancelar e para o fechamento ao terminar.
+
+Fábio (19/10/2026): com o persistent, o clique fora tirava o foco da Incremental e punha na Completa (o backdrop do Quasar pega o foco no mousedown e a q-dialog devolve para o primeiro botão do Tab). Com a incremental disponível, o Completa fica fora do Tab (tabindex -1): o primeiro botão do Tab passa a ser a Incremental e o foco não sai dela. O ESC não mexia no foco.
+
+Fábio (19/10/2026): a localização não é etapa da sincronização. Sai da lista (com o ícone, a barra e o toggle travado da nota de 18/10) e vira uma segunda linha abaixo da última sincronização, só texto. A janela busca a posição ao abrir e mostra o andamento: 'Buscando a localização...', 'Localização disponível: lat, long (± N m)' ou 'Sem localização: <motivo>' em vermelho; Completa e Incremental só habilitam com a posição. Store: localizarDispositivo() atualiza importacao.localizacao (agora com latitude e longitude, erro = o motivo) e serve a janela e o coletarDispositivo; pedirPosicao() faz um pedido por vez, porque a janela e a sincronização ao abrir pedem juntas; o pedido silencioso do abrirJanela saiu. A posição continua valendo até 1 min: passou disso até o clique, a sincronização busca de novo. Sem posição (recusada ou 10 s sem resposta), os botões ficam desabilitados; para tentar de novo, Cancelar e abrir a janela outra vez.
+
+Fábio (19/10/2026): os arquivos do catálogo passam a ficar numa pasta por catálogo: pdv-catalogo/produtos/{versao}.json.gz e .diff.gz (idem pessoas/), manifesto catalogo.json na raiz. URL de download, controller e front não mudam. Só o PdvCatalogoService muda: arquivo() monta o caminho na pasta da tabela, versoes() e limpar() varrem as pastas.
+
+Transição (go-live): os arquivos do formato antigo são movidos para as pastas, sem regerar nada; versões e diffs continuam valendo e nenhum PDV perde a incremental. Sem mover, /versoes dá 500 até a próxima rodada do job, todo PDV cai na completa e os arquivos velhos ficam na raiz para sempre (a limpeza só olha as pastas). Mover junto com o git pull, fora dos minutos :00/:15/:30/:45 do job, como o usuário 82 (dono dos arquivos do job; pasta criada por root deixa o job sem gravar):
+
+    docker exec -u 82 -w /opt/www/MGspa/api/storage/app/pdv-catalogo mgspa-api sh -c 'for f in produtos-* pessoas-*; do [ -e "$f" ] || continue; mkdir -p "${f%%-*}" && mv "$f" "${f%%-*}/${f#*-}"; done'
+
+Volta atrás (se reverter o código): for d in produtos pessoas; do for f in $d/*; do mv "$f" "$d-${f##*/}"; done; rmdir $d; done (na pasta pdv-catalogo, mesmo usuário). No dev o comando foi rodado às 16:52 de 19/10: 205 arquivos em cada pasta.
+
+Fábio (19/10/2026), critério #21: o job gravava diff em toda rodada, mesmo sem mudança (gzip vazio de 20 bytes; no dev 402 de 408). Ele só existia porque o servidor decidia se a versão do PDV vale para a incremental olhando se o diff dela estava em disco. Agora a rodada só grava o diff da tabela que mudou, e o controle passa a ser uma regra: a versão do PDV é conhecida se não passa da atual, está dentro da retenção (corte = agora - 8 dias) e é desta corrente (>= inicio, a versão em que a corrente de diffs da tabela começou, gravada por tabela no catalogo.json; recomeça na rodada sem json anterior: primeira vez, pasta apagada). Manifesto sem inicio (de antes da mudança) vale só o corte. Rodada sem json anterior também não grava o diff 'tudo +', que nunca seria aplicado. Retenção dos diffs de 30 para 8 dias: 1 dia além dos 7 em que o front aceita a incremental (DIAS_DIFF no PdvCatalogoService e DIAS_INCREMENTAL no sincronizacao.js, fixos no código, um apontando o outro). Front: saiu o filtro de diff vazio (DIFF_VAZIO).
+
+Go-live: na primeira rodada do job depois do git pull, a limpeza apaga os diffs com mais de 8 dias (nenhum PDV os usava: o front força a completa depois de 7). Depois do git pull, e só com o código novo no ar (o antigo depende deles), apagar os diffs vazios antigos como o usuário 82:
+
+    docker exec -u 82 -w /opt/www/MGspa/api/storage/app/pdv-catalogo mgspa-api find produtos pessoas -name '*.diff.gz' -size 20c -delete
+
+Sem rodar nada quebra: os vazios somem sozinhos em 8 dias, e até lá o front novo baixa arquivos de 20 bytes à toa.
+
+Teste (19/10/2026, dev): job pela linha de comando como uid 82 e Chrome headless contra o quasar dev (negocios-dev:9900), dispositivo 511, sem erro de console:
+- rodada sem mudança: nenhum .diff.gz, catalogo.json com inicio null nas duas tabelas (manifesto de antes), diff plantado de 01/10 apagado pela retenção de 8 dias, 2 jsons;
+- /versoes: desde = atual, desde de rodada sem diff e desde de 17/10 -> conhecida; mais de 8 dias e futuro -> não conhecida;
+- perfil limpo: completa ao abrir; rodada sem mudança -> janela com foco na Incremental, que só consulta as versoes ('Nada mudou');
+- preço do produto 1 +0,10 e mais uma rodada sem mudança -> só produtos/ ganha diff; a incremental baixa esse diff só (o OPTIONS que aparece junto é o preflight de CORS), 4 barras alteradas, pessoas nada mudou, preço novo no IndexedDB; preço de volta -> idem;
+- pasta movida (recomeço): manifesto com anterior null e inicio = a versão nova nas duas tabelas, só os jsons, sem o diff 'tudo +'; a versão antiga do PDV não é conhecida e a janela só oferece a Completa, com o foco; depois dela e de uma rodada sem mudança, inicio mantido e a incremental volta;
+- json anterior só de pessoas apagado: só pessoas recomeça (inicio novo), produtos mantém o dele, a janela só oferece a Completa.
+A pasta de verdade do dev foi devolvida no fim; os diffs vazios antigos do dev foram apagados com o comando do go-live.
 <!-- SECTION:NOTES:END -->

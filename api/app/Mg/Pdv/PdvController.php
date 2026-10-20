@@ -21,12 +21,8 @@ use Mg\PagarMe\PagarMePedido;
 use Mg\Titulo\Titulo;
 use Mg\Titulo\TituloResource;
 use App\Rules\InscricaoEstadual;
-use Carbon\Carbon;
-use Mg\Filial\Filial;
 use Mg\Estoque\EstoqueLocal;
-use Mg\Pessoa\Pessoa;
 use Mg\Produto\ProdutoService;
-use Mg\Saurus\S2Pay\ApiService;
 use Mg\Saurus\SaurusPdv;
 use Mg\Saurus\SaurusPedido;
 use Mg\Saurus\SaurusPedidoResource;
@@ -472,27 +468,7 @@ class PdvController
         $pdv = SaurusPdv::where('codsauruspdv', $pedido->codsauruspdv)->firstOrFail();
         $pos = SaurusPinPad::where('codsauruspdv', $pdv->codsauruspdv)->firstOrFail();
 
-        if ($pdv->vencimento < now()) {
-
-            $pessoa = Pessoa::findOrFail(Filial::findOrFail($pdv->codfilial)->codpessoa);
-
-            $autorizacao = ApiService::functionAutorizacao($pdv->id, $pessoa->cnpj);
-
-            SaurusPdv::updateOrCreate(
-                [
-                    'id' => $pdv->id,
-                ],
-                [
-
-                    'autorizacao' => $autorizacao->response->chavePublica,
-                    'vencimento' => Carbon::parse($autorizacao->response->vencimento)->subHour(1)->subMinutes(10),
-                ]
-            );
-
-            $pdv->fresh();
-        }
-
-        $pedidoResponse = ApiService::functionPedidoCriar($pedido, $pdv, $pos);
+        SaurusService::enviarPedido($pedido, $pdv, $pos);
 
         return new SaurusPedidoResource($pedido->fresh());
     }

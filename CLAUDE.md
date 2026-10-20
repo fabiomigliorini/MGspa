@@ -218,3 +218,18 @@ miolo dele e as telas nem percebem. O moment saiu do Negócios e do Pessoas na *
 (18/10/2026), e as cópias de "hoje", "agora", início/fim de mês e dias entre datas dos seis apps
 foram para o `datas.js`: `moment`, `date` do Quasar ou `toISOString().slice(0, 10)` que aparecer
 num diff é regressão.
+
+## PDV — o uuid é a senha do dispositivo e vai só no cabeçalho `X-Pdv`
+
+**O dispositivo se identifica pelo uuid no cabeçalho `X-Pdv`, nunca no endereço nem no corpo.**
+O interceptor do `negocios/src/boot/axios.js` põe o cabeçalho em toda chamada; o que sai fora do
+axios (o `fetch` do catálogo) põe à mão. No backend, a rota que exige o dispositivo leva o
+middleware `pdv`, que exige o dispositivo ativo e entrega o `Pdv` em
+`$request->attributes->get('pdv')`. Quem autoriza ora pelo dispositivo, ora pelo usuário (anexos
+do negócio, página do dispositivo) usa `PdvService::uuid($request)` e `PdvService::autoriza($request)`.
+
+**O uuid não aparece em lugar nenhum:** tela, lista, resposta da API (o model `Pdv` esconde em
+`$hidden`), mensagem da cobrança PIX, nem copiado para dentro de outro registro. Para mostrar o
+dispositivo a uma pessoa, use o código (`formataCodigo(codpdv)`) e o apelido. É assim desde a
+**TASK-197** (19/10/2026): `pdv: sSinc.pdv.uuid` em parâmetro ou corpo, ou o uuid do PDV num
+template, que aparecer num diff é regressão.

@@ -9,18 +9,22 @@ use Illuminate\Support\Facades\DB;
  * Catálogo do PDV (TASK-197): produtos e pessoas em arquivo, uma versão a cada rodada do job
  * pdv:catalogo, para a sincronização incremental do negocios.
  *
- * Por tabela e por versão ficam dois arquivos em storage/app/pdv-catalogo:
+ * Por versão ficam na pasta da tabela, em storage/app/pdv-catalogo:
  *
- *   produtos-20261017-135607.json.gz  todos os registros, um por linha, em ordem de chave
- *   produtos-20261017-135607.diff.gz  diferença contra o json da versão anterior: linha
- *                                     '-{...}' saiu, '+{...}' entrou; alterado vem nas duas
+ *   produtos/20261017-135607.json.gz  todos os registros, um por linha, em ordem de chave
+ *   produtos/20261017-135607.diff.gz  diferença contra o json da versão anterior: linha
+ *                                     '-{...}' saiu, '+{...}' entrou; alterado vem nas duas.
+ *                                     Só existe quando a tabela mudou na rodada
  *
  * A full baixa o json atual; o incremental aplica os diffs depois da versão que o PDV tem. O
  * diff sai de um merge das duas listas ordenadas, linha a linha, sem carregar nada em memória.
- * O manifesto catalogo.json aponta a última versão completa e é gravado por último: versão só
- * existe, para quem lista, quando todos os arquivos dela estão no lugar.
+ * O manifesto catalogo.json, na raiz, aponta a última versão completa e é gravado por último:
+ * versão só existe, para quem lista, quando todos os arquivos dela estão no lugar. Ele guarda
+ * também, por tabela, o inicio: a versão em que a corrente de diffs começou (rodada sem json
+ * anterior). A versão do PDV vale para o incremental se for desta corrente e de dentro da
+ * retenção: todo diff depois dela está em disco (ver versoes()).
  *
- * Retenção: diffs por 30 dias; json só das 2 últimas versões (o atual serve a full, o anterior
+ * Retenção: diffs por 8 dias; json só das 2 últimas versões (o atual serve a full, o anterior
  * calcula o próximo diff).
  */
 class PdvCatalogoService
@@ -28,7 +32,9 @@ class PdvCatalogoService
     const PASTA = 'pdv-catalogo';
     const MANIFESTO = 'catalogo.json';
     const PAGINA = 20000;
-    const DIAS_DIFF = 30;
+    // 1 dia além dos 7 em que o front ainda aceita a incremental (DIAS_INCREMENTAL no
+    // negocios/src/stores/sincronizacao.js): quem mexer num mexe no outro
+    const DIAS_DIFF = 8;
     const JSON_FLAGS = JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES;
 
     // tabela => chave; a chave é o primeiro campo de cada linha do json
@@ -37,9 +43,10 @@ class PdvCatalogoService
         'pessoas' => 'codpessoa',
     ];
 
-    public static function pasta(): string
+    // a raiz (manifesto) ou a pasta de uma tabela (json e diff dela)
+    public static function pasta(?string $tabela = null): string
     {
-        $pasta = storage_path('app/' . static::PASTA);
+        $pasta = storage_path('app/' . static::PASTA . ($tabela ? "/{$tabela}" : ''));
         if (!is_dir($pasta)) {
             mkdir($pasta, 0775, true);
         }
@@ -48,7 +55,7 @@ class PdvCatalogoService
 
     public static function arquivo(string $tabela, string $versao, string $tipo): string
     {
-        return static::pasta() . "/{$tabela}-{$versao}.{$tipo}.gz";
+        return static::pasta($tabela) . "/{$versao}.{$tipo}.gz";
     }
 
     public static function manifesto(): ?array
@@ -60,10 +67,16 @@ class PdvCatalogoService
         return json_decode(file_get_contents($arquivo), true) ?: null;
     }
 
+    // versão mais antiga cujo diff ainda fica em disco
+    private static function corte(): string
+    {
+        return date('Ymd-His', time() - static::DIAS_DIFF * 86400);
+    }
+
     // ------------------------------------------------------------------ listagem (api)
 
     // versão atual (full) e diffs em disco até ela, em ordem crescente, com o tamanho do .gz:
-    // o front escolhe full ou incremental e pula os diffs vazios
+    // o front escolhe full ou incremental
     public static function versoes(string $tabela, ?string $desde = null): array
     {
         $manifesto = static::manifesto();
@@ -71,9 +84,10 @@ class PdvCatalogoService
             abort(404, 'O catálogo ainda não foi gerado no servidor.');
         }
         $atual = $manifesto['versao'];
+        $inicio = $manifesto['tabelas'][$tabela]['inicio'] ?? null;
         $diffs = [];
-        foreach (glob(static::pasta() . "/{$tabela}-*.diff.gz") as $arquivo) {
-            if (!preg_match('/-(\d{8}-\d{6})\.diff\.gz$/', $arquivo, $m)) {
+        foreach (glob(static::pasta($tabela) . '/*.diff.gz') as $arquivo) {
+            if (!preg_match('/^(\d{8}-\d{6})\.diff\.gz$/', basename($arquivo), $m)) {
                 continue;
             }
             $versao = $m[1];
@@ -90,11 +104,15 @@ class PdvCatalogoService
                 'tamanho' => filesize(static::arquivo($tabela, $atual, 'json')),
                 'registros' => $manifesto['tabelas'][$tabela]['registros'] ?? null,
             ],
-            // a versao do PDV ainda existe aqui (e' a atual ou tem o diff dela): o incremental a
-            // partir dela e' valido; se nao, so' full
+            // todo diff depois da versao do PDV esta' aqui: ela e' de dentro da retencao e desta
+            // corrente (nao e' de antes da pasta recomecar). Rodada sem mudanca nao grava diff, por
+            // isso nao basta olhar o arquivo. Sem inicio no manifesto (gerado antes dele existir)
+            // a corrente nunca recomecou e vale so' o corte. Se nao, so' full
             'desde' => $desde === null ? null : [
                 'versao' => $desde,
-                'conhecida' => $desde == $atual || is_file(static::arquivo($tabela, $desde, 'diff')),
+                'conhecida' => $desde <= $atual
+                    && $desde >= static::corte()
+                    && ($inicio === null || $desde >= $inicio),
             ],
             'diffs' => array_values($diffs),
         ];
@@ -106,7 +124,8 @@ class PdvCatalogoService
     {
         $inicio = microtime(true);
         $pasta = static::pasta();
-        $anterior = static::manifesto()['versao'] ?? null;
+        $manifestoAnterior = static::manifesto();
+        $anterior = $manifestoAnterior['versao'] ?? null;
         $versao = date('Ymd-His');
         if ($anterior !== null && $versao <= $anterior) {
             throw new Exception("Versão {$versao} não é maior que a atual {$anterior}: o relógio voltou?");
@@ -118,22 +137,26 @@ class PdvCatalogoService
             // uma foto só do banco para as duas tabelas, apesar das páginas
             DB::statement('set transaction isolation level repeatable read');
             foreach (static::TABELAS as $tabela => $chave) {
-                $tabelas[$tabela] = static::gerarTabela($tabela, $chave, $versao, $anterior);
+                $corrente = $manifestoAnterior['tabelas'][$tabela]['inicio'] ?? null;
+                $tabelas[$tabela] = static::gerarTabela($tabela, $chave, $versao, $anterior, $corrente);
             }
             DB::commit();
         } catch (\Throwable $e) {
             DB::rollBack();
-            foreach (glob("{$pasta}/*-{$versao}.*.gz.tmp") as $tmp) {
+            foreach (glob("{$pasta}/*/{$versao}.*.gz.tmp") as $tmp) {
                 @unlink($tmp);
             }
             throw $e;
         }
 
-        // diff antes do json, manifesto por último: quem lista só vê versão completa
+        // diff antes do json, manifesto por último: quem lista só vê versão completa. Tabela
+        // que não mudou não tem diff
         foreach (['diff', 'json'] as $tipo) {
             foreach (array_keys(static::TABELAS) as $tabela) {
                 $arquivo = static::arquivo($tabela, $versao, $tipo);
-                rename($arquivo . '.tmp', $arquivo);
+                if (is_file($arquivo . '.tmp')) {
+                    rename($arquivo . '.tmp', $arquivo);
+                }
             }
         }
         $manifesto = [
@@ -152,7 +175,8 @@ class PdvCatalogoService
 
     // Escreve o json novo e, no mesmo passo, o diff contra o json anterior: merge de duas
     // listas ordenadas pela chave. A chave sai do começo da linha, sem decodificar o json.
-    private static function gerarTabela(string $tabela, string $chave, string $versao, ?string $anterior): array
+    // inicio é o da corrente de diffs, que recomeça aqui se não há json anterior
+    private static function gerarTabela(string $tabela, string $chave, string $versao, ?string $anterior, ?string $inicio): array
     {
         $json = gzopen(static::arquivo($tabela, $versao, 'json') . '.tmp', 'wb6');
         $diff = gzopen(static::arquivo($tabela, $versao, 'diff') . '.tmp', 'wb6');
@@ -206,7 +230,16 @@ class PdvCatalogoService
         }
         gzclose($json);
         gzclose($diff);
-        return compact('registros', 'alterados', 'excluidos');
+
+        // sem mudança não há o que aplicar; sem json anterior a corrente começa aqui, e o diff
+        // (tudo '+') nunca seria aplicado: PDV com versão de antes do inicio vai para a full
+        if (!$ant) {
+            $inicio = $versao;
+        }
+        if (!$ant || $alterados + $excluidos == 0) {
+            unlink(static::arquivo($tabela, $versao, 'diff') . '.tmp');
+        }
+        return compact('registros', 'alterados', 'excluidos', 'inicio');
     }
 
     private static function pagina(string $tabela, int $depois): array
@@ -223,17 +256,18 @@ class PdvCatalogoService
         return (int) substr($linha, strpos($linha, ':') + 1);
     }
 
-    // diffs por 30 dias; json só da versão nova e da anterior; sobra de rodada que caiu fora
+    // diffs por 8 dias; json só da versão nova e da anterior; sobra de rodada que caiu fora.
+    // Varre a pasta de cada tabela
     private static function limpar(string $pasta, string $versao, ?string $anterior): void
     {
-        $corte = date('Ymd-His', time() - static::DIAS_DIFF * 86400);
-        foreach (glob("{$pasta}/*.gz*") as $arquivo) {
-            if (!preg_match('/^(\w+)-(\d{8}-\d{6})\.(json|diff)\.gz(\.tmp)?$/', basename($arquivo), $m)) {
+        $corte = static::corte();
+        foreach (glob("{$pasta}/*/*.gz*") as $arquivo) {
+            if (!preg_match('/^(\d{8}-\d{6})\.(json|diff)\.gz(\.tmp)?$/', basename($arquivo), $m)) {
                 continue;
             }
-            $v = $m[2];
-            $tipo = $m[3];
-            $tmp = isset($m[4]);
+            $v = $m[1];
+            $tipo = $m[2];
+            $tmp = isset($m[3]);
             $apaga = $tmp
                 || ($tipo == 'json' && $v !== $versao && $v !== $anterior)
                 || ($tipo == 'diff' && $v < $corte);

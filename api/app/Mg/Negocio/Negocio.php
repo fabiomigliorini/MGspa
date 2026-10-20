@@ -34,6 +34,15 @@ class Negocio extends MgModel
     protected $table = 'tblnegocio';
     protected $primaryKey = 'codnegocio';
 
+    // a troca de PDV, usuario, vendedor, filial, local de estoque, natureza ou
+    // pessoa vai para a auditoria, venha de onde vier (TASK-29). updated: o
+    // original ainda e' o de antes do save.
+    protected static function booted()
+    {
+        static::updated(function (Negocio $negocio) {
+            NegocioService::auditarTroca($negocio);
+        });
+    }
 
     protected $fillable = [
         'acertoentrega',

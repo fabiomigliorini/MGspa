@@ -10,13 +10,14 @@ const sSinc = sincronizacaoStore()
 // ao abrir o sistema com a sincronizacao velha, a janela abre e ja sincroniza (TASK-197)
 onMounted(() => sSinc.sincronizarAoAbrir())
 
-// a cada vez que a janela abre ve se a incremental esta' disponivel e foca nela; se nao, so' a
-// completa fica habilitada, com o foco. Rodando (a que abre sozinha), os dois estao desabilitados
+// a cada vez que a janela abre busca a localizacao e ve se a incremental esta' disponivel; com
+// as duas, foca na incremental; sem ela, so' a completa fica habilitada, com o foco. Sem a
+// localizacao nenhum dos dois habilita. Rodando (a que abre sozinha), os dois estao desabilitados
 const btnIncremental = ref(null)
 const btnCompleta = ref(null)
-const aoMostrar = async () => {
+const aoAbrir = async () => {
   if (!sSinc.importacao.rodando) {
-    await sSinc.verificarIncremental()
+    await Promise.all([sSinc.verificarIncremental(), sSinc.localizarDispositivo().catch(() => {})])
   }
   await nextTick()
   const botao = sSinc.importacao.incremental ? btnIncremental : btnCompleta
@@ -49,19 +50,23 @@ const textoEtapa = (etapa) => {
   return '\u00a0'
 }
 
-// a localizacao e' obrigatoria e vem antes das etapas: linha propria, no mesmo formato
+// a localizacao e' obrigatoria, mas nao e' etapa: so' o texto, na linha abaixo da ultima
+// sincronizacao
 const loc = computed(() => sSinc.importacao.localizacao)
+const semLocalizacao = computed(() => loc.value.latitude === null)
 const textoLocalizacao = computed(() => {
   if (loc.value.buscando) {
-    return 'Buscando a localização do dispositivo...'
+    return 'Buscando a localização...'
   }
   if (loc.value.erro) {
-    return 'Sem localização'
+    return `Sem localização: ${loc.value.erro}`
   }
-  if (loc.value.precisao !== null) {
-    return `± ${formataNumero(loc.value.precisao, 0)} m`
+  if (!semLocalizacao.value) {
+    const { latitude, longitude, precisao } = loc.value
+    return `Localização disponível: ${latitude}, ${longitude} (± ${formataNumero(precisao, 0)} m)`
   }
-  return ' '
+  // espaco em branco: a linha existe mesmo vazia, para a janela nao mudar de tamanho
+  return '\u00a0'
 })
 
 // sem contagem (prancheta, vales, antes da versao chegar) a barra fica indeterminada enquanto roda
@@ -74,15 +79,16 @@ const progressoEtapa = (etapa) => {
 </script>
 
 <template>
-  <!-- fechar por qualquer caminho (Cancelar, ESC, clique fora) para a sincronizacao: ela nao
-  pode seguir rodando escondida -->
+  <!-- persistent: ESC e clique fora nao fecham, para ninguem perder a completa sem querer; so' o
+  Cancelar fecha, e fechar para a sincronizacao: ela nao pode seguir rodando escondida -->
   <q-dialog
     v-model="sSinc.importacao.dialog"
-    @show="aoMostrar()"
+    persistent
+    @before-show="aoAbrir()"
     @hide="sSinc.abortarSincronizacao()"
   >
     <q-card flat style="width: 400px; max-width: 95vw">
-      <q-card-section class="q-pb-none">
+      <q-card-section class="q-pb-sm">
         <div class="text-h6">Sincronizar</div>
         <div class="text-caption text-grey-7">
           <template v-if="sSinc.ultimaSincronizacao.completa">
@@ -94,33 +100,13 @@ const progressoEtapa = (etapa) => {
             · {{ sSinc.importacao.tempoTotal }} s</template
           >
         </div>
+        <div class="text-caption" :class="loc.erro ? 'text-red-5' : 'text-grey-7'">
+          {{ textoLocalizacao }}
+        </div>
       </q-card-section>
 
       <!-- as etapas rodam em paralelo: cada uma tem a sua linha, seu estado, sua barra e seu toggle -->
       <q-list>
-        <!-- obrigatoria: o toggle fica sempre ligado -->
-        <q-item>
-          <q-item-section avatar>
-            <q-spinner v-if="loc.buscando" color="primary" size="24px" />
-            <q-icon v-else-if="loc.erro" name="error" color="red-5" />
-            <q-icon v-else-if="loc.precisao !== null" name="check_circle" color="green-5" />
-            <q-icon v-else name="radio_button_unchecked" color="grey-5" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label>Localização</q-item-label>
-            <q-item-label caption lines="1">{{ textoLocalizacao }}</q-item-label>
-            <q-linear-progress
-              :value="loc.precisao !== null ? 1 : 0"
-              :indeterminate="loc.buscando"
-              :color="loc.erro ? 'red-5' : 'primary'"
-              rounded
-              class="q-mt-xs"
-            />
-          </q-item-section>
-          <q-item-section side>
-            <q-toggle :model-value="true" disable tabindex="-1" />
-          </q-item-section>
-        </q-item>
         <q-item v-for="(etapa, chave) in sSinc.importacao.etapas" :key="chave">
           <q-item-section avatar>
             <q-spinner v-if="etapa.rodando" color="primary" size="24px" />
@@ -157,14 +143,19 @@ const progressoEtapa = (etapa) => {
           @click="sSinc.abortarSincronizacao()"
           tabindex="-1"
         />
-        <!-- pessoas e produtos pelo arquivo inteiro, mesmo se a incremental estiver disponivel -->
+        <!-- pessoas e produtos pelo arquivo inteiro, mesmo se a incremental estiver disponivel. Com
+        a incremental disponivel fica fora do Tab: o clique fora (persistent) faz o Quasar focar o
+        primeiro botao do Tab, que entao e' a incremental -->
         <q-btn
           ref="btnCompleta"
           flat
           label="Completa"
           color="primary"
           @click="sSinc.sincronizar(true)"
-          :disable="sSinc.importacao.rodando || sSinc.importacao.incremental === null"
+          :disable="
+            sSinc.importacao.rodando || sSinc.importacao.incremental === null || semLocalizacao
+          "
+          :tabindex="sSinc.importacao.incremental ? -1 : 0"
         />
         <q-btn
           ref="btnIncremental"
@@ -172,7 +163,7 @@ const progressoEtapa = (etapa) => {
           label="Incremental"
           color="primary"
           @click="sSinc.sincronizar()"
-          :disable="sSinc.importacao.rodando || !sSinc.importacao.incremental"
+          :disable="sSinc.importacao.rodando || !sSinc.importacao.incremental || semLocalizacao"
         />
       </q-card-actions>
     </q-card>
