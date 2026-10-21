@@ -654,14 +654,17 @@ o dinheiro saía do Central.
    "Redeflex / Bilhete Agora / Black Ticket"; Ajuste "Lançar movimento manual" (banco: "Taxa, tarifa, rendimento ou movimento
    manual").
 2. **Um lado é sempre o portador da tela**: sai de outro → entra neste (pula o passo 2); sai deste
-   → pergunta **para onde vai**. O cabeçalho diz o passo, em vermelho: **SAINDO DE** na primeira
-   lista, **RECEBENDO EM** na segunda; no último passo, TRANSFERÊNCIA. Antes de lançar, "Sai de …
+   → pergunta **para onde vai**. O título do cabeçalho diz o passo: **SAINDO DE** na primeira
+   lista, **RECEBENDO EM** na segunda; no último passo, TRANSFERÊNCIA. Embaixo do filtro, ainda no
+   cabeçalho, a pergunta em vermelho ("De onde **SAI** o dinheiro?", "Para onde **VAI** o dinheiro?", o
+   verbo em maiúsculo e negrito). Antes de lançar, "Sai de …
    / Entra em …" com os dois nomes.
 3. **Lista**: este portador no topo ("Este caixa"), depois "Desta filial" e um grupo por filial
    e os sem filial no fim (espécie antes de banco). Os mesmos papéis de antes: origem operador,
    destino depositante.
 4. **Filtro só no desktop, no cabeçalho do dialog** (embaixo do título, fixo: só a lista rola); no
-   celular e no PDV, a lista sem campo, para não abrir o teclado.
+   celular e no PDV, a lista sem campo, para não abrir o teclado. A janela tem altura fixa (80vh)
+   em todos os passos.
 5. O texto da lista de lançamentos continua chamando pelo lado da gaveta ("Sangria ← Caixa 01
    Centro" na tela do Central).
 

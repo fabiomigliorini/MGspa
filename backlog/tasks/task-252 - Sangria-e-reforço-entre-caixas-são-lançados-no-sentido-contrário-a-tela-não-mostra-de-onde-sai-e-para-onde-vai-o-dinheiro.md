@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-21 22:06'
-updated_date: '2026-10-21 23:11'
+updated_date: '2026-10-21 23:59'
 labels:
   - contas
 dependencies: []
@@ -50,4 +50,6 @@ Roteiro de teste:
 Ajustes da validação com o Fábio (21/10): no Lançar, Transferência virou uma opção só e cada opção ganhou um caption (Transferência: Sangria / Reforço; Entrada de item: Novos chips / Ingressos físicos; Saída de item: Recolher chips / Ingressos físicos; Maquinetas de Parceiros, que era Vendas de Parceiro: Redeflex / Bilhete Agora / Black Ticket; Ajuste: Lançar movimento manual). No dialog, o filtro fica no cabeçalho fixo (só a lista rola) e o cabeçalho diz o passo em vermelho: SAINDO DE, RECEBENDO EM; no último passo, TRANSFERÊNCIA.
 
 Testes: prettier; compilação dos SFCs pelo compiler-sfc e pelo Vite dos servidores de dev do contas e do negocios, sem erro. Na revisão, corrigidos o filtro que voltava preenchido ao reabrir o dialog e os portadores sem filial que vinham antes das outras filiais (agora no fim). Backend sem mudança: as duas combinações que o dialog manda (sai deste para outro; sai de outro para este, com o período da tela no destino) são as mesmas da Sangria e do Reforço de antes.
+
+Segunda rodada de ajustes (21/10): o título do cabeçalho na cor normal (SAINDO DE, RECEBENDO EM; no último passo, TRANSFERÊNCIA) e, embaixo do filtro e antes da linha, a pergunta em vermelho com o verbo em maiúsculo e negrito (De onde SAI o dinheiro?, Para onde VAI o dinheiro?). Janela com altura fixa de 80vh em todos os passos; no passo do valor, o conteúdo fica centralizado na altura (com q-space: em tela pequena o meio rola em vez de cortar). Testes: prettier; compilação pelo compiler-sfc e pelo Vite do contas, sem erro.
 <!-- SECTION:NOTES:END -->

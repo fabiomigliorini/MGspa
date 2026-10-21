@@ -8,8 +8,8 @@
 // Wizard: 1) de onde sai o dinheiro (este portador no topo); 2) para onde vai, só quando sai deste
 // (sai de outro: entra neste, um lado é sempre o da tela); 3) data, valor (foco nele) e
 // observação, com o "sai de / entra em" em cima. Nas listas, os desta filial primeiro e depois um
-// grupo por filial; setas e Enter. O cabeçalho diz o passo (Saindo de, Recebendo em, em
-// vermelho) e, no desktop, tem o filtro; só a lista rola.
+// grupo por filial; setas e Enter. O cabeçalho tem o título do passo (Saindo de, Recebendo em),
+// o filtro (só no desktop) e a pergunta em vermelho; só a lista rola.
 import { ref, computed, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import MgInput from '@components/MgInput.vue'
@@ -187,18 +187,16 @@ async function salvar() {
       ref="cardRef"
       flat
       tabindex="0"
-      class="no-outline"
-      style="width: 400px; max-width: 95vw"
+      class="no-outline column no-wrap"
+      style="width: 400px; max-width: 95vw; height: 80vh"
       @keydown="tecla"
     >
-      <q-form @submit.prevent="avancar">
-        <!-- CABEÇALHO: o título (nas listas, o que se escolhe, em vermelho) e, nas listas do
-             desktop, o filtro (não rola com a lista) -->
+      <!-- altura fixa (80vh) em todos os passos: a lista ou o formulário ocupam o meio -->
+      <q-form class="col column no-wrap" @submit.prevent="avancar">
+        <!-- CABEÇALHO: o título do passo, o filtro (só no desktop) e a pergunta em vermelho; não
+             rola com a lista -->
         <q-card-section>
-          <div
-            class="text-overline text-uppercase"
-            :class="passo < 3 ? 'text-red-5' : 'text-grey-9'"
-          >
+          <div class="text-grey-9 text-overline text-uppercase">
             {{ ['Saindo de', 'Recebendo em', 'Transferência'][passo - 1] }}
           </div>
           <MgInput
@@ -213,78 +211,90 @@ async function salvar() {
               <q-icon name="search" />
             </template>
           </MgInput>
+          <div v-if="passo === 1" class="text-subtitle1 text-red-5 q-mt-sm">
+            De onde <span class="text-weight-bold">SAI</span> o dinheiro?
+          </div>
+          <div v-else-if="passo === 2" class="text-subtitle1 text-red-5 q-mt-sm">
+            Para onde <span class="text-weight-bold">VAI</span> o dinheiro?
+          </div>
         </q-card-section>
         <q-separator inset />
 
-        <!-- O QUE JÁ SE ESCOLHEU: SAI DE / ENTRA EM -->
-        <q-card-section v-if="passo > 1" class="q-pb-none">
-          <q-item class="q-px-none">
-            <q-item-section avatar>
-              <q-icon name="outbox" color="red-5" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label caption>Sai de</q-item-label>
-              <q-item-label class="text-subtitle1">
-                {{ nome(form.codportadororigem) }}
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-          <q-item v-if="passo === 3" class="q-px-none">
-            <q-item-section avatar>
-              <q-icon name="move_to_inbox" color="green-6" />
-            </q-item-section>
-            <q-item-section>
-              <q-item-label caption>Entra em</q-item-label>
-              <q-item-label class="text-subtitle1">
-                {{ nome(form.codportadordestino) }}
-              </q-item-label>
-            </q-item-section>
-          </q-item>
-        </q-card-section>
+        <!-- O MEIO: a lista rola; no passo 3, o conteúdo fica no centro da altura (os q-space
+             crescem quando sobra espaço e somem quando falta, e aí o meio rola) -->
+        <div class="col column no-wrap scroll">
+          <q-space v-if="passo === 3" />
+          <!-- O QUE JÁ SE ESCOLHEU: SAI DE / ENTRA EM -->
+          <q-card-section v-if="passo > 1" class="q-pb-none">
+            <q-item class="q-px-none">
+              <q-item-section avatar>
+                <q-icon name="outbox" color="red-5" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption>Sai de</q-item-label>
+                <q-item-label class="text-subtitle1">
+                  {{ nome(form.codportadororigem) }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="passo === 3" class="q-px-none">
+              <q-item-section avatar>
+                <q-icon name="move_to_inbox" color="green-6" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption>Entra em</q-item-label>
+                <q-item-label class="text-subtitle1">
+                  {{ nome(form.codportadordestino) }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-card-section>
 
-        <!-- PASSOS 1 E 2: DE ONDE SAI, PARA ONDE VAI (só a lista rola) -->
-        <q-card-section v-if="passo < 3" class="scroll" style="max-height: 50vh">
-          <ListaOpcoes
-            v-if="opcoesFiltradas.length"
-            :key="passo"
-            ref="listaRef"
-            :opcoes="opcoesFiltradas"
-            @escolher="escolher"
-          />
-          <div v-else-if="opcoesPasso.length" class="text-grey-6 text-italic q-pa-sm">
-            Nada encontrado
-          </div>
-          <div v-else class="text-caption text-grey-7">
-            Nenhum portador em que você possa depositar.
-          </div>
-        </q-card-section>
+          <!-- PASSOS 1 E 2: DE ONDE SAI, PARA ONDE VAI (só a lista rola) -->
+          <q-card-section v-if="passo < 3" class="col scroll">
+            <ListaOpcoes
+              v-if="opcoesFiltradas.length"
+              :key="passo"
+              ref="listaRef"
+              :opcoes="opcoesFiltradas"
+              @escolher="escolher"
+            />
+            <div v-else-if="opcoesPasso.length" class="text-grey-6 text-italic q-pa-sm">
+              Nada encontrado
+            </div>
+            <div v-else class="text-caption text-grey-7">
+              Nenhum portador em que você possa depositar.
+            </div>
+          </q-card-section>
 
-        <!-- PASSO 3: DATA, VALOR E OBSERVAÇÃO -->
-        <q-card-section v-else>
-          <div class="row q-col-gutter-md">
-            <div class="col-12">
-              <MgInputData
-                v-model="form.transacao"
-                type="timestamp"
-                label="Data"
-                :rules="[(v) => !!v, naSessao]"
-              />
+          <!-- PASSO 3: DATA, VALOR E OBSERVAÇÃO -->
+          <q-card-section v-else>
+            <div class="row q-col-gutter-md">
+              <div class="col-12">
+                <MgInputData
+                  v-model="form.transacao"
+                  type="timestamp"
+                  label="Data"
+                  :rules="[(v) => !!v, naSessao]"
+                />
+              </div>
+              <div class="col-12">
+                <MgInputValor
+                  v-model="form.valor"
+                  label="Valor"
+                  prefix="R$"
+                  autofocus
+                  :rules="[(v) => v > 0 || 'Informe o valor']"
+                  lazy-rules
+                />
+              </div>
+              <div class="col-12">
+                <MgInput v-model="form.observacoes" label="Observação" maxlength="300" />
+              </div>
             </div>
-            <div class="col-12">
-              <MgInputValor
-                v-model="form.valor"
-                label="Valor"
-                prefix="R$"
-                autofocus
-                :rules="[(v) => v > 0 || 'Informe o valor']"
-                lazy-rules
-              />
-            </div>
-            <div class="col-12">
-              <MgInput v-model="form.observacoes" label="Observação" maxlength="300" />
-            </div>
-          </div>
-        </q-card-section>
+          </q-card-section>
+          <q-space v-if="passo === 3" />
+        </div>
 
         <q-separator inset />
         <q-card-actions align="right">
