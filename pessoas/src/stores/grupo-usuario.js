@@ -10,6 +10,8 @@ export const grupoUsuarioStore = defineStore('grupo-usuario', {
       page: 1,
       inativo: 1,
     },
+    dialogGrupoUsuario: false,
+    formGrupoUsuario: {},
   }),
 
   actions: {
@@ -38,10 +40,38 @@ export const grupoUsuarioStore = defineStore('grupo-usuario', {
     //   return ret;
     // },
 
-    async alterarGrupo(model) {
-      const ret = await api.put('v1/grupo-usuario/' + model.codgrupousuario + '/alterar', model)
+    // O grupo alterado volta pra listagem também, senão ela fica com o nome/status velho
+    atualizarNaLista(grupo) {
+      const index = this.grupoUsuarios.findIndex((g) => g.codgrupousuario === grupo.codgrupousuario)
+      if (index !== -1) {
+        this.grupoUsuarios[index] = grupo
+      }
+    },
 
+    novoGrupo() {
+      this.formGrupoUsuario = { grupousuario: null, observacoes: null }
+      this.dialogGrupoUsuario = true
+    },
+
+    editarGrupo() {
+      this.formGrupoUsuario = {
+        codgrupousuario: this.detalheGrupoUsuarios.codgrupousuario,
+        grupousuario: this.detalheGrupoUsuarios.grupousuario,
+        observacoes: this.detalheGrupoUsuarios.observacoes,
+      }
+      this.dialogGrupoUsuario = true
+    },
+
+    async salvarGrupo() {
+      const model = this.formGrupoUsuario
+      if (!model.codgrupousuario) {
+        const ret = await api.post('v1/grupo-usuario', model)
+        this.grupoUsuarios.unshift(ret.data.data)
+        return ret
+      }
+      const ret = await api.put('v1/grupo-usuario/' + model.codgrupousuario + '/alterar', model)
       this.detalheGrupoUsuarios = ret.data.data
+      this.atualizarNaLista(ret.data.data)
       return ret
     },
 
@@ -50,21 +80,23 @@ export const grupoUsuarioStore = defineStore('grupo-usuario', {
       return ret
     },
 
-    async excluir(codusuario) {
-      const ret = await api.delete('v1/grupo-usuario/' + codusuario)
+    async excluir(codgrupousuario) {
+      const ret = await api.delete('v1/grupo-usuario/' + codgrupousuario)
+      this.grupoUsuarios = this.grupoUsuarios.filter((g) => g.codgrupousuario !== codgrupousuario)
       return ret
     },
 
     async ativar(codusuario) {
       const ret = await api.delete('v1/grupo-usuario/' + codusuario + '/inativo')
-
       this.detalheGrupoUsuarios = ret.data.data
+      this.atualizarNaLista(ret.data.data)
       return ret
     },
 
     async inativar(codusuario) {
       const ret = await api.post('v1/grupo-usuario/' + codusuario + '/inativo')
       this.detalheGrupoUsuarios = ret.data.data
+      this.atualizarNaLista(ret.data.data)
       return ret
     },
   },

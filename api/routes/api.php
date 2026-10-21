@@ -587,7 +587,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     Route::get('grupo-usuario/todos', [\Mg\Usuario\GrupoUsuarioController::class, 'index']);
     Route::get('grupo-usuario/{id}/autor', [\Mg\Usuario\GrupoUsuarioController::class, 'autor']);
-    Route::get('grupo-usuario/{id}', [\Mg\Usuario\GrupoUsuarioController::class, 'detalhes']);
     Route::delete('grupo-usuario/{id}/inativo', [\Mg\Usuario\GrupoUsuarioController::class, 'ativar'])->name('grupo-usuario.ativar');
     Route::post('grupo-usuario/{id}/inativo', [\Mg\Usuario\GrupoUsuarioController::class, 'inativar'])->name('grupo-usuario.inativar');
     Route::apiResource('grupo-usuario', \Mg\Usuario\GrupoUsuarioController::class)->parameters(['grupo-usuario' => 'id']);
