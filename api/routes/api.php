@@ -1359,8 +1359,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('portador-movimento/transferencia', '\Mg\Portador\PortadorLancamentoController@transferir');
     Route::post('portador-movimento/{id}/confirmar', '\Mg\Portador\PortadorLancamentoController@confirmar')->whereNumber('id');
     Route::post('portador-movimento/{id}/cancelar', '\Mg\Portador\PortadorLancamentoController@cancelar')->whereNumber('id');
-    // alterar a data da linha do extrato (TASK-204)
-    Route::post('portador-movimento/{id}/data', '\Mg\Portador\PortadorLancamentoController@data')->whereNumber('id');
+    // editar a linha do extrato: o comentario (TASK-248) e a data (TASK-204)
+    Route::put('portador-movimento/{id}', '\Mg\Portador\PortadorLancamentoController@editar')->whereNumber('id');
     // itens do caixa (doc-4, "Itens do caixa")
     Route::get('caixa-item', '\Mg\Caixa\CaixaItemController@index');
     Route::get('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@show')->whereNumber('id');

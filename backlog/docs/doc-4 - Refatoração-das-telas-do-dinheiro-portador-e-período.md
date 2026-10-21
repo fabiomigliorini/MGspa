@@ -363,7 +363,9 @@ Cada portador (qualquer tipo) tem uma **lista de usuários com papel** (`tblport
   detalhe por cédula). O borderô sai pela impressora do cabeçalho em qualquer situação, também
   no aberto (no PDV, a impressora dele manda para a térmica).
 - **Lançamentos**: linha do tempo por dia; pagamento abre o pagamento; transferência leva ao outro
-  portador; confirmar e cancelar na linha. Lançar é o **FAB "+"** no canto da tela, que abre a
+  portador; confirmar, editar e cancelar na linha. O Editar (lápis) muda a data, com
+  justificativa, e a observação do movimento, sem justificativa (TASK-204, TASK-248; no pagamento,
+  só a data). Lançar é o **FAB "+"** no canto da tela, que abre a
   lista do que fazer (seção "Lançar no período"); o cabeçalho dos lançamentos não tem mais botões.
 - **Cadastro do portador em espécie**: só portador, tipo, filial e tolerância (sem banco, conta,
   Pix, boleto).

@@ -3,7 +3,9 @@
 // vai para o período daquela data (fechado ou conferido recusa). Justificativa obrigatória; o
 // antes/depois fica gravado. Mudar de mês avisa, sem bloquear: pode mexer na DIMP e em relatório
 // já tirado. O mesmo dialog no extrato do portador (caixa, banco; contas e PDV) e no período da
-// maquineta; quem usa faz a chamada no `salvar`.
+// maquineta; quem usa faz a chamada no `salvar`. Com `com-observacoes` (o movimento do extrato) é o
+// Editar da linha (TASK-248): a observação também, e a justificativa só vale se a data mudar. O
+// `salvar` leva só o que mudou.
 import { ref, computed, watch } from 'vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -15,32 +17,53 @@ const props = defineProps({
   data: { type: String, default: null },
   // o que muda: "a data", "a data do cancelamento"
   rotulo: { type: String, default: 'a data' },
+  // editar também a observação (a atual em `observacoes`)
+  comObservacoes: { type: Boolean, default: false },
+  observacoes: { type: String, default: null },
   salvando: { type: Boolean, default: false },
 })
 const emit = defineEmits(['salvar'])
 
-const form = ref({ transacao: null, justificativa: '' })
+const form = ref({ transacao: null, justificativa: '', observacoes: '' })
+const refJustificativa = ref(null)
 
 watch(model, (aberto) => {
-  if (aberto) form.value = { transacao: formataTimestampIso(props.data), justificativa: '' }
+  if (aberto) {
+    form.value = {
+      transacao: formataTimestampIso(props.data),
+      justificativa: '',
+      observacoes: props.observacoes ?? '',
+    }
+  }
 })
 
 const mes = (d) => (d ? formataTimestampIso(d).slice(0, 7) : null)
 const trocaMes = computed(
   () => !!form.value.transacao && !!props.data && mes(form.value.transacao) !== mes(props.data),
 )
-const mudou = computed(
+const mudouData = computed(
   () =>
     !!form.value.transacao &&
     formataTimestampIso(form.value.transacao).slice(0, 16) !==
       formataTimestampIso(props.data).slice(0, 16),
 )
+const mudouObservacoes = computed(
+  () => props.comObservacoes && form.value.observacoes.trim() !== (props.observacoes ?? '').trim(),
+)
+
+// a data voltou a ser a atual: a justificativa desabilita sem o erro de antes
+watch(mudouData, (mudou) => {
+  if (!mudou) refJustificativa.value?.resetValidation()
+})
 
 function salvar() {
-  emit('salvar', {
-    transacao: formataTimestampIso(form.value.transacao),
-    justificativa: form.value.justificativa.trim(),
-  })
+  const dados = {}
+  if (mudouData.value) {
+    dados.transacao = formataTimestampIso(form.value.transacao)
+    dados.justificativa = form.value.justificativa.trim()
+  }
+  if (mudouObservacoes.value) dados.observacoes = form.value.observacoes.trim()
+  emit('salvar', dados)
 }
 </script>
 
@@ -49,7 +72,7 @@ function salvar() {
     <q-card flat style="width: 400px; max-width: 90vw">
       <q-form @submit.prevent="salvar">
         <q-card-section class="text-grey-9 text-overline text-uppercase">
-          Alterar {{ rotulo }}
+          {{ comObservacoes ? 'Editar lançamento' : `Alterar ${rotulo}` }}
         </q-card-section>
         <q-separator inset />
         <q-card-section class="text-caption text-grey-7 q-pb-none">
@@ -72,14 +95,22 @@ function salvar() {
               <q-icon name="warning" size="xs" class="q-mr-xs" />
               Muda de mês: pode afetar a DIMP e relatórios já apurados.
             </div>
+            <div v-if="comObservacoes" class="col-12">
+              <MgInput v-model="form.observacoes" label="Observação" maxlength="300" />
+            </div>
             <div class="col-12">
               <MgInput
+                ref="refJustificativa"
                 v-model="form.justificativa"
                 label="Justificativa"
                 type="textarea"
                 autogrow
                 maxlength="300"
-                :rules="[(v) => (v || '').trim().length >= 5 || 'Diga o motivo (mínimo 5 letras)']"
+                :disable="!mudouData"
+                :rules="[
+                  (v) =>
+                    !mudouData || (v || '').trim().length >= 5 || 'Diga o motivo (mínimo 5 letras)',
+                ]"
                 lazy-rules
               />
             </div>
@@ -93,7 +124,7 @@ function salvar() {
             label="Alterar"
             color="primary"
             type="submit"
-            :disable="!mudou"
+            :disable="!mudouData && !mudouObservacoes"
             :loading="salvando"
           />
         </q-card-actions>

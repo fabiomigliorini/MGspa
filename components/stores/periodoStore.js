@@ -228,17 +228,17 @@ export const periodoStore = defineStore('periodo', {
       )
     },
 
-    // alterar a data da linha (TASK-204): a linha vai para o período da data (o pagamento inteiro,
-    // a transferência nas duas pontas); some da tela se saiu do período dela
-    alterarData(codportadormovimento, { transacao, justificativa }) {
+    // editar a linha: o comentário (TASK-248) e a data (TASK-204), só o que mudou vem em `dados`.
+    // A data leva a linha para o período dela (o pagamento inteiro, a transferência nas duas
+    // pontas), e ela some da tela se saiu do período; o comentário, a transferência nas duas pontas
+    editar(codportadormovimento, dados) {
       return this.executar(
         () =>
-          api.post(`v1/portador-movimento/${codportadormovimento}/data`, {
-            transacao,
-            justificativa,
+          api.put(`v1/portador-movimento/${codportadormovimento}`, {
+            ...dados,
             codpdv: this.contexto.codpdv,
           }),
-        'Data alterada',
+        'Lançamento alterado',
       )
     },
 
