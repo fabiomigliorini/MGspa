@@ -117,12 +117,21 @@ const focar = (indice) => {
   nextTick(() => cardRefs.value[focado.value]?.scrollIntoView({ block: 'nearest' }))
 }
 
-// Zoom de 15% no card em destaque. Quasar nao tem classe de escala, entao
-// vai inline. O z-index sobe para o card crescer por cima dos vizinhos.
+// Destaque do card: fundo azul, borda e sombra (classes no template), zoom de
+// 3% no card e de 15% na foto, dentro do próprio quadro. O zoom do card é
+// pequeno de propósito: a sobra (uns 6px) cabe no espaço entre os cards e na
+// margem da grade, e não passa por baixo do cabeçalho da pesquisa -- com 15%,
+// passava. Quasar não tem classe de escala, então vai inline; o z-index sobe
+// para o card crescer por cima dos vizinhos.
 const estiloCard = (i) =>
   i === focado.value
-    ? 'transition: transform .15s; transform: scale(1.15); position: relative; z-index: 1'
+    ? 'transition: transform .15s; transform: scale(1.03); position: relative; z-index: 1'
     : 'transition: transform .15s'
+
+const estiloImagem = (i) =>
+  i === focado.value
+    ? { transition: 'transform .15s', transform: 'scale(1.15)' }
+    : { transition: 'transform .15s' }
 
 // Mouse e teclado mexem no MESMO destaque. Aqui não se usa focar(), porque
 // ele rola o card para dentro da tela -- sob o ponteiro isso seria um
@@ -360,23 +369,26 @@ defineExpose({ teclar, soltar, aberto: dialogProduto })
       :offset="250"
       @load="(indice, done) => emit('carregar', done)"
     >
+      <!-- scroll-margin: as setas rolam o card para dentro da tela e ele
+           pararia colado na borda, com o zoom cortado; a margem deixa folga -->
       <div class="row q-pa-md q-col-gutter-md">
         <div
           v-for="(produto, i) in produtos"
           :key="produto.chave"
           :ref="(el) => setCardRef(el, i)"
           class="col-xs-6 col-sm-3 col-md-3 col-lg-2 col-xl-2"
+          style="scroll-margin: 16px"
         >
           <q-card
             v-ripple
             class="cursor-pointer full-height"
-            :class="i === focado ? 'bg-blue-1' : ''"
+            :class="i === focado ? 'bg-blue-1 shadow-8' : ''"
             :style="estiloCard(i)"
             :bordered="i === focado"
             @mousemove="aoMoverMouse($event, i)"
             @click="abrirProduto(produto)"
           >
-            <q-img ratio="1" :src="imagem(produto.barra)" />
+            <q-img ratio="1" :src="imagem(produto.barra)" :img-style="estiloImagem(i)" />
 
             <q-card-section v-if="unica(produto)">
               <div class="absolute" style="top: 0; right: 5px; transform: translateY(-37px)">

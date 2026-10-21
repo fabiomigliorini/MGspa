@@ -1,11 +1,12 @@
 ---
 id: TASK-208
 title: >-
-  Prancheta não deixa enviar a foto da categoria, só digitar o endereço da
-  imagem
+  Montar a Prancheta exige digitar o endereço da foto da categoria e o código de
+  barras de cada produto
 status: To Do
 assignee: []
 created_date: '2026-10-10 19:42'
+updated_date: '2026-10-21 18:26'
 labels:
   - negocios
 dependencies: []
@@ -35,6 +36,7 @@ A sincronização vem de PdvPranchetaService::getPrancheta (cat.* inteiro) e vai
 - [ ] #2 A imagem enviada fica salva no backend e a categoria guarda a referência a ela
 - [ ] #3 Na sincronização da prancheta o PDV baixa e guarda as imagens das categorias, e o drawer da prancheta mostra as imagens offline
 - [ ] #4 As 99 categorias que já têm imagem continuam aparecendo (as de /categorias, as da api-mgspa e as de sites externos)
+- [ ] #5 Na manutenção da Prancheta (/prancheta), o produto se acrescenta pelo campo de bipar com a pesquisa F1 (MgInputProdutoBarras, o mesmo do modelo de vale-compras), achando pelo nome e pela foto, e não só digitando o código de barras
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -46,4 +48,6 @@ A decidir antes de implementar:
 - O que fazer com as 99 existentes: subir para o backend (migração), ou só manter o caminho antigo funcionando.
 
 Relação: TASK-64 centraliza a montagem da URL de imagem num service do Mg\Imagem. Se ela sair antes, a URL da imagem da categoria passa por esse service.
+
+Critério da pesquisa F1 veio da conversa da TASK-173 (Fábio, 21/10/2026): hoje o Acrescentar produto abre uma caixa que só aceita o código de barras (negocios/src/pages/PranchetaPage.vue:290, sProduto.buscarBarras).
 <!-- SECTION:NOTES:END -->

@@ -10,9 +10,9 @@ class SelectProdutoBarraController extends Controller
 {
     public static function index(Request $request)
     {
+        $busca = $request->busca ?? '';
         $page = (int) $request->page > 0 ? (int) $request->page : 1;
         $offset = ($page - 1) * 20;
-        [$where, $filtro, $ordem, $pedida] = static::filtro($request);
 
         $sql = "SELECT
                     strict_word_similarity(unaccent(:frase), unaccent(descricao || ' ' || barras)) AS score,
@@ -29,107 +29,14 @@ class SelectProdutoBarraController extends Controller
                     codprodutobarra as value,
                     descricao as label
                   FROM vwProdutoBarra
-                 {$where}";
-
-        if ($pedida === null) {
-            $sql .= " ORDER BY $ordem LIMIT 20 OFFSET $offset";
-            return DB::select($sql, $filtro);
-        }
-
-        // Com ordem escolhida, a relevancia continua sendo o filtro: ordena
-        // os 200 mais relevantes, nao a base inteira. O corte de
-        // similaridade e frouxo de proposito (0.4) -- buscar "caneca" casa
-        // com 4.256 produtos, incluindo "Ca-60" e "Cabeca". Em ordem
-        // alfabetica pura, o topo viraria "# Imobilizado Diversos". O teto
-        // de 200 e o mesmo que a pesquisa do PDV usa.
-        $sql = "SELECT * FROM ( {$sql} ORDER BY {$ordem} LIMIT 200 ) relevantes
-                 ORDER BY {$pedida} LIMIT 20 OFFSET {$offset}";
-        return DB::select($sql, $filtro);
-    }
-
-    /**
-     * Pesquisa em grade (MgDialogPesquisaProduto), que agrupa por produto
-     * (TASK-173): a pagina e de 20 PRODUTOS, e cada um vem com todas as
-     * barras dele que casaram com a busca -- nem mais (pesquisou "verde",
-     * a azul nao vem), nem menos (o produto nunca fica partido entre duas
-     * paginas). Uma linha por barra, no shape do index, mais nome (o
-     * produto sem variacao e embalagem), variacao e quantidade, que a grade
-     * usa para agrupar.
-     *
-     * A ordem e a mesma do index, aplicada ao produto: a relevancia dele e a
-     * da barra mais relevante, o preco o menor, as barras a menor.
-     */
-    public static function pesquisa(Request $request)
-    {
-        $page = (int) $request->page > 0 ? (int) $request->page : 1;
-        $offset = ($page - 1) * 20;
-        [$where, $filtro, $ordem, $pedida] = static::filtro($request);
-
-        // os 200 mais relevantes quando a ordem e escolhida, como no index
-        $fonte = 'produtos';
-        if ($pedida !== null) {
-            $fonte = "( SELECT * FROM produtos ORDER BY {$ordem}, codproduto LIMIT 200 ) relevantes";
-        }
-
-        $sql = "WITH casadas AS (
-                    SELECT
-                        strict_word_similarity(unaccent(:frase), unaccent(descricao || ' ' || barras)) AS score,
-                        codprodutobarra,
-                        codproduto,
-                        barras,
-                        descricao,
-                        produto AS nome,
-                        sigla,
-                        quantidade,
-                        preco,
-                        marca,
-                        referencia,
-                        inativo,
-                        '" . config('services.mglara.imagens_url') . "/' || imagem as imagem,
-                        codprodutobarra as value,
-                        descricao as label
-                      FROM vwProdutoBarra
-                     {$where}
-                ), produtos AS (
-                    SELECT
-                        codproduto,
-                        max(score) AS score,
-                        min(nome) AS descricao,
-                        min(preco) AS preco,
-                        min(barras) AS barras
-                      FROM casadas
-                     GROUP BY codproduto
-                ), pagina AS (
-                    SELECT codproduto, row_number() OVER (ORDER BY " . ($pedida ?? $ordem) . ", codproduto) AS posicao
-                      FROM {$fonte}
-                )
-                SELECT c.*, pv.variacao
-                  FROM casadas c
-                  JOIN pagina p ON (p.codproduto = c.codproduto)
-                  JOIN tblprodutobarra pb ON (pb.codprodutobarra = c.codprodutobarra)
-                  JOIN tblprodutovariacao pv ON (pv.codprodutovariacao = pb.codprodutovariacao)
-                 WHERE p.posicao > {$offset} AND p.posicao <= " . ($offset + 20) . "
-                 ORDER BY p.posicao, c.score DESC, c.codprodutobarra";
-        return DB::select($sql, $filtro);
-    }
-
-    /**
-     * Filtro da busca por texto, comum ao index e a pesquisa:
-     * [$where, $filtro, $ordem, $pedida]. $ordem e a da busca (relevancia,
-     * ou o que o texto pedir); $pedida, a escolhida na tela, ou null.
-     */
-    private static function filtro(Request $request)
-    {
-        $busca = $request->busca ?? '';
-
-        $where = 'WHERE codProdutoBarra is not null ';
+                 WHERE codProdutoBarra is not null ";
 
         $inativos = filter_var($request->input('inativos', false), FILTER_VALIDATE_BOOLEAN);
         if ($request->has('inativo')) {
             $inativos = filter_var($request->inativo, FILTER_VALIDATE_BOOLEAN);
         }
         if (!$inativos) {
-            $where .= 'AND Inativo is null ';
+            $sql .= 'AND Inativo is null ';
         }
 
         $ordem = null;
@@ -142,7 +49,7 @@ class SelectProdutoBarraController extends Controller
                 continue;
             }
             if (preg_match('/^\d{6}$/', $palavra) === 1) {
-                $where .= " AND codproduto = :palavra_{$i}::bigint ";
+                $sql .= " AND codproduto = :palavra_{$i}::bigint ";
                 $filtro["palavra_{$i}"] = $palavra;
                 if (is_null($ordem)) {
                     $ordem = 'descricao ASC, preco ASC';
@@ -150,7 +57,7 @@ class SelectProdutoBarraController extends Controller
                 continue;
             }
             if (preg_match('/^\d+(\.\d{3})*,\d{2}$/', $palavra) === 1) {
-                $where .= " AND preco = :palavra_{$i}::numeric ";
+                $sql .= " AND preco = :palavra_{$i}::numeric ";
                 $preco = str_replace(['.', ','], ['', '.'], $palavra);
                 $filtro["palavra_{$i}"] = $preco;
                 if (is_null($ordem)) {
@@ -163,7 +70,7 @@ class SelectProdutoBarraController extends Controller
 
         $filtro['frase'] = trim($frase);
         if (!empty($filtro['frase'])) {
-            $where .= " AND strict_word_similarity(unaccent(:frase), unaccent(descricao || ' ' || barras)) > 0.4 ";
+            $sql .= " AND strict_word_similarity(unaccent(:frase), unaccent(descricao || ' ' || barras)) > 0.4 ";
         }
 
         if (is_null($ordem)) {
@@ -180,7 +87,20 @@ class SelectProdutoBarraController extends Controller
         ];
         $pedida = $ordens[strtolower((string) $request->input('ordem'))] ?? null;
 
-        return [$where, $filtro, $ordem, $pedida];
+        if ($pedida === null) {
+            $sql .= " ORDER BY $ordem LIMIT 20 OFFSET $offset";
+            return DB::select($sql, $filtro);
+        }
+
+        // Com ordem escolhida, a relevancia continua sendo o filtro: ordena
+        // os 200 mais relevantes, nao a base inteira. O corte de
+        // similaridade e frouxo de proposito (0.4) -- buscar "caneca" casa
+        // com 4.256 produtos, incluindo "Ca-60" e "Cabeca". Em ordem
+        // alfabetica pura, o topo viraria "# Imobilizado Diversos". O teto
+        // de 200 e o mesmo que a pesquisa do PDV usa.
+        $sql = "SELECT * FROM ( {$sql} ORDER BY {$ordem} LIMIT 200 ) relevantes
+                 ORDER BY {$pedida} LIMIT 20 OFFSET {$offset}";
+        return DB::select($sql, $filtro);
     }
 
     /**

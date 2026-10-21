@@ -198,7 +198,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/estado/{id}', [\Mg\Select\SelectEstadoController::class, 'show'])->whereNumber('id');
     Route::get('select/veiculo-tipo/{id}', [\Mg\Select\SelectVeiculoTipoController::class, 'show'])->whereNumber('id');
     Route::get('select/veiculo/{id}', [\Mg\Select\SelectVeiculoController::class, 'show'])->whereNumber('id');
-    Route::get('select/produto-barra/pesquisa', [\Mg\Select\SelectProdutoBarraController::class, 'pesquisa']);
     Route::get('select/produto-barra/barras/{barras}', [\Mg\Select\SelectProdutoBarraController::class, 'barras']);
     Route::get('select/produto-barra/{id}', [\Mg\Select\SelectProdutoBarraController::class, 'show'])->whereNumber('id');
     Route::get('select/usuario/{id}', [\Mg\Select\SelectUsuarioController::class, 'show'])->whereNumber('id');
@@ -1116,6 +1115,9 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('dependente/{coddependente}/', '\Mg\Pessoa\DependenteController@delete');
     Route::post('dependente/{coddependente}/inativo', '\Mg\Pessoa\DependenteController@inativar');
     Route::delete('dependente/{coddependente}/inativo', '\Mg\Pessoa\DependenteController@ativar');
+
+    // Pesquisa de produto em grade, com o filtro do PDV (TASK-173)
+    Route::get('produto-barra/pesquisa', '\Mg\Produto\ProdutoBarraController@pesquisa');
 
     // Produto (CRUD migrado em 31/05/2026)
     Route::group(['prefix' => 'produto'], function () {

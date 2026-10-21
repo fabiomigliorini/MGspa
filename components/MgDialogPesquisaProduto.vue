@@ -6,9 +6,9 @@ import { ref, watch, nextTick } from 'vue'
 import { api } from 'src/services/api'
 
 // Pesquisa de produto em grade de cards, no formato da pesquisa do PDV.
-// Diferença: esta é sempre online -- lê v1/select/produto-barra/pesquisa
-// direto, sem base offline. Emite o código de barras escolhido no mesmo shape
-// do select.
+// Diferença: esta é sempre online -- lê v1/produto-barra/pesquisa direto, sem
+// base offline, com o mesmo filtro do PDV. Emite o código de barras escolhido
+// com value/label/barras/preco/imagem.
 //
 // A grade, o agrupamento por produto e a navegação por teclado são do
 // @components/MgGradeProduto, o mesmo da pesquisa do PDV: o foco fica no campo
@@ -31,11 +31,9 @@ const buscaPesquisada = ref('')
 
 // O rótulo é o que aparece; o valor é o que o backend entende.
 //
-// Relevância é o default (value null = o backend usa a ordem dele). Não dá
-// para começar em Alfabética como o PDV faz: lá o texto é casado por
-// substring, aqui por similaridade, que é frouxa de propósito -- em ordem
-// alfabética o topo de "caneta azul" vira "# Uso Consumo Diversos 96081000
-// Caneta", que está no resultado mas não é o que se procura.
+// Relevância é o default (value null = o backend ordena pelo quanto a
+// descrição se parece com o texto pesquisado). O filtro é o mesmo do PDV;
+// a Relevância é o que só existe aqui.
 const ORDENS = [
   { label: 'Relevância', value: null },
   { label: 'Alfabética', value: 'alfabetica' },
@@ -71,7 +69,7 @@ async function pesquisar(proximaPagina = false) {
   carregando.value = true
   try {
     pagina.value = proximaPagina ? pagina.value + 1 : 1
-    const { data } = await api.get('v1/select/produto-barra/pesquisa', {
+    const { data } = await api.get('v1/produto-barra/pesquisa', {
       params: { busca: busca.value, page: pagina.value, ordem: ordem.value?.value },
     })
     const rows = Array.isArray(data) ? data : data?.data || []

@@ -8,6 +8,13 @@ use Mg\MgController;
 
 class ProdutoBarraController extends MgController
 {
+    // Pesquisa de produto em grade (MgDialogPesquisaProduto), com o filtro do PDV (TASK-173)
+    public function pesquisa(Request $request)
+    {
+        $pagina = max(1, (int) $request->page);
+        return ProdutoBarraService::pesquisa((string) $request->busca, $request->ordem, $pagina);
+    }
+
     public function store(Request $request, $codproduto)
     {
         $produto = Produto::findOrFail($codproduto);

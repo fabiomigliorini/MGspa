@@ -183,6 +183,13 @@ Troca 1:1: repassa os atributos e **todos** os slots (`option`, `selected-item`,
 cru com `clearable`; o cru sem `clearable` passa para `MgSelect` quando a tela receber
 manutenção. Select novo nasce em `MgSelect`.
 
+**Produto se escolhe pelo `@components/MgInputProdutoBarras.vue`, com a pesquisa F1.** É o campo
+de bipar (aceita `5*` para a quantidade) com a lupa e o F1 que abrem a pesquisa em grade
+(`MgDialogPesquisaProduto` + `MgGradeProduto`, a mesma do PDV): um card por produto, a variação e
+a embalagem escolhidas numa janela de duas colunas. Filtra como o PDV: todas as palavras digitadas
+têm que estar na descrição, a primeira começando uma palavra (`GET v1/produto-barra/pesquisa`). O
+`MgSelectProdutoBarra` está saindo (TASK-250): escolha de produto nova que nascer nele é regressão.
+
 ## Axios — a instância mora em `src/services/api.js`, nunca no boot
 
 **Quem precisa do axios importa de `src/services/api`.** Ali nasce a instância de cada app:

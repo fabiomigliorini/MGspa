@@ -9,6 +9,136 @@ use Illuminate\Support\Facades\Log;
 class ProdutoBarraService
 {
     /**
+     * Pesquisa de produto em grade (MgDialogPesquisaProduto, TASK-173), com o mesmo filtro da
+     * pesquisa do PDV na base offline (negocios/src/stores/produto.js). O texto de busca de cada
+     * barra é o que o catálogo do PDV monta (PdvCatalogoService::produto): a descrição com
+     * variação, unidade e C/quantidade, o preço, as barras e os 6 últimos dígitos delas. A
+     * primeira palavra digitada tem que começar uma palavra desse texto e as outras aparecer em
+     * qualquer ponto dele, sem diferença de maiúscula: pesquisou "vermelh", só vem o que tem
+     * "vermelh" escrito.
+     *
+     * A página é de 20 PRODUTOS, cada um com todas as barras dele que casaram -- nem mais
+     * (pesquisou "verde", a azul não vem), nem menos (o produto nunca fica partido entre duas
+     * páginas). Uma linha por barra, com o que a grade usa para agrupar (nome, variacao, sigla,
+     * quantidade) e value/label, que é o que quem recebe o produto escolhido lê.
+     *
+     * A ordem é a do produto: a relevância dele é a da barra que mais se parece com o texto, o
+     * preço o menor, as barras a menor.
+     */
+    public static function pesquisa(string $busca, ?string $ordem, int $pagina): array
+    {
+        $palavras = array_values(array_filter(explode(' ', trim($busca)), fn ($p) => $p !== ''));
+        if (empty($palavras)) {
+            return [];
+        }
+
+        $filtro = [
+            'frase' => implode(' ', $palavras),
+            'url' => config('services.mglara.imagens_url') . '/',
+        ];
+        $where = [];
+        foreach ($palavras as $i => $palavra) {
+            $like = addcslashes($palavra, '\\%_');
+            if ($i == 0) {
+                // a primeira começa uma palavra do texto
+                $where[] = "(' ' || busca) ILIKE :palavra_{$i}";
+                $filtro["palavra_{$i}"] = "% {$like}%";
+                continue;
+            }
+            $where[] = "busca ILIKE :palavra_{$i}";
+            $filtro["palavra_{$i}"] = "%{$like}%";
+        }
+        $where = implode(' AND ', $where);
+
+        // whitelist -- nunca concatenar o que vem do request
+        $ordens = [
+            'alfabetica' => 'nome ASC, preco ASC',
+            'preco' => 'preco ASC, nome ASC',
+            'codigo' => 'codproduto ASC',
+            'barras' => 'barras ASC, nome ASC',
+        ];
+        $ordenacao = $ordens[strtolower((string) $ordem)] ?? 'score DESC, nome ASC, preco ASC';
+
+        $inicio = ($pagina - 1) * 20;
+        $fim = $inicio + 20;
+
+        $sql = "
+            WITH linhas AS (
+                SELECT
+                    pb.codprodutobarra,
+                    p.codproduto,
+                    pb.barras,
+                    p.produto AS nome,
+                    pv.variacao,
+                    coalesce(ume.sigla, um.sigla) AS sigla,
+                    pe.quantidade,
+                    coalesce(pe.preco, p.preco * coalesce(pe.quantidade, 1)) AS preco,
+                    i.observacoes AS imagem
+                FROM tblproduto p
+                INNER JOIN tblunidademedida um ON (um.codunidademedida = p.codunidademedida)
+                INNER JOIN tblprodutovariacao pv ON (pv.codproduto = p.codproduto)
+                INNER JOIN tblprodutobarra pb ON (pb.codprodutovariacao = pv.codprodutovariacao)
+                LEFT JOIN tblprodutoembalagem pe ON (pe.codprodutoembalagem = pb.codprodutoembalagem)
+                LEFT JOIN tblunidademedida ume ON (ume.codunidademedida = pe.codunidademedida)
+                LEFT JOIN tblprodutoimagem pri ON (pri.codprodutoimagem = pv.codprodutoimagem)
+                LEFT JOIN tblimagem i ON (i.codimagem = pri.codimagem)
+                WHERE coalesce(pv.inativo, p.inativo) IS NULL
+            ), descritas AS (
+                -- a descrição do PdvCatalogoService::montarDescricaoProduto
+                SELECT
+                    *,
+                    nome
+                        || coalesce(' ' || nullif(variacao, ''), '')
+                        || ' ' || sigla
+                        || coalesce(' C/' || trunc(nullif(quantidade, 0))::bigint, '') AS descricao
+                FROM linhas
+            ), casadas AS (
+                SELECT *, strict_word_similarity(unaccent(:frase), unaccent(descricao)) AS score
+                FROM (
+                    SELECT
+                        *,
+                        descricao
+                            || ' ' || replace(to_char(preco, 'FM999999999990.00'), '.', ',')
+                            || ' ' || barras
+                            || ' ' || right(barras, 6) AS busca
+                    FROM descritas
+                ) b
+                WHERE {$where}
+            ), produtos AS (
+                SELECT
+                    codproduto,
+                    max(score) AS score,
+                    min(nome) AS nome,
+                    min(preco) AS preco,
+                    min(barras) AS barras
+                FROM casadas
+                GROUP BY codproduto
+            ), pagina AS (
+                SELECT codproduto, row_number() OVER (ORDER BY {$ordenacao}, codproduto) AS posicao
+                FROM produtos
+            )
+            SELECT
+                c.codprodutobarra,
+                c.codproduto,
+                c.barras,
+                c.descricao,
+                c.nome,
+                c.variacao,
+                c.sigla,
+                c.quantidade,
+                c.preco,
+                :url || c.imagem AS imagem,
+                c.codprodutobarra AS value,
+                c.descricao AS label
+            FROM casadas c
+            INNER JOIN pagina p ON (p.codproduto = c.codproduto)
+            WHERE p.posicao > {$inicio} AND p.posicao <= {$fim}
+            ORDER BY p.posicao, c.score DESC, c.codprodutobarra
+        ";
+        return DB::select($sql, $filtro);
+    }
+
+    /**
      * Regenera os movimentos de estoque da variação no MGLara (best-effort).
      * Quando uma barra muda de variação, as vendas/notas ligadas a ela
      * precisam ser recontabilizadas nas duas variações (origem e destino).
