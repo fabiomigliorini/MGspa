@@ -1,9 +1,10 @@
 <script setup>
 // Lançar no período (doc-4): o FAB dos lançamentos abre esta lista do que dá para fazer e cada
-// opção, com o seu ícone e a sua cor, abre o seu dialog já no sentido escolhido. Sangria primeiro
-// (a mais usada). No caixa do contas: Sangria, Reforço, Entrada e Saída de item, Vendas de
-// Parceiro e Ajuste; no caixa do PDV só Sangria, Reforço e Vendas de Parceiro; no
-// banco Enviar, Receber e Ajuste/taxa/tarifa/rendimento. O que o caixa não tem (item, maquineta)
+// opção, com o seu ícone, a sua cor e o caption do que lança, abre o seu dialog já no sentido
+// escolhido. A transferência é uma opção só: de onde sai e para onde vai se escolhe no dialog
+// (TASK-252). Transferência primeiro (a mais usada). No caixa do contas: Transferência, Entrada e
+// Saída de item, Maquinetas de Parceiros e Ajuste; no caixa do PDV só Transferência e Maquinetas
+// de Parceiros; no banco Transferência e Ajuste. O que o caixa não tem (item, maquineta)
 // não aparece; a Saída de item com o caixa vazio aparece desabilitada, com o motivo. No teclado
 // (setas e Enter), como o wizard de cobrança.
 import { ref, computed } from 'vue'
@@ -23,26 +24,23 @@ const opcoes = computed(() => {
   const temMaquinetas = caixa && (store.periodo?.maquinetas ?? []).length > 0
   return [
     {
-      label: caixa ? 'Sangria' : 'Enviar',
-      icone: 'outbox',
-      cor: 'red-5',
-      abrir: () => store.abrirTransferir('E'),
+      label: 'Transferência',
+      caption: caixa ? 'Sangria / Reforço' : 'Enviar / Receber',
+      icone: 'swap_horiz',
+      cor: 'blue-6',
+      abrir: () => (store.dialogTransferir = true),
     },
     {
-      label: caixa ? 'Reforço' : 'Receber',
-      icone: 'move_to_inbox',
-      cor: 'green-6',
-      abrir: () => store.abrirTransferir('R'),
-    },
-    {
-      label: 'Entrada de item no caixa',
+      label: 'Entrada de item',
+      caption: 'Novos chips / Ingressos físicos',
       icone: 'add_box',
       cor: 'teal-6',
       mostra: temItens,
       abrir: () => store.abrirItem(1),
     },
     {
-      label: 'Saída de item do caixa',
+      label: 'Saída de item',
+      caption: 'Recolher chips / Ingressos físicos',
       icone: 'indeterminate_check_box',
       cor: 'orange-7',
       mostra: temItens,
@@ -51,14 +49,16 @@ const opcoes = computed(() => {
       abrir: () => store.abrirItem(-1),
     },
     {
-      label: 'Vendas de Parceiro',
+      label: 'Maquinetas de Parceiros',
+      caption: 'Redeflex / Bilhete Agora / Black Ticket',
       icone: 'receipt_long',
       cor: 'indigo-5',
       mostra: temMaquinetas,
       abrir: () => (store.dialogMaquineta = true),
     },
     {
-      label: caixa ? 'Ajuste' : 'Ajuste, taxa, tarifa, rendimento',
+      label: 'Ajuste',
+      caption: caixa ? 'Lançar movimento manual' : 'Taxa, tarifa, rendimento ou movimento manual',
       icone: 'tune',
       cor: 'blue-grey-5',
       mostra: !store.pdv,

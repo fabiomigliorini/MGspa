@@ -639,6 +639,32 @@ Valida:
 6. Período encerrado: a data dos diálogos vem com o fim do período. Período fechado: sem o FAB.
 7. Caixa do PDV: só Sangria, Reforço e Vendas de Parceiro.
 
+### Transferência pergunta os dois lados (21/10/2026, com o Fábio; TASK-252)
+
+Revisa os itens 1 e 6 acima (Sangria e Reforço separados, "o sentido veio do Lançar"). Sangria
+queria dizer "sai deste caixa", mas o pessoal usa a palavra pelo lado da gaveta: com a tela do
+Caixa Central aberta, quem queria registrar a sangria do Cx 01 para o Central clicava em Sangria e
+o dinheiro saía do Central.
+
+1. **Uma opção só no Lançar**: **Transferência**, primeira da lista, no lugar de Sangria e Reforço
+   (no banco, de Enviar e Receber). O `TransferirCaixaDialog` sempre pergunta **de onde sai o
+   dinheiro**. Cada opção do Lançar ganhou um caption do que lança: Transferência "Sangria /
+   Reforço" (banco: "Enviar / Receber"); Entrada de item "Novos chips / Ingressos físicos"; Saída
+   de item "Recolher chips / Ingressos físicos"; Maquinetas de Parceiros (era Vendas de Parceiro)
+   "Redeflex / Bilhete Agora / Black Ticket"; Ajuste "Lançar movimento manual" (banco: "Taxa, tarifa, rendimento ou movimento
+   manual").
+2. **Um lado é sempre o portador da tela**: sai de outro → entra neste (pula o passo 2); sai deste
+   → pergunta **para onde vai**. O cabeçalho diz o passo, em vermelho: **SAINDO DE** na primeira
+   lista, **RECEBENDO EM** na segunda; no último passo, TRANSFERÊNCIA. Antes de lançar, "Sai de …
+   / Entra em …" com os dois nomes.
+3. **Lista**: este portador no topo ("Este caixa"), depois "Desta filial" e um grupo por filial
+   e os sem filial no fim (espécie antes de banco). Os mesmos papéis de antes: origem operador,
+   destino depositante.
+4. **Filtro só no desktop, no cabeçalho do dialog** (embaixo do título, fixo: só a lista rola); no
+   celular e no PDV, a lista sem campo, para não abrir o teclado.
+5. O texto da lista de lançamentos continua chamando pelo lado da gaveta ("Sangria ← Caixa 01
+   Centro" na tela do Central).
+
 ### Como ficou no código: maquinetas de parceiro (06–07/10/2026; validado pelo Fábio em 07/10)
 
 - **DDL** `api/database/caixa_item_maquineta.sql` (idempotente; rodado no dev; roda no go-live

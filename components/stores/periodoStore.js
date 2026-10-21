@@ -107,8 +107,7 @@ export const periodoStore = defineStore('periodo', {
     dialogItem: false,
     dialogMaquineta: false,
     dialogUsuarios: false,
-    // o sentido escolhido no Lançar ao abrir o dialog: item 1 (entrada) ou -1 (saída); transferência
-    // 'R' (reforço/receber) ou 'E' (sangria/enviar)
+    // o sentido escolhido no Lançar ao abrir o dialog do item: 1 (entrada) ou -1 (saída)
     sentido: null,
     // a lista de usuários do portador (cadeado)
     usuarios: [],
@@ -194,20 +193,14 @@ export const periodoStore = defineStore('periodo', {
       }
     },
 
-    // ==== transferência: sentido E sai deste portador, R chega nele ====
+    // ==== transferência: origem e destino vêm do dialog (um deles é este portador) ====
 
-    abrirTransferir(sentido) {
-      this.sentido = sentido
-      this.dialogTransferir = true
-    },
-
-    transferir({ sentido, codportador, valor, observacoes, transacao }) {
-      const meu = this.portador.codportador
+    transferir({ codportadororigem, codportadordestino, valor, observacoes, transacao }) {
       return this.executar(
         () =>
           api.post('v1/portador-movimento/transferencia', {
-            codportadororigem: sentido === 'E' ? meu : codportador,
-            codportadordestino: sentido === 'E' ? codportador : meu,
+            codportadororigem,
+            codportadordestino,
             valor,
             observacoes,
             transacao: transacao || null,
