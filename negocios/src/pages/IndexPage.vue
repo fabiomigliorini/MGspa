@@ -43,31 +43,8 @@ const dialogOrcamentoTermica = ref(false)
 const iFrameOrcamentoTermicaRef = ref(null)
 
 const hotkeys = (event) => {
+  // o cursor ja descansa no campo Barras (useCursorNoLeitor, TASK-244)
   switch (event.key) {
-    // Joga foco no codigo de barras
-    case '1':
-    case '2':
-    case '3':
-    case '4':
-    case '5':
-    case '6':
-    case '7':
-    case '8':
-    case '9':
-    case '0':
-    case 'V': // Comanda Vendedor (Ex VDD00010022)
-    case 'N': // Comanda Negocio (Ex NEG03386672)
-      if (
-        document.activeElement.tagName.toLowerCase() != 'input' &&
-        document.activeElement.tagName.toLowerCase() != 'textarea'
-      ) {
-        const element = document.getElementById('inputBarras')
-        if (element) {
-          element.focus()
-        }
-      }
-      break
-
     case 'F1': // Pesquisa
       event.preventDefault()
       if (sNegocio.podeEditar) {

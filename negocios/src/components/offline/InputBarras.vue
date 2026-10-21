@@ -19,6 +19,7 @@ import { Notify, Dialog, debounce } from 'quasar'
 import { falar } from '../../utils/falar.js'
 import emitter from '../../utils/emitter.js'
 import MgInput from '@components/MgInput.vue'
+import { useCursorNoLeitor } from 'src/composables/useCursorNoLeitor'
 
 const router = useRouter()
 const sProduto = produtoStore()
@@ -27,6 +28,11 @@ const sListagem = listagemStore()
 const sSinc = sincronizacaoStore()
 const quantidade = ref(1)
 const barras = ref(null)
+const refBarras = ref(null)
+// o cursor volta sozinho ao campo sem abrir o teclado virtual; quem toca no campo ganha o
+// teclado numerico para digitar o codigo ou a quantidade (2*) (TASK-244)
+const modoTeclado = ref('none')
+useCursorNoLeitor(() => refBarras.value?.nativeEl)
 const barcodeVideo = ref(null)
 const dialogOrcamento = ref(false)
 const uuidOrcamento = ref(null)
@@ -427,7 +433,9 @@ onUnmounted(() => {
     input-class="text-right "
     @change="buscarBarras()"
     :prefix="labelQuantidade"
-    inputmode="tel"
+    :inputmode="modoTeclado"
+    @pointerdown="modoTeclado = 'tel'"
+    @blur="modoTeclado = 'none'"
     autocomplete="off"
     autofocus
     bg-color="white"

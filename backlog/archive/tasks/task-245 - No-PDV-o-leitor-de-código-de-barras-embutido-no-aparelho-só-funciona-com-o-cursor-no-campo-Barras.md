@@ -6,6 +6,7 @@ title: >-
 status: To Do
 assignee: []
 created_date: '2026-10-20 16:54'
+updated_date: '2026-10-21 16:20'
 labels:
   - negocios
 dependencies: []
@@ -42,4 +43,6 @@ Análise (20/10/2026): só leitura do código, ainda sem teste no aparelho.
 Direção: devolver o foco ao campo Barras sempre que o foco cair no body e não houver outro campo ou janela aberta (blur do campo, fechamento de dialog, depois de cada leitura). O campo só existe com `sNegocio.podeEditar` (IndexPage.vue:533), o que já cobre a venda não editável.
 Atenção: o campo tem `inputmode="tel"`, e devolver o foco com isso pode abrir o teclado virtual do Android a cada leitura. Decidir com quem opera se o aparelho com leitor usa `inputmode="none"` (sem teclado, só leitor) ou mantém o numérico para digitar quantidade (2*).
 Mesma causa da TASK-244 (quiosque); aproveitar a solução, mas telas e testes são separados.
+
+Juntada em 21/10/2026 na TASK-244: o mesmo problema do leitor embutido, na consulta de preço e no PDV. Os critérios de aceite daqui são os #6 a #10 de lá.
 <!-- SECTION:NOTES:END -->

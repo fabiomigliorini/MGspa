@@ -7,6 +7,7 @@ import { produtoStore } from 'stores/produto'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import DialogPesquisaProduto from 'components/offline/DialogPesquisaProduto.vue'
 import DialogSincronizacao from 'components/offline/DialogSincronizacao.vue'
+import { useCursorNoLeitor } from 'src/composables/useCursorNoLeitor'
 
 const $q = useQuasar()
 const sQuiosque = quiosqueStore()
@@ -113,10 +114,38 @@ const selecionarDoDialog = (barras) => {
   consultar(barras)
 }
 
-// ---- leitor de codigo de barras via keydown global (sem input) ----
+// ---- leitor de codigo de barras ----
+// o leitor (USB ou o embutido do Android) escreve no campo invisivel, que guarda o cursor;
+// o Enter do leitor dispara o change (TASK-244)
+const campoLeitor = ref(null)
 const codigoDigitando = ref('')
-let ultimaTecla = 0
 let timerDigitando = null
+
+useCursorNoLeitor(() => campoLeitor.value)
+
+const lerCampo = (e) => {
+  // abrir a pesquisa tira o cursor do campo e dispara o change: nao consulta o que ficou pela metade
+  if (sProduto.dialogPesquisa) {
+    return
+  }
+  // le do proprio campo: o v-model pode nao ter recebido o fim de uma composicao do teclado virtual
+  const txt = e.target.value.trim()
+  e.target.value = ''
+  codigoDigitando.value = ''
+  if (txt.length) {
+    consultar(txt)
+  }
+}
+
+// some sozinho se o leitor nao finalizar com Enter, ou se a digitacao parar no meio
+watch(codigoDigitando, (v) => {
+  if (timerDigitando) clearTimeout(timerDigitando)
+  if (v) {
+    timerDigitando = setTimeout(() => {
+      codigoDigitando.value = ''
+    }, TEMPO_LIMPAR_DIGITACAO)
+  }
+})
 
 const onKeydown = (e) => {
   // enquanto o dialog de pesquisa estiver aberto, o campo cuida da digitacao
@@ -127,51 +156,6 @@ const onKeydown = (e) => {
   if (e.key === 'F1') {
     e.preventDefault()
     abrirPesquisa()
-    return
-  }
-
-  if (e.key === 'Enter') {
-    const txt = codigoDigitando.value.trim()
-    codigoDigitando.value = ''
-    if (timerDigitando) clearTimeout(timerDigitando)
-    if (txt.length) {
-      consultar(txt)
-    }
-    return
-  }
-
-  // apaga o ultimo digito do codigo em digitacao
-  if (e.key === 'Backspace') {
-    e.preventDefault()
-    if (codigoDigitando.value.length) {
-      codigoDigitando.value = codigoDigitando.value.slice(0, -1)
-      ultimaTecla = performance.now()
-      if (timerDigitando) clearTimeout(timerDigitando)
-      timerDigitando = setTimeout(() => {
-        codigoDigitando.value = ''
-      }, TEMPO_LIMPAR_DIGITACAO)
-    }
-    return
-  }
-
-  // acumula apenas caracteres imprimiveis; reseta se houver pausa longa (tecla avulsa)
-  if (e.key.length === 1 && !e.ctrlKey && !e.metaKey) {
-    const agora = performance.now()
-    if (agora - ultimaTecla > TEMPO_LIMPAR_DIGITACAO) {
-      codigoDigitando.value = ''
-    }
-    // tira o foco de botoes pra o Enter do leitor nao ser interpretado como clique
-    const ativo = document.activeElement
-    if (ativo && ativo !== document.body && typeof ativo.blur === 'function') {
-      ativo.blur()
-    }
-    ultimaTecla = agora
-    codigoDigitando.value += e.key
-    // some sozinho se o leitor nao finalizar com Enter
-    if (timerDigitando) clearTimeout(timerDigitando)
-    timerDigitando = setTimeout(() => {
-      codigoDigitando.value = ''
-    }, TEMPO_LIMPAR_DIGITACAO)
   }
 }
 
@@ -185,7 +169,6 @@ const onPaste = (e) => {
   if (codigo) {
     e.preventDefault()
     codigoDigitando.value = ''
-    if (timerDigitando) clearTimeout(timerDigitando)
     consultar(codigo)
   }
 }
@@ -240,6 +223,17 @@ onUnmounted(() => {
 
     <!-- conteudo normal: so quando o dispositivo esta ativo -->
     <template v-else>
+      <!-- campo do leitor: invisivel, guarda o cursor para o leitor ter onde escrever (TASK-244) -->
+      <input
+        ref="campoLeitor"
+        v-model="codigoDigitando"
+        class="absolute"
+        style="opacity: 0; pointer-events: none"
+        inputmode="none"
+        autocomplete="off"
+        @change="lerCampo"
+      />
+
       <!-- feedback do codigo sendo lido/digitado -->
       <q-page-sticky position="top" :offset="[0, 24]" class="z-fab">
         <q-chip
