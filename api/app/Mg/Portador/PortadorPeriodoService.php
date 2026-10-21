@@ -338,10 +338,10 @@ class PortadorPeriodoService
     }
 
     // fecha: grava o fim (sem fim, agora) e a diferenca da contagem final.
-    // Dentro da tolerancia, fecha; acima, fica pendente (o mesmo fechar tenta
-    // de novo depois da correcao). Recusa, sem mexer em nada, com periodo
-    // anterior por fechar ou transferencia a confirmar. O ultimo com dinheiro
-    // na contagem final ja' deixa o seguinte aberto (TASK-212).
+    // Dentro da tolerancia, fecha; acima, ou com periodo anterior por fechar,
+    // fica pendente (o mesmo fechar tenta de novo depois). Recusa, sem mexer
+    // em nada, com transferencia a confirmar. O ultimo com dinheiro na
+    // contagem final ja' deixa o seguinte aberto (TASK-212).
     public static function fecharCaixa(PortadorPeriodo $periodo, ?array $contagem = null, ?array $itens = null, ?string $observacoes = null, ?Carbon $fim = null, ?int $livre = null): PortadorPeriodo
     {
         $portador = $periodo->Portador;
@@ -352,15 +352,12 @@ class PortadorPeriodoService
         if ($periodo->fechado()) {
             abort(422, 'Período já fechado.');
         }
-        // fecha-se do mais antigo para o mais novo: recusa sem mexer em nada
-        $anterior = PortadorPeriodo::where('codportador', $portador->codportador)
+        // fecha-se do mais antigo para o mais novo: com um anterior por
+        // fechar, este grava o fim e a contagem e fica pendente
+        $anteriorPendente = PortadorPeriodo::where('codportador', $portador->codportador)
             ->where('inicio', '<', $periodo->inicio)
             ->whereNull('fechamento')
-            ->orderBy('inicio')
-            ->first();
-        if ($anterior) {
-            abort(422, 'Feche antes o ' . static::descricao($anterior) . ' (fecha-se do mais antigo para o mais novo).');
-        }
+            ->exists();
         $pendentes = PortadorLancamentoService::pendentes($periodo);
         if ($pendentes) {
             abort(422, "Há {$pendentes} transferência(s) a confirmar neste período: confirme ou cancele antes de fechar.");
@@ -387,7 +384,7 @@ class PortadorPeriodoService
         if ($observacoes !== null) {
             $periodo->observacoes = trim($observacoes) ?: null;
         }
-        if (abs($diferenca) <= round((float) $portador->tolerancia, 2)) {
+        if (!$anteriorPendente && abs($diferenca) <= round((float) $portador->tolerancia, 2)) {
             $periodo->fechamento = $agora;
             $periodo->codusuariofechamento = Auth::user()->codusuario ?? null;
         }

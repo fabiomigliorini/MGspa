@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-10 20:41'
-updated_date: '2026-10-10 20:54'
+updated_date: '2026-10-21 16:00'
 labels:
   - contas
 dependencies: []
@@ -28,6 +28,7 @@ A pedido do Fábio (10/10/2026): ao fechar o período em espécie que tem saldo 
 - [x] #2 Fechamento que fica pendente (diferença acima da tolerância) também abre o seguinte: o dinheiro continua na gaveta
 - [x] #3 Contagem final zerada não abre o seguinte
 - [x] #4 A resposta do fechar já traz o período novo e a tela mostra a aba nova e avisa, continuando no período fechado
+- [x] #5 Com período anterior ainda pendente, fechar o seguinte não é recusado: ele grava o fim e a contagem, fica pendente e abre o próximo; fecha com o mesmo Fechar depois que o anterior fechar
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -44,4 +45,6 @@ Conferido (tinker, transação com rollback, Gaveta Dev Fabio #47, saldo 303,90)
 Testar: contas → /portador/{gaveta}/{período aberto} → contar o final pelo resumo → Fechar (cadeado). Deve aparecer a aba nova 'aberto' com o saldo e o aviso 'Período fechado; o seguinte já está aberto com R$ X', sem recarregar.
 
 Tela aprovada pelo Fábio (10/10/2026).
+
+21/10/2026 — furo achado em prod: caixa com dois períodos pendentes não deixava fechar o segundo para abrir o novo. fecharCaixa recusava inteiro ('Feche antes o período de …') com anterior por fechar. Agora, com anterior sem fechamento, segue o fluxo (grava fim, saldo final, diferença) mas não grava fechamento: fica pendente, e o TASK-212 abre o seguinte. O Fechar de novo, depois que o anterior fechar, fecha este (fim mantido). Transferência a confirmar continua recusando. Front: periodoStore.fechar() avisa 'Há período anterior pendente: este ficou pendente e fecha depois dele' quando a diferença está dentro da tolerância. doc-4 atualizado.
 <!-- SECTION:NOTES:END -->

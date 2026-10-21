@@ -378,7 +378,8 @@ export const periodoStore = defineStore('periodo', {
     },
 
     // espécie: com a contagem final; dentro da tolerância fecha, acima fica pendente
-    // só fecha, com a contagem final já informada. Acima da tolerância o servidor deixa pendente:
+    // só fecha, com a contagem final já informada. Acima da tolerância, ou com período anterior
+    // por fechar, o servidor deixa pendente:
     // é erro para quem fechou. Com dinheiro na contagem, o servidor já abre o seguinte (TASK-212):
     // vem nos períodos, vira aba nova e a tela continua no fechado
     async fechar() {
@@ -394,6 +395,12 @@ export const periodoStore = defineStore('periodo', {
         : ''
       if (p.situacao === 'fechado') {
         avisar(true, `Período fechado${seguinte}`)
+      } else if (Math.abs(p.diferenca) <= p.tolerancia) {
+        // dentro da tolerância e pendente: há período anterior por fechar
+        avisar(
+          false,
+          `Há período anterior pendente: este ficou pendente e fecha depois dele${seguinte}`,
+        )
       } else {
         avisar(
           false,

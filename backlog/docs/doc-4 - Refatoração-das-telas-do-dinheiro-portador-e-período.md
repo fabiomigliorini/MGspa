@@ -306,8 +306,10 @@ Cada portador (qualquer tipo) tem uma **lista de usuários com papel** (`tblport
   seguinte ao fim do anterior; sem período, o começo de hoje.
 - **Fechar**: só fecha o período pedido, com a contagem final **já informada** (contar é o botão do
   resumo).
-  - Recusa, sem mexer em nada, se houver **período anterior por fechar** (fecha-se do mais antigo
-    para o mais novo) ou **transferência a confirmar** no período.
+  - Recusa, sem mexer em nada, se houver **transferência a confirmar** no período.
+  - Com **período anterior por fechar** (fecha-se do mais antigo para o mais novo): grava o fim e
+    a contagem e o período fica **pendente**; o seguinte abre normal. Depois que o anterior
+    fechar, o mesmo Fechar fecha este (TASK-212).
   - Diferença dentro da tolerância: **fecha**; a diferença fica registrada.
   - Acima: dá o **erro** e o período fica **pendente** (com fim; o dia seguinte abre normal). A
     correção (vale ao colaborador quando falta, o movimento que faltou, ajuste) entra no pendente,
