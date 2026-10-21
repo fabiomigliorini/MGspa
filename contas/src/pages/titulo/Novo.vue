@@ -853,7 +853,7 @@ onMounted(async () => {
             outlined
             type="textarea"
             label="Observação (opcional)"
-            maxlength="255"
+            maxlength="2000"
             autogrow
             autofocus
           />

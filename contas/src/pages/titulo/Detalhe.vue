@@ -1102,7 +1102,7 @@ watch(() => route.fullPath, carregar)
                   outlined
                   type="textarea"
                   label="Observação"
-                  maxlength="255"
+                  maxlength="2000"
                   autogrow
                 />
               </div>

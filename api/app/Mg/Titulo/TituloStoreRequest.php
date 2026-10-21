@@ -27,7 +27,7 @@ class TituloStoreRequest extends FormRequest
             'vencimento'         => 'required|date',
             'vencimentooriginal' => 'nullable|date',
             'gerencial'          => 'boolean',
-            'observacao'         => 'nullable|string|max:255',
+            'observacao'         => 'nullable|string|max:2000',
         ];
     }
 
