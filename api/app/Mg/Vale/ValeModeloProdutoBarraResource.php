@@ -20,18 +20,21 @@ class ValeModeloProdutoBarraResource extends Resource
         $ret['barras'] = $pb->barras;
         $ret['codproduto'] = $pb->codproduto;
 
-        $sigla = $pb->Produto->UnidadeMedida->sigla;
+        $um = $pb->Produto->UnidadeMedida;
         $quantidade = null;
         if (!empty($pb->codprodutoembalagem)) {
-            $sigla = $pb->ProdutoEmbalagem->UnidadeMedida->sigla;
+            $um = $pb->ProdutoEmbalagem->UnidadeMedida;
             $quantidade = $pb->ProdutoEmbalagem->quantidade;
         }
         $ret['produto'] = PdvCatalogoService::montarDescricaoProduto(
             $pb->Produto->produto,
             $pb->ProdutoVariacao->variacao,
-            $sigla,
+            $um->sigla,
             $quantidade
         );
+        // a quantidade do kit respeita as casas da unidade (TASK-53)
+        $ret['sigla'] = $um->sigla;
+        $ret['decimais'] = $um->decimais;
 
         // URL pronta, igual a que o select de produto devolve, para a tela
         // nao ter que montar caminho de imagem em lugar nenhum.

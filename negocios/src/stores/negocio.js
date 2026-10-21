@@ -1,4 +1,4 @@
-import { formataTimestampIso } from '@components/formatters'
+import { formataTimestampIso, formataNumeroInteligente } from '@components/formatters'
 import { hoje, somaAnos } from '@components/utils/datas'
 import { defineStore } from 'pinia'
 import { toRaw } from 'vue'
@@ -10,6 +10,7 @@ import { useAuthStore } from 'stores/auth'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
 import bandeirasCartao from '../data/bandeiras-cartao.json'
 import { falar } from '../utils/falar.js'
+import { fracaoRecusada } from '../utils/quantidade.js'
 import { CONDICOES, MEIO, MEIOS, totalPagamento } from '@components/cobranca/pagamento.js'
 
 const sSinc = sincronizacaoStore()
@@ -1007,6 +1008,20 @@ export const negocioStore = defineStore('negocio', {
         // busca versao do IndexedDB para
         // garantir que nao foi adicionado nada em outra aba
         await this.recarregar()
+
+        // fracao que a unidade do produto nao aceita (1,5* num UN): recusa (TASK-53)
+        const recusa = fracaoRecusada(quantidade, await db.produto.get(parseInt(codprodutobarra)))
+        if (recusa) {
+          Notify.create({
+            type: 'negative',
+            message: recusa + ' (' + formataNumeroInteligente(quantidade) + ')!',
+            timeout: 0,
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          new Audio('/erro.mp3').play()
+          falar('Fração inválida!')
+          return false
+        }
 
         //verifica se o item já existe no negocio
         const index = this.negocio.itens.findIndex(function (item) {

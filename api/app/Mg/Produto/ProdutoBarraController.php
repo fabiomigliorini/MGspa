@@ -15,6 +15,12 @@ class ProdutoBarraController extends MgController
         return ProdutoBarraService::pesquisa((string) $request->busca, $request->ordem, $pagina);
     }
 
+    // Código digitado ou bipado no MgInputProdutoBarras, no shape de uma linha da pesquisa
+    public function barras($barras)
+    {
+        return new ProdutoBarraPesquisaResource(ProdutoBarraService::barras($barras));
+    }
+
     public function store(Request $request, $codproduto)
     {
         $produto = Produto::findOrFail($codproduto);

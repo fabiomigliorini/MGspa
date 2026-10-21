@@ -22,6 +22,7 @@ import {
   formataNumeroInteligente,
 } from '@components/formatters'
 import MgInputValor from '@components/MgInputValor.vue'
+import { fracaoRecusada } from '../../utils/quantidade.js'
 
 const props = defineProps({
   vale: { type: Object, required: true },
@@ -55,6 +56,13 @@ const preenchimentoObrigatorioRule = [
   (val) => (val && parseFloat(val) >= 0.001) || '* Obrigatório!',
 ]
 
+// a unidade do item em edição: a quantidade respeita as casas dela (TASK-53)
+const unidade = ref(null)
+const quantidadeRule = [
+  ...preenchimentoObrigatorioRule,
+  (val) => fracaoRecusada(val, unidade.value) ?? true,
+]
+
 const valorProdutosEdicao = computed(
   () =>
     Math.round(
@@ -64,7 +72,8 @@ const valorProdutosEdicao = computed(
     ) / 100,
 )
 
-const editar = (item) => {
+const editar = async (item) => {
+  unidade.value = await sProduto.barra(item.codprodutobarra)
   edicao.value = {
     uuid: item.uuid,
     produto: item.produto,
@@ -179,7 +188,7 @@ const linkProduto = (codproduto) => {
                 :decimals="3"
                 v-model="edicao.quantidade"
                 label="Quantidade"
-                :rules="preenchimentoObrigatorioRule"
+                :rules="quantidadeRule"
               />
             </div>
             <div class="col-6">

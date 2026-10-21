@@ -7,6 +7,7 @@ import { produtoStore } from 'src/stores/produto'
 import { Dialog } from 'quasar'
 import { useRouter } from 'vue-router'
 import MgInputValor from '@components/MgInputValor.vue'
+import { fracaoRecusada } from '../utils/quantidade.js'
 
 const route = useRoute()
 const router = useRouter()
@@ -16,6 +17,12 @@ const sProduto = produtoStore()
 
 const itensDevolucao = ref([])
 const totalDevolucao = ref(null)
+const formDevolucao = ref(null)
+
+// fracao que a unidade nao aceita so' passa se for todo o disponivel: a venda antiga feita
+// fracionada por engano se devolve inteira (TASK-53)
+const fracaoRule = (item) => (val) =>
+  Math.abs(val - item.disponivelDevolucao) < 0.0005 || (fracaoRecusada(val, item) ?? true)
 
 // o que falta no cadastro do cliente para devolver (TASK-31). Os campos sao os legados
 // do tblpessoa, que vem no negocio recarregado do servidor: sem endereco o cadastro grava
@@ -38,7 +45,7 @@ const pendencias = computed(() => {
 const urlPessoa = () => process.env.PESSOAS_URL + '/pessoa/' + sNegocio.negocio.codpessoa
 
 onMounted(() => {
-  sNegocio.carregarPeloUuid(route.params.uuid).then(() => {
+  sNegocio.carregarPeloUuid(route.params.uuid).then(async () => {
     itensDevolucao.value = [...sNegocio.negocio.itens]
     itensDevolucao.value = itensDevolucao.value.filter((i) => {
       return !i.inativo
@@ -52,6 +59,11 @@ onMounted(() => {
       i.quantidadeDevolucao = null
       i.valorDevolucao = null
     })
+    for (const i of itensDevolucao.value) {
+      const barra = await sProduto.barra(i.codprodutobarra)
+      i.sigla = barra?.sigla
+      i.decimais = barra?.decimais
+    }
   })
 })
 
@@ -88,6 +100,10 @@ const marcarNenhum = () => {
 
 const salvarDevolucao = async () => {
   if (pendencias.value.length) {
+    return
+  }
+  // o Confirmar fica fora do q-form: valida aqui
+  if (!(await formDevolucao.value.validate())) {
     return
   }
   Dialog.create({
@@ -156,7 +172,7 @@ const salvarDevolucao = async () => {
           />
         </div>
 
-        <q-form @submit="salvarDevolucao()">
+        <q-form ref="formDevolucao" @submit="salvarDevolucao()">
           <q-list class="rounded-borders">
             <template v-for="item in itensDevolucao" :key="item.codnegocioprodutobarra">
               <q-item>
@@ -211,7 +227,7 @@ const salvarDevolucao = async () => {
                     item-aligned
                     label="Quantidade"
                     @change="calcularValorDevolucao(item)"
-                    :rules="[(val) => val <= item.disponivelDevolucao]"
+                    :rules="[(val) => val <= item.disponivelDevolucao, fracaoRule(item)]"
                   />
                 </q-item-section>
                 <q-item-section class="text-right" style="max-width: 90px">

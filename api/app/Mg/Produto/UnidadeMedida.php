@@ -18,6 +18,7 @@ class UnidadeMedida extends MgModel
 
 
     protected $fillable = [
+        'decimais',
         'inativo',
         'sigla',
         'unidademedida'
@@ -29,6 +30,7 @@ class UnidadeMedida extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
+        'decimais' => 'integer',
         'inativo' => 'datetime'
     ];
 

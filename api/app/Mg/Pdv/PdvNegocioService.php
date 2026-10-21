@@ -21,6 +21,7 @@ use Mg\NotaFiscal\NotaFiscalStatusService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
 use Mg\Ocorrencia\OcorrenciaPdvService;
 use Mg\Ocorrencia\OcorrenciaService;
+use Mg\Produto\UnidadeMedidaService;
 use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Titulo\TituloService;
 use Illuminate\Support\Facades\Log;
@@ -247,6 +248,14 @@ class PdvNegocioService
             // quantidade menor que a gravada vai para o gerente (TASK-205)
             OcorrenciaPdvService::quantidadeAlterada($negocio, $npb, $item);
             $npb->fill($item);
+            // item novo com fracao que a unidade nao aceita (1,5 UN): recusa, como o
+            // itemAdicionar do PDV. O que ja' esta' gravado passa como esta' (TASK-53)
+            if (!$npb->exists) {
+                $recusa = UnidadeMedidaService::fracaoRecusada($npb->ProdutoBarra, $npb->quantidade);
+                if ($recusa) {
+                    throw new Exception($recusa, 1);
+                }
+            }
             $npb->codnegocio = $negocio->codnegocio;
             $npb->save();
         }

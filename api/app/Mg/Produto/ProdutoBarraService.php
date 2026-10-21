@@ -71,6 +71,7 @@ class ProdutoBarraService
                     p.produto AS nome,
                     pv.variacao,
                     coalesce(ume.sigla, um.sigla) AS sigla,
+                    coalesce(ume.decimais, um.decimais) AS decimais,
                     pe.quantidade,
                     coalesce(pe.preco, p.preco * coalesce(pe.quantidade, 1)) AS preco,
                     i.observacoes AS imagem
@@ -125,6 +126,7 @@ class ProdutoBarraService
                 c.nome,
                 c.variacao,
                 c.sigla,
+                c.decimais,
                 c.quantidade,
                 c.preco,
                 :url || c.imagem AS imagem,
@@ -136,6 +138,34 @@ class ProdutoBarraService
             ORDER BY p.posicao, c.score DESC, c.codprodutobarra
         ";
         return DB::select($sql, $filtro);
+    }
+
+    /**
+     * Resolve um código digitado ou bipado numa barra ÚNICA, nas duas formas que o PDV aceita:
+     * o código de barras exato, ou o código do produto com 6 dígitos, só nas barras sem
+     * embalagem.
+     *
+     * Só responde quando cai numa barra só: produto com variação de cor tem uma barra base por
+     * cor (o 200304, Tinta Acrilex 37ml, tem 6), e escolher uma delas seria ao acaso. Não achou
+     * é 404, mais de uma é 409; nos dois a tela abre a pesquisa em grade.
+     */
+    public static function barras(string $codigo): ProdutoBarra
+    {
+        $codigo = trim($codigo);
+        $qry = ProdutoBarra::where('barras', $codigo);
+        if (preg_match('/^\d{6}$/', $codigo)) {
+            $qry->orWhere(function ($q) use ($codigo) {
+                $q->where('codproduto', intval($codigo))->whereNull('codprodutoembalagem');
+            });
+        }
+        $barras = $qry->limit(10)->get();
+        if ($barras->isEmpty()) {
+            abort(404, "Nenhum produto com o código {$codigo}!");
+        }
+        if ($barras->count() > 1) {
+            abort(409, "O código {$codigo} cai em {$barras->count()} produtos. Use a pesquisa.");
+        }
+        return $barras->first();
     }
 
     /**

@@ -11,6 +11,7 @@ import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputProdutoBarras from '@components/MgInputProdutoBarras.vue'
+import { fracaoRecusada } from '../utils/quantidade.js'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -41,6 +42,12 @@ const preenchimentoObrigatorioRule = [
 const dialogItem = ref(false)
 const indiceEdicao = ref(null)
 const edicao = ref({ quantidade: null, valorunitario: null, valorprodutos: null })
+
+// o item traz a sigla e as casas da unidade: a quantidade respeita elas (TASK-53)
+const quantidadeRule = [
+  ...preenchimentoObrigatorioRule,
+  (val) => fracaoRecusada(val, form.value.itens[indiceEdicao.value]) ?? true,
+]
 
 const editarItem = (indice, item) => {
   indiceEdicao.value = indice
@@ -301,7 +308,7 @@ onMounted(async () => {
                     :min="0.001"
                     :decimals="3"
                     label="Quantidade"
-                    :rules="preenchimentoObrigatorioRule"
+                    :rules="quantidadeRule"
                     @change="recalcularValorProdutos()"
                   />
                 </div>

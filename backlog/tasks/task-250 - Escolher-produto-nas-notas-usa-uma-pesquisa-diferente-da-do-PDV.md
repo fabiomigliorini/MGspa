@@ -4,6 +4,7 @@ title: Escolher produto nas notas usa uma pesquisa diferente da do PDV
 status: To Do
 assignee: []
 created_date: '2026-10-20 16:36'
+updated_date: '2026-10-21 20:53'
 labels:
   - notas
 dependencies: []
@@ -33,3 +34,9 @@ Onde está:
 - [ ] #2 A escolha de produto do item da nota fiscal usa a mesma pesquisa em grade
 - [ ] #3 MgSelectProdutoBarra, o store selects/produtoBarra do notas e as rotas v1/select/produto-barra saem do código; a resolução do código bipado fica numa rota do domínio de produto
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Em 21/10/2026, na TASK-53, a resolução do código bipado do MgInputProdutoBarras saiu do select: agora é GET v1/produto-barra/barras/{barras} (ProdutoBarraController@barras, sem a vwProdutoBarra). Do AC #3 falta tirar MgSelectProdutoBarra, o store do notas e as rotas v1/select/produto-barra e v1/select/produto-barra/{id}.
+<!-- SECTION:NOTES:END -->

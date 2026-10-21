@@ -164,6 +164,11 @@ export const produtoStore = defineStore('produto', {
       this.resultadoPesquisa = arrProdutos
     },
 
+    // a barra no cache do PDV, com a sigla e as casas decimais da unidade (TASK-53)
+    async barra(codprodutobarra) {
+      return await db.produto.get(parseInt(codprodutobarra))
+    },
+
     async buscarBarras(barras) {
       // pergunta ao backend ja de inicio: se achar offline nao espera (a resposta so'
       // atualiza o cache), se nao achar e' a resposta do backend que vale antes de dar erro

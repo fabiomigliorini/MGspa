@@ -23,11 +23,14 @@ class UnidadeMedidaController extends MgController
         $request->validate([
             'unidademedida' => ['required', 'unique:tblunidademedida', 'min:2', 'max:15'],
             'sigla' => ['required', 'unique:tblunidademedida', 'max:3'],
+            'decimais' => ['required', 'integer', 'between:0,3'],
         ], [
             'unidademedida.required' => 'O campo "Descrição" não pode ser vazio',
             'unidademedida.unique' => 'Esta descrição já está cadastrada',
             'sigla.required' => 'O campo "Sigla" não pode ser vazio',
             'sigla.unique' => 'Esta sigla já está cadastrada',
+            'decimais.required' => 'O campo "Casas decimais" não pode ser vazio',
+            'decimais.between' => 'As casas decimais vão de 0 a 3',
         ]);
 
         $model = new UnidadeMedida();
@@ -59,11 +62,14 @@ class UnidadeMedidaController extends MgController
                 Rule::unique('tblunidademedida')->ignore($model->codunidademedida, 'codunidademedida'),
                 'max:3',
             ],
+            'decimais' => ['required', 'integer', 'between:0,3'],
         ], [
             'unidademedida.required' => 'O campo "Descrição" não pode ser vazio',
             'unidademedida.unique' => 'Esta descrição já está cadastrada',
             'sigla.required' => 'O campo "Sigla" não pode ser vazio',
             'sigla.unique' => 'Esta sigla já está cadastrada',
+            'decimais.required' => 'O campo "Casas decimais" não pode ser vazio',
+            'decimais.between' => 'As casas decimais vão de 0 a 3',
         ]);
 
         $model->fill($request->all());
