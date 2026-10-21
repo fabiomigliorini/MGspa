@@ -255,7 +255,7 @@ const adicionarPeloCodigoBarras = async (txt) => {
   let ret = await sProduto.buscarBarras(txt)
 
   if (ret.length == 1) {
-    await sNegocio.itemAdicionar(
+    const adicionou = await sNegocio.itemAdicionar(
       ret[0].codprodutobarra,
       ret[0].barras,
       ret[0].codproduto,
@@ -264,6 +264,9 @@ const adicionarPeloCodigoBarras = async (txt) => {
       qtd,
       ret[0].preco,
     )
+    if (!adicionou) {
+      return
+    }
     Notify.create({
       type: 'positive',
       message: 'Código ' + txt + ' adicionado.',
@@ -294,7 +297,7 @@ const adicionarPelaListagem = async (
   codimagem,
   preco,
 ) => {
-  await sNegocio.itemAdicionar(
+  const adicionou = await sNegocio.itemAdicionar(
     codprodutobarra,
     barras,
     codproduto,
@@ -303,6 +306,9 @@ const adicionarPelaListagem = async (
     quantidade.value,
     preco,
   )
+  if (!adicionou) {
+    return
+  }
   sProduto.dialogPesquisa = false
   sNegocio.paginaAtual = 1
   quantidade.value = 1

@@ -21,6 +21,10 @@ const sCobranca = cobrancaStore()
 
 const arredonda = (v) => Math.round((parseFloat(v) || 0) * 100) / 100
 
+// acima disso o PDV fica lento e a Sefaz rejeita a nota; o fechamento na API
+// recusa com o mesmo numero (TASK-249)
+const LIMITE_ITENS = 200
+
 // Serializa operações concorrentes por uuid de negócio.
 // Evita race entre cliques rápidos, scanner duplo e listener multi-aba.
 const _mutexes = new Map()
@@ -1011,6 +1015,21 @@ export const negocioStore = defineStore('negocio', {
           )
         })
 
+        // produto novo alem do limite: recusa; somar em item ja' lancado continua livre
+        const ativos = this.negocio.itens.filter((i) => i.inativo === null).length
+        if (index < 0 && ativos >= LIMITE_ITENS) {
+          Notify.create({
+            type: 'negative',
+            message:
+              'Limite de ' + LIMITE_ITENS + ' itens! Feche este negócio e abra outro para o resto.',
+            timeout: 0,
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          new Audio('/erro.mp3').play()
+          falar('Limite de itens!')
+          return false
+        }
+
         // se ja existe adiciona a quantiade, se nao cria um novo item
         let item
         if (index >= 0) {
@@ -1073,6 +1092,7 @@ export const negocioStore = defineStore('negocio', {
 
         // salva no IndexedDB
         await this.salvar()
+        return true
       })
     },
 

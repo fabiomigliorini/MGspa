@@ -29,6 +29,9 @@ use Mg\Saurus\SaurusService;
 
 class PdvNegocioService
 {
+    // acima disso o PDV fica lento e a Sefaz rejeita a nota (TASK-249); o
+    // front do negocios recusa o 201o item com o mesmo numero
+    const LIMITE_ITENS = 200;
 
     public static function negocio($data, Pdv $pdv)
     {
@@ -369,6 +372,14 @@ class PdvNegocioService
             && !$negocio->NegocioValeS()->whereNull('inativo')->exists()
         ) {
             throw new Exception('Não foi informado nenhum produto neste negócio!', 1);
+        }
+
+        // limite de itens: segura tambem a comanda unificada e a venda
+        // duplicada, que nao passam pelo itemAdicionar do PDV. A reaberta
+        // fica de fora: a nota dela ja' saiu e nao da' mais pra dividir (TASK-249)
+        $itens = $negocio->NegocioProdutoBarraS()->whereNull('inativo')->count();
+        if (!$reaberta && $itens > static::LIMITE_ITENS) {
+            throw new Exception("Este negócio tem {$itens} itens e o limite é " . static::LIMITE_ITENS . '! Divida em mais de um negócio.', 1);
         }
 
         if (!static::confereTotais($negocio)) {
