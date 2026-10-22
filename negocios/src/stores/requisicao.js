@@ -110,6 +110,44 @@ export const requisicaoStore = defineStore(
       form.value = { ...formVazio(), ...dados }
     }
 
+    // Requisitar a partir da venda fechada: cliente e itens vêm prontos e editáveis
+    async function novoDoNegocio(codnegocio, dados = {}) {
+      novo(dados)
+      try {
+        const { data } = await api.get(`v1/requisicao/rascunho/negocio/${codnegocio}`)
+        form.value = { ...form.value, ...data, destino: 'R' }
+      } catch (error) {
+        notificar('negative', mensagemErro(error, 'Impossível trazer os itens do negócio'))
+      }
+    }
+
+    // Sugerir abaixo do mínimo: só acrescenta à lista o que ainda não está nela
+    const sugerindo = ref(false)
+    async function sugerir() {
+      sugerindo.value = true
+      try {
+        const { data } = await api.get('v1/requisicao/sugestao', {
+          params: {
+            codestoquelocalrequisitante: form.value.codestoquelocalrequisitante,
+            codestoquelocalrequisitada: form.value.codestoquelocalrequisitada,
+          },
+        })
+        const presentes = new Set(form.value.itens.map((i) => i.codprodutobarra))
+        const novos = data.filter((i) => !presentes.has(i.codprodutobarra))
+        form.value.itens.push(...novos)
+        notificar(
+          novos.length ? 'positive' : 'info',
+          novos.length
+            ? `${novos.length} produto(s) abaixo do mínimo acrescentados`
+            : 'Nada novo abaixo do mínimo com saldo na outra loja',
+        )
+      } catch (error) {
+        notificar('negative', mensagemErro(error, 'Impossível sugerir'))
+      } finally {
+        sugerindo.value = false
+      }
+    }
+
     function editar(r) {
       form.value = {
         codrequisicao: r.codrequisicao,
@@ -224,6 +262,9 @@ export const requisicaoStore = defineStore(
       carregarPainel,
       carregar,
       novo,
+      novoDoNegocio,
+      sugerindo,
+      sugerir,
       editar,
       adicionarItem,
       removerItem,

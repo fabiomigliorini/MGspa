@@ -47,7 +47,12 @@ onMounted(async () => {
     }
     return
   }
-  sRequisicao.novo({ codestoquelocalrequisitante: sNegocio.padrao.codestoquelocal })
+  const dados = { codestoquelocalrequisitante: sNegocio.padrao.codestoquelocal }
+  if (route.query.codnegocio) {
+    await sRequisicao.novoDoNegocio(route.query.codnegocio, dados)
+    return
+  }
+  sRequisicao.novo(dados)
 })
 </script>
 
@@ -129,7 +134,23 @@ onMounted(async () => {
         </q-card>
 
         <q-card flat bordered class="q-mb-md">
-          <q-card-section class="text-grey-9 text-overline q-pb-none">Produtos</q-card-section>
+          <q-card-section class="row items-center q-pb-none">
+            <div class="text-grey-9 text-overline">Produtos</div>
+            <q-space />
+            <q-btn
+              flat
+              color="primary"
+              icon="trending_down"
+              label="Sugerir abaixo do mínimo"
+              :loading="sRequisicao.sugerindo"
+              :disable="!form.codestoquelocalrequisitante || !form.codestoquelocalrequisitada"
+              @click="sRequisicao.sugerir()"
+            >
+              <q-tooltip>
+                O que a loja que pede tem no mínimo ou abaixo e a outra tem saldo, até o máximo
+              </q-tooltip>
+            </q-btn>
+          </q-card-section>
           <q-card-section>
             <MgInputProdutoBarras
               label="Acrescentar produto (bipe, ou digite 5* e o código)"

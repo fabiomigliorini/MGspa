@@ -17,6 +17,7 @@ import InputBarras from 'components/offline/InputBarras.vue'
 import ListagemTitulos from 'components/offline/ListagemTitulos.vue'
 import ListagemNotas from 'components/offline/ListagemNotas.vue'
 import ListagemAnexos from 'components/offline/ListagemAnexos.vue'
+import ListagemRequisicoes from 'components/offline/ListagemRequisicoes.vue'
 import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
 import { Dialog, Notify, debounce } from 'quasar'
@@ -524,6 +525,7 @@ onUnmounted(() => {
         >
           <listagem-notas ref="listagemNotasRef" />
           <listagem-titulos />
+          <listagem-requisicoes />
         </template>
         <listagem-itens-vale
           v-for="(vale, indice) in sNegocio.valesAtivos"
@@ -714,6 +716,17 @@ onUnmounted(() => {
             v-if="sNegocio.itensAtivos.length > 0 && sNegocio.negocio.codnegociostatus != 3"
           />
         </q-fab>
+
+        <!-- REQUISITAR DE OUTRA LOJA (TASK-55): a venda fechada vira requisição -->
+        <q-btn
+          fab
+          icon="move_down"
+          color="brown"
+          :to="`/requisicao/nova?codnegocio=${sNegocio.negocio.codnegocio}`"
+          v-if="sNegocio.negocio.codnegociostatus == 2 && sNegocio.negocio.codnegocio"
+        >
+          <q-tooltip class="bg-accent">Requisitar de outra loja</q-tooltip>
+        </q-btn>
 
         <!-- FECHAR -->
         <q-btn

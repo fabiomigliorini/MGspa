@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mg\Impressora\Impressora;
+use Mg\Negocio\Negocio;
 use Mg\Pdv\PdvService;
 
 // Requisicao entre lojas (TASK-55, doc-6). Todas as rotas passam pelo middleware
@@ -23,6 +24,34 @@ class RequisicaoController extends Controller
             $request->lado,
             filter_var($request->input('finalizadas', false), FILTER_VALIDATE_BOOLEAN)
         ));
+    }
+
+    public function rascunhoDoNegocio($codnegocio)
+    {
+        return response()->json(RequisicaoService::rascunhoDoNegocio(
+            Negocio::with(['Pessoa.Cidade.Estado'])->findOrFail($codnegocio)
+        ));
+    }
+
+    public function sugestao(Request $request)
+    {
+        $request->validate([
+            'codestoquelocalrequisitante' => 'required|integer',
+            'codestoquelocalrequisitada' => 'required|integer',
+            'codmarca' => 'nullable|integer',
+            'abc' => 'nullable|string|max:2',
+        ]);
+        return response()->json(RequisicaoService::sugestao(
+            (int) $request->codestoquelocalrequisitante,
+            (int) $request->codestoquelocalrequisitada,
+            $request->codmarca ? (int) $request->codmarca : null,
+            $request->abc
+        ));
+    }
+
+    public function doNegocio($codnegocio)
+    {
+        return response()->json(RequisicaoService::doNegocio((int) $codnegocio));
     }
 
     public function show($codrequisicao)

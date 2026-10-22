@@ -5,10 +5,12 @@ namespace Mg\Requisicao;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Mg\Estoque\EstoqueLocal;
+use Mg\Estoque\EstoqueSaldoRelatorioService;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioService;
 use Mg\Pdv\Pdv;
 use Mg\Produto\ProdutoBarra;
+use Mg\Produto\ProdutoBarraPesquisaResource;
 use Mg\Produto\UnidadeMedidaService;
 use Mg\Usuario\Autorizador;
 
@@ -152,6 +154,94 @@ class RequisicaoService
             $reg->save();
         }
         $req->RequisicaoItemS()->whereNotIn('codprodutobarra', array_keys($vistos))->delete();
+    }
+
+    // Requisitar a partir da venda fechada: cliente e itens (somados por barra) para a tela
+    // de nova requisicao, que deixa mexer em tudo antes de gravar
+    public static function rascunhoDoNegocio(Negocio $negocio): array
+    {
+        if ($negocio->codnegociostatus != NegocioService::STATUS_FECHADO) {
+            abort(422, 'Feche o negócio antes de requisitar!');
+        }
+        $pessoa = $negocio->Pessoa;
+        $temCliente = $pessoa && $negocio->codpessoa != 1;
+        $endereco = $temCliente ? implode(' - ', array_filter([
+            implode(', ', array_filter([$pessoa->endereco, $pessoa->numero])),
+            $pessoa->complemento,
+            $pessoa->bairro,
+            $pessoa->Cidade ? ($pessoa->Cidade->cidade . '/' . ($pessoa->Cidade->Estado->sigla ?? '')) : null,
+        ])) : null;
+        $quantidades = [];
+        foreach ($negocio->NegocioProdutoBarraS()->whereNull('inativo')->get() as $npb) {
+            $quantidades[$npb->codprodutobarra] = ($quantidades[$npb->codprodutobarra] ?? 0) + $npb->quantidade;
+        }
+        return [
+            'codnegocio' => $negocio->codnegocio,
+            'codpessoa' => $temCliente ? $negocio->codpessoa : null,
+            'nome' => $temCliente ? ($pessoa->fantasia ?: $pessoa->pessoa) : null,
+            'telefone' => $temCliente ? $pessoa->telefone1 : null,
+            'endereco' => $endereco ?: null,
+            'itens' => static::itensComProduto($quantidades),
+        ];
+    }
+
+    // Sugestao abaixo do minimo (mesmas linhas do PDF de Sugestao de Transferencias): o que
+    // a requisitante tem no minimo ou abaixo e a requisitada tem saldo, ate' o maximo,
+    // na embalagem de transferencia (ou na unidade, se a variacao nao tem a barra dela)
+    public static function sugestao(int $requisitante, int $requisitada, ?int $codmarca = null, ?string $abc = null): array
+    {
+        $rows = EstoqueSaldoRelatorioService::transferenciasLinhas([
+            'codestoquelocalorigem' => $requisitada,
+            'codestoquelocaldestino' => $requisitante,
+            'codmarca' => $codmarca,
+            'abc' => $abc,
+        ]);
+        $quantidades = [];
+        foreach ($rows as $r) {
+            if (!empty($r->codprodutobarraembalagem)) {
+                $quantidades[$r->codprodutobarraembalagem] = $r->transferir / $r->quantidadeembalagem;
+            } elseif (!empty($r->codprodutobarraunidade)) {
+                $quantidades[$r->codprodutobarraunidade] = (float) $r->transferir;
+            }
+        }
+        return static::itensComProduto($quantidades);
+    }
+
+    // [codprodutobarra => quantidade] no shape dos itens do formulario
+    protected static function itensComProduto(array $quantidades): array
+    {
+        $barras = ProdutoBarra::with([
+            'Produto.UnidadeMedida',
+            'ProdutoEmbalagem.UnidadeMedida',
+            'ProdutoVariacao.ProdutoImagem',
+        ])->whereIn('codprodutobarra', array_keys($quantidades))->get()->keyBy('codprodutobarra');
+        $itens = [];
+        foreach ($quantidades as $codprodutobarra => $quantidade) {
+            if (!$pb = $barras[$codprodutobarra] ?? null) {
+                continue;
+            }
+            $itens[] = [
+                'codprodutobarra' => (int) $codprodutobarra,
+                'quantidade' => (float) $quantidade,
+                'produto' => (new ProdutoBarraPesquisaResource($pb))->toArray(request()),
+            ];
+        }
+        return $itens;
+    }
+
+    // as requisicoes que nasceram da venda (a tela do negocio mostra)
+    public static function doNegocio(int $codnegocio): array
+    {
+        return DB::select("
+            select r.codrequisicao, r.status, r.destino, r.criacao,
+                elr.sigla as siglarequisitante, eld.sigla as siglarequisitada,
+                eld.estoquelocal as requisitada
+            from tblrequisicao r
+            inner join tblestoquelocal elr on (elr.codestoquelocal = r.codestoquelocalrequisitante)
+            left join tblestoquelocal eld on (eld.codestoquelocal = r.codestoquelocalrequisitada)
+            where r.codnegocio = :codnegocio
+            order by r.codrequisicao
+        ", ['codnegocio' => $codnegocio]);
     }
 
     // Painel por loja: o que ela tem para atender (requisitada) ou o que ela pediu
