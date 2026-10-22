@@ -59,6 +59,16 @@ class EstoqueLocalController extends MgController
         return response()->json(EstoqueLocalService::detalhar($model->fresh(['Filial', 'Impressora'])), 200);
     }
 
+    public function indicadores(Request $request, $id)
+    {
+        $request->validate([
+            'inicio' => 'required|date',
+            'fim' => 'required|date',
+        ]);
+        EstoqueLocal::findOrFail($id);
+        return response()->json(EstoqueLocalService::indicadores((int) $id, $request->inicio, $request->fim));
+    }
+
     public function autocompletar(Request $request)
     {
         $res = EstoqueLocalService::autocompletar($request->all());

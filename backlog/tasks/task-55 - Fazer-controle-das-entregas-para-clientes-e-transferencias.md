@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-22 01:40'
+updated_date: '2026-10-22 01:41'
 labels:
   - negocios
 dependencies: []
@@ -44,7 +44,7 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #7 Etapa 7: entregas do negócio (tblnegocioentrega) com as listas Entregas a fazer e A receber
 - [x] #8 Etapa 9: separação no negócio do PDV ligada à requisição (QR, nº, Separar), processo idempotente, justificar e finalizar
 - [x] #9 Etapa 10: entrega pela requisição com os códigos de retirada (ou justificativa)
-- [ ] #10 Etapa 11: indicadores de qualidade do estoque no detalhe do Local de Estoque
+- [x] #10 Etapa 11: indicadores de qualidade do estoque no detalhe do Local de Estoque
 <!-- AC:END -->
 
 ## Implementation Notes

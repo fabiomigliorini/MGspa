@@ -31,6 +31,25 @@ export const useEstoqueLocalStore = defineStore('estoqueLocal', () => {
   // impressoras térmica e A5 (as que imprimem a via de separação da requisição)
   const impressoras = ref([])
 
+  // indicadores de qualidade do estoque do local como requisitado (TASK-55, etapa 11)
+  const indicadores = ref(null)
+  const carregandoIndicadores = ref(false)
+
+  async function carregarIndicadores(codestoquelocal, inicio, fim) {
+    carregandoIndicadores.value = true
+    try {
+      const { data } = await api.get(`v1/estoque-local/${codestoquelocal}/indicadores`, {
+        params: { inicio, fim },
+      })
+      indicadores.value = data
+    } catch (e) {
+      indicadores.value = null
+      notifyError(e, 'Erro ao carregar os indicadores')
+    } finally {
+      carregandoIndicadores.value = false
+    }
+  }
+
   async function carregarLista() {
     carregando.value = true
     try {
@@ -135,6 +154,9 @@ export const useEstoqueLocalStore = defineStore('estoqueLocal', () => {
     salvando,
     isNovo,
     impressoras,
+    indicadores,
+    carregandoIndicadores,
+    carregarIndicadores,
     carregarLista,
     carregarLocal,
     novo,

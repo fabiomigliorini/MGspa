@@ -136,6 +136,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('estoque-local', [\Mg\Estoque\EstoqueLocalController::class, 'index']);
     Route::get('estoque-local/{id}', [\Mg\Estoque\EstoqueLocalController::class, 'show']);
     Route::post('estoque-local', [\Mg\Estoque\EstoqueLocalController::class, 'store']);
+    Route::get('estoque-local/{id}/indicadores', [\Mg\Estoque\EstoqueLocalController::class, 'indicadores'])->whereNumber('id');
     Route::put('estoque-local/{id}', [\Mg\Estoque\EstoqueLocalController::class, 'update'])->whereNumber('id');
     Route::post('estoque-local/{id}/inativo', [\Mg\Estoque\EstoqueLocalController::class, 'inativar'])->whereNumber('id');
     Route::delete('estoque-local/{id}/inativo', [\Mg\Estoque\EstoqueLocalController::class, 'ativar'])->whereNumber('id');
