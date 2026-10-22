@@ -19,6 +19,8 @@ ordinal: 2000
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
 A store do patio ja tem saldoUnidadeOffline(cod) (snapshot do servidor + delta das cargas locais pendentes) e o snapshot saldosUnidades e baixado a cada sync - mas NENHUM componente usa: grep por saldoUnidadeOffline/saldosUnidades nos .vue nao acha nada. O CargaForm mostra 'Saldo a entregar' so para DESTINO do tipo CONTRATO. Consequencia: numa SAIDA ou TRANSFERENCIA o operador carrega 40 t de um silo com 10 t e nada avisa - nem no front nem no backend (CargaService::validar so cobra rateio e over-load de contrato). O saldo da unidade fica negativo e so aparece na tela de Estoque. Exibir o saldo da unidade na linha de ORIGEM (mesmo padrao do contrato) e decidir se o backend bloqueia ou so avisa.
+
+**Estado no código em 22/10/2026 (leitura):** 0 de 4 critérios no código. A linha de ORIGEM só tem o select (o saldo existe só no destino CONTRATO); `saldoUnidadeOffline`/`saldosUnidades` seguem sem consumidor e `puxarSaldos` roda a cada minuto sem `codsafra`. O fechamento não pede confirmação e o Estoque não destaca silo negativo. O #4 hoje faz o contrário da regra D6 do doc-5: CargaService::gerarMovimento aplica o sinal ao líquido e MovimentoGraoService::saldo soma o líquido, então o silo de origem baixa o líquido e o desconto vira grão fantasma no silo. **Pergunta em aberto:** a D6 vale só para cargas novas ou o extrato das expedições já finalizadas é regerado?
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria

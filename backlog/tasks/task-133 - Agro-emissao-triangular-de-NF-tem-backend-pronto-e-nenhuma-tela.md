@@ -4,7 +4,7 @@ title: 'Agro: emissao triangular de NF tem backend pronto e nenhuma tela'
 status: To Do
 assignee: []
 created_date: '2026-09-21 21:33'
-updated_date: '2026-09-28 21:00'
+updated_date: '2026-10-22 15:41'
 labels:
   - agro
 dependencies: []
@@ -23,3 +23,9 @@ NotaFiscalContratoService::planoEmissao esta implementado e exposto em GET v1/co
 <!-- AC:BEGIN -->
 - [ ] #1 Plano de emissão da nota do contrato não dá erro
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+22/10/2026 — causa do 500 do critério #1 (leitura de código): NotaFiscalContratoService::planoEmissao lê $calc['itens'] (linha 66), mas ContratoCalculoService::calcularDoContrato não devolve a chave itens (só bruto, liquido e totais). Só estoura quando o contrato tem nota no plano. A correção depende de decidir de onde vêm os tributos por carga (os gravados em cada fixação desde a TASK-183, por exemplo); o pré-requisito do vínculo cultura → produto fiscal continua faltando.
+<!-- SECTION:NOTES:END -->

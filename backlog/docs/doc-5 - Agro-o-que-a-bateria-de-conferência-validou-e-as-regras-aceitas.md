@@ -76,9 +76,13 @@ Decisões de 28/09 que definem o comportamento certo (detalhe em `specs/PLANO-AG
 
 ## 4. Defeitos confirmados, por task
 
+**Atualização em 22/10/2026:** os itens marcados como "Tratado" abaixo foram corrigidos depois da
+bateria; a conferência foi por leitura do código, não por nova rodada. Continuam abertos os da TASK-130,
+TASK-181 (transferência para o mesmo silo), TASK-182 (fechada sem implementar) e TASK-133.
+
 As corridas variam entre rodadas; quando é o caso, os números abaixo são a faixa observada.
 
-- **TASK-180 — sincronização entre aparelhos**
+- **TASK-180 — sincronização entre aparelhos** (tratados na TASK-180, 30/09; sem a bateria, não foram medidos de novo)
   - A cópia velha de outro aparelho desfaz fechamento (volta para TARA e zera o extrato) e desfaz cancelamento (R3, R4).
   - Dois aparelhos gravando o mesmo caminhão: as duas gravações passam, e 7 a 12 de 20 cargas ficam **FINALIZADAS sem extrato** (E4).
   - Extrato duplicado em 5 a 6 de 10 rodadas ao reativar durante o envio (R6).
@@ -95,25 +99,25 @@ As corridas variam entre rodadas; quando é o caso, os números abaixo são a fa
   - O cadastro aceita ordem repetida e tolerância 100.
   - O desconto pode passar do bruto (D7).
 - **TASK-170 — números**
-  - O servidor **bloqueia** a carga que passa do saldo do contrato, contra a regra aceita (C1, E3).
-  - Cancelar pelo pátio é barrado pela trava (C5).
-  - O saldo esconde o excesso, mostrando 0 em vez de −4.000 (C8).
-  - O entregue da safra soma compra (C9).
-  - Retirada manual soma no silo, e ajuste só com líquido grava zero (A6).
-  - O extrato da tela carrega só 50 linhas (A9, conferir na tela).
+  - O servidor **bloqueia** a carga que passa do saldo do contrato, contra a regra aceita (C1, E3). **Tratado na TASK-170 (01/10).**
+  - Cancelar pelo pátio é barrado pela trava (C5). **Tratado na TASK-170 (01/10).**
+  - O saldo esconde o excesso, mostrando 0 em vez de −4.000 (C8). **Tratado na TASK-170 (01/10).**
+  - O entregue da safra soma compra (C9). **Tratado na TASK-170 (01/10).**
+  - Retirada manual soma no silo, e ajuste só com líquido grava zero (A6). **Tratado na TASK-170 (01/10).**
+  - O extrato da tela carrega só 50 linhas (A9, conferir na tela). **Tratado na TASK-170 (01/10).**
 - **TASK-130 — silos**
   - O silo de origem baixa o líquido em vez do bruto, e o desconto vira grão fantasma no balanço da safra (T2, I1, I3, I8).
   - Silo inativo recebe carga (T7).
   - O pátio pede o saldo sem safra e soma milho com soja (T5).
 - **TASK-181 — origem e destino**
   - Transferência para o mesmo silo é aceita (T3).
-  - Tara maior que o PBT, PBT com fração e PBT acima de 150 t são aceitos (A8b, A8c, A8g).
+  - Tara maior que o PBT, PBT com fração e PBT acima de 150 t são aceitos (A8b, A8c, A8g). **Tratado na TASK-180 (30/09)**, pelo CargaSincronizarRequest.
 - **TASK-183 — valores do contrato**
-  - A fixação salva sem tributos não guarda os da época e segue a tabela ao vivo (V2b).
-  - Editar abaixo do que já foi travado passa (V5).
+  - A fixação salva sem tributos não guarda os da época e segue a tabela ao vivo (V2b). **Tratado na TASK-183 (01/10).**
+  - Editar abaixo do que já foi travado passa (V5). **Tratado na TASK-183 (01/10).**
 - **TASK-133:** o plano de emissão da NF do contrato dá 500 (V7).
-- **TASK-138/140:** o total da listagem é um número só, somando os tipos e as canceladas (L1, L2).
-- **TASK-129:** um usuário só de Caixa entra em 91 de 91 rotas do agro (P1).
+- **TASK-138/140:** o total da listagem é um número só, somando os tipos e as canceladas (L1, L2). **Tratado nas TASK-138/140 (06–07/10).**
+- **TASK-129:** um usuário só de Caixa entra em 91 de 91 rotas do agro (P1). **Tratado na TASK-129 (30/09).**
 
 ## 5. A conferir fora da bateria
 

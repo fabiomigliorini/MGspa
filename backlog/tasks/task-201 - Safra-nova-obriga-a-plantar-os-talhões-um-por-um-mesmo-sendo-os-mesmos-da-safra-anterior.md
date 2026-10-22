@@ -3,11 +3,11 @@ id: TASK-201
 title: >-
   Safra nova obriga a plantar os talhões um por um, mesmo sendo os mesmos da
   safra anterior
-status: Done
+status: To Do
 assignee:
   - '@eduardo'
 created_date: '2026-10-07 18:37'
-updated_date: '2026-10-10 16:16'
+updated_date: '2026-10-22 15:41'
 labels:
   - agro
 dependencies: []
@@ -35,6 +35,8 @@ A decidir com quem prioriza: se a origem pode ser de cultura diferente (soja →
 - [x] #2 Vêm nome, desenho, cor e área do cadastro atual do talhão na fazenda; variedade e data de plantio ficam em branco
 - [x] #3 Data de plantio deixa de ser obrigatória
 - [x] #4 Talhão sem variedade aparece como pendente e não pode ser finalizado até ela ser informada
+- [ ] #5 Safra com mais de 50 talhões plantados mostra todos na lista
+- [ ] #6 Na Cultura, o plantio sem variedade aparece na quebra por variedade
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -49,4 +51,6 @@ Conferido em dev (transação desfeita): origem safra 1 → 22 talhões copiados
 09/10/2026: validado pelo usuário. Lista de 'Copiar talhões de' mostra só safras ativas — confirmado como esperado. Pendente fora do código: rodar api/database/agro_plantio_variedade_opcional.sql em PROD antes do deploy.
 
 Teste ignorado pelo Fábio (10/10/2026): ele dispensou o teste manual dele e pediu para marcar e commitar. Critérios marcados com base no que está implementado e nos testes registrados nas notas acima.
+
+22/10/2026 — conferência no código (só leitura). Critérios novos: #5 agro/src/stores/safra.js (carregarPlantios) lê só a 1ª página de v1/safra/{cod}/plantio, que pagina em 50 (MgModel::$perPage); a cópia de talhões cria dezenas de uma vez, e safra com mais de 50 plantios fica com a lista e o wizard cortados, diferentes dos KPIs. #6 CulturaService::resumo soma todos os plantios, mas resumoVariedades só lista variedades cadastradas; plantio sem variedade (toda safra recém-copiada) entra no total e some da quebra. Como ver: #/cultura/N depois de copiar uma safra. Volta para To Do por causa de #5 e #6; responsável mantido.
 <!-- SECTION:NOTES:END -->

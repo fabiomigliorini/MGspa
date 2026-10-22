@@ -6,7 +6,7 @@ title: >-
 status: Done
 assignee: []
 created_date: '2026-09-28 21:11'
-updated_date: '2026-09-30 14:30'
+updated_date: '2026-10-22 15:41'
 labels:
   - agro
 dependencies: []
@@ -32,6 +32,12 @@ Toda regravação da carga (inclusive cancelar pelo pátio) recalcula o desconto
 - [ ] #7 Trocar o talhão para outra cultura depois de classificar avisa em vez de zerar o desconto
 - [ ] #8 A carga não fica presa em erro depois que a tabela muda
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+22/10/2026 — estado do código (só leitura), para o caso de o assunto voltar. Continua verdadeiro: #1 não existe tblcarga.parametrosclassificacao; CargaService::sincronizar recalcula com a tabela viva, inclusive ao cancelar pelo pátio (e o validar pode recusar o cancelamento com 422 se a tabela mudou depois do fechamento). #2 descontos e líquido em gramas; ticket.js arredonda campo a campo. #3 quatro fontes de kg: ponto (aparelho), extrato (rateio do servidor), NF (soma do ponto) e ticket (Math.round por ponto). #4 o pátio reimprime com o cálculo refeito; a ficha imprime o gravado. #5 desconto calculado no pátio e no servidor, sem teste de paridade. #6 PARCIAL: leitura 0–100 e parâmetro repetido já são recusados (TASK-180); ordem repetida e tolerância 100 ainda passam no ParametroClassificacaoStoreRequest. #7 PARCIAL: a tela bloqueia trocar o talhão para outra safra/cultura; o servidor não confere. #8 a carga pode ficar presa em 422 depois que a tabela muda. Fechada sem reabrir, conforme decidido em 30/09.
+<!-- SECTION:NOTES:END -->
 
 ## Comments
 

@@ -1,11 +1,11 @@
 ---
 id: TASK-171
 title: 'Agro/Patio: da pra alterar sem querer um campo ja lancado da carga'
-status: Done
+status: To Do
 assignee:
   - '@eduardo'
 created_date: '2026-09-23 19:56'
-updated_date: '2026-09-29 21:34'
+updated_date: '2026-10-22 15:41'
 labels:
   - agro
 dependencies: []
@@ -27,17 +27,17 @@ Os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) estao implementad
 - [x] #1 Bloco Caminhao (placa, carreta, motorista, chegada) so edita por dialog com Cancelar/Salvar
 - [x] #2 Bloco Pesagem (PBT/Tara com preview ao vivo) so edita por dialog
 - [x] #3 Bloco Classificacao (leituras dos parametros da cultura) so edita por dialog
-- [x] #4 Bloco Origem/Destino do grao: um dialog so, duas colunas lado a lado
+- [x] #4 Bloco Origem/Destino do grao: um dialog so; no card as duas colunas ficam lado a lado e no modal Origem e Destino ficam empilhados
 - [x] #5 FAB cinza 'salvar sem avancar' removido e a Observacao com lugar pra ser salva
 - [x] #6 Trocar o tipo de romaneio com peso ja lancado pede confirmacao nomeando a consequencia; sem peso troca direto; finalizada segue bloqueada
 - [x] #7 Blocos em leitura com icone e hierarquia: rotulo em legenda, valor em destaque, icone por tipo de ponto (talhao/armazem/contrato)
 - [x] #8 Chip colorido de etapa sai da area das abas; a etapa segue visivel na barra de progresso do drawer direito
 - [x] #9 Botão da etapa (Pesar bruto, Classificar, Pesar tara, Notas fiscais) abre o dialog da etapa pedindo o valor; sem valor não avança
 - [x] #10 Bloco sem nada informado mostra um + azul no lugar do lapis; com dado informado, segue o lapis de editar
-- [x] #11 Safra e tipo de operacao saem do drawer e do card e viram selects no modal de Operacao (6 campos em 2 linhas de 3); o card so exibe
+- [x] #11 Safra e tipo de operacao saem do drawer e do card e viram selects no modal de Operacao; o card so exibe (o layout de 6 campos so existe na Expedicao, ver #24)
 - [x] #12 Placa e carreta aceitam so formato brasileiro (ABC1234 ou ABC1D23); placa sem cadastro pode ser usada assim mesmo ou cadastrada
 - [x] #13 Motorista pode ser cadastrado de dentro do modal com CPF, nome, telefone e endereco
-- [x] #14 Motorista sem cadastro exige CPF, nome completo, telefone e endereco, gravados so na carga; CPF ja cadastrado seleciona a pessoa existente
+- [x] #14 Motorista sem cadastro basta o nome (CPF, telefone e endereco opcionais), gravados so na carga; CPF ja cadastrado seleciona a pessoa existente
 - [x] #15 Carga nova nasce com Recebimento e a chegada preenchidos, mas sem safra; registrar sem safra nao deixa
 - [x] #16 No modal de Operacao as setas percorrem as opcoes de placa e motorista (inclusive usar sem cadastro e cadastrar), e escolher a placa leva o foco pra carreta
 - [x] #17 Origem/Destino: a unica linha de origem ou destino nao tem X; a soma so aparece com mais de uma linha; o + fica na linha do titulo com tooltip
@@ -47,8 +47,10 @@ Os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) estao implementad
 - [x] #21 F3 e Enter confirmam o modal aberto e ja abrem o proximo que falta (Operacao > Origem/Destino > etapa da balanca); Esc interrompe
 - [x] #22 Registrar com o peso ja digitado nao pede o peso de novo: a carga ja nasce na etapa seguinte
 - [x] #23 Enter funciona em Placa/Motorista tambem (nao so Safra/Operacao) quando a lista esta fechada
-- [x] #24 Modal de Operacao: 2 campos de Reboque (nao obrigatorios, formato de placa) lado a lado; Motorista numa linha propria col-6
+- [x] #24 Modal de Operacao: na Expedicao, 2 campos de Reboque (nao obrigatorios, formato de placa) lado a lado; Motorista numa linha propria
 - [x] #25 FAB 'salvar sem avancar' removido; FAB principal (Registrar/etapa/Salvar) some quando a carga ja esta finalizada
+- [ ] #26 Carga com dois reboques não perde o segundo ao ser aberta em outro aparelho
+- [ ] #27 O segundo reboque sai no romaneio impresso e nas telas da carga
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -114,4 +116,6 @@ Com os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) salvando indi
 - F3 não chamava o onSubmit (submit() sem evento + @submit.prevent) — corrigido passando um Event; mensagem 'ou remova a linha' ajustada.
 
 29/09/2026: fechada a pedido do usuario (validacoes feitas em outra conversa). Pontos levantados na conferencia, para registro: layout do modal de Operacao segue o #24 (reboques so na Expedicao) e nao o '2 linhas de 3' do #11; backend aceita motorista sem cadastro sem CPF/endereco (so o front exige); mensagens de erro dos campos do motorista removidas; Observacao de carga finalizada so salva junto com algum bloco; script 30-agro_carga_reboque2.sql ainda fora do 00-diagnostico e do README.
+
+22/10/2026 — conferência no código (só leitura). Texto dos critérios #4, #11, #14 e #24 ajustado ao comportamento atual: o modal de Origem/Destino empilha os lados; reboques e o layout de 6 campos só na Expedição; motorista sem cadastro exige só o nome desde o commit 87776bfb (07/10, confirmado pelo usuário como proposital). Critérios novos: #26 normalizarCargaDoServidor (agro/src/utils/carga.js) copia placacarreta mas não placacarreta2, embora a API devolva; salvar a Operação de uma carga puxada do servidor grava o 2º reboque NULL. Como ver: limpar o IndexedDB, abrir uma Expedição com 2 reboques e salvar a Operação. #27 CargaForm.vue (imprimir) não passa placacarreta2 ao imprimirTicket, que já sabe imprimir; CargaResumo, CargaListItem e CargaDetailPage só mostram o 1º reboque; a 2ª via da ficha (ticketDoServidor) mostra os dois, então 2ª via e original saem diferentes. Como ver: F4 numa Expedição finalizada com 2 reboques. Volta para To Do por causa de #26 e #27; responsável mantido.
 <!-- SECTION:NOTES:END -->

@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-22 12:24'
-updated_date: '2026-10-07 15:39'
+updated_date: '2026-10-22 15:41'
 labels:
   - agro
 dependencies:
@@ -44,7 +44,7 @@ Criterio de aceite: o total geral do PDF bate com a barra de totais da tela.
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [x] #1 Relatório em A4 retrato com todas as informações da listagem de cargas (Safra, Origem e Destino em colunas próprias, textos longos cortados), mantendo agrupamento e subtotais
+- [x] #1 Relatório em A4 retrato com todas as informações da listagem de cargas (Safra, Origem e Destino em colunas próprias, textos longos cortados); sem agrupamento nem subtotais desde 06/10, quando o "Agrupar por" saiu da tela
 - [x] #2 Total do PDF igual ao da tela, por tipo e sem canceladas (exceto a coluna Bruto, que no PDF mostra e soma o PBT)
 <!-- AC:END -->
 
@@ -91,4 +91,6 @@ Gotcha mPDF: o <col> do colgroup sozinho NÃO segura a largura — ele estica a 
 07/10/2026, a pedido do usuário: coluna 'Bruto' do PDF mostra o PBT (caminhão cheio), mantendo o nome. Subtotais e totais dessa coluna somam o PBT (decidido com o usuário), então o total geral passou a ser somado das próprias linhas (somar()) e não mais do CargaService::totais(), que não tem PBT. Conferido: qtd/desconto/líquido/sacas por tipo continuam iguais ao totais() da tela; PBT somado = sum(pbt) das ativas.
 
 07/10/2026, a pedido do usuário: totais finais saíram da tabela de romaneios para um quadro próprio no fim (table.resumo), com títulos (Totais, Romaneios, Bruto (kg), Desconto (kg), Líquido (kg), Sacas), fonte 9pt e respiro largo; uma linha por tipo, sem canceladas; page-break-inside: avoid.
+
+22/10/2026 — conferência no código (só leitura). Texto do #1 ajustado: o PDF sai sem grupos desde que o 'Agrupar por' saiu do drawer (TASK-138, 06/10). Os 13 agrupamentos continuam no CargaRelatorioService e no Blade, alcançáveis só por ?agrupar= na URL — apagar ou manter fica para decidir. Pergunta em aberto: com a situação 'Cancelados', a tela soma só as ativas (CargaService::totais) e o PDF soma as linhas impressas e omite o quadro de totais; a legenda diz 'Inclui canceladas' mesmo quando só há canceladas.
 <!-- SECTION:NOTES:END -->
