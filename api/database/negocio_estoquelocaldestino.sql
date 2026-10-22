@@ -22,7 +22,8 @@ BEGIN;
 SET LOCAL lock_timeout = '5s';
 SET LOCAL statement_timeout = '60min';
 
--- 1. pelo movimento de destino ja' gerado pelo job
+-- 1. pelo movimento de destino ja' gerado pelo job (inclusive a transferencia da loja
+--    para ela mesma, que tem entrada no proprio local: copia o que o job usou)
 WITH destino AS (
     SELECT DISTINCT ON (npb.codnegocio) npb.codnegocio, elpv.codestoquelocal
     FROM tblestoquemovimento m
@@ -34,7 +35,6 @@ WITH destino AS (
         ON (elpv.codestoquelocalprodutovariacao = es.codestoquelocalprodutovariacao)
     WHERE m.codestoquemovimentoorigem IS NOT NULL
     AND n.codestoquelocaldestino IS NULL
-    AND elpv.codestoquelocal <> n.codestoquelocal
     ORDER BY npb.codnegocio, m.codestoquemovimento
 )
 UPDATE tblnegocio n

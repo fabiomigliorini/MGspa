@@ -53,6 +53,7 @@ class RequisicaoService
     {
         return in_array($req->status, [
             Requisicao::STATUS_AGUARDANDO,
+            Requisicao::STATUS_EM_SEPARACAO,
             Requisicao::STATUS_PARCIAL,
             Requisicao::STATUS_DIVERGENCIA,
         ]) && (static::ehRequisitada($req, $pdv) || static::ehGerente());
@@ -152,6 +153,9 @@ class RequisicaoService
     public static function criar(array $dados, Pdv $pdv): Requisicao
     {
         $dados['codestoquelocalrequisitante'] = $dados['codestoquelocalrequisitante'] ?? $pdv->codestoquelocal;
+        if (empty($dados['codestoquelocalrequisitante'])) {
+            abort(422, 'Informe a loja que pede (este dispositivo não tem local de estoque configurado)!');
+        }
         static::validarCabecalho($dados);
 
         $req = new Requisicao();
