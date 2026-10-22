@@ -533,6 +533,15 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('vale-modelo/{valeModelo}/inativo', [\Mg\Vale\ValeModeloController::class, 'ativar']);
     Route::apiResource('vale-modelo', \Mg\Vale\ValeModeloController::class)->parameters(['vale-modelo' => 'valeModelo']);
 
+    // Requisicao entre lojas (TASK-55, doc-6): o dispositivo (X-Pdv) diz de que loja e' quem esta' na tela
+    Route::middleware('pdv')->group(function () {
+        Route::get('requisicao/painel', [\Mg\Requisicao\RequisicaoController::class, 'painel']);
+        Route::post('requisicao', [\Mg\Requisicao\RequisicaoController::class, 'store']);
+        Route::get('requisicao/{codrequisicao}', [\Mg\Requisicao\RequisicaoController::class, 'show'])->whereNumber('codrequisicao');
+        Route::put('requisicao/{codrequisicao}', [\Mg\Requisicao\RequisicaoController::class, 'update'])->whereNumber('codrequisicao');
+        Route::post('requisicao/{codrequisicao}/cancelar', [\Mg\Requisicao\RequisicaoController::class, 'cancelar'])->whereNumber('codrequisicao');
+    });
+
     // UnidadeMedida (migrado em 31/05/2026)
     Route::get('unidade-medida/autocompletar', [\Mg\Produto\UnidadeMedidaController::class, 'autocompletar']);
     Route::post('unidade-medida/{id}/inativo', [\Mg\Produto\UnidadeMedidaController::class, 'inativar']);

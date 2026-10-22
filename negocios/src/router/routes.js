@@ -90,6 +90,31 @@ const routes = [
         },
       },
 
+      // REQUISICOES ENTRE LOJAS (TASK-55)
+      {
+        path: '/requisicao',
+        component: () => import('pages/RequisicaoPainelPage.vue'),
+        meta: { title: 'Requisições', backTo: '/' },
+      },
+      {
+        path: '/requisicao/nova',
+        component: () => import('pages/RequisicaoFormPage.vue'),
+        meta: { title: 'Nova Requisição', backTo: '/requisicao' },
+      },
+      {
+        path: '/requisicao/:codrequisicao(\\d+)',
+        component: () => import('pages/RequisicaoDetalhePage.vue'),
+        meta: { title: 'Requisição', backTo: '/requisicao' },
+      },
+      {
+        path: '/requisicao/:codrequisicao(\\d+)/editar',
+        component: () => import('pages/RequisicaoFormPage.vue'),
+        meta: {
+          title: 'Editar Requisição',
+          backTo: (route) => '/requisicao/' + route.params.codrequisicao,
+        },
+      },
+
       // IMPRESSORAS (TASK-253)
       {
         path: '/impressora',

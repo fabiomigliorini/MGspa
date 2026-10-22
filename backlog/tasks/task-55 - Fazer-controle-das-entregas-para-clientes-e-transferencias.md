@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-22 01:10'
+updated_date: '2026-10-22 01:16'
 labels:
   - negocios
 dependencies: []
@@ -37,7 +37,7 @@ As impressoras em tabela estão na task própria das impressoras.
 <!-- AC:BEGIN -->
 - [x] #1 Etapa 0: tblpedido, tblpedidoitem e tblnegocioprodutobarrapedidoitem removidas com o código Mg\Pedido; acertoentrega/codusuarioacertoentrega removidos
 - [x] #2 Etapa 2: cadastro de Locais de Estoque no app estoque, com a impressora do local
-- [ ] #3 Etapa 3: requisição com cadastro, detalhe e painel por loja (status em coluna, código só do lado de quem pediu)
+- [x] #3 Etapa 3: requisição com cadastro, detalhe e painel por loja (status em coluna, código só do lado de quem pediu)
 - [ ] #4 Etapa 4: impressão das duas vias da requisição (térmica/A5), automática ao criar e por botão
 - [ ] #5 Etapa 5: Requisitar a partir do negócio fechado e sugestão abaixo do mínimo
 - [ ] #6 Etapa 6: codestoquelocaldestino preenchido (backfill), select Loja destino no PDV e MGLara usando o campo

@@ -23,6 +23,7 @@ const menuGroups = [
   {
     label: 'Movimento',
     items: [
+      { label: 'Requisições', icon: 'move_down', color: 'brown', to: '/requisicao' },
       { label: 'Escanear Confissão', icon: 'photo_camera', color: 'negative', to: '/confissao' },
       {
         label: 'Cobranças PagarMe',
