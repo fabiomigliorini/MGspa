@@ -2,6 +2,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import { todasPaginas } from 'src/utils/paginas'
 
 // Store da TELA Estoque & Extrato (store-per-screen): dona de TODOS os dados do
 // dashboard — lista de safras p/ o seletor, safra selecionada, KPIs comerciais,
@@ -37,21 +38,6 @@ export const useExtratoStore = defineStore('extrato', () => {
   const liquidoForm = computed(
     () => Number(form.value.bruto || 0) - (retirada.value ? 0 : Number(form.value.desconto || 0)),
   )
-
-  // Todas as páginas (o Laravel pagina em 50): senão o extrato e os selects
-  // paravam no 50º registro.
-  async function todasPaginas(url, params = {}) {
-    const todos = []
-    let page = 1
-    let last = 1
-    do {
-      const { data } = await api.get(url, { params: { ...params, page } })
-      todos.push(...(data.data ?? data))
-      last = data?.meta?.last_page ?? data?.last_page ?? 1
-      page++
-    } while (page <= last)
-    return todos
-  }
 
   // ---- GET ----
   async function carregarSafras() {

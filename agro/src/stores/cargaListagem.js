@@ -4,6 +4,7 @@ import { api } from 'src/services/api'
 import { normalizarCargaParaExibicao } from 'src/utils/carga'
 import { abrirPdf } from 'src/utils/abrirPdf'
 import { notifyError } from 'src/utils/notify'
+import { todasPaginas as todasPaginasApi } from 'src/utils/paginas'
 import { hoje, inicioMes } from '@components/utils/datas'
 
 // Consulta do HISTÓRICO de romaneios — tela /cargas.
@@ -149,23 +150,8 @@ export const useCargaListagemStore = defineStore(
       }
     }
 
-    // Varre todas as páginas: MgModel::$perPage = 50 e o 51º contrato sumiria
-    // do select sem nenhum aviso.
-    async function todasPaginas(endpoint, extra = {}) {
-      const todos = []
-      let page = 1
-      let last = 1
-      do {
-        const { data } = await api.get(endpoint, {
-          params: { ...extra, page },
-          skipLoading: true,
-        })
-        todos.push(...(Array.isArray(data) ? data : (data.data ?? [])))
-        last = data?.meta?.last_page ?? data?.last_page ?? 1
-        page++
-      } while (page <= last)
-      return todos
-    }
+    // Cadastros dos selects sem o loading global (MgModel pagina em 50).
+    const todasPaginas = (url) => todasPaginasApi(url, {}, { skipLoading: true })
 
     async function carregarCadastros() {
       const [s, c, u, ct] = await Promise.all([

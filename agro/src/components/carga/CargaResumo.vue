@@ -6,7 +6,7 @@ import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { formataTimestamp, tempoRelativo } from '@components/formatters'
 import { useCargaStore } from 'src/stores/carga'
-import { sentidoMeta, ETAPA_META, fmtNumero } from 'src/utils/carga'
+import { sentidoMeta, ETAPA_META, fmtNumero, reboques } from 'src/utils/carga'
 import { sacas } from 'src/utils/desconto'
 import CargaEtapaProgresso from './CargaEtapaProgresso.vue'
 
@@ -137,7 +137,7 @@ function kgPonto(p) {
         <q-item-section>
           <q-item-label lines="1">
             {{ carga.placa || 'Sem placa' }}
-            <span v-if="carga.placacarreta" class="text-grey-6">/ {{ carga.placacarreta }}</span>
+            <span v-if="reboques(carga)" class="text-grey-6">/ {{ reboques(carga) }}</span>
           </q-item-label>
           <q-item-label v-if="veiculo?.veiculo" caption>{{ veiculo.veiculo }}</q-item-label>
           <q-item-label caption>{{ carga.motorista || 'Motorista não informado' }}</q-item-label>

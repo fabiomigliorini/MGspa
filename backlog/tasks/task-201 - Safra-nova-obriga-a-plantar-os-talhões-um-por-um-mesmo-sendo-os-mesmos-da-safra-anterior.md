@@ -3,11 +3,11 @@ id: TASK-201
 title: >-
   Safra nova obriga a plantar os talhões um por um, mesmo sendo os mesmos da
   safra anterior
-status: To Do
+status: In Progress
 assignee:
   - '@eduardo'
 created_date: '2026-10-07 18:37'
-updated_date: '2026-10-22 15:41'
+updated_date: '2026-10-22 19:26'
 labels:
   - agro
 dependencies: []
@@ -53,4 +53,6 @@ Conferido em dev (transação desfeita): origem safra 1 → 22 talhões copiados
 Teste ignorado pelo Fábio (10/10/2026): ele dispensou o teste manual dele e pediu para marcar e commitar. Critérios marcados com base no que está implementado e nos testes registrados nas notas acima.
 
 22/10/2026 — conferência no código (só leitura). Critérios novos: #5 agro/src/stores/safra.js (carregarPlantios) lê só a 1ª página de v1/safra/{cod}/plantio, que pagina em 50 (MgModel::$perPage); a cópia de talhões cria dezenas de uma vez, e safra com mais de 50 plantios fica com a lista e o wizard cortados, diferentes dos KPIs. #6 CulturaService::resumo soma todos os plantios, mas resumoVariedades só lista variedades cadastradas; plantio sem variedade (toda safra recém-copiada) entra no total e some da quebra. Como ver: #/cultura/N depois de copiar uma safra. Volta para To Do por causa de #5 e #6; responsável mantido.
+
+22/10/2026 (2) — #5/#6 implementados, aguardando validação. #5: carregarPlantios (stores/safra.js) lê todas as páginas com o novo utils/paginas.js::todasPaginas, que substitui as cópias de cargaListagem.js e extrato.js. #6: CulturaService::resumoVariedades acrescenta a linha 'Sem variedade' e mantém a variedade inativa que ainda tem área/colhido; a soma das linhas bate com os KPIs (conferido no dev, milho e soja, e com um plantio zerado em transação desfeita: 'Sem variedade' 4,7 ha). Como testar: #/cultura/N depois de copiar uma safra; safra com mais de 50 plantios lista todos.
 <!-- SECTION:NOTES:END -->

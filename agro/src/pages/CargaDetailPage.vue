@@ -7,7 +7,7 @@ import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
 import { formataTimestamp, tempoRelativo } from '@components/formatters'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
-import { sentidoMeta, ETAPA_META, fmtNumero } from 'src/utils/carga'
+import { sentidoMeta, ETAPA_META, fmtNumero, reboques } from 'src/utils/carga'
 import { imprimirTicket, ticketDoServidor } from 'src/utils/ticket'
 import { notifyError } from 'src/utils/notify'
 import { goBack } from 'src/utils/goBack'
@@ -206,8 +206,8 @@ onMounted(() => carregar(route.params.codcarga))
                   <q-item-section>
                     <q-item-label>
                       {{ carga.placa || 'Sem placa' }}
-                      <span v-if="carga.placacarreta" class="text-grey-6">
-                        / {{ carga.placacarreta }}
+                      <span v-if="reboques(carga)" class="text-grey-6">
+                        / {{ reboques(carga) }}
                       </span>
                     </q-item-label>
                     <q-item-label v-if="carga.Veiculo?.veiculo" caption>

@@ -3,17 +3,17 @@ id: TASK-183
 title: >-
   Líquido do contrato errado: isenção de FETHAB ignorada e card da fixação
   diferente do gravado
-status: To Do
+status: In Progress
 assignee:
   - '@eduardo'
 created_date: '2026-09-28 21:11'
-updated_date: '2026-10-22 15:40'
+updated_date: '2026-10-22 19:26'
 labels:
   - agro
 dependencies: []
 priority: high
 type: bug
-ordinal: 204000
+ordinal: 4000
 ---
 
 ## Description
@@ -43,4 +43,6 @@ Linha de base 28/09 (api/tests/agro, camada V): a isenção de FETHAB DECLARADA 
 01/10/2026 — implementado, aguardando validação. Backend: fixação sem tributos passa a GRAVAR os vigentes (ContratoFixacaoService::liquido), então a isenção declarada e os tributos da época ficam congelados; ContratoFixacaoRequest recusa quantidade×preço abaixo do câmbio travado e troca de moeda com trava; preço médio com definição única (R$ ÷ sacas firmes em R$, ContratoCalculoService::sacasFirmes); comissão calculada no servidor (ContratoService::aplicarComissao, reaplicada a cada recálculo de fixação; request não aceita mais comissaototal). Front: card da fixação mostra o liquidobrl gravado e a prévia usa o arredondamento do servidor; 'Bate' compara recebido com carregado líquido; contrato mostra o preço médio líquido; comissão vem do servidor. Pedido extra: PlantioMapaDialog não oferece trocar a safra quando a carga já tem (definida em Operação) e o talhão não sobrescreve mais a safra. Sem flag nova de isenção: a isenção continua sendo zerar a linha do FETHAB no modal. Fora: V7 (TASK-133) e mês da UPF (contabilidade). Bateria todos: OK 64 · FALHA 30 (era 62/32); V2b e V5 OK, nenhuma FALHA nova.
 
 22/10/2026 — conferência no código (só leitura) e critérios #1 a #8 ticados com a validação do usuário. Ressalvas: #1 a isenção é declarada zerando a linha do FETHAB no modal da fixação; não há isenção automática por cooperativa. #3 os tributos da época só ficam gravados quando a fixação é recalculada (fixação antiga sem tributos não tem backfill). #6 o preço médio dá o mesmo número, mas a conta está em 3 cópias (ContratoCalculoService::calcularDoContrato, ContratoResource, SafraService::resumoComercial). Critério #9 novo: ContratoFixacaoController::destroy/inativar/ativar não chamam ContratoFixacaoService::recalcular nem ContratoService::aplicarComissao (só o update recalcula), então a comissão em % fica com o valor antigo. Como ver: contrato com comissão %, excluir uma fixação e olhar o Total da comissão (ContratoDados). Volta para To Do por causa do #9; responsável mantido.
+
+22/10/2026 (2) — #9 implementado, aguardando validação. ContratoFixacaoController::destroy/inativar/ativar chamam reaplicarComissao (ContratoService::aplicarComissao + save no contrato). Não usa recalcular() para não regravar a fixação excluída nem congelar tributos ao inativar. Conferido no dev (transação desfeita): contrato 2 com 1% de comissão, 9.700 → 0 ao inativar a fixação de R$ 970.000 → 9.700 ao reativar. Como testar: contrato com comissão em %, excluir uma fixação e olhar o Total da comissão (ContratoDados).
 <!-- SECTION:NOTES:END -->

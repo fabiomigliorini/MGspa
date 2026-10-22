@@ -111,7 +111,7 @@ export function imprimirTicket(t) {
       <table>
         ${linha('Placa', t.placa || '—')}
         ${
-          t.placacarreta
+          t.placacarreta || t.placacarreta2
             ? linha('Reboque', [t.placacarreta, t.placacarreta2].filter(Boolean).join(' / '))
             : ''
         }

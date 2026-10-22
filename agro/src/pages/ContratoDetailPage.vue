@@ -13,7 +13,6 @@ import ContratoForm from 'components/ContratoForm.vue'
 import ContratoDados from 'components/ContratoDados.vue'
 import ContratoFixacao from 'components/ContratoFixacao.vue'
 import ContratoPagamentos from 'components/ContratoPagamentos.vue'
-import ContratoNotas from 'components/ContratoNotas.vue'
 import ContratoEntregas from 'components/ContratoEntregas.vue'
 import ContratoAnexos from 'components/ContratoAnexos.vue'
 
@@ -310,7 +309,7 @@ onMounted(() => store.carregar(cod))
         <!-- Barter também pode ter fixação/pagamento (campos livres). -->
         <ContratoFixacao />
         <ContratoPagamentos />
-        <ContratoNotas />
+        <!-- Plano de NF desativado (TASK-133): a emissão triangular não está pronta. -->
         <ContratoEntregas />
         <ContratoAnexos />
       </template>

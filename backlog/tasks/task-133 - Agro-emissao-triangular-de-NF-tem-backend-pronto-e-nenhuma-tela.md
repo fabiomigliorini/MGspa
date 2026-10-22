@@ -2,9 +2,10 @@
 id: TASK-133
 title: 'Agro: emissao triangular de NF tem backend pronto e nenhuma tela'
 status: To Do
-assignee: []
+assignee:
+  - '@eduardo'
 created_date: '2026-09-21 21:33'
-updated_date: '2026-10-22 15:41'
+updated_date: '2026-10-22 19:26'
 labels:
   - agro
 dependencies: []
@@ -28,4 +29,6 @@ NotaFiscalContratoService::planoEmissao esta implementado e exposto em GET v1/co
 
 <!-- SECTION:NOTES:BEGIN -->
 22/10/2026 — causa do 500 do critério #1 (leitura de código): NotaFiscalContratoService::planoEmissao lê $calc['itens'] (linha 66), mas ContratoCalculoService::calcularDoContrato não devolve a chave itens (só bruto, liquido e totais). Só estoura quando o contrato tem nota no plano. A correção depende de decidir de onde vêm os tributos por carga (os gravados em cada fixação desde a TASK-183, por exemplo); o pré-requisito do vínculo cultura → produto fiscal continua faltando.
+
+22/10/2026 (2) — desativado a pedido: o card 'Plano de NF' (ContratoNotas.vue) saiu do detalhe do contrato e a rota GET v1/contrato/{}/carga/{}/emissao ficou comentada em api/routes/api.php. O CRUD v1/contrato/{}/nota continua, para não perder o plano já cadastrado. Para religar: decidir de onde vêm os tributos por carga (os gravados na fixação) e criar o vínculo cultura → produto fiscal. Como testar: abrir um contrato; o card Plano de NF não aparece.
 <!-- SECTION:NOTES:END -->

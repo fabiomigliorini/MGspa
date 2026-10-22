@@ -561,6 +561,7 @@ function imprimir() {
     safra: safraCarga.value?.safra,
     placa: local.value.placa,
     placacarreta: local.value.placacarreta,
+    placacarreta2: local.value.placacarreta2,
     veiculo: veic?.veiculo || null,
     motorista: local.value.motorista,
     itens: itensFonte.map((p) => ({ rotulo: p.rotulo, kg: kgDoPonto(p) })),

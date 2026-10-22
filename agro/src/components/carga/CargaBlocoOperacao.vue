@@ -33,6 +33,7 @@ import {
   PLACA_RE,
   normalizarPlaca,
   CAMPOS_MOTORISTA_SEM_CADASTRO,
+  reboques,
 } from 'src/utils/carga'
 import { cadastrarMotorista } from 'src/utils/motorista'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
@@ -89,10 +90,6 @@ const temDados = computed(
       carga.value.placacarreta2 ||
       carga.value.motorista
     ),
-)
-// "REB1234 / REB5678" — só o(s) que existir(em); "—" se nenhum.
-const reboques = computed(() =>
-  [carga.value.placacarreta, carga.value.placacarreta2].filter(Boolean).join(' / '),
 )
 // Reboque só existe na Expedição (bitrem/rodotrem saindo da fazenda).
 const ehExpedicao = computed(() => carga.value.sentido === 'SAIDA')
@@ -526,7 +523,7 @@ async function salvar() {
           <div class="text-body2 text-grey-6">Reboque</div>
           <div class="row items-center no-wrap">
             <q-icon name="link" color="blue-grey-6" size="20px" class="q-mr-sm" />
-            <span class="text-h6 text-weight-medium">{{ reboques || '—' }}</span>
+            <span class="text-h6 text-weight-medium">{{ reboques(carga) || '—' }}</span>
           </div>
         </div>
         <div class="col-12 col-sm-4">
