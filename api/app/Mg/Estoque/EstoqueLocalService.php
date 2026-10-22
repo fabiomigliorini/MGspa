@@ -27,6 +27,25 @@ class EstoqueLocalService extends MgService
         return $qry;
     }
 
+    public static function salvar(array $dados, ?EstoqueLocal $local = null): EstoqueLocal
+    {
+        $local = $local ?? new EstoqueLocal();
+        $local->fill($dados);
+        $local->save();
+        return $local;
+    }
+
+    // o que as telas mostram alem das colunas: nome da filial e da impressora
+    public static function detalhar(EstoqueLocal $local): array
+    {
+        $ret = $local->toArray();
+        unset($ret['filial'], $ret['impressora']);
+        $ret['filial'] = $local->Filial->filial ?? null;
+        $ret['impressora'] = $local->Impressora->descricao ?? null;
+        $ret['impressoratipo'] = $local->Impressora->tipo ?? null;
+        return $ret;
+    }
+
     public static function autocompletar($params)
     {
         $qry = static::pesquisar($params)

@@ -12,6 +12,7 @@ use Mg\Negocio\Negocio;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\Produto\Produto;
 use Mg\Filial\Filial;
+use Mg\Impressora\Impressora;
 use Mg\Usuario\Usuario;
 
 class EstoqueLocal extends MgModel
@@ -22,6 +23,7 @@ class EstoqueLocal extends MgModel
 
     protected $fillable = [
         'codfilial',
+        'codimpressora',
         'controlaestoque',
         'deposito',
         'estoquelocal',
@@ -33,6 +35,7 @@ class EstoqueLocal extends MgModel
         'alteracao' => 'datetime',
         'codestoquelocal' => 'integer',
         'codfilial' => 'integer',
+        'codimpressora' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'controlaestoque' => 'boolean',
@@ -46,6 +49,11 @@ class EstoqueLocal extends MgModel
     public function Filial()
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+    }
+
+    public function Impressora()
+    {
+        return $this->belongsTo(Impressora::class, 'codimpressora', 'codimpressora');
     }
 
     public function UsuarioAlteracao()

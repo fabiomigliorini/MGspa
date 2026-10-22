@@ -135,6 +135,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // EstoqueLocal (migrado em 23/05/2026) — só leitura
     Route::get('estoque-local', [\Mg\Estoque\EstoqueLocalController::class, 'index']);
     Route::get('estoque-local/{id}', [\Mg\Estoque\EstoqueLocalController::class, 'show']);
+    Route::post('estoque-local', [\Mg\Estoque\EstoqueLocalController::class, 'store']);
+    Route::put('estoque-local/{id}', [\Mg\Estoque\EstoqueLocalController::class, 'update'])->whereNumber('id');
+    Route::post('estoque-local/{id}/inativo', [\Mg\Estoque\EstoqueLocalController::class, 'inativar'])->whereNumber('id');
+    Route::delete('estoque-local/{id}/inativo', [\Mg\Estoque\EstoqueLocalController::class, 'ativar'])->whereNumber('id');
 
     // Veiculo (migrado em 23/05/2026)
     Route::get('veiculo', [\Mg\Veiculo\VeiculoController::class, 'index']);
