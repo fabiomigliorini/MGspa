@@ -74,6 +74,12 @@ class Pdv extends MgModel
 
 
     // Chaves Estrangeiras
+    // impressora do cadastro (TASK-253) pela chave gravada no PDV
+    public function Impressora()
+    {
+        return $this->belongsTo(\Mg\Impressora\Impressora::class, 'impressora', 'impressora');
+    }
+
     public function Filial()
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');

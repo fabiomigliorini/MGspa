@@ -1,9 +1,10 @@
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
+import MgSelectImpressora from '@components/MgSelectImpressora.vue'
 import {
   formataCodigo,
   formataNumeroInteligente,
@@ -21,6 +22,38 @@ const { requisicao: r } = storeToRefs(sRequisicao)
 
 const status = computed(() => STATUS[r.value?.status] || STATUS.A)
 const itensPedidos = computed(() => (r.value?.itens || []).filter((i) => i.quantidade > 0))
+
+// impressão: cada loja imprime a sua via (a do cliente só na loja que pediu)
+const dialogImprimir = ref(false)
+const impressao = ref({ via: 'requisitada', formato: 'termica', impressora: null })
+const vias = computed(() =>
+  [
+    r.value?.codigoretirada !== undefined && {
+      value: 'requisitante',
+      label: 'Via do cliente (com o código)',
+    },
+    { value: 'requisitada', label: 'Via de separação (com o QR)' },
+  ].filter(Boolean),
+)
+const FORMATOS = [
+  { value: 'termica', label: 'Térmica 80 mm' },
+  { value: 'a5', label: 'A5' },
+]
+
+function abrirImprimir() {
+  impressao.value = {
+    via: r.value.codigoretirada !== undefined ? 'requisitante' : 'requisitada',
+    formato: 'termica',
+    impressora: null,
+  }
+  dialogImprimir.value = true
+}
+
+async function imprimir() {
+  if (await sRequisicao.imprimir(r.value, impressao.value.via, impressao.value.impressora)) {
+    dialogImprimir.value = false
+  }
+}
 
 function cancelar() {
   $q.dialog({
@@ -69,6 +102,9 @@ watch(
                 :to="`/requisicao/${r.codrequisicao}/editar`"
               >
                 <q-tooltip>Editar</q-tooltip>
+              </q-btn>
+              <q-btn flat round size="sm" color="grey-7" icon="print" @click="abrirImprimir">
+                <q-tooltip>Imprimir</q-tooltip>
               </q-btn>
               <q-btn
                 v-if="r.podecancelar"
@@ -166,5 +202,46 @@ watch(
         </q-card>
       </template>
     </div>
+
+    <q-dialog v-model="dialogImprimir">
+      <q-card flat style="width: 400px; max-width: 95vw">
+        <q-form @submit.prevent="imprimir">
+          <q-card-section class="text-grey-9 text-overline text-uppercase">Imprimir</q-card-section>
+          <q-card-section>
+            <div class="row q-col-gutter-md">
+              <div class="col-12">
+                <q-option-group v-model="impressao.via" :options="vias" type="radio" />
+              </div>
+              <div class="col-12">
+                <MgSelectImpressora
+                  v-model="impressao.impressora"
+                  label="Impressora (vazio = a padrão da via)"
+                  clearable
+                />
+              </div>
+              <div class="col-12">
+                <div class="text-caption text-grey-7">Formato do PDF na tela</div>
+                <q-option-group
+                  v-model="impressao.formato"
+                  :options="FORMATOS"
+                  type="radio"
+                  inline
+                />
+              </div>
+            </div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
+            <q-btn
+              flat
+              label="Ver PDF"
+              color="primary"
+              @click="sRequisicao.verPdf(r, impressao.via, impressao.formato)"
+            />
+            <q-btn flat label="Imprimir" color="primary" type="submit" />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
   </q-page>
 </template>

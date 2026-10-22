@@ -2,6 +2,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
 import { Notify } from 'quasar'
+import { abrirPdf } from '@components/abrirPdf'
 
 // Store do domínio "requisição entre lojas" (TASK-55, doc-6): serve o painel, o detalhe e o
 // formulário. O status vem pronto do backend (coluna gravada pelo processo da requisição).
@@ -162,6 +163,8 @@ export const requisicaoStore = defineStore(
           : await api.put(`v1/requisicao/${codrequisicao}`, dados)
         requisicao.value = data.data
         notificar('positive', isNovo.value ? 'Requisição criada' : 'Requisição alterada')
+        // o que não saiu sozinho na impressora (dispositivo ou loja sem impressora)
+        for (const aviso of data.avisos || []) notificar('warning', aviso)
         return data.data
       } catch (error) {
         notificar('negative', mensagemErro(error, 'Impossível salvar a requisição'))
@@ -183,6 +186,30 @@ export const requisicaoStore = defineStore(
       }
     }
 
+    // via: requisitante (com o código) ou requisitada (separação); impressora vazia = a padrão
+    async function imprimir(r, via, impressora = null) {
+      try {
+        const { data } = await api.post(`v1/requisicao/${r.codrequisicao}/imprimir`, {
+          via,
+          impressora,
+        })
+        notificar('positive', data.mensagem)
+        return true
+      } catch (error) {
+        notificar('negative', mensagemErro(error, 'Impossível imprimir'))
+        return false
+      }
+    }
+
+    function verPdf(r, via, formato) {
+      return abrirPdf(
+        api,
+        `v1/requisicao/${r.codrequisicao}/pdf`,
+        { via, formato },
+        { title: `Requisição #${r.codrequisicao}`, size: formato === 'a5' ? 'a4' : 'cupom' },
+      )
+    }
+
     return {
       lado,
       codestoquelocal,
@@ -202,6 +229,8 @@ export const requisicaoStore = defineStore(
       removerItem,
       salvar,
       cancelar,
+      imprimir,
+      verPdf,
     }
   },
   {
