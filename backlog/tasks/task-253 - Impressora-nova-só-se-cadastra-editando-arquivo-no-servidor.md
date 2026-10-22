@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-22 00:43'
-updated_date: '2026-10-22 01:04'
+updated_date: '2026-10-22 01:08'
 labels:
   - api
 dependencies: []
@@ -27,7 +27,13 @@ Plano em backlog/docs/doc-6 (etapas 0, 1 e 8): tabela tblimpressora (chave = nom
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
 - [x] #1 Etapa 0: impressoras do usuário removidas (tblusuario, api, MGLara, EscPrint, quasar legado) e o comando com a chave do Ably fora da resposta da impressão do DANFE
-- [ ] #2 Etapa 1: tblimpressora com cadastro no PDV (app negocios); printers.json apagado; select e PDV lendo a tabela
+- [x] #2 Etapa 1: tblimpressora com cadastro no PDV (app negocios); printers.json apagado; select e PDV lendo a tabela
 - [ ] #3 Etapa 8: codimpressora no PDV, em todas as rotas e no front; publicações no Ably por ImpressoraService::publicar
-- [ ] #4 README do MGprint aponta para o cadastro de impressoras
+- [x] #4 README do MGprint aponta para o cadastro de impressoras
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Etapa 1: printers.json não é versionado (cada servidor tem o seu). Carga pelo comando php artisan impressora:importar-json (cria só as que faltam; argox = etiqueta, resto = térmica) depois do api/database/impressora.sql; apagar o arquivo do servidor depois da carga.
+<!-- SECTION:NOTES:END -->

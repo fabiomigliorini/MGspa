@@ -90,6 +90,13 @@ const routes = [
         },
       },
 
+      // IMPRESSORAS (TASK-253)
+      {
+        path: '/impressora',
+        component: () => import('pages/ImpressoraPage.vue'),
+        meta: { title: 'Impressoras', backTo: '/' },
+      },
+
       // LISTAGEM NEGOCIOS
       {
         path: '/listagem',

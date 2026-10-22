@@ -44,6 +44,7 @@ const menuGroups = [
         to: '/dispositivo/meu',
       },
       { label: 'Outros Dispositivos', icon: 'devices', color: 'blue-grey', to: '/dispositivo' },
+      { label: 'Impressoras', icon: 'print', color: 'blue-grey', to: '/impressora' },
       {
         label: 'Prancheta',
         icon: 'mdi-clipboard-text-outline',

@@ -2,6 +2,7 @@
 
 namespace Mg\Pdv;
 
+use Mg\Impressora\ImpressoraService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -468,22 +469,17 @@ class PdvService
         return $regs;
     }
 
+    // impressoras ativas do cadastro (tblimpressora), para a sincronizacao do PDV
     public static function impressora()
     {
-        $printers = json_decode(file_get_contents(base_path('printers.json')), true);
-        $ret = [];
         $sincronizado = date('Y-m-d H:i:s');
-        $codimpressora = 0;
-        foreach ($printers as $impressora => $nome) {
-            $codimpressora++;
-            $ret[] = [
-                'codimpressora' => $codimpressora,
-                'impressora' => $impressora,
-                'nome' => $nome,
-                'sincronizado' => $sincronizado,
-            ];
-        }
-        return $ret;
+        return ImpressoraService::listar(false)->map(fn ($i) => [
+            'codimpressora' => $i->codimpressora,
+            'impressora' => $i->impressora,
+            'nome' => $i->descricao,
+            'tipo' => $i->tipo,
+            'sincronizado' => $sincronizado,
+        ])->values()->all();
     }
 
     // grava so' os campos que vieram: quem nao altera o cadastro nem manda (o controller recusa)

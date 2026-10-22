@@ -423,7 +423,7 @@ Legenda: ✅ migrado · ⏭️ pulado · 🟢 candidato leve · 🟡 médio · �
 | ✅ | `SelectEstoqueMovimentoTipoController` | migrado (lote #16-35) |
 | ✅ | `SelectFilialController` | migrado (lote #16-35) |
 | ✅ | `SelectGrupoEconomicoController` | migrado (lote #16-35) |
-| ✅ | `SelectImpressoraController` | migrado (lote #16-35) — lê printers.json |
+| ✅ | `SelectImpressoraController` | migrado (lote #16-35) — lê tblimpressora (TASK-253) |
 | ✅ | `SelectNaturezaOperacaoController` | migrado (lote #16-35) |
 | ✅ | `SelectPessoaController` | migrado (lote #16-35) |
 | ✅ | `SelectPortadorController` | migrado (lote #16-35) |

@@ -1380,6 +1380,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('portador/{codportador}/consulta-extrato', '\Mg\Portador\PortadorController@consultaExtrato');
     Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
 
+    // Impressora (TASK-253): cadastro no PDV; o nome e' a fila do CUPS / evento do Ably
+    Route::get('impressora', '\Mg\Impressora\ImpressoraController@index');
+    Route::post('impressora', '\Mg\Impressora\ImpressoraController@store');
+    Route::get('impressora/{codimpressora}', '\Mg\Impressora\ImpressoraController@show')->whereNumber('codimpressora');
+    Route::put('impressora/{codimpressora}', '\Mg\Impressora\ImpressoraController@update')->whereNumber('codimpressora');
+    Route::post('impressora/{codimpressora}/inativo', '\Mg\Impressora\ImpressoraController@inativar')->whereNumber('codimpressora');
+    Route::delete('impressora/{codimpressora}/inativo', '\Mg\Impressora\ImpressoraController@ativar')->whereNumber('codimpressora');
+
     // Maquineta (M3 doc-3: cadastro unico de terminais de cartao)
     Route::get('maquineta', '\Mg\Maquineta\MaquinetaController@index');
     Route::get('maquineta/adquirente', '\Mg\Maquineta\MaquinetaController@adquirentes');
