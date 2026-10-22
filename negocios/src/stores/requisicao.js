@@ -282,6 +282,19 @@ export const requisicaoStore = defineStore(
       }
     }
 
+    // entrega das partes separadas: códigos de retirada (ou justificativa) e quem recebeu
+    async function entregar(r, dados) {
+      try {
+        const { data } = await api.post(`v1/requisicao/${r.codrequisicao}/entregar`, dados)
+        requisicao.value = data.data
+        notificar('positive', 'Entrega registrada')
+        return true
+      } catch (error) {
+        notificar('negative', mensagemErro(error, 'Impossível registrar a entrega'))
+        return false
+      }
+    }
+
     async function reprocessar(r) {
       try {
         const { data } = await api.post(`v1/requisicao/${r.codrequisicao}/reprocessar`)
@@ -329,6 +342,7 @@ export const requisicaoStore = defineStore(
       incluirEnviadoAMais,
       finalizar,
       reprocessar,
+      entregar,
     }
   },
   {

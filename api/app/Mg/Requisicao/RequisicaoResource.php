@@ -76,6 +76,9 @@ class RequisicaoResource extends JsonResource
             'podecancelar' => RequisicaoService::podeCancelar($req, $pdv),
             'podejustificar' => RequisicaoService::podeJustificar($req, $pdv),
             'podeseparar' => RequisicaoService::podeSeparar($req, $pdv),
+            'podeentregar' => RequisicaoEntregaService::podeEntregar($req, $pdv),
+            'comcodigo' => RequisicaoEntregaService::comCodigo($req),
+            'partespendentes' => RequisicaoEntregaService::partesPendentes($req),
             'partes' => array_values(array_map(fn ($n) => [
                 'codnegocio' => $n['codnegocio'],
                 'codnegociostatus' => $n['codnegociostatus'],

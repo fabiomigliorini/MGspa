@@ -15,6 +15,7 @@ import {
 } from '@components/formatters'
 import { requisicaoStore, STATUS, MOTIVOS } from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
+import { RESULTADOS, MOTIVOS as MOTIVOS_ENTREGA } from 'stores/entrega'
 
 // Detalhe da requisição (TASK-55, doc-6). O código de retirada só aparece no dispositivo
 // da loja que pediu; o backend nem manda para os outros.
@@ -79,6 +80,45 @@ function abrirJustificar(i) {
 async function justificar() {
   const { item, ...dados } = justificativa.value
   if (await sRequisicao.justificarItem(item, dados)) dialogJustificar.value = false
+}
+
+// Entregar (TASK-55): retirada/entrega ao cliente com o código de cada requisição das partes
+// (ou justificativa sem ele); reposição é o recebido da loja que pediu
+const dialogEntregar = ref(false)
+const entrega = ref({})
+function abrirEntregar() {
+  entrega.value = {
+    codnegocios: r.value.partespendentes.map((p) => p.codnegocio),
+    resultado: 'E',
+    motivo: null,
+    recebedor: r.value.nome || '',
+    observacao: '',
+    codigos: {},
+    semCodigo: false,
+    justificativa: '',
+  }
+  dialogEntregar.value = true
+}
+const pedeCodigo = computed(() => r.value?.comcodigo && entrega.value.resultado !== 'N')
+// as requisições das partes escolhidas: o código de cada uma
+const requisicoesDasPartes = computed(() => [
+  ...new Set(
+    (r.value?.partespendentes || [])
+      .filter((p) => entrega.value.codnegocios?.includes(p.codnegocio))
+      .flatMap((p) => p.requisicoes),
+  ),
+])
+watch(
+  () => entrega.value.resultado,
+  () => (entrega.value.motivo = null),
+)
+async function entregar() {
+  const { semCodigo, codigos, justificativa, ...dados } = entrega.value
+  if (pedeCodigo.value) {
+    if (semCodigo) dados.justificativa = justificativa
+    else dados.codigos = codigos
+  }
+  if (await sRequisicao.entregar(r.value, dados)) dialogEntregar.value = false
 }
 
 function finalizar() {
@@ -170,6 +210,17 @@ watch(
                 @click="separar"
               >
                 <q-tooltip>Separar (abre um negócio no PDV ligado a esta requisição)</q-tooltip>
+              </q-btn>
+              <q-btn
+                v-if="r.podeentregar"
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="local_shipping"
+                @click="abrirEntregar"
+              >
+                <q-tooltip>{{ r.comcodigo ? 'Entregar ao cliente' : 'Recebido' }}</q-tooltip>
               </q-btn>
               <q-btn
                 v-if="r.podejustificar"
@@ -369,6 +420,93 @@ watch(
         </q-card>
       </template>
     </div>
+
+    <q-dialog v-model="dialogEntregar">
+      <q-card flat style="width: 600px; max-width: 95vw">
+        <q-form @submit.prevent="entregar">
+          <q-card-section class="text-grey-9 text-overline text-uppercase">
+            {{ r?.comcodigo ? 'Entregar ao cliente' : 'Recebido' }}
+          </q-card-section>
+          <q-card-section>
+            <div class="row q-col-gutter-md">
+              <div class="col-12">
+                <div class="text-caption text-grey-7">Partes</div>
+                <q-option-group
+                  v-model="entrega.codnegocios"
+                  type="checkbox"
+                  :options="
+                    (r?.partespendentes || []).map((p) => ({
+                      value: p.codnegocio,
+                      label: `Negócio #${formataCodigo(p.codnegocio)} · ${formataTimestamp(p.lancamento)}`,
+                    }))
+                  "
+                />
+              </div>
+              <div class="col-12">
+                <q-option-group v-model="entrega.resultado" :options="RESULTADOS" type="radio" />
+              </div>
+              <div class="col-12" v-if="MOTIVOS_ENTREGA[entrega.resultado]">
+                <div class="text-caption text-grey-7">Motivo</div>
+                <q-option-group
+                  v-model="entrega.motivo"
+                  :options="MOTIVOS_ENTREGA[entrega.resultado]"
+                  type="radio"
+                  inline
+                />
+              </div>
+              <template v-if="pedeCodigo">
+                <template v-if="!entrega.semCodigo">
+                  <div class="col-12 col-sm-6" v-for="cod in requisicoesDasPartes" :key="cod">
+                    <MgInput
+                      v-model="entrega.codigos[cod]"
+                      :label="`Código de retirada #${formataCodigo(cod)}`"
+                      maxlength="6"
+                      inputmode="numeric"
+                      autofocus
+                    />
+                  </div>
+                </template>
+                <div class="col-12">
+                  <q-toggle v-model="entrega.semCodigo" label="O cliente está sem o código" />
+                </div>
+                <div class="col-12" v-if="entrega.semCodigo">
+                  <MgInput
+                    v-model="entrega.justificativa"
+                    label="Justificativa (quem conferiu e como)"
+                    maxlength="200"
+                    :rules="[(v) => (v || '').trim().length >= 15 || 'Mínimo 15 letras']"
+                  />
+                </div>
+              </template>
+              <div class="col-12" v-if="entrega.resultado !== 'N'">
+                <MgInput
+                  v-model="entrega.recebedor"
+                  label="Quem recebeu"
+                  maxlength="100"
+                  :rules="[(v) => !!v || 'Informe quem recebeu']"
+                />
+              </div>
+              <div class="col-12">
+                <MgInput v-model="entrega.observacao" label="Observação" maxlength="500" autogrow />
+              </div>
+            </div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
+            <q-btn
+              flat
+              label="Registrar"
+              color="primary"
+              type="submit"
+              :disable="
+                !entrega.codnegocios?.length ||
+                (!!MOTIVOS_ENTREGA[entrega.resultado] && !entrega.motivo)
+              "
+            />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
 
     <q-dialog v-model="dialogJustificar">
       <q-card flat style="width: 600px; max-width: 95vw">

@@ -169,6 +169,28 @@ class RequisicaoController extends Controller
         return new RequisicaoResource($req->load(RequisicaoResource::RELACOES));
     }
 
+    // entrega das partes separadas: com o codigo de retirada de cada requisicao do negocio
+    // (retirada/entrega ao cliente) ou o recebido da reposicao
+    public function entregar(Request $request, $codrequisicao)
+    {
+        $dados = $request->validate([
+            'resultado' => 'required|in:' . implode(',', array_keys(\Mg\Negocio\NegocioEntrega::RESULTADOS)),
+            'motivo' => 'nullable|string|size:1',
+            'recebedor' => 'nullable|string|max:100',
+            'observacao' => 'nullable|string|max:500',
+            'codigos' => 'nullable|array',
+            'justificativa' => 'nullable|string|max:200',
+            'codnegocios' => 'nullable|array',
+            'codnegocios.*' => 'integer',
+        ]);
+        $pdv = $request->attributes->get('pdv');
+        DB::transaction(function () use ($codrequisicao, $dados, $pdv) {
+            $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
+            RequisicaoEntregaService::entregar($req, $dados, $pdv);
+        });
+        return new RequisicaoResource(Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao));
+    }
+
     // roda de novo o processo (corrigir falha de lancamento sem depender de evento)
     public function reprocessar($codrequisicao)
     {

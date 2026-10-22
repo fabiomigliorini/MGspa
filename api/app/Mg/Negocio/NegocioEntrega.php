@@ -48,6 +48,7 @@ class NegocioEntrega extends MgModel
         'observacao',
         'codigoconferido',
         'justificativa',
+        'codrequisicao',
         'inativo',
     ];
 
@@ -56,6 +57,7 @@ class NegocioEntrega extends MgModel
         'codigoconferido' => 'boolean',
         'codnegocio' => 'integer',
         'codnegocioentrega' => 'integer',
+        'codrequisicao' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
