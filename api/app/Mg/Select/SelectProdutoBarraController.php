@@ -103,58 +103,6 @@ class SelectProdutoBarraController extends Controller
         return DB::select($sql, $filtro);
     }
 
-    /**
-     * Resolve um codigo digitado ou bipado num produto UNICO. Duas formas,
-     * as mesmas que o PDV aceita:
-     *   1. o codigo de barras exato;
-     *   2. codigo do produto com 6 digitos, so nas barras sem embalagem
-     *      (quantidade is null).
-     *
-     * So responde quando a consulta devolve UM produto. Nao da para usar o
-     * ProdutoService::buscaPorBarras aqui: ele faz ->first() e, num produto
-     * com variacao de cor, escolheria uma cor ao acaso -- o codproduto
-     * 200304 (Tinta Acrilex 37ml) tem 6 barras base, uma por cor. O PDV
-     * escapa disso porque filtra ret.length == 1 no front.
-     *
-     * Devolve no mesmo shape do show, para a tela nao distinguir de onde veio.
-     */
-    public static function barras($barras)
-    {
-        $codigo = trim($barras);
-
-        $sql = "SELECT
-                    0 AS score,
-                    codprodutobarra,
-                    codproduto,
-                    barras,
-                    descricao,
-                    sigla,
-                    preco,
-                    marca,
-                    referencia,
-                    inativo,
-                    '" . config('services.mglara.imagens_url') . "/' || imagem as imagem,
-                    codprodutobarra as value,
-                    descricao as label
-                  FROM vwProdutoBarra
-                 WHERE barras = :codigo
-                    OR (
-                         :codigo ~ '^[0-9]{6}$'
-                         AND codproduto = nullif(regexp_replace(:codigo, '\\D', '', 'g'), '')::bigint
-                         AND quantidade IS NULL
-                       )
-                 LIMIT 10";
-        $rows = DB::select($sql, ['codigo' => $codigo]);
-
-        if (count($rows) === 0) {
-            abort(404, "Nenhum produto com o código {$codigo}!");
-        }
-        if (count($rows) > 1) {
-            abort(409, "O código {$codigo} cai em " . count($rows) . ' produtos. Use a pesquisa.');
-        }
-        return $rows[0];
-    }
-
     public static function show($id)
     {
         $sql = "SELECT

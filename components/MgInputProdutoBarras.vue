@@ -12,12 +12,13 @@ import MgDialogPesquisaProduto from '@components/MgDialogPesquisaProduto.vue'
 // código que vier em seguida entra com essa quantidade. Depois de cada
 // produto a quantidade volta para 1.
 //
-// O código é resolvido no backend (v1/select/produto-barra/barras/{codigo}),
-// que aceita a barra exata ou o código do produto com 6 dígitos, e só
-// responde quando cai num produto único.
+// O código é resolvido no backend (v1/produto-barra/barras/{codigo}), que
+// aceita a barra exata ou o código do produto com 6 dígitos, e só responde
+// quando cai num produto único.
 //
-// Emite `select` com (produto, quantidade). O produto vem no mesmo shape do
-// MgSelectProdutoBarra: value, label, barras, preco, codproduto, sigla...
+// Emite `select` com (produto, quantidade). O produto vem no shape da linha
+// da pesquisa em grade, venha do código ou dela: value, label, barras, preco,
+// codproduto, sigla, decimais...
 const props = defineProps({
   label: { type: String, default: 'Código de barras' },
   // liga o botão de lupa, que abre a pesquisa em grade
@@ -61,8 +62,8 @@ const buscar = async () => {
   if (!txt || buscando.value) return
   buscando.value = true
   try {
-    const { data } = await api.get(`v1/select/produto-barra/barras/${encodeURIComponent(txt)}`)
-    entregar(Array.isArray(data) ? data[0] : data?.data || data)
+    const { data } = await api.get(`v1/produto-barra/barras/${encodeURIComponent(txt)}`)
+    entregar(data.data)
   } catch (error) {
     const status = error?.response?.status
     // 404 = não achou, 409 = o código cai em vários produtos (variação de

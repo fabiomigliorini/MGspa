@@ -128,18 +128,25 @@ export const produtoStore = defineStore('produto', {
           break
       }
       LoadingBar.stop()
-      if (arrProdutos.length > 200) {
+
+      // a grade mostra um card por produto (TASK-173): o teto de 200 é de
+      // produtos, com todas as barras de cada um que casaram -- cortar nas
+      // barras deixaria o ultimo produto com parte das embalagens
+      const codprodutos = [...new Set(arrProdutos.map((p) => p.codproduto))]
+      const total = codprodutos.length
+      const primeiros = new Set(codprodutos.slice(0, 200))
+      arrProdutos = arrProdutos.filter((p) => primeiros.has(p.codproduto))
+      if (total > 200) {
         Notify.create({
           type: 'negative',
           message:
             'Pesquisa encontrou ' +
-            arrProdutos.length +
-            ' itens. Mostrando apenas os 200 primeiros. Refine a sua pesquisa.',
+            total +
+            ' produtos. Mostrando apenas os 200 primeiros. Refine a sua pesquisa.',
           timeout: 3000, // 3 segundos
           actions: [{ icon: 'close', color: 'white' }],
         })
-        arrProdutos = arrProdutos.slice(0, 200)
-      } else if (arrProdutos.length == 0) {
+      } else if (total == 0) {
         Notify.create({
           type: 'negative',
           message: 'Nenhum item localizado. Melhore sua pesquisa.',
@@ -149,12 +156,17 @@ export const produtoStore = defineStore('produto', {
       } else {
         Notify.create({
           type: 'positive',
-          message: 'Pesquisa encontrou ' + arrProdutos.length + ' itens.',
+          message: 'Pesquisa encontrou ' + total + (total == 1 ? ' produto.' : ' produtos.'),
           timeout: 1000, // 1 segundo
           actions: [{ icon: 'close', color: 'white' }],
         })
       }
       this.resultadoPesquisa = arrProdutos
+    },
+
+    // a barra no cache do PDV, com a sigla e as casas decimais da unidade (TASK-53)
+    async barra(codprodutobarra) {
+      return await db.produto.get(parseInt(codprodutobarra))
     },
 
     async buscarBarras(barras) {

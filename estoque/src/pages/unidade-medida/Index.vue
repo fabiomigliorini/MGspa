@@ -5,6 +5,7 @@ import { api } from 'src/services/api'
 import { useUnidadeMedidaStore } from 'src/stores/unidadeMedidaStore'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 
 const $q = useQuasar()
 const store = useUnidadeMedidaStore()
@@ -14,11 +15,23 @@ const isNovo = ref(true)
 const saving = ref(false)
 const model = ref(novoModelo())
 
+// casas da quantidade digitada no negocios (TASK-53); o exemplo é o que a pessoa pode digitar
+const decimaisOptions = [
+  { value: 0, label: 'Nenhuma: só inteiro (1, 2, 3)' },
+  { value: 1, label: '1 casa (0,5)' },
+  { value: 2, label: '2 casas (0,53)' },
+  { value: 3, label: '3 casas (0,712)' },
+]
+
+const labelDecimais = (v) =>
+  v ? `${v} ${v === 1 ? 'casa decimal' : 'casas decimais'}` : 'Sem fração'
+
 function novoModelo() {
   return {
     codunidademedida: null,
     unidademedida: '',
     sigla: '',
+    decimais: 0,
   }
 }
 
@@ -36,6 +49,7 @@ const abrirEditar = (row) => {
     codunidademedida: row.codunidademedida,
     unidademedida: row.unidademedida,
     sigla: row.sigla,
+    decimais: row.decimais,
   }
   dialog.value = true
 }
@@ -45,6 +59,7 @@ const submit = () => (isNovo.value ? criar() : atualizar())
 const payload = () => ({
   unidademedida: model.value.unidademedida,
   sigla: model.value.sigla,
+  decimais: model.value.decimais,
 })
 
 const criar = async () => {
@@ -138,7 +153,8 @@ onMounted(() => store.fetchItems(true))
                     <q-badge v-if="item.inativo" color="orange-7" class="q-ml-sm">Inativo</q-badge>
                   </q-item-label>
                   <q-item-label caption class="text-grey-6">
-                    {{ codFormatado(item.codunidademedida) }} · Sigla: {{ item.sigla }}
+                    {{ codFormatado(item.codunidademedida) }} · Sigla: {{ item.sigla }} ·
+                    {{ labelDecimais(item.decimais) }}
                   </q-item-label>
                 </q-item-section>
                 <q-item-section side>
@@ -230,6 +246,15 @@ onMounted(() => store.fetchItems(true))
                   label="Sigla"
                   maxlength="3"
                   :rules="[(v) => !!v || 'Obrigatório']"
+                />
+              </div>
+              <div class="col-12">
+                <MgSelect
+                  v-model="model.decimais"
+                  :options="decimaisOptions"
+                  emit-value
+                  map-options
+                  label="Casas decimais da quantidade"
                 />
               </div>
             </div>

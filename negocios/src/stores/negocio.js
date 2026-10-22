@@ -1,4 +1,4 @@
-import { formataTimestampIso } from '@components/formatters'
+import { formataTimestampIso, formataNumeroInteligente } from '@components/formatters'
 import { hoje, somaAnos } from '@components/utils/datas'
 import { defineStore } from 'pinia'
 import { toRaw } from 'vue'
@@ -10,6 +10,7 @@ import { useAuthStore } from 'stores/auth'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
 import bandeirasCartao from '../data/bandeiras-cartao.json'
 import { falar } from '../utils/falar.js'
+import { fracaoRecusada } from '../utils/quantidade.js'
 import { CONDICOES, MEIO, MEIOS, totalPagamento } from '@components/cobranca/pagamento.js'
 
 const sSinc = sincronizacaoStore()
@@ -20,6 +21,10 @@ const pdvDoNegocio = () => ({ apelido: sSinc.pdv.apelido, setor: sSinc.pdv.setor
 const sCobranca = cobrancaStore()
 
 const arredonda = (v) => Math.round((parseFloat(v) || 0) * 100) / 100
+
+// acima disso o PDV fica lento e a Sefaz rejeita a nota; o fechamento na API
+// recusa com o mesmo numero (TASK-249)
+const LIMITE_ITENS = 200
 
 // Serializa operações concorrentes por uuid de negócio.
 // Evita race entre cliques rápidos, scanner duplo e listener multi-aba.
@@ -1004,12 +1009,41 @@ export const negocioStore = defineStore('negocio', {
         // garantir que nao foi adicionado nada em outra aba
         await this.recarregar()
 
+        // fracao que a unidade do produto nao aceita (1,5* num UN): recusa (TASK-53)
+        const recusa = fracaoRecusada(quantidade, await db.produto.get(parseInt(codprodutobarra)))
+        if (recusa) {
+          Notify.create({
+            type: 'negative',
+            message: recusa + ' (' + formataNumeroInteligente(quantidade) + ')!',
+            timeout: 0,
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          new Audio('/erro.mp3').play()
+          falar('Fração inválida!')
+          return false
+        }
+
         //verifica se o item já existe no negocio
         const index = this.negocio.itens.findIndex(function (item) {
           return (
             item.inativo === null && parseInt(item.codprodutobarra) === parseInt(codprodutobarra)
           )
         })
+
+        // produto novo alem do limite: recusa; somar em item ja' lancado continua livre
+        const ativos = this.negocio.itens.filter((i) => i.inativo === null).length
+        if (index < 0 && ativos >= LIMITE_ITENS) {
+          Notify.create({
+            type: 'negative',
+            message:
+              'Limite de ' + LIMITE_ITENS + ' itens! Feche este negócio e abra outro para o resto.',
+            timeout: 0,
+            actions: [{ icon: 'close', color: 'white' }],
+          })
+          new Audio('/erro.mp3').play()
+          falar('Limite de itens!')
+          return false
+        }
 
         // se ja existe adiciona a quantiade, se nao cria um novo item
         let item
@@ -1073,6 +1107,7 @@ export const negocioStore = defineStore('negocio', {
 
         // salva no IndexedDB
         await this.salvar()
+        return true
       })
     },
 

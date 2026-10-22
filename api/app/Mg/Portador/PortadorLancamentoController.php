@@ -147,21 +147,32 @@ class PortadorLancamentoController extends Controller
         return $this->resposta($mov);
     }
 
-    // alterar a data da linha (TASK-204): a linha vai para o periodo da data;
+    // editar a linha: o comentario (TASK-248), se veio, e a data (TASK-204),
+    // se veio, com a justificativa. A data leva a linha para o periodo dela;
     // pagamento muda inteiro (razao, titulos), a transferencia nas duas pontas
-    public function data(Request $request, int $id)
+    public function editar(Request $request, int $id)
     {
         $dados = $request->validate([
-            'transacao' => 'required|date',
-            'justificativa' => 'required|string|min:5|max:300',
+            'transacao' => 'nullable|date',
+            'justificativa' => 'required_with:transacao|nullable|string|min:5|max:300',
+            'observacoes' => 'nullable|string|max:300',
             'codpdv' => 'nullable|integer',
         ]);
         $mov = PortadorMovimento::with('Pagamento')->findOrFail($id);
-        $mexidos = DB::transaction(fn () => LancamentoDataService::alterarMovimento(
-            $mov,
-            Carbon::parse($dados['transacao']),
-            $dados['justificativa']
-        ));
+        $mexidos = DB::transaction(function () use ($mov, $dados) {
+            $mexidos = collect();
+            if (array_key_exists('observacoes', $dados)) {
+                $mexidos = $mexidos->merge(PortadorLancamentoService::alterarObservacoes($mov, $dados['observacoes']));
+            }
+            if (!empty($dados['transacao'])) {
+                $mexidos = $mexidos->merge(LancamentoDataService::alterarMovimento(
+                    $mov,
+                    Carbon::parse($dados['transacao']),
+                    $dados['justificativa']
+                ));
+            }
+            return $mexidos;
+        });
         $periodos = PortadorPeriodo::whereIn('codportadorperiodo', $mexidos->filter()->unique()->values())->get();
         return ['data' => ['codportadormovimento' => $mov->codportadormovimento],
             'periodos' => PortadorPeriodoResource::lista(PortadorPeriodoService::comSeguintes($periodos))];

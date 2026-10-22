@@ -107,8 +107,7 @@ export const periodoStore = defineStore('periodo', {
     dialogItem: false,
     dialogMaquineta: false,
     dialogUsuarios: false,
-    // o sentido escolhido no Lançar ao abrir o dialog: item 1 (entrada) ou -1 (saída); transferência
-    // 'R' (reforço/receber) ou 'E' (sangria/enviar)
+    // o sentido escolhido no Lançar ao abrir o dialog do item: 1 (entrada) ou -1 (saída)
     sentido: null,
     // a lista de usuários do portador (cadeado)
     usuarios: [],
@@ -194,20 +193,14 @@ export const periodoStore = defineStore('periodo', {
       }
     },
 
-    // ==== transferência: sentido E sai deste portador, R chega nele ====
+    // ==== transferência: origem e destino vêm do dialog (um deles é este portador) ====
 
-    abrirTransferir(sentido) {
-      this.sentido = sentido
-      this.dialogTransferir = true
-    },
-
-    transferir({ sentido, codportador, valor, observacoes, transacao }) {
-      const meu = this.portador.codportador
+    transferir({ codportadororigem, codportadordestino, valor, observacoes, transacao }) {
       return this.executar(
         () =>
           api.post('v1/portador-movimento/transferencia', {
-            codportadororigem: sentido === 'E' ? meu : codportador,
-            codportadordestino: sentido === 'E' ? codportador : meu,
+            codportadororigem,
+            codportadordestino,
             valor,
             observacoes,
             transacao: transacao || null,
@@ -228,17 +221,17 @@ export const periodoStore = defineStore('periodo', {
       )
     },
 
-    // alterar a data da linha (TASK-204): a linha vai para o período da data (o pagamento inteiro,
-    // a transferência nas duas pontas); some da tela se saiu do período dela
-    alterarData(codportadormovimento, { transacao, justificativa }) {
+    // editar a linha: o comentário (TASK-248) e a data (TASK-204), só o que mudou vem em `dados`.
+    // A data leva a linha para o período dela (o pagamento inteiro, a transferência nas duas
+    // pontas), e ela some da tela se saiu do período; o comentário, a transferência nas duas pontas
+    editar(codportadormovimento, dados) {
       return this.executar(
         () =>
-          api.post(`v1/portador-movimento/${codportadormovimento}/data`, {
-            transacao,
-            justificativa,
+          api.put(`v1/portador-movimento/${codportadormovimento}`, {
+            ...dados,
             codpdv: this.contexto.codpdv,
           }),
-        'Data alterada',
+        'Lançamento alterado',
       )
     },
 
@@ -378,7 +371,8 @@ export const periodoStore = defineStore('periodo', {
     },
 
     // espécie: com a contagem final; dentro da tolerância fecha, acima fica pendente
-    // só fecha, com a contagem final já informada. Acima da tolerância o servidor deixa pendente:
+    // só fecha, com a contagem final já informada. Acima da tolerância, ou com período anterior
+    // por fechar, o servidor deixa pendente:
     // é erro para quem fechou. Com dinheiro na contagem, o servidor já abre o seguinte (TASK-212):
     // vem nos períodos, vira aba nova e a tela continua no fechado
     async fechar() {
@@ -394,6 +388,12 @@ export const periodoStore = defineStore('periodo', {
         : ''
       if (p.situacao === 'fechado') {
         avisar(true, `Período fechado${seguinte}`)
+      } else if (Math.abs(p.diferenca) <= p.tolerancia) {
+        // dentro da tolerância e pendente: há período anterior por fechar
+        avisar(
+          false,
+          `Há período anterior pendente: este ficou pendente e fecha depois dele${seguinte}`,
+        )
       } else {
         avisar(
           false,

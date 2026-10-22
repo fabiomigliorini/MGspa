@@ -1,13 +1,17 @@
 <script setup>
 // Transferência (doc-4, redefinição do dinheiro): não é pagamento; o saldo sai de um portador e
-// entra no outro. Enviar (sangria, envio ao financeiro, depósito) ou receber (reforço). Cai no
-// período da tela, com a data dentro dele (do início ao fim; aberto, até agora); o outro lado,
-// pela data. Só os portadores do usuário: destino = depositante, origem = operador. Nasce feita
-// quando quem registra é gestor do destino; senão fica a confirmar.
-// Enviar ou receber já vem escolhido no FAB dos lançamentos (store.sentido). Wizard, como a entrada
-// e saída de item: 1) o outro portador (os em espécie da filial primeiro); 2) data, valor (foco
-// nele) e observação. Passo 1 no teclado (setas e Enter), como o wizard de cobrança.
-import { ref, computed, watch, nextTick } from 'vue'
+// entra no outro (sangria, reforço, envio ao financeiro, depósito). Cai no período da tela, com a
+// data dentro dele (do início ao fim; aberto, até agora); o outro lado, pela data. Só os portadores
+// do usuário: destino = depositante, origem = operador. Nasce feita quando quem registra é gestor
+// do destino; senão fica a confirmar.
+// Uma opção só no Lançar, Transferência (Sangria / Reforço): o lado não se presume (TASK-252).
+// Wizard: 1) de onde sai o dinheiro (este portador no topo); 2) para onde vai, só quando sai deste
+// (sai de outro: entra neste, um lado é sempre o da tela); 3) data, valor (foco nele) e
+// observação, com o "sai de / entra em" em cima. Nas listas, os desta filial primeiro e depois um
+// grupo por filial; setas e Enter. O cabeçalho tem o título do passo (Saindo de, Recebendo em),
+// o filtro (só no desktop) e a pergunta em vermelho; só a lista rola.
+import { ref, computed, watch } from 'vue'
+import { useQuasar } from 'quasar'
 import MgInput from '@components/MgInput.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -17,9 +21,11 @@ import { formataTimestampIso } from '@components/formatters'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 import { periodoStore, limitePeriodo, dentroDoPeriodo } from '@components/stores/periodoStore'
 
+const $q = useQuasar()
 const store = periodoStore()
 const cache = useSelectCacheStore()
 const caixa = computed(() => !!store.portador?.ehCaixa)
+const este = computed(() => store.portador?.codportador)
 // a data fica dentro do período da tela (do início ao fim; aberto, até agora)
 const sessao = computed(() => store.periodo)
 // lê o valor do form (ISO), não o texto que o MgInputData passa às rules; vazio fica com o !!v
@@ -29,8 +35,8 @@ const naSessao = () =>
     ? 'Não pode ser no futuro'
     : dentroDoPeriodo(sessao.value, form.value.transacao))
 const vazio = () => ({
-  sentido: null,
-  codportador: null,
+  codportadororigem: null,
+  codportadordestino: null,
   valor: null,
   observacoes: '',
   transacao: formataTimestampIso(limitePeriodo(sessao.value)),
@@ -38,39 +44,49 @@ const vazio = () => ({
 const form = ref(vazio())
 
 // os portadores em espécie e banco em que o usuário tem papel (o mesmo v1/select/portador do
-// MgSelectPortador): enviar pede depositante no destino, receber pede operador na origem
+// MgSelectPortador): a origem pede operador, o destino depositante
 const NIVEL = { D: 1, O: 2, G: 3 }
 const portadores = ref([])
-const outro = computed(() => portadores.value.find((p) => p.codportador === form.value.codportador))
+const nome = (codportador) =>
+  codportador === este.value
+    ? store.portador?.portador
+    : portadores.value.find((p) => p.codportador === codportador)?.portador
 
-const opcoesPortador = computed(() => {
-  const minimo = NIVEL[form.value.sentido === 'E' ? 'D' : 'O']
+const opcao = (p) => ({
+  valor: p.codportador,
+  label: p.portador,
+  logo: p.codbanco ? logo(`/bancos/${p.codbanco}.svg`) : null,
+  icone: p.tipo === 'E' ? 'savings' : 'account_balance',
+  cor: 'blue-8',
+})
+
+// os outros portadores com o papel mínimo: os desta filial primeiro, depois um grupo por filial e
+// os sem filial no fim (espécie antes de banco)
+const outros = (papel) => {
   const codfilial = Number(store.portador?.codfilial)
-  const daFilial = (p) => p.tipo === 'E' && Number(p.codfilial) === codfilial
-  const lista = portadores.value
+  const daFilial = (p) => Number(p.codfilial) === codfilial
+  const ordem = (p) => (daFilial(p) ? 0 : p.filial ? 1 : 2)
+  return portadores.value
     .filter(
       (p) =>
         ['E', 'B'].includes(p.tipo) &&
-        p.codportador !== store.portador?.codportador &&
-        (NIVEL[p.papel] ?? 0) >= minimo,
+        p.codportador !== este.value &&
+        (NIVEL[p.papel] ?? 0) >= NIVEL[papel],
     )
-    .sort((a, b) => (daFilial(a) ? 0 : 1) - (daFilial(b) ? 0 : 1))
-  return lista.map((p, i) => ({
-    valor: p.codportador,
-    label: p.portador,
-    caption: [p.filial, p.banco].filter(Boolean).join(' · '),
-    logo: p.codbanco ? logo(`/bancos/${p.codbanco}.svg`) : null,
-    icone: p.tipo === 'E' ? 'savings' : 'account_balance',
-    cor: 'blue-8',
-    grupo: daFilial(p) ? 'Desta filial' : 'Mais opções',
-  }))
-})
-
-const titulo = computed(() => {
-  const enviar = form.value.sentido === 'E'
-  const acao = caixa.value ? (enviar ? 'Sangria' : 'Reforço') : enviar ? 'Enviar' : 'Receber'
-  return outro.value ? `${acao} ${enviar ? 'para' : 'de'} ${outro.value.portador}` : acao
-})
+    .sort(
+      (a, b) =>
+        ordem(a) - ordem(b) ||
+        String(a.filial ?? '').localeCompare(String(b.filial ?? '')) ||
+        (a.tipo === 'E' ? 0 : 1) - (b.tipo === 'E' ? 0 : 1) ||
+        String(a.portador).localeCompare(String(b.portador)),
+    )
+    .map((p) => ({
+      ...opcao(p),
+      caption: [p.filial, p.banco].filter(Boolean).join(' · '),
+      filial: p.filial,
+      grupo: daFilial(p) ? 'Desta filial' : p.filial || 'Sem filial',
+    }))
+}
 
 // ==== wizard ====
 
@@ -78,9 +94,41 @@ const passo = ref(1)
 const cardRef = ref(null)
 const listaRef = ref(null)
 
-function escolherPortador(opcao) {
-  form.value.codportador = opcao.valor
-  passo.value = 2
+// passo 1: este portador no topo, sem grupo; passo 2: para onde vai (sai deste)
+const opcoesPasso = computed(() =>
+  passo.value === 1
+    ? [
+        { ...opcao(store.portador ?? {}), caption: caixa.value ? 'Este caixa' : 'Este portador' },
+        ...outros('O'),
+      ]
+    : outros('D'),
+)
+
+// o filtro do cabeçalho (só no desktop): nome, caption ou filial; zera a cada passo
+const filtro = ref('')
+const opcoesFiltradas = computed(() => {
+  const texto = filtro.value.trim().toLowerCase()
+  if (!texto) return opcoesPasso.value
+  return opcoesPasso.value.filter((o) =>
+    [o.label, o.caption, o.filial].some((c) => c && String(c).toLowerCase().includes(texto)),
+  )
+})
+watch(passo, () => (filtro.value = ''))
+
+function escolher(escolhida) {
+  if (passo.value === 2) {
+    form.value.codportadordestino = escolhida.valor
+    passo.value = 3
+    return
+  }
+  form.value.codportadororigem = escolhida.valor
+  if (escolhida.valor === este.value) {
+    passo.value = 2
+    return
+  }
+  // sai de outro: entra neste
+  form.value.codportadordestino = este.value
+  passo.value = 3
 }
 
 function voltar() {
@@ -88,18 +136,23 @@ function voltar() {
     store.dialogTransferir = false
     return
   }
-  passo.value--
-  if (passo.value === 1) nextTick(() => cardRef.value?.$el.focus())
+  // do valor, volta para o "para onde vai" só se ele apareceu
+  passo.value = passo.value === 3 && form.value.codportadororigem === este.value ? 2 : 1
 }
 
-// o submit do form: no passo 2 valida e lança
+// o submit do form: no passo 3 valida e lança
 function avancar() {
-  if (passo.value === 2) salvar()
+  if (passo.value === 3) salvar()
 }
 
-// passo 1: as teclas vão para a lista
+// ao abrir: o foco no card (as setas vão para a lista), se o filtro não o pegou
+function focar() {
+  if (!cardRef.value?.$el.contains(document.activeElement)) cardRef.value?.$el.focus()
+}
+
+// passos 1 e 2: as teclas vão para a lista
 function tecla(e) {
-  if (passo.value > 1 || !listaRef.value?.tecla(e)) return
+  if (passo.value === 3 || !listaRef.value?.tecla(e)) return
   e.preventDefault()
   e.stopPropagation()
 }
@@ -108,8 +161,9 @@ watch(
   () => store.dialogTransferir,
   async (aberto) => {
     if (!aberto) return
-    form.value = { ...vazio(), sentido: store.sentido }
+    form.value = vazio()
     passo.value = 1
+    filtro.value = ''
     try {
       portadores.value = await cache.loadList('portador', 'v1/select/portador')
     } catch {
@@ -128,61 +182,119 @@ async function salvar() {
 </script>
 
 <template>
-  <q-dialog v-model="store.dialogTransferir" @show="cardRef?.$el.focus()">
+  <q-dialog v-model="store.dialogTransferir" @show="focar">
     <q-card
       ref="cardRef"
       flat
       tabindex="0"
-      class="no-outline"
-      style="width: 400px; max-width: 95vw"
+      class="no-outline column no-wrap"
+      style="width: 400px; max-width: 95vw; height: 80vh"
       @keydown="tecla"
     >
-      <q-form @submit.prevent="avancar">
-        <q-card-section class="text-grey-9 text-overline text-uppercase">
-          {{ titulo }}
+      <!-- altura fixa (80vh) em todos os passos: a lista ou o formulário ocupam o meio -->
+      <q-form class="col column no-wrap" @submit.prevent="avancar">
+        <!-- CABEÇALHO: o título do passo, o filtro (só no desktop) e a pergunta em vermelho; não
+             rola com a lista -->
+        <q-card-section>
+          <div class="text-grey-9 text-overline text-uppercase">
+            {{ ['Saindo de', 'Recebendo em', 'Transferência'][passo - 1] }}
+          </div>
+          <MgInput
+            v-if="passo < 3 && !$q.platform.is.mobile"
+            :key="passo"
+            v-model="filtro"
+            label="Filtrar (nome ou filial)"
+            autofocus
+            class="q-mt-sm"
+          >
+            <template #prepend>
+              <q-icon name="search" />
+            </template>
+          </MgInput>
+          <div v-if="passo === 1" class="text-subtitle1 text-red-5 q-mt-sm">
+            De onde <span class="text-weight-bold">SAI</span> o dinheiro?
+          </div>
+          <div v-else-if="passo === 2" class="text-subtitle1 text-red-5 q-mt-sm">
+            Para onde <span class="text-weight-bold">VAI</span> o dinheiro?
+          </div>
         </q-card-section>
         <q-separator inset />
 
-        <!-- PASSO 1: O OUTRO PORTADOR -->
-        <q-card-section v-if="passo === 1" class="scroll" style="max-height: 60vh">
-          <ListaOpcoes
-            v-if="opcoesPortador.length"
-            ref="listaRef"
-            :opcoes="opcoesPortador"
-            @escolher="escolherPortador"
-          />
-          <div v-else class="text-caption text-grey-7">
-            Nenhum portador em que você possa
-            {{ form.sentido === 'E' ? 'depositar' : 'retirar' }}.
-          </div>
-        </q-card-section>
+        <!-- O MEIO: a lista rola; no passo 3, o conteúdo fica no centro da altura (os q-space
+             crescem quando sobra espaço e somem quando falta, e aí o meio rola) -->
+        <div class="col column no-wrap scroll">
+          <q-space v-if="passo === 3" />
+          <!-- O QUE JÁ SE ESCOLHEU: SAI DE / ENTRA EM -->
+          <q-card-section v-if="passo > 1" class="q-pb-none">
+            <q-item class="q-px-none">
+              <q-item-section avatar>
+                <q-icon name="outbox" color="red-5" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption>Sai de</q-item-label>
+                <q-item-label class="text-subtitle1">
+                  {{ nome(form.codportadororigem) }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item v-if="passo === 3" class="q-px-none">
+              <q-item-section avatar>
+                <q-icon name="move_to_inbox" color="green-6" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption>Entra em</q-item-label>
+                <q-item-label class="text-subtitle1">
+                  {{ nome(form.codportadordestino) }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+          </q-card-section>
 
-        <!-- PASSO 2: DATA, VALOR E OBSERVAÇÃO -->
-        <q-card-section v-else>
-          <div class="row q-col-gutter-md">
-            <div class="col-12">
-              <MgInputData
-                v-model="form.transacao"
-                type="timestamp"
-                label="Data"
-                :rules="[(v) => !!v, naSessao]"
-              />
+          <!-- PASSOS 1 E 2: DE ONDE SAI, PARA ONDE VAI (só a lista rola) -->
+          <q-card-section v-if="passo < 3" class="col scroll">
+            <ListaOpcoes
+              v-if="opcoesFiltradas.length"
+              :key="passo"
+              ref="listaRef"
+              :opcoes="opcoesFiltradas"
+              @escolher="escolher"
+            />
+            <div v-else-if="opcoesPasso.length" class="text-grey-6 text-italic q-pa-sm">
+              Nada encontrado
             </div>
-            <div class="col-12">
-              <MgInputValor
-                v-model="form.valor"
-                label="Valor"
-                prefix="R$"
-                autofocus
-                :rules="[(v) => v > 0 || 'Informe o valor']"
-                lazy-rules
-              />
+            <div v-else class="text-caption text-grey-7">
+              Nenhum portador em que você possa depositar.
             </div>
-            <div class="col-12">
-              <MgInput v-model="form.observacoes" label="Observação" maxlength="300" />
+          </q-card-section>
+
+          <!-- PASSO 3: DATA, VALOR E OBSERVAÇÃO -->
+          <q-card-section v-else>
+            <div class="row q-col-gutter-md">
+              <div class="col-12">
+                <MgInputData
+                  v-model="form.transacao"
+                  type="timestamp"
+                  label="Data"
+                  :rules="[(v) => !!v, naSessao]"
+                />
+              </div>
+              <div class="col-12">
+                <MgInputValor
+                  v-model="form.valor"
+                  label="Valor"
+                  prefix="R$"
+                  autofocus
+                  :rules="[(v) => v > 0 || 'Informe o valor']"
+                  lazy-rules
+                />
+              </div>
+              <div class="col-12">
+                <MgInput v-model="form.observacoes" label="Observação" maxlength="300" />
+              </div>
             </div>
-          </div>
-        </q-card-section>
+          </q-card-section>
+          <q-space v-if="passo === 3" />
+        </div>
 
         <q-separator inset />
         <q-card-actions align="right">
@@ -194,7 +306,7 @@ async function salvar() {
             @click="voltar"
           />
           <q-btn
-            v-if="passo === 2"
+            v-if="passo === 3"
             flat
             :label="caixa ? 'Lançar' : 'Transferir'"
             color="primary"

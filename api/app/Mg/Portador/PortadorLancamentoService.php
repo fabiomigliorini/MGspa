@@ -474,6 +474,38 @@ class PortadorLancamentoService
         return $saida;
     }
 
+    // ==== comentario ====
+
+    // corrige o comentario da linha (TASK-248): quem altera a data, com o
+    // periodo nao fechado; a transferencia nas duas pontas. O do pagamento e'
+    // do pagamento. Devolve os codportadorperiodo das linhas
+    public static function alterarObservacoes(PortadorMovimento $mov, ?string $observacoes): array
+    {
+        if ($mov->tipo == PortadorMovimento::TIPO_PAGAMENTO) {
+            abort(422, 'O comentário do pagamento se corrige no pagamento.');
+        }
+        if (!LancamentoDataService::podeMovimento($mov)) {
+            abort(403, 'Corrigir o comentário: só quem pode alterar a data do lançamento.');
+        }
+        $observacoes = trim($observacoes ?? '');
+        // o ajuste nasce com o motivo, e continua com ele
+        if ($mov->tipo == PortadorMovimento::TIPO_AJUSTE && mb_strlen($observacoes) < 3) {
+            abort(422, 'O ajuste precisa do motivo (mínimo 3 letras).');
+        }
+        $linhas = $mov->tipo == PortadorMovimento::TIPO_TRANSFERENCIA ? static::lados($mov) : [$mov];
+        foreach ($linhas as $l) {
+            if ($l->estado == PortadorMovimento::ESTADO_CANCELADO) {
+                abort(422, 'Lançamento cancelado não muda.');
+            }
+            static::exigirNaoFechado($l->PortadorPeriodo);
+        }
+        foreach ($linhas as $l) {
+            $l->observacoes = $observacoes === '' ? null : mb_substr($observacoes, 0, 300);
+            $l->save();
+        }
+        return array_map(fn ($l) => $l->codportadorperiodo, $linhas);
+    }
+
     // transferencias a confirmar no periodo (fechar recusa), chegando ou saindo
     public static function pendentes(PortadorPeriodo $periodo): int
     {

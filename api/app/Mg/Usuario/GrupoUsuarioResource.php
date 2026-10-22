@@ -33,7 +33,8 @@ class GrupoUsuarioResource extends JsonResource
             ];
         }
 
-        $ret['Usuarios'] = $usuarios->sortBy('usuario', SORT_NATURAL | SORT_FLAG_CASE)->toArray();
+        // values(): chaveado por codusuario o JSON sai objeto, e a tela espera lista
+        $ret['Usuarios'] = $usuarios->sortBy('usuario', SORT_NATURAL | SORT_FLAG_CASE)->values()->toArray();
 
         return $ret;
     }

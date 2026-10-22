@@ -292,6 +292,7 @@ class PdvCatalogoService
                 pv.variacao,
                 p.abc,
             	coalesce(ume.sigla, um.sigla) as sigla,
+            	coalesce(ume.decimais, um.decimais) as decimais,
             	pe.quantidade,
             	pri.codimagem,
             	coalesce(pe.preco, p.preco * coalesce(pe.quantidade, 1)) as preco,
@@ -326,6 +327,7 @@ class PdvCatalogoService
                 $item->quantidade = floatval($item->quantidade);
             }
             $item->preco = floatval($item->preco);
+            $item->decimais = intval($item->decimais);
             // nome base para agrupar por produto na pesquisa (TASK-173); produto é a descrição
             // completa, com variação e embalagem
             $item->nome = $item->produto;

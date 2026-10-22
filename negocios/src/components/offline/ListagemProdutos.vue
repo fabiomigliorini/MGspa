@@ -10,6 +10,7 @@ import { produtoStore } from 'stores/produto'
 import { negocioStore } from 'stores/negocio'
 import { Dialog } from 'quasar'
 import MgInputValor from '@components/MgInputValor.vue'
+import { fracaoRecusada } from '../../utils/quantidade.js'
 
 const sProduto = produtoStore()
 const sNegocio = negocioStore()
@@ -63,6 +64,13 @@ const preenchimentoObrigatorioRule = [
   (val) => (val && parseFloat(val) >= 0.001) || '* Obrigatório!',
 ]
 
+// a unidade do item em edição: a quantidade respeita as casas dela (TASK-53)
+const unidade = ref(null)
+const quantidadeRule = [
+  ...preenchimentoObrigatorioRule,
+  (val) => fracaoRecusada(val, unidade.value) ?? true,
+]
+
 const paginas = computed(() => {
   return Math.ceil(sNegocio.quantidadeProdutosAtivos / porPagina.value)
 })
@@ -100,6 +108,7 @@ const editar = async (uuid) => {
   if (!item) {
     return false
   }
+  unidade.value = await sProduto.barra(item.codprodutobarra)
   edicao.value.uuid = uuid
   edicao.value.codprodutobarra = item.codprodutobarra
   edicao.value.quantidade = item.quantidade
@@ -216,7 +225,7 @@ const linkProduto = (codproduto) => {
                     :decimals="3"
                     v-model="edicao.quantidade"
                     label="Quantidade"
-                    :rules="preenchimentoObrigatorioRule"
+                    :rules="quantidadeRule"
                     @change="recalcularValorProdutos()"
                   />
                 </div>

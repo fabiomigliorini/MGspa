@@ -31,16 +31,10 @@ class GrupoUsuarioController extends MgController
         $model->fill($request->all());
         $model->save();
 
-        return response()->json($model, 201);
+        return new GrupoUsuarioResource($model);
     }
 
     public function show(Request $request, $id)
-    {
-        $model = GrupoUsuario::findOrFail($id);
-        return response()->json($model, 200);
-    }
-
-    public function detalhes($id)
     {
         $model = GrupoUsuarioService::detalhes($id);
         return new GrupoUsuarioResource($model);
@@ -70,6 +64,10 @@ class GrupoUsuarioController extends MgController
     public function destroy($id)
     {
         $model = GrupoUsuario::findOrFail($id);
+        // A FK é CASCADE: excluir levaria junto os usuários do grupo sem avisar
+        if ($model->GrupoUsuarioUsuarioS()->exists()) {
+            abort(409, 'Este grupo tem usuários! Tire os usuários do grupo ou inative em vez de excluir!');
+        }
         $model->delete();
 
         return response()->json(['result' => $model], 200);

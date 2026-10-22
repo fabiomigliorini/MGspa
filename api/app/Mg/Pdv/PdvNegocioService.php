@@ -21,6 +21,7 @@ use Mg\NotaFiscal\NotaFiscalStatusService;
 use Mg\NotaFiscal\NotaFiscalNegocioService;
 use Mg\Ocorrencia\OcorrenciaPdvService;
 use Mg\Ocorrencia\OcorrenciaService;
+use Mg\Produto\UnidadeMedidaService;
 use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Titulo\TituloService;
 use Illuminate\Support\Facades\Log;
@@ -29,6 +30,9 @@ use Mg\Saurus\SaurusService;
 
 class PdvNegocioService
 {
+    // acima disso o PDV fica lento e a Sefaz rejeita a nota (TASK-249); o
+    // front do negocios recusa o 201o item com o mesmo numero
+    const LIMITE_ITENS = 200;
 
     public static function negocio($data, Pdv $pdv)
     {
@@ -244,6 +248,14 @@ class PdvNegocioService
             // quantidade menor que a gravada vai para o gerente (TASK-205)
             OcorrenciaPdvService::quantidadeAlterada($negocio, $npb, $item);
             $npb->fill($item);
+            // item novo com fracao que a unidade nao aceita (1,5 UN): recusa, como o
+            // itemAdicionar do PDV. O que ja' esta' gravado passa como esta' (TASK-53)
+            if (!$npb->exists) {
+                $recusa = UnidadeMedidaService::fracaoRecusada($npb->ProdutoBarra, $npb->quantidade);
+                if ($recusa) {
+                    throw new Exception($recusa, 1);
+                }
+            }
             $npb->codnegocio = $negocio->codnegocio;
             $npb->save();
         }
@@ -369,6 +381,14 @@ class PdvNegocioService
             && !$negocio->NegocioValeS()->whereNull('inativo')->exists()
         ) {
             throw new Exception('Não foi informado nenhum produto neste negócio!', 1);
+        }
+
+        // limite de itens: segura tambem a comanda unificada e a venda
+        // duplicada, que nao passam pelo itemAdicionar do PDV. A reaberta
+        // fica de fora: a nota dela ja' saiu e nao da' mais pra dividir (TASK-249)
+        $itens = $negocio->NegocioProdutoBarraS()->whereNull('inativo')->count();
+        if (!$reaberta && $itens > static::LIMITE_ITENS) {
+            throw new Exception("Este negócio tem {$itens} itens e o limite é " . static::LIMITE_ITENS . '! Divida em mais de um negócio.', 1);
         }
 
         if (!static::confereTotais($negocio)) {

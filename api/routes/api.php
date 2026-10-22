@@ -198,7 +198,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/estado/{id}', [\Mg\Select\SelectEstadoController::class, 'show'])->whereNumber('id');
     Route::get('select/veiculo-tipo/{id}', [\Mg\Select\SelectVeiculoTipoController::class, 'show'])->whereNumber('id');
     Route::get('select/veiculo/{id}', [\Mg\Select\SelectVeiculoController::class, 'show'])->whereNumber('id');
-    Route::get('select/produto-barra/barras/{barras}', [\Mg\Select\SelectProdutoBarraController::class, 'barras']);
     Route::get('select/produto-barra/{id}', [\Mg\Select\SelectProdutoBarraController::class, 'show'])->whereNumber('id');
     Route::get('select/usuario/{id}', [\Mg\Select\SelectUsuarioController::class, 'show'])->whereNumber('id');
     Route::get('select/portador/{id}', [\Mg\Select\SelectPortadorController::class, 'show'])->whereNumber('id');
@@ -588,7 +587,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 
     Route::get('grupo-usuario/todos', [\Mg\Usuario\GrupoUsuarioController::class, 'index']);
     Route::get('grupo-usuario/{id}/autor', [\Mg\Usuario\GrupoUsuarioController::class, 'autor']);
-    Route::get('grupo-usuario/{id}', [\Mg\Usuario\GrupoUsuarioController::class, 'detalhes']);
     Route::delete('grupo-usuario/{id}/inativo', [\Mg\Usuario\GrupoUsuarioController::class, 'ativar'])->name('grupo-usuario.ativar');
     Route::post('grupo-usuario/{id}/inativo', [\Mg\Usuario\GrupoUsuarioController::class, 'inativar'])->name('grupo-usuario.inativar');
     Route::apiResource('grupo-usuario', \Mg\Usuario\GrupoUsuarioController::class)->parameters(['grupo-usuario' => 'id']);
@@ -1116,6 +1114,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('dependente/{coddependente}/inativo', '\Mg\Pessoa\DependenteController@inativar');
     Route::delete('dependente/{coddependente}/inativo', '\Mg\Pessoa\DependenteController@ativar');
 
+    // Pesquisa de produto em grade, com o filtro do PDV (TASK-173)
+    Route::get('produto-barra/pesquisa', '\Mg\Produto\ProdutoBarraController@pesquisa');
+    Route::get('produto-barra/barras/{barras}', '\Mg\Produto\ProdutoBarraController@barras');
+
     // Produto (CRUD migrado em 31/05/2026)
     Route::group(['prefix' => 'produto'], function () {
         Route::get('', '\Mg\Produto\ProdutoController@index');
@@ -1358,8 +1360,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::post('portador-movimento/transferencia', '\Mg\Portador\PortadorLancamentoController@transferir');
     Route::post('portador-movimento/{id}/confirmar', '\Mg\Portador\PortadorLancamentoController@confirmar')->whereNumber('id');
     Route::post('portador-movimento/{id}/cancelar', '\Mg\Portador\PortadorLancamentoController@cancelar')->whereNumber('id');
-    // alterar a data da linha do extrato (TASK-204)
-    Route::post('portador-movimento/{id}/data', '\Mg\Portador\PortadorLancamentoController@data')->whereNumber('id');
+    // editar a linha do extrato: o comentario (TASK-248) e a data (TASK-204)
+    Route::put('portador-movimento/{id}', '\Mg\Portador\PortadorLancamentoController@editar')->whereNumber('id');
     // itens do caixa (doc-4, "Itens do caixa")
     Route::get('caixa-item', '\Mg\Caixa\CaixaItemController@index');
     Route::get('caixa-item/{id}', '\Mg\Caixa\CaixaItemController@show')->whereNumber('id');

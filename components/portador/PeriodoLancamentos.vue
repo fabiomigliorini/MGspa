@@ -6,9 +6,10 @@
 // espécie) são movimento do portador (a transferência leva ao outro portador, no período onde o
 // valor caiu). O borderô da maquineta de parceiro (em espécie) mostra "sem borderô" enquanto não
 // tem a foto, e a câmera da linha vê e anexa. A confirmar em amarelo; cancelado riscado e fora do
-// saldo, com a justificativa. Confirmar, cancelar e alterar a data (TASK-204: a linha vai para o
-// período da data, com justificativa; a data alterada aparece embaixo) ficam na linha. A venda com
-// o pagamento noutro dia mostra a data da venda (a da NFC-e).
+// saldo, com a justificativa. Confirmar, cancelar e editar ficam na linha: o Editar muda a data
+// (TASK-204: a linha vai para o período da data, com justificativa; a data alterada aparece
+// embaixo) e a observação do movimento (TASK-248; a do pagamento é do pagamento). A venda com o
+// pagamento noutro dia mostra a data da venda (a da NFC-e).
 // Lançar é um FAB no canto da tela que abre a lista do que fazer (LancarCaixaDialog). No caixa do
 // PDV (negocios) o que é do contas (pagamento, outro portador) abre por :href.
 import { ref, computed } from 'vue'
@@ -137,15 +138,15 @@ const corValor = (l) =>
   cancelado(l) ? 'text-strike text-grey-5' : l.valor < 0 ? 'text-red-8' : 'text-green-8'
 const valor = (l) => (l.valor > 0 ? '+' : '') + formataNumero(l.valor)
 
-// alterar a data da linha escolhida
-const dataDe = ref(null)
-const dialogData = ref(false)
-function abrirData(l) {
-  dataDe.value = l
-  dialogData.value = true
+// editar a linha escolhida: a data e, no movimento (não pagamento), a observação
+const editando = ref(null)
+const dialogEditar = ref(false)
+function abrirEditar(l) {
+  editando.value = l
+  dialogEditar.value = true
 }
-async function alterarData(dados) {
-  if (await store.alterarData(dataDe.value.codportadormovimento, dados)) dialogData.value = false
+async function editar(dados) {
+  if (await store.editar(editando.value.codportadormovimento, dados)) dialogEditar.value = false
 }
 
 const justificar = (title, ok, fn) =>
@@ -309,10 +310,10 @@ function cancelar(l) {
                   round
                   size="sm"
                   color="grey-7"
-                  icon="event"
-                  @click.stop.prevent="abrirData(l)"
+                  icon="edit"
+                  @click.stop.prevent="abrirEditar(l)"
                 >
-                  <q-tooltip>Alterar a data</q-tooltip>
+                  <q-tooltip>Editar</q-tooltip>
                 </q-btn>
                 <q-btn
                   v-if="l.podeCancelar"
@@ -359,10 +360,12 @@ function cancelar(l) {
     <MgEmptyState v-else plain icon="receipt_long">Nenhum lançamento.</MgEmptyState>
 
     <AlterarDataDialog
-      v-model="dialogData"
-      :data="dataDe?.transacao"
+      v-model="dialogEditar"
+      :data="editando?.transacao"
+      :com-observacoes="!!editando && editando.tipo !== 'P'"
+      :observacoes="editando?.observacoes"
       :salvando="store.salvando"
-      @salvar="alterarData"
+      @salvar="editar"
     />
     <BorderoFotosDialog
       v-model="dialogFotos"

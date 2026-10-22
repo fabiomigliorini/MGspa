@@ -1,12 +1,12 @@
 <script setup>
-import MgInput from '@components/MgInput.vue'
-import { ref, onMounted, watch } from 'vue'
+import { onMounted, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { useRoute, useRouter } from 'vue-router'
 import { grupoUsuarioStore } from 'src/stores/grupo-usuario'
 import { useAuthStore } from 'src/stores'
 import MGLayout from 'layouts/MGLayout.vue'
 import NaoAutorizado from 'components/NaoAutorizado.vue'
+import DialogGrupoUsuario from 'components/usuario/DialogGrupoUsuario.vue'
 
 const $q = useQuasar()
 const route = useRoute()
@@ -14,42 +14,7 @@ const router = useRouter()
 const sGrupoUsuario = grupoUsuarioStore()
 const user = useAuthStore()
 
-// Dialog
-const dialogEditar = ref(false)
-const modelGrupoUsuario = ref({})
-
 // Functions
-const editar = () => {
-  modelGrupoUsuario.value = {
-    codgrupousuario: sGrupoUsuario.detalheGrupoUsuarios.codgrupousuario,
-    grupousuario: sGrupoUsuario.detalheGrupoUsuarios.grupousuario,
-    observacoes: sGrupoUsuario.detalheGrupoUsuarios.observacoes,
-  }
-  dialogEditar.value = true
-}
-
-const salvar = async () => {
-  try {
-    const ret = await sGrupoUsuario.alterarGrupo(modelGrupoUsuario.value)
-    if (ret.data) {
-      $q.notify({
-        color: 'green-5',
-        textColor: 'white',
-        icon: 'done',
-        message: 'Grupo alterado!',
-      })
-      dialogEditar.value = false
-    }
-  } catch (error) {
-    $q.notify({
-      color: 'red-5',
-      textColor: 'white',
-      icon: 'error',
-      message: error.response?.data?.message || 'Erro ao alterar',
-    })
-  }
-}
-
 const excluir = (codgrupousuario) => {
   $q.dialog({
     title: 'Excluir Grupo',
@@ -181,7 +146,15 @@ watch(
               <q-card-section class="text-grey-9 text-overline row items-center">
                 DETALHES DO GRUPO
                 <q-space />
-                <q-btn flat round dense size="sm" color="grey-7" icon="edit" @click="editar()">
+                <q-btn
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="grey-7"
+                  icon="edit"
+                  @click="sGrupoUsuario.editarGrupo()"
+                >
                   <q-tooltip>Editar</q-tooltip>
                 </q-btn>
 
@@ -287,39 +260,7 @@ watch(
         </div>
       </div>
 
-      <!-- Dialog Editar Grupo -->
-      <q-dialog v-model="dialogEditar">
-        <q-card style="min-width: 400px">
-          <q-form @submit.prevent="salvar()">
-            <q-card-section class="text-grey-9 text-overline">
-              EDITAR GRUPO USUÁRIO
-            </q-card-section>
-
-            <q-separator inset />
-
-            <q-card-section class="q-gutter-md">
-              <MgInput
-                outlined
-                v-model="modelGrupoUsuario.grupousuario"
-                label="Grupo Usuário"
-                :rules="[(val) => (val && val.length > 0) || 'Campo obrigatório']"
-              />
-
-              <MgInput
-                outlined
-                v-model="modelGrupoUsuario.observacoes"
-                label="Observações"
-                type="textarea"
-              />
-            </q-card-section>
-
-            <q-card-actions align="right" class="text-primary">
-              <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-              <q-btn flat label="Salvar" type="submit" />
-            </q-card-actions>
-          </q-form>
-        </q-card>
-      </q-dialog>
+      <dialog-grupo-usuario />
     </template>
 
     <template #content v-else>

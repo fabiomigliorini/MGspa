@@ -2,6 +2,7 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
 import { Notify } from 'quasar'
+import { fracaoRecusada } from '../utils/quantidade.js'
 
 // Store do dominio "modelo de vale compras" (catalogo do kit escolar).
 // Serve as duas telas do dominio: a listagem com filtros e o formulario de
@@ -152,6 +153,12 @@ export const valeModeloStore = defineStore(
     // linha, entao nunca existe linha pela metade para validar.
     function itemAcrescentar(opcao, quantidade = 1) {
       const quant = Number(quantidade) || 1
+      // fracao que a unidade do produto nao aceita (1,5* num UN): recusa (TASK-53)
+      const recusa = fracaoRecusada(quant, opcao)
+      if (recusa) {
+        notificar('negative', recusa + '!')
+        return
+      }
       const existente = form.value.itens.find((i) => i.codprodutobarra === opcao.value)
       if (existente) {
         existente.quantidade = Number(existente.quantidade || 0) + quant
@@ -163,6 +170,8 @@ export const valeModeloStore = defineStore(
         produto: opcao.label,
         barras: opcao.barras,
         imagem: opcao.imagem || null,
+        sigla: opcao.sigla,
+        decimais: opcao.decimais,
         quantidade: quant,
         valorunitario: Number(opcao.preco || 0),
       })
