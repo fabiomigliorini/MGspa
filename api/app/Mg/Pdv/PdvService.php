@@ -324,6 +324,11 @@ class PdvService
                 nat.codnaturezaoperacaodevolucao,
                 nat.preco,
                 nat.emitida,
+                -- gera movimento no destino (TASK-55): o PDV mostra a Loja destino
+                exists (
+                    select 1 from tblestoquemovimentotipo f
+                    where f.codestoquemovimentotipoorigem = nat.codestoquemovimentotipo
+                ) as movimentadestino,
                 :sincronizado as sincronizado
             from tblnaturezaoperacao nat 
             ';

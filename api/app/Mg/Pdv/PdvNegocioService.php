@@ -7,6 +7,8 @@ use Carbon\Carbon;
 use Exception;
 use Illuminate\Support\Facades\DB;
 use Mg\NaturezaOperacao\NaturezaOperacao;
+use Mg\Estoque\EstoqueLocal;
+use Mg\Estoque\EstoqueMovimentoTipo;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioParcelaService;
 use Mg\Caixa\CaixaService;
@@ -205,6 +207,52 @@ class PdvNegocioService
         }
     }
 
+    // a natureza gera movimento no destino quando o tipo de movimento dela tem tipo filho
+    // (transferencia, venda entre empresas do grupo)
+    public static function naturezaMovimentaDestino(?NaturezaOperacao $nat): bool
+    {
+        return !empty($nat?->codestoquemovimentotipo)
+            && EstoqueMovimentoTipo::where('codestoquemovimentotipoorigem', $nat->codestoquemovimentotipo)->exists();
+    }
+
+    // loja destino so' em natureza que gera movimento no destino; com ela, a pessoa do
+    // negocio e' a filial da loja destino (o PDV ja' manda assim)
+    public static function normalizarDestino(Negocio $negocio): void
+    {
+        $nat = NaturezaOperacao::find($negocio->codnaturezaoperacao);
+        if (!static::naturezaMovimentaDestino($nat)) {
+            $negocio->codestoquelocaldestino = null;
+            return;
+        }
+        if (!empty($negocio->codestoquelocaldestino)) {
+            $destino = EstoqueLocal::with('Filial')->find($negocio->codestoquelocaldestino);
+            if ($destino?->Filial?->codpessoa) {
+                $negocio->codpessoa = $destino->Filial->codpessoa;
+            }
+        }
+    }
+
+    public static function validarDestino(Negocio $negocio): void
+    {
+        $nat = $negocio->NaturezaOperacao;
+        if ($nat->transferencia && empty($negocio->codestoquelocaldestino)) {
+            throw new Exception('Informe a Loja destino da transferência!', 1);
+        }
+        if (empty($negocio->codestoquelocaldestino)) {
+            return;
+        }
+        $destino = EstoqueLocal::with('Filial')->findOrFail($negocio->codestoquelocaldestino);
+        if (!empty($destino->inativo)) {
+            throw new Exception("A loja destino {$destino->estoquelocal} está inativa!", 1);
+        }
+        if ($destino->codestoquelocal == $negocio->codestoquelocal) {
+            throw new Exception('A loja destino tem que ser outra!', 1);
+        }
+        if ($nat->transferencia && $destino->Filial->codempresa != $negocio->Filial->codempresa) {
+            throw new Exception('Transferência só entre lojas da mesma empresa!', 1);
+        }
+    }
+
     public static function negocioAberto(Negocio $negocio, $data, Pdv $pdv)
     {
 
@@ -237,6 +285,7 @@ class PdvNegocioService
             $negocio->codusuario = Auth::user()->codusuario;
         }
         $negocio->codfilial = $negocio->EstoqueLocal->codfilial;
+        static::normalizarDestino($negocio);
         $negocio->save();
 
         // importa os itens
@@ -300,6 +349,7 @@ class PdvNegocioService
         unset($data['codpdv']);
         $negocio->fill($data);
         $negocio->codfilial = $negocio->EstoqueLocal->codfilial;
+        static::normalizarDestino($negocio);
         $negocio->save();
 
         foreach (NegocioParcelaService::titulos($negocio) as $titulo) {
@@ -493,20 +543,9 @@ class PdvNegocioService
             }
         }
 
-        // validacoes de transferencia
-        if ($negocio->NaturezaOperacao->transferencia == true) {
-            $mesmaEmpresa = false;
-            foreach ($negocio->Pessoa->FilialS as $fil) {
-                if ($fil->codempresa == $negocio->Filial->codempresa) {
-                    $mesmaEmpresa = true;
-                } else {
-                    $mesmaEmpresa = false;
-                }
-            }
-            if (!$mesmaEmpresa) {
-                throw new Exception("A Pessoa destino precisa ser uma Filial!", 1);
-            }
-        }
+        // loja destino (TASK-55): obrigatoria na transferencia, e e' por ela que o estoque
+        // entra no destino
+        static::validarDestino($negocio);
 
         // marca negocio como fechado (a reaberta mantem o fechamento original)
         $negocio->codnegociostatus = NegocioService::STATUS_FECHADO;

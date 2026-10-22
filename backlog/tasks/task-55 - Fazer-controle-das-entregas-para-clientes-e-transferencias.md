@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-22 01:21'
+updated_date: '2026-10-22 01:23'
 labels:
   - negocios
 dependencies: []
@@ -40,9 +40,15 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #3 Etapa 3: requisição com cadastro, detalhe e painel por loja (status em coluna, código só do lado de quem pediu)
 - [x] #4 Etapa 4: impressão das duas vias da requisição (térmica/A5), automática ao criar e por botão
 - [x] #5 Etapa 5: Requisitar a partir do negócio fechado e sugestão abaixo do mínimo
-- [ ] #6 Etapa 6: codestoquelocaldestino preenchido (backfill), select Loja destino no PDV e MGLara usando o campo
+- [x] #6 Etapa 6: codestoquelocaldestino preenchido (backfill), select Loja destino no PDV e MGLara usando o campo
 - [ ] #7 Etapa 7: entregas do negócio (tblnegocioentrega) com as listas Entregas a fazer e A receber
 - [ ] #8 Etapa 9: separação no negócio do PDV ligada à requisição (QR, nº, Separar), processo idempotente, justificar e finalizar
 - [ ] #9 Etapa 10: entrega pela requisição com os códigos de retirada (ou justificativa)
 - [ ] #10 Etapa 11: indicadores de qualidade do estoque no detalhe do Local de Estoque
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Etapa 6: o model Negocio do MGLara tinha EstoqueLocalDestino apontando para codestoquelocal (devolvia a origem); corrigido junto. PDV com o Dexie antigo de naturezas mostra a Loja destino pela flag transferencia até sincronizar a natureza com movimentadestino.
+<!-- SECTION:NOTES:END -->

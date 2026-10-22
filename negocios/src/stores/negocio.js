@@ -940,6 +940,13 @@ export const negocioStore = defineStore('negocio', {
         }
       }
 
+      // loja destino
+      let estoquelocaldestino = null
+      if (this.negocio.codestoquelocaldestino) {
+        const dest = await db.estoqueLocal.get(this.negocio.codestoquelocaldestino)
+        estoquelocaldestino = dest?.estoquelocal ?? null
+      }
+
       // Pessoa
       if (this.negocio.codpessoa) {
         const pes = await db.pessoa.get(this.negocio.codpessoa)
@@ -968,6 +975,7 @@ export const negocioStore = defineStore('negocio', {
       this.negocio.operacao = operacao
       this.negocio.negociostatus = negociostatus
       this.negocio.estoquelocal = estoquelocal
+      this.negocio.estoquelocaldestino = estoquelocaldestino
       this.negocio.fantasia = fantasia
       this.negocio.fantasiavendedor = fantasiavendedor
     },
@@ -1742,11 +1750,28 @@ export const negocioStore = defineStore('negocio', {
       await this.salvar()
     },
 
-    async informarNatureza(codestoquelocal, codnaturezaoperacao, observacoes) {
+    // loja destino (TASK-55): só em natureza que gera movimento no destino (transferência,
+    // venda entre empresas do grupo); com ela, a pessoa vira a filial da loja destino
+    async informarNatureza(
+      codestoquelocal,
+      codnaturezaoperacao,
+      observacoes,
+      codestoquelocaldestino,
+    ) {
       await this.recarregar()
       this.negocio.codestoquelocal = codestoquelocal
       this.negocio.codnaturezaoperacao = codnaturezaoperacao
       this.negocio.observacoes = observacoes
+      const nat = await db.naturezaOperacao.get(codnaturezaoperacao)
+      // transferencia vale mesmo antes do PDV sincronizar a natureza com o movimentadestino
+      this.negocio.codestoquelocaldestino =
+        nat?.movimentadestino || nat?.transferencia ? codestoquelocaldestino || null : null
+      if (this.negocio.codestoquelocaldestino) {
+        const destino = await db.estoqueLocal.get(this.negocio.codestoquelocaldestino)
+        if (destino?.codpessoa) {
+          this.negocio.codpessoa = destino.codpessoa
+        }
+      }
       await this.carregarChavesEstrangeiras()
       await this.salvar()
     },

@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import { Dialog, Notify } from 'quasar'
@@ -26,7 +26,18 @@ const edicaoNatureza = ref({
   codestoquelocal: null,
   codnaturezaoperacao: null,
   observacoes: null,
+  codestoquelocaldestino: null,
 })
+
+// a natureza escolhida no diálogo: se gera movimento no destino, pede a Loja destino
+// (obrigatória na transferência) — TASK-55
+const naturezaEdicao = ref(null)
+watch(
+  () => edicaoNatureza.value.codnaturezaoperacao,
+  async (cod) => {
+    naturezaEdicao.value = cod ? await db.naturezaOperacao.get(cod) : null
+  },
+)
 
 const vendedores = ref([])
 const filtroVendedor = ref(null)
@@ -38,6 +49,7 @@ const editarNatureza = () => {
   edicaoNatureza.value.codestoquelocal = sNegocio.negocio.codestoquelocal
   edicaoNatureza.value.codnaturezaoperacao = sNegocio.negocio.codnaturezaoperacao
   edicaoNatureza.value.observacoes = sNegocio.negocio.observacoes
+  edicaoNatureza.value.codestoquelocaldestino = sNegocio.negocio.codestoquelocaldestino
   dialogPessoa.value = true
 }
 
@@ -96,6 +108,7 @@ const salvarNatureza = async () => {
       edicaoNatureza.value.codestoquelocal,
       edicaoNatureza.value.codnaturezaoperacao,
       edicaoNatureza.value.observacoes,
+      edicaoNatureza.value.codestoquelocaldestino,
     )
     dialogPessoa.value = false
   })
@@ -206,6 +219,21 @@ const apropriar = () => {
                 :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
               />
             </div>
+            <div
+              class="col-12"
+              v-if="naturezaEdicao?.movimentadestino || naturezaEdicao?.transferencia"
+            >
+              <select-estoque-local
+                outlined
+                v-model="edicaoNatureza.codestoquelocaldestino"
+                label="Loja destino"
+                :rules="[
+                  (val) => !naturezaEdicao?.transferencia || !!val || 'Informe a loja destino',
+                  (val) =>
+                    !val || val !== edicaoNatureza.codestoquelocal || 'Tem que ser outra loja',
+                ]"
+              />
+            </div>
             <div class="col-12">
               <MgInput
                 autofocus
@@ -280,6 +308,9 @@ const apropriar = () => {
       <q-item-section>
         <q-item-label lines="1">
           {{ sNegocio.negocio.estoquelocal }}
+          <template v-if="sNegocio.negocio.estoquelocaldestino">
+            para {{ sNegocio.negocio.estoquelocaldestino }}
+          </template>
         </q-item-label>
         <q-item-label caption>
           {{ formataTimestampCompleto(sNegocio.negocio.lancamento) }}
