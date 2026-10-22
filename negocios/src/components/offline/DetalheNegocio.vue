@@ -27,6 +27,7 @@ const edicaoNatureza = ref({
   codnaturezaoperacao: null,
   observacoes: null,
   codestoquelocaldestino: null,
+  entrega: false,
 })
 
 // a natureza escolhida no diálogo: se gera movimento no destino, pede a Loja destino
@@ -36,6 +37,10 @@ watch(
   () => edicaoNatureza.value.codnaturezaoperacao,
   async (cod) => {
     naturezaEdicao.value = cod ? await db.naturezaOperacao.get(cod) : null
+    // trocou para transferência: já vem marcado o controle de entrega
+    if (cod !== sNegocio.negocio?.codnaturezaoperacao && naturezaEdicao.value?.transferencia) {
+      edicaoNatureza.value.entrega = true
+    }
   },
 )
 
@@ -50,6 +55,7 @@ const editarNatureza = () => {
   edicaoNatureza.value.codnaturezaoperacao = sNegocio.negocio.codnaturezaoperacao
   edicaoNatureza.value.observacoes = sNegocio.negocio.observacoes
   edicaoNatureza.value.codestoquelocaldestino = sNegocio.negocio.codestoquelocaldestino
+  edicaoNatureza.value.entrega = !!sNegocio.negocio.entrega
   dialogPessoa.value = true
 }
 
@@ -109,6 +115,7 @@ const salvarNatureza = async () => {
       edicaoNatureza.value.codnaturezaoperacao,
       edicaoNatureza.value.observacoes,
       edicaoNatureza.value.codestoquelocaldestino,
+      edicaoNatureza.value.entrega,
     )
     dialogPessoa.value = false
   })
@@ -233,6 +240,9 @@ const apropriar = () => {
                     !val || val !== edicaoNatureza.codestoquelocal || 'Tem que ser outra loja',
                 ]"
               />
+            </div>
+            <div class="col-12">
+              <q-toggle v-model="edicaoNatureza.entrega" label="Controlar entrega" />
             </div>
             <div class="col-12">
               <MgInput

@@ -18,6 +18,7 @@ import ListagemTitulos from 'components/offline/ListagemTitulos.vue'
 import ListagemNotas from 'components/offline/ListagemNotas.vue'
 import ListagemAnexos from 'components/offline/ListagemAnexos.vue'
 import ListagemRequisicoes from 'components/offline/ListagemRequisicoes.vue'
+import CardEntrega from 'components/offline/CardEntrega.vue'
 import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
 import { Dialog, Notify, debounce } from 'quasar'
@@ -526,6 +527,7 @@ onUnmounted(() => {
           <listagem-notas ref="listagemNotasRef" />
           <listagem-titulos />
           <listagem-requisicoes />
+          <card-entrega />
         </template>
         <listagem-itens-vale
           v-for="(vale, indice) in sNegocio.valesAtivos"

@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-22 01:23'
+updated_date: '2026-10-22 01:27'
 labels:
   - negocios
 dependencies: []
@@ -41,7 +41,7 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #4 Etapa 4: impressão das duas vias da requisição (térmica/A5), automática ao criar e por botão
 - [x] #5 Etapa 5: Requisitar a partir do negócio fechado e sugestão abaixo do mínimo
 - [x] #6 Etapa 6: codestoquelocaldestino preenchido (backfill), select Loja destino no PDV e MGLara usando o campo
-- [ ] #7 Etapa 7: entregas do negócio (tblnegocioentrega) com as listas Entregas a fazer e A receber
+- [x] #7 Etapa 7: entregas do negócio (tblnegocioentrega) com as listas Entregas a fazer e A receber
 - [ ] #8 Etapa 9: separação no negócio do PDV ligada à requisição (QR, nº, Separar), processo idempotente, justificar e finalizar
 - [ ] #9 Etapa 10: entrega pela requisição com os códigos de retirada (ou justificativa)
 - [ ] #10 Etapa 11: indicadores de qualidade do estoque no detalhe do Local de Estoque

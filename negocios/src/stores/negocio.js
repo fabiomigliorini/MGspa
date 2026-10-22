@@ -501,6 +501,9 @@ export const negocioStore = defineStore('negocio', {
         codpdv: sSinc.pdv.codpdv,
         Pdv: pdvDoNegocio(),
       }
+      // transferência nasce com o controle de entrega marcado (TASK-55)
+      const nat = await db.naturezaOperacao.get(negocio.codnaturezaoperacao)
+      negocio.entrega = !!nat?.transferencia
       db.negocio.add(negocio, uuid)
       this.negocio = { ...negocio }
       await this.atualizarListagem()
@@ -1757,11 +1760,13 @@ export const negocioStore = defineStore('negocio', {
       codnaturezaoperacao,
       observacoes,
       codestoquelocaldestino,
+      entrega,
     ) {
       await this.recarregar()
       this.negocio.codestoquelocal = codestoquelocal
       this.negocio.codnaturezaoperacao = codnaturezaoperacao
       this.negocio.observacoes = observacoes
+      this.negocio.entrega = !!entrega
       const nat = await db.naturezaOperacao.get(codnaturezaoperacao)
       // transferencia vale mesmo antes do PDV sincronizar a natureza com o movimentadestino
       this.negocio.codestoquelocaldestino =

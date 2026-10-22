@@ -115,6 +115,13 @@ const routes = [
         },
       },
 
+      // ENTREGAS DO NEGOCIO (TASK-55)
+      {
+        path: '/entrega',
+        component: () => import('pages/EntregaPage.vue'),
+        meta: { title: 'Entregas', backTo: '/' },
+      },
+
       // IMPRESSORAS (TASK-253)
       {
         path: '/impressora',

@@ -551,6 +551,12 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         ->name('requisicao.pdf')
         ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
 
+    // Entregas do negocio (TASK-55, doc-6)
+    Route::get('negocio/entrega/{lado}', [\Mg\Negocio\NegocioEntregaController::class, 'pendentes'])->whereIn('lado', ['a-fazer', 'a-receber']);
+    Route::get('negocio/{codnegocio}/entrega', [\Mg\Negocio\NegocioEntregaController::class, 'index'])->whereNumber('codnegocio');
+    Route::post('negocio/{codnegocio}/entrega', [\Mg\Negocio\NegocioEntregaController::class, 'store'])->whereNumber('codnegocio');
+    Route::post('negocio-entrega/{codnegocioentrega}/inativo', [\Mg\Negocio\NegocioEntregaController::class, 'inativar'])->whereNumber('codnegocioentrega');
+
     // UnidadeMedida (migrado em 31/05/2026)
     Route::get('unidade-medida/autocompletar', [\Mg\Produto\UnidadeMedidaController::class, 'autocompletar']);
     Route::post('unidade-medida/{id}/inativo', [\Mg\Produto\UnidadeMedidaController::class, 'inativar']);
