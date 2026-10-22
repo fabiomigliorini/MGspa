@@ -71,6 +71,8 @@ class NegocioEntregaService
         $negocio->entregue = $entregue;
         if ($negocio->isDirty()) {
             $negocio->save();
+            // requisicoes que ele atende ficam entregues (TASK-55)
+            \Mg\Requisicao\RequisicaoProcessamentoService::aoMudarNegocio($negocio->codnegocio, 'entregue');
         }
     }
 

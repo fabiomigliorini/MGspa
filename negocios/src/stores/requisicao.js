@@ -31,6 +31,14 @@ export const STATUS = {
   C: { label: 'Cancelada', cor: 'red-5', icone: 'block' },
 }
 
+export const MOTIVOS = [
+  { value: 'E', label: 'Estoque do sistema errado' },
+  { value: 'A', label: 'Avariado / vencido' },
+  { value: 'N', label: 'Não localizado' },
+  { value: 'M', label: 'Enviado a mais' },
+  { value: 'S', label: 'Sem saldo' },
+]
+
 export const DESTINOS = [
   { value: 'R', label: 'Cliente retira na loja que atende' },
   { value: 'E', label: 'Entregar no endereço do cliente' },
@@ -239,6 +247,51 @@ export const requisicaoStore = defineStore(
       }
     }
 
+    // justificativa de quem atende (motivo + observação + substituto), item a item
+    async function justificarItem(item, dados) {
+      try {
+        const { data } = await api.put(`v1/requisicao-item/${item.codrequisicaoitem}`, dados)
+        requisicao.value = data.data
+        notificar('positive', 'Justificativa gravada')
+        return true
+      } catch (error) {
+        notificar('negative', mensagemErro(error, 'Impossível gravar a justificativa'))
+        return false
+      }
+    }
+
+    async function incluirEnviadoAMais(r, codprodutobarra) {
+      try {
+        const { data } = await api.post(`v1/requisicao/${r.codrequisicao}/item`, {
+          codprodutobarra,
+        })
+        requisicao.value = data.data
+        notificar('positive', 'Incluído como enviado a mais')
+      } catch (error) {
+        notificar('negative', mensagemErro(error, 'Impossível incluir'))
+      }
+    }
+
+    async function finalizar(r) {
+      try {
+        const { data } = await api.post(`v1/requisicao/${r.codrequisicao}/finalizar`)
+        requisicao.value = data.data
+        notificar('positive', 'Requisição finalizada')
+      } catch (error) {
+        notificar('negative', mensagemErro(error, 'Impossível finalizar'))
+      }
+    }
+
+    async function reprocessar(r) {
+      try {
+        const { data } = await api.post(`v1/requisicao/${r.codrequisicao}/reprocessar`)
+        requisicao.value = data.data
+        notificar('positive', 'Requisição reprocessada')
+      } catch (error) {
+        notificar('negative', mensagemErro(error, 'Impossível reprocessar'))
+      }
+    }
+
     function verPdf(r, via, formato) {
       return abrirPdf(
         api,
@@ -272,6 +325,10 @@ export const requisicaoStore = defineStore(
       cancelar,
       imprimir,
       verPdf,
+      justificarItem,
+      incluirEnviadoAMais,
+      finalizar,
+      reprocessar,
     }
   },
   {

@@ -129,6 +129,56 @@ class RequisicaoController extends Controller
         return new RequisicaoResource($req->load(RequisicaoResource::RELACOES));
     }
 
+    public function justificarItem(Request $request, $codrequisicaoitem)
+    {
+        $dados = $request->validate([
+            'motivo' => 'nullable|in:' . implode(',', array_keys(RequisicaoItem::MOTIVOS)),
+            'observacao' => 'nullable|string|max:500',
+            'codprodutobarrasubstituto' => 'nullable|integer|exists:tblprodutobarra,codprodutobarra',
+        ]);
+        $pdv = $request->attributes->get('pdv');
+        $item = DB::transaction(function () use ($codrequisicaoitem, $dados, $pdv) {
+            $item = RequisicaoItem::findOrFail($codrequisicaoitem);
+            Requisicao::lockForUpdate()->findOrFail($item->codrequisicao);
+            return RequisicaoService::justificarItem($item, $dados, $pdv);
+        });
+        return new RequisicaoResource(Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($item->codrequisicao));
+    }
+
+    public function incluirEnviadoAMais(Request $request, $codrequisicao)
+    {
+        $dados = $request->validate([
+            'codprodutobarra' => 'required|integer|exists:tblprodutobarra,codprodutobarra',
+            'observacao' => 'nullable|string|max:500',
+        ]);
+        $pdv = $request->attributes->get('pdv');
+        DB::transaction(function () use ($codrequisicao, $dados, $pdv) {
+            $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
+            RequisicaoService::incluirEnviadoAMais($req, $dados, $pdv);
+        });
+        return new RequisicaoResource(Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao));
+    }
+
+    public function finalizar(Request $request, $codrequisicao)
+    {
+        $pdv = $request->attributes->get('pdv');
+        $req = DB::transaction(function () use ($codrequisicao, $pdv) {
+            $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
+            return RequisicaoService::finalizar($req, $pdv);
+        });
+        return new RequisicaoResource($req->load(RequisicaoResource::RELACOES));
+    }
+
+    // roda de novo o processo (corrigir falha de lancamento sem depender de evento)
+    public function reprocessar($codrequisicao)
+    {
+        $req = DB::transaction(function () use ($codrequisicao) {
+            $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
+            return RequisicaoProcessamentoService::processar($req);
+        });
+        return new RequisicaoResource($req->load(RequisicaoResource::RELACOES));
+    }
+
     public function cancelar(Request $request, $codrequisicao)
     {
         $pdv = $request->attributes->get('pdv');

@@ -47,11 +47,101 @@ class RequisicaoService
             && (static::ehRequisitante($req, $pdv) || static::ehGerente());
     }
 
-    // justificar os itens e finalizar com divergencia: quem atende ou Gerente
+    // justificar os itens e finalizar com divergencia: quem atende ou Gerente (tambem
+    // sem nada separado: e' assim que quem atende diz que nao tem)
     public static function podeJustificar(Requisicao $req, ?Pdv $pdv): bool
     {
-        return in_array($req->status, [Requisicao::STATUS_PARCIAL, Requisicao::STATUS_DIVERGENCIA])
-            && (static::ehRequisitada($req, $pdv) || static::ehGerente());
+        return in_array($req->status, [
+            Requisicao::STATUS_AGUARDANDO,
+            Requisicao::STATUS_PARCIAL,
+            Requisicao::STATUS_DIVERGENCIA,
+        ]) && (static::ehRequisitada($req, $pdv) || static::ehGerente());
+    }
+
+    // separar: so' a loja que atende, enquanto nao esta' finalizada
+    public static function podeSeparar(Requisicao $req, ?Pdv $pdv): bool
+    {
+        return in_array($req->status, [
+            Requisicao::STATUS_AGUARDANDO,
+            Requisicao::STATUS_EM_SEPARACAO,
+            Requisicao::STATUS_PARCIAL,
+        ]) && static::ehRequisitada($req, $pdv);
+    }
+
+    protected static function exigirJustificar(Requisicao $req, ?Pdv $pdv): void
+    {
+        if (!static::podeJustificar($req, $pdv)) {
+            abort(403, 'Só a loja que atende ou um Gerente justifica e finaliza, e só com a requisição pendente!');
+        }
+    }
+
+    // motivo, observacao e substituto de um item (o substituto e' campo a parte)
+    public static function justificarItem(RequisicaoItem $item, array $dados, ?Pdv $pdv): RequisicaoItem
+    {
+        static::exigirJustificar($item->Requisicao, $pdv);
+        $item->motivo = $dados['motivo'] ?? null;
+        $item->observacao = $dados['observacao'] ?? null;
+        $item->codprodutobarrasubstituto = $dados['codprodutobarrasubstituto'] ?? null;
+        $item->save();
+        RequisicaoProcessamentoService::processar($item->Requisicao);
+        return $item;
+    }
+
+    // produto que veio fora do pedido e nao substitui nada: entra como item com pedido 0
+    // e motivo "enviado a mais" (o processo distribui as linhas dele para ca')
+    public static function incluirEnviadoAMais(Requisicao $req, array $dados, ?Pdv $pdv): RequisicaoItem
+    {
+        static::exigirJustificar($req, $pdv);
+        $item = RequisicaoItem::firstOrNew([
+            'codrequisicao' => $req->codrequisicao,
+            'codprodutobarra' => $dados['codprodutobarra'],
+        ]);
+        if (!$item->exists) {
+            $item->quantidade = 0;
+        }
+        $item->motivo = RequisicaoItem::MOTIVO_ENVIADO_A_MAIS;
+        $item->observacao = $dados['observacao'] ?? $item->observacao;
+        $item->save();
+        RequisicaoProcessamentoService::processar($req);
+        return $item;
+    }
+
+    // Finalizar com divergencia: nada em separacao, cada item que nao bateu com motivo,
+    // e cada produto fora do pedido como substituto de um item ou incluido a mais
+    public static function finalizar(Requisicao $req, ?Pdv $pdv): Requisicao
+    {
+        static::exigirJustificar($req, $pdv);
+        $calc = RequisicaoProcessamentoService::calcular([$req->codrequisicao]);
+        $abertos = array_filter($calc['negocios'], fn ($n) => in_array($req->codrequisicao, $n['requisicoes'])
+            && $n['codnegociostatus'] == NegocioService::STATUS_ABERTO);
+        if (!empty($abertos)) {
+            abort(422, 'Feche ou cancele antes o negócio ' . implode(', ', array_map(
+                fn ($n) => '#' . str_pad($n['codnegocio'], 8, '0', STR_PAD_LEFT),
+                $abertos
+            )) . '!');
+        }
+        $erros = [];
+        foreach ($req->RequisicaoItemS()->with('ProdutoBarra.Produto')->get() as $item) {
+            $c = $calc['itens'][$item->codrequisicaoitem] ?? null;
+            if ($c && abs($c['pedido'] - $c['atendido']) > RequisicaoProcessamentoService::TOLERANCIA && empty($item->motivo)) {
+                $erros[] = "{$item->ProdutoBarra->Produto->produto} não bateu: informe o motivo";
+            }
+        }
+        $substitutos = array_filter(array_column(array_filter($calc['itens'], fn ($i) => $i['codrequisicao'] == $req->codrequisicao), 'codprodutovariacaosubstituto'));
+        foreach ($calc['fora'][$req->codrequisicao] ?? [] as $f) {
+            if (!in_array($f['codprodutovariacao'], $substitutos)) {
+                $pb = ProdutoBarra::with('Produto')->find($f['codprodutobarra']);
+                $erros[] = "{$pb->Produto->produto} veio fora do pedido: marque como substituto de um item ou inclua como enviado a mais";
+            }
+        }
+        if (!empty($erros)) {
+            abort(422, implode('; ', array_unique($erros)) . '.');
+        }
+        $req->finalizacao = now();
+        $req->codusuariofinalizacao = Auth::user()?->codusuario;
+        $req->save();
+        RequisicaoProcessamentoService::processar($req);
+        return $req->fresh();
     }
 
     public static function gerarCodigoRetirada(): string

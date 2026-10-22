@@ -65,6 +65,8 @@ class NegocioResource extends Resource
         // Vale compras: bloco proprio do negocio, com os itens dentro de cada vale.
         // Vale inativo (excluido no PDV) viaja junto, como o item de mercadoria, para
         // o offline saber que a linha existe e nao tentar criar outra pelo mesmo uuid.
+        // requisicoes que este negocio atende (TASK-55), no formato que o PDV manda
+        $ret['requisicoes'] = \Mg\Requisicao\RequisicaoNegocioService::doNegocio($this->codnegocio);
         $ret['vales'] = NegocioValeResource::collection($this->NegocioValeS)->resolve();
         foreach ($ret['vales'] as &$vale) {
             $vale['valordescontopagamento'] = $fatias[$vale['uuid']] ?? null;

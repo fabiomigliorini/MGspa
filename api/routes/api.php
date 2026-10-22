@@ -544,6 +544,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::put('requisicao/{codrequisicao}', [\Mg\Requisicao\RequisicaoController::class, 'update'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/cancelar', [\Mg\Requisicao\RequisicaoController::class, 'cancelar'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/imprimir', [\Mg\Requisicao\RequisicaoController::class, 'imprimir'])->whereNumber('codrequisicao');
+        Route::post('requisicao/{codrequisicao}/item', [\Mg\Requisicao\RequisicaoController::class, 'incluirEnviadoAMais'])->whereNumber('codrequisicao');
+        Route::put('requisicao-item/{codrequisicaoitem}', [\Mg\Requisicao\RequisicaoController::class, 'justificarItem'])->whereNumber('codrequisicaoitem');
+        Route::post('requisicao/{codrequisicao}/finalizar', [\Mg\Requisicao\RequisicaoController::class, 'finalizar'])->whereNumber('codrequisicao');
+        Route::post('requisicao/{codrequisicao}/reprocessar', [\Mg\Requisicao\RequisicaoController::class, 'reprocessar'])->whereNumber('codrequisicao');
     });
     // PDF das vias: assinado (MGprint) ou logado; a via do cliente confere o dispositivo
     Route::get('requisicao/{codrequisicao}/pdf', [\Mg\Requisicao\RequisicaoController::class, 'pdf'])

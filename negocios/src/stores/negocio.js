@@ -483,6 +483,8 @@ export const negocioStore = defineStore('negocio', {
         codusuariorecebimento: null,
         cpf: null,
         entrega: false,
+        // requisições que este negócio atende (TASK-55): só a lista; o servidor calcula o resto
+        requisicoes: [],
         lancamento: formataTimestampIso(new Date()),
         observacoes: null,
         recebimento: null,
@@ -798,6 +800,10 @@ export const negocioStore = defineStore('negocio', {
       })
       // vales: uuid novo no vale e em cada item, senao o servidor recebe o
       // uuid de um vale que ja e de outro negocio e recusa o PUT
+      // requisições ligadas: uuid novo em cada ligação (o servidor recusa uuid de outro negócio)
+      negocio.requisicoes = (negocio.requisicoes ?? [])
+        .filter((r) => !r.inativo)
+        .map((r) => ({ uuid: uid(), codrequisicao: r.codrequisicao, inativo: null }))
       negocio.vales = (negocio.vales ?? []).filter((v) => {
         return v.inativo == null
       })
@@ -1787,6 +1793,77 @@ export const negocioStore = defineStore('negocio', {
       }
       await this.carregarChavesEstrangeiras()
       await this.salvar()
+    },
+
+    // Liga o negócio a uma requisição (TASK-55): pelo QR da via de separação, pelo número
+    // digitado ou pelo Separar da requisição, a qualquer momento antes de fechar. Põe a
+    // natureza de transferência e a loja destino (do QR ou informada); o Fechar confere.
+    async ligarRequisicao(codrequisicao, codestoquelocaldestino = null) {
+      await this.recarregar()
+      if (!this.podeEditar) {
+        Notify.create({
+          type: 'negative',
+          message: 'Negócio fechado: reabra para ligar a requisição.',
+          timeout: 3000,
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
+      }
+      this.negocio.requisicoes = this.negocio.requisicoes ?? []
+      const cod = parseInt(codrequisicao)
+      if (this.negocio.requisicoes.some((r) => !r.inativo && r.codrequisicao == cod)) {
+        Notify.create({ type: 'info', message: `Já ligado à requisição #${cod}`, timeout: 2000 })
+        return true
+      }
+      const natAtual = await db.naturezaOperacao.get(this.negocio.codnaturezaoperacao)
+      if (!natAtual?.transferencia || natAtual.codoperacao != 2) {
+        const nat = await db.naturezaOperacao
+          .filter((n) => n.transferencia && n.codoperacao == 2)
+          .first()
+        if (nat) {
+          this.negocio.codnaturezaoperacao = nat.codnaturezaoperacao
+        }
+      }
+      const destino = codestoquelocaldestino ? parseInt(codestoquelocaldestino) : null
+      if (
+        destino &&
+        this.negocio.codestoquelocaldestino &&
+        this.negocio.codestoquelocaldestino != destino
+      ) {
+        Notify.create({
+          type: 'warning',
+          message: `A requisição #${cod} vai para outra loja destino: o Fechar vai recusar.`,
+          timeout: 5000,
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+      } else if (destino) {
+        this.negocio.codestoquelocaldestino = destino
+        const loja = await db.estoqueLocal.get(destino)
+        if (loja?.codpessoa) {
+          this.negocio.codpessoa = loja.codpessoa
+        }
+      }
+      this.negocio.entrega = true
+      this.negocio.requisicoes.push({ uuid: uid(), codrequisicao: cod, inativo: null })
+      await this.carregarChavesEstrangeiras()
+      await this.salvar()
+      Notify.create({
+        type: 'positive',
+        message: `Negócio ligado à requisição #${cod}`,
+        timeout: 2000,
+      })
+      return true
+    },
+
+    async desligarRequisicao(uuid) {
+      await this.recarregar()
+      const link = (this.negocio.requisicoes ?? []).find((r) => r.uuid === uuid)
+      if (!link || !this.podeEditar) {
+        return false
+      }
+      link.inativo = formataTimestampIso(new Date())
+      await this.salvar()
+      return true
     },
 
     async informarVendedor(codpessoavendedor) {

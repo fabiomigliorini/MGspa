@@ -1,5 +1,5 @@
 <script setup>
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import { Dialog, Notify } from 'quasar'
@@ -43,6 +43,32 @@ watch(
     }
   },
 )
+
+// requisições que este negócio atende (TASK-55): liga pelo número (o QR e o Separar da
+// requisição ligam sozinhos)
+const requisicoesAtivas = computed(() =>
+  (sNegocio.negocio?.requisicoes ?? []).filter((r) => !r.inativo),
+)
+const dialogRequisicao = ref(false)
+const ligacao = ref({ codrequisicao: null, codestoquelocaldestino: null })
+const abrirLigarRequisicao = () => {
+  if (!sNegocio.podeEditar) return
+  ligacao.value = {
+    codrequisicao: null,
+    codestoquelocaldestino: sNegocio.negocio.codestoquelocaldestino,
+  }
+  dialogRequisicao.value = true
+}
+const ligarRequisicao = async () => {
+  if (
+    await sNegocio.ligarRequisicao(
+      ligacao.value.codrequisicao,
+      ligacao.value.codestoquelocaldestino,
+    )
+  ) {
+    dialogRequisicao.value = false
+  }
+}
 
 const vendedores = ref([])
 const filtroVendedor = ref(null)
@@ -263,6 +289,42 @@ const apropriar = () => {
     </q-card>
   </q-dialog>
 
+  <!-- Ligar requisição (TASK-55) -->
+  <q-dialog v-model="dialogRequisicao">
+    <q-card flat style="width: 400px; max-width: 95vw">
+      <q-form @submit.prevent="ligarRequisicao">
+        <q-card-section class="text-grey-9 text-overline text-uppercase">
+          Ligar a uma requisição
+        </q-card-section>
+        <q-card-section>
+          <div class="row q-col-gutter-md">
+            <div class="col-12">
+              <MgInput
+                v-model="ligacao.codrequisicao"
+                label="Número da requisição"
+                type="number"
+                autofocus
+                :rules="[(val) => !!val || 'Informe o número']"
+              />
+            </div>
+            <div class="col-12">
+              <select-estoque-local
+                outlined
+                v-model="ligacao.codestoquelocaldestino"
+                label="Loja destino (a que pediu)"
+                :rules="[(val) => !!val || 'Informe a loja destino']"
+              />
+            </div>
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
+          <q-btn flat label="Ligar" color="primary" type="submit" />
+        </q-card-actions>
+      </q-form>
+    </q-card>
+  </q-dialog>
+
   <!-- Editar Vendedor -->
   <q-dialog v-model="dialogVendedor" full-height>
     <q-card style="width: 500px">
@@ -308,6 +370,38 @@ const apropriar = () => {
 
   <q-list v-if="sNegocio.negocio">
     <!-- <q-item-label header>Pessoa</q-item-label> -->
+
+    <!-- Requisições que o negócio atende (TASK-55) -->
+    <q-item
+      v-if="requisicoesAtivas.length || sNegocio.podeEditar"
+      :clickable="sNegocio.podeEditar"
+      @click="abrirLigarRequisicao()"
+    >
+      <q-item-section avatar top>
+        <q-avatar icon="move_down" color="brown" text-color="white" />
+      </q-item-section>
+      <q-item-section>
+        <q-item-label lines="1">
+          {{ requisicoesAtivas.length ? 'Requisições' : 'Ligar a uma requisição' }}
+        </q-item-label>
+        <q-item-label caption v-for="r in requisicoesAtivas" :key="r.uuid">
+          <router-link :to="`/requisicao/${r.codrequisicao}`" @click.stop>
+            #{{ formataCodigo(r.codrequisicao) }}
+          </router-link>
+          <q-btn
+            v-if="sNegocio.podeEditar"
+            flat
+            round
+            size="xs"
+            color="grey-7"
+            icon="close"
+            @click.stop="sNegocio.desligarRequisicao(r.uuid)"
+          >
+            <q-tooltip>Tirar do negócio</q-tooltip>
+          </q-btn>
+        </q-item-label>
+      </q-item-section>
+    </q-item>
 
     <!-- Filial -->
     <q-item clickable @click="editarNatureza()">

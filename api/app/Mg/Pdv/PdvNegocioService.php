@@ -28,6 +28,8 @@ use Mg\Titulo\BoletoBb\BoletoBbService;
 use Mg\Titulo\TituloService;
 use Illuminate\Support\Facades\Log;
 use Mg\Rh\ProcessarVendaJob;
+use Mg\Requisicao\RequisicaoNegocioService;
+use Mg\Requisicao\RequisicaoProcessamentoService;
 use Mg\Saurus\SaurusService;
 
 class PdvNegocioService
@@ -314,6 +316,11 @@ class PdvNegocioService
         // a partir do que esta' gravado aqui.
         static::importarVales($negocio, $data['vales'] ?? []);
 
+        // requisicoes que este negocio atende (TASK-55): o negocio so' guarda a lista e
+        // avisa; quem calcula o atendido e o status e' o processo da requisicao
+        RequisicaoNegocioService::importar($negocio, $data['requisicoes'] ?? []);
+        RequisicaoProcessamentoService::aoMudarNegocio($negocio->codnegocio, 'alterado');
+
         // importa os pagamentos e as parcelas (M5 doc-3); o desconto do
         // pagamento ja' vem rateado no valordesconto dos itens e vales
         PdvNegocioPagamentoService::importar($negocio, $data['pagamentos'] ?? [], $data['parcelas'] ?? []);
@@ -547,6 +554,9 @@ class PdvNegocioService
         // entra no destino
         static::validarDestino($negocio);
 
+        // requisicoes ligadas (TASK-55): abertas, desta loja e para a loja destino
+        RequisicaoNegocioService::conferirCoerencia($negocio);
+
         // marca negocio como fechado (a reaberta mantem o fechamento original)
         $negocio->codnegociostatus = NegocioService::STATUS_FECHADO;
         if (!$reaberta) {
@@ -640,6 +650,9 @@ class PdvNegocioService
         // agenda movimentacao de estoque
         static::movimentarEstoque($negocio);
 
+        // requisicoes que ele atende (TASK-55)
+        RequisicaoProcessamentoService::aoMudarNegocio($negocio->codnegocio, 'fechado');
+
         // retorna
         return $negocio;
     }
@@ -728,6 +741,7 @@ class PdvNegocioService
         $negocio->save();
         OcorrenciaService::negocioCancelado($negocio, $foto, $justificativa);
         static::movimentarEstoque($negocio);
+        RequisicaoProcessamentoService::aoMudarNegocio($negocio->codnegocio, 'cancelado');
         return $negocio;
     }
 }
