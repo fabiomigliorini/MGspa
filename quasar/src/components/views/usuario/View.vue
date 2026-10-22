@@ -43,20 +43,6 @@
 
               <q-item class="q-px-none">
                 <q-item-section>
-                  <q-item-label caption>Impressora Matricial</q-item-label>
-                  <q-item-label>{{ item.impressoramatricial }}</q-item-label>
-                </q-item-section>
-              </q-item>
-
-              <q-item class="q-px-none">
-                <q-item-section>
-                  <q-item-label caption>Impressora Térmica</q-item-label>
-                  <q-item-label>{{ item.impressoratermica }}</q-item-label>
-                </q-item-section>
-              </q-item>
-
-              <q-item class="q-px-none">
-                <q-item-section>
                   <q-item-label caption>
                     Último acesso
                   </q-item-label>

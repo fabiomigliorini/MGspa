@@ -1385,9 +1385,6 @@ class NFePHPService extends MgService
         }
 
         // Valida se informado nome da Impressora
-        if (empty($impressora) && !empty($nf->codusuariocriacao)) {
-            $impressora = $nf->getRelationValue('UsuarioCriacao')?->impressoratermica;
-        }
         if (empty($impressora)) {
             throw new \Exception("Impressora não informada!", 1);
         }
@@ -1401,7 +1398,6 @@ class NFePHPService extends MgService
         return [
             "sucesso" => true,
             "mensagem" => "Danfe enviada para '$impressora'!",
-            "commando" => $cmd
         ];
     }
 

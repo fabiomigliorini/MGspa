@@ -28,12 +28,6 @@
               <div class="col-12">
                 <mg-autocomplete-pessoa label="Pessoa" v-model="data.codpessoa" :init="data.codpessoa"/>
               </div>
-              <div class="col-12">
-                <mg-select-impressora label="Impressora Matricial" v-model="data.impressoramatricial"/>
-              </div>
-              <div class="col-12">
-                <mg-select-impressora label="Impressora Térmica" v-model="data.impressoratermica"/>
-              </div>
             </div>
 
           </form>
@@ -69,7 +63,7 @@ export default {
     loadData: function (id) {
       let vm = this;
       let params = {
-        fields: ['codusuario', 'usuario', 'codfilial', 'impressoratermica', 'impressoramatricial', 'codpessoa']
+        fields: ['codusuario', 'usuario', 'codfilial', 'codpessoa']
       };
       vm.$axios.get('usuario/' + id, { params }).then(function (request) {
         vm.data = request.data

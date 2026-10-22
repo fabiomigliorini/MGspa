@@ -15,8 +15,6 @@
               <q-input type="password" v-model="data.senha" label="Senha" />
               <mg-autocomplete-pessoa label="Pessoa" v-model="data.codpessoa"></mg-autocomplete-pessoa>
               <mg-select-filial label="Filial" v-model="data.codfilial"/>
-              <mg-select-impressora label="Impressora Matricial" v-model="data.impressoramatricial"/>
-              <mg-select-impressora label="Impressora Térmica"  v-model="data.impressoratermica"/>
             </div>
           </div>
         </form>
@@ -67,12 +65,6 @@ export default {
       }).catch(function (error) {
         if(error.response.data.errors.usuario){
           vm.$q.notify({message: error.response.data.errors.usuario, color: 'negative'})
-        }
-        if(error.response.data.errors.impressoramatricial){
-          vm.$q.notify({message: error.response.data.errors.impressoramatricial, color: 'negative'})
-        }
-        if(error.response.data.errors.impressoratermica){
-          vm.$q.notify({message: error.response.data.errors.impressoratermica, color: 'negative'})
         }
         if(error.response.data.errors.senha){
           vm.$q.notify({message: error.response.data.errors.senha, color: 'negative'})
