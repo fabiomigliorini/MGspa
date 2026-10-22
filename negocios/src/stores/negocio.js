@@ -472,7 +472,6 @@ export const negocioStore = defineStore('negocio', {
         codpessoatransportador: null,
         codpessoavendedor: null,
         codusuario: null,
-        codusuarioacertoentrega: null,
         codusuariorecebimento: null,
         cpf: null,
         entrega: false,

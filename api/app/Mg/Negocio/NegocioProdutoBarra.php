@@ -13,7 +13,6 @@ use Mg\Estoque\EstoqueMovimento;
 use Mg\Rh\IndicadorLancamento;
 use Mg\Mercos\MercosPedidoItem;
 use Mg\Negocio\NegocioProdutoBarra;
-use Mg\Negocio\NegocioProdutoBarraPedidoItem;
 use Mg\NotaFiscal\NotaFiscalProdutoBarra;
 use Mg\Negocio\Negocio;
 use Mg\Produto\ProdutoBarra;
@@ -134,11 +133,6 @@ class NegocioProdutoBarra extends MgModel
     public function NegocioProdutoBarraDevolucaoS()
     {
         return $this->hasMany(NegocioProdutoBarra::class, 'codnegocioprodutobarradevolucao', 'codnegocioprodutobarra');
-    }
-
-    public function NegocioProdutoBarraPedidoItemS()
-    {
-        return $this->hasMany(NegocioProdutoBarraPedidoItem::class, 'codnegocioprodutobarra', 'codnegocioprodutobarra');
     }
 
     public function NotaFiscalProdutoBarraS()

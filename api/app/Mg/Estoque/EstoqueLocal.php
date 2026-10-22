@@ -10,7 +10,6 @@ use Mg\MgModel;
 use Mg\Estoque\EstoqueLocalProdutoVariacao;
 use Mg\Negocio\Negocio;
 use Mg\NotaFiscal\NotaFiscal;
-use Mg\Pedido\Pedido;
 use Mg\Produto\Produto;
 use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
@@ -79,16 +78,6 @@ class EstoqueLocal extends MgModel
     public function NotaFiscalS()
     {
         return $this->hasMany(NotaFiscal::class, 'codestoquelocal', 'codestoquelocal');
-    }
-
-    public function PedidoS()
-    {
-        return $this->hasMany(Pedido::class, 'codestoquelocal', 'codestoquelocal');
-    }
-
-    public function PedidoOrigemS()
-    {
-        return $this->hasMany(Pedido::class, 'codestoquelocalorigem', 'codestoquelocal');
     }
 
     public function ProdutoS()

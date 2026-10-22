@@ -9,7 +9,6 @@ namespace Mg\Produto;
 use Mg\MgModel;
 use Mg\Estoque\EstoqueLocalProdutoVariacao;
 use Mg\Mercos\MercosProduto;
-use Mg\Pedido\PedidoItem;
 use Mg\Produto\ProdutoBarra;
 use Mg\Produto\ProdutoImagemProdutoVariacao;
 use Mg\Woo\WooProduto;
@@ -116,11 +115,6 @@ class ProdutoVariacao extends MgModel
     public function MercosProdutoS()
     {
         return $this->hasMany(MercosProduto::class, 'codprodutovariacao', 'codprodutovariacao');
-    }
-
-    public function PedidoItemS()
-    {
-        return $this->hasMany(PedidoItem::class, 'codprodutovariacao', 'codprodutovariacao');
     }
 
     public function ProdutoBarraS()

@@ -45,7 +45,6 @@ class Negocio extends MgModel
     }
 
     protected $fillable = [
-        'acertoentrega',
         'codestoquelocal',
         'codestoquelocaldestino',
         'codfilial',
@@ -57,7 +56,6 @@ class Negocio extends MgModel
         'codpessoatransportador',
         'codpessoavendedor',
         'codusuario',
-        'codusuarioacertoentrega',
         'codusuarioconfissao',
         'codusuariorecebimento',
         'confissao',
@@ -81,7 +79,6 @@ class Negocio extends MgModel
     ];
 
     protected $casts = [
-        'acertoentrega' => 'datetime',
         'alteracao' => 'datetime',
         'codestoquelocal' => 'integer',
         'codestoquelocaldestino' => 'integer',
@@ -95,7 +92,6 @@ class Negocio extends MgModel
         'codpessoatransportador' => 'integer',
         'codpessoavendedor' => 'integer',
         'codusuario' => 'integer',
-        'codusuarioacertoentrega' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuarioconfissao' => 'integer',
         'codusuariocriacao' => 'integer',
@@ -174,11 +170,6 @@ class Negocio extends MgModel
     public function Usuario()
     {
         return $this->belongsTo(Usuario::class, 'codusuario', 'codusuario');
-    }
-
-    public function UsuarioAcertoEntrega()
-    {
-        return $this->belongsTo(Usuario::class, 'codusuarioacertoentrega', 'codusuario');
     }
 
     public function UsuarioAlteracao()
