@@ -3,6 +3,7 @@
 namespace Mg\Caixa;
 
 use Illuminate\Support\Facades\URL;
+use Mg\Impressora\ImpressoraService;
 use Mg\Portador\PortadorPeriodo;
 use Mg\Portador\PortadorPeriodoResource;
 
@@ -36,9 +37,6 @@ class CaixaBorderoService
     public static function imprimir(PortadorPeriodo $sessao, string $impressora): void
     {
         $url = static::url($sessao);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "'
-            . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora
-            . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [], \"copies\": 1}" }\'';
-        exec($cmd);
+        ImpressoraService::publicar(ImpressoraService::resolver($impressora), $url, [], 1);
     }
 }

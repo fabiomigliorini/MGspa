@@ -12,7 +12,8 @@ const props = defineProps({
   compact: { type: Boolean, default: false },
   showExtras: { type: Boolean, default: false },
   // Impressora termica: quando informada, habilita impressao do cupom (modelo 65)
-  impressora: { type: String, default: null },
+  // codimpressora (TASK-253)
+  impressora: { type: [Number, String], default: null },
   // Exibe o botao Excluir para notas em digitacao (status DIG)
   mostrarExcluir: { type: Boolean, default: false },
   // Abrir a DANFE ao fim do Emitir. Quando null, segue o padrao !compact
@@ -196,10 +197,10 @@ async function imprimir() {
     return
   }
   try {
-    await props.api.post(`/v1/nota-fiscal/${codnotafiscal.value}/imprimir`, {
+    const { data } = await props.api.post(`/v1/nota-fiscal/${codnotafiscal.value}/imprimir`, {
       impressora: props.impressora,
     })
-    $q.notify({ type: 'positive', message: `Enviado para impressora ${props.impressora}!` })
+    $q.notify({ type: 'positive', message: data?.mensagem || 'Enviado para a impressora!' })
   } catch (error) {
     $q.notify({ type: 'negative', message: mensagemErro(error) })
   }

@@ -161,7 +161,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       completa: true,
     },
     ultimaSincronizacao: {
-      impressora: null,
       formaPagamento: null,
       estoqueLocal: null,
       naturezaOperacao: null,
@@ -524,7 +523,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
         return
       }
       u.completa = [
-        u.impressora,
         u.formaPagamento,
         u.estoqueLocal,
         u.naturezaOperacao,
@@ -586,10 +584,9 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     // as quatro de configuracao, em sequencia, numa linha so' do dialog
     async sincronizarConfig() {
       const etapa = this.importacao.etapas.config
-      etapa.total = 4
+      etapa.total = 3
       let ok = true
       for (const fn of [
-        this.sincronizarImpressora,
         this.sincronizarFormaPagamento,
         this.sincronizarEstoqueLocal,
         this.sincronizarNaturezaOperacao,
@@ -748,40 +745,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       this.versao[chave] = atual.versao
       this.ultimaSincronizacao[chave] = dataDaVersao(atual.versao)
       return true
-    },
-
-    async sincronizarImpressora() {
-      if (!this.importacao.rodando) {
-        return
-      }
-
-      let sincronizado = null
-
-      try {
-        // busca registros na ApI
-        let { data } = await api.get('/v1/pdv/impressora')
-
-        // insere dados no banco local indexeddb
-        await db.impressora.bulkPut(data)
-
-        // exclui registros que nao vieram na importacao
-        sincronizado = data[0].sincronizado
-        db.impressora.where('sincronizado').below(sincronizado).delete()
-
-        //registra data de Sincronizacao
-        this.ultimaSincronizacao.impressora = sincronizado
-      } catch (error) {
-        console.log(error)
-        console.log('Impossível sincronizar Impressoras')
-        this.importacao.erro = true
-        Notify.create({
-          type: 'negative',
-          message: error?.response?.data?.message ?? error.message,
-          timeout: 0, // 20 minutos
-          actions: [{ icon: 'close', color: 'white' }],
-        })
-        return false
-      }
     },
 
     async sincronizarFormaPagamento() {

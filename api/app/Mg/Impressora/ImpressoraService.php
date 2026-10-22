@@ -27,6 +27,22 @@ class ImpressoraService extends MgService
         return $impressora;
     }
 
+    // A impressora pelo codimpressora; na transicao (PDV com a versao antiga), tambem
+    // pelo nome da fila no CUPS, que era o que as rotas recebiam
+    public static function resolver($valor): Impressora
+    {
+        if ($valor instanceof Impressora) {
+            return $valor;
+        }
+        $impressora = (is_int($valor) || ctype_digit((string) $valor))
+            ? Impressora::find((int) $valor)
+            : Impressora::where('impressora', (string) $valor)->first();
+        if (!$impressora) {
+            abort(422, 'Impressora não cadastrada! Escolha outra em Meu Dispositivo.');
+        }
+        return $impressora;
+    }
+
     // Manda o PDF da url para a impressora: o MGprint assina o evento com o nome
     // da fila do CUPS no canal "printing" do Ably, baixa a url e roda o lp.
     public static function publicar(Impressora $impressora, string $url, array $options = [], int $copias = 1): void

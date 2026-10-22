@@ -163,7 +163,7 @@ class PessoaController extends MgController
     public function comandaVendedorImprimir(Request $request, $codpessoa)
     {
         $request->validate([
-            'impressora' => ['required', 'string'],
+            'impressora' => ['required'],
             'copias' => ['required', 'integer'],
         ]);
         $pessoa = Pessoa::findOrFail($codpessoa);

@@ -3,6 +3,7 @@
 namespace Mg\Pessoa;
 
 use Carbon\Carbon;
+use Mg\Impressora\ImpressoraService;
 
 use JasperPHP\Instructions;
 use JasperPHP\Report;
@@ -32,8 +33,7 @@ class PessoaComandaVendedorService
     public static function imprimir (Pessoa $pessoa, $impressora, $copias)
     {
         $url = \URL::temporarySignedRoute('pessoa.comanda-vendedor', now()->addMinutes(10), ['codpessoa' => $pessoa->codpessoa]);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": ' . $copias . '}" }\'';
-        exec($cmd);
+        ImpressoraService::publicar(ImpressoraService::resolver($impressora), $url, ['fit-to-page'], $copias);
     }
 
 }

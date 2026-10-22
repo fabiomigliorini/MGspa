@@ -3,6 +3,7 @@
 namespace Mg\NFePHP;
 
 use Carbon\Carbon;
+use Mg\Impressora\ImpressoraService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -1391,13 +1392,13 @@ class NFePHPService extends MgService
 
         // Executa comando de impressao
         $url = \URL::temporarySignedRoute('nota-fiscal.danfe', now()->addMinutes(10), ['codnotafiscal' => $nf->codnotafiscal]);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
-        exec($cmd);
+        $impressora = ImpressoraService::resolver($impressora);
+        ImpressoraService::publicar($impressora, $url, ['fit-to-page'], 1);
 
         // retorna
         return [
             "sucesso" => true,
-            "mensagem" => "Danfe enviada para '$impressora'!",
+            "mensagem" => "Danfe enviada para '{$impressora->descricao}'!",
         ];
     }
 

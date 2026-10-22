@@ -2,6 +2,7 @@
 
 namespace Mg\Pdv;
 
+use Mg\Impressora\Impressora;
 use Mg\Impressora\ImpressoraService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -35,7 +36,7 @@ class PdvService
     const CAMPOS_CONFIGURACAO = [
         'codestoquelocal',
         'codnaturezaoperacao',
-        'impressora',
+        'codimpressora',
         'codmaquineta',
         'codportadorpix',
     ];
@@ -163,8 +164,8 @@ class PdvService
         if (empty($pdv->codnaturezaoperacao) && !empty($legado['codnaturezaoperacao'])) {
             $pdv->codnaturezaoperacao = NaturezaOperacao::find($legado['codnaturezaoperacao'])?->codnaturezaoperacao;
         }
-        if (empty($pdv->impressora) && !empty($legado['impressora'])) {
-            $pdv->impressora = substr($legado['impressora'], 0, 100);
+        if (empty($pdv->codimpressora) && !empty($legado['impressora'])) {
+            $pdv->codimpressora = Impressora::where('impressora', $legado['impressora'])->value('codimpressora');
         }
         if (empty($pdv->codportadorpix) && !empty($legado['codportador'])) {
             $pdv->codportadorpix = Portador::find($legado['codportador'])?->codportador;

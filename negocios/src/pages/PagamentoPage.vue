@@ -63,7 +63,7 @@ const adiantamentoLancado = async (pags) => {
       @finalizado="adiantamentoLancado"
     />
     <MgCobrancaDialog />
-    <PixCobDialog :impressora="sNegocio.padrao.impressora" />
+    <PixCobDialog :impressora="sNegocio.padrao.codimpressora" />
     <PagarMePedidoDialog />
     <SaurusPedidoDialog />
   </q-page>

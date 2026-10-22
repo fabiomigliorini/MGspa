@@ -6,14 +6,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-// Impressoras do cadastro (tblimpressora, TASK-253). value = nome da fila no CUPS
-// (o que as rotas de impressao recebem hoje); tipo filtra (?tipo=T,A).
+// Impressoras do cadastro (tblimpressora, TASK-253). value = codimpressora (o que as
+// rotas de impressao recebem); tipo filtra (?tipo=T,A).
 class SelectImpressoraController extends Controller
 {
     const SQL = '
         select
             i.codimpressora, i.impressora, i.descricao, i.tipo, i.inativo,
-            i.impressora as value, i.descricao as label
+            i.codimpressora as value, i.descricao as label
         from tblimpressora i
     ';
 
@@ -35,7 +35,9 @@ class SelectImpressoraController extends Controller
 
     public static function show($id)
     {
-        $rows = DB::select(static::SQL . ' where i.impressora = :id limit 1', ['id' => $id]);
+        $rows = ctype_digit((string) $id)
+            ? DB::select(static::SQL . ' where i.codimpressora = :id limit 1', ['id' => (int) $id])
+            : DB::select(static::SQL . ' where i.impressora = :id limit 1', ['id' => $id]);
         if (empty($rows)) {
             abort(404);
         }

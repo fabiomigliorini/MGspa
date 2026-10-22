@@ -33,6 +33,7 @@ class PdvResource extends JsonResource
         $ret['venda'] = $this->NaturezaOperacao?->venda ?? null;
         $ret['maquineta'] = $this->Maquineta?->apelido ?? null;
         $ret['portadorpix'] = $this->PortadorPix?->portador ?? null;
+        $ret['impressora'] = $this->Impressora?->descricao ?? null;
 
         return $ret;
     }

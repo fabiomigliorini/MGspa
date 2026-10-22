@@ -53,8 +53,9 @@ const props = defineProps({
     default: false,
   },
   // impressora térmica do QR do PIX (PDV)
+  // codimpressora (TASK-253)
   impressora: {
-    type: String,
+    type: [Number, String],
     default: null,
   },
   // o PIX sem uso (vindo da tela PIX): { codpix, valor, descricao, codpessoa }

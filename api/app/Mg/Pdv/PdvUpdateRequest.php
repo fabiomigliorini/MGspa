@@ -27,7 +27,7 @@ class PdvUpdateRequest extends FormRequest
             // configuracao
             'codestoquelocal' => 'required|integer|exists:tblestoquelocal,codestoquelocal',
             'codnaturezaoperacao' => 'required|integer|exists:tblnaturezaoperacao,codnaturezaoperacao',
-            'impressora' => 'nullable|string|max:100',
+            'codimpressora' => 'nullable|integer|exists:tblimpressora,codimpressora',
             'codmaquineta' => 'nullable|integer|exists:tblmaquineta,codmaquineta',
             'codportadorpix' => 'nullable|integer|exists:tblportador,codportador',
         ];

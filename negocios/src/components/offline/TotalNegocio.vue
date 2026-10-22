@@ -530,7 +530,7 @@ const podeReceber = computed(() => faltando.value && sNegocio.podeEditar)
     @parcelas="parcelasRecebidas"
     @cobranca="cobrancaCriada"
   />
-  <pix-cob-dialog :impressora="sNegocio.padrao.impressora" />
+  <pix-cob-dialog :impressora="sNegocio.padrao.codimpressora" />
   <pagar-me-pedido-dialog />
   <saurus-pedido-dialog />
   <pagamento-dialog />

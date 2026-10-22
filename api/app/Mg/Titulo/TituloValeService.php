@@ -3,6 +3,7 @@
 namespace Mg\Titulo;
 
 use Dompdf\Dompdf;
+use Mg\Impressora\ImpressoraService;
 use Illuminate\Support\Collection;
 use Picqer\Barcode\BarcodeGeneratorPNG;
 
@@ -61,9 +62,6 @@ class TituloValeService
     {
         static::titulos([$codtitulo]);
         $url = \URL::temporarySignedRoute('titulo.vale', now()->addMinutes(10), ['codtitulo' => $codtitulo]);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "'
-            . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora
-            . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [], \"copies\": 1}" }\'';
-        exec($cmd);
+        ImpressoraService::publicar(ImpressoraService::resolver($impressora), $url, [], 1);
     }
 }

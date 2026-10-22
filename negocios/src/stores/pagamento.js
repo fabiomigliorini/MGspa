@@ -38,7 +38,7 @@ export const pagamentoStore = defineStore('pagamento', {
   actions: {
     // o vale de crédito do título (Vale Compras / Contra Vale) na térmica do PDV
     async imprimirVale(codtitulo) {
-      const impressora = negocioStore().padrao.impressora
+      const impressora = negocioStore().padrao.codimpressora
       if (!impressora) {
         Notify.create({
           type: 'negative',
@@ -62,7 +62,7 @@ export const pagamentoStore = defineStore('pagamento', {
     },
 
     async imprimirRecibo(codpagamentos) {
-      const impressora = negocioStore().padrao.impressora
+      const impressora = negocioStore().padrao.codimpressora
       if (!impressora) {
         return
       }

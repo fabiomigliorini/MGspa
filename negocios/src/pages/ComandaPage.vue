@@ -3,7 +3,7 @@ import { ref, onMounted } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 import { negocioStore } from 'stores/negocio'
-import SelectImpressora from 'components/selects/SelectImpressora.vue'
+import MgSelectImpressora from '@components/MgSelectImpressora.vue'
 import SelectPessoa from 'src/components/selects/SelectPessoa.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 
@@ -11,7 +11,7 @@ const sNegocio = negocioStore()
 
 const model = ref({
   // impressora: "bematech-cxabot01",
-  impressora: sNegocio.padrao.impressora,
+  impressora: sNegocio.padrao.codimpressora,
   // codpessoavendedor: 30010669,
   codpessoavendedor: null,
   copias: 20,
@@ -19,13 +19,10 @@ const model = ref({
 
 const imprimir = async () => {
   try {
-    await api.post(
-      '/v1/pessoa/' + model.value.codpessoavendedor + '/comanda-vendedor/imprimir',
-      {
-        impressora: model.value.impressora,
-        copias: model.value.copias,
-      },
-    )
+    await api.post('/v1/pessoa/' + model.value.codpessoavendedor + '/comanda-vendedor/imprimir', {
+      impressora: model.value.impressora,
+      copias: model.value.copias,
+    })
     Notify.create({
       type: 'positive',
       message: 'Comandas impressas!',
@@ -45,7 +42,7 @@ const imprimir = async () => {
 }
 
 onMounted(() => {
-  model.value.impressora = sNegocio.padrao.impressora
+  model.value.impressora = sNegocio.padrao.codimpressora
 })
 </script>
 <template>
@@ -55,7 +52,7 @@ onMounted(() => {
         <q-form ref="formItem" @submit="imprimir()">
           <q-card-section>
             <div class="q-gutter-md">
-              <select-impressora
+              <MgSelectImpressora
                 outlined
                 v-model="model.impressora"
                 label="Impressora"

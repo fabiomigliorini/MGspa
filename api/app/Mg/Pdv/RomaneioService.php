@@ -3,6 +3,7 @@
 namespace Mg\Pdv;
 
 use Dompdf\Dompdf;
+use Mg\Impressora\ImpressoraService;
 use chillerlan\QRCode\QRCode;
 use chillerlan\QRCode\QROptions;
 use chillerlan\QRCode\Output\QROutputInterface;
@@ -57,9 +58,6 @@ class RomaneioService
     {
         // Executa comando de impressao
         $url = \URL::temporarySignedRoute('pdv.negocio.romaneio', now()->addMinutes(10), ['codnegocio' => $codnegocio]);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "'
-            . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora
-            . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [], \"copies\": 1}" }\'';
-        exec($cmd);
+        ImpressoraService::publicar(ImpressoraService::resolver($impressora), $url, [], 1);
     }
 }

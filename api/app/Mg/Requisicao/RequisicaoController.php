@@ -5,7 +5,7 @@ namespace Mg\Requisicao;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Mg\Impressora\Impressora;
+use Mg\Impressora\ImpressoraService;
 use Mg\Negocio\Negocio;
 use Mg\Pdv\PdvService;
 
@@ -101,7 +101,7 @@ class RequisicaoController extends Controller
     {
         $request->validate([
             'via' => 'required|in:' . implode(',', RequisicaoImpressaoService::VIAS),
-            'impressora' => 'nullable|string',
+            'impressora' => 'nullable',
         ]);
         $pdv = $request->attributes->get('pdv');
         $req = Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao);
@@ -110,7 +110,7 @@ class RequisicaoController extends Controller
             abort(403, 'A via do cliente (com o código de retirada) só imprime na loja que pediu!');
         }
         $impressora = $request->filled('impressora')
-            ? Impressora::where('impressora', $request->impressora)->firstOrFail()
+            ? ImpressoraService::resolver($request->impressora)
             : RequisicaoImpressaoService::impressoraPadrao($req, $request->via);
         if (!$impressora) {
             abort(422, 'Escolha a impressora: esta via não tem impressora padrão.');

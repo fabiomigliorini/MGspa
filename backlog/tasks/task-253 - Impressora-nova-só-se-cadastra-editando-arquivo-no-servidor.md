@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-22 00:43'
-updated_date: '2026-10-22 01:08'
+updated_date: '2026-10-22 01:31'
 labels:
   - api
 dependencies: []
@@ -28,7 +28,7 @@ Plano em backlog/docs/doc-6 (etapas 0, 1 e 8): tabela tblimpressora (chave = nom
 <!-- AC:BEGIN -->
 - [x] #1 Etapa 0: impressoras do usuário removidas (tblusuario, api, MGLara, EscPrint, quasar legado) e o comando com a chave do Ably fora da resposta da impressão do DANFE
 - [x] #2 Etapa 1: tblimpressora com cadastro no PDV (app negocios); printers.json apagado; select e PDV lendo a tabela
-- [ ] #3 Etapa 8: codimpressora no PDV, em todas as rotas e no front; publicações no Ably por ImpressoraService::publicar
+- [x] #3 Etapa 8: codimpressora no PDV, em todas as rotas e no front; publicações no Ably por ImpressoraService::publicar
 - [x] #4 README do MGprint aponta para o cadastro de impressoras
 <!-- AC:END -->
 
@@ -36,4 +36,6 @@ Plano em backlog/docs/doc-6 (etapas 0, 1 e 8): tabela tblimpressora (chave = nom
 
 <!-- SECTION:NOTES:BEGIN -->
 Etapa 1: printers.json não é versionado (cada servidor tem o seu). Carga pelo comando php artisan impressora:importar-json (cria só as que faltam; argox = etiqueta, resto = térmica) depois do api/database/impressora.sql; apagar o arquivo do servidor depois da carga.
+
+Etapa 8: as rotas e corpos continuam com o parâmetro chamado impressora, agora com o codimpressora; ImpressoraService::resolver aceita também o nome da fila (PWA ainda não atualizado). PDV atualizado e ainda não sincronizado usa a impressora antiga pelo nome (afterHydrate do store negocio) até a próxima sincronização.
 <!-- SECTION:NOTES:END -->

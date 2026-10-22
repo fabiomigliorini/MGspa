@@ -44,7 +44,7 @@ watch(
       codestoquelocal: props.pdv.codestoquelocal,
       codsetor: props.pdv.codsetor,
       codnaturezaoperacao: props.pdv.codnaturezaoperacao,
-      impressora: props.pdv.impressora,
+      codimpressora: props.pdv.codimpressora,
       codportador: props.pdv.codportador,
       codmaquineta: props.pdv.codmaquineta,
       codportadorpix: props.pdv.codportadorpix,
@@ -124,7 +124,7 @@ async function salvar() {
               />
             </div>
             <div class="col-12 col-sm-6">
-              <MgSelectImpressora v-model="model.impressora" clearable />
+              <MgSelectImpressora v-model="model.codimpressora" clearable />
             </div>
 
             <div class="col-12 text-subtitle2 text-grey-8">Pagamento</div>

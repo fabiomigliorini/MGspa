@@ -209,7 +209,7 @@ defineExpose({
           show-extras
           mostrar-excluir
           :abrir-danfe-apos-enviar="true"
-          :impressora="sNegocio.padrao.impressora"
+          :impressora="sNegocio.padrao.codimpressora"
           @action-completed="onAcao"
         />
       </q-card-actions>

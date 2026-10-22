@@ -3,6 +3,7 @@
 namespace Mg\Pix;
 
 use Carbon\Carbon;
+use Mg\Impressora\ImpressoraService;
 
 use Dompdf\Dompdf;
 
@@ -410,8 +411,7 @@ class PixService
     public static function imprimirQrCode(PixCob $cob, $impressora)
     {
         $url = \URL::temporarySignedRoute('pix.cob.pdf', now()->addMinutes(10), ['codpixcob' => $cob->codpixcob]);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
-        exec($cmd);
+        ImpressoraService::publicar(ImpressoraService::resolver($impressora), $url, ['fit-to-page'], 1);
     }
 
     public static function listagem(

@@ -113,6 +113,14 @@ function descontosIguais(a, b) {
 export const negocioStore = defineStore('negocio', {
   persist: {
     pick: ['padrao', 'paginaAtual', 'ultimos'],
+    // PDV que atualizou e ainda nao sincronizou o dispositivo (TASK-253): ate' la' imprime
+    // pelo nome da fila que ja' tinha, que o backend tambem aceita
+    afterHydrate: (ctx) => {
+      const padrao = ctx.store.padrao
+      if (padrao && padrao.codimpressora == null && padrao.impressora) {
+        padrao.codimpressora = padrao.impressora
+      }
+    },
   },
 
   state: () => ({
@@ -136,7 +144,7 @@ export const negocioStore = defineStore('negocio', {
       codnaturezaoperacao: 1, //Venda
       codoperacao: 2, //Saída
       venda: true, //Saída
-      impressora: null,
+      codimpressora: null,
       codmaquineta: null,
       codportadorpix: null,
     },
@@ -275,7 +283,7 @@ export const negocioStore = defineStore('negocio', {
         codnaturezaoperacao: pdv.codnaturezaoperacao,
         codoperacao: pdv.codoperacao,
         venda: pdv.venda,
-        impressora: pdv.impressora,
+        codimpressora: pdv.codimpressora,
         codmaquineta: pdv.codmaquineta,
         codportadorpix: pdv.codportadorpix,
       }
@@ -2200,7 +2208,7 @@ export const negocioStore = defineStore('negocio', {
         return false
       }
       try {
-        const ret = await sSinc.fecharNegocio(this.negocio.codnegocio, this.padrao.impressora)
+        const ret = await sSinc.fecharNegocio(this.negocio.codnegocio, this.padrao.codimpressora)
         if (ret.codnegocio) {
           Notify.create({
             type: 'positive',
@@ -2344,7 +2352,7 @@ export const negocioStore = defineStore('negocio', {
       const postDevolucao = await sSinc.negocioDevolucao(
         this.negocio.codnegocio,
         arrDevolucao,
-        this.padrao.impressora,
+        this.padrao.codimpressora,
       )
 
       return postDevolucao

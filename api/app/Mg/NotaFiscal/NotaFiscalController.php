@@ -454,7 +454,7 @@ class NotaFiscalController extends Controller
     public function imprimir(Request $request, int $codnotafiscal)
     {
         $request->validate([
-            'impressora' => 'nullable|string',
+            'impressora' => 'nullable',
         ]);
 
         $nota = NotaFiscal::findOrFail($codnotafiscal);

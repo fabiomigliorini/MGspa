@@ -272,7 +272,7 @@ const receber = async () => {
 const letraVale = (indice) => String.fromCharCode(65 + indice)
 
 const checarImpressora = () => {
-  if (!sNegocio.padrao.impressora) {
+  if (!sNegocio.padrao.codimpressora) {
     Notify.create({
       type: 'negative',
       message: 'Nenhuma impressora térmica selecionada!',
@@ -287,7 +287,7 @@ const checarImpressora = () => {
 const imprimirRomaneio = async () => {
   if (!checarImpressora()) return
   await api.post(
-    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/romaneio/' + sNegocio.padrao.impressora,
+    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/romaneio/' + sNegocio.padrao.codimpressora,
   )
   Notify.create({
     type: 'positive',
@@ -300,7 +300,7 @@ const imprimirRomaneio = async () => {
 const imprimirComanda = async () => {
   if (!checarImpressora()) return
   await api.post(
-    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/comanda/' + sNegocio.padrao.impressora,
+    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/comanda/' + sNegocio.padrao.codimpressora,
   )
   Notify.create({
     type: 'positive',
