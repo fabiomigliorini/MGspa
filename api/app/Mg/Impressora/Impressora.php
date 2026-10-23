@@ -6,7 +6,7 @@ use Mg\MgModel;
 use Mg\Usuario\Usuario;
 
 /**
- * Impressora (TASK-253). impressora = nome da fila no CUPS, que e' tambem o
+ * Impressora (TASK-255). impressora = nome da fila no CUPS, que e' tambem o
  * nome do evento no canal "printing" do Ably assinado pelo MGprint.
  */
 class Impressora extends MgModel

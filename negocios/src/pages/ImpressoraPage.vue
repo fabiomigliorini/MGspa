@@ -5,7 +5,7 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import MgInput from '@components/MgInput.vue'
 import { impressoraStore, TIPOS } from 'stores/impressora'
 
-// Cadastro de impressoras (TASK-253). O nome da fila é o do CUPS do computador onde a
+// Cadastro de impressoras (TASK-255). O nome da fila é o do CUPS do computador onde a
 // impressora está, que o MGprint escuta; a descrição é o que aparece nas telas.
 const sImpressora = impressoraStore()
 const { form, dialog, salvando, isNovo } = storeToRefs(sImpressora)

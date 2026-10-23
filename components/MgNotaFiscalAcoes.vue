@@ -12,7 +12,7 @@ const props = defineProps({
   compact: { type: Boolean, default: false },
   showExtras: { type: Boolean, default: false },
   // Impressora termica: quando informada, habilita impressao do cupom (modelo 65)
-  // codimpressora (TASK-253)
+  // codimpressora (TASK-255)
   impressora: { type: [Number, String], default: null },
   // Exibe o botao Excluir para notas em digitacao (status DIG)
   mostrarExcluir: { type: Boolean, default: false },

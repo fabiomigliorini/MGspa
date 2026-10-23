@@ -122,7 +122,7 @@ const routes = [
         meta: { title: 'Entregas', backTo: '/' },
       },
 
-      // IMPRESSORAS (TASK-253)
+      // IMPRESSORAS (TASK-255)
       {
         path: '/impressora',
         component: () => import('pages/ImpressoraPage.vue'),

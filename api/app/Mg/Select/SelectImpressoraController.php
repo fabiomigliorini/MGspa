@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
-// Impressoras do cadastro (tblimpressora, TASK-253). value = codimpressora (o que as
+// Impressoras do cadastro (tblimpressora, TASK-255). value = codimpressora (o que as
 // rotas de impressao recebem); tipo filtra (?tipo=T,A).
 class SelectImpressoraController extends Controller
 {

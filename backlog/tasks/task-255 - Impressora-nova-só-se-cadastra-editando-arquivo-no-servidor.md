@@ -1,5 +1,5 @@
 ---
-id: TASK-253
+id: TASK-255
 title: Impressora nova só se cadastra editando arquivo no servidor
 status: In Progress
 assignee:

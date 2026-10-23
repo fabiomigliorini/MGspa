@@ -16,7 +16,7 @@ import { avisar } from './eventos.js'
 
 // impressora térmica (PDV) para o QR impresso; sem ela o botão some
 const props = defineProps({
-  // codimpressora (TASK-253)
+  // codimpressora (TASK-255)
   impressora: {
     type: [Number, String],
     default: null,

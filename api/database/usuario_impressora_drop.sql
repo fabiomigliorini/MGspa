@@ -1,5 +1,5 @@
 -- =====================================================================
--- TASK-253 — Remove do tblusuario as impressoras do usuario, sem uso (vazias
+-- TASK-255 — Remove do tblusuario as impressoras do usuario, sem uso (vazias
 -- em todos os usuarios ativos): impressoratermica, impressoramatricial,
 -- impressoratelanegocio. A impressora e' do dispositivo (tblpdv) e, na
 -- sequencia, de um cadastro proprio (tblimpressora).

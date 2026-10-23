@@ -1418,7 +1418,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('portador/{codportador}/consulta-extrato', '\Mg\Portador\PortadorController@consultaExtrato');
     Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
 
-    // Impressora (TASK-253): cadastro no PDV; o nome e' a fila do CUPS / evento do Ably
+    // Impressora (TASK-255): cadastro no PDV; o nome e' a fila do CUPS / evento do Ably
     Route::get('impressora', '\Mg\Impressora\ImpressoraController@index');
     Route::post('impressora', '\Mg\Impressora\ImpressoraController@store');
     Route::get('impressora/{codimpressora}', '\Mg\Impressora\ImpressoraController@show')->whereNumber('codimpressora');

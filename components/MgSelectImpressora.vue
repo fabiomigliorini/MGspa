@@ -17,7 +17,7 @@ const props = defineProps({
 const emit = defineEmits(['update:modelValue', 'select'])
 
 const cache = useSelectCacheStore()
-// value = codimpressora (TASK-253); uma entrada de cache por filtro de tipo
+// value = codimpressora (TASK-255); uma entrada de cache por filtro de tipo
 const ENTITY = computed(() => (props.tipo ? `impressora_${props.tipo}` : 'impressora'))
 const ENDPOINT = computed(() =>
   props.tipo ? `v1/select/impressora?tipo=${props.tipo}` : 'v1/select/impressora',

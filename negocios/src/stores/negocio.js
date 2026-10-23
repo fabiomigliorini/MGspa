@@ -113,7 +113,7 @@ function descontosIguais(a, b) {
 export const negocioStore = defineStore('negocio', {
   persist: {
     pick: ['padrao', 'paginaAtual', 'ultimos'],
-    // PDV que atualizou e ainda nao sincronizou o dispositivo (TASK-253): ate' la' imprime
+    // PDV que atualizou e ainda nao sincronizou o dispositivo (TASK-255): ate' la' imprime
     // pelo nome da fila que ja' tinha, que o backend tambem aceita
     afterHydrate: (ctx) => {
       const padrao = ctx.store.padrao

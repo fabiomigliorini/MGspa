@@ -1,5 +1,5 @@
 -- =====================================================================
--- Cadastro de impressoras (TASK-253, etapa 1 do doc-6).
+-- Cadastro de impressoras (TASK-255, etapa 1 do doc-6).
 --
 --   tblimpressora — substitui o api/printers.json (arquivo local, fora do
 --                   git). impressora = nome da fila no CUPS, que e' tambem o

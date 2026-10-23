@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 import { api } from 'src/services/api'
 import { Notify } from 'quasar'
 
-// Store do dominio "impressora" (TASK-253): o cadastro que substituiu o printers.json.
+// Store do dominio "impressora" (TASK-255): o cadastro que substituiu o printers.json.
 // impressora = nome da fila no CUPS, que e' o evento do Ably que o MGprint escuta.
 // CRUD explicito na mao, sem motor generico.
 

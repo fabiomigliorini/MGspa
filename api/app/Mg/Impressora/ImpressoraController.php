@@ -7,7 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Mg\Usuario\Autorizador;
 
-// Cadastro de impressoras (TASK-253): qualquer usuario lista; so' Administrador grava.
+// Cadastro de impressoras (TASK-255): qualquer usuario lista; so' Administrador grava.
 class ImpressoraController extends Controller
 {
     public function index(Request $request)

@@ -1,5 +1,5 @@
 -- =====================================================================
--- Impressora do dispositivo pelo cadastro (TASK-253, etapa 8 do doc-6).
+-- Impressora do dispositivo pelo cadastro (TASK-255, etapa 8 do doc-6).
 --
 --   tblpdv.codimpressora — substitui tblpdv.impressora (texto com o nome da
 --                   fila no CUPS). A conversao e' pelo nome; o que nao casar

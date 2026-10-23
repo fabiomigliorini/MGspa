@@ -136,6 +136,6 @@ db.version(10).stores({
   pessoa: 'codpessoa, versao, *buscaArr',
 })
 
-// v11: as impressoras saem do IndexedDB (TASK-253): o cadastro e' online (MgSelectImpressora,
+// v11: as impressoras saem do IndexedDB (TASK-255): o cadastro e' online (MgSelectImpressora,
 // pelo codimpressora) e imprimir ja' exige estar online
 db.version(11).stores({ impressora: null })

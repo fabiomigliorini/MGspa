@@ -75,7 +75,7 @@ class Pdv extends MgModel
 
 
     // Chaves Estrangeiras
-    // impressora do cadastro (TASK-253)
+    // impressora do cadastro (TASK-255)
     public function Impressora()
     {
         return $this->belongsTo(\Mg\Impressora\Impressora::class, 'codimpressora', 'codimpressora');

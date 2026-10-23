@@ -5,7 +5,7 @@ namespace App\Console\Commands;
 use Illuminate\Console\Command;
 use Mg\Impressora\ImpressoraService;
 
-// Carga inicial da tblimpressora a partir do printers.json do servidor (TASK-253).
+// Carga inicial da tblimpressora a partir do printers.json do servidor (TASK-255).
 // Cria so' as que faltam; rodar antes de apagar o arquivo.
 class ImpressoraImportarJson extends Command
 {
