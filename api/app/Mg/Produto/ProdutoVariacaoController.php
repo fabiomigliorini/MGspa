@@ -8,6 +8,12 @@ use Mg\MgController;
 
 class ProdutoVariacaoController extends MgController
 {
+    // Saldo físico por local, na janela da variação da pesquisa em grade (TASK-254)
+    public function saldo($codprodutovariacao)
+    {
+        return ProdutoVariacaoService::saldo($codprodutovariacao);
+    }
+
     public function store(Request $request, $codproduto)
     {
         $produto = Produto::findOrFail($codproduto);

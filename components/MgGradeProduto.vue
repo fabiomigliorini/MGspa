@@ -2,12 +2,14 @@
 import { ref, shallowRef, computed, watch, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { formataNumero } from '@components/formatters'
+import { useSaldoVariacaoStore } from '@components/stores/saldoVariacaoStore'
 
 // Grade de cards da pesquisa de produto, comum à pesquisa do PDV (offline) e à
 // das telas online (TASK-173). Recebe o resultado da pesquisa, uma linha por
 // código de barras, e mostra UM card por produto. Escolhido o produto, abre
-// uma janela com as variações à esquerda e as embalagens dela à direita, com
-// o preço; a direita acompanha a variação em que o cursor está. A embalagem é
+// uma janela com as variações à esquerda, as embalagens dela no meio, com o
+// preço, e o saldo físico dela por local de estoque à direita (TASK-254); o
+// meio e a direita acompanham a variação em que o cursor está. A embalagem é
 // sigla + quantidade: duas barras da mesma embalagem aparecem uma vez, e o que
 // sai é a primeira delas -- o preço é o mesmo. Só entra o que veio na lista:
 // quem pesquisou "verde" não vê a azul. Produto de uma opção só sai direto da
@@ -162,11 +164,20 @@ const cursorVariacao = ref(0)
 const cursorEmbalagem = ref(0)
 const variacaoAtual = computed(() => produtoAberto.value?.variacoes[cursorVariacao.value])
 const umaVariacao = computed(() => produtoAberto.value?.variacoes.length === 1)
+// abaixo do md as colunas ficam uma embaixo da outra
+const colunasEmPilha = computed(() => $q.screen.lt.md)
+
+// saldo da variação em que o cursor está: só mostra, o teclado não passa por ele
+const sSaldo = useSaldoVariacaoStore()
+const codVariacaoAtual = computed(() =>
+  dialogProduto.value ? variacaoAtual.value?.barra.codprodutovariacao : null,
+)
+const saldoAtual = computed(() => sSaldo.saldos[codVariacaoAtual.value])
+watch(codVariacaoAtual, (cod) => sSaldo.carregar(cod))
 
 const refsVariacao = []
 const refsEmbalagem = []
 const colunaEmbalagem = ref(null)
-const secaoProduto = ref(null)
 const rolar = (refs, indice) =>
   nextTick(() => refs[indice]?.$el?.scrollIntoView({ block: 'nearest' }))
 
@@ -203,19 +214,17 @@ const moverEmbalagem = (indice) => {
   rolar(refsEmbalagem, cursorEmbalagem.value)
 }
 
-// No celular as embalagens ficam embaixo das variações: quem escolheu uma
-// variação lá no fim da lista não as veria sem rolar. Rola a seção até o fim,
-// com a margem de baixo, para a última embalagem não ficar colada na borda; e
-// na volta, até a variação. No desktop, com as colunas lado a lado, o fim da
-// seção pode ser o fim das variações -- ali só se garante que as embalagens
-// estejam à vista, e se já estão nada se mexe.
+// No celular e no tablet as embalagens ficam embaixo das variações: quem escolheu uma
+// variação lá no fim da lista não as veria sem rolar. Rola a seção até elas
+// (o saldo fica ao lado delas); e na volta, até a variação. No desktop, com as
+// colunas lado a lado, só se garante que as embalagens estejam à vista, e se
+// já estão nada se mexe.
 const irParaEmbalagens = () => {
   coluna.value = 'embalagem'
   cursorEmbalagem.value = 0
   nextTick(() => {
-    const secao = secaoProduto.value?.$el
-    if ($q.screen.xs) secao?.scrollTo({ top: secao.scrollHeight, behavior: 'smooth' })
-    else colunaEmbalagem.value?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })
+    const bloco = colunasEmPilha.value ? 'start' : 'nearest'
+    colunaEmbalagem.value?.scrollIntoView({ block: bloco, behavior: 'smooth' })
   })
 }
 
@@ -452,16 +461,25 @@ defineExpose({ teclar, soltar, aberto: dialogProduto })
         autofocus
         tabindex="-1"
         class="no-outline"
-        style="width: 600px; max-width: 95vw"
+        style="width: 660px; max-width: 95vw"
         @keydown="teclarProduto"
       >
         <q-card-section class="text-h6">{{ produtoAberto.titulo }}</q-card-section>
-        <!-- rola a seção, não o card: a barra nativa do card cobre o canto arredondado -->
-        <q-card-section ref="secaoProduto" class="q-pt-none scroll" style="max-height: 70vh">
+        <!-- rola a seção, não o card: a barra nativa do card cobre o canto arredondado.
+             Com as colunas lado a lado (md para cima) só a lista de variações rola, e a
+             embalagem e o saldo ficam à vista; empilhadas, rola a seção inteira -->
+        <q-card-section
+          class="q-pt-none"
+          :class="{ scroll: colunasEmPilha }"
+          :style="colunasEmPilha ? 'max-height: 70vh' : ''"
+        >
           <div class="row q-col-gutter-md">
-            <div class="col-12 col-sm-6">
+            <div class="col-12 col-md-5">
               <div class="text-overline text-grey-7">Variação</div>
-              <q-list>
+              <q-list
+                :class="{ scroll: !colunasEmPilha }"
+                :style="colunasEmPilha ? '' : 'max-height: 70vh'"
+              >
                 <q-item
                   v-for="(variacao, i) in produtoAberto.variacoes"
                   :key="variacao.chave"
@@ -484,7 +502,7 @@ defineExpose({ teclar, soltar, aberto: dialogProduto })
                 </q-item>
               </q-list>
             </div>
-            <div ref="colunaEmbalagem" class="col-12 col-sm-6">
+            <div ref="colunaEmbalagem" class="col-8 col-md-4">
               <div class="text-overline text-grey-7">Embalagem</div>
               <q-list>
                 <q-item
@@ -512,6 +530,44 @@ defineExpose({ teclar, soltar, aberto: dialogProduto })
                   </q-item-section>
                 </q-item>
               </q-list>
+            </div>
+            <div class="col-4 col-md-3">
+              <div class="text-overline text-grey-7">Saldo</div>
+              <div
+                v-if="saldoAtual?.dados && !saldoAtual.dados.locais.length"
+                class="q-pa-sm text-caption text-grey-7"
+              >
+                Sem estoque em nenhuma unidade
+              </div>
+              <q-list v-else-if="saldoAtual?.dados">
+                <q-item
+                  v-for="local in saldoAtual.dados.locais"
+                  :key="local.codestoquelocal"
+                  class="q-px-sm"
+                  :title="local.estoquelocal"
+                >
+                  <q-item-section>{{ local.sigla }}</q-item-section>
+                  <q-item-section
+                    side
+                    :class="local.saldoquantidade > 0 ? 'text-grey-9' : 'text-grey-5'"
+                  >
+                    {{ formataNumero(local.saldoquantidade, saldoAtual.dados.decimais) }}
+                  </q-item-section>
+                </q-item>
+                <q-item class="q-px-sm text-weight-bold">
+                  <q-item-section>Total</q-item-section>
+                  <q-item-section
+                    side
+                    :class="saldoAtual.dados.saldo > 0 ? 'text-positive' : 'text-grey-5'"
+                  >
+                    {{ formataNumero(saldoAtual.dados.saldo, saldoAtual.dados.decimais) }}
+                  </q-item-section>
+                </q-item>
+              </q-list>
+              <div v-else-if="saldoAtual?.carregando" class="q-pa-md text-center">
+                <q-spinner color="grey-7" size="md" />
+              </div>
+              <div v-else class="q-pa-md text-caption text-grey-7">Saldo indisponível.</div>
             </div>
           </div>
         </q-card-section>

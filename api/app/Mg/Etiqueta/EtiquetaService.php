@@ -3,6 +3,7 @@
 namespace Mg\Etiqueta;
 
 use Illuminate\Support\Facades\DB;
+use Mg\Impressora\ImpressoraService;
 use Carbon\Carbon;
 
 use Mg\Produto\ProdutoBarra;
@@ -146,13 +147,13 @@ class EtiquetaService
         // fecha arquivo e imprime
         fclose($handle);
         $url = \URL::temporarySignedRoute('etiqueta.arquivo', now()->addMinutes(10), ['arquivo' => basename($arquivo)]);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"raw\"], \"copies\": 1}" }\'';
-        exec($cmd);
+        $impressora = ImpressoraService::resolver($impressora);
+        ImpressoraService::publicar($impressora, $url, ['raw'], 1);
 
         // retornar quantidade de etiquetas
         return [
             'quantidadeetiqueta' => $quant,
-            'impressora' => $impressora,
+            'impressora' => $impressora->descricao,
             'modelo' => $modelo
         ];
     }

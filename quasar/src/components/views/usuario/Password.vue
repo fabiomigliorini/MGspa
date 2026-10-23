@@ -54,7 +54,7 @@ export default {
     loadData: function (id) {
       let vm = this;
       let params = {
-        fields: ['usuario', 'impressoratermica', 'impressoramatricial']
+        fields: ['usuario']
       };
       vm.$axios.get('usuario/' + id, { params }).then(function (request) {
         vm.data = request.data;
@@ -72,12 +72,6 @@ export default {
         });
         vm.$router.push('/usuario/' + request.data.codusuario)
       }).catch(function (error) {
-        if(error.response.data.errors.impressoramatricial){
-          vm.$q.notify({message: error.response.data.errors.impressoramatricial, color: 'negative'});
-        }
-        if(error.response.data.errors.impressoratermica){
-          vm.$q.notify({message: error.response.data.errors.impressoratermica, color: 'negative'});
-        }
         if(error.response.data.errors.senha){
           vm.$q.notify({message: error.response.data.errors.senha, color: 'negative'});
         }

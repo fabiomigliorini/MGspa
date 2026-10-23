@@ -67,6 +67,7 @@ class ProdutoBarraService
                 SELECT
                     pb.codprodutobarra,
                     p.codproduto,
+                    pv.codprodutovariacao,
                     pb.barras,
                     p.produto AS nome,
                     pv.variacao,
@@ -121,6 +122,7 @@ class ProdutoBarraService
             SELECT
                 c.codprodutobarra,
                 c.codproduto,
+                c.codprodutovariacao,
                 c.barras,
                 c.descricao,
                 c.nome,

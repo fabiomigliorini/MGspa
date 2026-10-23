@@ -19,9 +19,10 @@ class ImprimirValesNegocioJob implements ShouldQueue
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $codnegocio;
-    public string $impressora;
+    // codimpressora (ou, de PDV com a versao antiga, o nome da fila)
+    public int|string $impressora;
 
-    public function __construct(int $codnegocio, string $impressora)
+    public function __construct(int $codnegocio, int|string $impressora)
     {
         $this->codnegocio = $codnegocio;
         $this->impressora = $impressora;

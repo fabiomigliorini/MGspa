@@ -46,7 +46,7 @@ const CAMPOS_CADASTRO = [
 const CAMPOS_CONFIGURACAO = [
   'codestoquelocal',
   'codnaturezaoperacao',
-  'impressora',
+  'codimpressora',
   'codmaquineta',
   'codportadorpix',
 ]

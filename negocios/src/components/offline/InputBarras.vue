@@ -228,6 +228,12 @@ const buscarBarras = async () => {
 }
 
 const adicionarPeloCodigoBarras = async (txt) => {
+  // QR da via de separação da requisição (TASK-55): .../requisicao/{nº}?destino={loja}
+  const requisicao = txt.match(/\/requisicao\/(\d+)\?destino=(\d+)/i)
+  if (requisicao) {
+    sNegocio.ligarRequisicao(parseInt(requisicao[1]), parseInt(requisicao[2]))
+    return
+  }
   if (txt.length == 11) {
     const prefixo = txt.substring(0, 3)
     const codigo = txt.substring(3, 11)

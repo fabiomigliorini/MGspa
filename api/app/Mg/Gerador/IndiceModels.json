@@ -371,11 +371,6 @@
         "coluna": "codusuario",
         "metodo": "NegocioS"
       },
-      "tblnegocio.codusuarioacertoentrega": {
-        "tabela": "tblnegocio",
-        "coluna": "codusuarioacertoentrega",
-        "metodo": "NegocioAcertoEntregaS"
-      },
       "tblnegocio.codusuarioconfissao": {
         "tabela": "tblnegocio",
         "coluna": "codusuarioconfissao",
@@ -1585,11 +1580,6 @@
         "coluna": "codusuario",
         "metodo": "Usuario"
       },
-      "codusuarioacertoentrega": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioacertoentrega",
-        "metodo": "UsuarioAcertoEntrega"
-      },
       "codusuarioalteracao": {
         "tabela": "tblusuario",
         "coluna": "codusuarioalteracao",
@@ -2587,11 +2577,6 @@
         "coluna": "codnegocioprodutobarradevolucao",
         "metodo": "NegocioProdutoBarraDevolucaoS"
       },
-      "tblnegocioprodutobarrapedidoitem.codnegocioprodutobarra": {
-        "tabela": "tblnegocioprodutobarrapedidoitem",
-        "coluna": "codnegocioprodutobarra",
-        "metodo": "NegocioProdutoBarraPedidoItemS"
-      },
       "tblnotafiscalprodutobarra.codnegocioprodutobarra": {
         "tabela": "tblnotafiscalprodutobarra",
         "coluna": "codnegocioprodutobarra",
@@ -2765,36 +2750,6 @@
         "metodo": "EstoqueMovimentoOrigemS"
       }
     }
-  },
-  "tblnegocioprodutobarrapedidoitem": {
-    "tabela": "tblnegocioprodutobarrapedidoitem",
-    "campocodigo": "codnegocioprodutobarrapedidoitem",
-    "namespace": "Mg\\Negocio",
-    "classe": "NegocioProdutoBarraPedidoItem",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/Negocio/NegocioProdutoBarraPedidoItem.php",
-    "belongsTo": {
-      "codnegocioprodutobarra": {
-        "tabela": "tblnegocioprodutobarra",
-        "coluna": "codnegocioprodutobarra",
-        "metodo": "NegocioProdutoBarra"
-      },
-      "codpedidoitem": {
-        "tabela": "tblpedidoitem",
-        "coluna": "codpedidoitem",
-        "metodo": "PedidoItem"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      }
-    },
-    "hasMany": []
   },
   "tblcupomfiscal": {
     "tabela": "tblcupomfiscal",
@@ -2972,16 +2927,6 @@
         "tabela": "tblnotafiscal",
         "coluna": "codestoquelocal",
         "metodo": "NotaFiscalS"
-      },
-      "tblpedido.codestoquelocal": {
-        "tabela": "tblpedido",
-        "coluna": "codestoquelocal",
-        "metodo": "PedidoS"
-      },
-      "tblpedido.codestoquelocalorigem": {
-        "tabela": "tblpedido",
-        "coluna": "codestoquelocalorigem",
-        "metodo": "PedidoOrigemS"
       },
       "tblproduto.codestoquelocal": {
         "tabela": "tblproduto",
@@ -3411,11 +3356,6 @@
         "tabela": "tblmarca",
         "coluna": "codgrupoeconomico",
         "metodo": "MarcaS"
-      },
-      "tblpedido.codgrupoeconomico": {
-        "tabela": "tblpedido",
-        "coluna": "codgrupoeconomico",
-        "metodo": "PedidoS"
       },
       "tblpessoa.codgrupoeconomico": {
         "tabela": "tblpessoa",
@@ -4828,11 +4768,6 @@
         "coluna": "codprodutovariacao",
         "metodo": "MercosProdutoS"
       },
-      "tblpedidoitem.codprodutovariacao": {
-        "tabela": "tblpedidoitem",
-        "coluna": "codprodutovariacao",
-        "metodo": "PedidoItemS"
-      },
       "tblprodutobarra.codprodutovariacao": {
         "tabela": "tblprodutobarra",
         "coluna": "codprodutovariacao",
@@ -5235,42 +5170,6 @@
         "tabela": "tblestoquesaldo",
         "coluna": "codestoquelocalprodutovariacao",
         "metodo": "EstoqueSaldoS"
-      }
-    }
-  },
-  "tblpedidoitem": {
-    "tabela": "tblpedidoitem",
-    "campocodigo": "codpedidoitem",
-    "namespace": "Mg\\Pedido",
-    "classe": "PedidoItem",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/Pedido/PedidoItem.php",
-    "belongsTo": {
-      "codpedido": {
-        "tabela": "tblpedido",
-        "coluna": "codpedido",
-        "metodo": "Pedido"
-      },
-      "codprodutovariacao": {
-        "tabela": "tblprodutovariacao",
-        "coluna": "codprodutovariacao",
-        "metodo": "ProdutoVariacao"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      }
-    },
-    "hasMany": {
-      "tblnegocioprodutobarrapedidoitem.codpedidoitem": {
-        "tabela": "tblnegocioprodutobarrapedidoitem",
-        "coluna": "codpedidoitem",
-        "metodo": "NegocioProdutoBarraPedidoItemS"
       }
     }
   },
@@ -5872,47 +5771,6 @@
       }
     },
     "hasMany": []
-  },
-  "tblpedido": {
-    "tabela": "tblpedido",
-    "campocodigo": "codpedido",
-    "namespace": "Mg\\Pedido",
-    "classe": "Pedido",
-    "arquivo": "/opt/www/MGspa/api/app/Mg/Pedido/Pedido.php",
-    "belongsTo": {
-      "codestoquelocal": {
-        "tabela": "tblestoquelocal",
-        "coluna": "codestoquelocal",
-        "metodo": "EstoqueLocal"
-      },
-      "codestoquelocalorigem": {
-        "tabela": "tblestoquelocal",
-        "coluna": "codestoquelocalorigem",
-        "metodo": "EstoqueLocalOrigem"
-      },
-      "codgrupoeconomico": {
-        "tabela": "tblgrupoeconomico",
-        "coluna": "codgrupoeconomico",
-        "metodo": "GrupoEconomico"
-      },
-      "codusuarioalteracao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioalteracao",
-        "metodo": "UsuarioAlteracao"
-      },
-      "codusuariocriacao": {
-        "tabela": "tblusuario",
-        "coluna": "codusuariocriacao",
-        "metodo": "UsuarioCriacao"
-      }
-    },
-    "hasMany": {
-      "tblpedidoitem.codpedido": {
-        "tabela": "tblpedidoitem",
-        "coluna": "codpedido",
-        "metodo": "PedidoItemS"
-      }
-    }
   },
   "tblcertidaoemissor": {
     "tabela": "tblcertidaoemissor",

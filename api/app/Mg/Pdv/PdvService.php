@@ -2,6 +2,8 @@
 
 namespace Mg\Pdv;
 
+use Mg\Impressora\Impressora;
+use Mg\Impressora\ImpressoraService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
@@ -34,7 +36,7 @@ class PdvService
     const CAMPOS_CONFIGURACAO = [
         'codestoquelocal',
         'codnaturezaoperacao',
-        'impressora',
+        'codimpressora',
         'codmaquineta',
         'codportadorpix',
     ];
@@ -162,8 +164,8 @@ class PdvService
         if (empty($pdv->codnaturezaoperacao) && !empty($legado['codnaturezaoperacao'])) {
             $pdv->codnaturezaoperacao = NaturezaOperacao::find($legado['codnaturezaoperacao'])?->codnaturezaoperacao;
         }
-        if (empty($pdv->impressora) && !empty($legado['impressora'])) {
-            $pdv->impressora = substr($legado['impressora'], 0, 100);
+        if (empty($pdv->codimpressora) && !empty($legado['impressora'])) {
+            $pdv->codimpressora = Impressora::where('impressora', $legado['impressora'])->value('codimpressora');
         }
         if (empty($pdv->codportadorpix) && !empty($legado['codportador'])) {
             $pdv->codportadorpix = Portador::find($legado['codportador'])?->codportador;
@@ -323,6 +325,11 @@ class PdvService
                 nat.codnaturezaoperacaodevolucao,
                 nat.preco,
                 nat.emitida,
+                -- gera movimento no destino (TASK-55): o PDV mostra a Loja destino
+                exists (
+                    select 1 from tblestoquemovimentotipo f
+                    where f.codestoquemovimentotipoorigem = nat.codestoquemovimentotipo
+                ) as movimentadestino,
                 :sincronizado as sincronizado
             from tblnaturezaoperacao nat 
             ';
@@ -468,22 +475,17 @@ class PdvService
         return $regs;
     }
 
+    // impressoras ativas do cadastro (tblimpressora), para a sincronizacao do PDV
     public static function impressora()
     {
-        $printers = json_decode(file_get_contents(base_path('printers.json')), true);
-        $ret = [];
         $sincronizado = date('Y-m-d H:i:s');
-        $codimpressora = 0;
-        foreach ($printers as $impressora => $nome) {
-            $codimpressora++;
-            $ret[] = [
-                'codimpressora' => $codimpressora,
-                'impressora' => $impressora,
-                'nome' => $nome,
-                'sincronizado' => $sincronizado,
-            ];
-        }
-        return $ret;
+        return ImpressoraService::listar(false)->map(fn ($i) => [
+            'codimpressora' => $i->codimpressora,
+            'impressora' => $i->impressora,
+            'nome' => $i->descricao,
+            'tipo' => $i->tipo,
+            'sincronizado' => $sincronizado,
+        ])->values()->all();
     }
 
     // grava so' os campos que vieram: quem nao altera o cadastro nem manda (o controller recusa)

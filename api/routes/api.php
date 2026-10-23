@@ -135,6 +135,11 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // EstoqueLocal (migrado em 23/05/2026) — só leitura
     Route::get('estoque-local', [\Mg\Estoque\EstoqueLocalController::class, 'index']);
     Route::get('estoque-local/{id}', [\Mg\Estoque\EstoqueLocalController::class, 'show']);
+    Route::post('estoque-local', [\Mg\Estoque\EstoqueLocalController::class, 'store']);
+    Route::get('estoque-local/{id}/indicadores', [\Mg\Estoque\EstoqueLocalController::class, 'indicadores'])->whereNumber('id');
+    Route::put('estoque-local/{id}', [\Mg\Estoque\EstoqueLocalController::class, 'update'])->whereNumber('id');
+    Route::post('estoque-local/{id}/inativo', [\Mg\Estoque\EstoqueLocalController::class, 'inativar'])->whereNumber('id');
+    Route::delete('estoque-local/{id}/inativo', [\Mg\Estoque\EstoqueLocalController::class, 'ativar'])->whereNumber('id');
 
     // Veiculo (migrado em 23/05/2026)
     Route::get('veiculo', [\Mg\Veiculo\VeiculoController::class, 'index']);
@@ -530,6 +535,37 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('vale-modelo/{valeModelo}/inativo', [\Mg\Vale\ValeModeloController::class, 'ativar']);
     Route::apiResource('vale-modelo', \Mg\Vale\ValeModeloController::class)->parameters(['vale-modelo' => 'valeModelo']);
 
+    // Requisicao entre lojas (TASK-55, doc-6): o dispositivo (X-Pdv) diz de que loja e' quem esta' na tela
+    Route::middleware('pdv')->group(function () {
+        Route::get('requisicao/painel', [\Mg\Requisicao\RequisicaoController::class, 'painel']);
+        Route::get('requisicao/sugestao', [\Mg\Requisicao\RequisicaoController::class, 'sugestao']);
+        Route::get('requisicao/rascunho/negocio/{codnegocio}', [\Mg\Requisicao\RequisicaoController::class, 'rascunhoDoNegocio'])->whereNumber('codnegocio');
+        Route::get('requisicao/negocio/{codnegocio}', [\Mg\Requisicao\RequisicaoController::class, 'doNegocio'])->whereNumber('codnegocio');
+        Route::post('requisicao', [\Mg\Requisicao\RequisicaoController::class, 'store']);
+        Route::get('requisicao/{codrequisicao}', [\Mg\Requisicao\RequisicaoController::class, 'show'])->whereNumber('codrequisicao');
+        Route::put('requisicao/{codrequisicao}', [\Mg\Requisicao\RequisicaoController::class, 'update'])->whereNumber('codrequisicao');
+        Route::post('requisicao/{codrequisicao}/cancelar', [\Mg\Requisicao\RequisicaoController::class, 'cancelar'])->whereNumber('codrequisicao');
+        Route::post('requisicao/{codrequisicao}/imprimir', [\Mg\Requisicao\RequisicaoController::class, 'imprimir'])->whereNumber('codrequisicao');
+        Route::post('requisicao/{codrequisicao}/item', [\Mg\Requisicao\RequisicaoController::class, 'incluirEnviadoAMais'])->whereNumber('codrequisicao');
+        Route::put('requisicao-item/{codrequisicaoitem}', [\Mg\Requisicao\RequisicaoController::class, 'justificarItem'])->whereNumber('codrequisicaoitem');
+        Route::post('requisicao/{codrequisicao}/finalizar', [\Mg\Requisicao\RequisicaoController::class, 'finalizar'])->whereNumber('codrequisicao');
+        Route::post('requisicao/{codrequisicao}/reprocessar', [\Mg\Requisicao\RequisicaoController::class, 'reprocessar'])->whereNumber('codrequisicao');
+        // conferencia do codigo de retirada: poucas tentativas por minuto
+        Route::post('requisicao/{codrequisicao}/entregar', [\Mg\Requisicao\RequisicaoController::class, 'entregar'])
+            ->whereNumber('codrequisicao')->middleware('throttle:10,1');
+    });
+    // PDF das vias: assinado (MGprint) ou logado; a via do cliente confere o dispositivo
+    Route::get('requisicao/{codrequisicao}/pdf', [\Mg\Requisicao\RequisicaoController::class, 'pdf'])
+        ->whereNumber('codrequisicao')
+        ->name('requisicao.pdf')
+        ->withoutMiddleware('auth:api')->middleware('auth_or_signed');
+
+    // Entregas do negocio (TASK-55, doc-6)
+    Route::get('negocio/entrega/{lado}', [\Mg\Negocio\NegocioEntregaController::class, 'pendentes'])->whereIn('lado', ['a-fazer', 'a-receber']);
+    Route::get('negocio/{codnegocio}/entrega', [\Mg\Negocio\NegocioEntregaController::class, 'index'])->whereNumber('codnegocio');
+    Route::post('negocio/{codnegocio}/entrega', [\Mg\Negocio\NegocioEntregaController::class, 'store'])->whereNumber('codnegocio');
+    Route::post('negocio-entrega/{codnegocioentrega}/inativo', [\Mg\Negocio\NegocioEntregaController::class, 'inativar'])->whereNumber('codnegocioentrega');
+
     // UnidadeMedida (migrado em 31/05/2026)
     Route::get('unidade-medida/autocompletar', [\Mg\Produto\UnidadeMedidaController::class, 'autocompletar']);
     Route::post('unidade-medida/{id}/inativo', [\Mg\Produto\UnidadeMedidaController::class, 'inativar']);
@@ -613,14 +649,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::delete('grupoeconomico/{codgrupoeconomico}/inativo', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'ativar']);
     Route::put('grupoeconomico/{codgrupoeconomico}/', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'update']);
     Route::delete('grupoeconomico/{codgrupoeconomico}/', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'delete']);
-
-    // Pedido (migrado em 23/05/2026 — produtos-para-transferir fica proxiado pro legacy)
-    Route::get('pedido/{id}/item', [\Mg\Pedido\PedidoController::class, 'indexItem']);
-    Route::get('pedido/{id}/item/{iditem}', [\Mg\Pedido\PedidoController::class, 'showItem']);
-    Route::post('pedido/{id}/item', [\Mg\Pedido\PedidoController::class, 'storeItem']);
-    Route::put('pedido/{id}/item/{iditem}', [\Mg\Pedido\PedidoController::class, 'updateItem']);
-    Route::delete('pedido/{id}/item/{iditem}', [\Mg\Pedido\PedidoController::class, 'destroyItem']);
-    Route::apiResource('pedido', \Mg\Pedido\PedidoController::class)->parameters(['pedido' => 'id']);
 
     // CaixaMercadoria (stub literal do legacy — migrado em 23/05/2026)
     Route::apiResource('caixa-mercadoria', \Mg\CaixaMercadoria\CaixaMercadoriaController::class)->parameters(['caixa-mercadoria' => 'id']);
@@ -1118,6 +1146,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Pesquisa de produto em grade, com o filtro do PDV (TASK-173)
     Route::get('produto-barra/pesquisa', '\Mg\Produto\ProdutoBarraController@pesquisa');
     Route::get('produto-barra/barras/{barras}', '\Mg\Produto\ProdutoBarraController@barras');
+    Route::get('produto-variacao/{codprodutovariacao}/saldo', '\Mg\Produto\ProdutoVariacaoController@saldo')->whereNumber('codprodutovariacao');
 
     // Produto (CRUD migrado em 31/05/2026)
     Route::group(['prefix' => 'produto'], function () {
@@ -1388,6 +1417,14 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('portador/{codportador}/saldos-portador', '\Mg\Portador\PortadorController@listaSaldosPortador');
     Route::get('portador/{codportador}/consulta-extrato', '\Mg\Portador\PortadorController@consultaExtrato');
     Route::post('portador/importar-ofx', '\Mg\Portador\PortadorController@importarOfx');
+
+    // Impressora (TASK-255): cadastro no PDV; o nome e' a fila do CUPS / evento do Ably
+    Route::get('impressora', '\Mg\Impressora\ImpressoraController@index');
+    Route::post('impressora', '\Mg\Impressora\ImpressoraController@store');
+    Route::get('impressora/{codimpressora}', '\Mg\Impressora\ImpressoraController@show')->whereNumber('codimpressora');
+    Route::put('impressora/{codimpressora}', '\Mg\Impressora\ImpressoraController@update')->whereNumber('codimpressora');
+    Route::post('impressora/{codimpressora}/inativo', '\Mg\Impressora\ImpressoraController@inativar')->whereNumber('codimpressora');
+    Route::delete('impressora/{codimpressora}/inativo', '\Mg\Impressora\ImpressoraController@ativar')->whereNumber('codimpressora');
 
     // Maquineta (M3 doc-3: cadastro unico de terminais de cartao)
     Route::get('maquineta', '\Mg\Maquineta\MaquinetaController@index');

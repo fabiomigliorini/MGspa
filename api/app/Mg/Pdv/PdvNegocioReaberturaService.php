@@ -70,6 +70,8 @@ class PdvNegocioReaberturaService
             ['codnegociostatus' => NegocioService::STATUS_ABERTO],
             $justificativa
         );
+        // requisicoes que ele atende voltam a pendente (TASK-55)
+        \Mg\Requisicao\RequisicaoProcessamentoService::aoMudarNegocio($negocio->codnegocio, 'reaberto');
         return $negocio;
     }
 

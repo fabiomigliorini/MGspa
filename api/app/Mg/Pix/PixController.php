@@ -151,7 +151,7 @@ class PixController
     public function imprimirQrCode(Request $request, $codpixcob)
     {
         $request->validate([
-            'impressora' => ['required', 'string']
+            'impressora' => ['required']
         ]);
         $cob = PixCob::findOrFail($codpixcob);
         $pdf = PixService::imprimirQrCode($cob, $request->impressora);

@@ -30,6 +30,7 @@ class ProdutoBarraPesquisaResource extends Resource
         return [
             'codprodutobarra' => $this->codprodutobarra,
             'codproduto' => $this->codproduto,
+            'codprodutovariacao' => $this->codprodutovariacao,
             'barras' => $this->barras,
             'descricao' => $descricao,
             'nome' => $this->Produto->produto,

@@ -3,6 +3,7 @@
 namespace Mg\Pdv;
 
 use Mg\Negocio\Negocio;
+use Mg\Impressora\ImpressoraService;
 use Mg\Negocio\NegocioParcelaService;
 use Mg\Titulo\TituloService;
 use Mg\Titulo\TituloValeService;
@@ -98,9 +99,6 @@ class ValeService
             $params['codtitulo'] = $codtitulo;
         }
         $url = \URL::temporarySignedRoute('pdv.negocio.vale', now()->addMinutes(10), $params);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "'
-            . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora
-            . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [], \"copies\": 1}" }\'';
-        exec($cmd);
+        ImpressoraService::publicar(ImpressoraService::resolver($impressora), $url, [], 1);
     }
 }

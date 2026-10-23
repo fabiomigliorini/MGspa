@@ -132,7 +132,7 @@ const podeImprimir = computed(
 const urlVale = () => '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/vale'
 
 const imprimirVale = async () => {
-  if (!sNegocio.padrao.impressora) {
+  if (!sNegocio.padrao.codimpressora) {
     Notify.create({
       type: 'negative',
       message: 'Nenhuma impressora térmica selecionada!',
@@ -141,7 +141,7 @@ const imprimirVale = async () => {
     })
     return
   }
-  await api.post(urlVale() + '/' + sNegocio.padrao.impressora, null, {
+  await api.post(urlVale() + '/' + sNegocio.padrao.codimpressora, null, {
     params: { uuid: props.vale.uuid },
   })
   Notify.create({

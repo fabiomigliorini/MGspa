@@ -26,14 +26,10 @@ class UsuarioController extends MgController
     {
         $request->validate([
             'usuario' => ['required', 'unique:tblusuario', 'min:2'],
-            'impressoramatricial' => ['required'],
-            'impressoratermica' => ['required'],
         ], [
             'usuario.required' => 'O campo "Usuario" deve ser preenchido!',
             'usuario.unique' => 'Este "Usuario" já esta cadastrado',
             'usuario.min' => 'O campo "Usuario" deve ter no mínimo 2 caracteres.',
-            'impressoratermica.required' => 'O campo "Impressora Termica" deve ser preenchido!',
-            'impressoramatricial.required' => 'O campo "Impressora Matricial" deve ser preenchido!',
         ]);
 
         $model = new Usuario();

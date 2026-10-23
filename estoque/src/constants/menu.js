@@ -58,6 +58,13 @@ export const menuGroups = [
         to: { name: 'secao-produto' },
       },
       {
+        label: 'Locais de Estoque',
+        caption: 'Lojas e depósitos, impressora da via de separação',
+        icon: 'warehouse',
+        color: 'brown-7',
+        to: { name: 'estoque-local' },
+      },
+      {
         label: 'Unidades de Medida',
         caption: 'Cadastro de unidades de medida',
         icon: 'straighten',

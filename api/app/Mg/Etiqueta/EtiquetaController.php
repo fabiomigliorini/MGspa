@@ -53,7 +53,7 @@ class EtiquetaController extends MgController
     {
         $request->validate([
             'modelo' => ['required', 'string'],
-            'impressora' => ['required', 'string'],
+            'impressora' => ['required'],
             'etiquetas' => 'required|array|min:1',
         ]);
         return EtiquetaService::imprimir($request->impressora, $request->modelo, $request->etiquetas);

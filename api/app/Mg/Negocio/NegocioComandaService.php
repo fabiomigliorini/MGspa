@@ -3,6 +3,7 @@
 namespace Mg\Negocio;
 
 use Illuminate\Support\Str;
+use Mg\Impressora\ImpressoraService;
 
 use JasperPHP\core\Instructions;
 use JasperPHP\elements\Report;
@@ -33,8 +34,7 @@ class NegocioComandaService
     public static function imprimir(Negocio $negocio, $impressora)
     {
         $url = \URL::temporarySignedRoute('negocio.comanda', now()->addMinutes(10), ['codnegocio' => $negocio->codnegocio]);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "' . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [\"fit-to-page\"], \"copies\": 1}" }\'';
-        exec($cmd);
+        ImpressoraService::publicar(ImpressoraService::resolver($impressora), $url, ['fit-to-page'], 1);
     }
 
     public static function unificar(Negocio $negocio, Negocio $negocioComanda, Pdv $pdv = null, array $escolhas = [])

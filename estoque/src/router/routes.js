@@ -38,6 +38,20 @@ const routes = [
         meta: { auth: true, title: 'Marca', permissions: PERMISSOES_ESTOQUE },
       },
 
+      // ──────────────────────── Locais de Estoque ─────────────────────
+      {
+        path: 'estoque-local',
+        name: 'estoque-local',
+        component: () => import('pages/estoque-local/Index.vue'),
+        meta: { auth: true, title: 'Locais de Estoque', permissions: PERMISSOES_ESTOQUE },
+      },
+      {
+        path: 'estoque-local/:id',
+        name: 'estoque-local-detalhe',
+        component: () => import('pages/estoque-local/Detalhe.vue'),
+        meta: { auth: true, title: 'Local de Estoque', permissions: PERMISSOES_ESTOQUE },
+      },
+
       // ──────────────────────── Unidades de Medida ────────────────────
       {
         path: 'unidade-medida',

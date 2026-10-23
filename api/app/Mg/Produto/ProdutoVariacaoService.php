@@ -52,6 +52,44 @@ class ProdutoVariacaoService
         return $pv;
     }
 
+    /**
+     * Saldo físico da variação, um item por local de estoque, na janela da variação da pesquisa
+     * em grade (MgGradeProduto, TASK-254). Só os locais com saldo diferente de zero.
+     */
+    public static function saldo(int $codprodutovariacao): array
+    {
+        $pv = ProdutoVariacao::findOrFail($codprodutovariacao);
+        $locais = DB::select('
+            SELECT
+                el.codestoquelocal,
+                el.sigla,
+                el.estoquelocal,
+                coalesce(es.saldoquantidade, 0) AS saldoquantidade
+            FROM tblestoquelocalprodutovariacao elpv
+            INNER JOIN tblestoquelocal el ON (el.codestoquelocal = elpv.codestoquelocal)
+            INNER JOIN tblestoquesaldo es ON (
+                es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao
+                AND es.fiscal = false
+            )
+            WHERE elpv.codprodutovariacao = :codprodutovariacao
+            AND es.saldoquantidade <> 0
+            ORDER BY el.codestoquelocal
+        ', ['codprodutovariacao' => $pv->codprodutovariacao]);
+
+        $saldo = 0;
+        foreach ($locais as $local) {
+            $local->saldoquantidade = (float) $local->saldoquantidade;
+            $saldo += $local->saldoquantidade;
+        }
+
+        return [
+            'codprodutovariacao' => $pv->codprodutovariacao,
+            'decimais' => (int) $pv->Produto->UnidadeMedida->decimais,
+            'saldo' => $saldo,
+            'locais' => $locais,
+        ];
+    }
+
     public static function unificaVariacoes($codprodutovariacaoorigem, $codprodutovariacaodestino)
     {
         $pv_origem = ProdutoVariacao::findOrFail($codprodutovariacaoorigem);

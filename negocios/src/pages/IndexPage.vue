@@ -17,6 +17,8 @@ import InputBarras from 'components/offline/InputBarras.vue'
 import ListagemTitulos from 'components/offline/ListagemTitulos.vue'
 import ListagemNotas from 'components/offline/ListagemNotas.vue'
 import ListagemAnexos from 'components/offline/ListagemAnexos.vue'
+import ListagemRequisicoes from 'components/offline/ListagemRequisicoes.vue'
+import CardEntrega from 'components/offline/CardEntrega.vue'
 import { api } from 'src/services/api'
 import { abrirPdf } from '@components/abrirPdf'
 import { Dialog, Notify, debounce } from 'quasar'
@@ -270,7 +272,7 @@ const receber = async () => {
 const letraVale = (indice) => String.fromCharCode(65 + indice)
 
 const checarImpressora = () => {
-  if (!sNegocio.padrao.impressora) {
+  if (!sNegocio.padrao.codimpressora) {
     Notify.create({
       type: 'negative',
       message: 'Nenhuma impressora térmica selecionada!',
@@ -285,7 +287,7 @@ const checarImpressora = () => {
 const imprimirRomaneio = async () => {
   if (!checarImpressora()) return
   await api.post(
-    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/romaneio/' + sNegocio.padrao.impressora,
+    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/romaneio/' + sNegocio.padrao.codimpressora,
   )
   Notify.create({
     type: 'positive',
@@ -298,7 +300,7 @@ const imprimirRomaneio = async () => {
 const imprimirComanda = async () => {
   if (!checarImpressora()) return
   await api.post(
-    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/comanda/' + sNegocio.padrao.impressora,
+    '/v1/pdv/negocio/' + sNegocio.negocio.codnegocio + '/comanda/' + sNegocio.padrao.codimpressora,
   )
   Notify.create({
     type: 'positive',
@@ -524,6 +526,8 @@ onUnmounted(() => {
         >
           <listagem-notas ref="listagemNotasRef" />
           <listagem-titulos />
+          <listagem-requisicoes />
+          <card-entrega />
         </template>
         <listagem-itens-vale
           v-for="(vale, indice) in sNegocio.valesAtivos"
@@ -714,6 +718,17 @@ onUnmounted(() => {
             v-if="sNegocio.itensAtivos.length > 0 && sNegocio.negocio.codnegociostatus != 3"
           />
         </q-fab>
+
+        <!-- REQUISITAR DE OUTRA LOJA (TASK-55): a venda fechada vira requisição -->
+        <q-btn
+          fab
+          icon="move_down"
+          color="brown"
+          :to="`/requisicao/nova?codnegocio=${sNegocio.negocio.codnegocio}`"
+          v-if="sNegocio.negocio.codnegociostatus == 2 && sNegocio.negocio.codnegocio"
+        >
+          <q-tooltip class="bg-accent">Requisitar de outra loja</q-tooltip>
+        </q-btn>
 
         <!-- FECHAR -->
         <q-btn

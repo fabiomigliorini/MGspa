@@ -3,6 +3,7 @@
 namespace Mg\Pdv;
 
 use Illuminate\Support\Facades\Auth;
+use Mg\Impressora\ImpressoraService;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoListaService;
 use Mg\Pagamento\PagamentoService;
@@ -97,9 +98,6 @@ class PdvPagamentoService
     public static function imprimirRecibo(array $codpagamentos, string $impressora): void
     {
         $url = \URL::temporarySignedRoute('pdv.pagamento.recibo', now()->addMinutes(10), ['codpagamentos' => implode(',', $codpagamentos)]);
-        $cmd = 'curl -X POST https://rest.ably.io/channels/printing/messages -u "'
-            . config('services.ably.key') . '" -H "Content-Type: application/json" --data \'{ "name": "' . $impressora
-            . '", "data": "{\"url\": \"' . $url . '\", \"method\": \"get\", \"options\": [], \"copies\": 1}" }\'';
-        exec($cmd);
+        ImpressoraService::publicar(ImpressoraService::resolver($impressora), $url, [], 1);
     }
 }

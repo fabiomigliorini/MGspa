@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { negocioStore } from 'stores/negocio'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import { Dialog, Notify } from 'quasar'
@@ -26,7 +26,49 @@ const edicaoNatureza = ref({
   codestoquelocal: null,
   codnaturezaoperacao: null,
   observacoes: null,
+  codestoquelocaldestino: null,
+  entrega: false,
 })
+
+// a natureza escolhida no diálogo: se gera movimento no destino, pede a Loja destino
+// (obrigatória na transferência) — TASK-55
+const naturezaEdicao = ref(null)
+watch(
+  () => edicaoNatureza.value.codnaturezaoperacao,
+  async (cod) => {
+    naturezaEdicao.value = cod ? await db.naturezaOperacao.get(cod) : null
+    // trocou para transferência: já vem marcado o controle de entrega
+    if (cod !== sNegocio.negocio?.codnaturezaoperacao && naturezaEdicao.value?.transferencia) {
+      edicaoNatureza.value.entrega = true
+    }
+  },
+)
+
+// requisições que este negócio atende (TASK-55): liga pelo número (o QR e o Separar da
+// requisição ligam sozinhos)
+const requisicoesAtivas = computed(() =>
+  (sNegocio.negocio?.requisicoes ?? []).filter((r) => !r.inativo),
+)
+const dialogRequisicao = ref(false)
+const ligacao = ref({ codrequisicao: null, codestoquelocaldestino: null })
+const abrirLigarRequisicao = () => {
+  if (!sNegocio.podeEditar) return
+  ligacao.value = {
+    codrequisicao: null,
+    codestoquelocaldestino: sNegocio.negocio.codestoquelocaldestino,
+  }
+  dialogRequisicao.value = true
+}
+const ligarRequisicao = async () => {
+  if (
+    await sNegocio.ligarRequisicao(
+      ligacao.value.codrequisicao,
+      ligacao.value.codestoquelocaldestino,
+    )
+  ) {
+    dialogRequisicao.value = false
+  }
+}
 
 const vendedores = ref([])
 const filtroVendedor = ref(null)
@@ -38,6 +80,8 @@ const editarNatureza = () => {
   edicaoNatureza.value.codestoquelocal = sNegocio.negocio.codestoquelocal
   edicaoNatureza.value.codnaturezaoperacao = sNegocio.negocio.codnaturezaoperacao
   edicaoNatureza.value.observacoes = sNegocio.negocio.observacoes
+  edicaoNatureza.value.codestoquelocaldestino = sNegocio.negocio.codestoquelocaldestino
+  edicaoNatureza.value.entrega = !!sNegocio.negocio.entrega
   dialogPessoa.value = true
 }
 
@@ -96,6 +140,8 @@ const salvarNatureza = async () => {
       edicaoNatureza.value.codestoquelocal,
       edicaoNatureza.value.codnaturezaoperacao,
       edicaoNatureza.value.observacoes,
+      edicaoNatureza.value.codestoquelocaldestino,
+      edicaoNatureza.value.entrega,
     )
     dialogPessoa.value = false
   })
@@ -206,6 +252,24 @@ const apropriar = () => {
                 :rules="[(val) => !!val || 'Preenchimento Obrigatório']"
               />
             </div>
+            <div
+              class="col-12"
+              v-if="naturezaEdicao?.movimentadestino || naturezaEdicao?.transferencia"
+            >
+              <select-estoque-local
+                outlined
+                v-model="edicaoNatureza.codestoquelocaldestino"
+                label="Loja destino"
+                :rules="[
+                  (val) => !naturezaEdicao?.transferencia || !!val || 'Informe a loja destino',
+                  (val) =>
+                    !val || val !== edicaoNatureza.codestoquelocal || 'Tem que ser outra loja',
+                ]"
+              />
+            </div>
+            <div class="col-12">
+              <q-toggle v-model="edicaoNatureza.entrega" label="Controlar entrega" />
+            </div>
             <div class="col-12">
               <MgInput
                 autofocus
@@ -220,6 +284,42 @@ const apropriar = () => {
         <q-card-actions align="right">
           <q-btn flat label="Cancelar" color="grey-8" @click="dialogPessoa = false" tabindex="-1" />
           <q-btn type="submit" flat label="Salvar" color="primary" />
+        </q-card-actions>
+      </q-form>
+    </q-card>
+  </q-dialog>
+
+  <!-- Ligar requisição (TASK-55) -->
+  <q-dialog v-model="dialogRequisicao">
+    <q-card flat style="width: 400px; max-width: 95vw">
+      <q-form @submit.prevent="ligarRequisicao">
+        <q-card-section class="text-grey-9 text-overline text-uppercase">
+          Ligar a uma requisição
+        </q-card-section>
+        <q-card-section>
+          <div class="row q-col-gutter-md">
+            <div class="col-12">
+              <MgInput
+                v-model="ligacao.codrequisicao"
+                label="Número da requisição"
+                type="number"
+                autofocus
+                :rules="[(val) => !!val || 'Informe o número']"
+              />
+            </div>
+            <div class="col-12">
+              <select-estoque-local
+                outlined
+                v-model="ligacao.codestoquelocaldestino"
+                label="Loja destino (a que pediu)"
+                :rules="[(val) => !!val || 'Informe a loja destino']"
+              />
+            </div>
+          </div>
+        </q-card-section>
+        <q-card-actions align="right">
+          <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
+          <q-btn flat label="Ligar" color="primary" type="submit" />
         </q-card-actions>
       </q-form>
     </q-card>
@@ -271,6 +371,38 @@ const apropriar = () => {
   <q-list v-if="sNegocio.negocio">
     <!-- <q-item-label header>Pessoa</q-item-label> -->
 
+    <!-- Requisições que o negócio atende (TASK-55) -->
+    <q-item
+      v-if="requisicoesAtivas.length || sNegocio.podeEditar"
+      :clickable="sNegocio.podeEditar"
+      @click="abrirLigarRequisicao()"
+    >
+      <q-item-section avatar top>
+        <q-avatar icon="move_down" color="brown" text-color="white" />
+      </q-item-section>
+      <q-item-section>
+        <q-item-label lines="1">
+          {{ requisicoesAtivas.length ? 'Requisições' : 'Ligar a uma requisição' }}
+        </q-item-label>
+        <q-item-label caption v-for="r in requisicoesAtivas" :key="r.uuid">
+          <router-link :to="`/requisicao/${r.codrequisicao}`" @click.stop>
+            #{{ formataCodigo(r.codrequisicao) }}
+          </router-link>
+          <q-btn
+            v-if="sNegocio.podeEditar"
+            flat
+            round
+            size="xs"
+            color="grey-7"
+            icon="close"
+            @click.stop="sNegocio.desligarRequisicao(r.uuid)"
+          >
+            <q-tooltip>Tirar do negócio</q-tooltip>
+          </q-btn>
+        </q-item-label>
+      </q-item-section>
+    </q-item>
+
     <!-- Filial -->
     <q-item clickable @click="editarNatureza()">
       <q-item-section avatar top>
@@ -280,6 +412,9 @@ const apropriar = () => {
       <q-item-section>
         <q-item-label lines="1">
           {{ sNegocio.negocio.estoquelocal }}
+          <template v-if="sNegocio.negocio.estoquelocaldestino">
+            para {{ sNegocio.negocio.estoquelocaldestino }}
+          </template>
         </q-item-label>
         <q-item-label caption>
           {{ formataTimestampCompleto(sNegocio.negocio.lancamento) }}

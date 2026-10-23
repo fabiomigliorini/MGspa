@@ -33,7 +33,7 @@ async function carregar() {
   if (!sCaixa.gaveta) return
   await store.carregar(sCaixa.gaveta.codportador, null, {
     codpdv: sSinc.pdv.codpdv,
-    impressora: sNegocio.padrao.impressora,
+    impressora: sNegocio.padrao.codimpressora,
   })
 }
 

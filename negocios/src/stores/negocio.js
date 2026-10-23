@@ -113,6 +113,14 @@ function descontosIguais(a, b) {
 export const negocioStore = defineStore('negocio', {
   persist: {
     pick: ['padrao', 'paginaAtual', 'ultimos'],
+    // PDV que atualizou e ainda nao sincronizou o dispositivo (TASK-255): ate' la' imprime
+    // pelo nome da fila que ja' tinha, que o backend tambem aceita
+    afterHydrate: (ctx) => {
+      const padrao = ctx.store.padrao
+      if (padrao && padrao.codimpressora == null && padrao.impressora) {
+        padrao.codimpressora = padrao.impressora
+      }
+    },
   },
 
   state: () => ({
@@ -136,7 +144,7 @@ export const negocioStore = defineStore('negocio', {
       codnaturezaoperacao: 1, //Venda
       codoperacao: 2, //Saída
       venda: true, //Saída
-      impressora: null,
+      codimpressora: null,
       codmaquineta: null,
       codportadorpix: null,
     },
@@ -275,7 +283,7 @@ export const negocioStore = defineStore('negocio', {
         codnaturezaoperacao: pdv.codnaturezaoperacao,
         codoperacao: pdv.codoperacao,
         venda: pdv.venda,
-        impressora: pdv.impressora,
+        codimpressora: pdv.codimpressora,
         codmaquineta: pdv.codmaquineta,
         codportadorpix: pdv.codportadorpix,
       }
@@ -472,10 +480,11 @@ export const negocioStore = defineStore('negocio', {
         codpessoatransportador: null,
         codpessoavendedor: null,
         codusuario: null,
-        codusuarioacertoentrega: null,
         codusuariorecebimento: null,
         cpf: null,
         entrega: false,
+        // requisições que este negócio atende (TASK-55): só a lista; o servidor calcula o resto
+        requisicoes: [],
         lancamento: formataTimestampIso(new Date()),
         observacoes: null,
         recebimento: null,
@@ -502,6 +511,9 @@ export const negocioStore = defineStore('negocio', {
         codpdv: sSinc.pdv.codpdv,
         Pdv: pdvDoNegocio(),
       }
+      // transferência nasce com o controle de entrega marcado (TASK-55)
+      const nat = await db.naturezaOperacao.get(negocio.codnaturezaoperacao)
+      negocio.entrega = !!nat?.transferencia
       db.negocio.add(negocio, uuid)
       this.negocio = { ...negocio }
       await this.atualizarListagem()
@@ -788,6 +800,10 @@ export const negocioStore = defineStore('negocio', {
       })
       // vales: uuid novo no vale e em cada item, senao o servidor recebe o
       // uuid de um vale que ja e de outro negocio e recusa o PUT
+      // requisições ligadas: uuid novo em cada ligação (o servidor recusa uuid de outro negócio)
+      negocio.requisicoes = (negocio.requisicoes ?? [])
+        .filter((r) => !r.inativo)
+        .map((r) => ({ uuid: uid(), codrequisicao: r.codrequisicao, inativo: null }))
       negocio.vales = (negocio.vales ?? []).filter((v) => {
         return v.inativo == null
       })
@@ -941,6 +957,13 @@ export const negocioStore = defineStore('negocio', {
         }
       }
 
+      // loja destino
+      let estoquelocaldestino = null
+      if (this.negocio.codestoquelocaldestino) {
+        const dest = await db.estoqueLocal.get(this.negocio.codestoquelocaldestino)
+        estoquelocaldestino = dest?.estoquelocal ?? null
+      }
+
       // Pessoa
       if (this.negocio.codpessoa) {
         const pes = await db.pessoa.get(this.negocio.codpessoa)
@@ -969,6 +992,7 @@ export const negocioStore = defineStore('negocio', {
       this.negocio.operacao = operacao
       this.negocio.negociostatus = negociostatus
       this.negocio.estoquelocal = estoquelocal
+      this.negocio.estoquelocaldestino = estoquelocaldestino
       this.negocio.fantasia = fantasia
       this.negocio.fantasiavendedor = fantasiavendedor
     },
@@ -1743,13 +1767,103 @@ export const negocioStore = defineStore('negocio', {
       await this.salvar()
     },
 
-    async informarNatureza(codestoquelocal, codnaturezaoperacao, observacoes) {
+    // loja destino (TASK-55): só em natureza que gera movimento no destino (transferência,
+    // venda entre empresas do grupo); com ela, a pessoa vira a filial da loja destino
+    async informarNatureza(
+      codestoquelocal,
+      codnaturezaoperacao,
+      observacoes,
+      codestoquelocaldestino,
+      entrega,
+    ) {
       await this.recarregar()
       this.negocio.codestoquelocal = codestoquelocal
       this.negocio.codnaturezaoperacao = codnaturezaoperacao
       this.negocio.observacoes = observacoes
+      this.negocio.entrega = !!entrega
+      const nat = await db.naturezaOperacao.get(codnaturezaoperacao)
+      // transferencia vale mesmo antes do PDV sincronizar a natureza com o movimentadestino
+      this.negocio.codestoquelocaldestino =
+        nat?.movimentadestino || nat?.transferencia ? codestoquelocaldestino || null : null
+      if (this.negocio.codestoquelocaldestino) {
+        const destino = await db.estoqueLocal.get(this.negocio.codestoquelocaldestino)
+        if (destino?.codpessoa) {
+          this.negocio.codpessoa = destino.codpessoa
+        }
+      }
       await this.carregarChavesEstrangeiras()
       await this.salvar()
+    },
+
+    // Liga o negócio a uma requisição (TASK-55): pelo QR da via de separação, pelo número
+    // digitado ou pelo Separar da requisição, a qualquer momento antes de fechar. Põe a
+    // natureza de transferência e a loja destino (do QR ou informada); o Fechar confere.
+    async ligarRequisicao(codrequisicao, codestoquelocaldestino = null) {
+      await this.recarregar()
+      if (!this.podeEditar) {
+        Notify.create({
+          type: 'negative',
+          message: 'Negócio fechado: reabra para ligar a requisição.',
+          timeout: 3000,
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
+      }
+      this.negocio.requisicoes = this.negocio.requisicoes ?? []
+      const cod = parseInt(codrequisicao)
+      if (this.negocio.requisicoes.some((r) => !r.inativo && r.codrequisicao == cod)) {
+        Notify.create({ type: 'info', message: `Já ligado à requisição #${cod}`, timeout: 2000 })
+        return true
+      }
+      const natAtual = await db.naturezaOperacao.get(this.negocio.codnaturezaoperacao)
+      if (!natAtual?.transferencia || natAtual.codoperacao != 2) {
+        const nat = await db.naturezaOperacao
+          .filter((n) => n.transferencia && n.codoperacao == 2)
+          .first()
+        if (nat) {
+          this.negocio.codnaturezaoperacao = nat.codnaturezaoperacao
+        }
+      }
+      const destino = codestoquelocaldestino ? parseInt(codestoquelocaldestino) : null
+      if (
+        destino &&
+        this.negocio.codestoquelocaldestino &&
+        this.negocio.codestoquelocaldestino != destino
+      ) {
+        Notify.create({
+          type: 'warning',
+          message: `A requisição #${cod} vai para outra loja destino: o Fechar vai recusar.`,
+          timeout: 5000,
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+      } else if (destino) {
+        this.negocio.codestoquelocaldestino = destino
+        const loja = await db.estoqueLocal.get(destino)
+        if (loja?.codpessoa) {
+          this.negocio.codpessoa = loja.codpessoa
+        }
+      }
+      this.negocio.entrega = true
+      this.negocio.requisicoes.push({ uuid: uid(), codrequisicao: cod, inativo: null })
+      await this.carregarChavesEstrangeiras()
+      await this.salvar()
+      Notify.create({
+        type: 'positive',
+        message: `Negócio ligado à requisição #${cod}`,
+        timeout: 2000,
+      })
+      return true
+    },
+
+    async desligarRequisicao(uuid) {
+      await this.recarregar()
+      const link = (this.negocio.requisicoes ?? []).find((r) => r.uuid === uuid)
+      if (!link || !this.podeEditar) {
+        return false
+      }
+      link.inativo = formataTimestampIso(new Date())
+      await this.salvar()
+      return true
     },
 
     async informarVendedor(codpessoavendedor) {
@@ -2171,7 +2285,7 @@ export const negocioStore = defineStore('negocio', {
         return false
       }
       try {
-        const ret = await sSinc.fecharNegocio(this.negocio.codnegocio, this.padrao.impressora)
+        const ret = await sSinc.fecharNegocio(this.negocio.codnegocio, this.padrao.codimpressora)
         if (ret.codnegocio) {
           Notify.create({
             type: 'positive',
@@ -2315,7 +2429,7 @@ export const negocioStore = defineStore('negocio', {
       const postDevolucao = await sSinc.negocioDevolucao(
         this.negocio.codnegocio,
         arrDevolucao,
-        this.padrao.impressora,
+        this.padrao.codimpressora,
       )
 
       return postDevolucao

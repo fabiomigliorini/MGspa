@@ -360,7 +360,7 @@ onMounted(focarBarras)
           >
             <template #prepend><q-icon name="grid_view" /></template>
           </q-select>
-          <MgSelectImpressora v-model="impressora" />
+          <MgSelectImpressora v-model="impressora" tipo="E" />
         </q-card-section>
         <q-separator inset />
         <q-card-actions align="right" class="text-primary">

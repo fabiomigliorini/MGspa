@@ -38,7 +38,7 @@ async function carregar() {
 
 // Imprimir do cupom do recibo: manda para a térmica do PDV
 const recibo = async (pag) => {
-  if (!sNegocio.padrao.impressora) {
+  if (!sNegocio.padrao.codimpressora) {
     Notify.create({
       type: 'negative',
       message: 'Nenhuma impressora térmica selecionada!',

@@ -10,9 +10,9 @@ use Mg\MgModel;
 use Mg\Estoque\EstoqueLocalProdutoVariacao;
 use Mg\Negocio\Negocio;
 use Mg\NotaFiscal\NotaFiscal;
-use Mg\Pedido\Pedido;
 use Mg\Produto\Produto;
 use Mg\Filial\Filial;
+use Mg\Impressora\Impressora;
 use Mg\Usuario\Usuario;
 
 class EstoqueLocal extends MgModel
@@ -23,6 +23,7 @@ class EstoqueLocal extends MgModel
 
     protected $fillable = [
         'codfilial',
+        'codimpressora',
         'controlaestoque',
         'deposito',
         'estoquelocal',
@@ -34,6 +35,7 @@ class EstoqueLocal extends MgModel
         'alteracao' => 'datetime',
         'codestoquelocal' => 'integer',
         'codfilial' => 'integer',
+        'codimpressora' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'controlaestoque' => 'boolean',
@@ -47,6 +49,11 @@ class EstoqueLocal extends MgModel
     public function Filial()
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+    }
+
+    public function Impressora()
+    {
+        return $this->belongsTo(Impressora::class, 'codimpressora', 'codimpressora');
     }
 
     public function UsuarioAlteracao()
@@ -79,16 +86,6 @@ class EstoqueLocal extends MgModel
     public function NotaFiscalS()
     {
         return $this->hasMany(NotaFiscal::class, 'codestoquelocal', 'codestoquelocal');
-    }
-
-    public function PedidoS()
-    {
-        return $this->hasMany(Pedido::class, 'codestoquelocal', 'codestoquelocal');
-    }
-
-    public function PedidoOrigemS()
-    {
-        return $this->hasMany(Pedido::class, 'codestoquelocalorigem', 'codestoquelocal');
     }
 
     public function ProdutoS()

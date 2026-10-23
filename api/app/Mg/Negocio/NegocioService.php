@@ -134,7 +134,7 @@ class NegocioService
     {
         $campos = ['codpdv', 'codusuario'];
         if ($negocio->getOriginal('codnegociostatus') != static::STATUS_ABERTO || !empty($negocio->getOriginal('reabertura'))) {
-            $campos = array_merge($campos, ['codpessoavendedor', 'codfilial', 'codestoquelocal', 'codnaturezaoperacao', 'codpessoa']);
+            $campos = array_merge($campos, ['codpessoavendedor', 'codfilial', 'codestoquelocal', 'codestoquelocaldestino', 'codnaturezaoperacao', 'codpessoa']);
         }
         $campos = array_intersect($campos, array_keys($negocio->getChanges()));
         if (empty($campos)) {

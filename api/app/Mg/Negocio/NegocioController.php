@@ -50,7 +50,7 @@ class NegocioController extends MgController
     public function comandaImprimir (Request $request, $codnegocio)
     {
         $request->validate([
-            'impressora' => ['required', 'string']
+            'impressora' => ['required']
         ]);
         $negocio = Negocio::findOrFail($codnegocio);
         $pdf = NegocioComandaService::imprimir($negocio, $request->impressora);

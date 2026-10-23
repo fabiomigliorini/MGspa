@@ -13,12 +13,6 @@
 
       <div class="row q-pa-md">
         <div class="col-xs-6 col-sm-4 col-lg-2">
-          <router-link to="impressoras" class="card text-center category-link text-primary" style="text-decoration: none; display: block">
-            <q-icon name="print" />
-            <p class="caption">Impressoras</p>
-          </router-link>
-        </div>
-        <div class="col-xs-6 col-sm-4 col-lg-2">
           <router-link to="senha" class="card text-center category-link text-primary" style="text-decoration: none; display: block">
             <q-icon name="vpn_key" />
             <p class="caption">Trocar senha</p>

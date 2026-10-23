@@ -90,6 +90,45 @@ const routes = [
         },
       },
 
+      // REQUISICOES ENTRE LOJAS (TASK-55)
+      {
+        path: '/requisicao',
+        component: () => import('pages/RequisicaoPainelPage.vue'),
+        meta: { title: 'Requisições', backTo: '/' },
+      },
+      {
+        path: '/requisicao/nova',
+        component: () => import('pages/RequisicaoFormPage.vue'),
+        meta: { title: 'Nova Requisição', backTo: '/requisicao' },
+      },
+      {
+        path: '/requisicao/:codrequisicao(\\d+)',
+        component: () => import('pages/RequisicaoDetalhePage.vue'),
+        meta: { title: 'Requisição', backTo: '/requisicao' },
+      },
+      {
+        path: '/requisicao/:codrequisicao(\\d+)/editar',
+        component: () => import('pages/RequisicaoFormPage.vue'),
+        meta: {
+          title: 'Editar Requisição',
+          backTo: (route) => '/requisicao/' + route.params.codrequisicao,
+        },
+      },
+
+      // ENTREGAS DO NEGOCIO (TASK-55)
+      {
+        path: '/entrega',
+        component: () => import('pages/EntregaPage.vue'),
+        meta: { title: 'Entregas', backTo: '/' },
+      },
+
+      // IMPRESSORAS (TASK-255)
+      {
+        path: '/impressora',
+        component: () => import('pages/ImpressoraPage.vue'),
+        meta: { title: 'Impressoras', backTo: '/' },
+      },
+
       // LISTAGEM NEGOCIOS
       {
         path: '/listagem',

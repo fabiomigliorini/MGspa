@@ -11,16 +11,21 @@ const props = defineProps({
   label: { type: String, default: 'Impressora' },
   clearable: { type: Boolean, default: false },
   inativos: { type: Boolean, default: false },
+  // filtra pelo tipo: T termica, A A5, E etiqueta (ex.: "T,A"); vazio = todas
+  tipo: { type: String, default: '' },
 })
 const emit = defineEmits(['update:modelValue', 'select'])
 
 const cache = useSelectCacheStore()
-const ENTITY = 'impressora'
-const ENDPOINT = 'v1/select/impressora'
+// value = codimpressora (TASK-255); uma entrada de cache por filtro de tipo
+const ENTITY = computed(() => (props.tipo ? `impressora_${props.tipo}` : 'impressora'))
+const ENDPOINT = computed(() =>
+  props.tipo ? `v1/select/impressora?tipo=${props.tipo}` : 'v1/select/impressora',
+)
 
 // O store cacheia inativos num bucket separado (`{ent}__inativos`) — ler sempre
 // `entities[ENTITY]` devolveria lista vazia quando a prop inativos esta ligada.
-const chaveCache = computed(() => (props.inativos ? `${ENTITY}__inativos` : ENTITY))
+const chaveCache = computed(() => (props.inativos ? `${ENTITY.value}__inativos` : ENTITY.value))
 
 const opcoes = ref([])
 const carregando = ref(false)
@@ -30,7 +35,7 @@ const permitidos = computed(() => cache.entities[chaveCache.value]?.items || [])
 async function carregar() {
   carregando.value = true
   try {
-    await cache.loadList(ENTITY, ENDPOINT, { inativos: props.inativos })
+    await cache.loadList(ENTITY.value, ENDPOINT.value, { inativos: props.inativos })
     opcoes.value = permitidos.value
   } catch {
     opcoes.value = []

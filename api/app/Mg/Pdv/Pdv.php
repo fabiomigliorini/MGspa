@@ -37,7 +37,7 @@ class Pdv extends MgModel
         'codportadorpix',
         'codsetor',
         'desktop',
-        'impressora',
+        'codimpressora',
         'inativo',
         'minutosesquecido',
         'monitoramento',
@@ -55,6 +55,7 @@ class Pdv extends MgModel
     protected $casts = [
         'alteracao' => 'datetime',
         'codestoquelocal' => 'integer',
+        'codimpressora' => 'integer',
         'codfilial' => 'integer',
         'codmaquineta' => 'integer',
         'codnaturezaoperacao' => 'integer',
@@ -74,6 +75,12 @@ class Pdv extends MgModel
 
 
     // Chaves Estrangeiras
+    // impressora do cadastro (TASK-255)
+    public function Impressora()
+    {
+        return $this->belongsTo(\Mg\Impressora\Impressora::class, 'codimpressora', 'codimpressora');
+    }
+
     public function Filial()
     {
         return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');

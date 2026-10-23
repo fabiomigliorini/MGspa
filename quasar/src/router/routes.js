@@ -46,7 +46,6 @@ export default [
   { path: '/usuario', component: () => import('components/views/usuario/Index') },
   // { path: '/usuario/create', component: () => import('components/views/usuario/Create') },
   { path: '/usuario/perfil', component: () => import('components/views/usuario/Profile') },
-  { path: '/usuario/impressoras', component: () => import('components/views/usuario/Print') },
   { path: '/usuario/foto', component: () => import('components/views/usuario/Photo') },
   { path: '/usuario/senha', component: () => import('components/views/usuario/Password') },
   { path: '/usuario/grupo-usuario/:id', name: 'grupo-usuario', component: () => import('components/views/usuario/Index') },
@@ -74,10 +73,6 @@ export default [
   // { path: '/transferencia/requisicao/nova/:codestoquelocal/:codmarca/:fiscal/:data', component: () => import('components/views/transferencia/requisicao/Nova') },
 
   { path: '/dfe-distribuicao', component: () => import('components/views/dfe-distribuicao/Index') },
-
-  // Pedidos
-  { path: '/pedido/', component: () => import('components/views/pedido/Index') },
-  { path: '/pedido/:id', component: () => import('components/views/pedido/View') },
 
   // Stone Connect
   { path: '/stone-connect/', component: () => import('components/views/stone-connect/Index') },
