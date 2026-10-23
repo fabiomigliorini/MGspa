@@ -371,11 +371,6 @@
         "coluna": "codusuario",
         "metodo": "NegocioS"
       },
-      "tblnegocio.codusuarioacertoentrega": {
-        "tabela": "tblnegocio",
-        "coluna": "codusuarioacertoentrega",
-        "metodo": "NegocioAcertoEntregaS"
-      },
       "tblnegocio.codusuarioconfissao": {
         "tabela": "tblnegocio",
         "coluna": "codusuarioconfissao",
@@ -1584,11 +1579,6 @@
         "tabela": "tblusuario",
         "coluna": "codusuario",
         "metodo": "Usuario"
-      },
-      "codusuarioacertoentrega": {
-        "tabela": "tblusuario",
-        "coluna": "codusuarioacertoentrega",
-        "metodo": "UsuarioAcertoEntrega"
       },
       "codusuarioalteracao": {
         "tabela": "tblusuario",
