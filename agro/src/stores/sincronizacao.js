@@ -200,6 +200,8 @@ export const useSincronizacaoStore = defineStore('sincronizacao', () => {
         patch.codcarga = norm.codcarga
         patch.versao = norm.versao
         patch.placa = norm.placa
+        patch.placacarreta = norm.placacarreta
+        patch.placacarreta2 = norm.placacarreta2
         patch.motorista = norm.motorista
         for (const campo of CAMPOS_MOTORISTA_SEM_CADASTRO) patch[campo] = norm[campo]
         patch.codveiculo = norm.codveiculo

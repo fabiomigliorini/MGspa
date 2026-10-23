@@ -1,17 +1,17 @@
 ---
 id: TASK-231
 title: Build da API mostra avisos sobre a bateria de testes do agro
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-10-16 21:20'
-updated_date: '2026-10-16 21:21'
+updated_date: '2026-10-21 15:16'
 labels:
   - agro
 dependencies: []
 priority: low
 type: chore
-ordinal: 242000
+ordinal: 249000
 ---
 
 ## Description

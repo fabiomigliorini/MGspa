@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-17 19:06'
-updated_date: '2026-09-29 21:07'
+updated_date: '2026-10-22 15:33'
 labels:
   - agro
 dependencies: []
@@ -28,7 +28,7 @@ Efeito medido em 17/09/2026: a carga 1 (Milho 2026, parada em CLASSIFICACAO desd
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 No patio e Finalizadas listam cargas de todas as safras, com a safra escrita em cada item; o select de Safra sai do drawer
+- [x] #1 No patio e Finalizadas listam cargas de todas as safras, com a safra escrita em cada item; o select de Safra sai do drawer
 <!-- AC:END -->
 
 ## Implementation Notes

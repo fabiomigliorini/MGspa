@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-12 15:54'
-updated_date: '2026-10-07 13:25'
+updated_date: '2026-10-22 15:41'
 labels:
   - agro
 dependencies: []
@@ -17,7 +17,6 @@ ordinal: 206000
 ## Description
 
 <!-- SECTION:DESCRIPTION:BEGIN -->
-
 Origem: marcacao no codigo — agro/src/pages/PlantioDetailPage.vue:340 (TODO "listar via GET v1/movimento-grao?codplantio=..."). Hoje o card "Cargas deste plantio" e um placeholder ("Em breve").
 
 Decisao (06/10/2026): a lista vem do EXTRATO do talhao — GET v1/movimento-grao?codplantio=X&contatipo=PLANTIO — a mesma fonte do KPI "Colhido (sc)" (SafraService.php:84). Assim a lista mostra so a parte do talhao quando o romaneio e dividido entre talhoes, so romaneios finalizados, e inclui os ajustes manuais.
@@ -27,7 +26,6 @@ Destino: o eager load do movimento precisa trazer Carga.CargaPontoS para expor o
 Modelo a copiar: agro/src/components/ContratoEntregas.vue (entregas do contrato, tambem vindas do extrato).
 
 Por que nao carga/listagem?codplantio=: o romaneio dividido aparece com o peso inteiro nos dois talhoes, aparecem romaneios ainda no patio e os ajustes manuais ficam de fora — a soma nao bateria com o Colhido.
-
 <!-- SECTION:DESCRIPTION:END -->
 
 ## Acceptance Criteria
@@ -38,13 +36,12 @@ Por que nao carga/listagem?codplantio=: o romaneio dividido aparece com o peso i
 - [x] #2 A soma da lista é igual ao "Colhido (sc)" do topo da tela, inclusive com romaneio dividido entre dois talhões
 - [x] #3 Clicar na linha abre o romaneio (/cargas/:codcarga); o ajuste manual não tem link
 - [x] #4 A lista de plantios da safra mostra as sacas colhidas de cada talhão, por talhão e por variedade
-- [x] #5 Talhão marcado como finalizado por um check (lista da safra e tela do talhão), sem informar hectares colhidos; média real = sacas colhidas / área plantada, sempre
+- [x] #5 Talhão marcado como finalizado por um check, coluna "Encerrado" (lista da safra e tela do talhão), sem informar hectares colhidos; média real = sacas colhidas / área plantada, sempre
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
-
 Implementado em 06/10/2026. Na árvore, sem commit. FALTA VALIDAÇÃO na tela.
 
 Mudança em relação à descrição: os movimentos vêm EMBUTIDOS no show do plantio (GET v1/safra/{cs}/plantio/{cp}), no padrão das Entregas do contrato, em vez de GET v1/movimento-grao. Motivos: a tela já busca o show (sem requisição nova); o movimento-grao pagina fixo em 50; e o recorte fica idêntico ao do KPI Colhido.
@@ -74,4 +71,6 @@ Teste: https://sistema-dev.mgpapelaria.com.br:8088/#/safra/2/plantio/42
 - Progresso da colheita / "Colheita X ha" da safra = área dos talhões finalizados. ha parcial antigo é ignorado (dev: nenhum).
 - Edição do talhão (update) preserva o finalizado mesmo mudando a área.
 Conferido em dev (Milho 2026): Talhão 01 finalizado, 1.587 sc / 77,3 ha = 20,53 sc/ha; safra 3.134 sc, progresso 3,7%. php -l, eslint, prettier limpos; screenshot do template real em 1200px e 360px.
+
+22/10/2026 — conferência no código (só leitura). Texto do #5 ajustado: a coluna se chama 'Encerrado'; a 'barra de hectares' citada acima não existe mais. Observação: em talhão INATIVO o KPI 'Colhido' dá 0 (SafraService só conta plantio ativo) e o card lista as cargas (PlantioController::show não filtra) — só se chega lá pela URL.
 <!-- SECTION:NOTES:END -->

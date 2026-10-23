@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { Dialog } from 'quasar'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
+import { todasPaginas } from 'src/utils/paginas'
 
 // Store do DOMÍNIO safra. UMA store para TODAS as telas de safra (lista e
 // detalhe) — não uma store por tela. Todas leem e escrevem aqui, então editar
@@ -111,8 +112,8 @@ export const useSafraStore = defineStore('safra', () => {
 
   async function carregarPlantios(codsafra) {
     try {
-      const { data } = await api.get(`v1/safra/${codsafra}/plantio`)
-      plantios.value = data.data ?? data
+      // Todas as páginas: a cópia de talhões cria dezenas de plantios de uma vez.
+      plantios.value = await todasPaginas(`v1/safra/${codsafra}/plantio`)
     } catch (e) {
       notifyError(e)
     }

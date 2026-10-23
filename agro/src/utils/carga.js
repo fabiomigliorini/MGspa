@@ -301,6 +301,11 @@ export function ratearPontos(carga) {
   }
 }
 
+// "REB1234 / REB5678" — o(s) reboque(s) que existir(em); '' se nenhum.
+export function reboques(carga) {
+  return [carga?.placacarreta, carga?.placacarreta2].filter(Boolean).join(' / ')
+}
+
 // "Talhão 12 · Silo 1" — os pontos que identificam a carga na listagem: de onde
 // veio (entrada) ou pra onde vai (saída).
 export function pontosResumo(carga) {
@@ -393,6 +398,7 @@ export function normalizarCargaDoServidor(cs) {
     codveiculo: cs.codveiculo ?? null,
     placa: cs.placa ?? null,
     placacarreta: cs.placacarreta ?? null,
+    placacarreta2: cs.placacarreta2 ?? null,
     codpessoamotorista: cs.codpessoamotorista ?? null,
     motorista: cs.motorista ?? null,
     ...Object.fromEntries(CAMPOS_MOTORISTA_SEM_CADASTRO.map((c) => [c, cs[c] ?? null])),

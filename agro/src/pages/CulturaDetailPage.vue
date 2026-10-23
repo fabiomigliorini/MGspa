@@ -186,7 +186,7 @@ onMounted(() => store.carregarCultura(codcultura))
         </q-item>
         <q-separator />
         <q-list separator>
-          <q-item v-for="v in resumo.variedades" :key="v.codvariedade">
+          <q-item v-for="v in resumo.variedades" :key="v.codvariedade ?? 'sem'">
             <q-item-section avatar>
               <q-avatar color="teal-1" text-color="teal-8" icon="spa" />
             </q-item-section>

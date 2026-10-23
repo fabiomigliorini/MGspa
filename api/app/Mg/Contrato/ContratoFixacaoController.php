@@ -69,6 +69,7 @@ class ContratoFixacaoController extends MgController
         Autorizador::autoriza(self::GRUPOS);
 
         ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao)->delete();
+        static::reaplicarComissao($codcontrato);
         return response()->noContent();
     }
 
@@ -78,6 +79,7 @@ class ContratoFixacaoController extends MgController
 
         $m = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
         MgService::inativar($m);
+        static::reaplicarComissao($codcontrato);
         return new ContratoFixacaoResource($m->fresh('Moeda', 'ContratoFixacaoCambioS'));
     }
 
@@ -87,7 +89,19 @@ class ContratoFixacaoController extends MgController
 
         $m = ContratoFixacao::where('codcontrato', $codcontrato)->findOrFail($codfixacao);
         MgService::ativar($m);
+        static::reaplicarComissao($codcontrato);
         return new ContratoFixacaoResource($m->fresh('Moeda', 'ContratoFixacaoCambioS'));
+    }
+
+    /**
+     * A comissão percentual é sobre o fixado ativo: excluir, inativar ou reativar
+     * uma fixação muda a base. Não usa recalcular(), que regravaria a fixação.
+     */
+    private static function reaplicarComissao($codcontrato): void
+    {
+        $contrato = Contrato::findOrFail($codcontrato);
+        ContratoService::aplicarComissao($contrato);
+        $contrato->save();
     }
 
     /**

@@ -52,8 +52,9 @@ class CulturaService extends MgService
     }
 
     // Quebra do resumo por variedade (todas as variedades ativas da cultura,
-    // inclusive as sem colheita). Colhido = soma do líquido do extrato de grão
-    // por plantio (tblmovimentograo, contatipo PLANTIO).
+    // inclusive as sem colheita, mais as inativas e o "Sem variedade" que têm
+    // plantio, para a soma bater com o resumo). Colhido = soma do líquido do
+    // extrato de grão por plantio (tblmovimentograo, contatipo PLANTIO).
     private static function resumoVariedades($codcultura, $pesosaca)
     {
         $areaPorVar = Plantio::join('tblsafra', 'tblsafra.codsafra', '=', 'tblplantio.codsafra')
@@ -75,24 +76,39 @@ class CulturaService extends MgService
             ->selectRaw('p.codvariedade, SUM(tblmovimentograo.liquido) as colhido')
             ->pluck('colhido', 'codvariedade');
 
-        return Variedade::where('codcultura', $codcultura)
-            ->whereNull('inativo')
+        $linha = function ($codvariedade, $variedade) use ($areaPorVar, $colhidoPorVar, $pesosaca) {
+            // pluck() guarda a variedade nula na chave ''.
+            $area = (float) ($areaPorVar[$codvariedade ?? ''] ?? 0);
+            $colhidokg = (float) ($colhidoPorVar[$codvariedade ?? ''] ?? 0);
+            $sacas = $pesosaca > 0 ? $colhidokg / $pesosaca : 0;
+            return [
+                'codvariedade' => $codvariedade,
+                'variedade' => $variedade,
+                'area' => $area,
+                'colhidokg' => $colhidokg,
+                'sacas' => $sacas,
+                'produtividade' => $area > 0 ? $sacas / $area : 0,
+            ];
+        };
+
+        // Variedade inativa só entra se ainda tem área ou colhido: senão a soma
+        // das linhas não bate com os KPIs.
+        $ret = Variedade::where('codcultura', $codcultura)
             ->orderBy('variedade')
-            ->get(['codvariedade', 'variedade'])
-            ->map(function ($v) use ($areaPorVar, $colhidoPorVar, $pesosaca) {
-                $area = (float) ($areaPorVar[$v->codvariedade] ?? 0);
-                $colhidokg = (float) ($colhidoPorVar[$v->codvariedade] ?? 0);
-                $sacas = $pesosaca > 0 ? $colhidokg / $pesosaca : 0;
-                return [
-                    'codvariedade' => $v->codvariedade,
-                    'variedade' => $v->variedade,
-                    'area' => $area,
-                    'colhidokg' => $colhidokg,
-                    'sacas' => $sacas,
-                    'produtividade' => $area > 0 ? $sacas / $area : 0,
-                ];
-            })
+            ->get(['codvariedade', 'variedade', 'inativo'])
+            ->filter(fn ($v) => !$v->inativo
+                || isset($areaPorVar[$v->codvariedade])
+                || isset($colhidoPorVar[$v->codvariedade]))
+            ->map(fn ($v) => $linha($v->codvariedade, $v->variedade))
+            ->values()
             ->all();
+
+        // Plantio sem variedade (ex.: talhões recém-copiados para a safra nova).
+        if (isset($areaPorVar['']) || isset($colhidoPorVar[''])) {
+            $ret[] = $linha(null, 'Sem variedade');
+        }
+
+        return $ret;
     }
 
     public static function pesquisar(?array $filter = null, ?array $sort = null, ?array $fields = null)

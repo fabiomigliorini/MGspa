@@ -5,7 +5,14 @@
 // (TASK-73) e em qualquer outra lista de cargas.
 import { computed } from 'vue'
 import { formataHora, tempoRelativo } from '@components/formatters'
-import { iconeCarga, corIconeCarga, pontosResumo, fmtNumero, ETAPA_META } from 'src/utils/carga'
+import {
+  iconeCarga,
+  corIconeCarga,
+  pontosResumo,
+  reboques,
+  fmtNumero,
+  ETAPA_META,
+} from 'src/utils/carga'
 import { sacas } from 'src/utils/desconto'
 import CargaEtapaProgresso from './CargaEtapaProgresso.vue'
 
@@ -45,8 +52,8 @@ const metrica = computed(() => {
     <q-item-section>
       <q-item-label class="row items-baseline no-wrap q-gutter-x-xs">
         <span class="text-weight-bold">{{ carga.placa || 'Sem placa' }}</span>
-        <span v-if="carga.placacarreta" class="text-caption text-grey-6">
-          {{ carga.placacarreta }}
+        <span v-if="reboques(carga)" class="text-caption text-grey-6">
+          {{ reboques(carga) }}
         </span>
       </q-item-label>
       <q-item-label caption class="ellipsis">{{ pontosResumo(carga) }}</q-item-label>

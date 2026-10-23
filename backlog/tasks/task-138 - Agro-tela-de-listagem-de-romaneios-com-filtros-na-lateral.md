@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-22 12:23'
-updated_date: '2026-10-06 18:34'
+updated_date: '2026-10-22 15:41'
 labels:
   - agro
 dependencies:
@@ -34,7 +34,7 @@ NÃO reusar SelectUnidade/SelectContrato/SelectTalhao: leem o Dexie, populado s�
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [x] #1 Listagem no molde de Vales Emitidos: card com cabeçalho de colunas, filtros no padrão do Vale e botão Imprimir lista no topo
+- [x] #1 Listagem no molde de Vales Emitidos: tabela com cabeçalho de colunas, filtros no padrão do Vale e botão Gerar Relatório no topo
 - [x] #2 Totais separados por recebido, expedido e transferido, sem as canceladas
 <!-- AC:END -->
 
@@ -74,4 +74,6 @@ FALTA VALIDAÇÃO do usuário em https://sistema-dev.mgpapelaria.com.br:8088/#/c
 06/10/2026: Origem e Destino mais estreitos (classe celula-ponto, max-width 80px; o motorista segue em 105px). Ajustes do usuário no fonte mantidos: padding lateral 15px, reticências na Safra, sem tooltip no Destino, botão "Gerar relatório". Medido no mock: com 15px a tabela tem 1311px para 1166px (rolagem lateral de ~145px); com 8px cabe exato.
 
 06/10/2026: rolagem lateral voltou com o padding de 15px (1311px para 1166px). Padding lateral 9px: o maior que cabe (medido 12px=1233, 11=1207, 10=1181, 9=1166). Sem rolagem em 1200px; com o drawer aberto em 1366px sobram ~120px de rolagem.
+
+22/10/2026 — conferência no código (só leitura). Texto do #1 ajustado: o botão é 'Gerar Relatório' e a tabela é q-table sem q-card, como na vale-modelo. Medidas finais no CSS da CargasPage: padding lateral 10px (não 9px) e celula-ponto com 65px (não 80px); pela medição de 06/10, 10px dá ~15px de rolagem lateral a 1200px.
 <!-- SECTION:NOTES:END -->

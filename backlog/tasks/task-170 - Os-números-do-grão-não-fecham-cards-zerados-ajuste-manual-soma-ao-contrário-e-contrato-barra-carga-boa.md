@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-23 21:04'
-updated_date: '2026-10-01 19:07'
+updated_date: '2026-10-22 15:40'
 labels:
   - agro
 dependencies: []
@@ -32,15 +32,15 @@ Consolida as antigas TASK-126, TASK-127 e TASK-128 (arquivadas).
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Cards 'A colher' e 'Disponível p/ negociar' do extrato mostram valor de verdade, não zero
-- [ ] #2 Ajuste manual lançado como ORIGEM baixa o saldo em vez de somar
-- [ ] #3 Cancelar uma carga nunca é barrado pela trava do contrato
-- [ ] #4 Entregue da safra separa venda de compra
-- [ ] #5 Contrato entregue a mais mostra o excesso em vez de zerar o saldo
-- [ ] #6 Estoque & Extrato mostra todos os lançamentos e todos os contratos, silos e talhões nos selects
-- [ ] #7 Colhido é o mesmo no Início, na Safra, na Fazenda e na Cultura
-- [ ] #8 Ajuste manual grava exatamente o que o operador informou
-- [ ] #9 Carga que passa do saldo do contrato é aceita (o caminhão completa a carga); o pátio avisa quanto passa, com o mesmo 'Saldo a entregar' da tela (ajuste manual conta, estornado não)
+- [x] #1 Cards 'A colher' e 'Disponível p/ negociar' do extrato mostram valor de verdade, não zero
+- [x] #2 Ajuste manual lançado como ORIGEM baixa o saldo em vez de somar
+- [x] #3 Cancelar uma carga nunca é barrado pela trava do contrato
+- [x] #4 Entregue da safra separa venda de compra
+- [x] #5 Contrato entregue a mais mostra o excesso em vez de zerar o saldo
+- [x] #6 Estoque & Extrato mostra todos os lançamentos e todos os contratos, silos e talhões nos selects
+- [x] #7 Colhido é o mesmo no Início, na Safra, na Fazenda e na Cultura
+- [x] #8 Ajuste manual grava exatamente o que o operador informou
+- [x] #9 Carga que passa do saldo do contrato é aceita (o caminhão completa a carga); o pátio avisa quanto passa, com o mesmo 'Saldo a entregar' da tela (ajuste manual conta, estornado não)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -63,4 +63,6 @@ No extrato automatico o sinal vem do par papel+contatipo (CargaService::sinal: U
 29/09/2026 — regra aceita pelo negócio (doc-5): o contrato PODE ser carregado além do saldo; o caminhão completa a carga para aproveitar o frete e o comprador aceita. O servidor deixa de bloquear (hoje validarOverloadContrato recusa com 422, cenários C1 e E3 da bateria) e o pátio passa a AVISAR quanto passa do contratado. Saíram os critérios 'dois caminhões juntos não passam do contratado' e 'reativar respeita o teto'; a trava com lock de contrato do plano (Fase 4) deixa de ser necessária. Continuam: cancelar nunca é barrado (C5) e a tela mostrar o excesso (C8).
 
 30/09/2026 — implementado, aguardando validação. Backend: validarOverloadContrato removido (D12: aceita e avisa; cancelar nunca barra); lancarManual com sinal por papel (CargaService::sinal público), retirada de silo sem desconto, só líquido vira bruto, FKs de outro tipo zeradas; ContratoResource.saldokg sem piso; resumoComercial com entregue só VENDA, recebidokg (COMPRA), acolherkg e disponivelkg; colhido de Cultura/Fazenda na mesma regra da Safra (safra do movimento, plantio/safra ativos). Front: extrato e selects buscam todas as páginas; form de ajuste com Entrada/Retirada do silo; contrato mostra 'Entregue a mais'; pátio mostra 'passa X kg do contratado'; safra mostra recebido de compra; Início usa o colhido do servidor quando online. PROD: api/database/agro_movimento_manual_sinal.sql (D4, conferir a lista antes do UPDATE). Bateria todos: OK 62 · FALHA 32 (era 57/38), nenhuma FALHA nova; A6, C1–C9 OK.
+
+22/10/2026 — conferência no código (só leitura) e critérios ticados com a validação do usuário. Ressalvas: #7 o colhido da Fazenda (FazendaService::resumoSafras) conta safra inativa e o da Cultura (CulturaService::resumo) não; é igual enquanto todas as safras estão ativas. #9 o pátio aceita a carga e avisa quanto passa, mas o número do aviso vem do saldo do contrato no cache offline (stores/carga.js, TTL de 5 min) e pode atrasar até ~6 min depois de outra carga ou ajuste. A bateria citada acima (api/tests/agro, 'OK 62 · FALHA 32') foi removida em 16/10 (TASK-231): o número é histórico e não dá mais para reproduzir.
 <!-- SECTION:NOTES:END -->

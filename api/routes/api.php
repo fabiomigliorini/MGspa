@@ -471,7 +471,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Preview do preço líquido (deduções) — antes do apiResource p/ não colidir.
     Route::get('contrato/calculo', [\Mg\Contrato\ContratoController::class, 'calculo']);
     Route::get('safra/{codsafra}/proximo-numero-contrato', [\Mg\Contrato\ContratoController::class, 'proximoNumero']); // sugestão de Nº Nosso
-    Route::get('contrato/{codcontrato}/carga/{codcarga}/emissao', [\Mg\Contrato\ContratoController::class, 'emissao']); // plano de NF triangular (preview)
+    // Plano de NF triangular (preview) desativado (TASK-133): dava 500 e falta o vínculo cultura → produto fiscal.
+    // Route::get('contrato/{codcontrato}/carga/{codcarga}/emissao', [\Mg\Contrato\ContratoController::class, 'emissao']);
     Route::post('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'inativar']);
     Route::delete('contrato/{codcontrato}/inativo', [\Mg\Contrato\ContratoController::class, 'ativar']);
     Route::post('contrato/{codcontrato}/barter', [\Mg\Contrato\ContratoController::class, 'marcarBarter']); // settlement em insumos

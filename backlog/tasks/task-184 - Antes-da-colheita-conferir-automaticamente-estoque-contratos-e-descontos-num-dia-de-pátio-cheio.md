@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-28 21:11'
-updated_date: '2026-09-29 21:38'
+updated_date: '2026-10-22 15:41'
 labels:
   - agro
 dependencies: []
@@ -46,4 +46,6 @@ Pendente: E2 (rampa até 24 aparelhos) pede horário combinado, porque deixa a A
 29/09/2026 — classificação confirmada com quem prioriza (registro: backlog/docs/doc-5). Aceito: contrato carregado além do saldo (D12: o caminhão completa a carga; o servidor aceita, o pátio avisa, a tela mostra o excesso) e silo negativo (D1). Confirmados como defeito: transferência para o mesmo silo, tabela nova recalculando romaneio fechado, silo inativo recebendo carga, entregue somando compra; cargas 1, 4, 6 e 8 do dev são teste. Bateria ajustada à D12: C1 e E3 exigem que a carga que passa do saldo seja ACEITA (hoje o servidor barra com 422, falha da TASK-170); C2/C3 conferem o saldo a entregar da tela; C4 e R5 aceitam o excesso; C6 virou roteiro de tela; I7 virou INFO.
 
 29/09/2026: fechada a pedido do usuario — a bateria existe, esta versionada e roda com um comando (AC1). AC3 (rampa) e AC4 (conferencia na PROD) dispensados: o servidor da conta do servico. AC2 rodado em 29/09 (3 aparelhos, 150 caminhoes): desempenho ok (p95 111 ms, 0 erro), mas E4 falha — dois aparelhos gravando o mesmo caminhao deixam etapa e extrato desencontrados em 11 de 20 rodadas (reflexo em I1/I4). Defeito de codigo no servidor, sem task propria ainda; relatado ao usuario.
+
+22/10/2026 — os critérios #2 a #4 ficam dispensados/obsoletos: #3 e #4 foram dispensados pelo usuário em 29/09 e a bateria inteira saiu do repositório em 16/10 (TASK-231), então #2 não pode mais ser provado nem reprovado. Recuperar a bateria: git show 8139b9b2 --stat.
 <!-- SECTION:NOTES:END -->
