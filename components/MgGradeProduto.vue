@@ -9,7 +9,8 @@ import { useSaldoVariacaoStore } from '@components/stores/saldoVariacaoStore'
 // código de barras, e mostra UM card por produto. Escolhido o produto, abre
 // uma janela com as variações à esquerda, as embalagens dela no meio, com o
 // preço, e o saldo físico dela por local de estoque à direita (TASK-254); o
-// meio e a direita acompanham a variação em que o cursor está. A embalagem é
+// meio e a direita acompanham a variação em que o cursor está, e o saldo vem
+// contado na embalagem em foco (na CX C/4, caixas inteiras). A embalagem é
 // sigla + quantidade: duas barras da mesma embalagem aparecem uma vez, e o que
 // sai é a primeira delas -- o preço é o mesmo. Só entra o que veio na lista:
 // quem pesquisou "verde" não vê a azul. Produto de uma opção só sai direto da
@@ -174,6 +175,24 @@ const codVariacaoAtual = computed(() =>
 )
 const saldoAtual = computed(() => sSaldo.saldos[codVariacaoAtual.value])
 watch(codVariacaoAtual, (cod) => sSaldo.carregar(cod))
+
+// O saldo vem na unidade do produto; na embalagem em que o cursor está (CX C/4)
+// cada local mostra quantas embalagens inteiras dá, arredondando para baixo --
+// no negativo, em direção ao zero -- e o Total é a soma das linhas. O toFixed
+// tira o resto de ponto flutuante (1,2 / 0,4 dá 2,9999...); o `|| 0`, o -0.
+const saldoNaEmbalagem = computed(() => {
+  const dados = saldoAtual.value?.dados
+  if (!dados) return null
+  const embalagem = variacaoAtual.value?.embalagens[cursorEmbalagem.value]
+  const fator = Number(embalagem?.barra.quantidade) || 0
+  if (fator <= 0) return dados
+  const locais = dados.locais.map((local) => ({
+    ...local,
+    saldoquantidade: Math.trunc(Number((local.saldoquantidade / fator).toFixed(6))) || 0,
+  }))
+  const saldo = locais.reduce((soma, local) => soma + local.saldoquantidade, 0)
+  return { ...dados, decimais: 0, locais, saldo }
+})
 
 const refsVariacao = []
 const refsEmbalagem = []
@@ -539,9 +558,9 @@ defineExpose({ teclar, soltar, aberto: dialogProduto })
               >
                 Sem estoque em nenhuma unidade
               </div>
-              <q-list v-else-if="saldoAtual?.dados">
+              <q-list v-else-if="saldoNaEmbalagem">
                 <q-item
-                  v-for="local in saldoAtual.dados.locais"
+                  v-for="local in saldoNaEmbalagem.locais"
                   :key="local.codestoquelocal"
                   class="q-px-sm"
                   :title="local.estoquelocal"
@@ -551,16 +570,16 @@ defineExpose({ teclar, soltar, aberto: dialogProduto })
                     side
                     :class="local.saldoquantidade > 0 ? 'text-grey-9' : 'text-grey-5'"
                   >
-                    {{ formataNumero(local.saldoquantidade, saldoAtual.dados.decimais) }}
+                    {{ formataNumero(local.saldoquantidade, saldoNaEmbalagem.decimais) }}
                   </q-item-section>
                 </q-item>
                 <q-item class="q-px-sm text-weight-bold">
                   <q-item-section>Total</q-item-section>
                   <q-item-section
                     side
-                    :class="saldoAtual.dados.saldo > 0 ? 'text-positive' : 'text-grey-5'"
+                    :class="saldoNaEmbalagem.saldo > 0 ? 'text-positive' : 'text-grey-5'"
                   >
-                    {{ formataNumero(saldoAtual.dados.saldo, saldoAtual.dados.decimais) }}
+                    {{ formataNumero(saldoNaEmbalagem.saldo, saldoNaEmbalagem.decimais) }}
                   </q-item-section>
                 </q-item>
               </q-list>
