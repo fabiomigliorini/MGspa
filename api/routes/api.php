@@ -1145,6 +1145,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Pesquisa de produto em grade, com o filtro do PDV (TASK-173)
     Route::get('produto-barra/pesquisa', '\Mg\Produto\ProdutoBarraController@pesquisa');
     Route::get('produto-barra/barras/{barras}', '\Mg\Produto\ProdutoBarraController@barras');
+    Route::get('produto-variacao/{codprodutovariacao}/saldo', '\Mg\Produto\ProdutoVariacaoController@saldo')->whereNumber('codprodutovariacao');
 
     // Produto (CRUD migrado em 31/05/2026)
     Route::group(['prefix' => 'produto'], function () {

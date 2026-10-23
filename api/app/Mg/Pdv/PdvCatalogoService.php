@@ -287,6 +287,7 @@ class PdvCatalogoService
             select
             	pb.codprodutobarra,
                 p.codproduto,
+                pv.codprodutovariacao,
             	pb.barras,
                 p.produto,
                 pv.variacao,
