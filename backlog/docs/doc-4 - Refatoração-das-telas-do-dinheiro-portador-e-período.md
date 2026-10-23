@@ -61,7 +61,8 @@ ou período, podem passar a apontar para a tela nova se for trivial.
 6. **Importação do OFX** sai da Saldos para o painel (botão no cabeçalho do painel, mesmo dialog e
    mesma rota `v1/portador/importar-ofx`). A **Extrato do banco** (`ExtratoPage`, o que o banco
    mandou) abre por um botão no cabeçalho do portador banco. A conciliação razão × extrato não é
-   desta tarefa.
+   desta tarefa. Ao lado do OFX, o botão **Contabilidade** (TASK-256) abre o relatório dos títulos
+   pagos no período, por fiscal/gerencial, filial, portador e pagamento (`v1/pagamento/contabilidade`).
 7. **`/portador/{codportador}/{codportadorperiodo}`**: cabeçalho do portador; abaixo, **três níveis
    de abas — Ano → Mês → Período** — só com o que existe (ano só se tem mês; mês só se tem
    período). Selecionar um período atualiza a URL para `/portador/{cod}/{codperiodo}`; sem período

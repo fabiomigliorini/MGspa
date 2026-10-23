@@ -130,6 +130,30 @@ class PagamentoController extends Controller
         ]);
     }
 
+    // Titulos pagos no periodo, para a contabilidade (TASK-256)
+    public function contabilidade(Request $request)
+    {
+        Autorizador::autoriza(['Administrador', 'Financeiro']);
+        $request->validate([
+            'transacao_de' => 'required|date',
+            'transacao_ate' => 'required|date',
+            'codfilial' => 'nullable|integer',
+            'codportador' => 'nullable|integer',
+            'gerencial' => 'nullable|boolean',
+        ]);
+        $filtros = $request->only(['transacao_de', 'transacao_ate', 'codfilial', 'codportador']);
+        if ($request->filled('gerencial')) {
+            $filtros['gerencial'] = $request->boolean('gerencial');
+        }
+        if ($request->boolean('html')) {
+            return response(PagamentoContabilidadeService::html($filtros), 200, ['Content-Type' => 'text/html; charset=UTF-8']);
+        }
+        return response(PagamentoContabilidadeService::pdf($filtros), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="titulos-pagos.pdf"',
+        ]);
+    }
+
     // ==== Recibos ====
 
     // o recibo A5 (o mesmo texto do cupom da termica): PagamentoReciboService

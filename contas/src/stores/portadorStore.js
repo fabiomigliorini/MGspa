@@ -158,6 +158,9 @@ export const usePortadorStore = defineStore('portador', () => {
   // ---- OFX ----
   const dialogOfx = ref(false)
 
+  // ---- Títulos pagos para a contabilidade (TASK-256) ----
+  const dialogContabilidade = ref(false)
+
   return {
     filtros,
     painel,
@@ -175,5 +178,6 @@ export const usePortadorStore = defineStore('portador', () => {
     alternarInativo,
     excluir,
     dialogOfx,
+    dialogContabilidade,
   }
 })
