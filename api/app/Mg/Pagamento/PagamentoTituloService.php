@@ -12,6 +12,7 @@ use Mg\Maquineta\Maquineta;
 use Mg\PagarMe\PagarMePedido;
 use Mg\PagarMe\PagarMeService;
 use Mg\Pdv\Pdv;
+use Mg\Pdv\PdvNegocioPagamentoService;
 use Mg\Pix\Pix;
 use Mg\Pix\PixUsoService;
 use Mg\Portador\LancamentoDataService;
@@ -632,8 +633,9 @@ class PagamentoTituloService
     // sao estornados) e ele sai do razao do portador. Vale tambem para o
     // integrado (TASK-218): o PIX volta a ficar sem uso e o cartao volta a
     // ser so' o pedido, para a baixa certa. Boleto nao se cancela: a baixa e'
-    // do proprio titulo. O cheque a repassar e' cancelado junto. Venda pelo
-    // negocio, acerto pelo acerto.
+    // do proprio titulo. O cheque a repassar e' cancelado junto. O integrado
+    // da venda sai da venda e a cobranca se solta dela (TASK-30); o manual da
+    // venda e' do PDV, acerto pelo acerto.
     public static function cancelar(Pagamento $pag, string $justificativa): Pagamento
     {
         $pag = Pagamento::lockForUpdate()->findOrFail($pag->codpagamento);
@@ -641,7 +643,11 @@ class PagamentoTituloService
             abort(422, 'Pagamento já cancelado!');
         }
         if (!empty($pag->codnegocio)) {
-            abort(422, 'Pagamento de venda: cancele pelo negócio.');
+            if (!$pag->ehIntegrado()) {
+                abort(422, 'Pagamento manual da venda: reabra a venda e cancele no PDV.');
+            }
+            PdvNegocioPagamentoService::cancelarIntegrado($pag, $justificativa);
+            return PagamentoListaService::carregar($pag->codpagamento);
         }
         if (!empty($pag->codperiodocolaboradoracerto)) {
             abort(422, 'Pagamento de acerto de RH: estorne pelo acerto.');

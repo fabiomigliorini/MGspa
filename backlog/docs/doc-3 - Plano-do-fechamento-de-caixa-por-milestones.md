@@ -224,8 +224,12 @@ dependente fica para o seguinte. Um commit por milestone, depois da validação 
   o integrado) ou devolver. A forma **"Já recebido"** do wizard sugere os pendentes; só online.
 - **Desamarrar ≠ cancelar.** Desamarrar estorna as baixas: os títulos reabrem e o pagamento fica.
   Cancelar é só para o **manual** (dinheiro, cheque, cartão digitado) já desamarrado. Integrado
-  (PIX, Stone, SafraPay, boleto) **nunca se cancela**: a venda cancelada o deixa órfão, e
-  devolver é pela devolução do PIX ou pelo cancelamento no cartão.
+  (PIX, Stone, SafraPay) se cancela pelo mesmo Cancelar, na janela da cobrança ou no detalhe do
+  pagamento, em qualquer tela. Na baixa de títulos, as baixas são estornadas e o PIX/cartão volta a
+  ficar disponível (TASK-218). Na venda (TASK-30, 23/10/2026), só Gerente da filial, Financeiro
+  ou Admin, e só com a venda aberta (a fechada se reabre antes): sai do razão e do lote, e a
+  cobrança se solta da venda, para a consulta não trazer o pagamento de volta. Boleto não se
+  cancela. O estorno na maquininha e a devolução do PIX são feitos lá, à parte.
 - **Encontro de contas:** pagamento de total zero no portador **Encontro de Contas** (o antigo
   202016, Programação Pagamentos).
 - **PIX pela chave** confirmado pelo banco vira pagamento sem documento no razão do banco. Na

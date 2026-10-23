@@ -144,8 +144,10 @@ class PagamentoDetalheResource extends Resource
             ])->values()->all(),
             // o que a tela pode fazer (venda pelo negocio, acerto pelo acerto):
             // cancelar estorna as baixas junto, menos o de boleto (TASK-218);
-            // editar (pessoa, observacao; data so' do manual)
-            'cancelavel'                => $efetivado && $documento && !$baixabanco,
+            // o integrado da venda sai da venda (TASK-30); editar (pessoa,
+            // observacao; data so' do manual)
+            'cancelavel'                => $efetivado && !$baixabanco
+                && ($documento || (!empty($this->codnegocio) && $this->ehIntegrado())),
             'editavel'                  => $efetivado && $documento,
             'manual'                    => $manual,
             'integrado'                 => !$manual,

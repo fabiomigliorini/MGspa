@@ -7,6 +7,7 @@ import { saurusStore } from '@components/stores/saurusStore'
 import { formataNumero, formataTimestampCompleto } from '@components/formatters'
 import { useConsultaAutomatica } from './useConsultaAutomatica.js'
 import { avisar } from './eventos.js'
+import { cancelarPagamento } from './cancelarPagamento.js'
 
 const $q = useQuasar()
 const sSaurus = saurusStore()
@@ -93,6 +94,20 @@ const onShow = () => {
 const onHide = () => {
   parar()
   confirmacao?.hide()
+}
+
+// o pagamento que esta cobrança gerou: cancela em qualquer tela; quem pode e o que falta (a venda
+// aberta), o servidor diz (TASK-30)
+const cancelarPagamentoGerado = async () => {
+  const ok = await cancelarPagamento({
+    codpagamento: sSaurus.pedido.codpagamento,
+    codnegocio: sSaurus.pedido.codnegocio,
+    aviso: 'Não estorna na maquininha: o estorno é feito nela.',
+  })
+  if (ok) {
+    sSaurus.pedido.codpagamento = null
+    sSaurus.dialog.detalhesPedido = false
+  }
 }
 </script>
 <template>
@@ -269,6 +284,14 @@ const onHide = () => {
           @click="desistir()"
           tabindex="-1"
           v-if="sSaurus.pedido.status == 0"
+        />
+        <q-btn
+          v-if="sSaurus.pedido.codpagamento"
+          flat
+          label="Cancelar pagamento"
+          color="negative"
+          @click="cancelarPagamentoGerado()"
+          tabindex="-1"
         />
         <q-btn flat label="consultar" color="primary" @click="consultar()" ref="btnConsultarRef" />
         <q-btn

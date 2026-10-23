@@ -3,7 +3,9 @@
 namespace Mg\Pdv;
 
 use Carbon\Carbon;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Conferencia\ConferenciaService;
+use Mg\Conferencia\PagamentoCorrecaoService;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioParcela;
 use Mg\Negocio\NegocioParcelaService;
@@ -189,6 +191,40 @@ class PdvNegocioPagamentoService
         ]);
         $np->save();
         return $np;
+    }
+
+    // Cancelar o integrado da venda (TASK-30, decisao do Fabio 16/10/2026):
+    // o cartao estornado na maquininha, o PIX que nao era desta venda. So' com
+    // a venda aberta (a fechada se reabre antes). Sai como o registro indevido
+    // da conferencia (sai do razao e do lote; o PIX volta a ficar sem uso), e
+    // a cobranca se solta da venda: a consulta da Saurus/Stone e a importacao
+    // do PIX nao trazem o pagamento de volta.
+    public static function cancelarIntegrado(Pagamento $pag, string $justificativa): Pagamento
+    {
+        $negocio = Negocio::lockForUpdate()->findOrFail($pag->codnegocio);
+        if ($negocio->codnegociostatus != NegocioService::STATUS_ABERTO) {
+            abort(422, "Reabra a venda #{$negocio->codnegocio} antes de cancelar o pagamento.");
+        }
+        PagamentoCorrecaoService::exigirAberta($pag);
+        $antes = $pag->estado;
+        $pag->indevido = true;
+        PagamentoService::cancelar($pag, $justificativa);
+        foreach ([$pag->PixCob, $pag->PagarMePedido, $pag->SaurusPedido] as $cobranca) {
+            if ($cobranca && $cobranca->codnegocio == $negocio->codnegocio) {
+                $cobranca->codnegocio = null;
+                $cobranca->save();
+            }
+        }
+        AuditoriaService::registrar(
+            'tblpagamento',
+            $pag->codpagamento,
+            AuditoriaService::TIPO_PAGAMENTO_INTEGRADO_CANCELADO,
+            ['estado' => $antes],
+            ['estado' => $pag->estado],
+            $justificativa
+        );
+        NegocioService::recalcularTotal($negocio);
+        return $pag;
     }
 
     // Parcela vencida nao vira titulo: o operador ajusta no Prazo
