@@ -25,6 +25,8 @@ const props = defineProps({
   pesquisa: { type: Boolean, default: false },
   autofocus: { type: Boolean, default: false },
   bgColor: { type: String, default: '' },
+  // local em que o saldo dos cards da pesquisa começa; null = todos os locais
+  codestoquelocal: { type: Number, default: null },
 })
 
 const emit = defineEmits(['select'])
@@ -133,6 +135,7 @@ onUnmounted(() => window.removeEventListener('keydown', atalho))
       v-if="pesquisa"
       v-model="dialogPesquisa"
       :busca-inicial="codigo"
+      :codestoquelocal="codestoquelocal"
       @select="escolhidoNaPesquisa"
       @hide="focar"
     />

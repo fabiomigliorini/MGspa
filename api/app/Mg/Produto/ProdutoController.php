@@ -78,6 +78,12 @@ class ProdutoController extends MgController
         return response()->json(ProdutoService::saldoEstoque($codproduto), 200);
     }
 
+    // Saldo físico do produto, somado nas variações, no card da pesquisa em grade (TASK-254)
+    public function saldo($codproduto, $codestoquelocal = null)
+    {
+        return ProdutoService::saldo($codproduto, $codestoquelocal);
+    }
+
     public function negocios(Request $request, $codproduto)
     {
         return response()->json(ProdutoService::negocios($codproduto, $request->all()), 200);

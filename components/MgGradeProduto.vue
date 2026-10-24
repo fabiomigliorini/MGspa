@@ -2,7 +2,7 @@
 import { ref, shallowRef, computed, watch, nextTick } from 'vue'
 import { useQuasar } from 'quasar'
 import { formataNumero } from '@components/formatters'
-import { useSaldoVariacaoStore } from '@components/stores/saldoVariacaoStore'
+import { useSaldoEstoqueStore } from '@components/stores/saldoEstoqueStore'
 
 // Grade de cards da pesquisa de produto, comum à pesquisa do PDV (offline) e à
 // das telas online (TASK-173). Recebe o resultado da pesquisa, uma linha por
@@ -32,6 +32,10 @@ const props = defineProps({
   imagem: { type: Function, default: (barra) => barra.imagem },
   // liga o infinite scroll, que pede a página seguinte com `carregar`
   temMais: { type: Boolean, default: false },
+  // liga o chip de saldo no card; a pesquisa offline do PDV não liga
+  saldo: { type: Boolean, default: false },
+  // local do saldo do chip; null soma todos os locais
+  codestoquelocal: { type: Number, default: null },
 })
 
 const emit = defineEmits(['select', 'carregar'])
@@ -92,6 +96,30 @@ const produtos = computed(() => {
 // barras
 const unica = (produto) => produto.precos.length === 1 && produto.variacoes.length === 1
 
+// Chip de saldo do card (TASK-254): o saldo físico do produto somado em todas as
+// variações, no local escolhido ou em todos. Cada card pede o seu ao store, que
+// guarda 5 minutos -- rolar de volta ou voltar a um local já visto não consulta
+// de novo. Sem saldo (zero ou negativo) a foto fica cinza; enquanto carrega,
+// nem chip nem cinza.
+const sSaldo = useSaldoEstoqueStore()
+const saldoProduto = (produto) =>
+  props.saldo
+    ? sSaldo.produtos[sSaldo.chaveProduto(produto.chave, props.codestoquelocal)]?.dados
+    : null
+const semEstoque = (produto) => {
+  const dados = saldoProduto(produto)
+  return dados != null && dados.saldo <= 0
+}
+const corSaldo = (saldo) => (saldo > 0 ? 'positive' : saldo < 0 ? 'negative' : 'grey-7')
+watch(
+  () => [produtos.value, props.codestoquelocal, props.saldo],
+  () => {
+    if (!props.saldo) return
+    produtos.value.forEach((p) => sSaldo.carregarProduto(p.chave, props.codestoquelocal))
+  },
+  { immediate: true },
+)
+
 // -1 = nenhum card em destaque, o teclado ainda é do campo de pesquisa
 const focado = ref(-1)
 const cardRefs = ref([])
@@ -131,10 +159,11 @@ const estiloCard = (i) =>
     ? 'transition: transform .15s; transform: scale(1.03); position: relative; z-index: 1'
     : 'transition: transform .15s'
 
-const estiloImagem = (i) =>
-  i === focado.value
-    ? { transition: 'transform .15s', transform: 'scale(1.15)' }
-    : { transition: 'transform .15s' }
+const estiloImagem = (i, produto) => ({
+  transition: 'transform .15s',
+  ...(i === focado.value ? { transform: 'scale(1.15)' } : {}),
+  ...(semEstoque(produto) ? { filter: 'grayscale(1)' } : {}),
+})
 
 // Mouse e teclado mexem no MESMO destaque. Aqui não se usa focar(), porque
 // ele rola o card para dentro da tela -- sob o ponteiro isso seria um
@@ -169,12 +198,11 @@ const umaVariacao = computed(() => produtoAberto.value?.variacoes.length === 1)
 const colunasEmPilha = computed(() => $q.screen.lt.md)
 
 // saldo da variação em que o cursor está: só mostra, o teclado não passa por ele
-const sSaldo = useSaldoVariacaoStore()
 const codVariacaoAtual = computed(() =>
   dialogProduto.value ? variacaoAtual.value?.barra.codprodutovariacao : null,
 )
-const saldoAtual = computed(() => sSaldo.saldos[codVariacaoAtual.value])
-watch(codVariacaoAtual, (cod) => sSaldo.carregar(cod))
+const saldoAtual = computed(() => sSaldo.variacoes[codVariacaoAtual.value])
+watch(codVariacaoAtual, (cod) => sSaldo.carregarVariacao(cod))
 
 // O saldo vem na unidade do produto; na embalagem em que o cursor está (CX C/4)
 // cada local mostra quantas embalagens inteiras dá, arredondando para baixo --
@@ -416,7 +444,23 @@ defineExpose({ teclar, soltar, aberto: dialogProduto })
             @mousemove="aoMoverMouse($event, i)"
             @click="abrirProduto(produto)"
           >
-            <q-img ratio="1" :src="imagem(produto.barra)" :img-style="estiloImagem(i)" />
+            <!-- saldo no canto superior direito da foto, com o rótulo miúdo em cima,
+                 como o label de um campo -->
+            <div class="relative-position">
+              <q-img ratio="1" :src="imagem(produto.barra)" :img-style="estiloImagem(i, produto)" />
+              <div
+                v-if="saldoProduto(produto)"
+                class="absolute-top-right q-ma-sm q-px-sm q-py-xs rounded-borders bg-grey-2 text-right"
+              >
+                <div class="text-caption text-grey-7">Estoque</div>
+                <div
+                  class="text-subtitle2"
+                  :class="`text-${corSaldo(saldoProduto(produto).saldo)}`"
+                >
+                  {{ formataNumero(saldoProduto(produto).saldo, saldoProduto(produto).decimais) }}
+                </div>
+              </div>
+            </div>
 
             <q-card-section v-if="unica(produto)">
               <div class="absolute" style="top: 0; right: 5px; transform: translateY(-37px)">

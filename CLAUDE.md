@@ -192,6 +192,12 @@ código bipado se resolve em `GET v1/produto-barra/barras/{barras}`, no mesmo sh
 pesquisa. O `MgSelectProdutoBarra` está saindo (TASK-250): escolha de produto nova que nascer nele
 é regressão.
 
+O card traz o estoque físico do produto, somado nas variações, de todos os locais ou do local do
+select Saldo da pesquisa (`GET v1/produto/{codproduto}/saldo[/{codestoquelocal}]`, 5 minutos no
+`@components/stores/saldoEstoqueStore`); sem estoque, a foto fica cinza. A tela que tem um local
+de contexto passa `:codestoquelocal` ao `MgInputProdutoBarras` e o select começa nele (na
+requisição, a loja requisitada). O select só mostra: não filtra a lista (TASK-254).
+
 **Quantidade respeita as casas decimais da unidade de medida.** `tblunidademedida.decimais` diz
 quantas casas a quantidade aceita: 0 é só inteiro (UN, PT, RL…), MT tem 2, KG tem 3. O catálogo do
 PDV, a pesquisa em grade e o código bipado trazem `decimais` junto da `sigla`, e no negocios quem

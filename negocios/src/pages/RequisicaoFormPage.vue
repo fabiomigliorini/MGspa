@@ -446,6 +446,7 @@ onMounted(async () => {
                 label="Acrescentar produto (bipe, ou digite 5* e o código)"
                 pesquisa
                 autofocus
+                :codestoquelocal="form.codestoquelocalrequisitada"
                 @select="sRequisicao.adicionarItem"
               />
             </q-card-section>

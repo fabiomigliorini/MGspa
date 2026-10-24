@@ -1181,6 +1181,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('{codproduto}/notas', '\Mg\Produto\ProdutoController@notas');
         Route::get('{codproduto}/compras', '\Mg\Produto\ProdutoController@compras');
 
+        // Saldo físico somado no card da pesquisa em grade (TASK-254): todos os locais, ou um
+        Route::get('{codproduto}/saldo/{codestoquelocal?}', '\Mg\Produto\ProdutoController@saldo')
+            ->whereNumber(['codproduto', 'codestoquelocal']);
+
         // Integrações
         Route::get('{codproduto}/mercos', '\Mg\Produto\ProdutoController@mercos');
         Route::post('{codproduto}/mercos/exportar', '\Mg\Produto\ProdutoController@mercosExportar');
