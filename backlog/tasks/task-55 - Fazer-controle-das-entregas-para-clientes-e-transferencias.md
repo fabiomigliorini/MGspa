@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-24 21:23'
+updated_date: '2026-10-24 21:28'
 labels:
   - negocios
 dependencies: []
@@ -59,9 +59,9 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #22 Requisições: entregues e canceladas saem do painel (que fica só com as abertas e o botão Todas) e vão para a Listagem de Requisições, no estilo da de negócios: filtros no painel lateral, rolagem infinita, da mais nova para a mais antiga, sem filtro padrão; filtra também por telefone (pedaço acha) e pelo código de retirada inteiro
 - [x] #23 PDV: com loja destino (transferência ou venda entre empresas do grupo) não deixa escolher pessoa diferente da filial da loja destino; o F10/clique na pessoa recusa e diz para trocar a Loja destino
 - [ ] #24 Painel de requisições sempre abre na aba da loja do PDV; a aba escolhida vale até recarregar o app, não fica gravada no navegador
-- [ ] #25 PDV: o Ligar a uma requisição fica abaixo da natureza e só aparece com a Loja destino preenchida
-- [ ] #26 PDV: requisição ligada é um item que abre a requisição, e tirar do negócio pede confirmação
-- [ ] #27 PDV: ligar a uma requisição que não existe é recusado na hora, sem deixar para a sincronização
+- [x] #25 PDV: o Ligar a uma requisição fica abaixo da natureza e só aparece com a Loja destino preenchida
+- [x] #26 PDV: requisição ligada é um item que abre a requisição, e tirar do negócio pede confirmação
+- [x] #27 PDV: ligar a uma requisição que não existe é recusado na hora, sem deixar para a sincronização
 - [x] #28 Requisição: na impressão, cada item em duas linhas — descrição e quantidade em cima; barras (e localização) e a unidade com a embalagem (CX C/12) embaixo da quantidade
 <!-- AC:END -->
 

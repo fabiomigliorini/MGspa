@@ -94,7 +94,8 @@ o que depende dela por último.
    (emite a NF-e como hoje); próxima parte = outro negócio. Reabrir e Duplicar funcionam.
 8. Ligar negócio ↔ requisição a qualquer momento (antes, no meio ou depois de bipar): botão **Separar** na
    requisição; **bipar o QR** da via de separação (URL com nº + loja destino); **digitar o nº**. Ligar põe
-   natureza de transferência; loja destino vem do QR ou o usuário preenche (obrigatório).
+   natureza de transferência; loja destino vem do QR ou o usuário preenche (obrigatório). O nº digitado é
+   conferido no servidor na hora: requisição que não existe é recusada ali, não na sincronização.
 9. **Um negócio pode atender várias requisições** com o mesmo destino da mercadoria; retirada/entrega só
    junta com mesmo `codpessoa`, mesma loja de origem e de destino.
 10. **No Fechar** (online), o servidor confere a coerência de cada requisição ligada — existe, não cancelada
@@ -281,7 +282,9 @@ termina numa tela onde o Fábio confere (**Confere**).
 - PDV (negocios, offline): lista de requisições do negócio; ligar por **QR** (o `InputBarras` reconhece a
   URL `…/requisicao/{nº}?destino={local}`), por **nº digitado** (diálogo) ou chegando pelo **Separar** da
   requisição (abre negócio novo já ligado). Ligar põe natureza de transferência de saída e loja destino
-  (do QR ou preenchida pelo usuário, obrigatória). Link do negócio para cada requisição. Duplicar copia a lista.
+  (do QR ou preenchida pelo usuário, obrigatória). No painel lateral, abaixo da natureza e só com loja destino:
+  um item por requisição ligada (abre a requisição; o X tira do negócio, com confirmação) e o item Ligar.
+  Tirar inativa a ligação; a sincronização ignora a inativa de requisição que não existe. Duplicar copia a lista.
 - `PdvNegocioService::fechar`: conferência de coerência de todas as requisições ligadas (decisão 10); recusa
   com a divergência. Jobs e MGLara em `afterCommit`.
 - Disparo: `PdvNegocioService` (sincronização que muda a lista, fechar, cancelar, reabrir) só despacha
