@@ -151,6 +151,22 @@ o que depende dela por último.
 23. `codestoquelocaldestino` em toda natureza que gera movimento no destino; backfill do histórico; select
     "Loja destino" no PDV; MGLara usa só o campo.
 
+**Quem vê cada botão do detalhe da requisição**
+24. Os botões vêm prontos do backend (os `pode*` do `RequisicaoResource`, recalculados em toda resposta) e
+    dependem só de três coisas: o **status**, o **lado do dispositivo** e se o usuário é **Gerente**. A mesma
+    requisição mostra botões diferentes no PDV de quem pede e no de quem atende; F5 não muda nada.
+    - **Separar**: só o dispositivo da loja **requisitada**, com a requisição em A/S/P. Gerente não tem
+      exceção: o negócio de separação sai do local do PDV, e o Fechar recusa negócio de outra loja (decisão 10).
+    - **Editar**: só a loja **requisitante**, aguardando.
+    - **Cancelar**: requisitante ou Gerente, fora de C/E.
+    - **Justificar e Finalizar**: requisitada ou Gerente, em A/S/P/D.
+    - **Entregar**: em R/E, a requisitada ou Gerente; em L, a requisitante ou Gerente; só com parte fechada
+      ainda não entregue.
+    - **Reprocessar e Imprimir**: sempre; a via do cliente só aparece no dispositivo da loja que pediu.
+
+    O lado compara a **filial** do local de estoque do PDV (TASK-257) com a filial do local requisitante ou
+    requisitado; o Fechar compara o **local** do negócio. Com um local por filial, dá no mesmo.
+
 ## Plano — do mais fácil para o mais difícil
 
 Padrão de DDL: SQL idempotente em `api/database/*.sql` (modelo `ocorrencia.sql`, `pdv_configuracao.sql`);
