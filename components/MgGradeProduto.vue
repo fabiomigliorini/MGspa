@@ -524,7 +524,7 @@ defineExpose({ teclar, soltar, aberto: dialogProduto })
         autofocus
         tabindex="-1"
         class="no-outline"
-        style="width: 660px; max-width: 95vw"
+        style="width: 710px; max-width: 95vw"
         @keydown="teclarProduto"
       >
         <q-card-section class="text-h6">{{ produtoAberto.titulo }}</q-card-section>
@@ -565,7 +565,7 @@ defineExpose({ teclar, soltar, aberto: dialogProduto })
                 </q-item>
               </q-list>
             </div>
-            <div ref="colunaEmbalagem" class="col-8 col-md-4">
+            <div ref="colunaEmbalagem" class="col-8 col-md-5">
               <div class="text-overline text-grey-7">Embalagem</div>
               <q-list>
                 <q-item
@@ -594,7 +594,7 @@ defineExpose({ teclar, soltar, aberto: dialogProduto })
                 </q-item>
               </q-list>
             </div>
-            <div class="col-4 col-md-3">
+            <div class="col-4 col-md-2">
               <div class="text-overline text-grey-7">Saldo</div>
               <div
                 v-if="saldoAtual?.dados && !saldoAtual.dados.locais.length"
