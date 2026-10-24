@@ -4,7 +4,9 @@ namespace Mg\Requisicao;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Mg\Impressora\ImpressoraService;
 use Mg\Negocio\Negocio;
 use Mg\Pdv\PdvService;
@@ -17,12 +19,41 @@ class RequisicaoController extends Controller
     {
         $request->validate([
             'codestoquelocal' => 'required|integer',
-            'lado' => 'required|in:atender,requisitar',
         ]);
-        return response()->json(RequisicaoService::painel(
-            (int) $request->codestoquelocal,
-            $request->lado,
-            filter_var($request->input('finalizadas', false), FILTER_VALIDATE_BOOLEAN)
+        return response()->json(RequisicaoService::painel((int) $request->codestoquelocal));
+    }
+
+    public function index(Request $request)
+    {
+        $filtros = $request->validate([
+            'codrequisicao' => 'nullable|integer',
+            'codnegocio' => 'nullable|integer',
+            'codpessoa' => 'nullable|integer',
+            'codestoquelocalrequisitante' => 'nullable|integer',
+            'codestoquelocalrequisitada' => 'nullable|integer',
+            'status' => 'nullable|in:A,S,P,T,D,E,C',
+            'destino' => 'nullable|in:R,E,L',
+            'de' => 'nullable|date',
+            'ate' => 'nullable|date',
+            'busca' => 'nullable|string|max:100',
+            'telefone' => 'nullable|string|max:20',
+            'codigoretirada' => 'nullable|digits_between:1,6',
+            'page' => 'nullable|integer|min:1',
+        ]);
+        // o codigo de retirada e' a prova de quem retira: as mesmas poucas tentativas por
+        // minuto da entrega, senao a listagem vira o jeito de descobrir o codigo
+        if (!empty($filtros['codigoretirada'])) {
+            $chave = 'requisicao-codigoretirada:' . Auth::id();
+            if (RateLimiter::tooManyAttempts($chave, 10)) {
+                abort(429, 'Muitas tentativas com o código de retirada. Espere um minuto.');
+            }
+            RateLimiter::hit($chave, 60);
+        }
+        $page = (int) ($filtros['page'] ?? 1);
+        return response()->json(RequisicaoService::pesquisar(
+            $filtros,
+            RequisicaoService::POR_PAGINA,
+            ($page - 1) * RequisicaoService::POR_PAGINA
         ));
     }
 

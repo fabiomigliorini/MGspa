@@ -2,14 +2,14 @@
 import { storeToRefs } from 'pinia'
 import { useRouter } from 'vue-router'
 import MgInput from '@components/MgInput.vue'
-import MgSelect from '@components/MgSelect.vue'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
+import MgSelectImpressora from '@components/MgSelectImpressora.vue'
 import { useEstoqueLocalStore } from 'src/stores/estoqueLocalStore'
 
 // Formulário único do local de estoque: o Index abre para criar, o Detalhe para editar.
 const router = useRouter()
 const sLocal = useEstoqueLocalStore()
-const { form, dialog, salvando, isNovo, impressoras } = storeToRefs(sLocal)
+const { form, dialog, salvando, isNovo } = storeToRefs(sLocal)
 
 async function salvar() {
   const novo = isNovo.value
@@ -52,13 +52,11 @@ async function salvar() {
               />
             </div>
             <div class="col-12">
-              <MgSelect
+              <MgSelectImpressora
                 v-model="form.codimpressora"
-                :options="impressoras"
+                tipo="T,A"
                 label="Impressora da via de separação"
                 hint="Onde sai sozinha a via de separação das requisições que este local recebe"
-                emit-value
-                map-options
                 clearable
               />
             </div>

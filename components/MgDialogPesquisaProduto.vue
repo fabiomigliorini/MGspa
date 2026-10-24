@@ -20,7 +20,9 @@ const props = defineProps({
   buscaInicial: { type: String, default: '' },
 })
 
-const emit = defineEmits(['update:modelValue', 'select'])
+// `hide` sai quando a janela terminou de fechar, escolhendo produto ou não:
+// é nele que quem abriu devolve o foco para o campo de barras.
+const emit = defineEmits(['update:modelValue', 'select', 'hide'])
 
 // produtos por página, não barras: a página traz todas as barras de cada um
 const PER_PAGE = 20
@@ -146,6 +148,7 @@ watch(
     :model-value="modelValue"
     maximized
     @update:model-value="(v) => emit('update:modelValue', v)"
+    @hide="emit('hide')"
   >
     <q-card class="column full-height" @keydown="aoTeclar">
       <q-card-section class="bg-primary text-white col-auto">

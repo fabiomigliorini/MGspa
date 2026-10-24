@@ -11,6 +11,7 @@ const drawer = {
   confissao: defineAsyncComponent(() => import('components/drawers/ConfissaoLeftDrawer.vue')),
   pagamento: defineAsyncComponent(() => import('components/drawers/PagamentoLeftDrawer.vue')),
   woo: defineAsyncComponent(() => import('components/drawers/WooLeftDrawer.vue')),
+  requisicao: defineAsyncComponent(() => import('components/drawers/RequisicaoLeftDrawer.vue')),
 }
 
 const pdv = {
@@ -95,6 +96,15 @@ const routes = [
         path: '/requisicao',
         component: () => import('pages/RequisicaoPainelPage.vue'),
         meta: { title: 'Requisições', backTo: '/' },
+      },
+      {
+        path: '/requisicao/listagem',
+        component: () => import('pages/RequisicaoListagemPage.vue'),
+        meta: {
+          title: 'Listagem de Requisições',
+          leftDrawer: drawer.requisicao,
+          backTo: '/requisicao',
+        },
       },
       {
         path: '/requisicao/nova',

@@ -538,6 +538,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Requisicao entre lojas (TASK-55, doc-6): o dispositivo (X-Pdv) diz de que loja e' quem esta' na tela
     Route::middleware('pdv')->group(function () {
         Route::get('requisicao/painel', [\Mg\Requisicao\RequisicaoController::class, 'painel']);
+        Route::get('requisicao', [\Mg\Requisicao\RequisicaoController::class, 'index']);
         Route::get('requisicao/sugestao', [\Mg\Requisicao\RequisicaoController::class, 'sugestao']);
         Route::get('requisicao/rascunho/negocio/{codnegocio}', [\Mg\Requisicao\RequisicaoController::class, 'rascunhoDoNegocio'])->whereNumber('codnegocio');
         Route::get('requisicao/negocio/{codnegocio}', [\Mg\Requisicao\RequisicaoController::class, 'doNegocio'])->whereNumber('codnegocio');

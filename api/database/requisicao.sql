@@ -33,8 +33,10 @@ CREATE TABLE IF NOT EXISTS tblrequisicao (
     -- R cliente retira na requisitada, E entregar no endereco, L vai para a requisitante
     destino char(1) NOT NULL,
     codpessoa bigint,
-    nome varchar(100),
-    telefone varchar(50),
+    -- quem retira ou recebe: um telefone para cada nome, na mesma posicao; so' digitos,
+    -- com o DDD: 10 (fixo) ou 11 (celular)
+    nomes varchar(100)[],
+    telefones varchar(11)[],
     endereco varchar(300),
     -- 6 digitos; so' a requisitante ve
     codigoretirada char(6) NOT NULL,
@@ -62,7 +64,10 @@ CREATE TABLE IF NOT EXISTS tblrequisicao (
     CONSTRAINT tblrequisicao_lojas_check
         CHECK (codestoquelocalrequisitada IS DISTINCT FROM codestoquelocalrequisitante),
     CONSTRAINT tblrequisicao_destino_check CHECK (destino IN ('R', 'E', 'L')),
-    CONSTRAINT tblrequisicao_nome_check CHECK (destino = 'L' OR nome IS NOT NULL),
+    CONSTRAINT tblrequisicao_nomes_check
+        CHECK (destino = 'L' OR coalesce(cardinality(nomes), 0) > 0),
+    CONSTRAINT tblrequisicao_telefones_check
+        CHECK (coalesce(cardinality(telefones), 0) = coalesce(cardinality(nomes), 0)),
     CONSTRAINT tblrequisicao_endereco_check CHECK (destino <> 'E' OR endereco IS NOT NULL),
     CONSTRAINT tblrequisicao_status_check CHECK (status IN ('A', 'S', 'P', 'T', 'D', 'E', 'C')),
     CONSTRAINT tblrequisicao_codigoretirada_check CHECK (codigoretirada ~ '^[0-9]{6}$')

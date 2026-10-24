@@ -421,6 +421,25 @@ if (!function_exists('formataCep')) {
     }
 }
 
+if (!function_exists('formataTelefone')) {
+    // celular (99) 9-9999-9999, fixo (99) 9999-9999: o mesmo formataTelefone do @components/formatters
+    function formataTelefone($string)
+    {
+        $string = numeroLimpo($string ?? '');
+        switch (strlen($string)) {
+            case 11:
+                return formataPorMascara($string, '(##) #-####-####');
+            case 10:
+                return formataPorMascara($string, '(##) ####-####');
+            case 9:
+                return formataPorMascara($string, '#-####-####');
+            case 8:
+                return formataPorMascara($string, '####-####');
+        }
+        return $string;
+    }
+}
+
 if (!function_exists('formataLocalEstoque')) {
     function formataLocalEstoque($corredor, $prateleira, $coluna, $bloco)
     {

@@ -97,8 +97,11 @@ class ValeModeloRelatorioService
      * Foto que nao baixar ou nao decodificar simplesmente nao sai -- o
      * documento vale pela lista de itens e precos, nao pela imagem, e nao pode
      * deixar de imprimir porque o servidor de imagens piscou.
+     *
+     * Publico porque a requisicao em A5 (RequisicaoImpressaoService) usa as
+     * mesmas miniaturas.
      */
-    protected static function miniaturas(array $urls): array
+    public static function miniaturas(array $urls): array
     {
         if (empty($urls) || !function_exists('curl_multi_init')) {
             return [];

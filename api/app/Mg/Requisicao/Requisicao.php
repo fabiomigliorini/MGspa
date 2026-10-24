@@ -3,6 +3,7 @@
 namespace Mg\Requisicao;
 
 use Mg\MgModel;
+use Mg\PgArray;
 use Mg\Estoque\EstoqueLocal;
 use Mg\Negocio\Negocio;
 use Mg\Pdv\Pdv;
@@ -57,8 +58,8 @@ class Requisicao extends MgModel
         'atendimento',
         'destino',
         'codpessoa',
-        'nome',
-        'telefone',
+        'nomes',
+        'telefones',
         'endereco',
         'codnegocio',
         'observacoes',
@@ -81,6 +82,8 @@ class Requisicao extends MgModel
         'codusuariofinalizacao' => 'integer',
         'criacao' => 'datetime',
         'finalizacao' => 'datetime',
+        'nomes' => PgArray::class,
+        'telefones' => PgArray::class,
     ];
 
     // Chaves Estrangeiras

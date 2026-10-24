@@ -18,6 +18,24 @@ use Mg\Usuario\Autorizador;
 // O status nao se grava aqui: quem decide e' o RequisicaoProcessamentoService.
 class RequisicaoService
 {
+    // a linha das listas (painel e listagem): as duas lojas, quem retira e quantos itens
+    const SELECT_LISTA = "
+        select
+            r.codrequisicao, r.status, r.destino, r.atendimento, r.criacao,
+            array_to_string(r.nomes, ', ') as nome,
+            r.codestoquelocalrequisitante, elr.sigla as siglarequisitante,
+            elr.estoquelocal as requisitante,
+            r.codestoquelocalrequisitada, eld.sigla as siglarequisitada,
+            eld.estoquelocal as requisitada,
+            (select count(*) from tblrequisicaoitem ri
+              where ri.codrequisicao = r.codrequisicao and ri.quantidade > 0) as itens
+        from tblrequisicao r
+        inner join tblestoquelocal elr on (elr.codestoquelocal = r.codestoquelocalrequisitante)
+        left join tblestoquelocal eld on (eld.codestoquelocal = r.codestoquelocalrequisitada)
+    ";
+
+    const POR_PAGINA = 50;
+
     // o lado de quem pediu: o dispositivo e' de uma filial da loja requisitante (a filial do
     // dispositivo e' a do local de estoque dele, TASK-257)
     public static function ehRequisitante(Requisicao $req, ?Pdv $pdv): bool
@@ -266,6 +284,13 @@ class RequisicaoService
             $pessoa->bairro,
             $pessoa->Cidade ? ($pessoa->Cidade->cidade . '/' . ($pessoa->Cidade->Estado->sigla ?? '')) : null,
         ])) : null;
+        // os telefones do cadastro so' com os digitos, sem o zero na frente do DDD; o que nao
+        // sobra digito nenhum ('00 0000 0000') fica de fora
+        $telefones = $temCliente ? array_values(array_unique(array_filter(array_map(
+            fn ($t) => ltrim(numeroLimpo($t ?? ''), '0'),
+            [$pessoa->telefone1, $pessoa->telefone2, $pessoa->telefone3]
+        )))) : [];
+        $nome = $temCliente ? ($pessoa->fantasia ?: $pessoa->pessoa) : null;
         $quantidades = [];
         foreach ($negocio->NegocioProdutoBarraS()->whereNull('inativo')->get() as $npb) {
             $quantidades[$npb->codprodutobarra] = ($quantidades[$npb->codprodutobarra] ?? 0) + $npb->quantidade;
@@ -273,8 +298,9 @@ class RequisicaoService
         return [
             'codnegocio' => $negocio->codnegocio,
             'codpessoa' => $temCliente ? $negocio->codpessoa : null,
-            'nome' => $temCliente ? ($pessoa->fantasia ?: $pessoa->pessoa) : null,
-            'telefone' => $temCliente ? $pessoa->telefone1 : null,
+            // o nome do cliente para cada telefone do cadastro
+            'nomes' => $temCliente ? array_fill(0, max(count($telefones), 1), $nome) : [],
+            'telefones' => $telefones,
             'endereco' => $endereco ?: null,
             'itens' => static::itensComProduto($quantidades),
         ];
@@ -339,33 +365,61 @@ class RequisicaoService
         ", ['codnegocio' => $codnegocio]);
     }
 
-    // Painel por loja: o que ela tem para atender (requisitada) ou o que ela pediu
-    // (requisitante). So' as abertas, das mais antigas para as mais novas; com
-    // finalizadas, tambem as entregues e canceladas dos ultimos 30 dias.
-    public static function painel(int $codestoquelocal, string $lado, bool $finalizadas = false): array
+    // Painel por loja: o que ela tem para atender (requisitada) e o que ela pediu
+    // (requisitante), a tela separa. So' as abertas, das mais antigas para as mais
+    // novas; as entregues e canceladas ficam na listagem.
+    public static function painel(int $codestoquelocal): array
     {
-        $coluna = $lado === 'requisitar' ? 'r.codestoquelocalrequisitante' : 'r.codestoquelocalrequisitada';
-        $status = "r.status in ('A', 'S', 'P', 'T', 'D')";
-        if ($finalizadas) {
-            $status = "({$status} or r.criacao >= now() - interval '30 days')";
-        }
-        $sql = "
-            select
-                r.codrequisicao, r.status, r.destino, r.atendimento, r.nome, r.criacao,
-                r.codestoquelocalrequisitante, elr.sigla as siglarequisitante,
-                elr.estoquelocal as requisitante,
-                r.codestoquelocalrequisitada, eld.sigla as siglarequisitada,
-                eld.estoquelocal as requisitada,
-                (select count(*) from tblrequisicaoitem ri
-                  where ri.codrequisicao = r.codrequisicao and ri.quantidade > 0) as itens
-            from tblrequisicao r
-            inner join tblestoquelocal elr on (elr.codestoquelocal = r.codestoquelocalrequisitante)
-            left join tblestoquelocal eld on (eld.codestoquelocal = r.codestoquelocalrequisitada)
-            where {$coluna} = :codestoquelocal
-            and {$status}
+        $sql = self::SELECT_LISTA . "
+            where :codestoquelocal in (r.codestoquelocalrequisitada, r.codestoquelocalrequisitante)
+            and r.status in ('A', 'S', 'P', 'T', 'D')
             order by r.criacao, r.codrequisicao
             limit 500
         ";
         return DB::select($sql, ['codestoquelocal' => $codestoquelocal]);
+    }
+
+    // Listagem: todas as requisicoes, da mais nova para a mais antiga, nos filtros
+    // que vierem (nenhum e' obrigatorio)
+    public static function pesquisar(array $filtros, int $limite, int $offset = 0): array
+    {
+        $where = ['true'];
+        $bind = [];
+        foreach (['codrequisicao', 'codnegocio', 'codpessoa', 'codestoquelocalrequisitante', 'codestoquelocalrequisitada', 'status', 'destino'] as $campo) {
+            if (!empty($filtros[$campo])) {
+                $where[] = "r.{$campo} = :{$campo}";
+                $bind[$campo] = $filtros[$campo];
+            }
+        }
+        if (!empty($filtros['de'])) {
+            $where[] = 'r.criacao >= :de';
+            $bind['de'] = substr($filtros['de'], 0, 10) . ' 00:00:00';
+        }
+        if (!empty($filtros['ate'])) {
+            $where[] = 'r.criacao <= :ate';
+            $bind['ate'] = substr($filtros['ate'], 0, 10) . ' 23:59:59';
+        }
+        if (!empty($filtros['busca'])) {
+            // quem retira ou recebe
+            $where[] = "array_to_string(r.nomes, ' ') ilike :busca";
+            $bind['busca'] = '%' . preg_replace('/\s+/', '%', trim($filtros['busca'])) . '%';
+        }
+        // o telefone e' gravado so' com os digitos: a mascara digitada nao atrapalha, e um
+        // pedaco (os ultimos 4) tambem acha
+        $telefone = preg_replace('/\D/', '', $filtros['telefone'] ?? '');
+        if ($telefone !== '') {
+            $where[] = "array_to_string(r.telefones, ' ') like :telefone";
+            $bind['telefone'] = "%{$telefone}%";
+        }
+        // o codigo inteiro: pedaco nao acha
+        if (!empty($filtros['codigoretirada'])) {
+            $where[] = 'r.codigoretirada = :codigoretirada';
+            $bind['codigoretirada'] = $filtros['codigoretirada'];
+        }
+        $sql = self::SELECT_LISTA . '
+            where ' . implode("\n            and ", $where) . '
+            order by r.criacao desc, r.codrequisicao desc
+            limit ' . $limite . ' offset ' . $offset;
+        return DB::select($sql, $bind);
     }
 }

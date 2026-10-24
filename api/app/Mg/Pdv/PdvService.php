@@ -342,6 +342,7 @@ class PdvService
                 t.codestoquelocal,
                 t.estoquelocal,
                 t.deposito,
+                t.controlaestoque,
                 t.inativo,
                 t.sigla,
                 f.codfilial,

@@ -16,6 +16,12 @@ const props = defineProps({
     type: [String, Number],
     default: null,
   },
+  // sem `inicial`, começa na primeira opção; false começa sem nenhuma (Enter não escolhe nada
+  // até o operador navegar ou digitar o número)
+  selecionarPrimeira: {
+    type: Boolean,
+    default: true,
+  },
 })
 
 const emit = defineEmits(['escolher'])
@@ -32,6 +38,9 @@ const selecaoInicial = () => {
     if (i > -1) {
       return i
     }
+  }
+  if (!props.selecionarPrimeira) {
+    return -1
   }
   const i = props.opcoes.findIndex((o) => !o.desabilitado)
   return i > -1 ? i : 0
@@ -73,7 +82,8 @@ onMounted(() => {
 const mover = (delta) => {
   interagiu.value = true
   const total = props.opcoes.length
-  let i = indice.value
+  // sem seleção: ↓ vai para a primeira, ↑ para a última
+  let i = indice.value < 0 ? (delta > 0 ? -1 : 0) : indice.value
   for (let n = 0; n < total; n++) {
     i = (i + delta + total) % total
     if (!props.opcoes[i].desabilitado) {

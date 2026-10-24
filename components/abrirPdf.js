@@ -14,6 +14,7 @@ export { extrairErro } from './extrairErro'
  * @param {('a4'|'cupom')} [options.size] - tamanho do modal: 'a4' (padrão) ou 'cupom' (~500px)
  * @param {Function} [options.onImprimir] - se definido, exibe botão "Imprimir" no rodapé que dispara essa função
  * @param {string} [options.imprimirLabel] - label do botão imprimir (default: 'Imprimir')
+ * @param {boolean} [options.fecharAoImprimir] - fecha o modal quando o onImprimir termina
  */
 export async function abrirPdf(api, url, params = {}, options = {}) {
   try {
@@ -38,6 +39,7 @@ export async function abrirPdf(api, url, params = {}, options = {}) {
         size: options.size || 'a4',
         onImprimir: options.onImprimir || null,
         imprimirLabel: options.imprimirLabel || 'Imprimir',
+        fecharAoImprimir: !!options.fecharAoImprimir,
       },
     }).onDismiss(() => {
       URL.revokeObjectURL(blobUrl)

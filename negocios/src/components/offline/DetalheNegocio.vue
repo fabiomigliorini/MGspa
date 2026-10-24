@@ -69,6 +69,14 @@ const ligarRequisicao = async () => {
     dialogRequisicao.value = false
   }
 }
+const desligarRequisicao = (r) => {
+  Dialog.create({
+    title: 'Tirar do negócio',
+    message: `Tem certeza que você deseja tirar a requisição ${formataCodigo(r.codrequisicao)} deste negócio?`,
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'OK', color: 'primary', flat: true },
+  }).onOk(() => sNegocio.desligarRequisicao(r.uuid))
+}
 
 const vendedores = ref([])
 const filtroVendedor = ref(null)
@@ -371,38 +379,6 @@ const apropriar = () => {
   <q-list v-if="sNegocio.negocio">
     <!-- <q-item-label header>Pessoa</q-item-label> -->
 
-    <!-- Requisições que o negócio atende (TASK-55) -->
-    <q-item
-      v-if="requisicoesAtivas.length || sNegocio.podeEditar"
-      :clickable="sNegocio.podeEditar"
-      @click="abrirLigarRequisicao()"
-    >
-      <q-item-section avatar top>
-        <q-avatar icon="move_down" color="brown" text-color="white" />
-      </q-item-section>
-      <q-item-section>
-        <q-item-label lines="1">
-          {{ requisicoesAtivas.length ? 'Requisições' : 'Ligar a uma requisição' }}
-        </q-item-label>
-        <q-item-label caption v-for="r in requisicoesAtivas" :key="r.uuid">
-          <router-link :to="`/requisicao/${r.codrequisicao}`" @click.stop>
-            #{{ formataCodigo(r.codrequisicao) }}
-          </router-link>
-          <q-btn
-            v-if="sNegocio.podeEditar"
-            flat
-            round
-            size="xs"
-            color="grey-7"
-            icon="close"
-            @click.stop="sNegocio.desligarRequisicao(r.uuid)"
-          >
-            <q-tooltip>Tirar do negócio</q-tooltip>
-          </q-btn>
-        </q-item-label>
-      </q-item-section>
-    </q-item>
-
     <!-- Filial -->
     <q-item clickable @click="editarNatureza()">
       <q-item-section avatar top>
@@ -453,6 +429,47 @@ const apropriar = () => {
         </q-item-label>
       </q-item-section>
     </q-item>
+
+    <!-- Requisições que o negócio atende (TASK-55): só com Loja destino -->
+    <template v-if="sNegocio.negocio.codestoquelocaldestino">
+      <q-item
+        v-for="r in requisicoesAtivas"
+        :key="r.uuid"
+        clickable
+        v-ripple
+        :to="`/requisicao/${r.codrequisicao}`"
+      >
+        <q-item-section avatar top>
+          <q-avatar icon="move_down" color="brown" text-color="white" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label lines="1">{{ formataCodigo(r.codrequisicao) }}</q-item-label>
+          <q-item-label caption>Requisição</q-item-label>
+        </q-item-section>
+        <q-item-section side v-if="sNegocio.podeEditar">
+          <q-btn
+            flat
+            round
+            size="sm"
+            color="grey-7"
+            icon="close"
+            @click.stop.prevent="desligarRequisicao(r)"
+          >
+            <q-tooltip>Tirar do negócio</q-tooltip>
+          </q-btn>
+        </q-item-section>
+      </q-item>
+
+      <q-item v-if="sNegocio.podeEditar" clickable v-ripple @click="abrirLigarRequisicao()">
+        <q-item-section avatar top>
+          <q-avatar icon="move_down" color="grey" text-color="white" />
+        </q-item-section>
+        <q-item-section>
+          <q-item-label lines="1">Ligar a uma requisição</q-item-label>
+          <q-item-label caption>Requisição</q-item-label>
+        </q-item-section>
+      </q-item>
+    </template>
 
     <!-- OBSERVACOES -->
     <q-item clickable v-ripple @click="editarNatureza()">

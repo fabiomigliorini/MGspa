@@ -199,13 +199,19 @@ termina numa tela onde o Fábio confere (**Confere**).
   - `tblrequisicaoitem`: `codprodutobarra`, `quantidade` ≥ 0 (0 = incluído como "enviado a mais"),
     `quantidadeatendida` (gravada pelo processo, unidade base), `motivo` char(1), `codprodutobarrasubstituto`,
     `observacao`, auditoria; único `(codrequisicao, codprodutobarra)`.
-- Domínio `Mg\Requisicao` (rotas com middleware `pdv`): `GET v1/requisicao/painel`, `POST v1/requisicao`,
+- Domínio `Mg\Requisicao` (rotas com middleware `pdv`): `GET v1/requisicao/painel` (as abertas da loja, dos
+  dois lados), `GET v1/requisicao` (listagem paginada, todos os status, filtros opcionais), `POST v1/requisicao`,
   `GET|PUT v1/requisicao/{id}` (PUT só aguardando), `POST v1/requisicao/{id}/cancelar`.
   `codigoretirada` em `$hidden`; só volta quando o PDV é da filial requisitante.
 - `RequisicaoProcessamentoService::processar(codrequisicao)` (esqueleto: A e C; a distribuição entra na
   etapa 9) grava a coluna `status`.
-- negocios: `RequisicaoPainelPage` (`/requisicao`; colunas por status, Atender × Minhas, loja padrão do PDV,
-  mais antigas primeiro, polling 30 s com `useConsultaAutomatica`), `RequisicaoFormPage`
+- negocios: `RequisicaoPainelPage` (`/requisicao`; uma aba por loja, abrindo na do PDV; na aba, o card
+  "Para Centro atender" e um card "Centro pediu para Deposito" por loja atendente, cada um agrupado por
+  status; só as abertas, mais antigas primeiro, polling 30 s com `useConsultaAutomatica`),
+  `RequisicaoListagemPage` (`/requisicao/listagem`, botão Todas do painel; entregues e canceladas ficam aqui:
+  como a listagem de negócios, filtros no painel lateral — nº, status, destino, negócio, criação, lojas,
+  pessoa, quem retira, telefone, código de retirada inteiro com o limite de tentativas da entrega —,
+  rolagem infinita, mais nova primeiro, sem filtro padrão), `RequisicaoFormPage`
   (`MgInputProdutoBarras` com F1), `RequisicaoDetalhePage`, `stores/requisicao.js`, menu.
 - **Confere:** cria no Botânico (vê o código); aparece no painel do Centro como Aguardando, sem código;
   edita enquanto aguardando; cancela.

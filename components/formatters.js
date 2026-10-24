@@ -399,10 +399,10 @@ export function formataTelefone(fone, tipo = null) {
   if (isCel) {
     if (comDDD) {
       const p = s.padStart(11, "0");
-      return `(${p.slice(0, 2)}) ${p.slice(2, 3)} ${p.slice(3, 7)}-${p.slice(7, 11)}`;
+      return `(${p.slice(0, 2)}) ${p.slice(2, 3)}-${p.slice(3, 7)}-${p.slice(7, 11)}`;
     }
     const p = s.padStart(9, "0");
-    return `${p.slice(0, 1)} ${p.slice(1, 5)}-${p.slice(5, 9)}`;
+    return `${p.slice(0, 1)}-${p.slice(1, 5)}-${p.slice(5, 9)}`;
   }
   // Fixo (tipo === 1 ou autodetectado por length 8/10)
   if (comDDD) {
