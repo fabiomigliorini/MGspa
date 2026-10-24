@@ -109,6 +109,10 @@ export const requisicaoStore = defineStore('requisicao', () => {
   const codestoquelocal = ref(null)
   const lista = ref([])
   const carregandoPainel = ref(false)
+  // o voltar das outras telas cai na loja que estava no painel; sem ela, ele abre na do PDV
+  const enderecoPainel = computed(() =>
+    codestoquelocal.value ? `/requisicao/painel/${codestoquelocal.value}` : '/requisicao/painel',
+  )
 
   // listagem
   const filtros = ref(filtrosVazios())
@@ -443,6 +447,7 @@ export const requisicaoStore = defineStore('requisicao', () => {
     codestoquelocal,
     lista,
     carregandoPainel,
+    enderecoPainel,
     filtros,
     filtrosAtivos,
     requisicoes,

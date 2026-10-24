@@ -1,5 +1,6 @@
 import { defineAsyncComponent } from 'vue'
 import { sincronizacaoStore } from 'stores/sincronizacao'
+import { requisicaoStore } from 'stores/requisicao'
 
 const drawer = {
   offlineEsquerdo: defineAsyncComponent(() => import('components/drawers/OfflineLeftDrawer.vue')),
@@ -94,27 +95,27 @@ const routes = [
       // REQUISICOES ENTRE LOJAS (TASK-55)
       {
         path: '/requisicao',
-        component: () => import('pages/RequisicaoPainelPage.vue'),
-        meta: { title: 'Requisições', backTo: '/' },
-      },
-      {
-        path: '/requisicao/listagem',
         component: () => import('pages/RequisicaoListagemPage.vue'),
         meta: {
           title: 'Listagem de Requisições',
           leftDrawer: drawer.requisicao,
-          backTo: '/requisicao',
+          backTo: () => requisicaoStore().enderecoPainel,
         },
+      },
+      {
+        path: '/requisicao/painel/:codestoquelocal(\\d+)?',
+        component: () => import('pages/RequisicaoPainelPage.vue'),
+        meta: { title: 'Requisições', backTo: '/' },
       },
       {
         path: '/requisicao/nova',
         component: () => import('pages/RequisicaoFormPage.vue'),
-        meta: { title: 'Nova Requisição', backTo: '/requisicao' },
+        meta: { title: 'Nova Requisição', backTo: () => requisicaoStore().enderecoPainel },
       },
       {
         path: '/requisicao/:codrequisicao(\\d+)',
         component: () => import('pages/RequisicaoDetalhePage.vue'),
-        meta: { title: 'Requisição', backTo: '/requisicao' },
+        meta: { title: 'Requisição', backTo: () => requisicaoStore().enderecoPainel },
       },
       {
         path: '/requisicao/:codrequisicao(\\d+)/editar',

@@ -191,7 +191,9 @@ async function avancar() {
 
 function voltar() {
   if (passo.value === primeiro.value) {
-    router.push(isNovo.value ? '/requisicao' : `/requisicao/${form.value.codrequisicao}`)
+    router.push(
+      isNovo.value ? sRequisicao.enderecoPainel : `/requisicao/${form.value.codrequisicao}`,
+    )
     return
   }
   passo.value--

@@ -222,10 +222,11 @@ termina numa tela onde o Fábio confere (**Confere**).
   `codigoretirada` em `$hidden`; só volta quando o PDV é da filial requisitante.
 - `RequisicaoProcessamentoService::processar(codrequisicao)` (esqueleto: A e C; a distribuição entra na
   etapa 9) grava a coluna `status`.
-- negocios: `RequisicaoPainelPage` (`/requisicao`; uma aba por loja, abrindo na do PDV; na aba, o card
-  "Para Centro atender" e um card "Centro pediu para Deposito" por loja atendente, cada um agrupado por
-  status; só as abertas, mais antigas primeiro, polling 30 s com `useConsultaAutomatica`),
-  `RequisicaoListagemPage` (`/requisicao/listagem`, botão Todas do painel; entregues e canceladas ficam aqui:
+- negocios: `RequisicaoPainelPage` (`/requisicao/painel/{codestoquelocal}`; uma aba por loja, a do
+  endereço, e sem ela a do PDV; na aba, o card "Para Centro atender" e um card "Centro pediu para
+  Deposito" por loja atendente, cada um agrupado por status; só as abertas, mais antigas primeiro,
+  polling 30 s com `useConsultaAutomatica`),
+  `RequisicaoListagemPage` (`/requisicao`, botão Todas do painel; entregues e canceladas ficam aqui:
   como a listagem de negócios, filtros no painel lateral — nº, status, destino, negócio, criação, lojas,
   pessoa, quem retira, telefone, código de retirada inteiro com o limite de tentativas da entrega —,
   rolagem infinita, mais nova primeiro, sem filtro padrão), `RequisicaoFormPage`

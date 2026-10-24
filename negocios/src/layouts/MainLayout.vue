@@ -23,7 +23,7 @@ const menuGroups = [
   {
     label: 'Movimento',
     items: [
-      { label: 'Requisições', icon: 'move_down', color: 'brown', to: '/requisicao' },
+      { label: 'Requisições', icon: 'move_down', color: 'brown', to: '/requisicao/painel' },
       { label: 'Entregas', icon: 'local_shipping', color: 'orange-8', to: '/entrega' },
       { label: 'Escanear Confissão', icon: 'photo_camera', color: 'negative', to: '/confissao' },
       {

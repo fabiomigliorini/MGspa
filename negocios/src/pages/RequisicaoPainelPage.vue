@@ -1,5 +1,6 @@
 <script setup>
-import { computed, onMounted, ref, watch } from 'vue'
+import { computed, onMounted, ref } from 'vue'
+import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { db } from 'boot/db'
 import MgEmptyState from '@components/MgEmptyState.vue'
@@ -11,7 +12,9 @@ import { negocioStore } from 'stores/negocio'
 // Painel de requisições (TASK-55, doc-6): uma aba por loja; nela, o card do que a loja tem
 // para atender e um card por loja a que ela pediu, cada um por status, das mais antigas para
 // as mais novas. Só as abertas: entregues e canceladas ficam na listagem. Atualiza sozinho a
-// cada 30 s. Abre na loja do PDV; a aba escolhida vale até recarregar o app.
+// cada 30 s. A loja da aba vem do endereço (/requisicao/painel/101001); sem ela, a do PDV.
+const route = useRoute()
+const router = useRouter()
 const sRequisicao = requisicaoStore()
 const sNegocio = negocioStore()
 const { codestoquelocal } = storeToRefs(sRequisicao)
@@ -78,48 +81,52 @@ const { iniciar } = useConsultaAutomatica({
   intervalo: 30000,
 })
 
-// trocar de aba limpa a lista: a da loja anterior não aparece pela metade nos cards da nova
-watch(codestoquelocal, () => {
-  sRequisicao.lista = []
+const existe = (cod) => lojas.value.some((l) => l.codestoquelocal === cod)
+
+// Abre a loja do endereço. Sem ela, ou com uma loja que não está nas abas, devolve o endereço
+// da do PDV (ou da primeira aba) para onde redirecionar.
+function abrir(param) {
+  const cod = Number(param)
+  if (!existe(cod)) {
+    const padrao = existe(sNegocio.padrao.codestoquelocal)
+      ? sNegocio.padrao.codestoquelocal
+      : lojas.value[0]?.codestoquelocal
+    return padrao ? `/requisicao/painel/${padrao}` : true
+  }
+  // trocar de aba limpa a lista: a da loja anterior não aparece pela metade nos cards da nova
+  if (cod !== codestoquelocal.value) sRequisicao.lista = []
+  codestoquelocal.value = cod
   sRequisicao.carregarPainel()
-})
+  return true
+}
+
+onBeforeRouteUpdate((to) => abrir(to.params.codestoquelocal))
 
 onMounted(async () => {
   lojas.value = await db.estoqueLocal
     .orderBy('[codfilial+sigla]')
     .filter((l) => l.inativo == null && l.controlaestoque !== false)
     .toArray()
-  const existe = (cod) => lojas.value.some((l) => l.codestoquelocal === cod)
-  if (!existe(codestoquelocal.value)) {
-    codestoquelocal.value = existe(sNegocio.padrao.codestoquelocal)
-      ? sNegocio.padrao.codestoquelocal
-      : (lojas.value[0]?.codestoquelocal ?? null)
-  }
-  sRequisicao.carregarPainel()
+  const destino = abrir(route.params.codestoquelocal)
+  if (destino !== true) router.replace(destino)
   iniciar()
 })
 </script>
 
 <template>
   <q-page>
-    <q-tabs
-      v-model="codestoquelocal"
-      inline-label
-      outside-arrows
-      mobile-arrows
-      class="bg-primary text-white"
-    >
-      <q-tab
+    <q-tabs inline-label outside-arrows mobile-arrows class="bg-primary text-white">
+      <q-route-tab
         v-for="l in lojas"
         :key="l.codestoquelocal"
-        :name="l.codestoquelocal"
+        :to="`/requisicao/painel/${l.codestoquelocal}`"
         :label="l.estoquelocal"
       />
     </q-tabs>
 
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
       <div class="row justify-end q-mb-sm">
-        <q-btn flat color="primary" icon="list" label="Todas" to="/requisicao/listagem" />
+        <q-btn flat color="primary" icon="list" label="Todas" to="/requisicao" />
       </div>
 
       <MgEmptyState

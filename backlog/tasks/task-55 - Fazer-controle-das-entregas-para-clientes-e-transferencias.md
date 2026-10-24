@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-24 21:28'
+updated_date: '2026-10-24 21:36'
 labels:
   - negocios
 dependencies: []
@@ -58,7 +58,7 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #21 Painel de requisições: uma aba por loja no lugar do select; na aba, o card "Para Centro atender" e um card "Centro pediu para Deposito" por loja a que ela pediu, cada um com as requisições agrupadas por status
 - [x] #22 Requisições: entregues e canceladas saem do painel (que fica só com as abertas e o botão Todas) e vão para a Listagem de Requisições, no estilo da de negócios: filtros no painel lateral, rolagem infinita, da mais nova para a mais antiga, sem filtro padrão; filtra também por telefone (pedaço acha) e pelo código de retirada inteiro
 - [x] #23 PDV: com loja destino (transferência ou venda entre empresas do grupo) não deixa escolher pessoa diferente da filial da loja destino; o F10/clique na pessoa recusa e diz para trocar a Loja destino
-- [ ] #24 Painel de requisições sempre abre na aba da loja do PDV; a aba escolhida vale até recarregar o app, não fica gravada no navegador
+- [x] #24 Painel de requisições: a loja da aba fica no endereço (/requisicao/painel/101001) e o F5 continua nela; sem loja no endereço, abre na do PDV; /requisicao passa a ser a listagem
 - [x] #25 PDV: o Ligar a uma requisição fica abaixo da natureza e só aparece com a Loja destino preenchida
 - [x] #26 PDV: requisição ligada é um item que abre a requisição, e tirar do negócio pede confirmação
 - [x] #27 PDV: ligar a uma requisição que não existe é recusado na hora, sem deixar para a sincronização
@@ -77,4 +77,6 @@ Teste de tela no dev (21/10/2026, Chrome headless, PDVs 117 e 511, impressoras f
 Painel e listagem (#21/#22, 24/10/2026): o painel pede as abertas dos dois lados da loja (GET v1/requisicao/painel, sem lado/finalizadas) e a tela separa em cards; a listagem é GET v1/requisicao (50 por página, mesma linha do painel via RequisicaoService::SELECT_LISTA). O filtro pelo código de retirada só acha o código inteiro e tem o mesmo limite da entrega (10 por minuto por usuário), senão a listagem viraria o jeito de descobrir o código.
 
 Botões do detalhe (24/10/2026): a requisição 23 (Centro pede para Depósito), aberta no PDV do Centro, não mostrava o Separar. Não é instabilidade: os botões são os pode* do RequisicaoResource, por status + lado do dispositivo + Gerente, e o Separar só aparece no PDV da loja que atende. Regra escrita no doc-6 (decisão 24). O lado compara a filial do local do PDV com a do local da requisição; o Fechar compara o local (RequisicaoNegocioService.php:83). Dá no mesmo enquanto houver um local por filial.
+
+Painel no endereço (#24, 24/10/2026): a aba é /requisicao/painel/{codestoquelocal} e /requisicao virou a listagem (era /requisicao/listagem). Não dá /requisicao/{loja}: /requisicao/{n} é o detalhe, e o QR impresso aponta para ele. Sem loja no endereço, ou com loja fora das abas, o painel redireciona para a do PDV. O voltar do detalhe, da listagem e da nova requisição usa requisicaoStore().enderecoPainel, a loja que estava na tela; a aba não fica mais gravada no navegador.
 <!-- SECTION:NOTES:END -->
