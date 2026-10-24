@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-22 01:41'
+updated_date: '2026-10-24 19:50'
 labels:
   - negocios
 dependencies: []
@@ -45,6 +45,7 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #8 Etapa 9: separação no negócio do PDV ligada à requisição (QR, nº, Separar), processo idempotente, justificar e finalizar
 - [x] #9 Etapa 10: entrega pela requisição com os códigos de retirada (ou justificativa)
 - [x] #10 Etapa 11: indicadores de qualidade do estoque no detalhe do Local de Estoque
+- [x] #23 PDV: com loja destino (transferência ou venda entre empresas do grupo) não deixa escolher pessoa diferente da filial da loja destino; o F10/clique na pessoa recusa e diz para trocar a Loja destino
 <!-- AC:END -->
 
 ## Implementation Notes
