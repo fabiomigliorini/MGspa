@@ -78,9 +78,11 @@ const hotkeys = (event) => {
       receber()
       break
 
-    case 'F10': // Pessoa
+    case 'F10': // Pessoa (com loja destino a pessoa é a filial dela, TASK-55)
       event.preventDefault()
-      emitter.emit('informarPessoa')
+      if (!sNegocio.negocio?.codestoquelocaldestino) {
+        emitter.emit('informarPessoa')
+      }
       break
 
     default:

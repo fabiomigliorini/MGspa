@@ -257,11 +257,12 @@ termina numa tela onde o Fábio confere (**Confere**).
   de destino já existente (naturezas 15, 1, 19); 2) transferências restantes: pessoa → filial única → local
   único; 3) conferência (252 transferências com pessoa que não é filial ficam nulas).
 - MGLara `EstoqueGeraMovimentoNegocioProdutoBarra.php:164`: destino = `Negocio->EstoqueLocalDestino`.
-- `PdvNegocioService`: em natureza cujo tipo de movimento gera destino, grava o destino (pessoa = filial do
-  destino); `fechar` valida destino informado, ativo, diferente da origem e, na transferência, mesma empresa
-  (sai o laço bugado).
+- `PdvNegocioService`: em natureza cujo tipo de movimento gera destino, grava o destino; `fechar` valida
+  destino informado, ativo, diferente da origem, na transferência mesma empresa (sai o laço bugado) e a
+  pessoa igual à filial do destino (o servidor não troca a pessoa sozinho: confere e recusa).
 - negocios `components/offline/DetalheNegocio.vue`: select "Loja destino" no diálogo de natureza (offline,
-  do Dexie); `stores/negocio.js::informarNatureza(..., codestoquelocaldestino)`.
+  do Dexie); `stores/negocio.js::informarNatureza(..., codestoquelocaldestino)` põe a pessoa = filial do
+  destino. Com loja destino a pessoa não abre para troca (nem clique, nem F10).
 - **Confere:** transferência nova com Loja destino → entrada aparece no destino; sem destino é recusada;
   transferência antiga mostra o destino.
 

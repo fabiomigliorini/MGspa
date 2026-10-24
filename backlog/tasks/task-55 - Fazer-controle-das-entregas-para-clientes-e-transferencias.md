@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-24 21:36'
+updated_date: '2026-10-24 21:43'
 labels:
   - negocios
 dependencies: []
@@ -57,7 +57,7 @@ As impressoras em tabela estão na task própria das impressoras.
 - [ ] #20 Requisição: as três vias saem com os itens agrupados por marca (dentro da marca, pela descrição); no A5, com a foto do produto
 - [x] #21 Painel de requisições: uma aba por loja no lugar do select; na aba, o card "Para Centro atender" e um card "Centro pediu para Deposito" por loja a que ela pediu, cada um com as requisições agrupadas por status
 - [x] #22 Requisições: entregues e canceladas saem do painel (que fica só com as abertas e o botão Todas) e vão para a Listagem de Requisições, no estilo da de negócios: filtros no painel lateral, rolagem infinita, da mais nova para a mais antiga, sem filtro padrão; filtra também por telefone (pedaço acha) e pelo código de retirada inteiro
-- [x] #23 PDV: com loja destino (transferência ou venda entre empresas do grupo) não deixa escolher pessoa diferente da filial da loja destino; o F10/clique na pessoa recusa e diz para trocar a Loja destino
+- [x] #23 PDV: com loja destino (transferência ou venda entre empresas do grupo) a pessoa é a filial da loja destino, preenchida ao escolher a loja destino; a pessoa não abre para troca (clique nem F10) e o fechar no servidor recusa pessoa diferente da filial
 - [x] #24 Painel de requisições: a loja da aba fica no endereço (/requisicao/painel/101001) e o F5 continua nela; sem loja no endereço, abre na do PDV; /requisicao passa a ser a listagem
 - [x] #25 PDV: o Ligar a uma requisição fica abaixo da natureza e só aparece com a Loja destino preenchida
 - [x] #26 PDV: requisição ligada é um item que abre a requisição, e tirar do negócio pede confirmação

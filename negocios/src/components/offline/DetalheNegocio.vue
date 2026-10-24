@@ -496,7 +496,12 @@ const apropriar = () => {
 
     <!-- PESSOA -->
     <wizard-pessoa />
-    <q-item clickable v-ripple @click="editarPessoa()">
+    <!-- com loja destino a pessoa é a filial dela (TASK-55): não abre o wizard -->
+    <q-item
+      :clickable="!sNegocio.negocio.codestoquelocaldestino"
+      v-ripple="!sNegocio.negocio.codestoquelocaldestino"
+      @click="editarPessoa()"
+    >
       <q-item-section avatar top>
         <q-avatar
           icon="person"

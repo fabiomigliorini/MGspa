@@ -217,20 +217,13 @@ class PdvNegocioService
             && EstoqueMovimentoTipo::where('codestoquemovimentotipoorigem', $nat->codestoquemovimentotipo)->exists();
     }
 
-    // loja destino so' em natureza que gera movimento no destino; com ela, a pessoa do
-    // negocio e' a filial da loja destino (o PDV ja' manda assim)
+    // loja destino so' em natureza que gera movimento no destino; a pessoa (a filial da
+    // loja destino) vem do PDV e o fechar confere
     public static function normalizarDestino(Negocio $negocio): void
     {
         $nat = NaturezaOperacao::find($negocio->codnaturezaoperacao);
         if (!static::naturezaMovimentaDestino($nat)) {
             $negocio->codestoquelocaldestino = null;
-            return;
-        }
-        if (!empty($negocio->codestoquelocaldestino)) {
-            $destino = EstoqueLocal::with('Filial')->find($negocio->codestoquelocaldestino);
-            if ($destino?->Filial?->codpessoa) {
-                $negocio->codpessoa = $destino->Filial->codpessoa;
-            }
         }
     }
 
@@ -252,6 +245,10 @@ class PdvNegocioService
         }
         if ($nat->transferencia && $destino->Filial->codempresa != $negocio->Filial->codempresa) {
             throw new Exception('Transferência só entre lojas da mesma empresa!', 1);
+        }
+        if ($negocio->codpessoa != $destino->Filial->codpessoa) {
+            $filial = $destino->Filial->Pessoa->fantasia;
+            throw new Exception("A pessoa do negócio tem que ser {$filial}, a filial da loja destino {$destino->estoquelocal}!", 1);
         }
     }
 

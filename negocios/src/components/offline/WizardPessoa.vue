@@ -78,18 +78,6 @@ const props = defineProps({
 })
 
 const abrir = () => {
-  // com loja destino (transferência, venda entre empresas do grupo) a pessoa é a filial
-  // dela: muda trocando a loja destino (TASK-55)
-  if (sNegocio.negocio.codestoquelocaldestino) {
-    Notify.create({
-      type: 'warning',
-      message: `A pessoa é a filial da loja destino (${sNegocio.negocio.estoquelocaldestino}). Para mudar, troque a Loja destino.`,
-      timeout: 4000,
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-    return
-  }
-
   step.value = 1
   opcoes.value = []
   indice.value = 0
