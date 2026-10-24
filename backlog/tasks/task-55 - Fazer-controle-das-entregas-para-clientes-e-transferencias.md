@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-24 21:43'
+updated_date: '2026-10-24 22:04'
 labels:
   - negocios
 dependencies: []
@@ -63,6 +63,7 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #26 PDV: requisição ligada é um item que abre a requisição, e tirar do negócio pede confirmação
 - [x] #27 PDV: ligar a uma requisição que não existe é recusado na hora, sem deixar para a sincronização
 - [x] #28 Requisição: na impressão, cada item em duas linhas — descrição e quantidade em cima; barras (e localização) e a unidade com a embalagem (CX C/12) embaixo da quantidade
+- [x] #29 Requisição: o lado do dispositivo (quem pede ou quem atende) é decidido pelo local de estoque do PDV, não pela filial
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -76,7 +77,7 @@ Teste de tela no dev (21/10/2026, Chrome headless, PDVs 117 e 511, impressoras f
 
 Painel e listagem (#21/#22, 24/10/2026): o painel pede as abertas dos dois lados da loja (GET v1/requisicao/painel, sem lado/finalizadas) e a tela separa em cards; a listagem é GET v1/requisicao (50 por página, mesma linha do painel via RequisicaoService::SELECT_LISTA). O filtro pelo código de retirada só acha o código inteiro e tem o mesmo limite da entrega (10 por minuto por usuário), senão a listagem viraria o jeito de descobrir o código.
 
-Botões do detalhe (24/10/2026): a requisição 23 (Centro pede para Depósito), aberta no PDV do Centro, não mostrava o Separar. Não é instabilidade: os botões são os pode* do RequisicaoResource, por status + lado do dispositivo + Gerente, e o Separar só aparece no PDV da loja que atende. Regra escrita no doc-6 (decisão 24). O lado compara a filial do local do PDV com a do local da requisição; o Fechar compara o local (RequisicaoNegocioService.php:83). Dá no mesmo enquanto houver um local por filial.
+Botões do detalhe (24/10/2026): a requisição 23 (Centro pede para Depósito), aberta no PDV do Centro, não mostrava o Separar. Não é instabilidade: os botões são os pode* do RequisicaoResource, por status + lado do dispositivo + Gerente, e o Separar só aparece no PDV da loja que atende. Regra escrita no doc-6 (decisão 24). O lado do dispositivo é o local de estoque do PDV comparado com o local da requisição (RequisicaoService::ehRequisitante/ehRequisitada), o mesmo que o Fechar confere (RequisicaoNegocioService.php:83); antes passava pela filial do local, sobra do tblpdv.codfilial (TASK-257).
 
 Painel no endereço (#24, 24/10/2026): a aba é /requisicao/painel/{codestoquelocal} e /requisicao virou a listagem (era /requisicao/listagem). Não dá /requisicao/{loja}: /requisicao/{n} é o detalhe, e o QR impresso aponta para ele. Sem loja no endereço, ou com loja fora das abas, o painel redireciona para a do PDV. O voltar do detalhe, da listagem e da nova requisição usa requisicaoStore().enderecoPainel, a loja que estava na tela; a aba não fica mais gravada no navegador.
 <!-- SECTION:NOTES:END -->

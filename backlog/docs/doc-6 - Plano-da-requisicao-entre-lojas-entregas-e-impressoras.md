@@ -84,7 +84,7 @@ o que depende dela por último.
    (ex.: 1 CX c/10 resmas + 5 pacotes avulsos); não repete a mesma barra.
 4. Criar: no painel (do zero, `MgInputProdutoBarras`) ou a partir de negócio **fechado** (itens e cliente
    preenchidos e editáveis; guarda o negócio de origem). Requisitante edita itens e cliente **só enquanto
-   aguardando**. Cancelar: PDV da filial **requisitante** ou **Gerente**; recusa se houver negócio ativo
+   aguardando**. Cancelar: PDV da loja **requisitante** ou **Gerente**; recusa se houver negócio ativo
    ligado (mostra o link do negócio, onde se cancela).
 5. Código de retirada de 6 dígitos, só no lado A (comprovante e tela da A; nunca na tela nem na via da B).
 6. O que faltou: nova requisição à mão. Requisição parada: sem prazo; o painel ordena das mais antigas.
@@ -164,8 +164,8 @@ o que depende dela por último.
       ainda não entregue.
     - **Reprocessar e Imprimir**: sempre; a via do cliente só aparece no dispositivo da loja que pediu.
 
-    O lado compara a **filial** do local de estoque do PDV (TASK-257) com a filial do local requisitante ou
-    requisitado; o Fechar compara o **local** do negócio. Com um local por filial, dá no mesmo.
+    O lado é o **local de estoque** do PDV comparado com o local requisitante ou requisitado, o mesmo que o
+    Fechar confere no negócio (nunca a filial).
 
 ## Plano — do mais fácil para o mais difícil
 
@@ -219,7 +219,7 @@ termina numa tela onde o Fábio confere (**Confere**).
 - Domínio `Mg\Requisicao` (rotas com middleware `pdv`): `GET v1/requisicao/painel` (as abertas da loja, dos
   dois lados), `GET v1/requisicao` (listagem paginada, todos os status, filtros opcionais), `POST v1/requisicao`,
   `GET|PUT v1/requisicao/{id}` (PUT só aguardando), `POST v1/requisicao/{id}/cancelar`.
-  `codigoretirada` em `$hidden`; só volta quando o PDV é da filial requisitante.
+  `codigoretirada` em `$hidden`; só volta quando o PDV é da loja requisitante.
 - `RequisicaoProcessamentoService::processar(codrequisicao)` (esqueleto: A e C; a distribuição entra na
   etapa 9) grava a coluna `status`.
 - negocios: `RequisicaoPainelPage` (`/requisicao/painel/{codestoquelocal}`; uma aba por loja, a do

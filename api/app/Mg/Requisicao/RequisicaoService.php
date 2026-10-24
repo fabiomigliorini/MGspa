@@ -36,18 +36,17 @@ class RequisicaoService
 
     const POR_PAGINA = 50;
 
-    // o lado de quem pediu: o dispositivo e' de uma filial da loja requisitante (a filial do
-    // dispositivo e' a do local de estoque dele, TASK-257)
+    // o lado de quem pediu: o local de estoque do dispositivo e' a loja requisitante (o mesmo
+    // que o Fechar confere no negocio)
     public static function ehRequisitante(Requisicao $req, ?Pdv $pdv): bool
     {
-        return !empty($pdv) && $pdv->EstoqueLocal?->codfilial == $req->EstoqueLocalRequisitante->codfilial;
+        return !empty($pdv->codestoquelocal) && $pdv->codestoquelocal == $req->codestoquelocalrequisitante;
     }
 
     // o lado de quem atende
     public static function ehRequisitada(Requisicao $req, ?Pdv $pdv): bool
     {
-        return !empty($pdv) && !empty($req->EstoqueLocalRequisitada)
-            && $pdv->EstoqueLocal?->codfilial == $req->EstoqueLocalRequisitada->codfilial;
+        return !empty($pdv->codestoquelocal) && $pdv->codestoquelocal == $req->codestoquelocalrequisitada;
     }
 
     public static function ehGerente(): bool
