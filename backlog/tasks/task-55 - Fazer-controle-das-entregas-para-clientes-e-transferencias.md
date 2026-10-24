@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-24 21:12'
+updated_date: '2026-10-24 21:23'
 labels:
   - negocios
 dependencies: []
@@ -50,7 +50,7 @@ As impressoras em tabela estão na task própria das impressoras.
 - [ ] #13 Requisição: o botão Separar usa o ícone de carrinho
 - [ ] #14 Requisição: imprimir em 3 etapas (via, formato, janela do PDF com o botão Imprimir no cabeçalho); via única pula a etapa 1
 - [ ] #15 Requisição: o Imprimir da janela do PDF pergunta a impressora, começando na impressora do PDV
-- [ ] #16 Requisição: nova e editar em etapas (loja que pede, loja que atende, destino, negócio, quem retira, endereço, produtos, conferência); do negócio, os itens vendidos aparecem desmarcados para marcar o que falta
+- [x] #16 Requisição: nova e editar em etapas (loja que pede, loja que atende, destino, negócio, quem retira, endereço, produtos, conferência); do negócio, os itens vendidos aparecem desmarcados para marcar o que falta
 - [ ] #17 Local que não controla estoque (Renascer, MAB, JDI) não aparece na requisição, no painel de requisições nem na entrega
 - [ ] #18 Requisição: quem retira ou recebe em linhas de nome + telefone (pelo menos uma, as duas coisas obrigatórias), com o botão + para mais uma linha e o telefone formatado (99) 9-9999-9999 / (99) 9999-9999 no form, no detalhe e na impressão
 - [ ] #19 Requisição: o código de retirada inteiro sai só impresso na via do cliente; a via de separação e a tela (das duas lojas) mostram só as pontas (77XX82); a entrega continua pedindo o código inteiro
@@ -62,6 +62,7 @@ As impressoras em tabela estão na task própria das impressoras.
 - [ ] #25 PDV: o Ligar a uma requisição fica abaixo da natureza e só aparece com a Loja destino preenchida
 - [ ] #26 PDV: requisição ligada é um item que abre a requisição, e tirar do negócio pede confirmação
 - [ ] #27 PDV: ligar a uma requisição que não existe é recusado na hora, sem deixar para a sincronização
+- [x] #28 Requisição: na impressão, cada item em duas linhas — descrição e quantidade em cima; barras (e localização) e a unidade com a embalagem (CX C/12) embaixo da quantidade
 <!-- AC:END -->
 
 ## Implementation Notes
