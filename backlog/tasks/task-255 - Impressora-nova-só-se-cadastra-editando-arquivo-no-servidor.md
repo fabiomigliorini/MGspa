@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-22 00:43'
-updated_date: '2026-10-22 01:31'
+updated_date: '2026-10-23 16:48'
 labels:
   - api
 dependencies: []
@@ -30,6 +30,7 @@ Plano em backlog/docs/doc-6 (etapas 0, 1 e 8): tabela tblimpressora (chave = nom
 - [x] #2 Etapa 1: tblimpressora com cadastro no PDV (app negocios); printers.json apagado; select e PDV lendo a tabela
 - [x] #3 Etapa 8: codimpressora no PDV, em todas as rotas e no front; publicações no Ably por ImpressoraService::publicar
 - [x] #4 README do MGprint aponta para o cadastro de impressoras
+- [ ] #5 Etapa 0: MGsis deixa de ler as impressoras do usuário (login e Perfil param de vez que as colunas caem)
 <!-- AC:END -->
 
 ## Implementation Notes

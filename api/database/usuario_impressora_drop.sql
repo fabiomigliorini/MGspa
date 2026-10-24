@@ -4,8 +4,10 @@
 -- impressoratelanegocio. A impressora e' do dispositivo (tblpdv) e, na
 -- sequencia, de um cadastro proprio (tblimpressora).
 --
--- ORDEM: depois da publicacao do codigo da api e do MGLara que deixou de
--- ler essas colunas (Usuario, UsuarioController::store, NFePHPService::imprimir).
+-- ORDEM: depois da publicacao do codigo que deixou de ler essas colunas:
+--   - api  (Usuario, UsuarioController::store, NFePHPService::imprimir)
+--   - MGLara
+--   - MGsis (Usuario, UserIdentity: sem isso o login do MGsis para)
 --
 -- Reaplicavel (IF EXISTS). Transacional.
 -- =====================================================================
