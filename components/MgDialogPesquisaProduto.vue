@@ -65,12 +65,12 @@ watch(
   },
 )
 const sSelect = useSelectCacheStore()
+// os locais pelo nome, na ordem do código: Deposito, Botanico, Centro...
 const opcoesSaldo = computed(() => [
-  { label: 'Todos os locais', value: null },
-  ...(sSelect.entities.estoqueLocal?.items || []).map((l) => ({
-    label: `Saldo no ${l.sigla || l.label}`,
-    value: l.value,
-  })),
+  { label: 'Em todos os locais', value: null },
+  ...[...(sSelect.entities.estoqueLocal?.items || [])]
+    .sort((a, b) => a.value - b.value)
+    .map((l) => ({ label: l.label, value: l.value })),
 ])
 onMounted(() => sSelect.loadList('estoqueLocal', 'v1/select/estoque-local').catch(() => {}))
 
