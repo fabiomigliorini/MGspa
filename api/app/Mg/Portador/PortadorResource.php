@@ -23,10 +23,10 @@ class PortadorResource extends Resource
         $ret['gaveta'] = $this->ehGaveta();
         $ret['caixa'] = $this->ehCaixa();
         // PDVs que apontam para ele (o que o faz gaveta)
-        $ret['pdvs'] = $this->PdvS()->with('Filial')->orderBy('apelido')->get()->map(fn ($pdv) => [
+        $ret['pdvs'] = $this->PdvS()->with('EstoqueLocal.Filial')->orderBy('apelido')->get()->map(fn ($pdv) => [
             'codpdv' => $pdv->codpdv,
             'apelido' => $pdv->apelido,
-            'filial' => optional($pdv->Filial)->filial,
+            'filial' => $pdv->EstoqueLocal?->Filial?->filial,
             'inativo' => $pdv->inativo,
         ]);
         $ret['banco'] = $this->whenLoaded('Banco', function () {

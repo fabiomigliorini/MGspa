@@ -188,8 +188,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
       // backend retorna (inativo preenchido: nao vende nem sincroniza; ativar e' autorizar)
       inativo: null,
       apelido: null,
-      codfilial: null,
-      filial: null,
       codpdv: null,
       codsetor: null,
       observacoes: null,
@@ -323,8 +321,6 @@ export const sincronizacaoStore = defineStore('sincronizacao', {
     async aplicarDispositivo(pdv) {
       this.pdv.inativo = pdv.inativo
       this.pdv.apelido = pdv.apelido
-      this.pdv.codfilial = pdv.codfilial
-      this.pdv.filial = pdv.filial
       this.pdv.codpdv = pdv.codpdv
       this.pdv.codsetor = pdv.codsetor
       this.pdv.observacoes = pdv.observacoes

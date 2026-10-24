@@ -41,7 +41,7 @@ class CobrancaService
         PagarMeService::cancelarPedidosAbertosPos($pos->codpagarmepos);
         $juros = (float) ($dados['valorjuros'] ?? 0);
         return PagarMeService::criarPedido(
-            $pdv->codfilial ?? $pos->codfilial,
+            $pdv->EstoqueLocal->codfilial ?? $pos->codfilial,
             $pos->codpagarmepos,
             $dados['tipo'],
             $dados['valor'],

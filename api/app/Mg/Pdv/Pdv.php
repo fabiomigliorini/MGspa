@@ -12,7 +12,6 @@ use Mg\PagarMe\PagarMePagamento;
 use Mg\PagarMe\PagarMePedido;
 use Mg\Pix\Pix;
 use Mg\Pix\PixCob;
-use Mg\Filial\Filial;
 use Mg\Usuario\Usuario;
 use Mg\Portador\Portador;
 use Mg\Filial\Setor;
@@ -30,7 +29,6 @@ class Pdv extends MgModel
         'alocacao',
         'apelido',
         'codestoquelocal',
-        'codfilial',
         'codmaquineta',
         'codnaturezaoperacao',
         'codportador',
@@ -56,7 +54,6 @@ class Pdv extends MgModel
         'alteracao' => 'datetime',
         'codestoquelocal' => 'integer',
         'codimpressora' => 'integer',
-        'codfilial' => 'integer',
         'codmaquineta' => 'integer',
         'codnaturezaoperacao' => 'integer',
         'codpdv' => 'integer',
@@ -79,11 +76,6 @@ class Pdv extends MgModel
     public function Impressora()
     {
         return $this->belongsTo(\Mg\Impressora\Impressora::class, 'codimpressora', 'codimpressora');
-    }
-
-    public function Filial()
-    {
-        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
     }
 
     public function Portador()

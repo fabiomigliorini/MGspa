@@ -36,20 +36,20 @@ class PdvController
 
     public function getDispositivo(Request $request)
     {
-        // Administrador ve todos; Gerente, os da filial dele
+        // Administrador ve todos; Gerente, os da filial dele (a do local de estoque, TASK-257)
         $filiais = PdvAutorizador::filiais();
         if ($filiais === []) {
             abort(403, 'Só Administrador ou Gerente!');
         }
-        $query = Pdv::with(['Filial', 'Setor', 'Portador', 'UltimaLocalizacao'])->orderBy('criacao', 'desc');
+        $query = Pdv::with(['EstoqueLocal.Filial', 'Setor', 'Portador', 'UltimaLocalizacao'])->orderBy('criacao', 'desc');
         if ($filiais !== null) {
-            $query->whereIn('codfilial', $filiais);
+            $query->whereHas('EstoqueLocal', fn ($q) => $q->whereIn('codfilial', $filiais));
         }
         if ($request->apelido) {
             $query->where('apelido', 'ilike', "%{$request->apelido}%");
         }
         if ($request->codfilial) {
-            $query->where('codfilial', $request->codfilial);
+            $query->whereHas('EstoqueLocal', fn ($q) => $q->where('codfilial', $request->codfilial));
         }
         // sem status, so' os ativos
         match ($request->status) {
@@ -77,12 +77,12 @@ class PdvController
         // o proprio dispositivo se ve mesmo inativo (mostra o codigo para pedir a ativacao)
         $uuid = PdvService::uuid($request);
         if (empty($uuid) || $uuid !== $pdv->uuid) {
-            PdvAutorizador::autorizar($pdv->codfilial);
+            PdvAutorizador::autorizar($pdv->EstoqueLocal?->codfilial);
         }
         // a tela so' mostra os botoes; quem garante e' cada rota. Sem login (quiosque) a
         // pagina so' mostra: toda acao exige usuario
         $logado = !empty(Auth::user() ?? Auth::guard('api')->user());
-        $gestor = $logado && PdvAutorizador::pode($pdv->codfilial);
+        $gestor = $logado && PdvAutorizador::pode($pdv->EstoqueLocal?->codfilial);
         return (new PdvResource($pdv))->additional(['pode' => [
             'editar' => $gestor || ($logado && PdvAutorizador::proprio($pdv, $uuid)),
             'cadastro' => $gestor,
@@ -95,7 +95,7 @@ class PdvController
         $pdv = Pdv::findOrFail($codpdv);
         $uuid = PdvService::uuid($request);
         if (empty($uuid) || $uuid !== $pdv->uuid) {
-            PdvAutorizador::autorizar($pdv->codfilial);
+            PdvAutorizador::autorizar($pdv->EstoqueLocal?->codfilial);
         }
         return response()->json(PdvService::registros($pdv->codpdv));
     }
@@ -538,18 +538,20 @@ class PdvController
     {
         $pdv = Pdv::findOrFail($codpdv);
         $dados = $request->validated();
-        // a filial do dispositivo passa a ser a do local de estoque (PdvService::update)
+        // a filial do dispositivo e' a do local de estoque (TASK-257): trocar o local pode trocar a
+        // filial. Sem carregar a relacao, que ficaria com o local antigo na resposta
+        $atual = EstoqueLocal::find($pdv->codestoquelocal)?->codfilial;
         $codfilial = EstoqueLocal::findOrFail($dados['codestoquelocal'])->codfilial;
-        if (PdvAutorizador::pode($pdv->codfilial)) {
+        if (PdvAutorizador::pode($atual)) {
             // Gerente nao manda o dispositivo para filial onde nao e' gerente
-            if ($codfilial != $pdv->codfilial) {
+            if ($codfilial != $atual) {
                 PdvAutorizador::autorizar($codfilial);
             }
         } elseif (PdvAutorizador::proprio($pdv, PdvService::uuid($request))) {
             if ($request->hasAny(PdvService::CAMPOS_CADASTRO)) {
                 abort(403, 'Só Administrador ou Gerente da filial altera o cadastro do dispositivo!');
             }
-            if ($codfilial != $pdv->codfilial) {
+            if ($codfilial != $atual) {
                 abort(403, 'Local de estoque de outra filial muda a filial do dispositivo: só Administrador ou Gerente!');
             }
         } else {

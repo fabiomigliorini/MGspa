@@ -250,3 +250,9 @@ do negócio, página do dispositivo) usa `PdvService::uuid($request)` e `PdvServ
 dispositivo a uma pessoa, use o código (`formataCodigo(codpdv)`) e o apelido. É assim desde a
 **TASK-197** (19/10/2026): `pdv: sSinc.pdv.uuid` em parâmetro ou corpo, ou o uuid do PDV num
 template, que aparecer num diff é regressão.
+
+**A loja do PDV é a do local de estoque.** O dispositivo não tem filial própria: o
+`tblpdv.codfilial` saiu na **TASK-257** (24/10/2026). Quem precisa da filial do PDV usa
+`$pdv->EstoqueLocal->codfilial` (em SQL, o `join tblestoquelocal` pelo `codestoquelocal`); o
+`PdvResource` e o `select/pdv` continuam devolvendo `codfilial`/`filial`, calculados do local.
+`$pdv->codfilial`, `Pdv->Filial` ou filial lida do `tblpdv` que aparecer num diff é regressão.

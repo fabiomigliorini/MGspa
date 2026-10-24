@@ -42,7 +42,8 @@ class TituloAdiantamentoService
             abort(422, "Tipo {$tipo->tipotitulo} não nasce com pagamento!");
         }
         $entrada = !$tipo->ehReceber();
-        $codfilial = $pdv->codfilial ?? (int) ($dados['codfilial'] ?? 0);
+        // no PDV, a filial do local de estoque dele (TASK-257)
+        $codfilial = $pdv->EstoqueLocal->codfilial ?? (int) ($dados['codfilial'] ?? 0);
         if (empty($codfilial)) {
             abort(422, 'Informe a filial!');
         }

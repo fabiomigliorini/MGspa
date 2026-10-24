@@ -18,17 +18,18 @@ use Mg\Usuario\Autorizador;
 // O status nao se grava aqui: quem decide e' o RequisicaoProcessamentoService.
 class RequisicaoService
 {
-    // o lado de quem pediu: o dispositivo e' de uma filial da loja requisitante
+    // o lado de quem pediu: o dispositivo e' de uma filial da loja requisitante (a filial do
+    // dispositivo e' a do local de estoque dele, TASK-257)
     public static function ehRequisitante(Requisicao $req, ?Pdv $pdv): bool
     {
-        return !empty($pdv) && $pdv->codfilial == $req->EstoqueLocalRequisitante->codfilial;
+        return !empty($pdv) && $pdv->EstoqueLocal?->codfilial == $req->EstoqueLocalRequisitante->codfilial;
     }
 
     // o lado de quem atende
     public static function ehRequisitada(Requisicao $req, ?Pdv $pdv): bool
     {
         return !empty($pdv) && !empty($req->EstoqueLocalRequisitada)
-            && $pdv->codfilial == $req->EstoqueLocalRequisitada->codfilial;
+            && $pdv->EstoqueLocal?->codfilial == $req->EstoqueLocalRequisitada->codfilial;
     }
 
     public static function ehGerente(): bool

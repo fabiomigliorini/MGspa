@@ -157,7 +157,7 @@ export const dispositivoStore = defineStore(
       }
     }
 
-    // ativar e' autorizar: o servidor exige apelido, filial, local de estoque, setor e natureza
+    // ativar e' autorizar: o servidor exige apelido, local de estoque, setor e natureza
     const ativar = (pdv) =>
       acao('delete', `/v1/pdv/dispositivo/${pdv.codpdv}/inativo`, 'Dispositivo ativado!')
 

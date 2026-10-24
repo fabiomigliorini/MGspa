@@ -246,6 +246,8 @@ class PagamentoTituloService
         int $codfilialTitulos
     ): Pagamento {
         $total = round((float) ($forma['total'] ?? 0), 2);
+        // a filial do PDV e' a do local de estoque dele (TASK-257)
+        $codfilialPdv = $pdv->EstoqueLocal->codfilial ?? null;
 
         // o cartao cobrado na maquininha integrada (Stone, SafraPay): o
         // pagamento nasce com o pedido, quando a tela grava (TASK-220)
@@ -258,7 +260,7 @@ class PagamentoTituloService
                 'observacoes' => $dados['observacao'] ?? null,
                 'referente' => $dados['referente'] ?? null,
                 'codpdv' => $pdv->codpdv ?? null,
-                'codfilial' => $pdv->codfilial ?? null,
+                'codfilial' => $codfilialPdv,
             ];
             return !empty($forma['codpagarmepedido'])
                 ? PagarMeService::pagar((int) $forma['codpagarmepedido'], $total, $campos)
@@ -276,7 +278,7 @@ class PagamentoTituloService
                 'observacoes' => $dados['observacao'] ?? null,
                 'referente' => $dados['referente'] ?? null,
                 'codpdv' => $pdv->codpdv ?? null,
-                'codfilial' => $pdv->codfilial ?? null,
+                'codfilial' => $codfilialPdv,
             ]);
         }
 
@@ -295,7 +297,7 @@ class PagamentoTituloService
             'efetivacao' => Carbon::now(),
             'codusuarioefetivacao' => auth()->user()->codusuario ?? null,
             'codpdv' => $pdv->codpdv ?? null,
-            'codfilial' => $pdv->codfilial ?? $codfilialTitulos,
+            'codfilial' => $codfilialPdv ?? $codfilialTitulos,
         ];
 
         // encontro de contas: total zero no portador Encontro de Contas
@@ -334,7 +336,7 @@ class PagamentoTituloService
         $campos = [
             'codportadordestino' => $entrada ? ($portador->codportador ?? null) : null,
             'codportadororigem' => $entrada ? null : ($portador->codportador ?? null),
-            'codfilial' => $pdv->codfilial ?? $portador->codfilial ?? $codfilialTitulos,
+            'codfilial' => $codfilialPdv ?? $portador->codfilial ?? $codfilialTitulos,
         ];
 
         if (in_array($meio, PagamentoService::MEIOS_CARTAO) && $entrada) {
@@ -346,7 +348,7 @@ class PagamentoTituloService
                 'parcelas' => $forma['parcelas'] ?? null,
             ];
             // o cartao e' da loja da maquineta
-            $campos['codfilial'] = $pdv->codfilial ?? $maquineta->codfilial ?? $campos['codfilial'];
+            $campos['codfilial'] = $codfilialPdv ?? $maquineta->codfilial ?? $campos['codfilial'];
         }
         if ($meio == PagamentoService::MEIO_DINHEIRO && $entrada) {
             $campos['valortroco'] = $forma['valortroco'] ?? null;
