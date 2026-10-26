@@ -73,6 +73,37 @@ CREATE TABLE IF NOT EXISTS tblrequisicao (
     CONSTRAINT tblrequisicao_codigoretirada_check CHECK (codigoretirada ~ '^[0-9]{6}$')
 );
 
+-- A versao de 21/10 deste arquivo criava nome/telefone (um so'); o CREATE TABLE IF NOT
+-- EXISTS acima nao mexe na tabela que ja' existe. Converte para nomes/telefones.
+DO $$
+BEGIN
+    IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_schema = current_schema()
+        AND table_name = 'tblrequisicao'
+        AND column_name = 'nome'
+    ) THEN
+        ALTER TABLE tblrequisicao ADD COLUMN IF NOT EXISTS nomes varchar(100)[];
+        ALTER TABLE tblrequisicao ADD COLUMN IF NOT EXISTS telefones varchar(11)[];
+        UPDATE tblrequisicao SET
+            nomes = ARRAY[nome],
+            telefones = ARRAY[NULLIF(left(regexp_replace(coalesce(telefone, ''), '\D', '', 'g'), 11), '')]
+        WHERE nome IS NOT NULL
+        AND nomes IS NULL;
+        ALTER TABLE tblrequisicao DROP CONSTRAINT IF EXISTS tblrequisicao_nome_check;
+        ALTER TABLE tblrequisicao DROP COLUMN nome;
+        ALTER TABLE tblrequisicao DROP COLUMN IF EXISTS telefone;
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tblrequisicao_nomes_check') THEN
+        ALTER TABLE tblrequisicao ADD CONSTRAINT tblrequisicao_nomes_check
+            CHECK (destino = 'L' OR coalesce(cardinality(nomes), 0) > 0);
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'tblrequisicao_telefones_check') THEN
+        ALTER TABLE tblrequisicao ADD CONSTRAINT tblrequisicao_telefones_check
+            CHECK (coalesce(cardinality(telefones), 0) = coalesce(cardinality(nomes), 0));
+    END IF;
+END $$;
+
 CREATE INDEX IF NOT EXISTS idx_tblrequisicao_requisitada_status
     ON tblrequisicao (codestoquelocalrequisitada, status);
 CREATE INDEX IF NOT EXISTS idx_tblrequisicao_requisitante_status

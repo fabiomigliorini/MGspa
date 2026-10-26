@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-25 23:10'
+updated_date: '2026-10-26 16:30'
 labels:
   - negocios
 dependencies: []
@@ -82,4 +82,6 @@ Botões do detalhe (24/10/2026): a requisição 23 (Centro pede para Depósito),
 Painel no endereço (#24, 24/10/2026): a aba é /requisicao/painel/{codestoquelocal} e /requisicao virou a listagem (era /requisicao/listagem). Não dá /requisicao/{loja}: /requisicao/{n} é o detalhe, e o QR impresso aponta para ele. Sem loja no endereço, ou com loja fora das abas, o painel redireciona para a do PDV. O voltar do detalhe, da listagem e da nova requisição usa requisicaoStore().enderecoPainel, a loja que estava na tela; a aba não fica mais gravada no navegador.
 
 24/10/2026: o "Sugerir abaixo do mínimo" do AC #5 (botão no formulário + GET v1/requisicao/sugestao, commit 86f4ac958) saiu: não funcionava e não foi pedido. A reposição pelo mínimo foi para a TASK-258 (gerador de requisição). O PDF Sugestão de Transferências do estoque continua.
+
+Go-live 26/10: produção quebrou no painel (column r.nomes does not exist). A tblrequisicao de prod foi criada pela versão de 21/10 do requisicao.sql (nome/telefone); a de 24/10 trocou para nomes/telefones dentro do CREATE TABLE IF NOT EXISTS, que não mexe na tabela existente. O requisicao.sql agora converte nome/telefone em nomes/telefones (telefone só dígitos, até 11) e cria os checks que faltarem; reaplicável. Já aplicado em prod em 26/10 (4 requisições convertidas; a nº 3 ficou sem telefone, o antigo estava vazio).
 <!-- SECTION:NOTES:END -->
