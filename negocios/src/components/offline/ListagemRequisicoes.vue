@@ -43,9 +43,7 @@ watch(
         </q-item-section>
         <q-item-section>
           <q-item-label class="ellipsis">Requisição</q-item-label>
-          <q-item-label caption class="ellipsis"
-            >#{{ formataCodigo(r.codrequisicao) }}</q-item-label
-          >
+          <q-item-label caption class="ellipsis">{{ formataCodigo(r.codrequisicao) }}</q-item-label>
           <q-item-label caption class="ellipsis">
             {{ r.siglarequisitante }} para {{ r.siglarequisitada || 'Compras' }} ·
             {{ (STATUS[r.status] || STATUS.A).label }}

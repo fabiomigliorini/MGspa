@@ -1,11 +1,13 @@
 @php
     // Uma view, duas vias x dois formatos (TASK-55, doc-6):
     //   via requisitante — autorizacao de retirada, com o codigo (entregue ao cliente)
-    //   via requisitada  — lista para separar, com a localizacao e o QR; nunca o codigo
+    //   via requisitada  — lista para separar, com a localizacao e o QR; o codigo so'
+    //                      mascarado (77XX82), para conferir a caixa com o do cliente
     //   formato termica (80 mm) ou a5
     $a5 = $formato === 'a5';
     $daRequisitante = $via === 'requisitante';
     $comCodigo = $daRequisitante && in_array($req->destino, ['R', 'E']);
+    $codigoMascarado = $daRequisitante ? null : \Mg\Requisicao\RequisicaoEntregaService::codigoRetiradaMascarado($req);
     $lojaRetirada = $req->EstoqueLocalRequisitada;
     $pessoaRetirada = $lojaRetirada?->Filial?->Pessoa;
 @endphp
@@ -61,6 +63,18 @@
             border-bottom: 1px dotted #888;
         }
 
+        /* o item ocupa duas linhas: a divisoria fica so' embaixo da segunda */
+        .itens .item td {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+
+        .itens .marca td {
+            padding-top: 6px;
+            font-weight: bold;
+            border-bottom: 1px solid black;
+        }
+
         .direita {
             text-align: right;
         }
@@ -98,18 +112,19 @@
     <div class="bloco">
         <b>Pede:</b> {{ $req->EstoqueLocalRequisitante->estoquelocal }}<br>
         <b>Atende:</b> {{ $lojaRetirada?->estoquelocal ?? 'Compras' }}<br>
-        <b>Destino:</b> {{ \Mg\Requisicao\Requisicao::DESTINOS[$req->destino] }}
+        <b>Destino:</b> {{ \Mg\Requisicao\Requisicao::DESTINOS[$req->destino] }}<br>
+        <b>Prioridade:</b> {{ \Mg\Requisicao\Requisicao::PRIORIDADES[$req->prioridade] ?? '' }}
     </div>
 
-    @if ($req->nome || $req->endereco)
+    @if ($req->nomes || $req->endereco)
         <div class="bloco">
-            @if ($req->nome)
-                <b>Cliente:</b> {{ $req->nome }}
-                @if ($req->telefone)
-                    &middot; {{ $req->telefone }}
+            @foreach ($req->nomes as $i => $nome)
+                <b>Cliente:</b> {{ $nome }}
+                @if (!empty($req->telefones[$i]))
+                    &middot; {{ formataTelefone($req->telefones[$i]) }}
                 @endif
                 <br>
-            @endif
+            @endforeach
             @if ($req->endereco)
                 <b>Endereço:</b> {{ $req->endereco }}
             @endif
@@ -135,25 +150,45 @@
         <div class="bloco cinza">Apresente este comprovante e o código para retirar a mercadoria.</div>
     @endif
 
+    @if ($codigoMascarado)
+        <div class="bloco">Código de retirada (confira com o do cliente):</div>
+        <div class="codigo">{{ $codigoMascarado }}</div>
+    @endif
+
+    {{-- agrupados por marca (o deposito guarda assim); no A5, com a foto --}}
     <table class="itens bloco">
         <tr>
-            <td><b>Produto</b></td>
+            <td colspan="{{ $a5 ? 2 : 1 }}"><b>Produto</b></td>
             <td class="direita"><b>Qtd</b></td>
         </tr>
-        @foreach ($itens as $item)
-            <tr>
-                <td>
-                    {{ $item['descricao'] }}
-                    <br>
-                    <span class="cinza">{{ $item['barras'] }}</span>
-                    @if (!$daRequisitante && $item['localizacao'])
-                        <span class="cinza"> &middot; {{ $item['localizacao'] }}</span>
-                    @endif
-                </td>
-                <td class="direita" style="white-space: nowrap;">
-                    <b>{{ $item['quantidade'] }}</b> {{ $item['sigla'] }}
-                </td>
+        @foreach ($itens as $marca => $daMarca)
+            <tr class="marca">
+                <td colspan="{{ $a5 ? 3 : 2 }}">{{ $marca }}</td>
             </tr>
+            @foreach ($daMarca as $item)
+                {{-- 1a linha: descricao e quantidade; 2a: barras (e localizacao) e unidade --}}
+                <tr class="item">
+                    @if ($a5)
+                        <td style="width: 11mm;" rowspan="2">
+                            @if (!empty($fotos[$item['imagem']]))
+                                <img src="{{ $fotos[$item['imagem']]['src'] }}"
+                                    style="width: {{ $fotos[$item['imagem']]['w'] }}mm; height: {{ $fotos[$item['imagem']]['h'] }}mm;">
+                            @endif
+                        </td>
+                    @endif
+                    <td>{{ $item['descricao'] }}</td>
+                    <td class="direita"><b>{{ $item['quantidade'] }}</b></td>
+                </tr>
+                <tr>
+                    <td class="cinza">
+                        {{ $item['barras'] }}
+                        @if (!$daRequisitante && $item['localizacao'])
+                            &middot; {{ $item['localizacao'] }}
+                        @endif
+                    </td>
+                    <td class="direita" style="white-space: nowrap;">{{ $item['unidade'] }}</td>
+                </tr>
+            @endforeach
         @endforeach
     </table>
 

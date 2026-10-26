@@ -7,6 +7,11 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
+  // controlaestoque ausente = PDV ainda não sincronizou o campo; mostra como antes
+  somenteControlaEstoque: {
+    type: Boolean,
+    default: false,
+  },
 })
 
 const opcoes = ref([])
@@ -22,6 +27,9 @@ onMounted(async () => {
       .toArray()
   } else {
     opcoes.value = await regs.toArray()
+  }
+  if (props.somenteControlaEstoque) {
+    opcoes.value = opcoes.value.filter((item) => item.controlaestoque !== false)
   }
   filtrado.value = opcoes.value
 })

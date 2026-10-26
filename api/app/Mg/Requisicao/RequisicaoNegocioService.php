@@ -10,7 +10,8 @@ use Mg\Negocio\Negocio;
 // calculo do atendido e' do RequisicaoProcessamentoService.
 class RequisicaoNegocioService
 {
-    // a lista que veio do PDV (pelo uuid); requisicao inexistente recusa a sincronizacao
+    // a lista que veio do PDV (pelo uuid); requisicao inexistente recusa a sincronizacao,
+    // a menos que o PDV ja' tenha tirado ela do negocio (ai' nao ha' o que gravar)
     public static function importar(Negocio $negocio, array $links): void
     {
         foreach ($links as $link) {
@@ -18,6 +19,9 @@ class RequisicaoNegocioService
                 continue;
             }
             if (!Requisicao::whereKey($link['codrequisicao'])->exists()) {
+                if (!empty($link['inativo'])) {
+                    continue;
+                }
                 $cod = str_pad($link['codrequisicao'], 8, '0', STR_PAD_LEFT);
                 throw new Exception("A requisição #{$cod} não existe: tire ela do negócio!", 1);
             }

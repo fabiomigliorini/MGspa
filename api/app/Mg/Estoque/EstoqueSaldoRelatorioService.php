@@ -298,9 +298,7 @@ class EstoqueSaldoRelatorioService
 
     // ───────────────────────── Transferências ─────────────────────────────
 
-    // linhas da sugestao (destino no minimo ou abaixo, origem com saldo): o PDF abaixo e a
-    // sugestao da requisicao (RequisicaoService::sugestao) usam as mesmas
-    public static function transferenciasLinhas(array $f): array
+    public static function transferencias(array $f): string
     {
         $origem = (int) ($f['codestoquelocalorigem'] ?? 0);
         $destino = (int) ($f['codestoquelocaldestino'] ?? 0);
@@ -326,15 +324,7 @@ class EstoqueSaldoRelatorioService
                     elpv_dest.estoqueminimo, elpv_dest.estoquemaximo,
                     sld_dest.saldoquantidade as saldodestino,
                     sld_orig.saldoquantidade as saldoorigem,
-                    coalesce(pe.quantidade, 1) as quantidadeembalagem,
-                    (select pb.codprodutobarra from tblprodutobarra pb
-                      where pb.codprodutovariacao = pv.codprodutovariacao
-                      and pb.codprodutoembalagem = p.codprodutoembalagemtransferencia
-                      order by pb.codprodutobarra limit 1) as codprodutobarraembalagem,
-                    (select pb.codprodutobarra from tblprodutobarra pb
-                      where pb.codprodutovariacao = pv.codprodutovariacao
-                      and pb.codprodutoembalagem is null
-                      order by pb.codprodutobarra limit 1) as codprodutobarraunidade
+                    coalesce(pe.quantidade, 1) as quantidadeembalagem
                 from tblproduto p
                 inner join tblmarca m on (m.codmarca = p.codmarca)
                 inner join tblprodutovariacao pv on (pv.codproduto = p.codproduto)
@@ -351,14 +341,7 @@ class EstoqueSaldoRelatorioService
             order by itens.marca, itens.produto, itens.variacao
         ";
 
-        return DB::select($sql);
-    }
-
-    public static function transferencias(array $f): string
-    {
-        $origem = (int) ($f['codestoquelocalorigem'] ?? 0);
-        $destino = (int) ($f['codestoquelocaldestino'] ?? 0);
-        $rows = static::transferenciasLinhas($f);
+        $rows = DB::select($sql);
 
         $linhas = '';
         foreach ($rows as $r) {

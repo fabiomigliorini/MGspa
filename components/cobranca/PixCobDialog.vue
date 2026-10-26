@@ -13,6 +13,7 @@ import {
 } from '@components/formatters'
 import { useConsultaAutomatica } from './useConsultaAutomatica.js'
 import { avisar } from './eventos.js'
+import { cancelarPagamento } from './cancelarPagamento.js'
 
 // impressora térmica (PDV) para o QR impresso; sem ela o botão some
 const props = defineProps({
@@ -109,6 +110,20 @@ const mensagem = () => {
 
 const whatsapp = () => {
   window.open('whatsapp://send?text=' + encodeURI(textoMensagem()))
+}
+
+// o pagamento que esta cobrança gerou: cancela em qualquer tela; quem pode e o que falta (a venda
+// aberta), o servidor diz (TASK-30)
+const cancelarPagamentoGerado = async () => {
+  const ok = await cancelarPagamento({
+    codpagamento: sPix.pixCob.codpagamento,
+    codnegocio: sPix.pixCob.codnegocio,
+    aviso: 'O PIX volta para Sem uso na tela PIX.',
+  })
+  if (ok) {
+    sPix.pixCob.codpagamento = null
+    sPix.dialog.detalhesPixCob = false
+  }
 }
 </script>
 <template>
@@ -259,6 +274,14 @@ const whatsapp = () => {
             tabindex="-1"
           />
         </template>
+        <q-btn
+          v-if="sPix.pixCob.codpagamento"
+          flat
+          label="Cancelar pagamento"
+          color="negative"
+          @click="cancelarPagamentoGerado()"
+          tabindex="-1"
+        />
         <q-btn flat label="consultar" color="primary" @click="consultar()" ref="btnConsultarRef" />
         <q-btn
           flat

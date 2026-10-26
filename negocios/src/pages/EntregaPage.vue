@@ -40,7 +40,12 @@ onMounted(() => {
         <q-card-section>
           <div class="row q-col-gutter-md items-center">
             <div class="col-12 col-sm-6">
-              <SelectEstoqueLocal v-model="codestoquelocal" label="Loja" outlined />
+              <SelectEstoqueLocal
+                v-model="codestoquelocal"
+                label="Loja"
+                outlined
+                somente-controla-estoque
+              />
             </div>
             <div class="col-12 col-sm-6">
               <q-option-group v-model="lado" :options="LADOS" type="radio" inline />
@@ -66,7 +71,7 @@ onMounted(() => {
           >
             <q-item-section>
               <q-item-label class="ellipsis">
-                #{{ formataCodigo(n.codnegocio) }} · {{ n.siglaorigem }}
+                {{ formataCodigo(n.codnegocio) }} · {{ n.siglaorigem }}
                 <template v-if="n.sigladestino"> para {{ n.sigladestino }}</template>
                 · {{ n.fantasia }}
               </q-item-label>

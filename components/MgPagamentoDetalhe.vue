@@ -132,11 +132,13 @@ const pedirMotivo = (titulo, mensagem, rotulo) =>
 
 // cancelar: o pagamento não aconteceu como foi lançado (digitado errado, baixa no título errado);
 // sai do razão e as baixas são estornadas junto. O PIX volta a ficar sem uso e o cartão volta a ser
-// só o pedido, para a baixa certa
+// só o pedido, para a baixa certa. O integrado da venda sai da venda, aberta (TASK-30)
 const cancelar = () => {
   pedirMotivo(
     'Cancelar pagamento',
-    'Cancelar diz que este pagamento não aconteceu como foi lançado: ele sai do caixa/banco e as baixas dos títulos são estornadas. PIX e cartão voltam a ficar disponíveis para a baixa certa. Informe o motivo:',
+    pag.value.codnegocio
+      ? `Cancelar diz que este pagamento não aconteceu: ele sai da venda ${formataCodigo(pag.value.codnegocio)}, que precisa estar aberta (reabra antes), e a cobrança se solta dela. O estorno na maquininha é feito nela. Informe o motivo:`
+      : 'Cancelar diz que este pagamento não aconteceu como foi lançado: ele sai do caixa/banco e as baixas dos títulos são estornadas. PIX e cartão voltam a ficar disponíveis para a baixa certa. Informe o motivo:',
     'Cancelar pagamento',
   ).onOk(async (justificativa) => {
     try {

@@ -102,7 +102,7 @@ class PixService
     public static function criarPixCobPdv(Float $valor, ?Pdv $pdv, ?Negocio $negocio, int $codportador = null, ?Pessoa $pessoa = null)
     {
         $pessoa = $negocio->Pessoa ?? $pessoa;
-        $codfilial = $negocio->codfilial ?? $pdv->codfilial ?? null;
+        $codfilial = $negocio->codfilial ?? $pdv->EstoqueLocal->codfilial ?? null;
 
         // procura ou cria registro
         $cob = new PixCob([
@@ -315,7 +315,7 @@ class PixService
         ]);
         PagamentoService::preencher($pag, [
             'codnegocio' => $cob->codnegocio,
-            'codfilial' => $cob->Negocio->codfilial ?? $cob->Pdv->codfilial ?? $cob->Portador->codfilial,
+            'codfilial' => $cob->Negocio->codfilial ?? $cob->Pdv->EstoqueLocal->codfilial ?? $cob->Portador->codfilial,
             'codpdv' => $cob->codpdv ?? $cob->Negocio->codpdv ?? null,
             'meio' => PagamentoService::MEIO_PIX,
             'principal' => $valorpagamento,

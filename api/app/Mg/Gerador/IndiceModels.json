@@ -245,11 +245,6 @@
         "coluna": "codfilial",
         "metodo": "PagarMePosS"
       },
-      "tblpdv.codfilial": {
-        "tabela": "tblpdv",
-        "coluna": "codfilial",
-        "metodo": "PdvS"
-      },
       "tblportador.codfilial": {
         "tabela": "tblportador",
         "coluna": "codfilial",
@@ -5831,11 +5826,6 @@
     "classe": "Pdv",
     "arquivo": "/opt/www/MGspa/api/app/Mg/Pdv/Pdv.php",
     "belongsTo": {
-      "codfilial": {
-        "tabela": "tblfilial",
-        "coluna": "codfilial",
-        "metodo": "Filial"
-      },
       "codusuarioalteracao": {
         "tabela": "tblusuario",
         "coluna": "codusuarioalteracao",

@@ -7,6 +7,7 @@ import { pagarMeStore } from '@components/stores/pagarMeStore'
 import { formataNumero, formataTimestampCompleto } from '@components/formatters'
 import { useConsultaAutomatica } from './useConsultaAutomatica.js'
 import { avisar } from './eventos.js'
+import { cancelarPagamento } from './cancelarPagamento.js'
 
 const $q = useQuasar()
 const sPagarMe = pagarMeStore()
@@ -81,6 +82,20 @@ const onShow = () => {
 const onHide = () => {
   parar()
   confirmacao?.hide()
+}
+
+// o pagamento que esta cobrança gerou: cancela em qualquer tela; quem pode e o que falta (a venda
+// aberta), o servidor diz (TASK-30)
+const cancelarPagamentoGerado = async () => {
+  const ok = await cancelarPagamento({
+    codpagamento: sPagarMe.pedido.codpagamento,
+    codnegocio: sPagarMe.pedido.codnegocio,
+    aviso: 'Não estorna na maquininha: o estorno é feito nela.',
+  })
+  if (ok) {
+    sPagarMe.pedido.codpagamento = null
+    sPagarMe.dialog.detalhesPedido = false
+  }
 }
 </script>
 <template>
@@ -253,6 +268,14 @@ const onHide = () => {
           @click="desistir()"
           tabindex="-1"
           v-if="sPagarMe.pedido.status == 1"
+        />
+        <q-btn
+          v-if="sPagarMe.pedido.codpagamento"
+          flat
+          label="Cancelar pagamento"
+          color="negative"
+          @click="cancelarPagamentoGerado()"
+          tabindex="-1"
         />
         <q-btn flat label="consultar" color="primary" @click="consultar()" ref="btnConsultarRef" />
         <q-btn

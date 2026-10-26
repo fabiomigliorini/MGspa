@@ -25,6 +25,7 @@ class EstoqueLocal extends MgModel
         'codfilial',
         'codimpressora',
         'controlaestoque',
+        'defeito',
         'deposito',
         'estoquelocal',
         'inativo',
@@ -40,6 +41,7 @@ class EstoqueLocal extends MgModel
         'codusuariocriacao' => 'integer',
         'controlaestoque' => 'boolean',
         'criacao' => 'datetime',
+        'defeito' => 'boolean',
         'deposito' => 'boolean',
         'inativo' => 'datetime'
     ];

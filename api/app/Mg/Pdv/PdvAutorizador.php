@@ -42,7 +42,7 @@ class PdvAutorizador
         if (static::proprio($pdv, $uuid)) {
             return;
         }
-        static::autorizar($pdv->codfilial);
+        static::autorizar($pdv->EstoqueLocal?->codfilial);
     }
 
     // filiais cujos dispositivos o usuario ve; null = todas

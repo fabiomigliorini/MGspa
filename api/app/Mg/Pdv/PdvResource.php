@@ -19,7 +19,9 @@ class PdvResource extends JsonResource
         $ret = parent::toArray($request);
 
         // Chave Extrangeira
-        $ret['filial'] = @$this->Filial->filial;
+        // a filial do dispositivo e' a do local de estoque (TASK-257)
+        $ret['codfilial'] = $this->EstoqueLocal?->codfilial;
+        $ret['filial'] = $this->EstoqueLocal?->Filial?->filial;
         $ret['setor'] = $this->Setor?->setor ?? null;
         $ret['portador'] = $this->Portador?->portador ?? null;
 

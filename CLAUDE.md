@@ -187,10 +187,18 @@ manutenção. Select novo nasce em `MgSelect`.
 de bipar (aceita `5*` para a quantidade) com a lupa e o F1 que abrem a pesquisa em grade
 (`MgDialogPesquisaProduto` + `MgGradeProduto`, a mesma do PDV): um card por produto, a variação e
 a embalagem escolhidas numa janela de duas colunas. Filtra como o PDV: todas as palavras digitadas
-têm que estar na descrição, a primeira começando uma palavra (`GET v1/produto-barra/pesquisa`). O
-código bipado se resolve em `GET v1/produto-barra/barras/{barras}`, no mesmo shape da linha da
-pesquisa. O `MgSelectProdutoBarra` está saindo (TASK-250): escolha de produto nova que nascer nele
+têm que estar na descrição, a primeira começando uma palavra (`GET v1/produto-barra/pesquisa`), e
+acha também pela referência do produto, da variação e da barra. Esse filtro é um motor só,
+`ProdutoBarraService::sqlBusca`, que o gerador de requisição também usa (TASK-258): pesquisa de
+produto nova no servidor monta em volta dele, não copia o filtro. O código bipado se resolve em
+`GET v1/produto-barra/barras/{barras}`, no mesmo shape da linha da pesquisa. O `MgSelectProdutoBarra` está saindo (TASK-250): escolha de produto nova que nascer nele
 é regressão.
+
+O card traz o estoque físico do produto, somado nas variações, de todos os locais ou do local do
+select Saldo da pesquisa (`GET v1/produto/{codproduto}/saldo[/{codestoquelocal}]`, 5 minutos no
+`@components/stores/saldoEstoqueStore`); sem estoque, a foto fica cinza. A tela que tem um local
+de contexto passa `:codestoquelocal` ao `MgInputProdutoBarras` e o select começa nele (na
+requisição, a loja requisitada). O select só mostra: não filtra a lista (TASK-254).
 
 **Quantidade respeita as casas decimais da unidade de medida.** `tblunidademedida.decimais` diz
 quantas casas a quantidade aceita: 0 é só inteiro (UN, PT, RL…), MT tem 2, KG tem 3. O catálogo do
@@ -250,3 +258,9 @@ do negócio, página do dispositivo) usa `PdvService::uuid($request)` e `PdvServ
 dispositivo a uma pessoa, use o código (`formataCodigo(codpdv)`) e o apelido. É assim desde a
 **TASK-197** (19/10/2026): `pdv: sSinc.pdv.uuid` em parâmetro ou corpo, ou o uuid do PDV num
 template, que aparecer num diff é regressão.
+
+**A loja do PDV é a do local de estoque.** O dispositivo não tem filial própria: o
+`tblpdv.codfilial` saiu na **TASK-257** (24/10/2026). Quem precisa da filial do PDV usa
+`$pdv->EstoqueLocal->codfilial` (em SQL, o `join tblestoquelocal` pelo `codestoquelocal`); o
+`PdvResource` e o `select/pdv` continuam devolvendo `codfilial`/`filial`, calculados do local.
+`$pdv->codfilial`, `Pdv->Filial` ou filial lida do `tblpdv` que aparecer num diff é regressão.

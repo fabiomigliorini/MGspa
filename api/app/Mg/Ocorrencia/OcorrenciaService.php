@@ -94,10 +94,11 @@ class OcorrenciaService
     }
 
     // A ocorrencia e' da loja do PDV (quem confere e' o gerente de la'),
-    // mesmo quando o estoque do negocio e' de outra filial
+    // mesmo quando o estoque do negocio e' de outra filial. A loja do PDV e' a
+    // do local de estoque dele (TASK-257)
     public static function filial(?Pdv $pdv, $codfilial): ?int
     {
-        return $pdv->codfilial ?? $codfilial;
+        return $pdv->EstoqueLocal->codfilial ?? $codfilial;
     }
 
     // Uma vez so' por registro e tipo; com auditorias, amarra
@@ -487,9 +488,10 @@ class OcorrenciaService
     public static function esquecidos(?int $codportador = null): int
     {
         $sql = '
-            select n.codnegocio, n.codpdv, p.codfilial, n.codusuario, n.valortotal, n.alteracao
+            select n.codnegocio, n.codpdv, el.codfilial, n.codusuario, n.valortotal, n.alteracao
             from tblnegocio n
             inner join tblpdv p on (p.codpdv = n.codpdv)
+            left join tblestoquelocal el on (el.codestoquelocal = p.codestoquelocal)
             where n.codnegociostatus = :aberto
             and p.monitoramento is not null
             and n.criacao >= p.monitoramento

@@ -12,7 +12,7 @@ class NegocioEntregaResource extends JsonResource
         unset($ret['usuario_criacao']);
         $ret['resultadodescricao'] = NegocioEntrega::RESULTADOS[$this->resultado] ?? null;
         $ret['motivodescricao'] = NegocioEntrega::MOTIVOS[$this->resultado][$this->motivo] ?? null;
-        $ret['usuariocriacao'] = $this->UsuarioCriacao->usuario ?? null;
+        $ret['usuariocriacao'] = $this->usuariocriacao;
         return $ret;
     }
 }

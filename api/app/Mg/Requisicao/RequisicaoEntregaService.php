@@ -34,6 +34,18 @@ class RequisicaoEntregaService
         return in_array($req->destino, [Requisicao::DESTINO_RETIRA, Requisicao::DESTINO_ENTREGA]);
     }
 
+    // o codigo com o meio escondido (773982 -> 77XX82): vai na via de separacao e na
+    // tela, para conferir a caixa com o do cliente; o inteiro so' na via do cliente, e a
+    // entrega continua pedindo o codigo inteiro
+    public static function codigoRetiradaMascarado(Requisicao $req): ?string
+    {
+        if (!static::comCodigo($req) || empty($req->codigoretirada)) {
+            return null;
+        }
+        $codigo = (string) $req->codigoretirada;
+        return substr($codigo, 0, 2) . str_repeat('X', strlen($codigo) - 4) . substr($codigo, -2);
+    }
+
     // retirada/entrega: a loja que atende (ou Gerente); reposicao: a loja que pediu (ou Gerente)
     public static function podeEntregar(Requisicao $req, ?Pdv $pdv): bool
     {

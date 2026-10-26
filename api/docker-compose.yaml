@@ -25,7 +25,7 @@ services:
       - /opt/www:/opt/www
       - /media/publico:/media/publico
       - /tmp:/tmp/host
-      - /etc/timezone:/etc/timezone:ro
+      #- /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - /usr/share/zoneinfo:/usr/share/zoneinfo
     extra_hosts:
@@ -53,7 +53,7 @@ services:
     volumes:
       - /opt/www:/opt/www
       - /media/publico:/media/publico
-      - /etc/timezone:/etc/timezone:ro
+      #- /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - /usr/share/zoneinfo:/usr/share/zoneinfo
     extra_hosts:
@@ -92,7 +92,7 @@ services:
     volumes:
       - /opt/www:/opt/www
       - /media/publico:/media/publico
-      - /etc/timezone:/etc/timezone:ro
+      #- /etc/timezone:/etc/timezone:ro
       - /etc/localtime:/etc/localtime:ro
       - /usr/share/zoneinfo:/usr/share/zoneinfo
     extra_hosts:

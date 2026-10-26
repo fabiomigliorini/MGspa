@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref, watch } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
 import MgInput from '@components/MgInput.vue'
@@ -42,13 +42,25 @@ function abrir() {
   dialog.value = true
 }
 
+// depois de registrar o formulário volta vazio: sem acusar o "Quem recebeu" que acabou de limpar
+const refForm = ref(null)
+async function registrar() {
+  if (await sEntrega.registrar(sNegocio.negocio.codnegocio)) {
+    await nextTick()
+    refForm.value?.resetValidation()
+  }
+}
+
 function estornar(e) {
   $q.dialog({
     title: 'Estornar',
     message: `Estornar o registro "${resultado(e.resultado).label}" de ${formataTimestamp(e.data)}?`,
     cancel: { label: 'Voltar', color: 'grey-8', flat: true },
     ok: { label: 'Estornar', color: 'red-5', flat: true },
-  }).onOk(() => sEntrega.estornar(e))
+  }).onOk(async () => {
+    await sEntrega.estornar(e)
+    refForm.value?.resetValidation()
+  })
 }
 </script>
 
@@ -106,7 +118,7 @@ function estornar(e) {
           </q-item>
         </q-list>
         <q-separator v-if="entregas.length" />
-        <q-form @submit.prevent="sEntrega.registrar(sNegocio.negocio.codnegocio)">
+        <q-form ref="refForm" @submit.prevent="registrar">
           <q-card-section>
             <div class="row q-col-gutter-md">
               <div class="col-12">

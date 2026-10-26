@@ -538,13 +538,19 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Requisicao entre lojas (TASK-55, doc-6): o dispositivo (X-Pdv) diz de que loja e' quem esta' na tela
     Route::middleware('pdv')->group(function () {
         Route::get('requisicao/painel', [\Mg\Requisicao\RequisicaoController::class, 'painel']);
-        Route::get('requisicao/sugestao', [\Mg\Requisicao\RequisicaoController::class, 'sugestao']);
+        Route::get('requisicao', [\Mg\Requisicao\RequisicaoController::class, 'index']);
+        // gerador de requisicao (TASK-258): so' consulta
+        Route::get('requisicao/gerador/marcas', [\Mg\Requisicao\RequisicaoController::class, 'geradorMarcas']);
+        Route::get('requisicao/gerador/produtos', [\Mg\Requisicao\RequisicaoController::class, 'geradorProdutos']);
+        Route::get('requisicao/gerador/produto/{codproduto}', [\Mg\Requisicao\RequisicaoController::class, 'geradorProduto'])->whereNumber('codproduto');
+        Route::get('requisicao/gerador/situacao', [\Mg\Requisicao\RequisicaoController::class, 'geradorSituacao']);
         Route::get('requisicao/rascunho/negocio/{codnegocio}', [\Mg\Requisicao\RequisicaoController::class, 'rascunhoDoNegocio'])->whereNumber('codnegocio');
         Route::get('requisicao/negocio/{codnegocio}', [\Mg\Requisicao\RequisicaoController::class, 'doNegocio'])->whereNumber('codnegocio');
         Route::post('requisicao', [\Mg\Requisicao\RequisicaoController::class, 'store']);
         Route::get('requisicao/{codrequisicao}', [\Mg\Requisicao\RequisicaoController::class, 'show'])->whereNumber('codrequisicao');
         Route::put('requisicao/{codrequisicao}', [\Mg\Requisicao\RequisicaoController::class, 'update'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/cancelar', [\Mg\Requisicao\RequisicaoController::class, 'cancelar'])->whereNumber('codrequisicao');
+        Route::put('requisicao/{codrequisicao}/prioridade', [\Mg\Requisicao\RequisicaoController::class, 'prioridade'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/imprimir', [\Mg\Requisicao\RequisicaoController::class, 'imprimir'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/item', [\Mg\Requisicao\RequisicaoController::class, 'incluirEnviadoAMais'])->whereNumber('codrequisicao');
         Route::put('requisicao-item/{codrequisicaoitem}', [\Mg\Requisicao\RequisicaoController::class, 'justificarItem'])->whereNumber('codrequisicaoitem');
@@ -1180,6 +1186,10 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('{codproduto}/notas', '\Mg\Produto\ProdutoController@notas');
         Route::get('{codproduto}/compras', '\Mg\Produto\ProdutoController@compras');
 
+        // Saldo físico somado no card da pesquisa em grade (TASK-254): todos os locais, ou um
+        Route::get('{codproduto}/saldo/{codestoquelocal?}', '\Mg\Produto\ProdutoController@saldo')
+            ->whereNumber(['codproduto', 'codestoquelocal']);
+
         // Integrações
         Route::get('{codproduto}/mercos', '\Mg\Produto\ProdutoController@mercos');
         Route::post('{codproduto}/mercos/exportar', '\Mg\Produto\ProdutoController@mercosExportar');
@@ -1322,6 +1332,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     // Pagamentos: listagem unica e baixa de titulos (M6/M6.1 doc-3; era liquidacao-titulo)
     Route::get('pagamento', '\Mg\Pagamento\PagamentoController@index');
     Route::get('pagamento/relatorio', '\Mg\Pagamento\PagamentoController@relatorio');
+    Route::get('pagamento/contabilidade', '\Mg\Pagamento\PagamentoController@contabilidade');
     Route::get('pagamento/divergencia', '\Mg\Pagamento\PagamentoController@divergencias');
     Route::get('pagamento/{id}', '\Mg\Pagamento\PagamentoController@show')->where('id', '[0-9]+');
     Route::post('pagamento', '\Mg\Pagamento\PagamentoController@store');

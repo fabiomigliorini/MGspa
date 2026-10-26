@@ -34,7 +34,7 @@ onMounted(() => sLocal.carregarLista())
             :to="{ name: 'estoque-local-detalhe', params: { id: l.codestoquelocal } }"
           >
             <q-item-section avatar>
-              <q-avatar color="brown-6" text-color="white">{{ l.sigla }}</q-avatar>
+              <q-avatar color="brown-6" text-color="white" font-size="14px">{{ l.sigla }}</q-avatar>
             </q-item-section>
             <q-item-section>
               <q-item-label class="ellipsis" :class="{ 'text-strike text-grey-6': l.inativo }">
@@ -44,6 +44,7 @@ onMounted(() => sLocal.carregarLista())
                 {{ formataCodigo(l.codestoquelocal) }} · {{ l.filial }}
                 <template v-if="l.deposito"> · depósito</template>
                 <template v-if="!l.controlaestoque"> · não controla estoque</template>
+                <template v-if="l.defeito"> · defeito</template>
               </q-item-label>
               <q-item-label v-if="l.impressora" caption class="ellipsis">
                 <q-icon name="print" /> {{ l.impressora }}

@@ -4,7 +4,9 @@ namespace Mg\Requisicao;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\RateLimiter;
 use Mg\Impressora\ImpressoraService;
 use Mg\Negocio\Negocio;
 use Mg\Pdv\PdvService;
@@ -17,12 +19,92 @@ class RequisicaoController extends Controller
     {
         $request->validate([
             'codestoquelocal' => 'required|integer',
-            'lado' => 'required|in:atender,requisitar',
         ]);
-        return response()->json(RequisicaoService::painel(
+        return response()->json(RequisicaoService::painel((int) $request->codestoquelocal));
+    }
+
+    public function index(Request $request)
+    {
+        $filtros = $request->validate([
+            'codrequisicao' => 'nullable|integer',
+            'codnegocio' => 'nullable|integer',
+            'codpessoa' => 'nullable|integer',
+            'codestoquelocalrequisitante' => 'nullable|integer',
+            'codestoquelocalrequisitada' => 'nullable|integer',
+            'status' => 'nullable|in:A,S,P,T,D,E,C',
+            'destino' => 'nullable|in:R,E,L',
+            'prioridade' => 'nullable|in:' . implode(',', array_keys(Requisicao::PRIORIDADES)),
+            'de' => 'nullable|date',
+            'ate' => 'nullable|date',
+            'busca' => 'nullable|string|max:100',
+            'telefone' => 'nullable|string|max:20',
+            'codigoretirada' => 'nullable|digits_between:1,6',
+            'page' => 'nullable|integer|min:1',
+        ]);
+        // o codigo de retirada e' a prova de quem retira: as mesmas poucas tentativas por
+        // minuto da entrega, senao a listagem vira o jeito de descobrir o codigo
+        if (!empty($filtros['codigoretirada'])) {
+            $chave = 'requisicao-codigoretirada:' . Auth::id();
+            if (RateLimiter::tooManyAttempts($chave, 10)) {
+                abort(429, 'Muitas tentativas com o código de retirada. Espere um minuto.');
+            }
+            RateLimiter::hit($chave, 60);
+        }
+        $page = (int) ($filtros['page'] ?? 1);
+        return response()->json(RequisicaoService::pesquisar(
+            $filtros,
+            RequisicaoService::POR_PAGINA,
+            ($page - 1) * RequisicaoService::POR_PAGINA
+        ));
+    }
+
+    // Gerador de requisicao (TASK-258): so' consulta; o Gerar usa o store
+    public function geradorMarcas(Request $request)
+    {
+        $filtros = $request->validate([
+            'codestoquelocal' => 'required|integer',
+            'abc' => 'nullable|in:' . implode(',', array_keys(RequisicaoGeradorService::ABC)),
+            'situacao' => 'nullable|in:' . RequisicaoGeradorService::SITUACAO_ABAIXO . ',' . RequisicaoGeradorService::SITUACAO_ZERADO,
+        ]);
+        return response()->json(RequisicaoGeradorService::marcas((int) $filtros['codestoquelocal'], $filtros));
+    }
+
+    public function geradorProdutos(Request $request)
+    {
+        $filtros = $request->validate([
+            'codestoquelocal' => 'required|integer',
+            'codmarca' => 'nullable|integer',
+            'busca' => 'nullable|string|max:100',
+            'abc' => 'nullable|in:' . implode(',', array_keys(RequisicaoGeradorService::ABC)),
+            'situacao' => 'nullable|in:' . RequisicaoGeradorService::SITUACAO_ABAIXO . ',' . RequisicaoGeradorService::SITUACAO_ZERADO,
+            'ordem' => 'nullable|in:alfabetica,furo',
+            'page' => 'nullable|integer|min:1',
+        ]);
+        return response()->json(RequisicaoGeradorService::produtos(
+            (int) $filtros['codestoquelocal'],
+            $filtros,
+            (int) ($filtros['page'] ?? 1)
+        ));
+    }
+
+    public function geradorProduto(Request $request, $codproduto)
+    {
+        $request->validate([
+            'codestoquelocal' => 'required|integer',
+        ]);
+        return response()->json(RequisicaoGeradorService::produto((int) $codproduto, (int) $request->codestoquelocal));
+    }
+
+    public function geradorSituacao(Request $request)
+    {
+        $request->validate([
+            'codestoquelocal' => 'required|integer',
+            'codprodutovariacao' => 'required|array|max:500',
+            'codprodutovariacao.*' => 'integer',
+        ]);
+        return response()->json(RequisicaoGeradorService::situacoes(
             (int) $request->codestoquelocal,
-            $request->lado,
-            filter_var($request->input('finalizadas', false), FILTER_VALIDATE_BOOLEAN)
+            $request->codprodutovariacao
         ));
     }
 
@@ -30,22 +112,6 @@ class RequisicaoController extends Controller
     {
         return response()->json(RequisicaoService::rascunhoDoNegocio(
             Negocio::with(['Pessoa.Cidade.Estado'])->findOrFail($codnegocio)
-        ));
-    }
-
-    public function sugestao(Request $request)
-    {
-        $request->validate([
-            'codestoquelocalrequisitante' => 'required|integer',
-            'codestoquelocalrequisitada' => 'required|integer',
-            'codmarca' => 'nullable|integer',
-            'abc' => 'nullable|string|max:2',
-        ]);
-        return response()->json(RequisicaoService::sugestao(
-            (int) $request->codestoquelocalrequisitante,
-            (int) $request->codestoquelocalrequisitada,
-            $request->codmarca ? (int) $request->codmarca : null,
-            $request->abc
         ));
     }
 
@@ -125,6 +191,23 @@ class RequisicaoController extends Controller
         $req = DB::transaction(function () use ($request, $codrequisicao, $pdv) {
             $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
             return RequisicaoService::atualizar($req, $request->validated(), $pdv);
+        });
+        return new RequisicaoResource($req->load(RequisicaoResource::RELACOES));
+    }
+
+    // troca so' a prioridade, com o motivo (vai para a auditoria)
+    public function prioridade(Request $request, $codrequisicao)
+    {
+        $dados = $request->validate([
+            'prioridade' => 'required|in:' . implode(',', array_keys(Requisicao::PRIORIDADES)),
+            'motivo' => 'required|string|max:300',
+        ], [
+            'motivo.required' => 'Informe o motivo!',
+        ]);
+        $pdv = $request->attributes->get('pdv');
+        $req = DB::transaction(function () use ($codrequisicao, $dados, $pdv) {
+            $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
+            return RequisicaoService::prioridade($req, (int) $dados['prioridade'], $dados['motivo'], $pdv);
         });
         return new RequisicaoResource($req->load(RequisicaoResource::RELACOES));
     }

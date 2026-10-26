@@ -209,6 +209,40 @@ class ProdutoService extends MgService
         return array_values($locais);
     }
 
+    /**
+     * Saldo físico do produto somado em todas as variações, no card da pesquisa em grade
+     * (TASK-254): em todos os locais, ou só no $codestoquelocal. O mesmo saldo da
+     * ProdutoVariacaoService::saldo, sem abrir por local.
+     */
+    public static function saldo(int $codproduto, ?int $codestoquelocal = null): array
+    {
+        $produto = Produto::findOrFail($codproduto);
+        $filtro = ['codproduto' => $produto->codproduto];
+        $local = '';
+        if ($codestoquelocal !== null) {
+            $local = 'AND elpv.codestoquelocal = :codestoquelocal';
+            $filtro['codestoquelocal'] = $codestoquelocal;
+        }
+        $saldo = DB::selectOne("
+            SELECT coalesce(sum(es.saldoquantidade), 0) AS saldo
+            FROM tblprodutovariacao pv
+            INNER JOIN tblestoquelocalprodutovariacao elpv ON (elpv.codprodutovariacao = pv.codprodutovariacao)
+            INNER JOIN tblestoquesaldo es ON (
+                es.codestoquelocalprodutovariacao = elpv.codestoquelocalprodutovariacao
+                AND es.fiscal = false
+            )
+            WHERE pv.codproduto = :codproduto
+            {$local}
+        ", $filtro)->saldo;
+
+        return [
+            'codproduto' => $produto->codproduto,
+            'codestoquelocal' => $codestoquelocal,
+            'decimais' => (int) $produto->UnidadeMedida->decimais,
+            'saldo' => (float) $saldo,
+        ];
+    }
+
     public static function negocios($codproduto, array $filter): array
     {
         $sql = "

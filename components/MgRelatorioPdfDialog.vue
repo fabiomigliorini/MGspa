@@ -12,6 +12,8 @@ const props = defineProps({
   },
   onImprimir: { type: Function, default: null },
   imprimirLabel: { type: String, default: 'Imprimir' },
+  // fecha a janela e só depois chama o onImprimir (ex.: ele abre a escolha da impressora)
+  fecharAoImprimir: { type: Boolean, default: false },
 })
 
 defineEmits([...useDialogPluginComponent.emits])
@@ -26,9 +28,7 @@ const cardStyle = computed(() =>
 
 const imprimindo = ref(false)
 
-const handleImprimir = async () => {
-  if (!props.onImprimir) return
-  imprimindo.value = true
+const imprimir = async () => {
   try {
     await props.onImprimir()
   } catch (e) {
@@ -36,14 +36,37 @@ const handleImprimir = async () => {
       type: 'negative',
       message: e?.response?.data?.message || e?.message || 'Erro ao imprimir',
     })
+  }
+}
+
+// Com fecharAoImprimir a janela sai antes e o onImprimir roda quando ela terminou
+// de fechar: o q-dialog devolve o foco para quem o abriu ao fechar, e isso
+// roubaria o foco do que o onImprimir abrir (o filtro da escolha da impressora).
+let imprimirAoFechar = false
+
+const handleImprimir = async () => {
+  if (!props.onImprimir) return
+  if (props.fecharAoImprimir) {
+    imprimirAoFechar = true
+    dialogRef.value?.hide()
+    return
+  }
+  imprimindo.value = true
+  try {
+    await imprimir()
   } finally {
     imprimindo.value = false
   }
 }
+
+const aoFechar = () => {
+  onDialogHide()
+  if (imprimirAoFechar) imprimir()
+}
 </script>
 
 <template>
-  <q-dialog ref="dialogRef" @hide="onDialogHide">
+  <q-dialog ref="dialogRef" @hide="aoFechar">
     <q-card bordered flat class="column" :style="cardStyle">
       <q-card-section
         class="text-grey-9 text-overline row items-center q-py-sm text-h2 text-uppercase"

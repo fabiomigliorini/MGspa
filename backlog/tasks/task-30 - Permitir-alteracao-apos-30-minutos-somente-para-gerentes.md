@@ -5,7 +5,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-10 19:46'
+updated_date: '2026-10-23 22:35'
 labels:
   - negocios
 dependencies: []
@@ -41,6 +41,7 @@ Decisões do Fábio (09-10/10/2026), plano completo em ~/.claude/plans/precisamo
 - [x] #9 Listagem do PDV filtra os Reabertos
 - [x] #10 Depois do F3 a venda fechada continua mostrando riscado o pagamento cancelado e a parcela tirada (só a venda aberta comum esconde)
 - [x] #11 Duplicar a venda reaberta gera um negócio aberto comum, não reaberto
+- [x] #12 Gerente cancela o pagamento integrado (cartão SafraPay/Stone, PIX) na janela da cobrança e no detalhe do pagamento, em qualquer tela, com justificativa: sai da venda e do lote, a cobrança se solta da venda e a consulta não traz de volta; venda fechada recusa pedindo para reabrir
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -59,6 +60,28 @@ Testado em dev pelo tinker (transação desfeita no fim): F3 sem mexer = no-op; 
 Fechada mostra o cancelado (10/10/2026): PdvNegocioPagamentoService::mostrarCancelado — pagamento C e parcela inativa só ficam escondidos na venda aberta comum; na reaberta, fechada e cancelada voltam riscados. No PDV, a decisão de emitir nota (romaneioOuNotaVendaPadrao) e o cartão do contra-vale passam a usar pagamentosAtivos/parcelasAtivas, para o cancelado não contar.
 
 Duplicar a reaberta (10/10/2026): o duplicar() do PDV (negocios/src/stores/negocio.js) copiava o negócio inteiro com a reabertura, e a cópia aparecia como reaberta. Só no aparelho — o servidor não aceita reabertura no PUT (fora do fillable) —, mas o PDV tratava a cópia como reaberta (PIX/cartão no portador e na data da venda original). Agora a cópia nasce com reabertura = null. Cópia feita antes da correção se acerta com o botão de recarregar do servidor no detalhe do negócio.
+
+Reaberta (23/10/2026), relato do Fábio: o gerente estornou na maquininha o débito SafraPay de R$ 608,60 da venda #04651600 (fechada, NFC-e autorizada) e não havia como registrar. Nenhum caminho cancelava o integrado da venda: a janela da cobrança só tinha Consultar; PagamentoTituloService::cancelar recusava 'Pagamento de venda: cancele pelo negócio'; na reaberta o integrado ficava travado (AC #3). A decisão do Fábio de 16/10 ('o automático também, mas só Administrador ou Gerente') substitui o 'integrado fica travado' do AC #3. Além disso, a consulta da Stone ressuscitava o pagamento cancelado (PagarMeService::vincularPagamento volta C->P->E com o pedido ainda na venda).
+
+Correção:
+- api/app/Mg/Pagamento/PagamentoTituloAutorizador.php motivoBloqueioEstorno: pagamento de venda = ConferenciaAutorizador::pode (Gerente da filial, Financeiro, Admin), o mesmo do Reabrir.
+- api/app/Mg/Pagamento/PagamentoTituloService.php cancelar: o integrado da venda vai para PdvNegocioPagamentoService::cancelarIntegrado; o manual da venda continua recusando ('reabra a venda e cancele no PDV').
+- api/app/Mg/Pdv/PdvNegocioPagamentoService.php cancelarIntegrado: venda aberta (reaberta ou não), senão 'Reabra a venda #N'; exigirAberta (lote conferido/sessão fechada/conferido recusam); indevido + PagamentoService::cancelar (sai do razão e do lote; PIX volta a Sem uso); solta a cobrança (codnegocio nulo em PixCob/PagarMePedido/SaurusPedido), para a consulta não trazer de volta; auditoria tipo 23 'Pagamento integrado cancelado' com a justificativa; recalcularTotal.
+- api/app/Mg/Pagamento/PagamentoDetalheResource.php: cancelavel também no integrado da venda.
+- components/cobranca/cancelarPagamento.js (novo) + SaurusPedidoDialog, PagarMePedidoDialog, PixCobDialog: botão 'Cancelar pagamento' (vermelho) sempre que a cobrança tem pagamento ativo, em todas as telas que abrem a janela (PDV, Pagamentos do Contas e do PDV, baixa de títulos). Pede o motivo, chama v1/pagamento/{id}/cancelar e avisa cobrancaAtualizada (a venda na tela recarrega).
+- components/MgPagamentoDetalhe.vue: mensagem do Cancelar para o pagamento de venda.
+
+Teste (dev):
+1. Venda fechada paga com SafraPay; como gerente, clicar no cartão -> Cancelar pagamento: recusa pedindo para reabrir. Reabrir, Cancelar pagamento com motivo: linha riscada; psql: tblpagamento estado C, indevido true, codmaquinetalote nulo; tblsauruspedido.codnegocio nulo; tblauditoria tipo 23. Lançar dinheiro e F3: fecha com a mesma data/caixa/PDV.
+2. Stone na venda: mesmo roteiro; consultar o pedido depois: o pagamento não volta.
+3. PIX na venda: cancelar; o PIX aparece em Sem uso na tela PIX do Contas.
+4. Detalhe do pagamento (Contas e PDV -> Pagamentos): cartão integrado de venda mostra Cancelar (block) e funciona igual.
+5. Baixa de títulos com cartão (Contas): na janela da cobrança paga, Cancelar pagamento estorna as baixas.
+6. Caixa sem grupo: botão aparece, servidor recusa 'só Financeiro, Administrador ou Gerente da filial'.
+7. Lote da maquininha conferido: recusa com a mensagem do lote, sem mudar nada.
+8. Manual da venda pelo detalhe: recusa 'reabra a venda e cancele no PDV'.
+
+Validado pelo Fábio em 23/10/2026 ('funcionou'). doc-3 atualizado: o integrado se cancela (baixa: TASK-218; venda: TASK-30).
 <!-- SECTION:NOTES:END -->
 
 ## Comments

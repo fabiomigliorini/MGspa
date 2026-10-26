@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\URL;
 use Mg\Estoque\EstoqueLocalProdutoVariacao;
 use Mg\Impressora\Impressora;
 use Mg\Impressora\ImpressoraService;
+use Mg\Vale\ValeModeloRelatorioService;
 
 // As duas vias da requisicao (TASK-55, doc-6): a da loja que pede (autorizacao de
 // retirada com o codigo) sai na impressora do PDV que registrou; a de separacao
@@ -66,32 +67,48 @@ class RequisicaoImpressaoService
         return $partes ? implode(' ', $partes) : null;
     }
 
+    // As tres vias saem com os itens agrupados por marca, que e' como o deposito
+    // guarda a mercadoria; dentro da marca, pela descricao. No A5 vai a foto.
     public static function pdf(Requisicao $req, string $via, string $formato): string
     {
-        $req->loadMissing(RequisicaoResource::RELACOES);
-        $itens = $req->RequisicaoItemS->where('quantidade', '>', 0)->sortBy('codrequisicaoitem')
-            ->map(function ($i) use ($req) {
+        $req->loadMissing(array_merge(RequisicaoResource::RELACOES, [
+            'RequisicaoItemS.ProdutoBarra.Produto.Marca',
+            'RequisicaoItemS.ProdutoBarra.ProdutoVariacao.Marca',
+        ]));
+        $a5 = $formato === static::FORMATO_A5;
+        $itens = $req->RequisicaoItemS->where('quantidade', '>', 0)
+            ->map(function ($i) use ($req, $a5) {
                 $pb = $i->ProdutoBarra;
                 $pe = $pb->ProdutoEmbalagem;
                 $um = $pe ? $pe->UnidadeMedida : $pb->Produto->UnidadeMedida;
+                $codimagem = $pb->ProdutoVariacao->ProdutoImagem?->codimagem;
+                // a unidade (com a quantidade da embalagem) vai embaixo da quantidade, nao na descricao
                 return [
-                    'descricao' => \Mg\Pdv\PdvCatalogoService::montarDescricaoProduto(
-                        $pb->Produto->produto,
-                        $pb->ProdutoVariacao->variacao,
-                        $um->sigla,
-                        $pe ? floatval($pe->quantidade) : null
-                    ),
+                    'descricao' => trim($pb->Produto->produto . ' ' . $pb->ProdutoVariacao->variacao),
                     'barras' => $pb->barras,
-                    'sigla' => $um->sigla,
+                    'unidade' => $um->sigla . ($pe ? ' C/' . intval($pe->quantidade) : ''),
                     'quantidade' => rtrim(rtrim(number_format($i->quantidade, 3, ',', '.'), '0'), ','),
                     'localizacao' => static::localizacao($req->codestoquelocalrequisitada, $pb->codprodutovariacao),
+                    // a variacao pode ter marca propria; senao, a do produto
+                    'marca' => ($pb->ProdutoVariacao->Marca ?? $pb->Produto->Marca)?->marca ?? 'Sem marca',
+                    'imagem' => ($a5 && $codimagem)
+                        ? config('services.mglara.imagens_url') . "/{$codimagem}.jpg"
+                        : null,
                 ];
-            })->values();
+            })
+            ->sortBy([['marca', 'asc'], ['descricao', 'asc']])
+            ->groupBy('marca');
+        // a foto que nao baixar simplesmente nao sai (ver ValeModeloRelatorioService)
+        $fotos = $a5
+            ? ValeModeloRelatorioService::miniaturas(
+                $itens->flatten(1)->pluck('imagem')->filter()->unique()->mapWithKeys(fn ($u) => [$u => $u])->all()
+            )
+            : [];
         $qrcode = $via === static::VIA_REQUISITADA ? static::qrcode($req) : null;
 
         $dompdf = new Dompdf();
-        $dompdf->loadHtml(view('requisicao.requisicao', compact('req', 'via', 'formato', 'itens', 'qrcode'))->render(), 'UTF-8');
-        if ($formato === static::FORMATO_A5) {
+        $dompdf->loadHtml(view('requisicao.requisicao', compact('req', 'via', 'formato', 'itens', 'fotos', 'qrcode'))->render(), 'UTF-8');
+        if ($a5) {
             $dompdf->setPaper('a5', 'portrait');
         } else {
             // bobina 80 mm x 297 (altura A4), igual ao romaneio
@@ -132,7 +149,9 @@ class RequisicaoImpressaoService
     {
         $avisos = [];
         if (!static::impressoraPadrao($req, static::VIA_REQUISITANTE)) {
-            $avisos[] = 'Este dispositivo não tem impressora: imprima a via do cliente pelo botão.';
+            $avisos[] = 'Este dispositivo não tem impressora: imprima a via '
+                . (RequisicaoEntregaService::comCodigo($req) ? 'do cliente' : 'da loja que pede')
+                . ' pelo botão.';
         }
         if (!static::impressoraPadrao($req, static::VIA_REQUISITADA)) {
             $avisos[] = ($req->EstoqueLocalRequisitada?->estoquelocal ?? 'A loja que atende')

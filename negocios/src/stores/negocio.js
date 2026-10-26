@@ -5,6 +5,7 @@ import { toRaw } from 'vue'
 import { db } from 'boot/db'
 import { Notify, uid } from 'quasar'
 import { sincronizacaoStore } from 'stores/sincronizacao'
+import { api } from 'src/services/api'
 import { caixaStore } from 'stores/caixa'
 import { useAuthStore } from 'stores/auth'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
@@ -733,7 +734,10 @@ export const negocioStore = defineStore('negocio', {
       return false
     },
 
-    async carregarPrimeiroVazioOuCriar() {
+    // sincronizar = false: grava só no aparelho, para quem chama mexer no negócio e mandar ao
+    // servidor uma vez só (o Separar da requisição: dois envios seguidos do negócio novo
+    // chegavam juntos e o segundo batia no uuid que o primeiro acabava de criar)
+    async carregarPrimeiroVazioOuCriar(sincronizar = true) {
       if (!sSinc.pdv.codpdv) {
         Notify.create({
           type: 'negative',
@@ -760,7 +764,7 @@ export const negocioStore = defineStore('negocio', {
       negocio = await this.criar()
       if (negocio != false) {
         await this.carregarChavesEstrangeiras()
-        await this.salvar()
+        await this.salvar(sincronizar)
         return negocio
       }
       return false
@@ -1799,6 +1803,21 @@ export const negocioStore = defineStore('negocio', {
     // digitado ou pelo Separar da requisição, a qualquer momento antes de fechar. Põe a
     // natureza de transferência e a loja destino (do QR ou informada); o Fechar confere.
     async ligarRequisicao(codrequisicao, codestoquelocaldestino = null) {
+      // requisição que não existe é recusada aqui, não na sincronização
+      try {
+        await api.get(`v1/requisicao/${parseInt(codrequisicao)}`)
+      } catch (error) {
+        Notify.create({
+          type: 'negative',
+          message:
+            error.response?.status == 404
+              ? `A requisição #${parseInt(codrequisicao)} não existe.`
+              : `Não foi possível conferir a requisição: ${error.response?.data?.message ?? error.message}`,
+          timeout: 3000,
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
+      }
       await this.recarregar()
       if (!this.podeEditar) {
         Notify.create({

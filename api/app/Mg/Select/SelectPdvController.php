@@ -9,12 +9,14 @@ use Illuminate\Support\Facades\DB;
 // PDVs (dispositivos) para o filtro da listagem de pagamentos (M6.1 doc-3)
 class SelectPdvController extends Controller
 {
+    // a filial do PDV e' a do local de estoque (TASK-257)
     const SQL = '
         select
-            d.codpdv, d.apelido, d.codfilial, f.filial, d.inativo,
+            d.codpdv, d.apelido, el.codfilial, f.filial, d.inativo,
             d.codpdv as value, coalesce(d.apelido, \'PDV \' || d.codpdv) as label
         from tblpdv d
-        left join tblfilial f on (f.codfilial = d.codfilial)
+        left join tblestoquelocal el on (el.codestoquelocal = d.codestoquelocal)
+        left join tblfilial f on (f.codfilial = el.codfilial)
     ';
 
     public static function index(Request $request)

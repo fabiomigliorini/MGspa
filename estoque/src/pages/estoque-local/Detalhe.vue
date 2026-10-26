@@ -59,7 +59,8 @@ watch(periodo, carregarIndicadores, { deep: true })
       <template v-else-if="sLocal.local">
         <q-card flat bordered class="q-mb-md">
           <q-card-section class="row items-center no-wrap">
-            <q-avatar color="brown-6" text-color="white" class="q-mr-md">
+            <q-btn flat round icon="arrow_back" class="q-mr-sm" :to="{ name: 'estoque-local' }" />
+            <q-avatar color="brown-6" text-color="white" font-size="14px" class="q-mr-md">
               {{ sLocal.local.sigla }}
             </q-avatar>
             <div class="col">
@@ -108,6 +109,7 @@ watch(periodo, carregarIndicadores, { deep: true })
                 <q-item-label>
                   {{ sLocal.local.controlaestoque ? 'Controla estoque' : 'Não controla estoque' }}
                   <template v-if="sLocal.local.deposito"> · depósito</template>
+                  <template v-if="sLocal.local.defeito"> · defeito</template>
                 </q-item-label>
               </q-item-section>
             </q-item>
@@ -183,7 +185,7 @@ watch(periodo, carregarIndicadores, { deep: true })
               <q-item-section>
                 <q-item-label>{{ i.produto }} {{ i.variacao }}</q-item-label>
                 <q-item-label caption>
-                  {{ formataData(i.criacao) }} · requisição #{{ formataCodigo(i.codrequisicao) }} de
+                  {{ formataData(i.criacao) }} · requisição {{ formataCodigo(i.codrequisicao) }} de
                   {{ i.siglarequisitante }} · {{ i.barras }}
                 </q-item-label>
                 <q-item-label caption class="text-deep-orange-7" v-if="i.motivo">

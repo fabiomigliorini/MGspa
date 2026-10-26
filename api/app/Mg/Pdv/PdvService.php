@@ -44,7 +44,6 @@ class PdvService
     // sem estes o dispositivo nao e' ativado
     const OBRIGATORIOS_ATIVAR = [
         'apelido' => 'Apelido',
-        'codfilial' => 'Filial',
         'codestoquelocal' => 'Local de Estoque',
         'codsetor' => 'Setor',
         'codnaturezaoperacao' => 'Natureza de Operação',
@@ -156,10 +155,6 @@ class PdvService
         if (empty($pdv->codestoquelocal) && !empty($legado['codestoquelocal'])) {
             $estoque = EstoqueLocal::find($legado['codestoquelocal']);
             $pdv->codestoquelocal = $estoque?->codestoquelocal;
-            // sem filial ainda, fica a do local de estoque
-            if (empty($pdv->codfilial)) {
-                $pdv->codfilial = $estoque?->codfilial;
-            }
         }
         if (empty($pdv->codnaturezaoperacao) && !empty($legado['codnaturezaoperacao'])) {
             $pdv->codnaturezaoperacao = NaturezaOperacao::find($legado['codnaturezaoperacao'])?->codnaturezaoperacao;
@@ -347,6 +342,8 @@ class PdvService
                 t.codestoquelocal,
                 t.estoquelocal,
                 t.deposito,
+                t.controlaestoque,
+                t.defeito,
                 t.inativo,
                 t.sigla,
                 f.codfilial,
@@ -501,10 +498,6 @@ class PdvService
             }
         }
         $pdv->fill($data);
-        // a filial e' sempre a do local de estoque: nao tem como ficarem incoerentes
-        if (!empty($pdv->codestoquelocal)) {
-            $pdv->codfilial = EstoqueLocal::findOrFail($pdv->codestoquelocal)->codfilial;
-        }
         if ($pdv->minutosesquecido === null) {
             $pdv->minutosesquecido = 120;
         }
@@ -516,7 +509,8 @@ class PdvService
             if ($portador->tipo !== Portador::TIPO_ESPECIE) {
                 abort(422, "O portador {$portador->portador} não é em espécie!");
             }
-            if ($portador->codfilial != $pdv->codfilial) {
+            // a filial do PDV e' a do local de estoque (TASK-257)
+            if ($portador->codfilial != EstoqueLocal::find($pdv->codestoquelocal)?->codfilial) {
                 abort(422, "O portador {$portador->portador} não é da filial do PDV!");
             }
         }

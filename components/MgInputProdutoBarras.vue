@@ -1,6 +1,6 @@
 <script setup>
 import MgInput from '@components/MgInput.vue'
-import { ref, computed, onMounted, onUnmounted } from 'vue'
+import { ref, computed, nextTick, onMounted, onUnmounted } from 'vue'
 import { Notify } from 'quasar'
 import { api } from 'src/services/api'
 import { formataNumeroInteligente } from '@components/formatters'
@@ -25,16 +25,24 @@ const props = defineProps({
   pesquisa: { type: Boolean, default: false },
   autofocus: { type: Boolean, default: false },
   bgColor: { type: String, default: '' },
+  // local em que o saldo dos cards da pesquisa começa; null = todos os locais
+  codestoquelocal: { type: Number, default: null },
 })
 
 const emit = defineEmits(['select'])
 
+const campo = ref(null)
 const codigo = ref('')
 const quantidade = ref(1)
 const buscando = ref(false)
 const dialogPesquisa = ref(false)
 
 const prefixoQuantidade = computed(() => `${formataNumeroInteligente(quantidade.value)} x`)
+
+// Depois de acrescentar um produto o foco volta para o campo, para o próximo
+// bipe cair aqui: quem escolheu na pesquisa estava com o foco na janela, e
+// quem clicou no + estava com o foco no botão.
+const focar = () => nextTick(() => campo.value?.focus())
 
 const notificar = (type, message) =>
   Notify.create({ type, message, timeout: 3000, actions: [{ icon: 'close', color: 'white' }] })
@@ -64,6 +72,7 @@ const buscar = async () => {
   try {
     const { data } = await api.get(`v1/produto-barra/barras/${encodeURIComponent(txt)}`)
     entregar(data.data)
+    focar()
   } catch (error) {
     const status = error?.response?.status
     // 404 = não achou, 409 = o código cai em vários produtos (variação de
@@ -97,6 +106,7 @@ onUnmounted(() => window.removeEventListener('keydown', atalho))
 <template>
   <div>
     <MgInput
+      ref="campo"
       :model-value="codigo"
       type="text"
       outlined
@@ -125,7 +135,9 @@ onUnmounted(() => window.removeEventListener('keydown', atalho))
       v-if="pesquisa"
       v-model="dialogPesquisa"
       :busca-inicial="codigo"
+      :codestoquelocal="codestoquelocal"
       @select="escolhidoNaPesquisa"
+      @hide="focar"
     />
   </div>
 </template>

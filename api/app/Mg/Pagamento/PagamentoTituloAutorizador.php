@@ -2,6 +2,7 @@
 
 namespace Mg\Pagamento;
 
+use Mg\Conferencia\ConferenciaAutorizador;
 use Mg\Portador\LancamentoDataService;
 use Mg\Portador\Portador;
 use Mg\Portador\PortadorAutorizador;
@@ -142,8 +143,15 @@ class PagamentoTituloAutorizador
         return static::motivoPapel($codusuario, $portador, PortadorUsuario::PAPEL_OPERADOR, $acao);
     }
 
+    // o pagamento integrado da venda: Gerente da filial, Financeiro ou Admin,
+    // como o Reabrir (decisao do Fabio, 16/10/2026)
     public static function motivoBloqueioEstorno(Pagamento $pag, int $codusuario): ?string
     {
+        if (!empty($pag->codnegocio)) {
+            return ConferenciaAutorizador::pode($pag->codfilial)
+                ? null
+                : 'Pagamento de venda: só Financeiro, Administrador ou Gerente da filial.';
+        }
         return self::motivoBloqueioMutacao($pag, $codusuario, 'Cancelar');
     }
 

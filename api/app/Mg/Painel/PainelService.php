@@ -136,9 +136,10 @@ class PainelService
             select n.codnegocio, n.valortotal, n.alteracao, p.apelido as pdv, u.usuario
             from tblnegocio n
             inner join tblpdv p on (p.codpdv = n.codpdv)
+            inner join tblestoquelocal el on (el.codestoquelocal = p.codestoquelocal)
             left join tblusuario u on (u.codusuario = n.codusuario)
             where n.codnegociostatus = :aberto
-            and p.codfilial = :codfilial
+            and el.codfilial = :codfilial
             and p.monitoramento is not null
             and n.criacao >= p.monitoramento
             and n.alteracao < now() - make_interval(mins => p.minutosesquecido)

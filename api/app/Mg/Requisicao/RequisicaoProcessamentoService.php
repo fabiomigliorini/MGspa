@@ -40,19 +40,26 @@ class RequisicaoProcessamentoService
     }
 
     // o evento do negocio: cancelado ou reaberto derrubam a finalizacao manual (as
-    // justificativas dos itens ficam); depois reprocessa as requisicoes dele
+    // justificativas dos itens ficam); depois reprocessa as requisicoes dele. Reprocessa
+    // tambem as de ligacao desfeita (o desligar muda o atendido), mas so' a ligacao ativa
+    // derruba a finalizacao: o negocio que ja' nao atende a requisicao nao mexe nela
     public static function processarEvento(int $codnegocio, string $evento): void
     {
-        $codrequisicoes = array_map(fn ($r) => (int) $r->codrequisicao, DB::select(
-            'select distinct codrequisicao from tblnegociorequisicao where codnegocio = :codnegocio',
+        $ligacoes = DB::select(
+            'select codrequisicao, inativo from tblnegociorequisicao where codnegocio = :codnegocio',
             ['codnegocio' => $codnegocio]
-        ));
+        );
+        $codrequisicoes = array_values(array_unique(array_map(fn ($r) => (int) $r->codrequisicao, $ligacoes)));
         if (empty($codrequisicoes)) {
             return;
         }
-        DB::transaction(function () use ($codrequisicoes, $evento) {
-            if (in_array($evento, ['cancelado', 'reaberto'])) {
-                Requisicao::whereIn('codrequisicao', $codrequisicoes)
+        $ativas = array_values(array_unique(array_map(
+            fn ($r) => (int) $r->codrequisicao,
+            array_filter($ligacoes, fn ($r) => $r->inativo === null)
+        )));
+        DB::transaction(function () use ($codrequisicoes, $ativas, $evento) {
+            if (in_array($evento, ['cancelado', 'reaberto']) && !empty($ativas)) {
+                Requisicao::whereIn('codrequisicao', $ativas)
                     ->whereNotNull('finalizacao')
                     ->update(['finalizacao' => null, 'codusuariofinalizacao' => null]);
             }

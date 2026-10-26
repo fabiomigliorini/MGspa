@@ -2,13 +2,14 @@
 // Painel dos portadores (doc-4): os portadores em que o usuário é operador ou gestor, por filial,
 // o saldo da espécie (banco, adquirente e cartão sem saldo até a conciliação), a situação do
 // período da espécie, os pendentes e as transferências a confirmar. A linha abre o portador e o
-// período. Cadastro e OFX: Financeiro e Admin.
+// período. Cadastro, OFX e o relatório da contabilidade: Financeiro e Admin.
 import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import { formataNumero, formataTimestamp } from '@components/formatters'
 import PortadorDialog from 'components/portador/PortadorDialog.vue'
 import OfxDialog from 'components/portador/OfxDialog.vue'
+import ContabilidadeDialog from 'components/portador/ContabilidadeDialog.vue'
 import { usePortadorStore } from 'src/stores/portadorStore'
 import { useAuth } from 'src/composables/useAuth'
 import { portadorTipoColor } from 'src/constants/portadorTipo'
@@ -51,6 +52,16 @@ onMounted(() => store.buscarPainel())
   <q-page>
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
       <div v-if="financeiro" class="row justify-end q-mb-sm">
+        <q-btn
+          flat
+          no-caps
+          color="primary"
+          icon="summarize"
+          label="Contabilidade"
+          @click="store.dialogContabilidade = true"
+        >
+          <q-tooltip>Títulos pagos no período, para a contabilidade</q-tooltip>
+        </q-btn>
         <q-btn
           flat
           no-caps
@@ -163,5 +174,6 @@ onMounted(() => store.buscarPainel())
 
     <PortadorDialog />
     <OfxDialog />
+    <ContabilidadeDialog />
   </q-page>
 </template>

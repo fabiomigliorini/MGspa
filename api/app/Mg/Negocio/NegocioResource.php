@@ -46,6 +46,7 @@ class NegocioResource extends Resource
         $ret['operacao'] = $this->Operacao->operacao;
         $ret['negociostatus'] = $this->NegocioStatus->negociostatus;
         $ret['estoquelocal'] = $this->EstoqueLocal->estoquelocal;
+        $ret['estoquelocaldestino'] = $this->EstoqueLocalDestino->estoquelocal ?? null;
         $ret['fantasia'] = $this->Pessoa->fantasia;
         $ret['fantasiavendedor'] = $this->PessoaVendedor->fantasia ?? null;
         // fatia de cada item/vale no desconto do pagamento (o PDV refaz o

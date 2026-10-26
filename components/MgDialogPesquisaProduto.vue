@@ -2,8 +2,10 @@
 import MgInput from '@components/MgInput.vue'
 import MgGradeProduto from '@components/MgGradeProduto.vue'
 import MgSelect from '@components/MgSelect.vue'
-import { ref, watch, nextTick } from 'vue'
+import { ref, computed, watch, nextTick, onMounted } from 'vue'
+import { useQuasar } from 'quasar'
 import { api } from 'src/services/api'
+import { useSelectCacheStore } from '@components/stores/selectCacheStore'
 
 // Pesquisa de produto em grade de cards, no formato da pesquisa do PDV.
 // Diferença: esta é sempre online -- lê v1/produto-barra/pesquisa direto, sem
@@ -18,9 +20,19 @@ const props = defineProps({
   modelValue: { type: Boolean, default: false },
   // texto já digitado no campo de barras, para abrir com a busca pronta
   buscaInicial: { type: String, default: '' },
+  // local em que o select Saldo começa (na requisição, a loja requisitada); null =
+  // todos os locais
+  codestoquelocal: { type: Number, default: null },
 })
 
-const emit = defineEmits(['update:modelValue', 'select'])
+const $q = useQuasar()
+// no celular o cabeçalho fica só com o campo e um botão, que abre as opções
+const celular = computed(() => $q.screen.lt.sm)
+const dialogOpcoes = ref(false)
+
+// `hide` sai quando a janela terminou de fechar, escolhendo produto ou não:
+// é nele que quem abriu devolve o foco para o campo de barras.
+const emit = defineEmits(['update:modelValue', 'select', 'hide'])
 
 // produtos por página, não barras: a página traz todas as barras de cada um
 const PER_PAGE = 20
@@ -42,6 +54,26 @@ const ORDENS = [
   { label: 'Barras', value: 'barras' },
 ]
 const ordem = ref(ORDENS[0])
+
+// De onde vem o saldo do chip de cada card (TASK-254). Não filtra a lista nem
+// refaz a pesquisa: só troca o local que a grade pede ao store de saldo.
+const local = ref(props.codestoquelocal)
+watch(
+  () => props.codestoquelocal,
+  (cod) => {
+    local.value = cod
+  },
+)
+const sSelect = useSelectCacheStore()
+// os locais pelo nome, na ordem do código: Deposito, Botanico, Centro...
+const opcoesSaldo = computed(() => [
+  { label: 'Em todos os locais', value: null },
+  ...[...(sSelect.entities.estoqueLocal?.items || [])]
+    .sort((a, b) => a.value - b.value)
+    .map((l) => ({ label: l.label, value: l.value })),
+])
+onMounted(() => sSelect.loadList('estoqueLocal', 'v1/select/estoque-local').catch(() => {}))
+
 const itens = ref([])
 const carregando = ref(false)
 const pagina = ref(1)
@@ -59,8 +91,10 @@ const manterFoco = (evento) => {
   if (!props.modelValue) return
   if (evento.relatedTarget?.closest?.('.q-select, .q-menu')) return
   if (grade.value?.aberto) return
+  if (dialogOpcoes.value) return
   nextTick(() => refPesquisa.value?.focus())
 }
+const focarPesquisa = () => nextTick(() => refPesquisa.value?.focus())
 
 const fechar = () => emit('update:modelValue', false)
 
@@ -98,6 +132,16 @@ const carregarMais = async (done) => {
 
 const escolher = (barra) => {
   emit('select', barra)
+  fechar()
+}
+
+// botões da janela de opções do celular, que fazem o que os ícones do campo fazem
+const limparDasOpcoes = () => {
+  busca.value = ''
+  dialogOpcoes.value = false
+}
+const fecharDasOpcoes = () => {
+  dialogOpcoes.value = false
   fechar()
 }
 
@@ -146,6 +190,7 @@ watch(
     :model-value="modelValue"
     maximized
     @update:model-value="(v) => emit('update:modelValue', v)"
+    @hide="emit('hide')"
   >
     <q-card class="column full-height" @keydown="aoTeclar">
       <q-card-section class="bg-primary text-white col-auto">
@@ -161,27 +206,48 @@ watch(
             @blur="manterFoco"
           >
             <template #append>
-              <q-btn round flat icon="close" tabindex="-1" @click="busca = ''">
-                <q-tooltip>Limpar</q-tooltip>
-              </q-btn>
-              <q-btn round flat icon="search" tabindex="-1" @click="pesquisar()">
-                <q-tooltip>Pesquisar</q-tooltip>
-              </q-btn>
-              <q-btn round flat icon="logout" tabindex="-1" @click="fechar">
-                <q-tooltip>Fechar</q-tooltip>
-              </q-btn>
+              <q-btn
+                v-if="celular"
+                round
+                flat
+                icon="tune"
+                tabindex="-1"
+                @click="dialogOpcoes = true"
+              />
+              <template v-else>
+                <q-btn round flat icon="close" tabindex="-1" @click="busca = ''">
+                  <q-tooltip>Limpar</q-tooltip>
+                </q-btn>
+                <q-btn round flat icon="search" tabindex="-1" @click="pesquisar()">
+                  <q-tooltip>Pesquisar</q-tooltip>
+                </q-btn>
+                <q-btn round flat icon="logout" tabindex="-1" @click="fechar">
+                  <q-tooltip>Fechar</q-tooltip>
+                </q-btn>
+              </template>
             </template>
           </MgInput>
-          <MgSelect
-            v-model="ordem"
-            bg-color="white"
-            label="Ordem"
-            :options="ORDENS"
-            style="width: 150px"
-            @update:model-value="pesquisar()"
-          />
+          <template v-if="!celular">
+            <MgSelect
+              v-model="ordem"
+              bg-color="white"
+              label="Ordem"
+              :options="ORDENS"
+              style="width: 150px"
+              @update:model-value="pesquisar()"
+            />
+            <MgSelect
+              v-model="local"
+              bg-color="white"
+              label="Saldo"
+              :options="opcoesSaldo"
+              emit-value
+              map-options
+              style="width: 170px"
+            />
+          </template>
         </div>
-        <div class="text-caption q-mt-xs">
+        <div v-if="!celular" class="text-caption q-mt-xs">
           Enter pesquisa · setas andam pelos produtos · Enter abre o que estiver em destaque · Esc
           volta
         </div>
@@ -192,6 +258,8 @@ watch(
           ref="grade"
           :barras="itens"
           :tem-mais="temMais"
+          saldo
+          :codestoquelocal="local"
           @select="escolher"
           @carregar="carregarMais"
         />
@@ -205,6 +273,37 @@ watch(
           <div>Digite o que procura e tecle Enter.</div>
         </div>
       </q-card-section>
+
+      <!-- celular: o que no desktop fica no cabeçalho -->
+      <q-dialog v-model="dialogOpcoes" @hide="focarPesquisa">
+        <q-card flat style="width: 400px; max-width: 90vw">
+          <q-card-section class="text-h6">Opções da pesquisa</q-card-section>
+          <q-card-section class="q-pt-none">
+            <div class="row q-col-gutter-md">
+              <MgSelect
+                v-model="ordem"
+                label="Ordem"
+                :options="ORDENS"
+                class="col-12"
+                @update:model-value="pesquisar()"
+              />
+              <MgSelect
+                v-model="local"
+                label="Saldo"
+                :options="opcoesSaldo"
+                emit-value
+                map-options
+                class="col-12"
+              />
+            </div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat color="grey-7" label="Limpar" @click="limparDasOpcoes" />
+            <q-btn flat color="grey-7" label="Fechar pesquisa" @click="fecharDasOpcoes" />
+            <q-btn flat color="primary" label="OK" @click="dialogOpcoes = false" />
+          </q-card-actions>
+        </q-card>
+      </q-dialog>
     </q-card>
   </q-dialog>
 </template>

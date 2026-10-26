@@ -13,6 +13,7 @@ const formVazio = () => ({
   codfilial: null,
   deposito: false,
   controlaestoque: true,
+  defeito: false,
   codimpressora: null,
 })
 
@@ -27,9 +28,6 @@ export const useEstoqueLocalStore = defineStore('estoqueLocal', () => {
   const dialog = ref(false)
   const salvando = ref(false)
   const isNovo = computed(() => !form.value.codestoquelocal)
-
-  // impressoras térmica e A5 (as que imprimem a via de separação da requisição)
-  const impressoras = ref([])
 
   // indicadores de qualidade do estoque do local como requisitado (TASK-55, etapa 11)
   const indicadores = ref(null)
@@ -75,19 +73,8 @@ export const useEstoqueLocalStore = defineStore('estoqueLocal', () => {
     }
   }
 
-  async function carregarImpressoras() {
-    if (impressoras.value.length) return
-    try {
-      const { data } = await api.get('v1/select/impressora', { params: { tipo: 'T,A' } })
-      impressoras.value = data.map((i) => ({ value: i.codimpressora, label: i.descricao }))
-    } catch (e) {
-      notifyError(e, 'Erro ao carregar as impressoras')
-    }
-  }
-
   function novo() {
     form.value = formVazio()
-    carregarImpressoras()
     dialog.value = true
   }
 
@@ -99,9 +86,9 @@ export const useEstoqueLocalStore = defineStore('estoqueLocal', () => {
       codfilial: registro.codfilial,
       deposito: !!registro.deposito,
       controlaestoque: !!registro.controlaestoque,
+      defeito: !!registro.defeito,
       codimpressora: registro.codimpressora,
     }
-    carregarImpressoras()
     dialog.value = true
   }
 
@@ -153,7 +140,6 @@ export const useEstoqueLocalStore = defineStore('estoqueLocal', () => {
     dialog,
     salvando,
     isNovo,
-    impressoras,
     indicadores,
     carregandoIndicadores,
     carregarIndicadores,

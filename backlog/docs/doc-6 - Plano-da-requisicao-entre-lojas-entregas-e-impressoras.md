@@ -84,7 +84,7 @@ o que depende dela por último.
    (ex.: 1 CX c/10 resmas + 5 pacotes avulsos); não repete a mesma barra.
 4. Criar: no painel (do zero, `MgInputProdutoBarras`) ou a partir de negócio **fechado** (itens e cliente
    preenchidos e editáveis; guarda o negócio de origem). Requisitante edita itens e cliente **só enquanto
-   aguardando**. Cancelar: PDV da filial **requisitante** ou **Gerente**; recusa se houver negócio ativo
+   aguardando**. Cancelar: PDV da loja **requisitante** ou **Gerente**; recusa se houver negócio ativo
    ligado (mostra o link do negócio, onde se cancela).
 5. Código de retirada de 6 dígitos, só no lado A (comprovante e tela da A; nunca na tela nem na via da B).
 6. O que faltou: nova requisição à mão. Requisição parada: sem prazo; o painel ordena das mais antigas.
@@ -94,7 +94,8 @@ o que depende dela por último.
    (emite a NF-e como hoje); próxima parte = outro negócio. Reabrir e Duplicar funcionam.
 8. Ligar negócio ↔ requisição a qualquer momento (antes, no meio ou depois de bipar): botão **Separar** na
    requisição; **bipar o QR** da via de separação (URL com nº + loja destino); **digitar o nº**. Ligar põe
-   natureza de transferência; loja destino vem do QR ou o usuário preenche (obrigatório).
+   natureza de transferência; loja destino vem do QR ou o usuário preenche (obrigatório). O nº digitado é
+   conferido no servidor na hora: requisição que não existe é recusada ali, não na sincronização.
 9. **Um negócio pode atender várias requisições** com o mesmo destino da mercadoria; retirada/entrega só
    junta com mesmo `codpessoa`, mesma loja de origem e de destino.
 10. **No Fechar** (online), o servidor confere a coerência de cada requisição ligada — existe, não cancelada
@@ -150,6 +151,22 @@ o que depende dela por último.
 23. `codestoquelocaldestino` em toda natureza que gera movimento no destino; backfill do histórico; select
     "Loja destino" no PDV; MGLara usa só o campo.
 
+**Quem vê cada botão do detalhe da requisição**
+24. Os botões vêm prontos do backend (os `pode*` do `RequisicaoResource`, recalculados em toda resposta) e
+    dependem só de três coisas: o **status**, o **lado do dispositivo** e se o usuário é **Gerente**. A mesma
+    requisição mostra botões diferentes no PDV de quem pede e no de quem atende; F5 não muda nada.
+    - **Separar**: só o dispositivo da loja **requisitada**, com a requisição em A/S/P. Gerente não tem
+      exceção: o negócio de separação sai do local do PDV, e o Fechar recusa negócio de outra loja (decisão 10).
+    - **Editar**: só a loja **requisitante**, aguardando.
+    - **Cancelar**: requisitante ou Gerente, fora de C/E.
+    - **Justificar e Finalizar**: requisitada ou Gerente, em A/S/P/D.
+    - **Entregar**: em R/E, a requisitada ou Gerente; em L, a requisitante ou Gerente; só com parte fechada
+      ainda não entregue.
+    - **Reprocessar e Imprimir**: sempre; a via do cliente só aparece no dispositivo da loja que pediu.
+
+    O lado é o **local de estoque** do PDV comparado com o local requisitante ou requisitado, o mesmo que o
+    Fechar confere no negócio (nunca a filial).
+
 ## Plano — do mais fácil para o mais difícil
 
 Padrão de DDL: SQL idempotente em `api/database/*.sql` (modelo `ocorrencia.sql`, `pdv_configuracao.sql`);
@@ -199,13 +216,20 @@ termina numa tela onde o Fábio confere (**Confere**).
   - `tblrequisicaoitem`: `codprodutobarra`, `quantidade` ≥ 0 (0 = incluído como "enviado a mais"),
     `quantidadeatendida` (gravada pelo processo, unidade base), `motivo` char(1), `codprodutobarrasubstituto`,
     `observacao`, auditoria; único `(codrequisicao, codprodutobarra)`.
-- Domínio `Mg\Requisicao` (rotas com middleware `pdv`): `GET v1/requisicao/painel`, `POST v1/requisicao`,
+- Domínio `Mg\Requisicao` (rotas com middleware `pdv`): `GET v1/requisicao/painel` (as abertas da loja, dos
+  dois lados), `GET v1/requisicao` (listagem paginada, todos os status, filtros opcionais), `POST v1/requisicao`,
   `GET|PUT v1/requisicao/{id}` (PUT só aguardando), `POST v1/requisicao/{id}/cancelar`.
-  `codigoretirada` em `$hidden`; só volta quando o PDV é da filial requisitante.
+  `codigoretirada` em `$hidden`; só volta quando o PDV é da loja requisitante.
 - `RequisicaoProcessamentoService::processar(codrequisicao)` (esqueleto: A e C; a distribuição entra na
   etapa 9) grava a coluna `status`.
-- negocios: `RequisicaoPainelPage` (`/requisicao`; colunas por status, Atender × Minhas, loja padrão do PDV,
-  mais antigas primeiro, polling 30 s com `useConsultaAutomatica`), `RequisicaoFormPage`
+- negocios: `RequisicaoPainelPage` (`/requisicao/painel/{codestoquelocal}`; uma aba por loja, a do
+  endereço, e sem ela a do PDV; na aba, o card "Para Centro atender" e um card "Centro pediu para
+  Deposito" por loja atendente, cada um agrupado por status; só as abertas, mais antigas primeiro,
+  polling 30 s com `useConsultaAutomatica`),
+  `RequisicaoListagemPage` (`/requisicao`, botão Todas do painel; entregues e canceladas ficam aqui:
+  como a listagem de negócios, filtros no painel lateral — nº, status, destino, negócio, criação, lojas,
+  pessoa, quem retira, telefone, código de retirada inteiro com o limite de tentativas da entrega —,
+  rolagem infinita, mais nova primeiro, sem filtro padrão), `RequisicaoFormPage`
   (`MgInputProdutoBarras` com F1), `RequisicaoDetalhePage`, `stores/requisicao.js`, menu.
 - **Confere:** cria no Botânico (vê o código); aparece no painel do Centro como Aguardando, sem código;
   edita enquanto aguardando; cancela.
@@ -223,21 +247,21 @@ termina numa tela onde o Fábio confere (**Confere**).
 ### Etapa 5 — Facilitadores
 - Botão "Requisitar" no negócio fechado → `/requisicao/nova?codnegocio=` pré-preenchido; negócio mostra as
   requisições de origem.
-- `GET v1/requisicao/sugestao` com o SQL de `EstoqueSaldoRelatorioService::transferencias` (extraído para
-  método de linhas); barra da `codprodutoembalagemtransferencia`; botão "Sugerir abaixo do mínimo" só
-  preenche a lista.
-- **Confere:** venda → Requisitar preenchido; sugestão bate com o PDF de Sugestão de Transferências.
+- ~~`GET v1/requisicao/sugestao` e o botão "Sugerir abaixo do mínimo"~~: removidos em 24/10/2026 (não
+  funcionavam e não foram pedidos). A reposição pelo mínimo virou o gerador de requisição (TASK-258).
+- **Confere:** venda → Requisitar preenchido.
 
 ### Etapa 6 — `codestoquelocaldestino`
 - `negocio_estoquelocaldestino.sql` (go-live, **antes** do deploy do MGLara): 1) copia o local do movimento
   de destino já existente (naturezas 15, 1, 19); 2) transferências restantes: pessoa → filial única → local
   único; 3) conferência (252 transferências com pessoa que não é filial ficam nulas).
 - MGLara `EstoqueGeraMovimentoNegocioProdutoBarra.php:164`: destino = `Negocio->EstoqueLocalDestino`.
-- `PdvNegocioService`: em natureza cujo tipo de movimento gera destino, grava o destino (pessoa = filial do
-  destino); `fechar` valida destino informado, ativo, diferente da origem e, na transferência, mesma empresa
-  (sai o laço bugado).
+- `PdvNegocioService`: em natureza cujo tipo de movimento gera destino, grava o destino; `fechar` valida
+  destino informado, ativo, diferente da origem, na transferência mesma empresa (sai o laço bugado) e a
+  pessoa igual à filial do destino (o servidor não troca a pessoa sozinho: confere e recusa).
 - negocios `components/offline/DetalheNegocio.vue`: select "Loja destino" no diálogo de natureza (offline,
-  do Dexie); `stores/negocio.js::informarNatureza(..., codestoquelocaldestino)`.
+  do Dexie); `stores/negocio.js::informarNatureza(..., codestoquelocaldestino)` põe a pessoa = filial do
+  destino. Com loja destino a pessoa não abre para troca (nem clique, nem F10).
 - **Confere:** transferência nova com Loja destino → entrada aparece no destino; sem destino é recusada;
   transferência antiga mostra o destino.
 
@@ -275,7 +299,9 @@ termina numa tela onde o Fábio confere (**Confere**).
 - PDV (negocios, offline): lista de requisições do negócio; ligar por **QR** (o `InputBarras` reconhece a
   URL `…/requisicao/{nº}?destino={local}`), por **nº digitado** (diálogo) ou chegando pelo **Separar** da
   requisição (abre negócio novo já ligado). Ligar põe natureza de transferência de saída e loja destino
-  (do QR ou preenchida pelo usuário, obrigatória). Link do negócio para cada requisição. Duplicar copia a lista.
+  (do QR ou preenchida pelo usuário, obrigatória). No painel lateral, abaixo da natureza e só com loja destino:
+  um item por requisição ligada (abre a requisição; o X tira do negócio, com confirmação) e o item Ligar.
+  Tirar inativa a ligação; a sincronização ignora a inativa de requisição que não existe. Duplicar copia a lista.
 - `PdvNegocioService::fechar`: conferência de coerência de todas as requisições ligadas (decisão 10); recusa
   com a divergência. Jobs e MGLara em `afterCommit`.
 - Disparo: `PdvNegocioService` (sincronização que muda a lista, fechar, cancelar, reabrir) só despacha
@@ -310,6 +336,34 @@ termina numa tela onde o Fábio confere (**Confere**).
   por loja requisitada e data. Ranking, evolução e gráfico só a pedido.
 - **Confere:** depois de requisições finalizadas com divergência, o detalhe do Centro mostra o resumo e a
   lista batendo com as requisições.
+
+### Etapa 12 — Gerador de requisição, prioridade e local Defeito (TASK-258, 24-25/10/2026)
+- **Gerador** (botão "Gerador" no painel, `/requisicao/gerador`): loja que pede (padrão a do PDV) →
+  marcas → produtos → variações → revisão → uma requisição de Reposição (`L`) por loja que atende.
+  - Regras do PDF, na loja que pede: trabalha = máx > 1; abaixo = trabalha e saldo ≤ mín; zerado =
+    trabalha e saldo ≤ 0; faltam = Σ(máx − saldo); **furo** = Σ(máx − saldo) × preço de venda, em R$
+    (soma qualquer unidade, por isso ordena marcas e produtos). Marca só a do produto (a da variação sai
+    na TASK-259).
+  - Marcas: todas as ativas, "12 de 140 · R$ 3.450"; "Todas as marcas" pula a escolha. Produtos: todos os
+    ativos, "3 de 8 · faltam 46 UN · R$ 380", pesquisa com o motor do F1. Filtros: urgência (Todos /
+    Abaixo do mínimo / Só zerados), ABC (A, A+B, A+B+C) e ordem (furo ou alfabética).
+  - Variação: a loja que pede (saldo, mín, máx, faltam) e cada outra loja (saldo, mín, máx, o que já foi
+    pedido em reposição aberta, campo de quanto pedir). Digita-se em unidades e sobe para o múltiplo
+    da embalagem de transferência; o item sai na barra dela. Sem embalagem não arredonda.
+  - Rascunho único no Pinia persistente (loja, quantidades, filtros; nunca saldo); com quantidade, a
+    troca de loja é recusada. Botão para abrir o produto no app estoque.
+  - Backend só consulta: `RequisicaoGeradorService` (`GET v1/requisicao/gerador/{marcas,produtos,
+    produto/{cod},situacao}`); o Gerar usa o `POST v1/requisicao`.
+- **Prioridade** (`tblrequisicao.prioridade`, 1 Baixa, 2 Normal, 3 Alta, 4 Urgente): pré-selecionada
+  pelo destino no formulário (R Urgente, E Alta, L Normal) e, no gerador, pela pior situação (zerado
+  Urgente, abaixo Normal, senão Baixa). Depois de criada, só muda pelo botão "Prioridade" do detalhe
+  (os dois lados, status aberto, motivo obrigatório → `tblauditoria` tipo 24, no Histórico). O painel
+  ordena por prioridade e depois pela mais antiga; chip no painel, prioridade nas vias e filtro na
+  listagem.
+- **Defeito** (`tblestoquelocal.defeito`, o 199001): local da mercadoria com defeito à espera de
+  substituição; fica fora da requisição (painel, formulário, gerador). Checkbox no cadastro do local.
+- **Go-live**: depois dos SQLs desta doc e antes do deploy, `estoquelocal_defeito.sql` e
+  `requisicao_prioridade.sql` (idempotentes). O PDV esconde o Defeito depois de sincronizar.
 
 ## Backlog — primeiro passo da execução
 
