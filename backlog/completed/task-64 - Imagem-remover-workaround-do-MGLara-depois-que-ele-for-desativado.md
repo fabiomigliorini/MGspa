@@ -1,10 +1,10 @@
 ---
 id: TASK-64
 title: Fotos de produto ainda saem do MGLara e vao sumir quando ele for desligado
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-09-12 15:54'
-updated_date: '2026-09-24 21:59'
+updated_date: '2026-10-26 16:22'
 labels:
   - api
 dependencies: []
@@ -103,3 +103,12 @@ conferencia de estoque, cadastro de marca e de usuario — a foto aparece em tod
 - [ ] #7 A versao do Dexie em negocios/src/boot/db.js foi incrementada e o offline ressincroniza, sem o caixa ficar com base velha
 - [ ] #8 O workaround do MGLara em ImagemService.php:23 (model->observacoes = model->arquivo) foi removido depois do MGLara desativado
 <!-- AC:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-10-26 16:22
+---
+Absorvida pela TASK-82 (decisão do Fábio em 25/10/2026): o motor de imagens (specs/SPEC-IMAGENS.md) cobre estes critérios no milestone M5 (consumidores). Fechada como duplicada; nada foi implementado aqui.
+---
+<!-- COMMENTS:END -->
