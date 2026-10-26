@@ -9,13 +9,99 @@ use Illuminate\Support\Facades\Log;
 class ProdutoBarraService
 {
     /**
-     * Pesquisa de produto em grade (MgDialogPesquisaProduto, TASK-173), com o mesmo filtro da
-     * pesquisa do PDV na base offline (negocios/src/stores/produto.js). O texto de busca de cada
-     * barra é o que o catálogo do PDV monta (PdvCatalogoService::produto): a descrição com
-     * variação, unidade e C/quantidade, o preço, as barras e os 6 últimos dígitos delas. A
-     * primeira palavra digitada tem que começar uma palavra desse texto e as outras aparecer em
-     * qualquer ponto dele, sem diferença de maiúscula: pesquisou "vermelh", só vem o que tem
-     * "vermelh" escrito.
+     * O motor da pesquisa de produto, o mesmo na pesquisa em grade (F1) e no gerador de
+     * requisição (TASK-258): as barras ativas cujo texto de busca casa com o que foi digitado.
+     * O texto de cada barra é o que o catálogo do PDV monta (PdvCatalogoService::produto) -- a
+     * descrição com variação, unidade e C/quantidade, o preço, as barras e os 6 últimos dígitos
+     * delas -- mais as referências do produto, da variação e da barra. A primeira palavra
+     * digitada tem que começar uma palavra desse texto e as outras aparecer em qualquer ponto
+     * dele, sem diferença de maiúscula: pesquisou "vermelh", só vem o que tem "vermelh" escrito.
+     *
+     * Devolve o SELECT (uma linha por barra, com o que a grade usa) e os binds, para quem chama
+     * montar em volta; sem palavra nenhuma, null. O $prefixo separa os binds dos de quem chama.
+     */
+    public static function sqlBusca(string $busca, string $prefixo = 'palavra'): ?array
+    {
+        $palavras = static::palavras($busca);
+        if (empty($palavras)) {
+            return null;
+        }
+        $bind = [];
+        $where = [];
+        foreach ($palavras as $i => $palavra) {
+            $like = addcslashes($palavra, '\\%_');
+            if ($i == 0) {
+                // a primeira começa uma palavra do texto
+                $where[] = "(' ' || busca) ILIKE :{$prefixo}_{$i}";
+                $bind["{$prefixo}_{$i}"] = "% {$like}%";
+                continue;
+            }
+            $where[] = "busca ILIKE :{$prefixo}_{$i}";
+            $bind["{$prefixo}_{$i}"] = "%{$like}%";
+        }
+        $where = implode(' AND ', $where);
+
+        $sql = "
+            SELECT * FROM (
+                SELECT
+                    *,
+                    descricao
+                        || ' ' || replace(to_char(preco, 'FM999999999990.00'), '.', ',')
+                        || ' ' || barras
+                        || ' ' || right(barras, 6)
+                        || coalesce(' ' || referenciaproduto, '')
+                        || coalesce(' ' || referenciavariacao, '')
+                        || coalesce(' ' || referenciabarra, '') AS busca
+                FROM (
+                    -- a descrição do PdvCatalogoService::montarDescricaoProduto
+                    SELECT
+                        *,
+                        nome
+                            || coalesce(' ' || nullif(variacao, ''), '')
+                            || ' ' || sigla
+                            || coalesce(' C/' || trunc(nullif(quantidade, 0))::bigint, '') AS descricao
+                    FROM (
+                        SELECT
+                            pb.codprodutobarra,
+                            p.codproduto,
+                            pv.codprodutovariacao,
+                            pb.barras,
+                            p.produto AS nome,
+                            pv.variacao,
+                            coalesce(ume.sigla, um.sigla) AS sigla,
+                            coalesce(ume.decimais, um.decimais) AS decimais,
+                            pe.quantidade,
+                            coalesce(pe.preco, p.preco * coalesce(pe.quantidade, 1)) AS preco,
+                            i.observacoes AS imagem,
+                            p.referencia AS referenciaproduto,
+                            pv.referencia AS referenciavariacao,
+                            pb.referencia AS referenciabarra
+                        FROM tblproduto p
+                        INNER JOIN tblunidademedida um ON (um.codunidademedida = p.codunidademedida)
+                        INNER JOIN tblprodutovariacao pv ON (pv.codproduto = p.codproduto)
+                        INNER JOIN tblprodutobarra pb ON (pb.codprodutovariacao = pv.codprodutovariacao)
+                        LEFT JOIN tblprodutoembalagem pe ON (pe.codprodutoembalagem = pb.codprodutoembalagem)
+                        LEFT JOIN tblunidademedida ume ON (ume.codunidademedida = pe.codunidademedida)
+                        LEFT JOIN tblprodutoimagem pri ON (pri.codprodutoimagem = pv.codprodutoimagem)
+                        LEFT JOIN tblimagem i ON (i.codimagem = pri.codimagem)
+                        WHERE coalesce(pv.inativo, p.inativo) IS NULL
+                    ) linhas
+                ) descritas
+            ) textos
+            WHERE {$where}
+        ";
+        return ['sql' => $sql, 'bind' => $bind];
+    }
+
+    protected static function palavras(string $busca): array
+    {
+        return array_values(array_filter(explode(' ', trim($busca)), fn ($p) => $p !== ''));
+    }
+
+    /**
+     * Pesquisa de produto em grade (MgDialogPesquisaProduto, TASK-173), com o motor acima
+     * (sqlBusca), o mesmo filtro da pesquisa do PDV na base offline
+     * (negocios/src/stores/produto.js) mais as referências.
      *
      * A página é de 20 PRODUTOS, cada um com todas as barras dele que casaram -- nem mais
      * (pesquisou "verde", a azul não vem), nem menos (o produto nunca fica partido entre duas
@@ -27,28 +113,14 @@ class ProdutoBarraService
      */
     public static function pesquisa(string $busca, ?string $ordem, int $pagina): array
     {
-        $palavras = array_values(array_filter(explode(' ', trim($busca)), fn ($p) => $p !== ''));
-        if (empty($palavras)) {
+        $motor = static::sqlBusca($busca);
+        if (!$motor) {
             return [];
         }
-
-        $filtro = [
-            'frase' => implode(' ', $palavras),
+        $filtro = $motor['bind'] + [
+            'frase' => implode(' ', static::palavras($busca)),
             'url' => config('services.mglara.imagens_url') . '/',
         ];
-        $where = [];
-        foreach ($palavras as $i => $palavra) {
-            $like = addcslashes($palavra, '\\%_');
-            if ($i == 0) {
-                // a primeira começa uma palavra do texto
-                $where[] = "(' ' || busca) ILIKE :palavra_{$i}";
-                $filtro["palavra_{$i}"] = "% {$like}%";
-                continue;
-            }
-            $where[] = "busca ILIKE :palavra_{$i}";
-            $filtro["palavra_{$i}"] = "%{$like}%";
-        }
-        $where = implode(' AND ', $where);
 
         // whitelist -- nunca concatenar o que vem do request
         $ordens = [
@@ -63,49 +135,9 @@ class ProdutoBarraService
         $fim = $inicio + 20;
 
         $sql = "
-            WITH linhas AS (
-                SELECT
-                    pb.codprodutobarra,
-                    p.codproduto,
-                    pv.codprodutovariacao,
-                    pb.barras,
-                    p.produto AS nome,
-                    pv.variacao,
-                    coalesce(ume.sigla, um.sigla) AS sigla,
-                    coalesce(ume.decimais, um.decimais) AS decimais,
-                    pe.quantidade,
-                    coalesce(pe.preco, p.preco * coalesce(pe.quantidade, 1)) AS preco,
-                    i.observacoes AS imagem
-                FROM tblproduto p
-                INNER JOIN tblunidademedida um ON (um.codunidademedida = p.codunidademedida)
-                INNER JOIN tblprodutovariacao pv ON (pv.codproduto = p.codproduto)
-                INNER JOIN tblprodutobarra pb ON (pb.codprodutovariacao = pv.codprodutovariacao)
-                LEFT JOIN tblprodutoembalagem pe ON (pe.codprodutoembalagem = pb.codprodutoembalagem)
-                LEFT JOIN tblunidademedida ume ON (ume.codunidademedida = pe.codunidademedida)
-                LEFT JOIN tblprodutoimagem pri ON (pri.codprodutoimagem = pv.codprodutoimagem)
-                LEFT JOIN tblimagem i ON (i.codimagem = pri.codimagem)
-                WHERE coalesce(pv.inativo, p.inativo) IS NULL
-            ), descritas AS (
-                -- a descrição do PdvCatalogoService::montarDescricaoProduto
-                SELECT
-                    *,
-                    nome
-                        || coalesce(' ' || nullif(variacao, ''), '')
-                        || ' ' || sigla
-                        || coalesce(' C/' || trunc(nullif(quantidade, 0))::bigint, '') AS descricao
-                FROM linhas
-            ), casadas AS (
+            WITH casadas AS (
                 SELECT *, strict_word_similarity(unaccent(:frase), unaccent(descricao)) AS score
-                FROM (
-                    SELECT
-                        *,
-                        descricao
-                            || ' ' || replace(to_char(preco, 'FM999999999990.00'), '.', ',')
-                            || ' ' || barras
-                            || ' ' || right(barras, 6) AS busca
-                    FROM descritas
-                ) b
-                WHERE {$where}
+                FROM ({$motor['sql']}) b
             ), produtos AS (
                 SELECT
                     codproduto,

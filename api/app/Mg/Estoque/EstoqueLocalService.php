@@ -124,7 +124,7 @@ class EstoqueLocalService extends MgService
     public static function lojas()
     {
         return EstoqueLocal::ativo()
-            ->where('codfilial', '!=', 199)
+            ->where('defeito', false)
             ->where('deposito', false)
             ->orderBy('codestoquelocal')
             ->get();

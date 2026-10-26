@@ -11,7 +11,14 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import ListaOpcoes from '@components/cobranca/ListaOpcoes.vue'
 import { formataCodigo, formataTelefone, mascaraTelefone } from '@components/formatters'
 import { isTelefoneValido } from '@components/validador'
-import { requisicaoStore, DESTINOS } from 'stores/requisicao'
+import {
+  requisicaoStore,
+  DESTINOS,
+  PRIORIDADES,
+  PRIORIDADE,
+  PRIORIDADE_DO_DESTINO,
+  lojaDaRequisicao,
+} from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
 
 // Nova requisição / editar (TASK-55, doc-6) em etapas, no modelo do wizard de cobrança e do
@@ -75,8 +82,7 @@ const opcaoLoja = (local, i) => ({
   tecla: i < 9 ? i + 1 : null,
 })
 
-// controlaestoque ausente = PDV ainda não sincronizou o campo; mostra como antes
-const locaisComEstoque = computed(() => locais.value.filter((l) => l.controlaestoque !== false))
+const locaisComEstoque = computed(() => locais.value.filter(lojaDaRequisicao))
 const opcoesRequisitante = computed(() => locaisComEstoque.value.map(opcaoLoja))
 const opcoesRequisitada = computed(() =>
   locaisComEstoque.value
@@ -117,10 +123,15 @@ function escolherRequisitada(opcao) {
   avancar()
 }
 
+// na requisição nova o destino pré-seleciona a prioridade; quem pede troca na conferência
 function escolherDestino(opcao) {
   form.value.destino = opcao.valor
+  if (isNovo.value) form.value.prioridade = PRIORIDADE_DO_DESTINO[opcao.valor]
   avancar()
 }
+
+// depois de criada, a prioridade só muda pelo botão do detalhe
+const opcoesPrioridade = PRIORIDADES.map((p) => ({ value: p.value, label: p.label }))
 
 // ---- produtos ----
 // Último bipado primeiro: o produto novo nasce no topo da lista, que é a
@@ -248,20 +259,6 @@ onMounted(async () => {
               </div>
               <div class="text-h6 text-weight-regular">{{ PERGUNTAS[etapa] }}</div>
             </div>
-            <q-btn
-              v-if="etapa === 'produtos' && !modoNegocio"
-              flat
-              color="primary"
-              icon="trending_down"
-              label="Sugerir abaixo do mínimo"
-              tabindex="-1"
-              :loading="sRequisicao.sugerindo"
-              @click="sRequisicao.sugerir()"
-            >
-              <q-tooltip>
-                O que a loja que pede tem no mínimo ou abaixo e a outra tem saldo, até o máximo
-              </q-tooltip>
-            </q-btn>
           </q-card-section>
 
           <!-- ETAPA: LOJA QUE PEDE -->
@@ -522,6 +519,19 @@ onMounted(async () => {
                 <div class="q-mb-sm">
                   <span class="text-grey-7">Produtos:</span> {{ form.itens.length }}
                 </div>
+                <div class="q-mb-sm" v-if="!isNovo">
+                  <span class="text-grey-7">Prioridade:</span>
+                  {{ PRIORIDADE[form.prioridade]?.label }}
+                </div>
+              </div>
+              <div class="col-12" v-if="isNovo">
+                <div class="text-grey-7">Prioridade</div>
+                <q-option-group
+                  v-model="form.prioridade"
+                  :options="opcoesPrioridade"
+                  type="radio"
+                  inline
+                />
               </div>
               <div class="col-12">
                 <MgInput

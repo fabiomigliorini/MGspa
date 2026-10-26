@@ -3,6 +3,7 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useQuasar } from 'quasar'
 import { storeToRefs } from 'pinia'
+import MgHistorico from '@components/MgHistorico.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInput from '@components/MgInput.vue'
 import MgSelect from '@components/MgSelect.vue'
@@ -14,7 +15,7 @@ import {
   formataTelefone,
   formataTimestamp,
 } from '@components/formatters'
-import { requisicaoStore, STATUS, MOTIVOS } from 'stores/requisicao'
+import { requisicaoStore, STATUS, MOTIVOS, PRIORIDADES, PRIORIDADE } from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
 import { RESULTADOS, MOTIVOS as MOTIVOS_ENTREGA } from 'stores/entrega'
 
@@ -28,6 +29,7 @@ const sNegocio = negocioStore()
 const { requisicao: r } = storeToRefs(sRequisicao)
 
 const status = computed(() => STATUS[r.value?.status] || STATUS.A)
+const prioridadeAtual = computed(() => PRIORIDADE[r.value?.prioridade] || PRIORIDADE[2])
 const itensPedidos = computed(() => r.value?.itens || [])
 
 // atendido x pedido de um item (na menor embalagem envolvida)
@@ -82,6 +84,21 @@ function abrirJustificar(i) {
 async function justificar() {
   const { item, ...dados } = justificativa.value
   if (await sRequisicao.justificarItem(item, dados)) dialogJustificar.value = false
+}
+
+// Prioridade (TASK-258): depois de criada, só muda aqui, com o motivo (vai para o Histórico)
+const dialogPrioridade = ref(false)
+const trocaPrioridade = ref({ prioridade: null, motivo: '' })
+const opcoesPrioridade = PRIORIDADES.map((p) => ({ value: p.value, label: p.label }))
+function abrirPrioridade() {
+  trocaPrioridade.value = { prioridade: r.value.prioridade, motivo: '' }
+  dialogPrioridade.value = true
+}
+async function salvarPrioridade() {
+  const { prioridade, motivo } = trocaPrioridade.value
+  if (await sRequisicao.trocarPrioridade(r.value, prioridade, motivo.trim())) {
+    dialogPrioridade.value = false
+  }
 }
 
 // Entregar (TASK-55): retirada/entrega ao cliente com o código de cada requisição das partes
@@ -310,6 +327,18 @@ watch(
             </div>
             <div class="col-12 col-sm-auto row items-center justify-end no-wrap">
               <MgInfoCriacao :registro="r" />
+              <MgHistorico tabela="tblrequisicao" :codigo="r.codrequisicao" />
+              <q-btn
+                v-if="r.podeprioridade"
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="flag"
+                @click="abrirPrioridade"
+              >
+                <q-tooltip>Prioridade</q-tooltip>
+              </q-btn>
               <q-btn
                 v-if="r.podeseparar"
                 flat
@@ -396,6 +425,15 @@ watch(
                 <q-item-label v-if="r.finalizacao" caption>
                   Finalizada em {{ formataTimestamp(r.finalizacao) }} por {{ r.usuariofinalizacao }}
                 </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item>
+              <q-item-section avatar>
+                <q-icon name="flag" :color="prioridadeAtual.cor" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption>Prioridade</q-item-label>
+                <q-item-label>{{ prioridadeAtual.label }}</q-item-label>
               </q-item-section>
             </q-item>
             <!-- só as pontas do código (77XX82, o XX em cinza), com os dígitos espaçados (1,8x
@@ -627,6 +665,38 @@ watch(
                 (!!MOTIVOS_ENTREGA[entrega.resultado] && !entrega.motivo)
               "
             />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="dialogPrioridade">
+      <q-card flat style="width: 400px; max-width: 95vw">
+        <q-form @submit.prevent="salvarPrioridade">
+          <q-card-section class="text-h6">Prioridade</q-card-section>
+          <q-card-section class="q-pt-none">
+            <div class="row q-col-gutter-md">
+              <div class="col-12">
+                <q-option-group
+                  v-model="trocaPrioridade.prioridade"
+                  :options="opcoesPrioridade"
+                  type="radio"
+                />
+              </div>
+              <div class="col-12">
+                <MgInput
+                  v-model="trocaPrioridade.motivo"
+                  label="Motivo"
+                  maxlength="300"
+                  autofocus
+                  :rules="[(v) => !!v?.trim() || 'Informe o motivo']"
+                />
+              </div>
+            </div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
+            <q-btn flat label="Gravar" color="primary" type="submit" />
           </q-card-actions>
         </q-form>
       </q-card>

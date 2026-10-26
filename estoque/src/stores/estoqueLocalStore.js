@@ -13,6 +13,7 @@ const formVazio = () => ({
   codfilial: null,
   deposito: false,
   controlaestoque: true,
+  defeito: false,
   codimpressora: null,
 })
 
@@ -85,6 +86,7 @@ export const useEstoqueLocalStore = defineStore('estoqueLocal', () => {
       codfilial: registro.codfilial,
       deposito: !!registro.deposito,
       controlaestoque: !!registro.controlaestoque,
+      defeito: !!registro.defeito,
       codimpressora: registro.codimpressora,
     }
     dialog.value = true

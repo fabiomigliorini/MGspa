@@ -1,5 +1,5 @@
 <script setup>
-import { requisicaoStore, STATUS, DESTINOS } from 'stores/requisicao'
+import { requisicaoStore, STATUS, DESTINOS, PRIORIDADES } from 'stores/requisicao'
 import FilterDrawerShell from 'components/FilterDrawerShell.vue'
 import FilterGroup from 'components/FilterGroup.vue'
 import MgInput from '@components/MgInput.vue'
@@ -14,6 +14,7 @@ const sRequisicao = requisicaoStore()
 
 const opcoesStatus = Object.entries(STATUS).map(([value, s]) => ({ value, label: s.label }))
 const opcoesDestino = DESTINOS.map((d) => ({ value: d.value, label: d.label }))
+const opcoesPrioridade = PRIORIDADES.map((p) => ({ value: p.value, label: p.label }))
 </script>
 
 <template>
@@ -46,6 +47,16 @@ const opcoesDestino = DESTINOS.map((d) => ({ value: d.value, label: d.label }))
             v-model="sRequisicao.filtros.destino"
             :options="opcoesDestino"
             label="Destino"
+            map-options
+            emit-value
+            clearable
+          />
+        </div>
+        <div class="col-12">
+          <MgSelect
+            v-model="sRequisicao.filtros.prioridade"
+            :options="opcoesPrioridade"
+            label="Prioridade"
             map-options
             emit-value
             clearable

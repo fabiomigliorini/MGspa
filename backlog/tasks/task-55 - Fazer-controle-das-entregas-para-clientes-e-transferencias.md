@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-24 22:04'
+updated_date: '2026-10-25 23:10'
 labels:
   - negocios
 dependencies: []
@@ -80,4 +80,6 @@ Painel e listagem (#21/#22, 24/10/2026): o painel pede as abertas dos dois lados
 Botões do detalhe (24/10/2026): a requisição 23 (Centro pede para Depósito), aberta no PDV do Centro, não mostrava o Separar. Não é instabilidade: os botões são os pode* do RequisicaoResource, por status + lado do dispositivo + Gerente, e o Separar só aparece no PDV da loja que atende. Regra escrita no doc-6 (decisão 24). O lado do dispositivo é o local de estoque do PDV comparado com o local da requisição (RequisicaoService::ehRequisitante/ehRequisitada), o mesmo que o Fechar confere (RequisicaoNegocioService.php:83); antes passava pela filial do local, sobra do tblpdv.codfilial (TASK-257).
 
 Painel no endereço (#24, 24/10/2026): a aba é /requisicao/painel/{codestoquelocal} e /requisicao virou a listagem (era /requisicao/listagem). Não dá /requisicao/{loja}: /requisicao/{n} é o detalhe, e o QR impresso aponta para ele. Sem loja no endereço, ou com loja fora das abas, o painel redireciona para a do PDV. O voltar do detalhe, da listagem e da nova requisição usa requisicaoStore().enderecoPainel, a loja que estava na tela; a aba não fica mais gravada no navegador.
+
+24/10/2026: o "Sugerir abaixo do mínimo" do AC #5 (botão no formulário + GET v1/requisicao/sugestao, commit 86f4ac958) saiu: não funcionava e não foi pedido. A reposição pelo mínimo foi para a TASK-258 (gerador de requisição). O PDF Sugestão de Transferências do estoque continua.
 <!-- SECTION:NOTES:END -->

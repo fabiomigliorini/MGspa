@@ -6,12 +6,12 @@ import { db } from 'boot/db'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import { formataCodigo, tempoRelativo } from '@components/formatters'
 import { useConsultaAutomatica } from '@components/cobranca/useConsultaAutomatica'
-import { requisicaoStore, STATUS, DESTINO } from 'stores/requisicao'
+import { requisicaoStore, STATUS, DESTINO, PRIORIDADE, lojaDaRequisicao } from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
 
 // Painel de requisições (TASK-55, doc-6): uma aba por loja; nela, o card do que a loja tem
-// para atender e um card por loja a que ela pediu, cada um por status, das mais antigas para
-// as mais novas. Só as abertas: entregues e canceladas ficam na listagem. Atualiza sozinho a
+// para atender e um card por loja a que ela pediu, cada um por status, da mais urgente para a
+// menos e, na mesma prioridade, das mais antigas para as mais novas (a ordem vem do backend). Só as abertas: entregues e canceladas ficam na listagem. Atualiza sozinho a
 // cada 30 s. A loja da aba vem do endereço (/requisicao/painel/101001); sem ela, a do PDV.
 const route = useRoute()
 const router = useRouter()
@@ -105,7 +105,7 @@ onBeforeRouteUpdate((to) => abrir(to.params.codestoquelocal))
 onMounted(async () => {
   lojas.value = await db.estoqueLocal
     .orderBy('[codfilial+sigla]')
-    .filter((l) => l.inativo == null && l.controlaestoque !== false)
+    .filter((l) => l.inativo == null && lojaDaRequisicao(l))
     .toArray()
   const destino = abrir(route.params.codestoquelocal)
   if (destino !== true) router.replace(destino)
@@ -126,6 +126,7 @@ onMounted(async () => {
 
     <div class="q-pa-md" style="max-width: 1086px; margin: auto">
       <div class="row justify-end q-mb-sm">
+        <q-btn flat color="primary" icon="auto_awesome" label="Gerador" to="/requisicao/gerador" />
         <q-btn flat color="primary" icon="list" label="Todas" to="/requisicao" />
       </div>
 
@@ -168,6 +169,14 @@ onMounted(async () => {
                   <template v-if="r.nome"> · {{ r.nome }}</template>
                 </q-item-label>
                 <q-item-label caption class="ellipsis">{{ legenda(r, c.atender) }}</q-item-label>
+              </q-item-section>
+              <q-item-section side>
+                <q-chip
+                  size="sm"
+                  :color="PRIORIDADE[r.prioridade]?.cor"
+                  text-color="white"
+                  :label="PRIORIDADE[r.prioridade]?.label"
+                />
               </q-item-section>
               <q-item-section side>
                 <q-item-label caption>{{ tempoRelativo(r.criacao) }}</q-item-label>

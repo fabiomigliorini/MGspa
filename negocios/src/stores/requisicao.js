@@ -66,6 +66,25 @@ export const DESTINOS = [
 
 export const DESTINO = Object.fromEntries(DESTINOS.map((d) => [d.value, d]))
 
+// Prioridade (TASK-258): o número é o do banco e ordena o painel, a mais urgente primeiro.
+// Depois de criada, só muda pelo botão Prioridade do detalhe, com o motivo.
+export const PRIORIDADES = [
+  { value: 4, label: 'Urgente', cor: 'red-5' },
+  { value: 3, label: 'Alta', cor: 'orange-5' },
+  { value: 2, label: 'Normal', cor: 'grey-6' },
+  { value: 1, label: 'Baixa', cor: 'grey-5' },
+]
+
+export const PRIORIDADE = Object.fromEntries(PRIORIDADES.map((p) => [p.value, p]))
+
+// o destino escolhido no formulário pré-seleciona a prioridade: o cliente que vem buscar
+// espera, a entrega tem data combinada, a reposição é a rotina
+export const PRIORIDADE_DO_DESTINO = { R: 4, E: 3, L: 2 }
+
+// As lojas que entram na requisição (painel, formulário e gerador): as que controlam estoque e
+// não guardam mercadoria com defeito. Campo ausente = o PDV ainda não sincronizou; aparece como antes
+export const lojaDaRequisicao = (l) => l.controlaestoque !== false && !l.defeito
+
 // Quem retira ou recebe: o telefone i é do nome i (só os dígitos, com o DDD). O form sempre
 // tem pelo menos uma linha.
 const contatos = (nomes, telefones) => {
@@ -80,6 +99,7 @@ const filtrosVazios = () => ({
   codrequisicao: null,
   status: null,
   destino: null,
+  prioridade: null,
   codnegocio: null,
   de: null,
   ate: null,
@@ -96,6 +116,7 @@ const formVazio = () => ({
   codestoquelocalrequisitante: null,
   codestoquelocalrequisitada: null,
   destino: 'R',
+  prioridade: PRIORIDADE_DO_DESTINO.R,
   codpessoa: null,
   ...contatos(),
   endereco: '',
@@ -243,33 +264,6 @@ export const requisicaoStore = defineStore('requisicao', () => {
       .map(({ marcado, ...item }) => item)
   }
 
-  // Sugerir abaixo do mínimo: só acrescenta à lista o que ainda não está nela
-  const sugerindo = ref(false)
-  async function sugerir() {
-    sugerindo.value = true
-    try {
-      const { data } = await api.get('v1/requisicao/sugestao', {
-        params: {
-          codestoquelocalrequisitante: form.value.codestoquelocalrequisitante,
-          codestoquelocalrequisitada: form.value.codestoquelocalrequisitada,
-        },
-      })
-      const presentes = new Set(form.value.itens.map((i) => i.codprodutobarra))
-      const novos = data.filter((i) => !presentes.has(i.codprodutobarra))
-      form.value.itens.push(...novos)
-      notificar(
-        novos.length ? 'positive' : 'info',
-        novos.length
-          ? `${novos.length} produto(s) abaixo do mínimo acrescentados`
-          : 'Nada novo abaixo do mínimo com saldo na outra loja',
-      )
-    } catch (error) {
-      notificar('negative', mensagemErro(error, 'Impossível sugerir'))
-    } finally {
-      sugerindo.value = false
-    }
-  }
-
   // o negócio gravado conta como já trazido: passar pela etapa dele não troca quem retira
   // pelo cliente da venda; só trocar o número traz de novo
   function editar(r) {
@@ -280,6 +274,7 @@ export const requisicaoStore = defineStore('requisicao', () => {
       codestoquelocalrequisitante: r.codestoquelocalrequisitante,
       codestoquelocalrequisitada: r.codestoquelocalrequisitada,
       destino: r.destino,
+      prioridade: r.prioridade,
       codpessoa: r.codpessoa,
       ...contatos(r.nomes, r.telefones),
       endereco: r.endereco || '',
@@ -338,6 +333,22 @@ export const requisicaoStore = defineStore('requisicao', () => {
       return null
     } finally {
       salvando.value = false
+    }
+  }
+
+  // troca só a prioridade; o motivo vai para a auditoria (o histórico do detalhe)
+  async function trocarPrioridade(r, prioridade, motivo) {
+    try {
+      const { data } = await api.put(`v1/requisicao/${r.codrequisicao}/prioridade`, {
+        prioridade,
+        motivo,
+      })
+      requisicao.value = data.data
+      notificar('positive', `Prioridade ${PRIORIDADE[prioridade]?.label}`)
+      return true
+    } catch (error) {
+      notificar('negative', mensagemErro(error, 'Impossível trocar a prioridade'))
+      return false
     }
   }
 
@@ -466,12 +477,11 @@ export const requisicaoStore = defineStore('requisicao', () => {
     carregandoNegocio,
     carregarNegocio,
     aplicarSelecaoNegocio,
-    sugerindo,
-    sugerir,
     editar,
     adicionarItem,
     removerItem,
     salvar,
+    trocarPrioridade,
     cancelar,
     imprimir,
     verPdf,

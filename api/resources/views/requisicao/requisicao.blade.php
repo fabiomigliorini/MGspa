@@ -112,7 +112,8 @@
     <div class="bloco">
         <b>Pede:</b> {{ $req->EstoqueLocalRequisitante->estoquelocal }}<br>
         <b>Atende:</b> {{ $lojaRetirada?->estoquelocal ?? 'Compras' }}<br>
-        <b>Destino:</b> {{ \Mg\Requisicao\Requisicao::DESTINOS[$req->destino] }}
+        <b>Destino:</b> {{ \Mg\Requisicao\Requisicao::DESTINOS[$req->destino] }}<br>
+        <b>Prioridade:</b> {{ \Mg\Requisicao\Requisicao::PRIORIDADES[$req->prioridade] ?? '' }}
     </div>
 
     @if ($req->nomes || $req->endereco)

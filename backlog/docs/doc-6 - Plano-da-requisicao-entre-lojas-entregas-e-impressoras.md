@@ -247,10 +247,9 @@ termina numa tela onde o Fábio confere (**Confere**).
 ### Etapa 5 — Facilitadores
 - Botão "Requisitar" no negócio fechado → `/requisicao/nova?codnegocio=` pré-preenchido; negócio mostra as
   requisições de origem.
-- `GET v1/requisicao/sugestao` com o SQL de `EstoqueSaldoRelatorioService::transferencias` (extraído para
-  método de linhas); barra da `codprodutoembalagemtransferencia`; botão "Sugerir abaixo do mínimo" só
-  preenche a lista.
-- **Confere:** venda → Requisitar preenchido; sugestão bate com o PDF de Sugestão de Transferências.
+- ~~`GET v1/requisicao/sugestao` e o botão "Sugerir abaixo do mínimo"~~: removidos em 24/10/2026 (não
+  funcionavam e não foram pedidos). A reposição pelo mínimo virou o gerador de requisição (TASK-258).
+- **Confere:** venda → Requisitar preenchido.
 
 ### Etapa 6 — `codestoquelocaldestino`
 - `negocio_estoquelocaldestino.sql` (go-live, **antes** do deploy do MGLara): 1) copia o local do movimento
@@ -337,6 +336,34 @@ termina numa tela onde o Fábio confere (**Confere**).
   por loja requisitada e data. Ranking, evolução e gráfico só a pedido.
 - **Confere:** depois de requisições finalizadas com divergência, o detalhe do Centro mostra o resumo e a
   lista batendo com as requisições.
+
+### Etapa 12 — Gerador de requisição, prioridade e local Defeito (TASK-258, 24-25/10/2026)
+- **Gerador** (botão "Gerador" no painel, `/requisicao/gerador`): loja que pede (padrão a do PDV) →
+  marcas → produtos → variações → revisão → uma requisição de Reposição (`L`) por loja que atende.
+  - Regras do PDF, na loja que pede: trabalha = máx > 1; abaixo = trabalha e saldo ≤ mín; zerado =
+    trabalha e saldo ≤ 0; faltam = Σ(máx − saldo); **furo** = Σ(máx − saldo) × preço de venda, em R$
+    (soma qualquer unidade, por isso ordena marcas e produtos). Marca só a do produto (a da variação sai
+    na TASK-259).
+  - Marcas: todas as ativas, "12 de 140 · R$ 3.450"; "Todas as marcas" pula a escolha. Produtos: todos os
+    ativos, "3 de 8 · faltam 46 UN · R$ 380", pesquisa com o motor do F1. Filtros: urgência (Todos /
+    Abaixo do mínimo / Só zerados), ABC (A, A+B, A+B+C) e ordem (furo ou alfabética).
+  - Variação: a loja que pede (saldo, mín, máx, faltam) e cada outra loja (saldo, mín, máx, o que já foi
+    pedido em reposição aberta, campo de quanto pedir). Digita-se em unidades e sobe para o múltiplo
+    da embalagem de transferência; o item sai na barra dela. Sem embalagem não arredonda.
+  - Rascunho único no Pinia persistente (loja, quantidades, filtros; nunca saldo); com quantidade, a
+    troca de loja é recusada. Botão para abrir o produto no app estoque.
+  - Backend só consulta: `RequisicaoGeradorService` (`GET v1/requisicao/gerador/{marcas,produtos,
+    produto/{cod},situacao}`); o Gerar usa o `POST v1/requisicao`.
+- **Prioridade** (`tblrequisicao.prioridade`, 1 Baixa, 2 Normal, 3 Alta, 4 Urgente): pré-selecionada
+  pelo destino no formulário (R Urgente, E Alta, L Normal) e, no gerador, pela pior situação (zerado
+  Urgente, abaixo Normal, senão Baixa). Depois de criada, só muda pelo botão "Prioridade" do detalhe
+  (os dois lados, status aberto, motivo obrigatório → `tblauditoria` tipo 24, no Histórico). O painel
+  ordena por prioridade e depois pela mais antiga; chip no painel, prioridade nas vias e filtro na
+  listagem.
+- **Defeito** (`tblestoquelocal.defeito`, o 199001): local da mercadoria com defeito à espera de
+  substituição; fica fora da requisição (painel, formulário, gerador). Checkbox no cadastro do local.
+- **Go-live**: depois dos SQLs desta doc e antes do deploy, `estoquelocal_defeito.sql` e
+  `requisicao_prioridade.sql` (idempotentes). O PDV esconde o Defeito depois de sincronizar.
 
 ## Backlog — primeiro passo da execução
 

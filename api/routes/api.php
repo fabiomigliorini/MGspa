@@ -539,13 +539,18 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::middleware('pdv')->group(function () {
         Route::get('requisicao/painel', [\Mg\Requisicao\RequisicaoController::class, 'painel']);
         Route::get('requisicao', [\Mg\Requisicao\RequisicaoController::class, 'index']);
-        Route::get('requisicao/sugestao', [\Mg\Requisicao\RequisicaoController::class, 'sugestao']);
+        // gerador de requisicao (TASK-258): so' consulta
+        Route::get('requisicao/gerador/marcas', [\Mg\Requisicao\RequisicaoController::class, 'geradorMarcas']);
+        Route::get('requisicao/gerador/produtos', [\Mg\Requisicao\RequisicaoController::class, 'geradorProdutos']);
+        Route::get('requisicao/gerador/produto/{codproduto}', [\Mg\Requisicao\RequisicaoController::class, 'geradorProduto'])->whereNumber('codproduto');
+        Route::get('requisicao/gerador/situacao', [\Mg\Requisicao\RequisicaoController::class, 'geradorSituacao']);
         Route::get('requisicao/rascunho/negocio/{codnegocio}', [\Mg\Requisicao\RequisicaoController::class, 'rascunhoDoNegocio'])->whereNumber('codnegocio');
         Route::get('requisicao/negocio/{codnegocio}', [\Mg\Requisicao\RequisicaoController::class, 'doNegocio'])->whereNumber('codnegocio');
         Route::post('requisicao', [\Mg\Requisicao\RequisicaoController::class, 'store']);
         Route::get('requisicao/{codrequisicao}', [\Mg\Requisicao\RequisicaoController::class, 'show'])->whereNumber('codrequisicao');
         Route::put('requisicao/{codrequisicao}', [\Mg\Requisicao\RequisicaoController::class, 'update'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/cancelar', [\Mg\Requisicao\RequisicaoController::class, 'cancelar'])->whereNumber('codrequisicao');
+        Route::put('requisicao/{codrequisicao}/prioridade', [\Mg\Requisicao\RequisicaoController::class, 'prioridade'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/imprimir', [\Mg\Requisicao\RequisicaoController::class, 'imprimir'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/item', [\Mg\Requisicao\RequisicaoController::class, 'incluirEnviadoAMais'])->whereNumber('codrequisicao');
         Route::put('requisicao-item/{codrequisicaoitem}', [\Mg\Requisicao\RequisicaoController::class, 'justificarItem'])->whereNumber('codrequisicaoitem');

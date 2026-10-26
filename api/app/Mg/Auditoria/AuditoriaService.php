@@ -47,6 +47,8 @@ class AuditoriaService
     // cartao/PIX da venda cancelado pelo gerente; a cobranca se solta da
     // venda (TASK-30)
     const TIPO_PAGAMENTO_INTEGRADO_CANCELADO = 23;
+    // prioridade da requisicao trocada pelo botao do detalhe (TASK-258)
+    const TIPO_PRIORIDADE_ALTERADA = 24;
 
     const TIPOS = [
         self::TIPO_DATA_ALTERADA => 'Data alterada',
@@ -72,6 +74,7 @@ class AuditoriaService
         self::TIPO_PORTADOR_ALTERADO => 'Portador alterado',
         self::TIPO_NEGOCIO_ALTERADO => 'Negócio alterado',
         self::TIPO_PAGAMENTO_INTEGRADO_CANCELADO => 'Pagamento integrado cancelado',
+        self::TIPO_PRIORIDADE_ALTERADA => 'Prioridade alterada',
     ];
 
     // o historico do registro traz tambem a auditoria destes filhos (TASK-209);

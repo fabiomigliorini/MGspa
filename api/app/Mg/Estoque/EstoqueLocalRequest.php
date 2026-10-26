@@ -25,6 +25,7 @@ class EstoqueLocalRequest extends FormRequest
             'codfilial' => 'required|integer|exists:tblfilial,codfilial',
             'deposito' => 'boolean',
             'controlaestoque' => 'boolean',
+            'defeito' => 'boolean',
             'codimpressora' => 'nullable|integer|exists:tblimpressora,codimpressora',
         ];
     }

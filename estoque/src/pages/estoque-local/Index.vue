@@ -44,6 +44,7 @@ onMounted(() => sLocal.carregarLista())
                 {{ formataCodigo(l.codestoquelocal) }} · {{ l.filial }}
                 <template v-if="l.deposito"> · depósito</template>
                 <template v-if="!l.controlaestoque"> · não controla estoque</template>
+                <template v-if="l.defeito"> · defeito</template>
               </q-item-label>
               <q-item-label v-if="l.impressora" caption class="ellipsis">
                 <q-icon name="print" /> {{ l.impressora }}

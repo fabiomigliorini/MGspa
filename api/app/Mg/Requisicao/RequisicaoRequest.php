@@ -18,6 +18,8 @@ class RequisicaoRequest extends FormRequest
             'codestoquelocalrequisitante' => 'nullable|integer|exists:tblestoquelocal,codestoquelocal',
             'codestoquelocalrequisitada' => 'required|integer|exists:tblestoquelocal,codestoquelocal',
             'destino' => ['required', Rule::in(array_keys(Requisicao::DESTINOS))],
+            // so' na criacao (depois, pelo botao Prioridade); sem ela, o banco poe Normal
+            'prioridade' => ['nullable', Rule::in(array_keys(Requisicao::PRIORIDADES))],
             'codpessoa' => 'nullable|integer|exists:tblpessoa,codpessoa',
             'nomes' => 'nullable|required_unless:destino,L|array',
             'nomes.*' => 'required|string|max:100',

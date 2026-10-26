@@ -187,9 +187,11 @@ manutenção. Select novo nasce em `MgSelect`.
 de bipar (aceita `5*` para a quantidade) com a lupa e o F1 que abrem a pesquisa em grade
 (`MgDialogPesquisaProduto` + `MgGradeProduto`, a mesma do PDV): um card por produto, a variação e
 a embalagem escolhidas numa janela de duas colunas. Filtra como o PDV: todas as palavras digitadas
-têm que estar na descrição, a primeira começando uma palavra (`GET v1/produto-barra/pesquisa`). O
-código bipado se resolve em `GET v1/produto-barra/barras/{barras}`, no mesmo shape da linha da
-pesquisa. O `MgSelectProdutoBarra` está saindo (TASK-250): escolha de produto nova que nascer nele
+têm que estar na descrição, a primeira começando uma palavra (`GET v1/produto-barra/pesquisa`), e
+acha também pela referência do produto, da variação e da barra. Esse filtro é um motor só,
+`ProdutoBarraService::sqlBusca`, que o gerador de requisição também usa (TASK-258): pesquisa de
+produto nova no servidor monta em volta dele, não copia o filtro. O código bipado se resolve em
+`GET v1/produto-barra/barras/{barras}`, no mesmo shape da linha da pesquisa. O `MgSelectProdutoBarra` está saindo (TASK-250): escolha de produto nova que nascer nele
 é regressão.
 
 O card traz o estoque físico do produto, somado nas variações, de todos os locais ou do local do

@@ -109,6 +109,7 @@ watch(periodo, carregarIndicadores, { deep: true })
                 <q-item-label>
                   {{ sLocal.local.controlaestoque ? 'Controla estoque' : 'Não controla estoque' }}
                   <template v-if="sLocal.local.deposito"> · depósito</template>
+                  <template v-if="sLocal.local.defeito"> · defeito</template>
                 </q-item-label>
               </q-item-section>
             </q-item>

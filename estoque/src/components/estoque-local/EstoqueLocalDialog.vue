@@ -66,6 +66,14 @@ async function salvar() {
             <div class="col-12 col-sm-6">
               <q-toggle v-model="form.deposito" label="Depósito" />
             </div>
+            <div class="col-12 col-sm-6">
+              <q-toggle v-model="form.defeito" label="Defeito">
+                <q-tooltip>
+                  Guarda a mercadoria com defeito, à espera de substituição. Fica fora da requisição
+                  entre lojas
+                </q-tooltip>
+              </q-toggle>
+            </div>
           </div>
         </q-card-section>
         <q-card-actions align="right">

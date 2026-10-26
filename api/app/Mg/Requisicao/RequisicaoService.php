@@ -4,8 +4,8 @@ namespace Mg\Requisicao;
 
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Mg\Auditoria\AuditoriaService;
 use Mg\Estoque\EstoqueLocal;
-use Mg\Estoque\EstoqueSaldoRelatorioService;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioService;
 use Mg\Pdv\Pdv;
@@ -21,7 +21,7 @@ class RequisicaoService
     // a linha das listas (painel e listagem): as duas lojas, quem retira e quantos itens
     const SELECT_LISTA = "
         select
-            r.codrequisicao, r.status, r.destino, r.atendimento, r.criacao,
+            r.codrequisicao, r.status, r.destino, r.atendimento, r.prioridade, r.criacao,
             array_to_string(r.nomes, ', ') as nome,
             r.codestoquelocalrequisitante, elr.sigla as siglarequisitante,
             elr.estoquelocal as requisitante,
@@ -85,6 +85,44 @@ class RequisicaoService
             Requisicao::STATUS_EM_SEPARACAO,
             Requisicao::STATUS_PARCIAL,
         ]) && static::ehRequisitada($req, $pdv);
+    }
+
+    // trocar a prioridade: os dois lados, enquanto a requisicao esta' aberta
+    public static function podePrioridade(Requisicao $req, ?Pdv $pdv): bool
+    {
+        return in_array($req->status, [
+            Requisicao::STATUS_AGUARDANDO,
+            Requisicao::STATUS_EM_SEPARACAO,
+            Requisicao::STATUS_PARCIAL,
+            Requisicao::STATUS_TOTAL,
+            Requisicao::STATUS_DIVERGENCIA,
+        ]) && (static::ehRequisitante($req, $pdv) || static::ehRequisitada($req, $pdv));
+    }
+
+    // depois de criada, a prioridade so' muda aqui, com o motivo na auditoria
+    public static function prioridade(Requisicao $req, int $prioridade, string $motivo, ?Pdv $pdv): Requisicao
+    {
+        if (!static::podePrioridade($req, $pdv)) {
+            abort(403, 'Só as duas lojas da requisição trocam a prioridade, e só com ela aberta!');
+        }
+        if (trim($motivo) === '') {
+            abort(422, 'Informe o motivo!');
+        }
+        if ($req->prioridade == $prioridade) {
+            return $req;
+        }
+        $antes = $req->prioridade;
+        $req->prioridade = $prioridade;
+        $req->save();
+        AuditoriaService::registrar(
+            'tblrequisicao',
+            $req->codrequisicao,
+            AuditoriaService::TIPO_PRIORIDADE_ALTERADA,
+            ['prioridade' => Requisicao::PRIORIDADES[$antes] ?? $antes],
+            ['prioridade' => Requisicao::PRIORIDADES[$prioridade] ?? $prioridade],
+            $motivo
+        );
+        return $req;
     }
 
     protected static function exigirJustificar(Requisicao $req, ?Pdv $pdv): void
@@ -182,6 +220,8 @@ class RequisicaoService
         $req->codigoretirada = static::gerarCodigoRetirada();
         $req->codpdv = $pdv->codpdv;
         $req->status = Requisicao::STATUS_AGUARDANDO;
+        // fora do fillable: o atualizar nao mexe nela
+        $req->prioridade = $dados['prioridade'] ?? Requisicao::PRIORIDADE_NORMAL;
         $req->save();
 
         static::salvarItens($req, $dados['itens']);
@@ -305,28 +345,6 @@ class RequisicaoService
         ];
     }
 
-    // Sugestao abaixo do minimo (mesmas linhas do PDF de Sugestao de Transferencias): o que
-    // a requisitante tem no minimo ou abaixo e a requisitada tem saldo, ate' o maximo,
-    // na embalagem de transferencia (ou na unidade, se a variacao nao tem a barra dela)
-    public static function sugestao(int $requisitante, int $requisitada, ?int $codmarca = null, ?string $abc = null): array
-    {
-        $rows = EstoqueSaldoRelatorioService::transferenciasLinhas([
-            'codestoquelocalorigem' => $requisitada,
-            'codestoquelocaldestino' => $requisitante,
-            'codmarca' => $codmarca,
-            'abc' => $abc,
-        ]);
-        $quantidades = [];
-        foreach ($rows as $r) {
-            if (!empty($r->codprodutobarraembalagem)) {
-                $quantidades[$r->codprodutobarraembalagem] = $r->transferir / $r->quantidadeembalagem;
-            } elseif (!empty($r->codprodutobarraunidade)) {
-                $quantidades[$r->codprodutobarraunidade] = (float) $r->transferir;
-            }
-        }
-        return static::itensComProduto($quantidades);
-    }
-
     // [codprodutobarra => quantidade] no shape dos itens do formulario
     protected static function itensComProduto(array $quantidades): array
     {
@@ -365,14 +383,15 @@ class RequisicaoService
     }
 
     // Painel por loja: o que ela tem para atender (requisitada) e o que ela pediu
-    // (requisitante), a tela separa. So' as abertas, das mais antigas para as mais
-    // novas; as entregues e canceladas ficam na listagem.
+    // (requisitante), a tela separa. So' as abertas, da mais urgente para a menos e,
+    // na mesma prioridade, da mais antiga para a mais nova; as entregues e canceladas
+    // ficam na listagem.
     public static function painel(int $codestoquelocal): array
     {
         $sql = self::SELECT_LISTA . "
             where :codestoquelocal in (r.codestoquelocalrequisitada, r.codestoquelocalrequisitante)
             and r.status in ('A', 'S', 'P', 'T', 'D')
-            order by r.criacao, r.codrequisicao
+            order by r.prioridade desc, r.criacao, r.codrequisicao
             limit 500
         ";
         return DB::select($sql, ['codestoquelocal' => $codestoquelocal]);
@@ -384,7 +403,7 @@ class RequisicaoService
     {
         $where = ['true'];
         $bind = [];
-        foreach (['codrequisicao', 'codnegocio', 'codpessoa', 'codestoquelocalrequisitante', 'codestoquelocalrequisitada', 'status', 'destino'] as $campo) {
+        foreach (['codrequisicao', 'codnegocio', 'codpessoa', 'codestoquelocalrequisitante', 'codestoquelocalrequisitada', 'status', 'destino', 'prioridade'] as $campo) {
             if (!empty($filtros[$campo])) {
                 $where[] = "r.{$campo} = :{$campo}";
                 $bind[$campo] = $filtros[$campo];

@@ -1,6 +1,7 @@
 import { defineAsyncComponent } from 'vue'
 import { sincronizacaoStore } from 'stores/sincronizacao'
 import { requisicaoStore } from 'stores/requisicao'
+import { requisicaoGeradorStore } from 'stores/requisicaoGerador'
 
 const drawer = {
   offlineEsquerdo: defineAsyncComponent(() => import('components/drawers/OfflineLeftDrawer.vue')),
@@ -14,6 +15,16 @@ const drawer = {
   woo: defineAsyncComponent(() => import('components/drawers/WooLeftDrawer.vue')),
   requisicao: defineAsyncComponent(() => import('components/drawers/RequisicaoLeftDrawer.vue')),
 }
+
+// O rascunho do gerador de requisição é de uma loja só: com quantidade nele, outra loja no
+// endereço é recusada (com o aviso) e volta para a dele
+const geradorLoja = async (to) => {
+  const sGerador = requisicaoGeradorStore()
+  await sGerador.carregarLojas()
+  if (sGerador.usarLoja(Number(to.params.codestoquelocal))) return true
+  return `/requisicao/gerador/${sGerador.codestoquelocal}/marcas`
+}
+const marcasDoGerador = (route) => `/requisicao/gerador/${route.params.codestoquelocal}/marcas`
 
 const pdv = {
   title: 'PDV',
@@ -123,6 +134,43 @@ const routes = [
         meta: {
           title: 'Editar Requisição',
           backTo: (route) => '/requisicao/' + route.params.codrequisicao,
+        },
+      },
+
+      // GERADOR DE REQUISICAO (TASK-258)
+      {
+        path: '/requisicao/gerador',
+        component: () => import('pages/RequisicaoGeradorPage.vue'),
+        meta: { title: 'Gerador de Requisição', backTo: () => requisicaoStore().enderecoPainel },
+      },
+      {
+        path: '/requisicao/gerador/:codestoquelocal(\\d+)/marcas',
+        component: () => import('pages/RequisicaoGeradorMarcasPage.vue'),
+        beforeEnter: geradorLoja,
+        meta: { title: 'Gerador de Requisição', backTo: '/requisicao/gerador' },
+      },
+      {
+        path: '/requisicao/gerador/:codestoquelocal(\\d+)/marca/:codmarca(\\d+)?',
+        component: () => import('pages/RequisicaoGeradorProdutosPage.vue'),
+        beforeEnter: geradorLoja,
+        meta: { title: 'Gerador de Requisição', backTo: marcasDoGerador },
+      },
+      {
+        path: '/requisicao/gerador/:codestoquelocal(\\d+)/produto/:codproduto(\\d+)',
+        component: () => import('pages/RequisicaoGeradorProdutoPage.vue'),
+        beforeEnter: geradorLoja,
+        meta: {
+          title: 'Gerador de Requisição',
+          backTo: (route) => requisicaoGeradorStore().enderecoLista || marcasDoGerador(route),
+        },
+      },
+      {
+        path: '/requisicao/gerador/:codestoquelocal(\\d+)/revisao',
+        component: () => import('pages/RequisicaoGeradorRevisaoPage.vue'),
+        beforeEnter: geradorLoja,
+        meta: {
+          title: 'Gerador de Requisição',
+          backTo: (route) => requisicaoGeradorStore().enderecoLista || marcasDoGerador(route),
         },
       },
 

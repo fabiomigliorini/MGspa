@@ -49,6 +49,19 @@ class Requisicao extends MgModel
         self::STATUS_CANCELADA => 'Cancelada',
     ];
 
+    // o numero ordena o painel (a mais urgente primeiro)
+    const PRIORIDADE_BAIXA = 1;
+    const PRIORIDADE_NORMAL = 2;
+    const PRIORIDADE_ALTA = 3;
+    const PRIORIDADE_URGENTE = 4;
+
+    const PRIORIDADES = [
+        self::PRIORIDADE_BAIXA => 'Baixa',
+        self::PRIORIDADE_NORMAL => 'Normal',
+        self::PRIORIDADE_ALTA => 'Alta',
+        self::PRIORIDADE_URGENTE => 'Urgente',
+    ];
+
     protected $table = 'tblrequisicao';
     protected $primaryKey = 'codrequisicao';
 
@@ -83,6 +96,7 @@ class Requisicao extends MgModel
         'criacao' => 'datetime',
         'finalizacao' => 'datetime',
         'nomes' => PgArray::class,
+        'prioridade' => 'integer',
         'telefones' => PgArray::class,
     ];
 
