@@ -3,10 +3,10 @@ id: TASK-208
 title: >-
   Montar a Prancheta exige digitar o endereço da foto da categoria e o código de
   barras de cada produto
-status: To Do
+status: Done
 assignee: []
 created_date: '2026-10-10 19:42'
-updated_date: '2026-10-21 18:26'
+updated_date: '2026-10-26 16:22'
 labels:
   - negocios
 dependencies: []
@@ -51,3 +51,12 @@ Relação: TASK-64 centraliza a montagem da URL de imagem num service do Mg\Imag
 
 Critério da pesquisa F1 veio da conversa da TASK-173 (Fábio, 21/10/2026): hoje o Acrescentar produto abre uma caixa que só aceita o código de barras (negocios/src/pages/PranchetaPage.vue:290, sProduto.buscarBarras).
 <!-- SECTION:NOTES:END -->
+
+## Comments
+
+<!-- COMMENTS:BEGIN -->
+created: 2026-10-26 16:22
+---
+Absorvida pela TASK-82 (decisão do Fábio em 25/10/2026): o motor de imagens (specs/SPEC-IMAGENS.md) cobre estes critérios no milestone M4 (prancheta), inclusive o cache offline e o MgInputProdutoBarras. Fechada como duplicada; nada foi implementado aqui.
+---
+<!-- COMMENTS:END -->
