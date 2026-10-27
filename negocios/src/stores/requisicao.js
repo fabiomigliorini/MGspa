@@ -7,11 +7,11 @@ import { abrirPdf } from '@components/abrirPdf'
 // Store do domínio "requisição entre lojas" (TASK-55, doc-6): serve o painel, o detalhe e o
 // formulário. O status vem pronto do backend (coluna gravada pelo processo da requisição).
 
-const notificar = (type, message) =>
+const notificar = (type, message, timeout = 3000) =>
   Notify.create({
     type,
     message,
-    timeout: 3000,
+    timeout,
     actions: [{ icon: 'close', color: 'white' }],
   })
 
@@ -30,6 +30,15 @@ export const STATUS = {
   E: { label: 'Entregue', cor: 'blue-7', icone: 'task_alt' },
   C: { label: 'Cancelada', cor: 'red-5', icone: 'block' },
 }
+
+// não atendida não é status gravado: é a finalizada com divergências (D) sem nenhuma parte
+// separada (a loja que atende não tinha); a API manda o naoatendida
+export const NAO_ATENDIDA = {
+  label: 'Não atendida',
+  cor: 'blue-grey-6',
+  icone: 'remove_shopping_cart',
+}
+export const statusDe = (r) => (r?.naoatendida ? NAO_ATENDIDA : STATUS[r?.status] || STATUS.A)
 
 export const MOTIVOS = [
   { value: 'E', label: 'Estoque do sistema errado' },
@@ -394,6 +403,19 @@ export const requisicaoStore = defineStore('requisicao', () => {
     }
   }
 
+  // tira a justificativa do item (achou o produto, tem saldo); o enviado a mais sai da requisição
+  async function tirarJustificativa(item) {
+    try {
+      const { data } = await api.delete(
+        `v1/requisicao-item/${item.codrequisicaoitem}/justificativa`,
+      )
+      requisicao.value = data.data
+      notificar('positive', 'Justificativa retirada')
+    } catch (error) {
+      notificar('negative', mensagemErro(error, 'Impossível tirar a justificativa'))
+    }
+  }
+
   // justificativa de quem atende (motivo + observação + substituto), item a item
   async function justificarItem(item, dados) {
     try {
@@ -425,7 +447,7 @@ export const requisicaoStore = defineStore('requisicao', () => {
       requisicao.value = data.data
       notificar('positive', 'Requisição finalizada')
     } catch (error) {
-      notificar('negative', mensagemErro(error, 'Impossível finalizar'))
+      notificar('negative', mensagemErro(error, 'Impossível finalizar'), 8000)
     }
   }
 
@@ -504,6 +526,7 @@ export const requisicaoStore = defineStore('requisicao', () => {
     justificarItem,
     incluirEnviadoAMais,
     finalizar,
+    tirarJustificativa,
     reprocessar,
     entregar,
   }

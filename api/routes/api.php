@@ -554,6 +554,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('requisicao/{codrequisicao}/imprimir', [\Mg\Requisicao\RequisicaoController::class, 'imprimir'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/item', [\Mg\Requisicao\RequisicaoController::class, 'incluirEnviadoAMais'])->whereNumber('codrequisicao');
         Route::put('requisicao-item/{codrequisicaoitem}', [\Mg\Requisicao\RequisicaoController::class, 'justificarItem'])->whereNumber('codrequisicaoitem');
+        Route::delete('requisicao-item/{codrequisicaoitem}/justificativa', [\Mg\Requisicao\RequisicaoController::class, 'tirarJustificativa'])->whereNumber('codrequisicaoitem');
         Route::post('requisicao/{codrequisicao}/finalizar', [\Mg\Requisicao\RequisicaoController::class, 'finalizar'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/reabrir', [\Mg\Requisicao\RequisicaoController::class, 'reabrir'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/reprocessar', [\Mg\Requisicao\RequisicaoController::class, 'reprocessar'])->whereNumber('codrequisicao');

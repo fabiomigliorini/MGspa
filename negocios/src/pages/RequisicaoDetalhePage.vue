@@ -15,7 +15,7 @@ import {
   formataTelefone,
   formataTimestamp,
 } from '@components/formatters'
-import { requisicaoStore, STATUS, MOTIVOS, PRIORIDADES, PRIORIDADE } from 'stores/requisicao'
+import { requisicaoStore, statusDe, MOTIVOS, PRIORIDADES, PRIORIDADE } from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
 import { RESULTADOS, MOTIVOS as MOTIVOS_ENTREGA } from 'stores/entrega'
 
@@ -28,7 +28,7 @@ const sRequisicao = requisicaoStore()
 const sNegocio = negocioStore()
 const { requisicao: r } = storeToRefs(sRequisicao)
 
-const status = computed(() => STATUS[r.value?.status] || STATUS.A)
+const status = computed(() => statusDe(r.value))
 const prioridadeAtual = computed(() => PRIORIDADE[r.value?.prioridade] || PRIORIDADE[2])
 const itensPedidos = computed(() => r.value?.itens || [])
 
@@ -92,7 +92,7 @@ const substitutos = computed(() =>
   })),
 )
 function abrirJustificar(i) {
-  if (!r.value.podejustificar) return
+  if (!r.value.podefinalizar) return
   justificativa.value = {
     item: i,
     motivo: i.motivo,
@@ -104,6 +104,18 @@ function abrirJustificar(i) {
 async function justificar() {
   const { item, ...dados } = justificativa.value
   if (await sRequisicao.justificarItem(item, dados)) dialogJustificar.value = false
+}
+
+// Finalizar (TASK-55): acabou a separação, o que não foi não vai mais. Item que não bateu
+// sem motivo, ou fora do pedido sem destino, o servidor recusa dizendo qual justificar
+function finalizar() {
+  $q.dialog({
+    title: 'Finalizar separação',
+    message:
+      'A separação acaba aqui: o que não foi não vai mais. Cada item que não bateu precisa estar justificado.',
+    cancel: { label: 'Voltar', color: 'grey-8', flat: true },
+    ok: { label: 'Finalizar', color: 'primary', flat: true },
+  }).onOk(() => sRequisicao.finalizar(r.value))
 }
 
 // Prioridade (TASK-258): depois de criada, só muda aqui, com o motivo (vai para o Histórico)
@@ -171,16 +183,6 @@ async function entregar() {
     else dados.codigos = codigos
   }
   if (await sRequisicao.entregar(r.value, dados)) dialogEntregar.value = false
-}
-
-function finalizar() {
-  $q.dialog({
-    title: 'Finalizar',
-    message:
-      'Finalizar a requisição com o que foi separado? O que não bateu fica com o motivo de cada item.',
-    cancel: { label: 'Voltar', color: 'grey-8', flat: true },
-    ok: { label: 'Finalizar', color: 'primary', flat: true },
-  }).onOk(() => sRequisicao.finalizar(r.value))
 }
 
 // Impressão em etapas, no formato do wizard de pagamento do PDV: a via, o
@@ -323,6 +325,20 @@ function teclaImpressora(e) {
   e.stopPropagation()
 }
 
+// tirar a justificativa: achou o produto (tem saldo) depois de reabrir; o enviado a mais sai
+// da requisição e o produto volta ao fora do pedido
+function tirarJustificativa(i) {
+  $q.dialog({
+    title: 'Tirar a justificativa',
+    message:
+      Number(i.quantidade) === 0
+        ? `${i.produto.descricao} sai da requisição e volta ao fora do pedido.`
+        : `Tirar "${nomeMotivo(i.motivo)}" de ${i.produto.descricao}? O item volta a esperar a separação.`,
+    cancel: { label: 'Voltar', color: 'grey-8', flat: true },
+    ok: { label: 'Tirar', color: 'primary', flat: true },
+  }).onOk(() => sRequisicao.tirarJustificativa(i))
+}
+
 function cancelar() {
   $q.dialog({
     title: 'Cancelar requisição',
@@ -395,7 +411,7 @@ watch(
                 <q-tooltip>{{ r.comcodigo ? 'Entregar ao cliente' : 'Recebido' }}</q-tooltip>
               </q-btn>
               <q-btn
-                v-if="r.podejustificar"
+                v-if="r.podefinalizar"
                 flat
                 round
                 size="sm"
@@ -403,7 +419,7 @@ watch(
                 icon="done_all"
                 @click="finalizar"
               >
-                <q-tooltip>Finalizar</q-tooltip>
+                <q-tooltip>Finalizar separação</q-tooltip>
               </q-btn>
               <q-btn
                 v-if="r.podereabrir"
@@ -556,7 +572,7 @@ watch(
             <q-item
               v-for="i in itensPedidos"
               :key="i.codrequisicaoitem"
-              :clickable="r.podejustificar"
+              :clickable="r.podefinalizar"
               @click="abrirJustificar(i)"
             >
               <q-item-section avatar>
@@ -584,6 +600,18 @@ watch(
                   {{ situacaoItem(i).texto }}
                 </q-item-label>
               </q-item-section>
+              <q-item-section side v-if="r.podefinalizar && i.motivo">
+                <q-btn
+                  flat
+                  round
+                  size="sm"
+                  color="grey-7"
+                  icon="backspace"
+                  @click.stop="tirarJustificativa(i)"
+                >
+                  <q-tooltip>Tirar a justificativa (achou o produto)</q-tooltip>
+                </q-btn>
+              </q-item-section>
             </q-item>
           </q-list>
         </q-card>
@@ -603,7 +631,7 @@ watch(
                   <template v-if="f.resolvido"> · substituto de um item</template>
                 </q-item-label>
               </q-item-section>
-              <q-item-section side v-if="r.podejustificar && !f.resolvido">
+              <q-item-section side v-if="r.podefinalizar && !f.resolvido">
                 <q-btn
                   flat
                   color="primary"

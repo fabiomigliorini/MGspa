@@ -3,6 +3,7 @@
 namespace Mg\Requisicao;
 
 use Illuminate\Http\Resources\Json\JsonResource;
+use Mg\Negocio\NegocioService;
 use Mg\Produto\ProdutoBarra;
 use Mg\Produto\ProdutoBarraPesquisaResource;
 
@@ -42,6 +43,10 @@ class RequisicaoResource extends JsonResource
             'codrequisicao' => $req->codrequisicao,
             'status' => $req->status,
             'statusdescricao' => Requisicao::STATUS[$req->status] ?? null,
+            // finalizada sem nenhuma parte separada (RequisicaoService::SQL_NAO_ATENDIDA)
+            'naoatendida' => $req->status == Requisicao::STATUS_DIVERGENCIA
+                && !array_filter($calc['negocios'], fn ($n) => in_array($req->codrequisicao, $n['requisicoes'])
+                    && $n['codnegociostatus'] == NegocioService::STATUS_FECHADO),
             'atendimento' => $req->atendimento,
             'destino' => $req->destino,
             'destinodescricao' => Requisicao::DESTINOS[$req->destino] ?? null,
@@ -77,7 +82,7 @@ class RequisicaoResource extends JsonResource
             'ehrequisitada' => RequisicaoService::ehRequisitada($req, $pdv),
             'podeeditar' => RequisicaoService::podeEditar($req, $pdv),
             'podecancelar' => RequisicaoService::podeCancelar($req, $pdv),
-            'podejustificar' => RequisicaoService::podeJustificar($req, $pdv),
+            'podefinalizar' => RequisicaoService::podeFinalizar($req, $pdv),
             'podeseparar' => RequisicaoService::podeSeparar($req, $pdv),
             'podeprioridade' => RequisicaoService::podePrioridade($req, $pdv),
             'podereabrir' => RequisicaoService::podeReabrir($req, $pdv),

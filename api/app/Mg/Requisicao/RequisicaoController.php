@@ -252,7 +252,20 @@ class RequisicaoController extends Controller
         return new RequisicaoResource($req->load(RequisicaoResource::RELACOES));
     }
 
-    // desfaz o Finalizar com divergencias, com o motivo (vai para a auditoria)
+    // tira a justificativa do item (achou o produto, tem saldo)
+    public function tirarJustificativa(Request $request, $codrequisicaoitem)
+    {
+        $pdv = $request->attributes->get('pdv');
+        $codrequisicao = DB::transaction(function () use ($codrequisicaoitem, $pdv) {
+            $item = RequisicaoItem::findOrFail($codrequisicaoitem);
+            Requisicao::lockForUpdate()->findOrFail($item->codrequisicao);
+            RequisicaoService::tirarJustificativa($item, $pdv);
+            return $item->codrequisicao;
+        });
+        return new RequisicaoResource(Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao));
+    }
+
+    // desfaz o Finalizar (com divergencias ou nao atendida), com o motivo (vai para a auditoria)
     public function reabrir(Request $request, $codrequisicao)
     {
         $dados = $request->validate([

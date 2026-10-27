@@ -3,7 +3,7 @@ import { onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import { formataCodigo, formataTimestamp } from '@components/formatters'
-import { requisicaoStore, STATUS, DESTINO } from 'stores/requisicao'
+import { requisicaoStore, statusDe, DESTINO } from 'stores/requisicao'
 
 // Listagem de requisições (TASK-55): todas, da mais nova para a mais antiga, nos filtros do
 // painel lateral (nenhum por padrão). O painel por loja mostra só as abertas.
@@ -70,7 +70,7 @@ onUnmounted(() => clearTimeout(timer))
               <q-item-section side>
                 <q-item-label caption>{{ formataTimestamp(r.criacao, 2) }}</q-item-label>
                 <q-item-label caption>
-                  <q-badge :color="STATUS[r.status].cor" :label="STATUS[r.status].label" />
+                  <q-badge :color="statusDe(r).cor" :label="statusDe(r).label" />
                 </q-item-label>
               </q-item-section>
             </q-item>

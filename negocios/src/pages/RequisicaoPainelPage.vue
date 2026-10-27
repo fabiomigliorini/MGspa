@@ -23,13 +23,22 @@ const { codestoquelocal } = storeToRefs(sRequisicao)
 // sincronizou o campo; mostra como antes)
 const lojas = ref([])
 
-const ORDEM = ['A', 'S', 'P', 'T', 'D']
+// grupos por etapa: separada (total ou finalizada com divergência) é de quem recebe — na
+// reposição, a loja que pediu; na retirada/entrega, a loja que separou entrega ao cliente
+const ETAPAS = [
+  { chave: 'A', ...STATUS.A },
+  { chave: 'S', ...STATUS.S },
+  { chave: 'P', ...STATUS.P },
+  { chave: 'cliente', label: 'Aguardando o cliente', cor: 'green-7', icone: 'person_pin_circle' },
+  { chave: 'receber', label: 'A receber', cor: 'green-7', icone: 'local_shipping' },
+]
+const etapa = (r) =>
+  ['T', 'D'].includes(r.status) ? (r.destino === 'L' ? 'receber' : 'cliente') : r.status
 
-const porStatus = (requisicoes) =>
-  ORDEM.map((status) => ({
-    status,
-    ...STATUS[status],
-    itens: requisicoes.filter((r) => r.status === status),
+const porEtapa = (requisicoes) =>
+  ETAPAS.map((e) => ({
+    ...e,
+    itens: requisicoes.filter((r) => etapa(r) === e.chave),
   })).filter((g) => g.itens.length)
 
 // "para atender" primeiro; depois um card por loja a que esta pediu (sem loja = Compras)
@@ -60,7 +69,7 @@ const cards = computed(() => {
     }),
   ]
     .filter((c) => c.requisicoes.length)
-    .map((c) => ({ ...c, grupos: porStatus(c.requisicoes) }))
+    .map((c) => ({ ...c, grupos: porEtapa(c.requisicoes) }))
 })
 
 // no "para atender" a linha diz quem pediu; no "que pedi" quem atende já é o card
@@ -68,6 +77,7 @@ const legenda = (r, atender) =>
   [
     atender && `pedida por ${r.requisitante}`,
     DESTINO[r.destino].curto,
+    r.status === 'D' && 'com divergências',
     `${r.itens} ${r.itens == 1 ? 'item' : 'itens'}`,
   ]
     .filter(Boolean)
@@ -149,7 +159,7 @@ onMounted(async () => {
           </q-item-section>
         </q-item>
 
-        <template v-for="g in c.grupos" :key="g.status">
+        <template v-for="g in c.grupos" :key="g.chave">
           <q-separator />
           <q-item-label header class="row items-center text-weight-medium" :class="`text-${g.cor}`">
             <q-icon :name="g.icone" size="xs" class="q-mr-sm" />

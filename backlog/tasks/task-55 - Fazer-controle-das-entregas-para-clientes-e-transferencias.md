@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-27 13:44'
+updated_date: '2026-10-27 20:14'
 labels:
   - negocios
 dependencies: []
@@ -74,6 +74,10 @@ As impressoras em tabela estão na task própria das impressoras.
 - [ ] #37 Separar com negócio de separação em andamento neste PDV abre esse negócio em vez de criar outro
 - [ ] #38 Requisição a partir do negócio: 'Marcar todos' na lista de produtos (parcial quando só alguns estão marcados)
 - [ ] #39 Reabrir a requisição com divergências: Gerente só no PDV da loja que atende, Administrador em qualquer PDV; motivo no Histórico; volta a pendente
+- [ ] #40 Separada (total sozinha ou finalizada) sai do painel de quem separou: reposição fica em 'A receber' na loja que pediu; retira/entrega fica em 'Aguardando o cliente' na loja que separou
+- [ ] #41 Finalizar sem nada separado → 'Não atendida' (D sem parte, sem mudar o banco): sai dos painéis e do 'já pedido' do Gerador, não liga negócio; Reabrir vale para ela
+- [ ] #42 Reaberta (ou antes de finalizar), quem atende ou Gerente tira a justificativa de um item (achou o produto); o enviado a mais sai e o produto volta ao fora do pedido
+- [ ] #43 Finalizar separação só confirma; item que não bateu sem motivo ou fora do pedido sem destino → recusa 'Justifique antes de finalizar' com cada produto; finalizada, o botão some
 <!-- AC:END -->
 
 ## Implementation Notes

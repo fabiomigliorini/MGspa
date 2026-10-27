@@ -120,12 +120,21 @@ o que depende dela por último.
     **A** aguardando · **S** em separação (há negócio ligado aberto) · **P** separado parcial / pendente ·
     **T** separado total (tudo bateu: atendido = pedido em todos os itens e nada fora do pedido — o processo
     finaliza sozinho) · **D** separado com divergências (finalizado à mão) · **E** entregue (finalizada e
-    todas as partes entregues) · **C** cancelada. "Separado" = pronto para retirar.
-15. Pendência: a loja **requisitada** ou **Gerente** abre a requisição, lança por item **motivo**
-    (estoque do sistema errado, avariado/vencido, não localizado, enviado a mais, sem saldo) + observação +
-    **substituído por** (campo à parte, complementar ao motivo), e **Finaliza** (→ D). Produto fora do pedido
-    aparece listado; quem justifica marca como substituto de um item ou inclui como item com pedido 0 e
-    motivo "enviado a mais".
+    todas as partes entregues) · **C** cancelada. **Não atendida** não é status gravado: é a D sem nenhuma
+    parte separada (a loja não tinha; `RequisicaoService::SQL_NAO_ATENDIDA`, `naoatendida` na API) — sai
+    dos painéis e do "já pedido" do Gerador, a tela mostra "Não atendida" (27/10/2026). "Separado" = pronto para retirar.
+    **Painel** (27/10/2026): separada (T ou D) sai de quem separou e fica para quem recebe — reposição em
+    **A receber** na loja que pediu; retirada/entrega em **Aguardando o cliente** na loja que separou (ela
+    entrega ao cliente) e na que pediu. Não atendida, E e C ficam só na listagem.
+15. **Finalizar = acabou a separação**; não existe "o resto vem depois" (decisão 6). Enquanto a separação
+    está aberta (A/S/P, também depois de Reabrir), a loja **requisitada** ou **Gerente** clica no item e lança
+    **motivo** (estoque do sistema errado, avariado/vencido, não localizado, enviado a mais, sem saldo) +
+    observação + **substituído por** (campo à parte, complementar ao motivo); produto fora do pedido é marcado
+    como substituto de um item ou incluído como item com pedido 0 e motivo "enviado a mais" (botão no card
+    Fora do pedido). **Tirar a justificativa** (achou o produto): botão no item,
+    `DELETE v1/requisicao-item/{id}/justificativa`; o enviado a mais sai e o produto volta ao fora do pedido.
+    **Finalizar** só confirma (→ D, ou não atendida sem nada separado); item divergente sem motivo ou fora do
+    pedido sem destino → recusa "Justifique antes de finalizar: …" com cada produto (27/10/2026).
 16. Reprocessamento: a cada evento o processo roda de novo. **Reabriu ou cancelou** um negócio ligado → a
     finalização manual cai e volta a pendente (as justificativas ficam); **fechou e atendeu tudo** → T
     sozinho. Botão **Reprocessar** na requisição roda o mesmo processo. **Reabrir** (Gerente no PDV da loja que atende ou Administrador, só em D, com
@@ -168,8 +177,8 @@ o que depende dela por último.
     - **Editar**: a loja **requisitante** ou Gerente, aguardando.
     - **Prioridade**: requisitante ou Administrador, em A/S/P/T/D (quem atende não troca).
     - **Cancelar**: requisitante ou Gerente, fora de C/E.
-    - **Justificar e Finalizar**: requisitada ou Gerente, em A/S/P/D.
-    - **Reabrir**: Gerente no PDV da loja **requisitada**, ou Administrador em qualquer PDV, em D.
+    - **Justificar, tirar justificativa e Finalizar separação**: requisitada ou Gerente, em A/S/P.
+    - **Reabrir**: Gerente no PDV da loja **requisitada**, ou Administrador em qualquer PDV, em D (também a não atendida).
     - **Entregar**: em R/E, a requisitada ou Gerente; em L, a requisitante ou Gerente; só com parte fechada
       ainda não entregue.
     - **Reprocessar e Imprimir**: sempre; a via do cliente só aparece no dispositivo da loja que pediu.
@@ -320,9 +329,9 @@ termina numa tela onde o Fábio confere (**Confere**).
   linhas ativas dos negócios fechados ligados (ordem determinística: lançamento do negócio, ordem da linha),
   distribui pela decisão 13, grava `quantidadeatendida`, decide o status (decisões 14 e 16) e grava. Botão
   **Reprocessar** (`POST v1/requisicao/{id}/reprocessar`).
-- Justificar e finalizar (requisitada ou Gerente): `PUT v1/requisicao-item/{id}` (motivo, observação,
-  substituto), incluir item pedido 0, `POST v1/requisicao/{id}/finalizar` (exige motivo em cada item
-  divergente e produto fora do pedido resolvido).
+- Justificar e finalizar (requisitada ou Gerente, em A/S/P): `PUT v1/requisicao-item/{id}` (motivo, observação,
+  substituto), `DELETE v1/requisicao-item/{id}/justificativa`, incluir item pedido 0, `POST
+  v1/requisicao/{id}/finalizar` (exige motivo em cada item divergente e produto fora do pedido resolvido).
 - negocios `RequisicaoDetalhePage`: itens com pedido × atendido (menor embalagem), lista "fora do pedido",
   partes (negócios) com link, justificativas e Finalizar.
 - **Confere:** no PDA do Centro, bipa offline, liga pelo QR, fecha → NF-e sai → requisição "separado

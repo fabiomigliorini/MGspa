@@ -19,6 +19,15 @@ use Mg\Usuario\Autorizador;
 class RequisicaoService
 {
     // a linha das listas (painel e listagem): as duas lojas, quem retira e quantos itens
+    // nao atendida: finalizada (D) sem nenhuma parte separada (negocio fechado ligado), a
+    // loja que atende nao tinha. Nao e' status gravado: e' a D sem parte, a tela mostra
+    // "Nao atendida" e o painel nao mostra (nao ha' o que entregar nem receber)
+    const SQL_NAO_ATENDIDA = "(r.status = 'D' and not exists (
+            select 1 from tblnegociorequisicao nr
+            inner join tblnegocio n on (n.codnegocio = nr.codnegocio)
+            where nr.codrequisicao = r.codrequisicao and nr.inativo is null and n.codnegociostatus = 2
+        ))";
+
     const SELECT_LISTA = "
         select
             r.codrequisicao, r.status, r.destino, r.atendimento, r.prioridade, r.criacao,
@@ -28,7 +37,8 @@ class RequisicaoService
             r.codestoquelocalrequisitada, eld.sigla as siglarequisitada,
             eld.estoquelocal as requisitada,
             (select count(*) from tblrequisicaoitem ri
-              where ri.codrequisicao = r.codrequisicao and ri.quantidade > 0) as itens
+              where ri.codrequisicao = r.codrequisicao and ri.quantidade > 0) as itens,
+            " . self::SQL_NAO_ATENDIDA . " as naoatendida
         from tblrequisicao r
         inner join tblestoquelocal elr on (elr.codestoquelocal = r.codestoquelocalrequisitante)
         left join tblestoquelocal eld on (eld.codestoquelocal = r.codestoquelocalrequisitada)
@@ -66,15 +76,14 @@ class RequisicaoService
             && (static::ehRequisitante($req, $pdv) || static::ehGerente());
     }
 
-    // justificar os itens e finalizar com divergencia: quem atende ou Gerente (tambem
-    // sem nada separado: e' assim que quem atende diz que nao tem)
-    public static function podeJustificar(Requisicao $req, ?Pdv $pdv): bool
+    // justificar os itens e finalizar: quem atende ou Gerente, enquanto a separacao nao
+    // acabou (tambem sem nada separado: e' assim que quem atende diz que nao tem)
+    public static function podeFinalizar(Requisicao $req, ?Pdv $pdv): bool
     {
         return in_array($req->status, [
             Requisicao::STATUS_AGUARDANDO,
             Requisicao::STATUS_EM_SEPARACAO,
             Requisicao::STATUS_PARCIAL,
-            Requisicao::STATUS_DIVERGENCIA,
         ]) && (static::ehRequisitada($req, $pdv) || static::ehGerente());
     }
 
@@ -101,8 +110,8 @@ class RequisicaoService
         ]) && (static::ehRequisitante($req, $pdv) || Autorizador::pode([]));
     }
 
-    // reabrir, desfazendo o Finalizar com divergencias: Administrador em qualquer PDV;
-    // Gerente so' no PDV da loja que atende (pode([]) e' so' o Administrador)
+    // reabrir, desfazendo o Finalizar com divergencias (tambem a nao atendida): Administrador
+    // em qualquer PDV; Gerente so' no PDV da loja que atende (pode([]) e' so' o Administrador)
     public static function podeReabrir(Requisicao $req, ?Pdv $pdv): bool
     {
         return $req->status == Requisicao::STATUS_DIVERGENCIA
@@ -137,8 +146,8 @@ class RequisicaoService
 
     protected static function exigirJustificar(Requisicao $req, ?Pdv $pdv): void
     {
-        if (!static::podeJustificar($req, $pdv)) {
-            abort(403, 'Só a loja que atende ou um Gerente justifica e finaliza, e só com a requisição pendente!');
+        if (!static::podeFinalizar($req, $pdv)) {
+            abort(403, 'Só a loja que atende ou um Gerente justifica e finaliza, e só enquanto a separação não acabou (finalizada, reabra antes)!');
         }
     }
 
@@ -173,8 +182,9 @@ class RequisicaoService
         return $item;
     }
 
-    // Finalizar com divergencia: nada em separacao, cada item que nao bateu com motivo,
-    // e cada produto fora do pedido como substituto de um item ou incluido a mais
+    // Finalizar = acabou a separacao, o que nao foi nao vai mais: nada em separacao, cada
+    // item que nao bateu com motivo, e cada produto fora do pedido como substituto de um
+    // item ou incluido a mais (faltou, recusa dizendo o que justificar)
     public static function finalizar(Requisicao $req, ?Pdv $pdv): Requisicao
     {
         static::exigirJustificar($req, $pdv);
@@ -191,18 +201,18 @@ class RequisicaoService
         foreach ($req->RequisicaoItemS()->with('ProdutoBarra.Produto')->get() as $item) {
             $c = $calc['itens'][$item->codrequisicaoitem] ?? null;
             if ($c && abs($c['pedido'] - $c['atendido']) > RequisicaoProcessamentoService::TOLERANCIA && empty($item->motivo)) {
-                $erros[] = "{$item->ProdutoBarra->Produto->produto} não bateu: informe o motivo";
+                $erros[] = "{$item->ProdutoBarra->Produto->produto} (não bateu: clique no item e informe o motivo)";
             }
         }
         $substitutos = array_filter(array_column(array_filter($calc['itens'], fn ($i) => $i['codrequisicao'] == $req->codrequisicao), 'codprodutovariacaosubstituto'));
         foreach ($calc['fora'][$req->codrequisicao] ?? [] as $f) {
             if (!in_array($f['codprodutovariacao'], $substitutos)) {
                 $pb = ProdutoBarra::with('Produto')->find($f['codprodutobarra']);
-                $erros[] = "{$pb->Produto->produto} veio fora do pedido: marque como substituto de um item ou inclua como enviado a mais";
+                $erros[] = "{$pb->Produto->produto} (veio fora do pedido: marque como substituto de um item ou Enviado a mais)";
             }
         }
         if (!empty($erros)) {
-            abort(422, implode('; ', array_unique($erros)) . '.');
+            abort(422, 'Justifique antes de finalizar: ' . implode('; ', array_unique($erros)) . '.');
         }
         $req->finalizacao = now();
         $req->codusuariofinalizacao = Auth::user()?->codusuario;
@@ -211,12 +221,31 @@ class RequisicaoService
         return $req->fresh();
     }
 
+    // tira a justificativa de um item (achou o produto, tem saldo): enquanto a separacao
+    // nao acabou, quem pode finalizar. O "enviado a mais" (item com pedido 0) sai da
+    // requisicao e o produto volta ao fora do pedido
+    public static function tirarJustificativa(RequisicaoItem $item, ?Pdv $pdv): void
+    {
+        $req = $item->Requisicao;
+        static::exigirJustificar($req, $pdv);
+        if ((float) $item->quantidade == 0) {
+            $item->delete();
+        } else {
+            $item->motivo = null;
+            $item->observacao = null;
+            $item->codprodutobarrasubstituto = null;
+            $item->save();
+        }
+        RequisicaoProcessamentoService::processar($req);
+    }
+
     // desfaz o Finalizar: o processo devolve a pendente (ou aguardando, sem nada
     // fechado); as justificativas dos itens ficam
+    // (cada uma sai pelo tirarJustificativa)
     public static function reabrir(Requisicao $req, string $motivo, ?Pdv $pdv): Requisicao
     {
         if (!static::podeReabrir($req, $pdv)) {
-            abort(403, 'Só o Gerente da loja que atende (no PDV dela) ou um Administrador reabre, e só requisição com divergências!');
+            abort(403, 'Só o Gerente da loja que atende (no PDV dela) ou um Administrador reabre, e só requisição finalizada!');
         }
         if (trim($motivo) === '') {
             abort(422, 'Informe o motivo!');
@@ -415,6 +444,7 @@ class RequisicaoService
     {
         return DB::select("
             select r.codrequisicao, r.status, r.destino, r.criacao,
+                " . self::SQL_NAO_ATENDIDA . " as naoatendida,
                 elr.sigla as siglarequisitante, eld.sigla as siglarequisitada,
                 eld.estoquelocal as requisitada
             from tblrequisicao r
@@ -426,18 +456,26 @@ class RequisicaoService
     }
 
     // Painel por loja: o que ela tem para atender (requisitada) e o que ela pediu
-    // (requisitante), a tela separa. So' as abertas, da mais urgente para a menos e,
-    // na mesma prioridade, da mais antiga para a mais nova; as entregues e canceladas
-    // ficam na listagem.
+    // (requisitante), a tela separa. Separada (total ou finalizada) sai de quem separou e
+    // fica so' para quem recebe: na reposicao, a loja que pediu; na retirada/entrega, a
+    // propria loja que separou entrega ao cliente, entao fica nela tambem. Da mais urgente
+    // para a menos e, na mesma prioridade, da mais antiga para a mais nova; as entregues,
+    // nao atendidas (SQL_NAO_ATENDIDA) e canceladas ficam na listagem.
     public static function painel(int $codestoquelocal): array
     {
         $sql = self::SELECT_LISTA . "
-            where :codestoquelocal in (r.codestoquelocalrequisitada, r.codestoquelocalrequisitante)
-            and r.status in ('A', 'S', 'P', 'T', 'D')
+            where (
+                (r.codestoquelocalrequisitada = :codestoquelocal and (
+                    r.status in ('A', 'S', 'P')
+                    or (r.status in ('T', 'D') and r.destino in ('R', 'E'))
+                ))
+                or (r.codestoquelocalrequisitante = :codestoquelocal2 and r.status in ('A', 'S', 'P', 'T', 'D'))
+            )
+            and not " . self::SQL_NAO_ATENDIDA . "
             order by r.prioridade desc, r.criacao, r.codrequisicao
             limit 500
         ";
-        return DB::select($sql, ['codestoquelocal' => $codestoquelocal]);
+        return DB::select($sql, ['codestoquelocal' => $codestoquelocal, 'codestoquelocal2' => $codestoquelocal]);
     }
 
     // Listagem: todas as requisicoes, da mais nova para a mais antiga, nos filtros
