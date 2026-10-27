@@ -80,6 +80,7 @@ class RequisicaoResource extends JsonResource
             'podejustificar' => RequisicaoService::podeJustificar($req, $pdv),
             'podeseparar' => RequisicaoService::podeSeparar($req, $pdv),
             'podeprioridade' => RequisicaoService::podePrioridade($req, $pdv),
+            'podereabrir' => RequisicaoService::podeReabrir($req, $pdv),
             'podeentregar' => RequisicaoEntregaService::podeEntregar($req, $pdv),
             'comcodigo' => RequisicaoEntregaService::comCodigo($req),
             'partespendentes' => RequisicaoEntregaService::partesPendentes($req),

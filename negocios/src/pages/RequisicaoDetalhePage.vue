@@ -47,9 +47,29 @@ const nomeMotivo = (m) => MOTIVOS.find((x) => x.value === m)?.label
 
 const STATUS_NEGOCIO = { 1: 'Aberto', 2: 'Fechado', 3: 'Cancelado' }
 
+// os negócios de separação ainda abertos: o que foi bipado neles só conta quando fecharem
+const partesAbertas = computed(() => (r.value?.partes || []).filter((p) => p.codnegociostatus == 1))
+
 // Separar (TASK-55): abre um negócio no PDV já ligado a esta requisição; o negócio novo vai
-// ao servidor uma vez só, já ligado (o ligar é que sincroniza)
+// ao servidor uma vez só, já ligado (o ligar é que sincroniza). O botão aparece em qualquer
+// PDV enquanto a requisição está aberta, mas só separa o da loja que atende.
+const separavel = computed(() => ['A', 'S', 'P'].includes(r.value?.status))
 async function separar() {
+  if (!r.value.podeseparar) {
+    $q.notify({
+      type: 'negative',
+      message: `Separe no PDV do ${r.value.requisitada}: o negócio de separação sai do estoque do PDV.`,
+      timeout: 5000,
+      actions: [{ icon: 'close', color: 'white' }],
+    })
+    return
+  }
+  // já em separação neste PDV: abre o negócio em andamento
+  const andamento = await sNegocio.negocioAbertoDaRequisicao(r.value.codrequisicao)
+  if (andamento) {
+    router.push('/offline/' + andamento.uuid)
+    return
+  }
   const neg = await sNegocio.carregarPrimeiroVazioOuCriar(false)
   if (!neg) return
   if (await sNegocio.ligarRequisicao(r.value.codrequisicao, r.value.codestoquelocalrequisitante)) {
@@ -98,6 +118,19 @@ async function salvarPrioridade() {
   const { prioridade, motivo } = trocaPrioridade.value
   if (await sRequisicao.trocarPrioridade(r.value, prioridade, motivo.trim())) {
     dialogPrioridade.value = false
+  }
+}
+
+// Reabrir: o Gerente da loja que atende (ou Administrador) desfaz o Finalizar, com o motivo (vai para o Histórico)
+const dialogReabrir = ref(false)
+const motivoReabrir = ref('')
+function abrirReabrir() {
+  motivoReabrir.value = ''
+  dialogReabrir.value = true
+}
+async function reabrir() {
+  if (await sRequisicao.reabrir(r.value, motivoReabrir.value.trim())) {
+    dialogReabrir.value = false
   }
 }
 
@@ -340,7 +373,7 @@ watch(
                 <q-tooltip>Prioridade</q-tooltip>
               </q-btn>
               <q-btn
-                v-if="r.podeseparar"
+                v-if="separavel"
                 flat
                 round
                 size="sm"
@@ -371,6 +404,17 @@ watch(
                 @click="finalizar"
               >
                 <q-tooltip>Finalizar</q-tooltip>
+              </q-btn>
+              <q-btn
+                v-if="r.podereabrir"
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="lock_open"
+                @click="abrirReabrir"
+              >
+                <q-tooltip>Reabrir (desfaz o Finalizar)</q-tooltip>
               </q-btn>
               <q-btn
                 flat
@@ -494,6 +538,20 @@ watch(
           <q-card-section class="text-grey-9 text-overline q-pb-none"
             >Produtos pedidos</q-card-section
           >
+          <q-item
+            v-for="p in partesAbertas"
+            :key="p.codnegocio"
+            clickable
+            :to="`/negocio/${p.codnegocio}`"
+            class="text-blue-grey-8"
+          >
+            <q-item-section avatar><q-icon name="hourglass_top" /></q-item-section>
+            <q-item-section>
+              <q-item-label>Em separação no negócio {{ formataCodigo(p.codnegocio) }}</q-item-label>
+              <q-item-label caption>Os produtos contam quando ele for fechado</q-item-label>
+            </q-item-section>
+            <q-item-section side><q-icon name="chevron_right" /></q-item-section>
+          </q-item>
           <q-list separator>
             <q-item
               v-for="i in itensPedidos"
@@ -697,6 +755,31 @@ watch(
           <q-card-actions align="right">
             <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
             <q-btn flat label="Gravar" color="primary" type="submit" />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
+
+    <q-dialog v-model="dialogReabrir">
+      <q-card flat style="width: 400px; max-width: 95vw">
+        <q-form @submit.prevent="reabrir">
+          <q-card-section class="text-h6">Reabrir</q-card-section>
+          <q-card-section class="q-pt-none">
+            <div class="text-body2 text-grey-8 q-mb-md">
+              Desfaz o Finalizar: a requisição volta a pendente e pode receber outro negócio. As
+              justificativas dos itens ficam.
+            </div>
+            <MgInput
+              v-model="motivoReabrir"
+              label="Motivo"
+              maxlength="300"
+              autofocus
+              :rules="[(v) => !!v?.trim() || 'Informe o motivo']"
+            />
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
+            <q-btn flat label="Reabrir" color="primary" type="submit" />
           </q-card-actions>
         </q-form>
       </q-card>

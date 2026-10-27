@@ -8,6 +8,7 @@ import { negocioStore } from 'stores/negocio'
 
 // Gerador de requisição (TASK-258), primeira tela: a loja que vai ser reposta. Começa na do
 // rascunho, se ele tem quantidade; senão, na do PDV. Com rascunho, a troca é recusada.
+// Quem não é Gerente só repõe a loja do PDV: a tela passa direto para as marcas.
 const router = useRouter()
 const sGerador = requisicaoGeradorStore()
 const sNegocio = negocioStore()
@@ -20,14 +21,18 @@ const inicial = computed(() =>
 )
 
 const opcoes = computed(() =>
-  sGerador.lojas.map((l, i) => ({
-    valor: l.codestoquelocal,
-    label: l.estoquelocal,
-    caption: l.sigla,
-    icone: 'warehouse',
-    cor: 'blue-grey-5',
-    tecla: i < 9 ? i + 1 : null,
-  })),
+  sGerador.lojas
+    .filter(
+      (l) => sNegocio.podeEscolherLoja || l.codestoquelocal == sNegocio.padrao.codestoquelocal,
+    )
+    .map((l, i) => ({
+      valor: l.codestoquelocal,
+      label: l.estoquelocal,
+      caption: l.sigla,
+      icone: 'warehouse',
+      cor: 'blue-grey-5',
+      tecla: i < 9 ? i + 1 : null,
+    })),
 )
 
 function escolher(opcao) {
@@ -45,6 +50,13 @@ function tecla(e) {
 
 onMounted(async () => {
   await sGerador.carregarLojas()
+  // sem escolha: segue com a loja do PDV (replace, para o voltar não cair aqui de novo);
+  // com rascunho de outra loja, fica nesta tela para gerar ou limpar
+  const loja = sNegocio.padrao.codestoquelocal
+  if (!sNegocio.podeEscolherLoja && loja && sGerador.usarLoja(loja)) {
+    router.replace(`/requisicao/gerador/${loja}/marcas`)
+    return
+  }
   nextTick(() => cardRef.value?.$el?.focus())
 })
 </script>

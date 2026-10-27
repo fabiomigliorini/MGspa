@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-26 16:30'
+updated_date: '2026-10-27 13:44'
 labels:
   - negocios
 dependencies: []
@@ -64,6 +64,16 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #27 PDV: ligar a uma requisição que não existe é recusado na hora, sem deixar para a sincronização
 - [x] #28 Requisição: na impressão, cada item em duas linhas — descrição e quantidade em cima; barras (e localização) e a unidade com a embalagem (CX C/12) embaixo da quantidade
 - [x] #29 Requisição: o lado do dispositivo (quem pede ou quem atende) é decidido pelo local de estoque do PDV, não pela filial
+- [ ] #30 A loja que pede é a do PDV; só Gerente/Admin escolhe outra (formulário e Gerador; o servidor recusa)
+- [ ] #31 Ligar recusa na hora a requisição de outra loja atender ou já finalizada/cancelada (Separar, QR e número)
+- [ ] #32 Separar aparece em qualquer PDV com a requisição aberta e, fora da loja que atende, recusa dizendo onde separar
+- [ ] #33 Detalhe mostra 'Em separação no negócio #X' enquanto há negócio de separação aberto
+- [ ] #34 Gerente/Admin em qualquer PDV edita a requisição (aguardando); a prioridade só a loja que pediu ou Administrador
+- [ ] #35 ESC volta uma etapa no formulário da requisição (com o select aberto, só fecha o menu)
+- [ ] #36 Requisição a partir do negócio não pergunta o número do negócio nem quem pede (é a loja da venda)
+- [ ] #37 Separar com negócio de separação em andamento neste PDV abre esse negócio em vez de criar outro
+- [ ] #38 Requisição a partir do negócio: 'Marcar todos' na lista de produtos (parcial quando só alguns estão marcados)
+- [ ] #39 Reabrir a requisição com divergências: Gerente só no PDV da loja que atende, Administrador em qualquer PDV; motivo no Histórico; volta a pendente
 <!-- AC:END -->
 
 ## Implementation Notes

@@ -252,6 +252,22 @@ class RequisicaoController extends Controller
         return new RequisicaoResource($req->load(RequisicaoResource::RELACOES));
     }
 
+    // desfaz o Finalizar com divergencias, com o motivo (vai para a auditoria)
+    public function reabrir(Request $request, $codrequisicao)
+    {
+        $dados = $request->validate([
+            'motivo' => 'required|string|max:300',
+        ], [
+            'motivo.required' => 'Informe o motivo!',
+        ]);
+        $pdv = $request->attributes->get('pdv');
+        $req = DB::transaction(function () use ($codrequisicao, $dados, $pdv) {
+            $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
+            return RequisicaoService::reabrir($req, $dados['motivo'], $pdv);
+        });
+        return new RequisicaoResource($req->load(RequisicaoResource::RELACOES));
+    }
+
     // entrega das partes separadas: com o codigo de retirada de cada requisicao do negocio
     // (retirada/entrega ao cliente) ou o recebido da reposicao
     public function entregar(Request $request, $codrequisicao)

@@ -230,8 +230,9 @@ export const requisicaoStore = defineStore('requisicao', () => {
   }
 
   // Etapa do negócio: o cliente da venda fechada é o padrão de quem retira ou recebe e os
-  // itens vendidos são a lista para marcar. Busca só quando o número muda.
-  async function carregarNegocio() {
+  // itens vendidos são a lista para marcar. Busca só quando o número muda. comLoja: a
+  // requisição nasce do negócio (botão do PDV) e a loja dele é quem pede
+  async function carregarNegocio({ comLoja = false } = {}) {
     const codnegocio = form.value.codnegocio
     if (!codnegocio) {
       itensNegocio.value = []
@@ -242,6 +243,7 @@ export const requisicaoStore = defineStore('requisicao', () => {
     carregandoNegocio.value = true
     try {
       const { data } = await api.get(`v1/requisicao/rascunho/negocio/${codnegocio}`)
+      if (comLoja) form.value.codestoquelocalrequisitante = data.codestoquelocal
       form.value.codpessoa = data.codpessoa
       Object.assign(form.value, contatos(data.nomes, data.telefones))
       form.value.endereco = data.endereco || ''
@@ -348,6 +350,19 @@ export const requisicaoStore = defineStore('requisicao', () => {
       return true
     } catch (error) {
       notificar('negative', mensagemErro(error, 'Impossível trocar a prioridade'))
+      return false
+    }
+  }
+
+  // desfaz o Finalizar com divergências (Gerente da loja que atende ou Administrador); o motivo vai para a auditoria
+  async function reabrir(r, motivo) {
+    try {
+      const { data } = await api.post(`v1/requisicao/${r.codrequisicao}/reabrir`, { motivo })
+      requisicao.value = data.data
+      notificar('positive', 'Requisição reaberta')
+      return true
+    } catch (error) {
+      notificar('negative', mensagemErro(error, 'Impossível reabrir a requisição'))
       return false
     }
   }
@@ -482,6 +497,7 @@ export const requisicaoStore = defineStore('requisicao', () => {
     removerItem,
     salvar,
     trocarPrioridade,
+    reabrir,
     cancelar,
     imprimir,
     verPdf,

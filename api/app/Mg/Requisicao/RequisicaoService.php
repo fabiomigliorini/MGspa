@@ -56,7 +56,8 @@ class RequisicaoService
 
     public static function podeEditar(Requisicao $req, ?Pdv $pdv): bool
     {
-        return $req->status == Requisicao::STATUS_AGUARDANDO && static::ehRequisitante($req, $pdv);
+        return $req->status == Requisicao::STATUS_AGUARDANDO
+            && (static::ehRequisitante($req, $pdv) || static::ehGerente());
     }
 
     public static function podeCancelar(Requisicao $req, ?Pdv $pdv): bool
@@ -87,7 +88,8 @@ class RequisicaoService
         ]) && static::ehRequisitada($req, $pdv);
     }
 
-    // trocar a prioridade: os dois lados, enquanto a requisicao esta' aberta
+    // trocar a prioridade: quem pediu ou Administrador (pode([]) e' so' o Administrador),
+    // enquanto a requisicao esta' aberta
     public static function podePrioridade(Requisicao $req, ?Pdv $pdv): bool
     {
         return in_array($req->status, [
@@ -96,14 +98,22 @@ class RequisicaoService
             Requisicao::STATUS_PARCIAL,
             Requisicao::STATUS_TOTAL,
             Requisicao::STATUS_DIVERGENCIA,
-        ]) && (static::ehRequisitante($req, $pdv) || static::ehRequisitada($req, $pdv));
+        ]) && (static::ehRequisitante($req, $pdv) || Autorizador::pode([]));
+    }
+
+    // reabrir, desfazendo o Finalizar com divergencias: Administrador em qualquer PDV;
+    // Gerente so' no PDV da loja que atende (pode([]) e' so' o Administrador)
+    public static function podeReabrir(Requisicao $req, ?Pdv $pdv): bool
+    {
+        return $req->status == Requisicao::STATUS_DIVERGENCIA
+            && (Autorizador::pode([]) || (static::ehGerente() && static::ehRequisitada($req, $pdv)));
     }
 
     // depois de criada, a prioridade so' muda aqui, com o motivo na auditoria
     public static function prioridade(Requisicao $req, int $prioridade, string $motivo, ?Pdv $pdv): Requisicao
     {
         if (!static::podePrioridade($req, $pdv)) {
-            abort(403, 'Só as duas lojas da requisição trocam a prioridade, e só com ela aberta!');
+            abort(403, 'Só a loja que pediu ou um Administrador troca a prioridade, e só com a requisição aberta!');
         }
         if (trim($motivo) === '') {
             abort(422, 'Informe o motivo!');
@@ -201,6 +211,32 @@ class RequisicaoService
         return $req->fresh();
     }
 
+    // desfaz o Finalizar: o processo devolve a pendente (ou aguardando, sem nada
+    // fechado); as justificativas dos itens ficam
+    public static function reabrir(Requisicao $req, string $motivo, ?Pdv $pdv): Requisicao
+    {
+        if (!static::podeReabrir($req, $pdv)) {
+            abort(403, 'Só o Gerente da loja que atende (no PDV dela) ou um Administrador reabre, e só requisição com divergências!');
+        }
+        if (trim($motivo) === '') {
+            abort(422, 'Informe o motivo!');
+        }
+        $antes = $req->finalizacao;
+        $req->finalizacao = null;
+        $req->codusuariofinalizacao = null;
+        $req->save();
+        AuditoriaService::registrar(
+            'tblrequisicao',
+            $req->codrequisicao,
+            AuditoriaService::TIPO_REQUISICAO_REABERTA,
+            ['finalizacao' => $antes],
+            ['finalizacao' => null],
+            $motivo
+        );
+        RequisicaoProcessamentoService::processar($req);
+        return $req->fresh();
+    }
+
     public static function gerarCodigoRetirada(): string
     {
         return str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
@@ -211,6 +247,11 @@ class RequisicaoService
         $dados['codestoquelocalrequisitante'] = $dados['codestoquelocalrequisitante'] ?? $pdv->codestoquelocal;
         if (empty($dados['codestoquelocalrequisitante'])) {
             abort(422, 'Informe a loja que pede (este dispositivo não tem local de estoque configurado)!');
+        }
+        // quem pede e' a loja do PDV; outra, so' Gerente escolhe
+        if ($dados['codestoquelocalrequisitante'] != $pdv->codestoquelocal && !static::ehGerente()) {
+            $loja = $pdv->EstoqueLocal->estoquelocal ?? 'sem local de estoque';
+            abort(422, "A loja que pede é a deste PDV ({$loja}). Só Gerente escolhe outra!");
         }
         static::validarCabecalho($dados);
 
@@ -232,7 +273,7 @@ class RequisicaoService
     public static function atualizar(Requisicao $req, array $dados, Pdv $pdv): Requisicao
     {
         if (!static::podeEditar($req, $pdv)) {
-            abort(422, 'Só a loja que pediu altera, e só enquanto a requisição está aguardando!');
+            abort(422, 'Só a loja que pediu ou um Gerente altera, e só enquanto a requisição está aguardando!');
         }
         $dados['codestoquelocalrequisitante'] = $req->codestoquelocalrequisitante;
         static::validarCabecalho($dados);
@@ -336,6 +377,8 @@ class RequisicaoService
         }
         return [
             'codnegocio' => $negocio->codnegocio,
+            // a loja da venda e' quem pede: a tela nao pergunta
+            'codestoquelocal' => $negocio->codestoquelocal,
             'codpessoa' => $temCliente ? $negocio->codpessoa : null,
             // o nome do cliente para cada telefone do cadastro
             'nomes' => $temCliente ? array_fill(0, max(count($telefones), 1), $nome) : [],
