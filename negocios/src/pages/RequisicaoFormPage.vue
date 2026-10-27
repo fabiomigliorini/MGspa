@@ -39,7 +39,7 @@ const PERGUNTAS = {
   requisitante: 'Quem está requisitando?',
   requisitada: 'Quem vai atender?',
   destino: 'Para onde vai a mercadoria?',
-  negocio: 'De qual negócio?',
+  negocio: 'Veio de uma venda? (opcional)',
   cliente: 'Quem retira ou recebe?',
   endereco: 'Onde entregar?',
   produtos: 'Quais produtos?',
@@ -329,7 +329,7 @@ onMounted(async () => {
               <div class="col-12 col-sm-4">
                 <MgInputValor
                   v-model="form.codnegocio"
-                  label="Número do negócio"
+                  label="Número do negócio (opcional)"
                   :decimals="0"
                   :grouping="false"
                   align="left"
@@ -340,8 +340,9 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12 text-body2 text-grey-7">
-                Da venda fechada vêm o cliente e a lista de produtos para marcar. Sem número, a
-                requisição se monta bipando os produtos.
+                Não é obrigatório: deixe em branco e clique em Pular para montar a requisição
+                bipando os produtos. Com o número de uma venda fechada, vêm o cliente e a lista de
+                produtos para marcar.
               </div>
             </div>
           </q-card-section>
@@ -608,7 +609,7 @@ onMounted(async () => {
               v-else-if="!etapaLista"
               flat
               color="primary"
-              label="Continuar"
+              :label="etapa === 'negocio' && !form.codnegocio ? 'Pular' : 'Continuar'"
               type="submit"
               :loading="sRequisicao.carregandoNegocio"
               :disable="etapa === 'produtos' && semProdutos"
