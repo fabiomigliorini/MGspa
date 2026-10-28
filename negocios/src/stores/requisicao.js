@@ -307,9 +307,12 @@ export const requisicaoStore = defineStore('requisicao', () => {
 
   // o mesmo produto bipado de novo soma na linha que já existe
   function adicionarItem(produto, quantidade) {
-    const existente = form.value.itens.find((i) => i.codprodutobarra === produto.codprodutobarra)
-    if (existente) {
+    // a tela mostra a lista invertida: o rebipado vai para o fim, para subir ao topo
+    const indice = form.value.itens.findIndex((i) => i.codprodutobarra === produto.codprodutobarra)
+    if (indice >= 0) {
+      const [existente] = form.value.itens.splice(indice, 1)
       existente.quantidade = Number(existente.quantidade) + Number(quantidade)
+      form.value.itens.push(existente)
       return
     }
     form.value.itens.push({ codprodutobarra: produto.codprodutobarra, quantidade, produto })
