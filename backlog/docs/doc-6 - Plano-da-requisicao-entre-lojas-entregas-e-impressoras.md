@@ -80,6 +80,9 @@ o que depende dela por último.
 2. Destino da mercadoria: **R** cliente retira na loja requisitada / **E** entregar no endereço do cliente /
    **L** vai para a loja requisitante (reposição). `atendimento` **L** loja / **C** compras (só estrutura).
    Fiscal fora de discussão: todos geram transferência B→A; na entrega vai a NF-e de transferência + a nota de venda.
+   **E é entregue pelo entregador de quem pede** (28/10/2026): a loja A já tem a venda, o entregador dela
+   busca a mercadoria na B e entrega ao cliente, e a entrega é responsabilidade da A. R continua com a B
+   (o cliente vai até ela).
 3. Item pedido = `codprodutobarra` + quantidade; **a mesma variação pode repetir** em embalagens diferentes
    (ex.: 1 CX c/10 resmas + 5 pacotes avulsos); não repete a mesma barra.
 4. Criar: no painel (do zero, `MgInputProdutoBarras`) ou a partir de negócio **fechado** (itens e cliente
@@ -131,6 +134,11 @@ o que depende dela por último.
     Separado em parte; quem pediu: Esperando separar / Sendo separada / Separada em parte). A linha é
     só **quem pediu → quem atende** (`CEN → BOT`), sem o nome do cliente; embaixo, o destino. Não atendida,
     E e C ficam só na listagem.
+    **Entregar no endereço** (28/10/2026, a implementar): status novo **Com o entregador** (o entregador de
+    quem pediu já retirou todas as partes separadas; falta entregar ao cliente). No painel, em Separados da
+    loja que atende o grupo do E passa a **Entregador vem buscar** e a requisição sai dali na retirada (o
+    serviço da B acabou); em "{Loja} pediu", o E separado fica em **Buscar em XXX** (o entregador ainda não
+    passou) e depois em **Com o entregador**. R continua em Aguardando o cliente e L em A receber.
 15. **Finalizar = acabou a separação**; não existe "o resto vem depois" (decisão 6). Enquanto a separação
     está aberta (A/S/P, também depois de Reabrir), a loja **requisitada** ou **Gerente** clica no item e lança
     **motivo** (estoque do sistema errado, avariado/vencido, não localizado, enviado a mais, sem saldo) +
@@ -158,6 +166,12 @@ o que depende dela por último.
     registra o recebido, sem código, também **pela requisição** — quem enviou não confirma o próprio
     recebido, nem sendo Gerente (28/10/2026). A entrega direta do negócio (lista de Entregas)
     recusa negócio ligado a requisição, de qualquer destino.
+    **Entregar no endereço em dois passos** (28/10/2026, a implementar; decisão 2): 1) **Retirado pelo
+    entregador**: a loja B registra, em cada parte fechada ainda não retirada, quem buscou (obrigatório, sem
+    código); a transferência fica entregue (sai do A receber da A e das Entregas a fazer da B). É passagem de
+    mão com o entregador presente na B, não "quem enviou confirma o próprio recebido". 2) **Entregar ao
+    cliente**: a loja A registra, só nas partes já retiradas, com o código de todas as requisições do negócio
+    ou justificativa, como no R; tentativas não entregues ficam registradas; todas entregues → E.
 
 **Impressão e impressoras**
 20. Um blade, duas vias × térmica/A5: via **requisitante** (autorização de retirada com o código) na térmica
@@ -180,10 +194,12 @@ o que depende dela por último.
     botões do seu serviço** (28/10/2026): botão que não pode, não aparece. Gerente **não** faz o serviço do
     outro lado; só o **Administrador** age em qualquer PDV.
     - **Quem pede**: Editar (aguardando), Cancelar (fora de C/E), Prioridade (A/S/P/T/D), Recebido da
-      reposição (com parte fechada ainda não entregue) e a via do cliente (com o código inteiro).
+      reposição (com parte fechada ainda não entregue), **Entregar ao cliente no E** (com parte retirada pelo
+      entregador ainda não entregue; a implementar) e a via do cliente (com o código inteiro).
     - **Quem atende**: Separar (A/S/P; o negócio sai do local do PDV e o Fechar recusa negócio de outra
       loja, decisão 10; com separação em andamento neste PDV, abre esse negócio), Justificar, tirar
-      justificativa e Finalizar (A/S/P), Entregar ao cliente em R/E (com parte fechada ainda não entregue)
+      justificativa e Finalizar (A/S/P), Entregar ao cliente **só no R** (com parte fechada ainda não
+      entregue), **Retirado pelo entregador no E** (com parte fechada ainda não retirada; a implementar)
       e **Reabrir** (D, também a não atendida) — este só o **Gerente**.
     - **Qualquer PDV**: ver, Reprocessar e a via de separação.
     - Gerente continua escolhendo outra loja que pede ao criar (formulário e Gerador).
