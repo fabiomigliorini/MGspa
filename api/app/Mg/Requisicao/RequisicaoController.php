@@ -141,7 +141,7 @@ class RequisicaoController extends Controller
     }
 
     // PDF de uma via. Pela URL assinada (o MGprint baixa) ou logado: a via da loja que
-    // pede tem o codigo de retirada, so' o dispositivo dela (ou Gerente) abre
+    // pede tem o codigo de retirada, so' o dispositivo dela (ou Administrador) abre
     public function pdf(Request $request, $codrequisicao)
     {
         $request->validate([
@@ -151,7 +151,7 @@ class RequisicaoController extends Controller
         $req = Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao);
         if (!$request->hasValidSignature() && $request->via === RequisicaoImpressaoService::VIA_REQUISITANTE) {
             $pdv = PdvService::podeAcessar(PdvService::uuid($request)) ?: null;
-            if (!RequisicaoService::ehRequisitante($req, $pdv) && !RequisicaoService::ehGerente()) {
+            if (!RequisicaoService::ehRequisitante($req, $pdv) && !RequisicaoService::ehAdministrador()) {
                 abort(403, 'A via do cliente (com o código de retirada) só abre no dispositivo da loja que pediu!');
             }
         }
@@ -172,7 +172,7 @@ class RequisicaoController extends Controller
         $pdv = $request->attributes->get('pdv');
         $req = Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao);
         if ($request->via === RequisicaoImpressaoService::VIA_REQUISITANTE
-            && !RequisicaoService::ehRequisitante($req, $pdv) && !RequisicaoService::ehGerente()) {
+            && !RequisicaoService::ehRequisitante($req, $pdv) && !RequisicaoService::ehAdministrador()) {
             abort(403, 'A via do cliente (com o código de retirada) só imprime na loja que pediu!');
         }
         $impressora = $request->filled('impressora')

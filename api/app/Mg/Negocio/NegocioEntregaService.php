@@ -40,15 +40,15 @@ class NegocioEntregaService
         if ($negocio->codnegociostatus != NegocioService::STATUS_FECHADO) {
             abort(422, 'Só negócio fechado tem entrega!');
         }
-        // negocio de requisicao com cliente (retira/entrega) se entrega pela requisicao,
-        // que confere o codigo de retirada (TASK-55)
+        // negocio de requisicao se entrega pela requisicao (TASK-55): com cliente, ela confere o
+        // codigo de retirada; na reposicao, so' a loja que pediu da' o recebido, nunca quem enviou
         if (empty($dados['codrequisicao'])) {
-            $req = \Mg\Requisicao\RequisicaoNegocioService::requisicoesAtivas($negocio->codnegocio)
-                ->whereIn('destino', [\Mg\Requisicao\Requisicao::DESTINO_RETIRA, \Mg\Requisicao\Requisicao::DESTINO_ENTREGA])
-                ->first();
+            $req = \Mg\Requisicao\RequisicaoNegocioService::requisicoesAtivas($negocio->codnegocio)->first();
             if ($req) {
                 $cod = str_pad($req->codrequisicao, 8, '0', STR_PAD_LEFT);
-                abort(422, "Este negócio é da requisição #{$cod}: registre a entrega por ela (com o código de retirada).");
+                abort(422, \Mg\Requisicao\RequisicaoEntregaService::comCodigo($req)
+                    ? "Este negócio é da requisição #{$cod}: registre a entrega por ela (com o código de retirada)."
+                    : "Este negócio é da requisição #{$cod}: o recebido é registrado por ela, na loja que pediu.");
             }
         }
         static::validar($dados);

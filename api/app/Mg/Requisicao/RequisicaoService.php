@@ -64,27 +64,36 @@ class RequisicaoService
         return Autorizador::pode(['Gerente']);
     }
 
+    // pode([]) e' so' o Administrador
+    public static function ehAdministrador(): bool
+    {
+        return Autorizador::pode([]);
+    }
+
+    // Os botoes sao do lado do PDV (28/10/2026): quem pede edita, cancela, troca a prioridade e
+    // da' o recebido; quem atende separa, justifica, finaliza e entrega ao cliente. Gerente nao
+    // faz o servico do outro lado; so' o Administrador age em qualquer PDV.
     public static function podeEditar(Requisicao $req, ?Pdv $pdv): bool
     {
         return $req->status == Requisicao::STATUS_AGUARDANDO
-            && (static::ehRequisitante($req, $pdv) || static::ehGerente());
+            && (static::ehRequisitante($req, $pdv) || static::ehAdministrador());
     }
 
     public static function podeCancelar(Requisicao $req, ?Pdv $pdv): bool
     {
         return !in_array($req->status, [Requisicao::STATUS_CANCELADA, Requisicao::STATUS_ENTREGUE])
-            && (static::ehRequisitante($req, $pdv) || static::ehGerente());
+            && (static::ehRequisitante($req, $pdv) || static::ehAdministrador());
     }
 
-    // justificar os itens e finalizar: quem atende ou Gerente, enquanto a separacao nao
-    // acabou (tambem sem nada separado: e' assim que quem atende diz que nao tem)
+    // justificar os itens e finalizar: quem atende, enquanto a separacao nao acabou (tambem
+    // sem nada separado: e' assim que quem atende diz que nao tem)
     public static function podeFinalizar(Requisicao $req, ?Pdv $pdv): bool
     {
         return in_array($req->status, [
             Requisicao::STATUS_AGUARDANDO,
             Requisicao::STATUS_EM_SEPARACAO,
             Requisicao::STATUS_PARCIAL,
-        ]) && (static::ehRequisitada($req, $pdv) || static::ehGerente());
+        ]) && (static::ehRequisitada($req, $pdv) || static::ehAdministrador());
     }
 
     // separar: so' a loja que atende, enquanto nao esta' finalizada
@@ -97,8 +106,7 @@ class RequisicaoService
         ]) && static::ehRequisitada($req, $pdv);
     }
 
-    // trocar a prioridade: quem pediu ou Administrador (pode([]) e' so' o Administrador),
-    // enquanto a requisicao esta' aberta
+    // trocar a prioridade: quem pediu, enquanto a requisicao esta' aberta
     public static function podePrioridade(Requisicao $req, ?Pdv $pdv): bool
     {
         return in_array($req->status, [
@@ -107,15 +115,15 @@ class RequisicaoService
             Requisicao::STATUS_PARCIAL,
             Requisicao::STATUS_TOTAL,
             Requisicao::STATUS_DIVERGENCIA,
-        ]) && (static::ehRequisitante($req, $pdv) || Autorizador::pode([]));
+        ]) && (static::ehRequisitante($req, $pdv) || static::ehAdministrador());
     }
 
-    // reabrir, desfazendo o Finalizar com divergencias (tambem a nao atendida): Administrador
-    // em qualquer PDV; Gerente so' no PDV da loja que atende (pode([]) e' so' o Administrador)
+    // reabrir, desfazendo o Finalizar com divergencias (tambem a nao atendida): o Gerente, no
+    // PDV da loja que atende
     public static function podeReabrir(Requisicao $req, ?Pdv $pdv): bool
     {
         return $req->status == Requisicao::STATUS_DIVERGENCIA
-            && (Autorizador::pode([]) || (static::ehGerente() && static::ehRequisitada($req, $pdv)));
+            && (static::ehAdministrador() || (static::ehGerente() && static::ehRequisitada($req, $pdv)));
     }
 
     // depois de criada, a prioridade so' muda aqui, com o motivo na auditoria
@@ -147,7 +155,7 @@ class RequisicaoService
     protected static function exigirJustificar(Requisicao $req, ?Pdv $pdv): void
     {
         if (!static::podeFinalizar($req, $pdv)) {
-            abort(403, 'Só a loja que atende ou um Gerente justifica e finaliza, e só enquanto a separação não acabou (finalizada, reabra antes)!');
+            abort(403, 'Só a loja que atende justifica e finaliza, e só enquanto a separação não acabou (finalizada, reabra antes)!');
         }
     }
 
@@ -302,7 +310,7 @@ class RequisicaoService
     public static function atualizar(Requisicao $req, array $dados, Pdv $pdv): Requisicao
     {
         if (!static::podeEditar($req, $pdv)) {
-            abort(422, 'Só a loja que pediu ou um Gerente altera, e só enquanto a requisição está aguardando!');
+            abort(422, 'Só a loja que pediu altera, e só enquanto a requisição está aguardando!');
         }
         $dados['codestoquelocalrequisitante'] = $req->codestoquelocalrequisitante;
         static::validarCabecalho($dados);
@@ -316,7 +324,7 @@ class RequisicaoService
     public static function cancelar(Requisicao $req, Pdv $pdv): Requisicao
     {
         if (!static::podeCancelar($req, $pdv)) {
-            abort(403, 'Só a loja que pediu ou um Gerente cancela a requisição!');
+            abort(403, 'Só a loja que pediu cancela a requisição!');
         }
         $ativos = RequisicaoProcessamentoService::negociosAtivos($req);
         if (!empty($ativos)) {
@@ -456,21 +464,16 @@ class RequisicaoService
     }
 
     // Painel por loja: o que ela tem para atender (requisitada) e o que ela pediu
-    // (requisitante), a tela separa. Separada (total ou finalizada) sai de quem separou e
-    // fica so' para quem recebe: na reposicao, a loja que pediu; na retirada/entrega, a
-    // propria loja que separou entrega ao cliente, entao fica nela tambem. Da mais urgente
-    // para a menos e, na mesma prioridade, da mais antiga para a mais nova; as entregues,
-    // nao atendidas (SQL_NAO_ATENDIDA) e canceladas ficam na listagem.
+    // (requisitante), a tela separa. Separada (total ou finalizada) fica nas duas lojas ate'
+    // ser entregue: quem separou acompanha o que ainda nao chegou (28/10/2026), e sai quando a
+    // loja que pediu da' o Recebido ou o cliente retira. Da mais urgente para a menos e, na
+    // mesma prioridade, da mais antiga para a mais nova; as entregues, nao atendidas
+    // (SQL_NAO_ATENDIDA) e canceladas ficam na listagem.
     public static function painel(int $codestoquelocal): array
     {
         $sql = self::SELECT_LISTA . "
-            where (
-                (r.codestoquelocalrequisitada = :codestoquelocal and (
-                    r.status in ('A', 'S', 'P')
-                    or (r.status in ('T', 'D') and r.destino in ('R', 'E'))
-                ))
-                or (r.codestoquelocalrequisitante = :codestoquelocal2 and r.status in ('A', 'S', 'P', 'T', 'D'))
-            )
+            where (r.codestoquelocalrequisitada = :codestoquelocal or r.codestoquelocalrequisitante = :codestoquelocal2)
+            and r.status in ('A', 'S', 'P', 'T', 'D')
             and not " . self::SQL_NAO_ATENDIDA . "
             order by r.prioridade desc, r.criacao, r.codrequisicao
             limit 500

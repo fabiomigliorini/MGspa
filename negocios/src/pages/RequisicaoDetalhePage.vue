@@ -51,19 +51,9 @@ const STATUS_NEGOCIO = { 1: 'Aberto', 2: 'Fechado', 3: 'Cancelado' }
 const partesAbertas = computed(() => (r.value?.partes || []).filter((p) => p.codnegociostatus == 1))
 
 // Separar (TASK-55): abre um negócio no PDV já ligado a esta requisição; o negócio novo vai
-// ao servidor uma vez só, já ligado (o ligar é que sincroniza). O botão aparece em qualquer
-// PDV enquanto a requisição está aberta, mas só separa o da loja que atende.
-const separavel = computed(() => ['A', 'S', 'P'].includes(r.value?.status))
+// ao servidor uma vez só, já ligado (o ligar é que sincroniza). Só no PDV da loja que atende,
+// com a requisição aberta: quem pede não tem o botão.
 async function separar() {
-  if (!r.value.podeseparar) {
-    $q.notify({
-      type: 'negative',
-      message: `Separe no PDV do ${r.value.requisitada}: o negócio de separação sai do estoque do PDV.`,
-      timeout: 5000,
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-    return
-  }
   // já em separação neste PDV: abre o negócio em andamento
   const andamento = await sNegocio.negocioAbertoDaRequisicao(r.value.codrequisicao)
   if (andamento) {
@@ -389,7 +379,7 @@ watch(
                 <q-tooltip>Prioridade</q-tooltip>
               </q-btn>
               <q-btn
-                v-if="separavel"
+                v-if="r.podeseparar"
                 flat
                 round
                 size="sm"

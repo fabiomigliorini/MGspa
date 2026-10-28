@@ -75,6 +75,10 @@ export const DESTINOS = [
 
 export const DESTINO = Object.fromEntries(DESTINOS.map((d) => [d.value, d]))
 
+// a linha da requisição: quem pediu → quem atende (sem loja = Compras). Sem o nome do cliente:
+// o destino (cliente retira, entrega, reposição) vai embaixo
+export const trajeto = (r) => `${r.siglarequisitante} → ${r.siglarequisitada || 'Compras'}`
+
 // Prioridade (TASK-258): o número é o do banco e ordena o painel, a mais urgente primeiro.
 // Depois de criada, só muda pelo botão Prioridade do detalhe, com o motivo.
 export const PRIORIDADES = [

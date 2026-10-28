@@ -6,13 +6,20 @@ import { db } from 'boot/db'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import { formataCodigo, tempoRelativo } from '@components/formatters'
 import { useConsultaAutomatica } from '@components/cobranca/useConsultaAutomatica'
-import { requisicaoStore, STATUS, DESTINO, PRIORIDADE, lojaDaRequisicao } from 'stores/requisicao'
+import {
+  requisicaoStore,
+  STATUS,
+  DESTINO,
+  PRIORIDADE,
+  lojaDaRequisicao,
+  trajeto,
+} from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
 
-// Painel de requisições (TASK-55, doc-6): uma aba por loja; nela, o card do que a loja tem
-// para atender e um card por loja a que ela pediu, cada um por status, da mais urgente para a
-// menos e, na mesma prioridade, das mais antigas para as mais novas (a ordem vem do backend). Só as abertas: entregues e canceladas ficam na listagem. Atualiza sozinho a
-// cada 30 s. A loja da aba vem do endereço (/requisicao/painel/101001); sem ela, a do PDV.
+// Painel de requisições (TASK-55, doc-6): uma aba por loja; nela, os cards Atender, Separados e
+// Pedidos, cada um por grupo, da mais urgente para a menos e, na mesma prioridade, das mais
+// antigas para as mais novas (a ordem vem do backend). Só as abertas: entregues e canceladas
+// ficam na listagem. Atualiza sozinho a cada 30 s. A loja da aba vem do endereço (/requisicao/painel/101001); sem ela, a do PDV.
 const route = useRoute()
 const router = useRouter()
 const sRequisicao = requisicaoStore()
@@ -23,59 +30,73 @@ const { codestoquelocal } = storeToRefs(sRequisicao)
 // sincronizou o campo; mostra como antes)
 const lojas = ref([])
 
-// grupos por etapa: separada (total ou finalizada com divergência) é de quem recebe — na
-// reposição, a loja que pediu; na retirada/entrega, a loja que separou entrega ao cliente
-const ETAPAS = [
-  { chave: 'A', ...STATUS.A },
-  { chave: 'S', ...STATUS.S },
-  { chave: 'P', ...STATUS.P },
-  { chave: 'cliente', label: 'Aguardando o cliente', cor: 'green-7', icone: 'person_pin_circle' },
-  { chave: 'receber', label: 'A receber', cor: 'green-7', icone: 'local_shipping' },
+// os grupos têm o nome da ação de cada lado; o status gravado (A/S/P/T/D) é o mesmo.
+// Separada (total ou finalizada com divergência) fica nas duas lojas até ser entregue: quem
+// separou acompanha pelo destino, quem pediu espera receber ou o cliente
+const separada = (r) => ['T', 'D'].includes(r.status)
+
+const PARA_ATENDER = [
+  { ...STATUS.A, chave: 'A', label: 'A separar' },
+  { ...STATUS.S, chave: 'S', label: 'Separando' },
+  { ...STATUS.P, chave: 'P', label: 'Separado em parte' },
 ]
-const etapa = (r) =>
-  ['T', 'D'].includes(r.status) ? (r.destino === 'L' ? 'receber' : 'cliente') : r.status
+const SEPAROU = [
+  { ...DESTINO.R, chave: 'R', label: 'Cliente vem retirar' },
+  { ...DESTINO.E, chave: 'E', label: 'Entregar no endereço' },
+  { ...DESTINO.L, chave: 'L', label: 'Levar para a loja' },
+]
+const PEDIU = [
+  { ...STATUS.A, chave: 'A', label: 'Esperando separar' },
+  { ...STATUS.S, chave: 'S', label: 'Sendo separada' },
+  { ...STATUS.P, chave: 'P', label: 'Separada em parte' },
+  { chave: 'receber', label: 'A receber', cor: 'green-7', icone: 'local_shipping' },
+  { chave: 'cliente', label: 'Aguardando o cliente', cor: 'green-7', icone: 'person_pin_circle' },
+]
+const etapaPedida = (r) => (separada(r) ? (r.destino === 'L' ? 'receber' : 'cliente') : r.status)
 
-const porEtapa = (requisicoes) =>
-  ETAPAS.map((e) => ({
-    ...e,
-    itens: requisicoes.filter((r) => etapa(r) === e.chave),
-  })).filter((g) => g.itens.length)
+const agrupar = (requisicoes, grupos, chave) =>
+  grupos
+    .map((g) => ({ ...g, itens: requisicoes.filter((r) => chave(r) === g.chave) }))
+    .filter((g) => g.itens.length)
 
-// "para atender" primeiro; depois um card por loja a que esta pediu (sem loja = Compras)
+// três cards: o que a loja tem para separar, o que ela separou e falta entregar, e o que ela
+// pediu (de qualquer loja, ou Compras: a linha diz para quem)
 const cards = computed(() => {
   const loja = codestoquelocal.value
   const nome = lojas.value.find((l) => l.codestoquelocal === loja)?.estoquelocal
+  const minhas = sRequisicao.lista.filter((r) => r.codestoquelocalrequisitada === loja)
   const pedidas = sRequisicao.lista.filter((r) => r.codestoquelocalrequisitada !== loja)
-  const atendentes = [...new Set(pedidas.map((r) => r.codestoquelocalrequisitada))].sort(
-    (a, b) => (a ?? Infinity) - (b ?? Infinity),
-  )
   return [
     {
       chave: 'atender',
-      titulo: `Para ${nome} atender`,
+      titulo: 'Atender',
       icone: 'move_to_inbox',
-      atender: true,
-      requisicoes: sRequisicao.lista.filter((r) => r.codestoquelocalrequisitada === loja),
+      grupos: agrupar(
+        minhas.filter((r) => !separada(r)),
+        PARA_ATENDER,
+        (r) => r.status,
+      ),
     },
-    ...atendentes.map((cod) => {
-      const requisicoes = pedidas.filter((r) => r.codestoquelocalrequisitada === cod)
-      return {
-        chave: cod ?? 'compras',
-        titulo: `${nome} pediu para ${requisicoes[0].requisitada || 'Compras'}`,
-        icone: 'outbox',
-        atender: false,
-        requisicoes,
-      }
-    }),
+    {
+      chave: 'separados',
+      titulo: 'Separados',
+      icone: 'local_shipping',
+      grupos: agrupar(minhas.filter(separada), SEPAROU, (r) => r.destino),
+    },
+    {
+      chave: 'pedidos',
+      titulo: `${nome} pediu`,
+      icone: 'outbox',
+      grupos: agrupar(pedidas, PEDIU, etapaPedida),
+    },
   ]
-    .filter((c) => c.requisicoes.length)
-    .map((c) => ({ ...c, grupos: porEtapa(c.requisicoes) }))
+    .map((c) => ({ ...c, total: c.grupos.reduce((n, g) => n + g.itens.length, 0) }))
+    .filter((c) => c.total)
 })
 
-// no "para atender" a linha diz quem pediu; no "que pedi" quem atende já é o card
-const legenda = (r, atender) =>
+// quem pediu e quem atende já estão na linha de cima
+const legenda = (r) =>
   [
-    atender && `pedida por ${r.requisitante}`,
     DESTINO[r.destino].curto,
     r.status === 'D' && 'com divergências',
     `${r.itens} ${r.itens == 1 ? 'item' : 'itens'}`,
@@ -155,7 +176,7 @@ onMounted(async () => {
           </q-item-section>
           <q-item-section>
             <q-item-label class="text-subtitle1 text-weight-medium">{{ c.titulo }}</q-item-label>
-            <q-item-label caption>{{ quantas(c.requisicoes.length) }}</q-item-label>
+            <q-item-label caption>{{ quantas(c.total) }}</q-item-label>
           </q-item-section>
         </q-item>
 
@@ -174,11 +195,9 @@ onMounted(async () => {
             >
               <q-item-section>
                 <q-item-label class="ellipsis">
-                  {{ formataCodigo(r.codrequisicao) }} · {{ r.siglarequisitante }} →
-                  {{ r.siglarequisitada || 'Compras' }}
-                  <template v-if="r.nome"> · {{ r.nome }}</template>
+                  {{ formataCodigo(r.codrequisicao) }} · {{ trajeto(r) }}
                 </q-item-label>
-                <q-item-label caption class="ellipsis">{{ legenda(r, c.atender) }}</q-item-label>
+                <q-item-label caption class="ellipsis">{{ legenda(r) }}</q-item-label>
               </q-item-section>
               <q-item-section side>
                 <q-chip

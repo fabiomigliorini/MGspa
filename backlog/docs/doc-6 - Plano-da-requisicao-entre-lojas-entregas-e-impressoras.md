@@ -123,9 +123,14 @@ o que depende dela por último.
     todas as partes entregues) · **C** cancelada. **Não atendida** não é status gravado: é a D sem nenhuma
     parte separada (a loja não tinha; `RequisicaoService::SQL_NAO_ATENDIDA`, `naoatendida` na API) — sai
     dos painéis e do "já pedido" do Gerador, a tela mostra "Não atendida" (27/10/2026). "Separado" = pronto para retirar.
-    **Painel** (27/10/2026): separada (T ou D) sai de quem separou e fica para quem recebe — reposição em
-    **A receber** na loja que pediu; retirada/entrega em **Aguardando o cliente** na loja que separou (ela
-    entrega ao cliente) e na que pediu. Não atendida, E e C ficam só na listagem.
+    **Painel** (28/10/2026, substitui a regra de 27/10): separada (T ou D) fica nas duas lojas até ser
+    entregue. O painel tem três cards: **Atender**, **Separados** e **"{Loja} pediu"** (tudo o que a loja pediu,
+    de qualquer loja, num card só). Na loja que separou, sai do Atender e vai para **Separados**, por destino (Cliente vem retirar / Entregar no endereço / Levar para a loja): quem separou
+    acompanha o que ainda não chegou. Na loja que pediu, reposição em **A receber** e retirada/entrega em
+    **Aguardando o cliente**. Os grupos têm o nome da ação de cada lado (quem atende: A separar / Separando /
+    Separado em parte; quem pediu: Esperando separar / Sendo separada / Separada em parte). A linha é
+    só **quem pediu → quem atende** (`CEN → BOT`), sem o nome do cliente; embaixo, o destino. Não atendida,
+    E e C ficam só na listagem.
 15. **Finalizar = acabou a separação**; não existe "o resto vem depois" (decisão 6). Enquanto a separação
     está aberta (A/S/P, também depois de Reabrir), a loja **requisitada** ou **Gerente** clica no item e lança
     **motivo** (estoque do sistema errado, avariado/vencido, não localizado, enviado a mais, sem saldo) +
@@ -150,7 +155,9 @@ o que depende dela por último.
     (destino: reposição e transferência).
 19. Negócio de requisição R/E se entrega **pela requisição**, com o código de **todas** as requisições do
     negócio; sem código, com justificativa obrigatória (marca "entregue sem código"). Reposição (L): a loja A
-    registra o recebido, sem código.
+    registra o recebido, sem código, também **pela requisição** — quem enviou não confirma o próprio
+    recebido, nem sendo Gerente (28/10/2026). A entrega direta do negócio (lista de Entregas)
+    recusa negócio ligado a requisição, de qualquer destino.
 
 **Impressão e impressoras**
 20. Um blade, duas vias × térmica/A5: via **requisitante** (autorização de retirada com o código) na térmica
@@ -168,20 +175,18 @@ o que depende dela por último.
 
 **Quem vê cada botão do detalhe da requisição**
 24. Os botões vêm prontos do backend (os `pode*` do `RequisicaoResource`, recalculados em toda resposta) e
-    dependem só de três coisas: o **status**, o **lado do dispositivo** e se o usuário é **Gerente**. A mesma
-    requisição mostra botões diferentes no PDV de quem pede e no de quem atende; F5 não muda nada.
-    - **Separar**: só o dispositivo da loja **requisitada**, com a requisição em A/S/P. Gerente não tem
-      exceção: o negócio de separação sai do local do PDV, e o Fechar recusa negócio de outra loja (decisão 10).
-      O botão aparece em A/S/P em qualquer PDV e, fora da requisitada, recusa dizendo em qual separar.
-      Com negócio de separação em andamento neste PDV, abre esse negócio em vez de criar outro.
-    - **Editar**: a loja **requisitante** ou Gerente, aguardando.
-    - **Prioridade**: requisitante ou Administrador, em A/S/P/T/D (quem atende não troca).
-    - **Cancelar**: requisitante ou Gerente, fora de C/E.
-    - **Justificar, tirar justificativa e Finalizar separação**: requisitada ou Gerente, em A/S/P.
-    - **Reabrir**: Gerente no PDV da loja **requisitada**, ou Administrador em qualquer PDV, em D (também a não atendida).
-    - **Entregar**: em R/E, a requisitada ou Gerente; em L, a requisitante ou Gerente; só com parte fechada
-      ainda não entregue.
-    - **Reprocessar e Imprimir**: sempre; a via do cliente só aparece no dispositivo da loja que pediu.
+    dependem do **status** e do **lado do dispositivo** (o local de estoque do PDV). A mesma requisição mostra
+    botões diferentes no PDV de quem pede e no de quem atende; F5 não muda nada. **Cada lado só tem os
+    botões do seu serviço** (28/10/2026): botão que não pode, não aparece. Gerente **não** faz o serviço do
+    outro lado; só o **Administrador** age em qualquer PDV.
+    - **Quem pede**: Editar (aguardando), Cancelar (fora de C/E), Prioridade (A/S/P/T/D), Recebido da
+      reposição (com parte fechada ainda não entregue) e a via do cliente (com o código inteiro).
+    - **Quem atende**: Separar (A/S/P; o negócio sai do local do PDV e o Fechar recusa negócio de outra
+      loja, decisão 10; com separação em andamento neste PDV, abre esse negócio), Justificar, tirar
+      justificativa e Finalizar (A/S/P), Entregar ao cliente em R/E (com parte fechada ainda não entregue)
+      e **Reabrir** (D, também a não atendida) — este só o **Gerente**.
+    - **Qualquer PDV**: ver, Reprocessar e a via de separação.
+    - Gerente continua escolhendo outra loja que pede ao criar (formulário e Gerador).
 
     O lado é o **local de estoque** do PDV comparado com o local requisitante ou requisitado, o mesmo que o
     Fechar confere no negócio (nunca a filial).

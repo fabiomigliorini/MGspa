@@ -46,7 +46,9 @@ class RequisicaoEntregaService
         return substr($codigo, 0, 2) . str_repeat('X', strlen($codigo) - 4) . substr($codigo, -2);
     }
 
-    // retirada/entrega: a loja que atende (ou Gerente); reposicao: a loja que pediu (ou Gerente)
+    // retirada/entrega: a loja que atende entrega ao cliente; reposicao: a loja que pediu da' o
+    // recebido (quem enviou nao confirma o proprio recebido). Gerente nao faz o servico do outro
+    // lado; so' o Administrador age em qualquer PDV (28/10/2026)
     public static function podeEntregar(Requisicao $req, ?Pdv $pdv): bool
     {
         if (in_array($req->status, [Requisicao::STATUS_CANCELADA, Requisicao::STATUS_ENTREGUE])) {
@@ -55,15 +57,15 @@ class RequisicaoEntregaService
         $lado = static::comCodigo($req)
             ? RequisicaoService::ehRequisitada($req, $pdv)
             : RequisicaoService::ehRequisitante($req, $pdv);
-        return ($lado || RequisicaoService::ehGerente()) && !empty(static::partesPendentes($req));
+        return ($lado || RequisicaoService::ehAdministrador()) && !empty(static::partesPendentes($req));
     }
 
     public static function entregar(Requisicao $req, array $dados, ?Pdv $pdv): array
     {
         if (!static::podeEntregar($req, $pdv)) {
             abort(403, static::comCodigo($req)
-                ? 'A entrega ao cliente é registrada pela loja que atende (ou Gerente), com parte separada pendente!'
-                : 'O recebido da reposição é registrado pela loja que pediu (ou Gerente), com parte separada pendente!');
+                ? 'A entrega ao cliente é registrada pela loja que atende, com parte separada pendente!'
+                : 'O recebido da reposição é registrado pela loja que pediu, com parte separada pendente!');
         }
         $partes = static::partesPendentes($req);
         if (!empty($dados['codnegocios'])) {
