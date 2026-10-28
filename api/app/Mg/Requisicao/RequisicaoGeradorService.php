@@ -243,7 +243,8 @@ class RequisicaoGeradorService
             'codprodutoembalagem' => $produto->codprodutoembalagemtransferencia ?? 0,
         ]);
 
-        // o que a loja que pede ja' pediu de cada loja, em reposicao ainda aberta
+        // o que a loja que pede ja' pediu de cada loja, em reposicao ainda aberta (a nao
+        // atendida nao vem mais)
         $pedidos = [];
         foreach (DB::select("
             select
@@ -257,6 +258,7 @@ class RequisicaoGeradorService
             where r.codestoquelocalrequisitante = :codestoquelocal
             and r.destino = :destino
             and r.status in ('A', 'S', 'P', 'T', 'D')
+            and not " . RequisicaoService::SQL_NAO_ATENDIDA . "
             and pb.codproduto = :codproduto
             group by pb.codprodutovariacao, r.codestoquelocalrequisitada
         ", [

@@ -49,6 +49,8 @@ class AuditoriaService
     const TIPO_PAGAMENTO_INTEGRADO_CANCELADO = 23;
     // prioridade da requisicao trocada pelo botao do detalhe (TASK-258)
     const TIPO_PRIORIDADE_ALTERADA = 24;
+    // requisicao com divergencias reaberta pelo gerente, desfazendo o Finalizar (TASK-55)
+    const TIPO_REQUISICAO_REABERTA = 25;
 
     const TIPOS = [
         self::TIPO_DATA_ALTERADA => 'Data alterada',
@@ -75,6 +77,7 @@ class AuditoriaService
         self::TIPO_NEGOCIO_ALTERADO => 'Negócio alterado',
         self::TIPO_PAGAMENTO_INTEGRADO_CANCELADO => 'Pagamento integrado cancelado',
         self::TIPO_PRIORIDADE_ALTERADA => 'Prioridade alterada',
+        self::TIPO_REQUISICAO_REABERTA => 'Requisição reaberta',
     ];
 
     // o historico do registro traz tambem a auditoria destes filhos (TASK-209);

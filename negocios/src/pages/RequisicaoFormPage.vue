@@ -39,16 +39,25 @@ const PERGUNTAS = {
   requisitante: 'Quem está requisitando?',
   requisitada: 'Quem vai atender?',
   destino: 'Para onde vai a mercadoria?',
-  negocio: 'De qual negócio?',
+  negocio: 'Veio de uma venda? (opcional)',
   cliente: 'Quem retira ou recebe?',
   endereco: 'Onde entregar?',
   produtos: 'Quais produtos?',
   conferencia: 'Confira e salve',
 }
 
+// nascida do negócio (botão do PDV): o número e a loja que pede já vieram dele
+const doNegocio = ref(false)
+
+// quem pede é a loja do PDV: só o Gerente escolhe outra, e só na requisição nova e avulsa
 const etapas = computed(() => {
-  const lista = ['requisitante', 'requisitada', 'destino']
-  if (temCliente.value) lista.push('negocio', 'cliente')
+  const lista = []
+  if (isNovo.value && sNegocio.podeEscolherLoja && !doNegocio.value) lista.push('requisitante')
+  lista.push('requisitada', 'destino')
+  if (temCliente.value) {
+    if (!doNegocio.value) lista.push('negocio')
+    lista.push('cliente')
+  }
   if (form.value.destino === 'E') lista.push('endereco')
   lista.push('produtos', 'conferencia')
   return lista
@@ -56,7 +65,6 @@ const etapas = computed(() => {
 
 const passo = ref(0)
 const etapa = computed(() => etapas.value[passo.value] || 'conferencia')
-const primeiro = computed(() => (isNovo.value ? 0 : 1))
 const ultima = computed(() => etapa.value === 'conferencia')
 // nas listas quem lê o teclado é o card; nas demais etapas o foco é do campo
 const etapaLista = computed(() => ['requisitante', 'requisitada', 'destino'].includes(etapa.value))
@@ -142,6 +150,16 @@ const itensExibicao = computed(() =>
 )
 
 const marcados = computed(() => itensNegocio.value.filter((i) => i.marcado && i.quantidade > 0))
+// marcar todos: true/false, ou null (indeterminado) quando só parte está marcada
+const todosMarcados = computed(() => {
+  const qtd = itensNegocio.value.filter((i) => i.marcado).length
+  if (!qtd) return false
+  return qtd === itensNegocio.value.length ? true : null
+})
+function marcarTodos() {
+  const marcar = todosMarcados.value !== true
+  itensNegocio.value.forEach((i) => (i.marcado = marcar))
+}
 const semProdutos = computed(() =>
   modoNegocio.value ? !marcados.value.length : !form.value.itens.length,
 )
@@ -201,7 +219,7 @@ async function avancar() {
 }
 
 function voltar() {
-  if (passo.value === primeiro.value) {
+  if (passo.value === 0) {
     router.push(
       isNovo.value ? sRequisicao.enderecoPainel : `/requisicao/${form.value.codrequisicao}`,
     )
@@ -211,8 +229,15 @@ function voltar() {
   focar()
 }
 
-// nas listas o card repassa as teclas (setas, número, Enter)
+// ESC volta (o select aberto já consumiu o ESC para fechar o menu); nas listas o card
+// repassa as teclas (setas, número, Enter)
 function tecla(e) {
+  if (e.key === 'Escape') {
+    if (e.defaultPrevented) return
+    e.preventDefault()
+    voltar()
+    return
+  }
   if (!etapaLista.value || !listaRef.value?.tecla(e)) return
   e.preventDefault()
   e.stopPropagation()
@@ -237,8 +262,13 @@ onMounted(async () => {
       codestoquelocalrequisitante: sNegocio.padrao.codestoquelocal,
       codnegocio: Number(route.query.codnegocio) || null,
     })
+    // do negócio: já traz cliente, itens e a loja; recusado (não fechado), segue avulsa
+    if (form.value.codnegocio) {
+      doNegocio.value = await sRequisicao.carregarNegocio({ comLoja: true })
+      if (!doNegocio.value) form.value.codnegocio = null
+    }
   }
-  passo.value = primeiro.value
+  passo.value = 0
   focar()
 })
 </script>
@@ -299,7 +329,7 @@ onMounted(async () => {
               <div class="col-12 col-sm-4">
                 <MgInputValor
                   v-model="form.codnegocio"
-                  label="Número do negócio"
+                  label="Número do negócio (opcional)"
                   :decimals="0"
                   :grouping="false"
                   align="left"
@@ -310,8 +340,9 @@ onMounted(async () => {
                 />
               </div>
               <div class="col-12 text-body2 text-grey-7">
-                Da venda fechada vêm o cliente e a lista de produtos para marcar. Sem número, a
-                requisição se monta bipando os produtos.
+                Não é obrigatório: deixe em branco e clique em Pular para montar a requisição
+                bipando os produtos. Com o número de uma venda fechada, vêm o cliente e a lista de
+                produtos para marcar.
               </div>
             </div>
           </q-card-section>
@@ -404,6 +435,16 @@ onMounted(async () => {
               Nenhum produto neste negócio.
             </MgEmptyState>
             <q-list v-else separator>
+              <q-item clickable v-ripple @click="marcarTodos">
+                <q-item-section side @click.stop>
+                  <q-checkbox
+                    :model-value="todosMarcados"
+                    tabindex="-1"
+                    @update:model-value="marcarTodos"
+                  />
+                </q-item-section>
+                <q-item-section class="text-weight-medium">Marcar todos</q-item-section>
+              </q-item>
               <q-item
                 v-for="item in itensNegocio"
                 :key="item.codprodutobarra"
@@ -550,7 +591,7 @@ onMounted(async () => {
             <q-btn
               flat
               color="grey-8"
-              :label="passo === primeiro ? 'Cancelar' : 'Voltar'"
+              :label="passo === 0 ? 'Cancelar' : 'Voltar'"
               tabindex="-1"
               @click="voltar"
             />
@@ -568,7 +609,7 @@ onMounted(async () => {
               v-else-if="!etapaLista"
               flat
               color="primary"
-              label="Continuar"
+              :label="etapa === 'negocio' && !form.codnegocio ? 'Pular' : 'Continuar'"
               type="submit"
               :loading="sRequisicao.carregandoNegocio"
               :disable="etapa === 'produtos' && semProdutos"

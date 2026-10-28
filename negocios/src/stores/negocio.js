@@ -195,6 +195,11 @@ export const negocioStore = defineStore('negocio', {
       const grupos = (useAuthStore().usuario?.permissoes ?? []).map((p) => p.grupousuario)
       return ['Administrador', 'Gerente', 'Financeiro'].some((g) => grupos.includes(g))
     },
+    // requisição de outra loja que não a do PDV: só Gerente (o servidor confere)
+    podeEscolherLoja() {
+      const grupos = (useAuthStore().usuario?.permissoes ?? []).map((p) => p.grupousuario)
+      return ['Administrador', 'Gerente'].some((g) => grupos.includes(g))
+    },
     // fechado ou cancelado
     podeReabrir() {
       const status = this.negocio?.codnegociostatus
@@ -732,6 +737,18 @@ export const negocioStore = defineStore('negocio', {
         return negocios[0]
       }
       return false
+    },
+
+    // o negócio aberto deste PDV já ligado à requisição (o Separar abre ele de novo)
+    async negocioAbertoDaRequisicao(codrequisicao) {
+      return db.negocio
+        .where({ codnegociostatus: 1 })
+        .filter(
+          (neg) =>
+            neg.codpdv == sSinc.pdv.codpdv &&
+            (neg.requisicoes ?? []).some((r) => !r.inativo && r.codrequisicao == codrequisicao),
+        )
+        .first()
     },
 
     // sincronizar = false: grava só no aparelho, para quem chama mexer no negócio e mandar ao
@@ -1801,11 +1818,14 @@ export const negocioStore = defineStore('negocio', {
 
     // Liga o negócio a uma requisição (TASK-55): pelo QR da via de separação, pelo número
     // digitado ou pelo Separar da requisição, a qualquer momento antes de fechar. Põe a
-    // natureza de transferência e a loja destino (do QR ou informada); o Fechar confere.
+    // natureza de transferência e a loja destino (do QR ou informada). O que o Fechar
+    // recusaria (requisição finalizada ou de outra loja atender) é recusado já aqui.
     async ligarRequisicao(codrequisicao, codestoquelocaldestino = null) {
       // requisição que não existe é recusada aqui, não na sincronização
+      let req
       try {
-        await api.get(`v1/requisicao/${parseInt(codrequisicao)}`)
+        const { data } = await api.get(`v1/requisicao/${parseInt(codrequisicao)}`)
+        req = data.data ?? data
       } catch (error) {
         Notify.create({
           type: 'negative',
@@ -1833,6 +1853,23 @@ export const negocioStore = defineStore('negocio', {
       if (this.negocio.requisicoes.some((r) => !r.inativo && r.codrequisicao == cod)) {
         Notify.create({ type: 'info', message: `Já ligado à requisição #${cod}`, timeout: 2000 })
         return true
+      }
+      // as mesmas conferências do Fechar (RequisicaoNegocioService::conferirCoerencia)
+      let recusa = null
+      if (!['A', 'S', 'P'].includes(req.status)) {
+        recusa = `A requisição #${cod} está ${req.statusdescricao?.toLowerCase()}.`
+      } else if (req.codestoquelocalrequisitada != this.negocio.codestoquelocal) {
+        const local = await db.estoqueLocal.get(this.negocio.codestoquelocal)
+        recusa = `A requisição #${cod} é para ${req.requisitada} atender, e este negócio é do ${local?.estoquelocal ?? 'outro local'}.`
+      }
+      if (recusa) {
+        Notify.create({
+          type: 'negative',
+          message: recusa,
+          timeout: 5000,
+          actions: [{ icon: 'close', color: 'white' }],
+        })
+        return false
       }
       const natAtual = await db.naturezaOperacao.get(this.negocio.codnaturezaoperacao)
       if (!natAtual?.transferencia || natAtual.codoperacao != 2) {

@@ -3,7 +3,7 @@ import { ref, watch } from 'vue'
 import { api } from 'src/services/api'
 import { formataCodigo } from '@components/formatters'
 import { negocioStore } from 'stores/negocio'
-import { STATUS } from 'stores/requisicao'
+import { statusDe } from 'stores/requisicao'
 
 // Requisições que nasceram desta venda (TASK-55): um card cada, que leva para a requisição.
 // Só online; sem conexão o card simplesmente não aparece.
@@ -35,18 +35,14 @@ watch(
     <q-card flat bordered class="full-height column no-wrap">
       <q-item clickable v-ripple :to="`/requisicao/${r.codrequisicao}`">
         <q-item-section avatar>
-          <q-avatar
-            :icon="(STATUS[r.status] || STATUS.A).icone"
-            :color="(STATUS[r.status] || STATUS.A).cor"
-            text-color="white"
-          />
+          <q-avatar :icon="statusDe(r).icone" :color="statusDe(r).cor" text-color="white" />
         </q-item-section>
         <q-item-section>
           <q-item-label class="ellipsis">Requisição</q-item-label>
           <q-item-label caption class="ellipsis">{{ formataCodigo(r.codrequisicao) }}</q-item-label>
           <q-item-label caption class="ellipsis">
             {{ r.siglarequisitante }} para {{ r.siglarequisitada || 'Compras' }} ·
-            {{ (STATUS[r.status] || STATUS.A).label }}
+            {{ statusDe(r).label }}
           </q-item-label>
         </q-item-section>
       </q-item>

@@ -252,6 +252,35 @@ class RequisicaoController extends Controller
         return new RequisicaoResource($req->load(RequisicaoResource::RELACOES));
     }
 
+    // tira a justificativa do item (achou o produto, tem saldo)
+    public function tirarJustificativa(Request $request, $codrequisicaoitem)
+    {
+        $pdv = $request->attributes->get('pdv');
+        $codrequisicao = DB::transaction(function () use ($codrequisicaoitem, $pdv) {
+            $item = RequisicaoItem::findOrFail($codrequisicaoitem);
+            Requisicao::lockForUpdate()->findOrFail($item->codrequisicao);
+            RequisicaoService::tirarJustificativa($item, $pdv);
+            return $item->codrequisicao;
+        });
+        return new RequisicaoResource(Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao));
+    }
+
+    // desfaz o Finalizar (com divergencias ou nao atendida), com o motivo (vai para a auditoria)
+    public function reabrir(Request $request, $codrequisicao)
+    {
+        $dados = $request->validate([
+            'motivo' => 'required|string|max:300',
+        ], [
+            'motivo.required' => 'Informe o motivo!',
+        ]);
+        $pdv = $request->attributes->get('pdv');
+        $req = DB::transaction(function () use ($codrequisicao, $dados, $pdv) {
+            $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
+            return RequisicaoService::reabrir($req, $dados['motivo'], $pdv);
+        });
+        return new RequisicaoResource($req->load(RequisicaoResource::RELACOES));
+    }
+
     // entrega das partes separadas: com o codigo de retirada de cada requisicao do negocio
     // (retirada/entrega ao cliente) ou o recebido da reposicao
     public function entregar(Request $request, $codrequisicao)
