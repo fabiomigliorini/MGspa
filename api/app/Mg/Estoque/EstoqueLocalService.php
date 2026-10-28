@@ -48,8 +48,8 @@ class EstoqueLocalService extends MgService
     }
 
     // Indicadores de qualidade do estoque do local como requisitado (TASK-55, etapa 11):
-    // os itens das requisicoes que ele atendeu (separado total, com divergencias ou
-    // entregue) criadas no periodo. Conta por item; tudo de colunas gravadas.
+    // os itens das requisicoes que ele atendeu (separado, saiu para entrega ou entregue:
+    // T, D, R, E) criadas no periodo. Conta por item; tudo de colunas gravadas.
     public static function indicadores(int $codestoquelocal, string $inicio, string $fim): array
     {
         $itens = DB::select("

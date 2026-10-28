@@ -21,17 +21,30 @@ const mensagemErro = (error, fallback) => {
   return primeiro || data?.message || error?.message || fallback
 }
 
+// Um nome por situação, o mesmo em todo lugar (painel, listagem, detalhe, negócio): P é "em
+// separação" como o S (a separação não acabou) e D é "separado" como o T (a divergência aparece
+// na linha e nos itens). O status gravado continua com as oito letras.
 export const STATUS = {
-  A: { label: 'Aguardando', cor: 'grey-7', icone: 'hourglass_empty' },
+  A: { label: 'A separar', cor: 'grey-7', icone: 'hourglass_empty' },
   S: { label: 'Em separação', cor: 'orange-8', icone: 'qr_code_scanner' },
-  P: { label: 'Separado parcial', cor: 'amber-9', icone: 'rule' },
-  T: { label: 'Separado total', cor: 'green-7', icone: 'inventory' },
-  D: { label: 'Separado com divergências', cor: 'deep-orange-7', icone: 'report' },
+  P: { label: 'Em separação', cor: 'orange-8', icone: 'qr_code_scanner' },
+  T: { label: 'Separado', cor: 'green-7', icone: 'inventory' },
+  D: { label: 'Separado', cor: 'green-7', icone: 'inventory' },
   // entrega no endereço: o entregador da loja que pediu já retirou tudo, falta o cliente
-  R: { label: 'Com o entregador', cor: 'teal-7', icone: 'delivery_dining' },
+  R: { label: 'Saiu para entrega', cor: 'teal-7', icone: 'delivery_dining' },
   E: { label: 'Entregue', cor: 'blue-7', icone: 'task_alt' },
   C: { label: 'Cancelada', cor: 'red-5', icone: 'block' },
 }
+
+// filtro da listagem: um item por nome (S e P juntos, T e D juntos)
+export const FILTRO_STATUS = [
+  { value: 'A', label: STATUS.A.label },
+  { value: 'S,P', label: STATUS.S.label },
+  { value: 'T,D', label: STATUS.T.label },
+  { value: 'R', label: STATUS.R.label },
+  { value: 'E', label: STATUS.E.label },
+  { value: 'C', label: STATUS.C.label },
+]
 
 // não atendida não é status gravado: é a finalizada com divergências (D) sem nenhuma parte
 // separada (a loja que atende não tinha); a API manda o naoatendida
@@ -54,21 +67,21 @@ export const MOTIVOS = [
 export const DESTINOS = [
   {
     value: 'R',
-    label: 'Cliente retira na loja que atende',
+    label: 'Cliente retira',
     curto: 'cliente retira',
     icone: 'storefront',
     cor: 'blue-7',
   },
   {
     value: 'E',
-    label: 'Entregar no endereço do cliente',
+    label: 'Entrega no endereço',
     curto: 'entrega no endereço',
     icone: 'local_shipping',
     cor: 'orange-8',
   },
   {
     value: 'L',
-    label: 'Reposição: vai para a minha loja',
+    label: 'Reposição',
     curto: 'reposição',
     icone: 'warehouse',
     cor: 'green-7',
@@ -80,6 +93,16 @@ export const DESTINO = Object.fromEntries(DESTINOS.map((d) => [d.value, d]))
 // a linha da requisição: quem pediu → quem atende (sem loja = Compras). Sem o nome do cliente:
 // o destino (cliente retira, entrega, reposição) vai embaixo
 export const trajeto = (r) => `${r.siglarequisitante} → ${r.siglarequisitada || 'Compras'}`
+
+// embaixo do trajeto: o destino, a divergência (o D aparece como "Separado") e quantos itens
+export const legenda = (r) =>
+  [
+    DESTINO[r.destino].curto,
+    r.status === 'D' && !r.naoatendida && 'com divergências',
+    `${r.itens} ${r.itens == 1 ? 'item' : 'itens'}`,
+  ]
+    .filter(Boolean)
+    .join(' · ')
 
 // Prioridade (TASK-258): o número é o do banco e ordena o painel, a mais urgente primeiro.
 // Depois de criada, só muda pelo botão Prioridade do detalhe, com o motivo.

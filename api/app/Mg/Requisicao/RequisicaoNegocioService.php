@@ -83,7 +83,7 @@ class RequisicaoNegocioService
                 Requisicao::STATUS_COM_ENTREGADOR,
                 Requisicao::STATUS_ENTREGUE,
             ])) {
-                $erros[] = "a requisição {$cod} está " . mb_strtolower(Requisicao::STATUS[$req->status]);
+                $erros[] = "a requisição {$cod} não aceita mais separação (situação: " . Requisicao::STATUS[$req->status] . ')';
             }
             if ($req->codestoquelocalrequisitada != $negocio->codestoquelocal) {
                 $erros[] = "a requisição {$cod} é para "

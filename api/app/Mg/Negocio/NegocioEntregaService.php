@@ -82,7 +82,7 @@ class NegocioEntregaService
         MgService::inativar($entrega);
         static::atualizarEntregue($entrega->Negocio);
         // estornar a entrega ao cliente depois da retirada nao muda o tblnegocio.entregue: a
-        // requisicao volta a 'Com o entregador' pelo reprocessamento (idempotente)
+        // requisicao volta a 'Saiu para entrega' pelo reprocessamento (idempotente)
         \Mg\Requisicao\RequisicaoProcessamentoService::aoMudarNegocio($entrega->codnegocio, 'entregue');
         return $entrega;
     }

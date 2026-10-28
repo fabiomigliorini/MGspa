@@ -27,8 +27,8 @@ class Requisicao extends MgModel
 
     const DESTINOS = [
         self::DESTINO_RETIRA => 'Cliente retira',
-        self::DESTINO_ENTREGA => 'Entregar no endereço',
-        self::DESTINO_LOJA => 'Reposição da loja',
+        self::DESTINO_ENTREGA => 'Entrega no endereço',
+        self::DESTINO_LOJA => 'Reposição',
     ];
 
     const STATUS_AGUARDANDO = 'A';
@@ -41,13 +41,15 @@ class Requisicao extends MgModel
     const STATUS_ENTREGUE = 'E';
     const STATUS_CANCELADA = 'C';
 
+    // um nome por situacao, o mesmo das telas (stores/requisicao.js): P esta' em separacao como
+    // o S, e D esta' separado como o T (a divergencia aparece nos itens)
     const STATUS = [
-        self::STATUS_AGUARDANDO => 'Aguardando',
+        self::STATUS_AGUARDANDO => 'A separar',
         self::STATUS_EM_SEPARACAO => 'Em separação',
-        self::STATUS_PARCIAL => 'Separado parcial',
-        self::STATUS_TOTAL => 'Separado total',
-        self::STATUS_DIVERGENCIA => 'Separado com divergências',
-        self::STATUS_COM_ENTREGADOR => 'Com o entregador',
+        self::STATUS_PARCIAL => 'Em separação',
+        self::STATUS_TOTAL => 'Separado',
+        self::STATUS_DIVERGENCIA => 'Separado',
+        self::STATUS_COM_ENTREGADOR => 'Saiu para entrega',
         self::STATUS_ENTREGUE => 'Entregue',
         self::STATUS_CANCELADA => 'Cancelada',
     ];

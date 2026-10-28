@@ -464,7 +464,7 @@ class RequisicaoService
     }
 
     // Painel por loja: o que ela tem para atender (requisitada) e o que ela pediu
-    // (requisitante), a tela separa. Com o entregador (entrega no endereco, tudo retirado) so'
+    // (requisitante), a tela separa. Saiu para entrega (entrega no endereco, tudo retirado) so'
     // no lado de quem pediu: o servico de quem atende acabou na retirada.
     // Separada (total ou finalizada) fica nas duas lojas ate'
     // ser entregue: quem separou acompanha o que ainda nao chegou (28/10/2026), e sai quando a
@@ -494,11 +494,20 @@ class RequisicaoService
     {
         $where = ['true'];
         $bind = [];
-        foreach (['codrequisicao', 'codnegocio', 'codpessoa', 'codestoquelocalrequisitante', 'codestoquelocalrequisitada', 'status', 'destino', 'prioridade'] as $campo) {
+        foreach (['codrequisicao', 'codnegocio', 'codpessoa', 'codestoquelocalrequisitante', 'codestoquelocalrequisitada', 'destino', 'prioridade'] as $campo) {
             if (!empty($filtros[$campo])) {
                 $where[] = "r.{$campo} = :{$campo}";
                 $bind[$campo] = $filtros[$campo];
             }
+        }
+        // o status pode vir em lista ("S,P"): o filtro da tela junta os que tem o mesmo nome
+        if (!empty($filtros['status'])) {
+            $marcas = [];
+            foreach (explode(',', $filtros['status']) as $i => $letra) {
+                $marcas[] = ":status{$i}";
+                $bind["status{$i}"] = $letra;
+            }
+            $where[] = 'r.status in (' . implode(', ', $marcas) . ')';
         }
         if (!empty($filtros['de'])) {
             $where[] = 'r.criacao >= :de';

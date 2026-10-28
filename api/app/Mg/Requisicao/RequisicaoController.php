@@ -31,7 +31,8 @@ class RequisicaoController extends Controller
             'codpessoa' => 'nullable|integer',
             'codestoquelocalrequisitante' => 'nullable|integer',
             'codestoquelocalrequisitada' => 'nullable|integer',
-            'status' => 'nullable|in:' . implode(',', array_keys(Requisicao::STATUS)),
+            // uma letra ou uma lista ("S,P": o filtro junta os status que tem o mesmo nome)
+            'status' => ['nullable', 'regex:/^[' . implode('', array_keys(Requisicao::STATUS)) . '](,[' . implode('', array_keys(Requisicao::STATUS)) . '])*$/'],
             'destino' => 'nullable|in:R,E,L',
             'prioridade' => 'nullable|in:' . implode(',', array_keys(Requisicao::PRIORIDADES)),
             'de' => 'nullable|date',

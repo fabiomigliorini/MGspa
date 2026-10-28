@@ -693,10 +693,10 @@ watch(
                   {{ STATUS_NEGOCIO[p.codnegociostatus] }} · {{ formataTimestamp(p.lancamento) }}
                   <template v-if="entregaNoEndereco">
                     <template v-if="p.entregue">
-                      · retirada pelo entregador {{ formataTimestamp(p.entregue) }}</template
+                      · retirado pelo entregador {{ formataTimestamp(p.entregue) }}</template
                     >
                     <template v-if="p.entreguecliente">
-                      · entregue ao cliente {{ formataTimestamp(p.entreguecliente) }}</template
+                      · entregue {{ formataTimestamp(p.entreguecliente) }}</template
                     >
                   </template>
                   <template v-else-if="p.entregue">

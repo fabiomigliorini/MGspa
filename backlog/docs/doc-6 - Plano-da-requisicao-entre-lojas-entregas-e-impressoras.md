@@ -126,19 +126,22 @@ o que depende dela por último.
     todas as partes entregues) · **C** cancelada. **Não atendida** não é status gravado: é a D sem nenhuma
     parte separada (a loja não tinha; `RequisicaoService::SQL_NAO_ATENDIDA`, `naoatendida` na API) — sai
     dos painéis e do "já pedido" do Gerador, a tela mostra "Não atendida" (27/10/2026). "Separado" = pronto para retirar.
-    **Painel** (28/10/2026, substitui a regra de 27/10): separada (T ou D) fica nas duas lojas até ser
-    entregue. O painel tem três cards: **Atender**, **Separados** e **"{Loja} pediu"** (tudo o que a loja pediu,
-    de qualquer loja, num card só). Na loja que separou, sai do Atender e vai para **Separados**, por destino (Cliente vem retirar / Entregar no endereço / Levar para a loja): quem separou
-    acompanha o que ainda não chegou. Na loja que pediu, reposição em **A receber** e retirada/entrega em
-    **Aguardando o cliente**. Os grupos têm o nome da ação de cada lado (quem atende: A separar / Separando /
-    Separado em parte; quem pediu: Esperando separar / Sendo separada / Separada em parte). A linha é
-    só **quem pediu → quem atende** (`CEN → BOT`), sem o nome do cliente; embaixo, o destino. Não atendida,
-    E e C ficam só na listagem.
-    **Entregar no endereço** (28/10/2026): status novo **R Com o entregador** (o entregador de
-    quem pediu já retirou todas as partes separadas; falta entregar ao cliente). No painel, em Separados da
-    loja que atende o grupo do E passa a **Entregador vem buscar** e a requisição sai dali na retirada (o
-    serviço da B acabou); em "{Loja} pediu", o E separado fica em **Buscar em XXX** (o entregador ainda não
-    passou) e depois em **Com o entregador**. R continua em Aguardando o cliente e L em A receber.
+    **Um nome por situação** (28/10/2026, substitui os nomes por lado): o mesmo no painel, na listagem, no
+    filtro, no detalhe, no card do negócio e nas mensagens do backend (`STATUS` em `stores/requisicao.js` e
+    em `Requisicao.php`). **A** A separar · **S** e **P** Em separação (a separação não acabou) · **T** e **D**
+    Separado (a divergência aparece na linha e nos itens) · **R** Saiu para entrega · **E** Entregue · **C**
+    Cancelada · Não atendida. O filtro da listagem junta os que têm o mesmo nome (S,P e T,D). Destino com
+    um nome só: **Cliente retira**, **Entrega no endereço**, **Reposição** (o formulário mantém a frase com
+    as lojas).
+    **Painel** (28/10/2026): três cards, e os grupos são os nomes da situação. **Atender**: A separar e Em
+    separação. **Separados**: as separadas (T ou D), sem subtítulo, porque o título do card já diz (fica nas
+    duas lojas até sair; quem separou acompanha).
+    **"{Loja} pediu"** (tudo o que a loja pediu, de qualquer loja): A separar, Em separação, Separado e Saiu
+    para entrega. A linha é **quem pediu → quem atende** (`CEN → BOT`), com o ícone do destino; embaixo, o
+    destino, "com divergências" no D e os itens. Não atendida, E e C ficam só na listagem.
+    **Entregar no endereço** (28/10/2026): status novo **R Saiu para entrega** (o entregador de
+    quem pediu já retirou todas as partes separadas; falta entregar ao cliente): sai do painel de quem
+    separou (o serviço da B acabou) e fica só em "{Loja} pediu".
 15. **Finalizar = acabou a separação**; não existe "o resto vem depois" (decisão 6). Enquanto a separação
     está aberta (A/S/P, também depois de Reabrir), a loja **requisitada** ou **Gerente** clica no item e lança
     **motivo** (estoque do sistema errado, avariado/vencido, não localizado, enviado a mais, sem saldo) +
