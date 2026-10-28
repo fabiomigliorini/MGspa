@@ -21,13 +21,12 @@ services:
       - "9007:9000"
     depends_on:
       - redis
+    environment:
+      TZ: America/Cuiaba
     volumes:
       - /opt/www:/opt/www
       - /media/publico:/media/publico
       - /tmp:/tmp/host
-      #- /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-      - /usr/share/zoneinfo:/usr/share/zoneinfo
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "sistema-dev.mgpapelaria.com.br:host-gateway"
@@ -50,12 +49,11 @@ services:
       - api
       - redis
     command: ["php", "artisan", "schedule:work"]
+    environment:
+      TZ: America/Cuiaba
     volumes:
       - /opt/www:/opt/www
       - /media/publico:/media/publico
-      #- /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-      - /usr/share/zoneinfo:/usr/share/zoneinfo
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "sistema-dev.mgpapelaria.com.br:host-gateway"
@@ -89,12 +87,11 @@ services:
         "--tries=3",
         "--max-time=3600",
       ]
+    environment:
+      TZ: America/Cuiaba
     volumes:
       - /opt/www:/opt/www
       - /media/publico:/media/publico
-      #- /etc/timezone:/etc/timezone:ro
-      - /etc/localtime:/etc/localtime:ro
-      - /usr/share/zoneinfo:/usr/share/zoneinfo
     extra_hosts:
       - "host.docker.internal:host-gateway"
       - "sistema-dev.mgpapelaria.com.br:host-gateway"
