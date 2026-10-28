@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-26 16:30'
+updated_date: '2026-10-28 16:39'
 labels:
   - negocios
 dependencies: []
@@ -45,8 +45,8 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #8 Etapa 9: separação no negócio do PDV ligada à requisição (QR, nº, Separar), processo idempotente, justificar e finalizar
 - [x] #9 Etapa 10: entrega pela requisição com os códigos de retirada (ou justificativa)
 - [x] #10 Etapa 11: indicadores de qualidade do estoque no detalhe do Local de Estoque
-- [ ] #11 Requisição: depois de acrescentar produto pela pesquisa (F1/lupa) ou pelo botão +, o foco volta para o campo de bipar
-- [ ] #12 Requisição: a lista de produtos mostra o último acrescentado primeiro
+- [x] #11 Requisição: depois de acrescentar produto pela pesquisa (F1/lupa) ou pelo botão +, o foco volta para o campo de bipar
+- [x] #12 Requisição: a lista de produtos mostra o último acrescentado primeiro
 - [ ] #13 Requisição: o botão Separar usa o ícone de carrinho
 - [ ] #14 Requisição: imprimir em 3 etapas (via, formato, janela do PDF com o botão Imprimir no cabeçalho); via única pula a etapa 1
 - [ ] #15 Requisição: o Imprimir da janela do PDF pergunta a impressora, começando na impressora do PDV
