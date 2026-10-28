@@ -31,7 +31,7 @@ class RequisicaoController extends Controller
             'codpessoa' => 'nullable|integer',
             'codestoquelocalrequisitante' => 'nullable|integer',
             'codestoquelocalrequisitada' => 'nullable|integer',
-            'status' => 'nullable|in:A,S,P,T,D,E,C',
+            'status' => 'nullable|in:' . implode(',', array_keys(Requisicao::STATUS)),
             'destino' => 'nullable|in:R,E,L',
             'prioridade' => 'nullable|in:' . implode(',', array_keys(Requisicao::PRIORIDADES)),
             'de' => 'nullable|date',
@@ -299,6 +299,23 @@ class RequisicaoController extends Controller
         DB::transaction(function () use ($codrequisicao, $dados, $pdv) {
             $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
             RequisicaoEntregaService::entregar($req, $dados, $pdv);
+        });
+        return new RequisicaoResource(Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao));
+    }
+
+    // entrega no endereco: o entregador da loja que pediu retirou as partes na loja que atende
+    public function retirar(Request $request, $codrequisicao)
+    {
+        $dados = $request->validate([
+            'recebedor' => 'required|string|max:100',
+            'observacao' => 'nullable|string|max:500',
+            'codnegocios' => 'nullable|array',
+            'codnegocios.*' => 'integer',
+        ]);
+        $pdv = $request->attributes->get('pdv');
+        DB::transaction(function () use ($codrequisicao, $dados, $pdv) {
+            $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
+            RequisicaoEntregaService::retirar($req, $dados, $pdv);
         });
         return new RequisicaoResource(Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao));
     }

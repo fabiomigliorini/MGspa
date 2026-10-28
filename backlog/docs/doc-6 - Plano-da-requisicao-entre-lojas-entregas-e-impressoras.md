@@ -134,7 +134,7 @@ o que depende dela por último.
     Separado em parte; quem pediu: Esperando separar / Sendo separada / Separada em parte). A linha é
     só **quem pediu → quem atende** (`CEN → BOT`), sem o nome do cliente; embaixo, o destino. Não atendida,
     E e C ficam só na listagem.
-    **Entregar no endereço** (28/10/2026, a implementar): status novo **Com o entregador** (o entregador de
+    **Entregar no endereço** (28/10/2026): status novo **R Com o entregador** (o entregador de
     quem pediu já retirou todas as partes separadas; falta entregar ao cliente). No painel, em Separados da
     loja que atende o grupo do E passa a **Entregador vem buscar** e a requisição sai dali na retirada (o
     serviço da B acabou); em "{Loja} pediu", o E separado fica em **Buscar em XXX** (o entregador ainda não
@@ -166,12 +166,15 @@ o que depende dela por último.
     registra o recebido, sem código, também **pela requisição** — quem enviou não confirma o próprio
     recebido, nem sendo Gerente (28/10/2026). A entrega direta do negócio (lista de Entregas)
     recusa negócio ligado a requisição, de qualquer destino.
-    **Entregar no endereço em dois passos** (28/10/2026, a implementar; decisão 2): 1) **Retirado pelo
+    **Entregar no endereço em dois passos** (28/10/2026; decisão 2): 1) **Retirado pelo
     entregador**: a loja B registra, em cada parte fechada ainda não retirada, quem buscou (obrigatório, sem
     código); a transferência fica entregue (sai do A receber da A e das Entregas a fazer da B). É passagem de
     mão com o entregador presente na B, não "quem enviou confirma o próprio recebido". 2) **Entregar ao
     cliente**: a loja A registra, só nas partes já retiradas, com o código de todas as requisições do negócio
     ou justificativa, como no R; tentativas não entregues ficam registradas; todas entregues → E.
+    Negócio de separação que já saiu da loja (retirado, entregue ou recebido) **não reabre**: recusa pedindo
+    para estornar antes (`PdvNegocioReaberturaService::reabrir`, 28/10/2026); senão, fechado de novo,
+    continuaria contando como entregue até com item que não foi junto.
 
 **Impressão e impressoras**
 20. Um blade, duas vias × térmica/A5: via **requisitante** (autorização de retirada com o código) na térmica
@@ -195,11 +198,11 @@ o que depende dela por último.
     outro lado; só o **Administrador** age em qualquer PDV.
     - **Quem pede**: Editar (aguardando), Cancelar (fora de C/E), Prioridade (A/S/P/T/D), Recebido da
       reposição (com parte fechada ainda não entregue), **Entregar ao cliente no E** (com parte retirada pelo
-      entregador ainda não entregue; a implementar) e a via do cliente (com o código inteiro).
+      entregador ainda não entregue) e a via do cliente (com o código inteiro).
     - **Quem atende**: Separar (A/S/P; o negócio sai do local do PDV e o Fechar recusa negócio de outra
       loja, decisão 10; com separação em andamento neste PDV, abre esse negócio), Justificar, tirar
       justificativa e Finalizar (A/S/P), Entregar ao cliente **só no R** (com parte fechada ainda não
-      entregue), **Retirado pelo entregador no E** (com parte fechada ainda não retirada; a implementar)
+      entregue), **Retirado pelo entregador no E** (com parte fechada ainda não retirada)
       e **Reabrir** (D, também a não atendida) — este só o **Gerente**.
     - **Qualquer PDV**: ver, Reprocessar e a via de separação.
     - Gerente continua escolhendo outra loja que pede ao criar (formulário e Gerador).

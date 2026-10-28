@@ -80,6 +80,7 @@ class RequisicaoNegocioService
                 Requisicao::STATUS_CANCELADA,
                 Requisicao::STATUS_TOTAL,
                 Requisicao::STATUS_DIVERGENCIA,
+                Requisicao::STATUS_COM_ENTREGADOR,
                 Requisicao::STATUS_ENTREGUE,
             ])) {
                 $erros[] = "a requisição {$cod} está " . mb_strtolower(Requisicao::STATUS[$req->status]);

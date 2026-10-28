@@ -51,6 +51,19 @@ class PdvNegocioReaberturaService
         if ($negocio->NegocioValeS()->whereNotNull('codvalecompra')->exists()) {
             abort(422, 'Este negócio é um Vale Compras convertido do sistema antigo e não pode ser alterado!');
         }
+        // separacao de requisicao que ja' saiu da loja (TASK-55): fechado de novo, continuaria
+        // contando como retirado/entregue, ate' com item que nao foi junto
+        if (!empty($negocio->entregue)) {
+            $req = \Mg\Requisicao\RequisicaoNegocioService::requisicoesAtivas($negocio->codnegocio)->first();
+            if ($req) {
+                $cod = str_pad($req->codrequisicao, 8, '0', STR_PAD_LEFT);
+                abort(422, match ($req->destino) {
+                    \Mg\Requisicao\Requisicao::DESTINO_ENTREGA => "Este negócio da requisição #{$cod} já foi retirado pelo entregador: estorne a retirada antes de reabrir.",
+                    \Mg\Requisicao\Requisicao::DESTINO_RETIRA => "Este negócio da requisição #{$cod} já foi entregue ao cliente: estorne a entrega antes de reabrir.",
+                    default => "Este negócio da requisição #{$cod} já foi recebido pela loja que pediu: estorne o recebido antes de reabrir.",
+                });
+            }
+        }
         ConferenciaAutorizador::autorizar($negocio->codfilial);
 
         $antes = ['codnegociostatus' => $negocio->codnegociostatus];

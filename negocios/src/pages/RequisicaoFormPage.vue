@@ -103,7 +103,8 @@ const labelDestino = (destino) => {
   const pede = nomeLocal(form.value.codestoquelocalrequisitante)
   return {
     R: `Cliente retira no ${atende}`,
-    E: `${atende} entrega no endereço do cliente`,
+    // quem entrega ao cliente é a loja que pediu: o entregador dela busca em quem atende
+    E: `${pede} entrega no endereço do cliente (o entregador busca no ${atende})`,
     L: `Reposição de mercadoria do ${atende} para ${pede}`,
   }[destino]
 }

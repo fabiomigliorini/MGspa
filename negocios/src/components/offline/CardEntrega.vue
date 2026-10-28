@@ -18,6 +18,9 @@ const dialog = ref(false)
 const ativas = computed(() => entregas.value.filter((e) => !e.inativo))
 const ultima = computed(() => ativas.value[ativas.value.length - 1] || null)
 const resultado = (valor) => RESULTADOS.find((r) => r.value === valor) || RESULTADOS[0]
+// requisição com entrega no endereço: a retirada pelo entregador da loja que pediu (etapa C)
+const RETIRADA = { label: 'Retirado pelo entregador', icone: 'delivery_dining', cor: 'teal-7' }
+const situacao = (e) => (e.etapa === 'C' ? RETIRADA : resultado(e.resultado))
 const mostrar = computed(() => controla.value || entregas.value.length > 0)
 
 watch(
@@ -54,7 +57,7 @@ async function registrar() {
 function estornar(e) {
   $q.dialog({
     title: 'Estornar',
-    message: `Estornar o registro "${resultado(e.resultado).label}" de ${formataTimestamp(e.data)}?`,
+    message: `Estornar o registro "${situacao(e).label}" de ${formataTimestamp(e.data)}?`,
     cancel: { label: 'Voltar', color: 'grey-8', flat: true },
     ok: { label: 'Estornar', color: 'red-5', flat: true },
   }).onOk(async () => {
@@ -94,16 +97,18 @@ function estornar(e) {
         <q-list v-if="entregas.length" separator>
           <q-item v-for="e in entregas" :key="e.codnegocioentrega">
             <q-item-section avatar>
-              <q-icon :name="resultado(e.resultado).icone" :color="resultado(e.resultado).cor" />
+              <q-icon :name="situacao(e).icone" :color="situacao(e).cor" />
             </q-item-section>
             <q-item-section :class="{ 'text-strike text-grey-6': e.inativo }">
               <q-item-label>
-                {{ resultado(e.resultado).label }}
+                {{ situacao(e).label }}
                 <template v-if="e.motivodescricao"> · {{ e.motivodescricao }}</template>
               </q-item-label>
               <q-item-label caption>
                 {{ formataTimestamp(e.data) }} · {{ e.usuariocriacao }}
-                <template v-if="e.recebedor"> · recebeu {{ e.recebedor }}</template>
+                <template v-if="e.recebedor">
+                  · {{ e.etapa === 'C' ? 'buscou' : 'recebeu' }} {{ e.recebedor }}</template
+                >
               </q-item-label>
               <q-item-label caption v-if="e.justificativa">
                 Sem código: {{ e.justificativa }}

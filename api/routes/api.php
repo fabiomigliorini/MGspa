@@ -558,6 +558,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('requisicao/{codrequisicao}/finalizar', [\Mg\Requisicao\RequisicaoController::class, 'finalizar'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/reabrir', [\Mg\Requisicao\RequisicaoController::class, 'reabrir'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/reprocessar', [\Mg\Requisicao\RequisicaoController::class, 'reprocessar'])->whereNumber('codrequisicao');
+        Route::post('requisicao/{codrequisicao}/retirar', [\Mg\Requisicao\RequisicaoController::class, 'retirar'])->whereNumber('codrequisicao');
         // conferencia do codigo de retirada: poucas tentativas por minuto
         Route::post('requisicao/{codrequisicao}/entregar', [\Mg\Requisicao\RequisicaoController::class, 'entregar'])
             ->whereNumber('codrequisicao')->middleware('throttle:10,1');

@@ -3,6 +3,7 @@
 namespace Mg\Requisicao;
 
 use Illuminate\Support\Facades\DB;
+use Mg\Negocio\NegocioEntrega;
 use Mg\Negocio\NegocioService;
 
 // Processo idempotente da requisicao (TASK-55, doc-6): o unico que grava o atendido
@@ -109,7 +110,7 @@ class RequisicaoProcessamentoService
         $lista = implode(',', $grupo);
 
         $requisicoes = [];
-        foreach (DB::select("select codrequisicao, criacao, cancelamento, finalizacao, status
+        foreach (DB::select("select codrequisicao, criacao, cancelamento, finalizacao, status, destino
                 from tblrequisicao where codrequisicao in ({$lista})") as $r) {
             $requisicoes[(int) $r->codrequisicao] = $r;
         }
@@ -162,9 +163,27 @@ class RequisicaoProcessamentoService
                 'codnegociostatus' => (int) $n->codnegociostatus,
                 'lancamento' => $n->lancamento,
                 'entregue' => $n->entregue,
+                'entreguecliente' => null,
                 'requisicoes' => [],
             ];
             $negocios[$cod]['requisicoes'][] = (int) $n->codrequisicao;
+        }
+
+        // entrega ao cliente (etapa E): na entrega no endereco o tblnegocio.entregue e' a
+        // retirada pelo entregador, e o cliente recebe depois
+        if (!empty($negocios)) {
+            foreach (DB::select("
+                select codnegocio, min(data) as data from tblnegocioentrega
+                where codnegocio in (" . implode(',', array_keys($negocios)) . ")
+                and inativo is null and etapa = :cliente and resultado in (:entregue, :problema)
+                group by codnegocio
+            ", [
+                'cliente' => NegocioEntrega::ETAPA_CLIENTE,
+                'entregue' => NegocioEntrega::RESULTADO_ENTREGUE,
+                'problema' => NegocioEntrega::RESULTADO_PROBLEMA,
+            ]) as $e) {
+                $negocios[(int) $e->codnegocio]['entreguecliente'] = $e->data;
+            }
         }
 
         $fora = [];
@@ -285,8 +304,15 @@ class RequisicaoProcessamentoService
         } else {
             return Requisicao::STATUS_PARCIAL;
         }
-        if (!empty($fechados) && !array_filter($fechados, fn ($n) => empty($n['entregue']))) {
+        // entrega no endereco: entregue quando o cliente recebeu todas as partes; com o
+        // entregador quando ele ja' retirou todas na loja que atende
+        $campo = $r->destino === Requisicao::DESTINO_ENTREGA ? 'entreguecliente' : 'entregue';
+        if (!empty($fechados) && !array_filter($fechados, fn ($n) => empty($n[$campo]))) {
             return Requisicao::STATUS_ENTREGUE;
+        }
+        if ($r->destino === Requisicao::DESTINO_ENTREGA && !empty($fechados)
+            && !array_filter($fechados, fn ($n) => empty($n['entregue']))) {
+            return Requisicao::STATUS_COM_ENTREGADOR;
         }
         return $status;
     }

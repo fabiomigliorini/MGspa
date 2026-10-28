@@ -32,7 +32,9 @@ const lojas = ref([])
 
 // os grupos têm o nome da ação de cada lado; o status gravado (A/S/P/T/D) é o mesmo.
 // Separada (total ou finalizada com divergência) fica nas duas lojas até ser entregue: quem
-// separou acompanha pelo destino, quem pediu espera receber ou o cliente
+// separou acompanha pelo destino, quem pediu espera receber ou o cliente. Na entrega no
+// endereço o entregador de quem pediu busca: quem separou acompanha até a retirada (depois o
+// painel só manda 'Com o entregador' para quem pediu)
 const separada = (r) => ['T', 'D'].includes(r.status)
 
 const PARA_ATENDER = [
@@ -42,17 +44,34 @@ const PARA_ATENDER = [
 ]
 const SEPAROU = [
   { ...DESTINO.R, chave: 'R', label: 'Cliente vem retirar' },
-  { ...DESTINO.E, chave: 'E', label: 'Entregar no endereço' },
+  { ...DESTINO.E, chave: 'E', label: 'Entregador vem buscar' },
   { ...DESTINO.L, chave: 'L', label: 'Levar para a loja' },
 ]
 const PEDIU = [
   { ...STATUS.A, chave: 'A', label: 'Esperando separar' },
   { ...STATUS.S, chave: 'S', label: 'Sendo separada' },
   { ...STATUS.P, chave: 'P', label: 'Separada em parte' },
+]
+const PEDIU_SEPARADA = [
+  { ...STATUS.R, chave: 'R', label: 'Com o entregador' },
   { chave: 'receber', label: 'A receber', cor: 'green-7', icone: 'local_shipping' },
   { chave: 'cliente', label: 'Aguardando o cliente', cor: 'green-7', icone: 'person_pin_circle' },
 ]
-const etapaPedida = (r) => (separada(r) ? (r.destino === 'L' ? 'receber' : 'cliente') : r.status)
+// entrega no endereço separada: um grupo por loja onde o entregador tem de buscar
+const buscarEm = (r) => `buscar:${r.siglarequisitada}`
+const gruposBuscar = (requisicoes) =>
+  [...new Set(requisicoes.filter((r) => separada(r) && r.destino === 'E').map(buscarEm))].map(
+    (chave) => ({
+      ...DESTINO.E,
+      chave,
+      label: `Buscar em ${chave.slice('buscar:'.length)}`,
+    }),
+  )
+const etapaPedida = (r) => {
+  if (!separada(r)) return r.status
+  if (r.destino === 'E') return buscarEm(r)
+  return r.destino === 'L' ? 'receber' : 'cliente'
+}
 
 const agrupar = (requisicoes, grupos, chave) =>
   grupos
@@ -87,7 +106,11 @@ const cards = computed(() => {
       chave: 'pedidos',
       titulo: `${nome} pediu`,
       icone: 'outbox',
-      grupos: agrupar(pedidas, PEDIU, etapaPedida),
+      grupos: agrupar(
+        pedidas,
+        [...PEDIU, ...gruposBuscar(pedidas), ...PEDIU_SEPARADA],
+        etapaPedida,
+      ),
     },
   ]
     .map((c) => ({ ...c, total: c.grupos.reduce((n, g) => n + g.itens.length, 0) }))

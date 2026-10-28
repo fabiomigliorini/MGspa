@@ -77,7 +77,7 @@ class EstoqueLocalService extends MgService
             left join tblprodutovariacao pvs on (pvs.codprodutovariacao = pbs.codprodutovariacao)
             left join tblusuario u on (u.codusuario = ri.codusuarioalteracao)
             where r.codestoquelocalrequisitada = :codestoquelocal
-            and r.status in ('T', 'D', 'E')
+            and r.status in ('T', 'D', 'R', 'E')
             and r.criacao >= :inicio
             and r.criacao < (cast(:fim as date) + 1)
             order by r.criacao, r.codrequisicao, ri.codrequisicaoitem

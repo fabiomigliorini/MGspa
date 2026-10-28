@@ -36,6 +36,8 @@ class Requisicao extends MgModel
     const STATUS_PARCIAL = 'P';
     const STATUS_TOTAL = 'T';
     const STATUS_DIVERGENCIA = 'D';
+    // entrega no endereco: o entregador da loja que pediu ja' retirou tudo, falta o cliente
+    const STATUS_COM_ENTREGADOR = 'R';
     const STATUS_ENTREGUE = 'E';
     const STATUS_CANCELADA = 'C';
 
@@ -45,6 +47,7 @@ class Requisicao extends MgModel
         self::STATUS_PARCIAL => 'Separado parcial',
         self::STATUS_TOTAL => 'Separado total',
         self::STATUS_DIVERGENCIA => 'Separado com divergências',
+        self::STATUS_COM_ENTREGADOR => 'Com o entregador',
         self::STATUS_ENTREGUE => 'Entregue',
         self::STATUS_CANCELADA => 'Cancelada',
     ];

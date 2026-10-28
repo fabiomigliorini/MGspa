@@ -41,14 +41,18 @@ class NegocioEntregaService
             abort(422, 'Só negócio fechado tem entrega!');
         }
         // negocio de requisicao se entrega pela requisicao (TASK-55): com cliente, ela confere o
-        // codigo de retirada; na reposicao, so' a loja que pediu da' o recebido, nunca quem enviou
+        // codigo de retirada; na entrega no endereco, a loja que atende registra a retirada pelo
+        // entregador e a loja que pediu, a entrega ao cliente; na reposicao, so' a loja que pediu
+        // da' o recebido, nunca quem enviou
         if (empty($dados['codrequisicao'])) {
             $req = \Mg\Requisicao\RequisicaoNegocioService::requisicoesAtivas($negocio->codnegocio)->first();
             if ($req) {
                 $cod = str_pad($req->codrequisicao, 8, '0', STR_PAD_LEFT);
-                abort(422, \Mg\Requisicao\RequisicaoEntregaService::comCodigo($req)
-                    ? "Este negócio é da requisição #{$cod}: registre a entrega por ela (com o código de retirada)."
-                    : "Este negócio é da requisição #{$cod}: o recebido é registrado por ela, na loja que pediu.");
+                abort(422, match ($req->destino) {
+                    \Mg\Requisicao\Requisicao::DESTINO_ENTREGA => "Este negócio é da requisição #{$cod}: registre por ela a retirada pelo entregador (na loja que atende) e a entrega ao cliente (na loja que pediu).",
+                    \Mg\Requisicao\Requisicao::DESTINO_RETIRA => "Este negócio é da requisição #{$cod}: registre a entrega por ela (com o código de retirada).",
+                    default => "Este negócio é da requisição #{$cod}: o recebido é registrado por ela, na loja que pediu.",
+                });
             }
         }
         static::validar($dados);
@@ -67,8 +71,19 @@ class NegocioEntregaService
 
     public static function inativar(NegocioEntrega $entrega): NegocioEntrega
     {
+        // a retirada pelo entregador e' o que marca o negocio entregue: com a entrega ao cliente
+        // ativa, estornar so' a retirada nao desfaria nada (o cliente ja' recebeu)
+        if ($entrega->etapa === NegocioEntrega::ETAPA_RETIRADA && NegocioEntrega::where('codnegocio', $entrega->codnegocio)
+            ->where('etapa', NegocioEntrega::ETAPA_CLIENTE)
+            ->whereIn('resultado', [NegocioEntrega::RESULTADO_ENTREGUE, NegocioEntrega::RESULTADO_PROBLEMA])
+            ->whereNull('inativo')->exists()) {
+            abort(422, 'Estorne antes a entrega ao cliente: a retirada pelo entregador só se estorna enquanto o cliente não recebeu.');
+        }
         MgService::inativar($entrega);
         static::atualizarEntregue($entrega->Negocio);
+        // estornar a entrega ao cliente depois da retirada nao muda o tblnegocio.entregue: a
+        // requisicao volta a 'Com o entregador' pelo reprocessamento (idempotente)
+        \Mg\Requisicao\RequisicaoProcessamentoService::aoMudarNegocio($entrega->codnegocio, 'entregue');
         return $entrega;
     }
 

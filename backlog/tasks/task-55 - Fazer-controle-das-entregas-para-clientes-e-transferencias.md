@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-28 19:04'
+updated_date: '2026-10-28 20:16'
 labels:
   - negocios
 dependencies: []
@@ -85,6 +85,7 @@ As impressoras em tabela estão na task própria das impressoras.
 - [ ] #48 Entregar no endereço: a loja que atende registra 'Retirado pelo entregador' (quem buscou, sem código) em cada parte separada; a transferência sai do 'A receber' e a requisição fica 'Com o entregador'
 - [ ] #49 Entregar no endereço: a loja que pediu registra 'Entregar ao cliente' com o código de retirada (ou justificativa), só nas partes já retiradas; tentativa não entregue fica registrada; todas entregues → Entregue
 - [ ] #50 Painel no Entregar no endereço: em Separados da loja que atende, 'Entregador vem buscar' até a retirada; em '{Loja} pediu', 'Buscar em XXX' e 'Com o entregador'; via de separação e detalhe dizem que o entregador da loja que pediu vem buscar
+- [ ] #51 Negócio de separação que já saiu da loja (retirado pelo entregador, entregue ao cliente ou recebido) não reabre: recusa pedindo para estornar a retirada/entrega antes
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -117,4 +118,6 @@ Linha da requisição (28/10/2026): a seta no sentido da mercadoria ('BOT → Lu
 Cards do painel (28/10/2026): um card por loja a que se pediu ficava solto; agora três cards fixos, Atender / Separados / Pedidos. Os grupos de dentro ficam como estão por enquanto: o usuário vai decidir a unificação dos substatus depois.
 
 Entrega no endereço pela loja que pediu (28/10/2026): na empresa, a loja que pede já tem a venda; o entregador dela passa na loja que atende, busca a mercadoria e entrega ao cliente, e a entrega é responsabilidade de quem pediu. Hoje o sistema põe a entrega ao cliente do E na loja que atende (RequisicaoEntregaService::podeEntregar com ehRequisitada para R e E). Decidido: R (cliente retira) continua com quem atende; o E tem dois passos, cada um um botão: 'Retirado pelo entregador' (quem atende, nome de quem buscou, sem código; é passagem de mão, não quem enviou confirmando o próprio recebido da decisão 19) e 'Entregar ao cliente' (quem pediu, com o código de retirada ou justificativa); o código continua no E (o cliente fica com a via e informa ao entregador). Fluxo: separa (T/D) → retirado pelo entregador → 'Com o entregador' → entregue ao cliente → E. Proposta técnica, a conferir na implementação: tblnegocioentrega.etapa (C retirada / E cliente; os registros existentes ficam E), a retirada preenche tblnegocio.entregue pelo atualizarEntregue de hoje (primeiro E/P); status novo 'Com o entregador' no CHECK de tblrequisicao.status e no RequisicaoProcessamentoService; podeEntregar com E = ehRequisitante e podeRetirar com E = ehRequisitada no RequisicaoResource; partesPendentes separando falta retirar de falta entregar ao cliente.
+
+Implementação #47–#50 (28/10/2026): tblnegocioentrega.etapa (C retirada pelo entregador / E cliente) e status R 'Com o entregador' em api/database/requisicao_entregador.sql — go-live: rodar ANTES do deploy (o calcular da requisição lê a etapa). RequisicaoEntregaService: podeRetirar/retirar (POST v1/requisicao/{id}/retirar, loja que atende), partesARetirar; podeEntregar só é da loja que atende no R (E e L, de quem pediu); no E, partesPendentes = retiradas e ainda não entregues ao cliente. RequisicaoProcessamentoService: entreguecliente por negócio; no E, Entregue quando todas as partes chegaram ao cliente e R quando todas foram retiradas. Painel: R só no lado de quem pediu. NegocioEntregaService::inativar reprocessa sempre (estornar a entrega ao cliente não muda o tblnegocio.entregue).
 <!-- SECTION:NOTES:END -->

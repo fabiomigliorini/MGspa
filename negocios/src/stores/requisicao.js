@@ -27,6 +27,8 @@ export const STATUS = {
   P: { label: 'Separado parcial', cor: 'amber-9', icone: 'rule' },
   T: { label: 'Separado total', cor: 'green-7', icone: 'inventory' },
   D: { label: 'Separado com divergências', cor: 'deep-orange-7', icone: 'report' },
+  // entrega no endereço: o entregador da loja que pediu já retirou tudo, falta o cliente
+  R: { label: 'Com o entregador', cor: 'teal-7', icone: 'delivery_dining' },
   E: { label: 'Entregue', cor: 'blue-7', icone: 'task_alt' },
   C: { label: 'Cancelada', cor: 'red-5', icone: 'block' },
 }
@@ -471,6 +473,19 @@ export const requisicaoStore = defineStore('requisicao', () => {
     }
   }
 
+  // entrega no endereço: o entregador da loja que pediu retirou as partes na loja que atende
+  async function retirar(r, dados) {
+    try {
+      const { data } = await api.post(`v1/requisicao/${r.codrequisicao}/retirar`, dados)
+      requisicao.value = data.data
+      notificar('positive', 'Retirada registrada')
+      return true
+    } catch (error) {
+      notificar('negative', mensagemErro(error, 'Impossível registrar a retirada'))
+      return false
+    }
+  }
+
   async function reprocessar(r) {
     try {
       const { data } = await api.post(`v1/requisicao/${r.codrequisicao}/reprocessar`)
@@ -536,6 +551,7 @@ export const requisicaoStore = defineStore('requisicao', () => {
     tirarJustificativa,
     reprocessar,
     entregar,
+    retirar,
   }
 })
 

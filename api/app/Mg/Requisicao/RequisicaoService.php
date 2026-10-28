@@ -464,7 +464,9 @@ class RequisicaoService
     }
 
     // Painel por loja: o que ela tem para atender (requisitada) e o que ela pediu
-    // (requisitante), a tela separa. Separada (total ou finalizada) fica nas duas lojas ate'
+    // (requisitante), a tela separa. Com o entregador (entrega no endereco, tudo retirado) so'
+    // no lado de quem pediu: o servico de quem atende acabou na retirada.
+    // Separada (total ou finalizada) fica nas duas lojas ate'
     // ser entregue: quem separou acompanha o que ainda nao chegou (28/10/2026), e sai quando a
     // loja que pediu da' o Recebido ou o cliente retira. Da mais urgente para a menos e, na
     // mesma prioridade, da mais antiga para a mais nova; as entregues, nao atendidas
@@ -473,12 +475,17 @@ class RequisicaoService
     {
         $sql = self::SELECT_LISTA . "
             where (r.codestoquelocalrequisitada = :codestoquelocal or r.codestoquelocalrequisitante = :codestoquelocal2)
-            and r.status in ('A', 'S', 'P', 'T', 'D')
+            and (r.status in ('A', 'S', 'P', 'T', 'D')
+                or (r.status = 'R' and r.codestoquelocalrequisitante = :codestoquelocal3))
             and not " . self::SQL_NAO_ATENDIDA . "
             order by r.prioridade desc, r.criacao, r.codrequisicao
             limit 500
         ";
-        return DB::select($sql, ['codestoquelocal' => $codestoquelocal, 'codestoquelocal2' => $codestoquelocal]);
+        return DB::select($sql, [
+            'codestoquelocal' => $codestoquelocal,
+            'codestoquelocal2' => $codestoquelocal,
+            'codestoquelocal3' => $codestoquelocal,
+        ]);
     }
 
     // Listagem: todas as requisicoes, da mais nova para a mais antiga, nos filtros

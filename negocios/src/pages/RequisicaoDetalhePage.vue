@@ -175,6 +175,23 @@ async function entregar() {
   if (await sRequisicao.entregar(r.value, dados)) dialogEntregar.value = false
 }
 
+// Entrega no endereço: o entregador da loja que pediu busca na loja que atende, que registra
+// a retirada (quem buscou, sem código); depois a loja que pediu entrega ao cliente
+const entregaNoEndereco = computed(() => r.value?.destino === 'E')
+const dialogRetirar = ref(false)
+const retirada = ref({})
+function abrirRetirar() {
+  retirada.value = {
+    codnegocios: r.value.partesaretirar.map((p) => p.codnegocio),
+    recebedor: '',
+    observacao: '',
+  }
+  dialogRetirar.value = true
+}
+async function retirar() {
+  if (await sRequisicao.retirar(r.value, retirada.value)) dialogRetirar.value = false
+}
+
 // Impressão em etapas, no formato do wizard de pagamento do PDV: a via, o
 // formato, a janela do PDF (com o botão do cabeçalho, igual à DANFE da NFC-e) e,
 // ao imprimir, a impressora. Cada loja imprime a sua via (a do cliente só na loja
@@ -390,6 +407,17 @@ watch(
                 <q-tooltip>Separar (abre um negócio no PDV ligado a esta requisição)</q-tooltip>
               </q-btn>
               <q-btn
+                v-if="r.poderetirar"
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="handshake"
+                @click="abrirRetirar"
+              >
+                <q-tooltip>Retirado pelo entregador</q-tooltip>
+              </q-btn>
+              <q-btn
                 v-if="r.podeentregar"
                 flat
                 round
@@ -489,7 +517,23 @@ watch(
             <!-- só as pontas do código (77XX82, o XX em cinza), com os dígitos espaçados (1,8x
                  a largura do dígito), para conferir com o do cliente; o inteiro sai só na via
                  do cliente e a entrega pede ele digitado -->
-            <q-item v-if="r.comcodigo && r.codigoretiradamascarado">
+            <!-- na entrega no endereço quem atende não confere código: entrega ao entregador -->
+            <q-item v-if="entregaNoEndereco">
+              <q-item-section avatar>
+                <q-icon name="delivery_dining" color="teal-7" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption>Entrega no endereço</q-item-label>
+                <q-item-label>
+                  O entregador de {{ r.requisitante }} busca em {{ r.requisitada }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
+            <q-item
+              v-if="
+                r.comcodigo && r.codigoretiradamascarado && (r.ehrequisitante || !entregaNoEndereco)
+              "
+            >
               <q-item-section avatar><q-icon name="key" color="primary" /></q-item-section>
               <q-item-section>
                 <q-item-label caption>
@@ -647,7 +691,15 @@ watch(
                 <q-item-label>Negócio {{ formataCodigo(p.codnegocio) }}</q-item-label>
                 <q-item-label caption>
                   {{ STATUS_NEGOCIO[p.codnegociostatus] }} · {{ formataTimestamp(p.lancamento) }}
-                  <template v-if="p.entregue">
+                  <template v-if="entregaNoEndereco">
+                    <template v-if="p.entregue">
+                      · retirada pelo entregador {{ formataTimestamp(p.entregue) }}</template
+                    >
+                    <template v-if="p.entreguecliente">
+                      · entregue ao cliente {{ formataTimestamp(p.entreguecliente) }}</template
+                    >
+                  </template>
+                  <template v-else-if="p.entregue">
                     · entregue {{ formataTimestamp(p.entregue) }}</template
                   >
                 </q-item-label>
@@ -658,6 +710,60 @@ watch(
         </q-card>
       </template>
     </div>
+
+    <q-dialog v-model="dialogRetirar">
+      <q-card flat style="width: 600px; max-width: 95vw">
+        <q-form @submit.prevent="retirar">
+          <q-card-section class="text-grey-9 text-overline text-uppercase">
+            Retirado pelo entregador
+          </q-card-section>
+          <q-card-section>
+            <div class="row q-col-gutter-md">
+              <div class="col-12">
+                <div class="text-caption text-grey-7">Partes</div>
+                <q-option-group
+                  v-model="retirada.codnegocios"
+                  type="checkbox"
+                  :options="
+                    (r?.partesaretirar || []).map((p) => ({
+                      value: p.codnegocio,
+                      label: `Negócio ${formataCodigo(p.codnegocio)} · ${formataTimestamp(p.lancamento)}`,
+                    }))
+                  "
+                />
+              </div>
+              <div class="col-12">
+                <MgInput
+                  v-model="retirada.recebedor"
+                  :label="`Quem buscou (entregador de ${r?.requisitante})`"
+                  maxlength="100"
+                  autofocus
+                  :rules="[(v) => !!(v || '').trim() || 'Informe quem buscou']"
+                />
+              </div>
+              <div class="col-12">
+                <MgInput
+                  v-model="retirada.observacao"
+                  label="Observação"
+                  maxlength="500"
+                  autogrow
+                />
+              </div>
+            </div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
+            <q-btn
+              flat
+              label="Registrar"
+              color="primary"
+              type="submit"
+              :disable="!retirada.codnegocios?.length"
+            />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
 
     <q-dialog v-model="dialogEntregar">
       <q-card flat style="width: 600px; max-width: 95vw">

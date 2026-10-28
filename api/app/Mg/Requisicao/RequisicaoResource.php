@@ -87,13 +87,17 @@ class RequisicaoResource extends JsonResource
             'podeprioridade' => RequisicaoService::podePrioridade($req, $pdv),
             'podereabrir' => RequisicaoService::podeReabrir($req, $pdv),
             'podeentregar' => RequisicaoEntregaService::podeEntregar($req, $pdv),
+            'poderetirar' => RequisicaoEntregaService::podeRetirar($req, $pdv),
             'comcodigo' => RequisicaoEntregaService::comCodigo($req),
             'partespendentes' => RequisicaoEntregaService::partesPendentes($req),
+            'partesaretirar' => RequisicaoEntregaService::partesARetirar($req),
             'partes' => array_values(array_map(fn ($n) => [
                 'codnegocio' => $n['codnegocio'],
                 'codnegociostatus' => $n['codnegociostatus'],
                 'lancamento' => $n['lancamento'],
+                // na entrega no endereco, entregue = retirado pelo entregador
                 'entregue' => $n['entregue'],
+                'entreguecliente' => $n['entreguecliente'],
             ], array_filter($calc['negocios'], fn ($n) => in_array($req->codrequisicao, $n['requisicoes'])))),
             'foradopedido' => array_map(fn ($f) => [
                 'codnegocio' => $f['codnegocio'],
