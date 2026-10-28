@@ -5,4 +5,4 @@ LABEL maintainer="mgpapelaria.com.br"
 WORKDIR /opt/www/MGspa/estoque
 
 RUN apk upgrade --update --no-cache
-RUN apk add --no-cache bash-completion coreutils autoconf git
+RUN apk add --no-cache bash-completion coreutils autoconf tzdata git
