@@ -7,7 +7,7 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-28 16:39'
+updated_date: '2026-10-28 17:11'
 labels:
   - negocios
 dependencies: []
@@ -47,14 +47,14 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #10 Etapa 11: indicadores de qualidade do estoque no detalhe do Local de Estoque
 - [x] #11 Requisição: depois de acrescentar produto pela pesquisa (F1/lupa) ou pelo botão +, o foco volta para o campo de bipar
 - [x] #12 Requisição: a lista de produtos mostra o último acrescentado primeiro
-- [ ] #13 Requisição: o botão Separar usa o ícone de carrinho
-- [ ] #14 Requisição: imprimir em 3 etapas (via, formato, janela do PDF com o botão Imprimir no cabeçalho); via única pula a etapa 1
-- [ ] #15 Requisição: o Imprimir da janela do PDF pergunta a impressora, começando na impressora do PDV
+- [x] #13 Requisição: o botão Separar usa o ícone de carrinho
+- [x] #14 Requisição: imprimir em 3 etapas (via, formato, janela do PDF com o botão Imprimir no cabeçalho); via única pula a etapa 1
+- [x] #15 Requisição: o Imprimir da janela do PDF pergunta a impressora, começando na impressora do PDV
 - [x] #16 Requisição: nova e editar em etapas (loja que pede, loja que atende, destino, negócio, quem retira, endereço, produtos, conferência); do negócio, os itens vendidos aparecem desmarcados para marcar o que falta
-- [ ] #17 Local que não controla estoque (Renascer, MAB, JDI) não aparece na requisição, no painel de requisições nem na entrega
-- [ ] #18 Requisição: quem retira ou recebe em linhas de nome + telefone (pelo menos uma, as duas coisas obrigatórias), com o botão + para mais uma linha e o telefone formatado (99) 9-9999-9999 / (99) 9999-9999 no form, no detalhe e na impressão
-- [ ] #19 Requisição: o código de retirada inteiro sai só impresso na via do cliente; a via de separação e a tela (das duas lojas) mostram só as pontas (77XX82); a entrega continua pedindo o código inteiro
-- [ ] #20 Requisição: as três vias saem com os itens agrupados por marca (dentro da marca, pela descrição); no A5, com a foto do produto
+- [x] #17 Local que não controla estoque (Renascer, MAB, JDI) não aparece na requisição, no painel de requisições nem na entrega
+- [x] #18 Requisição: quem retira ou recebe em linhas de nome + telefone (pelo menos uma, as duas coisas obrigatórias), com o botão + para mais uma linha e o telefone formatado (99) 9-9999-9999 / (99) 9999-9999 no form, no detalhe e na impressão
+- [x] #19 Requisição: o código de retirada inteiro sai só impresso na via do cliente; a via de separação e a tela (das duas lojas) mostram só as pontas (77XX82); a entrega continua pedindo o código inteiro
+- [x] #20 Requisição: as três vias saem com os itens agrupados por marca (dentro da marca, pela descrição); no A5, com a foto do produto
 - [x] #21 Painel de requisições: uma aba por loja no lugar do select; na aba, o card "Para Centro atender" e um card "Centro pediu para Deposito" por loja a que ela pediu, cada um com as requisições agrupadas por status
 - [x] #22 Requisições: entregues e canceladas saem do painel (que fica só com as abertas e o botão Todas) e vão para a Listagem de Requisições, no estilo da de negócios: filtros no painel lateral, rolagem infinita, da mais nova para a mais antiga, sem filtro padrão; filtra também por telefone (pedaço acha) e pelo código de retirada inteiro
 - [x] #23 PDV: com loja destino (transferência ou venda entre empresas do grupo) a pessoa é a filial da loja destino, preenchida ao escolher a loja destino; a pessoa não abre para troca (clique nem F10) e o fechar no servidor recusa pessoa diferente da filial
@@ -64,12 +64,12 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #27 PDV: ligar a uma requisição que não existe é recusado na hora, sem deixar para a sincronização
 - [x] #28 Requisição: na impressão, cada item em duas linhas — descrição e quantidade em cima; barras (e localização) e a unidade com a embalagem (CX C/12) embaixo da quantidade
 - [x] #29 Requisição: o lado do dispositivo (quem pede ou quem atende) é decidido pelo local de estoque do PDV, não pela filial
-- [ ] #30 A loja que pede é a do PDV; só Gerente/Admin escolhe outra (formulário e Gerador; o servidor recusa)
-- [ ] #31 Ligar recusa na hora a requisição de outra loja atender ou já finalizada/cancelada (Separar, QR e número)
-- [ ] #32 Separar aparece em qualquer PDV com a requisição aberta e, fora da loja que atende, recusa dizendo onde separar
-- [ ] #33 Detalhe mostra 'Em separação no negócio #X' enquanto há negócio de separação aberto
-- [ ] #34 Gerente/Admin em qualquer PDV edita a requisição (aguardando); a prioridade só a loja que pediu ou Administrador
-- [ ] #35 ESC volta uma etapa no formulário da requisição (com o select aberto, só fecha o menu)
+- [x] #30 A loja que pede é a do PDV; só Gerente/Admin escolhe outra (formulário e Gerador; o servidor recusa)
+- [x] #31 Ligar recusa na hora a requisição de outra loja atender ou já finalizada/cancelada (Separar, QR e número)
+- [x] #32 Separar aparece em qualquer PDV com a requisição aberta e, fora da loja que atende, recusa dizendo onde separar
+- [x] #33 Detalhe mostra 'Em separação no negócio #X' enquanto há negócio de separação aberto
+- [x] #34 Gerente/Admin em qualquer PDV edita a requisição (aguardando); a prioridade só a loja que pediu ou Administrador
+- [x] #35 ESC volta uma etapa no formulário da requisição (com o select aberto, só fecha o menu)
 - [ ] #36 Requisição a partir do negócio não pergunta o número do negócio nem quem pede (é a loja da venda)
 - [ ] #37 Separar com negócio de separação em andamento neste PDV abre esse negócio em vez de criar outro
 - [ ] #38 Requisição a partir do negócio: 'Marcar todos' na lista de produtos (parcial quando só alguns estão marcados)

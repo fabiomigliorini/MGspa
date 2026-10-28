@@ -229,11 +229,12 @@ function voltar() {
   focar()
 }
 
-// ESC volta (o select aberto já consumiu o ESC para fechar o menu); nas listas o card
-// repassa as teclas (setas, número, Enter)
+// ESC volta; com o menu do select aberto, só fecha o menu. O q-select dá preventDefault
+// no ESC mesmo fechado, então quem diz se o menu está aberto é o aria-expanded. Nas listas
+// o card repassa as teclas (setas, número, Enter)
 function tecla(e) {
   if (e.key === 'Escape') {
-    if (e.defaultPrevented) return
+    if (e.target?.getAttribute?.('aria-expanded') === 'true') return
     e.preventDefault()
     voltar()
     return

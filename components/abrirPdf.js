@@ -12,7 +12,7 @@ export { extrairErro } from './extrairErro'
  * @param {Object} [options]
  * @param {string} [options.title] - título exibido no header do modal
  * @param {('a4'|'cupom')} [options.size] - tamanho do modal: 'a4' (padrão) ou 'cupom' (~500px)
- * @param {Function} [options.onImprimir] - se definido, exibe botão "Imprimir" no rodapé que dispara essa função
+ * @param {Function} [options.onImprimir] - se definido, exibe botão "Imprimir" no cabeçalho que dispara essa função
  * @param {string} [options.imprimirLabel] - label do botão imprimir (default: 'Imprimir')
  * @param {boolean} [options.fecharAoImprimir] - fecha o modal quando o onImprimir termina
  */
