@@ -525,21 +525,24 @@ watch(
                 <q-item-label>{{ prioridadeAtual.label }}</q-item-label>
               </q-item-section>
             </q-item>
-            <!-- só as pontas do código (77XX82, o XX em cinza), com os dígitos espaçados (1,8x
-                 a largura do dígito), para conferir com o do cliente; o inteiro sai só na via
-                 do cliente e a entrega pede ele digitado -->
-            <!-- na entrega no endereço quem atende não confere código: entrega ao entregador -->
-            <q-item v-if="entregaNoEndereco">
+            <!-- onde a mercadoria chega, em destaque: o endereço do cliente na entrega no
+                 endereço, o da loja que pediu na reposição; em cima, quem leva. A reposição
+                 atendida por Compras não tem loja que leve -->
+            <q-item v-if="saida && r.requisitada">
               <q-item-section avatar>
                 <q-icon name="delivery_dining" color="teal-7" />
               </q-item-section>
               <q-item-section>
-                <q-item-label caption>Entrega no endereço</q-item-label>
-                <q-item-label>
-                  O entregador de {{ r.requisitante }} busca em {{ r.requisitada }}
+                <q-item-label caption>{{ saida.frase(r) }}</q-item-label>
+                <q-item-label v-if="r.enderecoentrega" class="text-subtitle1 text-weight-medium">
+                  {{ r.enderecoentrega }}
                 </q-item-label>
               </q-item-section>
             </q-item>
+            <!-- só as pontas do código (77XX82, o XX em cinza), com os dígitos espaçados (1,8x
+                 a largura do dígito), para conferir com o do cliente; o inteiro sai só na via
+                 do cliente e a entrega pede ele digitado -->
+            <!-- na entrega no endereço quem atende não confere código: entrega ao entregador -->
             <q-item
               v-if="
                 r.comcodigo && r.codigoretiradamascarado && (r.ehrequisitante || !entregaNoEndereco)
@@ -573,7 +576,10 @@ watch(
                   {{ nome }}
                   <span class="text-grey-7">· {{ formataTelefone(r.telefones[i]) }}</span>
                 </q-item-label>
-                <q-item-label v-if="r.endereco" caption>{{ r.endereco }}</q-item-label>
+                <!-- na entrega no endereço, ele está em destaque no card de entrega -->
+                <q-item-label v-if="r.endereco && !entregaNoEndereco" caption>
+                  {{ r.endereco }}
+                </q-item-label>
               </q-item-section>
             </q-item>
             <q-item v-if="r.codnegocio" clickable :to="`/negocio/${r.codnegocio}`">

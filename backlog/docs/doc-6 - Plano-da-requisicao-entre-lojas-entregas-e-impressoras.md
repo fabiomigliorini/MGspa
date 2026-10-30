@@ -196,6 +196,10 @@ o que depende dela por último.
     `Requisicao::DESTINOS_COM_SAIDA`; o processo lê os dois passos das etapas (`retirado` = etapa C,
     `entreguecliente` = etapa E), não do `tblnegocio.entregue`. A parte recebida antes de existir a
     saída conta como saída. O estorno vai na ordem inversa (Recebido, depois a saída).
+    No detalhe, a entrega no endereço e a reposição de loja têm o card de entrega: em cima, quem leva
+    ("O entregador de A busca em B", "Um funcionário de B leva para A", `SAIDA.frase`); em destaque,
+    onde a mercadoria chega (`enderecoentrega`: o endereço do cliente, ou o da loja que pediu, pelo
+    cadastro da filial).
     Negócio de separação que já saiu da loja (retirado, saiu para entrega, entregue ou recebido) **não
     reabre**: recusa pedindo para estornar antes (`PdvNegocioReaberturaService::reabrir`, 28/10/2026; a
     saída da reposição pela etapa C ativa, 30/10/2026); senão, fechado de novo, continuaria contando como

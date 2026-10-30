@@ -5,7 +5,7 @@ status: In Progress
 assignee:
   - '@eduardo'
 created_date: '2026-10-30 15:32'
-updated_date: '2026-10-30 19:25'
+updated_date: '2026-10-30 19:37'
 labels:
   - negocios
 dependencies: []
@@ -28,6 +28,7 @@ Decidido em 30/10/2026: linha em colunas alinhadas (usuário em coluna própria,
 - [ ] #2 Painel em formato de listagem: card, grupo e linha no mesmo recuo; usuário, prioridade e tempo em colunas alinhadas; botão + não cobre a última linha
 - [ ] #3 No detalhe da requisição, o nome do produto (pedido, substituto e fora do pedido) abre o cadastro no MGLara em nova aba, sem abrir o Justificar
 - [ ] #4 Reposição: a loja que atende registra 'Saiu para entrega' com o nome de quem leva; a requisição fica 'Saiu para entrega' e o Recebido só aparece depois
+- [ ] #5 No detalhe, a entrega no endereço e a reposição mostram em destaque onde a mercadoria chega (endereço do cliente ou da loja que pediu), com quem leva em cima
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -54,4 +55,6 @@ Link do produto testado no Chrome headless: clique e Enter no link não disparam
 30/10 (validação): código e lojas em colunas separadas na RequisicaoLinha. Uma linha com o título das colunas (como o cabeçalho da /vale-modelo) chegou a ser feita e foi desfeita a pedido. Conferido em réplica headless a 1600, 800 e 430px.
 
 30/10 (validação, 2ª rodada): o painel não tem mais a linha de grupo; a situação virou coluna da linha (ícone e texto na cor dela), à esquerda da prioridade (etiqueta), nas duas telas: a listagem passa a mostrar a prioridade também. A ordem do painel continua por situação (A separar, Em separação, Separado, Saiu para entrega) e, nela, a do backend. Quem pediu foi para baixo do código; a Criada usa a fonte do trajeto (body2). Réplica headless a 1600, 800, 724 (listagem com filtro numa tela de 1024), 430 e 390px: tudo cabe; só a 390px o 'Saiu para entrega' corta em 'Saiu para entr…' (no celular a situação já perde o ícone).
+
+30/10 (#5, card de entrega no detalhe): a frase de quem leva virou o título pequeno do card e o endereço vai em destaque embaixo. Vale para a entrega no endereço (endereço do cliente) e para a reposição atendida por loja (endereço da loja que pediu, do cadastro da filial). RequisicaoResource.enderecoentrega; o endereço numa linha saiu de rascunhoDoNegocio para RequisicaoService::enderecoDe, que os dois usam; SAIDA.frase no store. O card Cliente não repete o endereço na entrega no endereço. Testado com transação desfeita: E #88 = endereço do cliente, L #73 = endereço da loja (Centro), R #80 = nulo; o rascunho da venda devolve o mesmo endereço de antes.
 <!-- SECTION:NOTES:END -->

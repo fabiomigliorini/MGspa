@@ -12,7 +12,7 @@ use Mg\Produto\ProdutoBarraPesquisaResource;
 class RequisicaoResource extends JsonResource
 {
     const RELACOES = [
-        'EstoqueLocalRequisitante.Filial.Pessoa',
+        'EstoqueLocalRequisitante.Filial.Pessoa.Cidade.Estado',
         'EstoqueLocalRequisitada.Filial.Pessoa',
         'Pessoa',
         'Pdv',
@@ -63,6 +63,13 @@ class RequisicaoResource extends JsonResource
             'nomes' => $req->nomes,
             'telefones' => $req->telefones,
             'endereco' => $req->endereco,
+            // onde a mercadoria chega (o card de entrega do detalhe): na entrega no endereco, o
+            // do cliente; na reposicao, o da loja que pediu
+            'enderecoentrega' => match ($req->destino) {
+                Requisicao::DESTINO_ENTREGA => $req->endereco,
+                Requisicao::DESTINO_LOJA => RequisicaoService::enderecoDe($req->EstoqueLocalRequisitante?->Filial?->Pessoa),
+                default => null,
+            },
             'codnegocio' => $req->codnegocio,
             'codpdv' => $req->codpdv,
             'pdv' => $req->Pdv->apelido ?? null,

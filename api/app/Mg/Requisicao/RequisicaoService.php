@@ -9,6 +9,7 @@ use Mg\Estoque\EstoqueLocal;
 use Mg\Negocio\Negocio;
 use Mg\Negocio\NegocioService;
 use Mg\Pdv\Pdv;
+use Mg\Pessoa\Pessoa;
 use Mg\Produto\ProdutoBarra;
 use Mg\Produto\ProdutoBarraPesquisaResource;
 use Mg\Produto\UnidadeMedidaService;
@@ -389,6 +390,21 @@ class RequisicaoService
         $req->RequisicaoItemS()->whereNotIn('codprodutobarra', array_keys($vistos))->delete();
     }
 
+    // O endereco numa linha so': "rua, numero - complemento - bairro - cidade/UF". O do cliente
+    // (rascunho da venda) e o da loja que pediu (reposicao, no detalhe); sem nada, null
+    public static function enderecoDe(?Pessoa $pessoa): ?string
+    {
+        if (!$pessoa) {
+            return null;
+        }
+        return implode(' - ', array_filter([
+            implode(', ', array_filter([$pessoa->endereco, $pessoa->numero])),
+            $pessoa->complemento,
+            $pessoa->bairro,
+            $pessoa->Cidade ? ($pessoa->Cidade->cidade . '/' . ($pessoa->Cidade->Estado->sigla ?? '')) : null,
+        ])) ?: null;
+    }
+
     // Requisitar a partir da venda fechada: cliente e itens (somados por barra) para a tela
     // de nova requisicao, que deixa mexer em tudo antes de gravar
     public static function rascunhoDoNegocio(Negocio $negocio): array
@@ -398,12 +414,7 @@ class RequisicaoService
         }
         $pessoa = $negocio->Pessoa;
         $temCliente = $pessoa && $negocio->codpessoa != 1;
-        $endereco = $temCliente ? implode(' - ', array_filter([
-            implode(', ', array_filter([$pessoa->endereco, $pessoa->numero])),
-            $pessoa->complemento,
-            $pessoa->bairro,
-            $pessoa->Cidade ? ($pessoa->Cidade->cidade . '/' . ($pessoa->Cidade->Estado->sigla ?? '')) : null,
-        ])) : null;
+        $endereco = $temCliente ? static::enderecoDe($pessoa) : null;
         // os telefones do cadastro so' com os digitos, sem o zero na frente do DDD; o que nao
         // sobra digito nenhum ('00 0000 0000') fica de fora
         $telefones = $temCliente ? array_values(array_unique(array_filter(array_map(
@@ -423,7 +434,7 @@ class RequisicaoService
             // o nome do cliente para cada telefone do cadastro
             'nomes' => $temCliente ? array_fill(0, max(count($telefones), 1), $nome) : [],
             'telefones' => $telefones,
-            'endereco' => $endereco ?: null,
+            'endereco' => $endereco,
             'itens' => static::itensComProduto($quantidades),
         ];
     }

@@ -93,9 +93,11 @@ export const DESTINO = Object.fromEntries(DESTINOS.map((d) => [d.value, d]))
 
 // A saída da loja que atende (etapa C da entrega), nos destinos que têm esse passo: na entrega
 // no endereço o entregador de quem pediu busca; na reposição um funcionário de quem atende
-// leva. O mesmo botão e o mesmo registro; só os textos mudam (detalhe, entregas do negócio)
+// leva. O mesmo botão e o mesmo registro; só os textos mudam (detalhe, entregas do negócio).
+// frase: quem leva, em cima do endereço de entrega no detalhe
 export const SAIDA = {
   E: {
+    frase: (r) => `O entregador de ${r.requisitante} busca em ${r.requisitada}`,
     label: 'Retirado pelo entregador',
     parte: 'retirado pelo entregador',
     quem: (r) => `Quem buscou (entregador de ${r.requisitante})`,
@@ -103,6 +105,7 @@ export const SAIDA = {
     registrada: 'Retirada registrada',
   },
   L: {
+    frase: (r) => `Um funcionário de ${r.requisitada} leva para ${r.requisitante}`,
     label: 'Saiu para entrega',
     parte: 'saiu para entrega',
     quem: (r) => `Quem levou (funcionário de ${r.requisitada})`,
