@@ -134,9 +134,11 @@ o que depende dela por último.
     Cancelada · Não atendida. O filtro da listagem junta os que têm o mesmo nome (S,P e T,D). Destino com
     um nome só: **Cliente retira**, **Entrega no endereço**, **Reposição** (o formulário mantém a frase com
     as lojas).
-    **Painel** (28/10/2026): três cards, e os grupos são os nomes da situação. **Atender**: A separar e Em
-    separação. **Separados**: as separadas (T ou D), sem subtítulo, porque o título do card já diz (fica nas
-    duas lojas até sair; quem separou acompanha).
+    **Painel** (28/10/2026): três cards. A situação é uma coluna da linha (TASK-261, no lugar das linhas
+    de grupo), e o card vem em blocos dela: A separar, Em separação, Separado, Saiu para entrega; na
+    mesma situação, a mais urgente e, na mesma prioridade, a mais antiga. **Atender**: A separar e Em
+    separação. **Separados**: as separadas (T ou D; fica nas duas lojas até sair; quem separou
+    acompanha).
     **"{Loja} pediu"** (tudo o que a loja pediu, de qualquer loja): A separar, Em separação, Separado e Saiu
     para entrega. A linha é **quem pediu → quem atende** (`CEN → BOT`), com o ícone do destino; embaixo, o
     destino, "com divergências" no D e os itens. Não atendida, E e C ficam só na listagem.
@@ -145,10 +147,11 @@ o que depende dela por último.
     separou (o serviço da B acabou) e fica só em "{Loja} pediu". **Reposição** (30/10/2026, TASK-261):
     o mesmo R quando todas as partes saíram da B (falta o Recebido da A), com a mesma regra do painel.
     **Linha das listas** (30/10/2026, TASK-261): painel e listagem usam o mesmo componente
-    (`RequisicaoLinha`), em colunas alinhadas como uma listagem: ícone do destino; código; lojas
-    (trajeto) com a legenda embaixo; **quem pediu** (o usuário que criou); a marca (prioridade no painel,
-    situação na listagem); e quando (há quanto tempo no painel, data e hora na listagem). O título do
-    card, o do grupo e a linha têm o ícone na mesma coluna e o texto no mesmo recuo.
+    (`RequisicaoLinha`), em colunas alinhadas como uma listagem: ícone do destino; código com **quem
+    pediu** (o usuário que criou) embaixo; lojas (trajeto) com a legenda embaixo; situação (ícone e texto
+    na cor dela); prioridade (etiqueta, para não se confundir com a situação quando a cor coincide); e
+    quando (há quanto tempo no painel, data e hora na listagem), na mesma fonte do trajeto. O título do
+    card e a linha têm o ícone na mesma coluna e o texto no mesmo recuo.
 15. **Finalizar = acabou a separação**; não existe "o resto vem depois" (decisão 6). Enquanto a separação
     está aberta (A/S/P, também depois de Reabrir), a loja **requisitada** ou **Gerente** clica no item e lança
     **motivo** (estoque do sistema errado, avariado/vencido, não localizado, enviado a mais, sem saldo) +

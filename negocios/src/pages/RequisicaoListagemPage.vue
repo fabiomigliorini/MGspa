@@ -3,7 +3,7 @@ import { onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import { formataTimestamp } from '@components/formatters'
-import { requisicaoStore, statusDe } from 'stores/requisicao'
+import { requisicaoStore } from 'stores/requisicao'
 import RequisicaoLinha from 'components/requisicao/RequisicaoLinha.vue'
 
 // Listagem de requisições (TASK-55): todas, da mais nova para a mais antiga, nos filtros do
@@ -47,7 +47,6 @@ onUnmounted(() => clearTimeout(timer))
               v-for="r in requisicoes"
               :key="r.codrequisicao"
               :requisicao="r"
-              :marca="statusDe(r)"
               :quando="formataTimestamp(r.criacao, 2)"
             />
           </q-list>
