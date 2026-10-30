@@ -189,6 +189,11 @@ async function entregar() {
 // registro; depois a loja que pediu dá o Recebido. Os textos de cada um vêm do SAIDA
 const entregaNoEndereco = computed(() => r.value?.destino === 'E')
 const saida = computed(() => SAIDA[r.value?.destino])
+// onde a mercadoria chega: o endereço do cliente na entrega no endereço, a loja que pediu na
+// reposição
+const enderecoParaEntrega = computed(
+  () => ({ E: r.value?.endereco, L: r.value?.requisitante })[r.value?.destino],
+)
 const dialogRetirar = ref(false)
 const retirada = ref({})
 function abrirRetirar() {
@@ -387,7 +392,9 @@ watch(
             <q-avatar :icon="status.icone" :color="status.cor" text-color="white" class="q-mr-md" />
             <div class="col" style="min-width: 0">
               <div class="text-h5 ellipsis">Requisição {{ formataCodigo(r.codrequisicao) }}</div>
-              <div class="text-caption text-grey-7">
+              <!-- na entrega no endereço, quem busca onde; o endereço vai no card de entrega -->
+              <div v-if="saida?.frase" class="text-caption text-grey-7">{{ saida.frase(r) }}</div>
+              <div v-else class="text-caption text-grey-7">
                 {{ r.requisitante }} pede para {{ r.requisitada || 'Compras' }} ·
                 {{ r.destinodescricao }}
               </div>
@@ -525,17 +532,14 @@ watch(
                 <q-item-label>{{ prioridadeAtual.label }}</q-item-label>
               </q-item-section>
             </q-item>
-            <!-- onde a mercadoria chega, em destaque: o endereço do cliente na entrega no
-                 endereço, o da loja que pediu na reposição; em cima, quem leva. A reposição
-                 atendida por Compras não tem loja que leve -->
-            <q-item v-if="saida && r.requisitada">
+            <q-item v-if="enderecoParaEntrega">
               <q-item-section avatar>
                 <q-icon name="delivery_dining" color="teal-7" />
               </q-item-section>
               <q-item-section>
-                <q-item-label caption>{{ saida.frase(r) }}</q-item-label>
-                <q-item-label v-if="r.enderecoentrega" class="text-subtitle1 text-weight-medium">
-                  {{ r.enderecoentrega }}
+                <q-item-label caption>Endereço para entrega</q-item-label>
+                <q-item-label class="text-subtitle1 text-weight-medium">
+                  {{ enderecoParaEntrega }}
                 </q-item-label>
               </q-item-section>
             </q-item>
