@@ -51,5 +51,5 @@ Achado na revisão e corrigido: quem pediu não via no detalhe quem está levand
 
 Link do produto testado no Chrome headless: clique e Enter no link não disparam a linha; clique no resto da linha e Enter na linha disparam; href MGLARA_URL/produto/{cod}, target _blank, sem sublinhado. SFCs compilados conferindo identificador do template fora do setup: nenhum.
 
-30/10 (validação): código e lojas em colunas separadas e linha com o título das colunas (Requisição, Lojas, Usuário, Prioridade/Situação, Criada), como o cabeçalho da tabela da /vale-modelo. As colunas ficam numa constante só (COLUNAS, no RequisicaoLinha.vue), usada pela linha e pelo novo RequisicaoCabecalho.vue; no celular o cabeçalho some porque a linha quebra em duas. Conferido em réplica headless a 1600, 800 e 430px.
+30/10 (validação): código e lojas em colunas separadas na RequisicaoLinha. Uma linha com o título das colunas (como o cabeçalho da /vale-modelo) chegou a ser feita e foi desfeita a pedido. Conferido em réplica headless a 1600, 800 e 430px.
 <!-- SECTION:NOTES:END -->

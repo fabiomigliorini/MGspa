@@ -147,10 +147,8 @@ o que depende dela por último.
     **Linha das listas** (30/10/2026, TASK-261): painel e listagem usam o mesmo componente
     (`RequisicaoLinha`), em colunas alinhadas como uma listagem: ícone do destino; código; lojas
     (trajeto) com a legenda embaixo; **quem pediu** (o usuário que criou); a marca (prioridade no painel,
-    situação na listagem); e quando (há quanto tempo no painel, data e hora na listagem). Em cima, a
-    linha com o título das colunas (`RequisicaoCabecalho`), como o cabeçalho da tabela da /vale-modelo;
-    no celular ela some, porque a linha quebra em duas. O título do card, o das colunas, o do grupo e a
-    linha têm o ícone na mesma coluna e o texto no mesmo recuo.
+    situação na listagem); e quando (há quanto tempo no painel, data e hora na listagem). O título do
+    card, o do grupo e a linha têm o ícone na mesma coluna e o texto no mesmo recuo.
 15. **Finalizar = acabou a separação**; não existe "o resto vem depois" (decisão 6). Enquanto a separação
     está aberta (A/S/P, também depois de Reabrir), a loja **requisitada** ou **Gerente** clica no item e lança
     **motivo** (estoque do sistema errado, avariado/vencido, não localizado, enviado a mais, sem saldo) +
