@@ -2,8 +2,9 @@
 import { onUnmounted, ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import MgEmptyState from '@components/MgEmptyState.vue'
-import { formataCodigo, formataTimestamp } from '@components/formatters'
-import { requisicaoStore, statusDe, DESTINO, trajeto, legenda } from 'stores/requisicao'
+import { formataTimestamp } from '@components/formatters'
+import { requisicaoStore, statusDe } from 'stores/requisicao'
+import RequisicaoLinha from 'components/requisicao/RequisicaoLinha.vue'
 
 // Listagem de requisições (TASK-55): todas, da mais nova para a mais antiga, nos filtros do
 // painel lateral (nenhum por padrão). O painel por loja mostra só as abertas.
@@ -42,33 +43,13 @@ onUnmounted(() => clearTimeout(timer))
 
         <q-card v-else flat bordered>
           <q-list separator>
-            <q-item
+            <RequisicaoLinha
               v-for="r in requisicoes"
               :key="r.codrequisicao"
-              :to="`/requisicao/${r.codrequisicao}`"
-            >
-              <q-item-section avatar>
-                <q-avatar
-                  :icon="DESTINO[r.destino].icone"
-                  :color="DESTINO[r.destino].cor"
-                  text-color="white"
-                />
-              </q-item-section>
-
-              <q-item-section style="min-width: 0">
-                <q-item-label class="text-weight-medium ellipsis">
-                  {{ formataCodigo(r.codrequisicao) }} · {{ trajeto(r) }}
-                </q-item-label>
-                <q-item-label caption class="ellipsis">{{ legenda(r) }}</q-item-label>
-              </q-item-section>
-
-              <q-item-section side>
-                <q-item-label caption>{{ formataTimestamp(r.criacao, 2) }}</q-item-label>
-                <q-item-label caption>
-                  <q-badge :color="statusDe(r).cor" :label="statusDe(r).label" />
-                </q-item-label>
-              </q-item-section>
-            </q-item>
+              :requisicao="r"
+              :marca="statusDe(r)"
+              :quando="formataTimestamp(r.criacao, 2)"
+            />
           </q-list>
         </q-card>
       </div>

@@ -10,9 +10,13 @@ use Mg\MgService;
 // fica entregue (tblnegocio.entregue) com um registro E/P ativo.
 class NegocioEntregaService
 {
+    // com o destino da requisicao por que foi registrada: a saida (etapa C) da entrega no
+    // endereco e' a retirada pelo entregador; a da reposicao, a saida para entrega
     public static function entregas(Negocio $negocio)
     {
         return NegocioEntrega::with('UsuarioCriacao')
+            ->addSelect(['destinorequisicao' => \Mg\Requisicao\Requisicao::select('destino')
+                ->whereColumn('tblrequisicao.codrequisicao', 'tblnegocioentrega.codrequisicao')])
             ->where('codnegocio', $negocio->codnegocio)
             ->orderBy('data')
             ->orderBy('codnegocioentrega')
@@ -51,7 +55,7 @@ class NegocioEntregaService
                 abort(422, match ($req->destino) {
                     \Mg\Requisicao\Requisicao::DESTINO_ENTREGA => "Este negócio é da requisição #{$cod}: registre por ela a retirada pelo entregador (na loja que atende) e a entrega ao cliente (na loja que pediu).",
                     \Mg\Requisicao\Requisicao::DESTINO_RETIRA => "Este negócio é da requisição #{$cod}: registre a entrega por ela (com o código de retirada).",
-                    default => "Este negócio é da requisição #{$cod}: o recebido é registrado por ela, na loja que pediu.",
+                    default => "Este negócio é da requisição #{$cod}: registre por ela a saída para entrega (na loja que atende) e o recebido (na loja que pediu).",
                 });
             }
         }
@@ -71,13 +75,18 @@ class NegocioEntregaService
 
     public static function inativar(NegocioEntrega $entrega): NegocioEntrega
     {
-        // a retirada pelo entregador e' o que marca o negocio entregue: com a entrega ao cliente
-        // ativa, estornar so' a retirada nao desfaria nada (o cliente ja' recebeu)
+        // a saida da loja que atende (retirada pelo entregador ou saida da reposicao) so' se
+        // estorna enquanto o segundo passo nao aconteceu: com a entrega ao cliente (ou o
+        // Recebido) ativa, estornar so' a saida nao desfaria nada
         if ($entrega->etapa === NegocioEntrega::ETAPA_RETIRADA && NegocioEntrega::where('codnegocio', $entrega->codnegocio)
             ->where('etapa', NegocioEntrega::ETAPA_CLIENTE)
             ->whereIn('resultado', [NegocioEntrega::RESULTADO_ENTREGUE, NegocioEntrega::RESULTADO_PROBLEMA])
             ->whereNull('inativo')->exists()) {
-            abort(422, 'Estorne antes a entrega ao cliente: a retirada pelo entregador só se estorna enquanto o cliente não recebeu.');
+            $reposicao = \Mg\Requisicao\Requisicao::whereKey($entrega->codrequisicao)
+                ->value('destino') === \Mg\Requisicao\Requisicao::DESTINO_LOJA;
+            abort(422, $reposicao
+                ? 'Estorne antes o recebido: a saída para entrega só se estorna enquanto a loja que pediu não recebeu.'
+                : 'Estorne antes a entrega ao cliente: a retirada pelo entregador só se estorna enquanto o cliente não recebeu.');
         }
         MgService::inativar($entrega);
         static::atualizarEntregue($entrega->Negocio);
@@ -87,12 +96,17 @@ class NegocioEntregaService
         return $entrega;
     }
 
-    // tblnegocio.entregue = data do primeiro registro E/P ativo; sem nenhum, nulo
+    // tblnegocio.entregue = data do primeiro registro E/P ativo; sem nenhum, nulo. A saida da
+    // reposicao (etapa C de requisicao L) nao conta: quem leva e' de quem atende, a mercadoria
+    // continua com quem enviou e o negocio so' fica entregue no Recebido da loja que pediu (fica
+    // no A receber ate' la'). Na entrega no endereco a saida conta: o entregador e' de quem pediu
     public static function atualizarEntregue(Negocio $negocio): void
     {
         $entregue = DB::selectOne("
-            select min(data) as data from tblnegocioentrega
-            where codnegocio = :codnegocio and inativo is null and resultado in ('E', 'P')
+            select min(e.data) as data from tblnegocioentrega e
+            left join tblrequisicao r on (r.codrequisicao = e.codrequisicao)
+            where e.codnegocio = :codnegocio and e.inativo is null and e.resultado in ('E', 'P')
+            and not (e.etapa = 'C' and r.destino is not distinct from 'L')
         ", ['codnegocio' => $negocio->codnegocio])->data;
         $negocio->entregue = $entregue;
         if ($negocio->isDirty()) {
@@ -114,6 +128,7 @@ class NegocioEntregaService
                 n.codestoquelocaldestino, eld.sigla as sigladestino, eld.estoquelocal as destino,
                 n.codpessoa, p.fantasia, nat.naturezaoperacao,
                 ult.resultado as ultimoresultado, ult.motivo as ultimomotivo, ult.data as ultimadata,
+                ult.etapa as ultimaetapa,
                 (select count(*) from tblnegocioentrega ne
                   where ne.codnegocio = n.codnegocio and ne.inativo is null) as tentativas
             from tblnegocio n
@@ -122,7 +137,7 @@ class NegocioEntregaService
             left join tblpessoa p on (p.codpessoa = n.codpessoa)
             inner join tblnaturezaoperacao nat on (nat.codnaturezaoperacao = n.codnaturezaoperacao)
             left join lateral (
-                select ne.resultado, ne.motivo, ne.data from tblnegocioentrega ne
+                select ne.resultado, ne.motivo, ne.data, ne.etapa from tblnegocioentrega ne
                 where ne.codnegocio = n.codnegocio and ne.inativo is null
                 order by ne.data desc, ne.codnegocioentrega desc
                 limit 1

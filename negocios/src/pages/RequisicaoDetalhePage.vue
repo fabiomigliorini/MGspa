@@ -6,6 +6,7 @@ import { storeToRefs } from 'pinia'
 import MgHistorico from '@components/MgHistorico.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInput from '@components/MgInput.vue'
+import MgLinkProduto from '@components/MgLinkProduto.vue'
 import MgSelect from '@components/MgSelect.vue'
 import ListaOpcoes from '@components/cobranca/ListaOpcoes.vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
@@ -15,7 +16,14 @@ import {
   formataTelefone,
   formataTimestamp,
 } from '@components/formatters'
-import { requisicaoStore, statusDe, MOTIVOS, PRIORIDADES, PRIORIDADE } from 'stores/requisicao'
+import {
+  requisicaoStore,
+  statusDe,
+  MOTIVOS,
+  PRIORIDADES,
+  PRIORIDADE,
+  SAIDA,
+} from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
 import { RESULTADOS, MOTIVOS as MOTIVOS_ENTREGA } from 'stores/entrega'
 
@@ -176,8 +184,11 @@ async function entregar() {
 }
 
 // Entrega no endereço: o entregador da loja que pediu busca na loja que atende, que registra
-// a retirada (quem buscou, sem código); depois a loja que pediu entrega ao cliente
+// a retirada (quem buscou, sem código); depois a loja que pediu entrega ao cliente. Reposição:
+// a loja que atende registra a saída para entrega (quem levou), com o mesmo botão e o mesmo
+// registro; depois a loja que pediu dá o Recebido. Os textos de cada um vêm do SAIDA
 const entregaNoEndereco = computed(() => r.value?.destino === 'E')
+const saida = computed(() => SAIDA[r.value?.destino])
 const dialogRetirar = ref(false)
 const retirada = ref({})
 function abrirRetirar() {
@@ -303,7 +314,7 @@ async function abrirImpressora() {
   impressoras.value = [...itens.filter(doPdv), ...itens.filter((i) => !doPdv(i))].map((i) => ({
     valor: i.value,
     label: i.label,
-    caption: [TIPOS_IMPRESSORA[i.tipo], doPdv(i) && 'Deste PDV'].filter(Boolean).join(' · '),
+    caption: [TIPOS_IMPRESSORA[i.tipo], doPdv(i) && 'Deste PDV'].filter(Boolean).join(' - '),
     icone: 'print',
     cor: 'blue-grey-5',
   }))
@@ -415,7 +426,7 @@ watch(
                 icon="handshake"
                 @click="abrirRetirar"
               >
-                <q-tooltip>Retirado pelo entregador</q-tooltip>
+                <q-tooltip>{{ saida?.label }}</q-tooltip>
               </q-btn>
               <q-btn
                 v-if="r.podeentregar"
@@ -616,12 +627,19 @@ watch(
                 </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label>{{ i.produto.descricao }}</q-item-label>
+                <q-item-label>
+                  <MgLinkProduto :codproduto="i.produto.codproduto">{{
+                    i.produto.descricao
+                  }}</MgLinkProduto>
+                </q-item-label>
                 <q-item-label caption>{{ i.produto.barras }}</q-item-label>
                 <q-item-label caption v-if="i.motivo" class="text-deep-orange-7">
                   {{ nomeMotivo(i.motivo) }}
                   <template v-if="i.substituto">
-                    · substituído por {{ i.substituto.descricao }}</template
+                    · substituído por
+                    <MgLinkProduto :codproduto="i.substituto.codproduto">{{
+                      i.substituto.descricao
+                    }}</MgLinkProduto></template
                   >
                   <template v-if="i.observacao"> · {{ i.observacao }}</template>
                 </q-item-label>
@@ -658,7 +676,11 @@ watch(
           <q-list separator>
             <q-item v-for="(f, indice) in r.foradopedido" :key="indice">
               <q-item-section>
-                <q-item-label>{{ f.produto.descricao }}</q-item-label>
+                <q-item-label>
+                  <MgLinkProduto :codproduto="f.produto.codproduto">{{
+                    f.produto.descricao
+                  }}</MgLinkProduto>
+                </q-item-label>
                 <q-item-label caption>
                   {{ formataNumeroInteligente(f.quantidade) }} {{ f.sigla }} no negócio
                   {{ formataCodigo(f.codnegocio) }}
@@ -691,12 +713,16 @@ watch(
                 <q-item-label>Negócio {{ formataCodigo(p.codnegocio) }}</q-item-label>
                 <q-item-label caption>
                   {{ STATUS_NEGOCIO[p.codnegociostatus] }} · {{ formataTimestamp(p.lancamento) }}
-                  <template v-if="entregaNoEndereco">
-                    <template v-if="p.entregue">
-                      · retirado pelo entregador {{ formataTimestamp(p.entregue) }}</template
+                  <template v-if="saida">
+                    <template v-if="p.retirado">
+                      · {{ saida.parte }} {{ formataTimestamp(p.retirado) }}
+                      <template v-if="p.retiradopor">
+                        ({{ saida.verbo }} {{ p.retiradopor }})</template
+                      ></template
                     >
                     <template v-if="p.entreguecliente">
-                      · entregue {{ formataTimestamp(p.entreguecliente) }}</template
+                      · {{ r.comcodigo ? 'entregue' : 'recebido' }}
+                      {{ formataTimestamp(p.entreguecliente) }}</template
                     >
                   </template>
                   <template v-else-if="p.entregue">
@@ -715,7 +741,7 @@ watch(
       <q-card flat style="width: 600px; max-width: 95vw">
         <q-form @submit.prevent="retirar">
           <q-card-section class="text-grey-9 text-overline text-uppercase">
-            Retirado pelo entregador
+            {{ saida?.label }}
           </q-card-section>
           <q-card-section>
             <div class="row q-col-gutter-md">
@@ -735,10 +761,10 @@ watch(
               <div class="col-12">
                 <MgInput
                   v-model="retirada.recebedor"
-                  :label="`Quem buscou (entregador de ${r?.requisitante})`"
+                  :label="saida?.quem(r)"
                   maxlength="100"
                   autofocus
-                  :rules="[(v) => !!(v || '').trim() || 'Informe quem buscou']"
+                  :rules="[(v) => !!(v || '').trim() || `Informe quem ${saida?.verbo}`]"
                 />
               </div>
               <div class="col-12">

@@ -6,6 +6,7 @@ import MgInput from '@components/MgInput.vue'
 import { formataTimestamp } from '@components/formatters'
 import { negocioStore } from 'stores/negocio'
 import { entregaStore, RESULTADOS, MOTIVOS } from 'stores/entrega'
+import { SAIDA } from 'stores/requisicao'
 
 // Entrega do negócio fechado (TASK-55): um card com a situação; clicando, o histórico das
 // tentativas e o registro de uma nova. Só online.
@@ -18,9 +19,13 @@ const dialog = ref(false)
 const ativas = computed(() => entregas.value.filter((e) => !e.inativo))
 const ultima = computed(() => ativas.value[ativas.value.length - 1] || null)
 const resultado = (valor) => RESULTADOS.find((r) => r.value === valor) || RESULTADOS[0]
-// requisição com entrega no endereço: a retirada pelo entregador da loja que pediu (etapa C)
-const RETIRADA = { label: 'Retirado pelo entregador', icone: 'delivery_dining', cor: 'teal-7' }
-const situacao = (e) => (e.etapa === 'C' ? RETIRADA : resultado(e.resultado))
+// requisição com saída (etapa C): a retirada pelo entregador da loja que pediu (entrega no
+// endereço) ou a saída para entrega da reposição; o destino vem com o registro
+const saidaDe = (e) => SAIDA[e.destinorequisicao] || SAIDA.E
+const situacao = (e) =>
+  e.etapa === 'C'
+    ? { label: saidaDe(e).label, icone: 'delivery_dining', cor: 'teal-7' }
+    : resultado(e.resultado)
 const mostrar = computed(() => controla.value || entregas.value.length > 0)
 
 watch(
@@ -84,7 +89,7 @@ function estornar(e) {
             {{ entregue ? 'Entregue ' + formataTimestamp(entregue) : 'Pendente' }}
           </q-item-label>
           <q-item-label caption class="ellipsis" v-if="ultima && !entregue">
-            {{ resultado(ultima.resultado).label }}
+            {{ situacao(ultima).label }}
             <template v-if="ultima.motivodescricao"> · {{ ultima.motivodescricao }}</template>
           </q-item-label>
         </q-item-section>
@@ -107,7 +112,7 @@ function estornar(e) {
               <q-item-label caption>
                 {{ formataTimestamp(e.data) }} · {{ e.usuariocriacao }}
                 <template v-if="e.recebedor">
-                  · {{ e.etapa === 'C' ? 'buscou' : 'recebeu' }} {{ e.recebedor }}</template
+                  · {{ e.etapa === 'C' ? saidaDe(e).verbo : 'recebeu' }} {{ e.recebedor }}</template
                 >
               </q-item-label>
               <q-item-label caption v-if="e.justificativa">

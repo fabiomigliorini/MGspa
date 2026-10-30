@@ -4,18 +4,11 @@ import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { db } from 'boot/db'
 import MgEmptyState from '@components/MgEmptyState.vue'
-import { formataCodigo, tempoRelativo } from '@components/formatters'
+import { tempoRelativo } from '@components/formatters'
 import { useConsultaAutomatica } from '@components/cobranca/useConsultaAutomatica'
-import {
-  requisicaoStore,
-  STATUS,
-  DESTINO,
-  PRIORIDADE,
-  lojaDaRequisicao,
-  trajeto,
-  legenda,
-} from 'stores/requisicao'
+import { requisicaoStore, STATUS, PRIORIDADE, lojaDaRequisicao } from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
+import RequisicaoLinha from 'components/requisicao/RequisicaoLinha.vue'
 
 // Painel de requisições (TASK-55, doc-6): uma aba por loja; nela, os cards Atender, Separados e
 // Pedidos, cada um por grupo, da mais urgente para a menos e, na mesma prioridade, das mais
@@ -33,8 +26,8 @@ const lojas = ref([])
 
 // os grupos são os nomes da situação, os mesmos em todo lugar (STATUS): P está em separação
 // como o S, e D está separado como o T. Separada (T ou D) fica nas duas lojas até sair: quem
-// separou acompanha no card Separados; na entrega no endereço, depois que o entregador de quem
-// pediu retira (R), o painel só manda a requisição para quem pediu
+// separou acompanha no card Separados; na entrega no endereço e na reposição, depois que tudo sai
+// da loja que atende (R), o painel só manda a requisição para quem pediu
 const separada = (r) => ['T', 'D'].includes(r.status)
 const GRUPOS = ['A', 'S', 'T', 'R'].map((chave) => ({ ...STATUS[chave], chave }))
 const grupoDe = (r) => ({ P: 'S', D: 'T' })[r.status] || r.status
@@ -142,66 +135,42 @@ onMounted(async () => {
         Nenhuma requisição nesta loja.
       </MgEmptyState>
 
+      <!-- uma lista por card: o título do card, o do grupo e a linha têm o ícone na mesma
+           coluna e o texto no mesmo recuo (TASK-261) -->
       <q-card v-for="c in cards" :key="c.chave" flat bordered class="q-mb-md">
-        <q-item>
-          <q-item-section avatar>
-            <q-avatar :icon="c.icone" color="primary" text-color="white" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label class="text-subtitle1 text-weight-medium">{{ c.titulo }}</q-item-label>
-            <q-item-label caption>{{ quantas(c.total) }}</q-item-label>
-          </q-item-section>
-        </q-item>
+        <q-list separator>
+          <q-item>
+            <q-item-section avatar>
+              <q-icon :name="c.icone" color="primary" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="text-subtitle1 text-weight-medium">{{ c.titulo }}</q-item-label>
+              <q-item-label caption>{{ quantas(c.total) }}</q-item-label>
+            </q-item-section>
+          </q-item>
 
-        <template v-for="g in c.grupos" :key="g.chave">
-          <q-separator />
-          <q-item-label
-            v-if="!c.semSubtitulo"
-            header
-            class="row items-center text-weight-medium"
-            :class="`text-${g.cor}`"
-          >
-            <q-icon :name="g.icone" size="xs" class="q-mr-sm" />
-            {{ g.label }} · {{ g.itens.length }}
-          </q-item-label>
-          <q-list separator>
-            <q-item
-              v-for="r in g.itens"
-              :key="r.codrequisicao"
-              clickable
-              :to="`/requisicao/${r.codrequisicao}`"
-            >
+          <template v-for="g in c.grupos" :key="g.chave">
+            <q-item v-if="!c.semSubtitulo" :class="`text-${g.cor}`">
               <q-item-section avatar>
-                <q-avatar
-                  :icon="DESTINO[r.destino].icone"
-                  :color="DESTINO[r.destino].cor"
-                  text-color="white"
-                />
+                <q-icon :name="g.icone" />
               </q-item-section>
-              <q-item-section>
-                <q-item-label class="ellipsis">
-                  {{ formataCodigo(r.codrequisicao) }} · {{ trajeto(r) }}
-                </q-item-label>
-                <q-item-label caption class="ellipsis">{{ legenda(r) }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-chip
-                  size="sm"
-                  :color="PRIORIDADE[r.prioridade]?.cor"
-                  text-color="white"
-                  :label="PRIORIDADE[r.prioridade]?.label"
-                />
-              </q-item-section>
-              <q-item-section side>
-                <q-item-label caption>{{ tempoRelativo(r.criacao) }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-icon name="chevron_right" />
+              <q-item-section class="text-body2 text-weight-medium">
+                {{ g.label }} - {{ g.itens.length }}
               </q-item-section>
             </q-item>
-          </q-list>
-        </template>
+            <RequisicaoLinha
+              v-for="r in g.itens"
+              :key="r.codrequisicao"
+              :requisicao="r"
+              :marca="PRIORIDADE[r.prioridade] || PRIORIDADE[2]"
+              :quando="tempoRelativo(r.criacao)"
+            />
+          </template>
+        </q-list>
       </q-card>
+
+      <!-- espaço para o botão + não cobrir a última requisição -->
+      <div class="q-py-xl" />
     </div>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">

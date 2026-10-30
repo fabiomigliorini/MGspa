@@ -30,7 +30,8 @@ export const STATUS = {
   P: { label: 'Em separação', cor: 'orange-8', icone: 'qr_code_scanner' },
   T: { label: 'Separado', cor: 'green-7', icone: 'inventory' },
   D: { label: 'Separado', cor: 'green-7', icone: 'inventory' },
-  // entrega no endereço: o entregador da loja que pediu já retirou tudo, falta o cliente
+  // entrega no endereço e reposição: tudo já saiu da loja que atende; falta o cliente receber
+  // (ou a loja que pediu dar o Recebido)
   R: { label: 'Saiu para entrega', cor: 'teal-7', icone: 'delivery_dining' },
   E: { label: 'Entregue', cor: 'blue-7', icone: 'task_alt' },
   C: { label: 'Cancelada', cor: 'red-5', icone: 'block' },
@@ -89,6 +90,26 @@ export const DESTINOS = [
 ]
 
 export const DESTINO = Object.fromEntries(DESTINOS.map((d) => [d.value, d]))
+
+// A saída da loja que atende (etapa C da entrega), nos destinos que têm esse passo: na entrega
+// no endereço o entregador de quem pediu busca; na reposição um funcionário de quem atende
+// leva. O mesmo botão e o mesmo registro; só os textos mudam (detalhe, entregas do negócio)
+export const SAIDA = {
+  E: {
+    label: 'Retirado pelo entregador',
+    parte: 'retirado pelo entregador',
+    quem: (r) => `Quem buscou (entregador de ${r.requisitante})`,
+    verbo: 'buscou',
+    registrada: 'Retirada registrada',
+  },
+  L: {
+    label: 'Saiu para entrega',
+    parte: 'saiu para entrega',
+    quem: (r) => `Quem levou (funcionário de ${r.requisitada})`,
+    verbo: 'levou',
+    registrada: 'Saída para entrega registrada',
+  },
+}
 
 // a linha da requisição: quem pediu → quem atende (sem loja = Compras). Sem o nome do cliente:
 // o destino (cliente retira, entrega, reposição) vai embaixo
@@ -501,10 +522,10 @@ export const requisicaoStore = defineStore('requisicao', () => {
     try {
       const { data } = await api.post(`v1/requisicao/${r.codrequisicao}/retirar`, dados)
       requisicao.value = data.data
-      notificar('positive', 'Retirada registrada')
+      notificar('positive', SAIDA[r.destino]?.registrada || 'Saída registrada')
       return true
     } catch (error) {
-      notificar('negative', mensagemErro(error, 'Impossível registrar a retirada'))
+      notificar('negative', mensagemErro(error, 'Impossível registrar a saída'))
       return false
     }
   }

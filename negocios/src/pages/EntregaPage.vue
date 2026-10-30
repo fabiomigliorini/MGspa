@@ -5,6 +5,7 @@ import MgEmptyState from '@components/MgEmptyState.vue'
 import { formataCodigo, formataReal, tempoRelativo } from '@components/formatters'
 import SelectEstoqueLocal from 'components/selects/SelectEstoqueLocal.vue'
 import { entregaStore, RESULTADOS, MOTIVOS } from 'stores/entrega'
+import { SAIDA } from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
 
 // Entregas (TASK-55, doc-6): o que a loja tem para entregar (é a origem: retirada e entrega
@@ -20,9 +21,12 @@ const LADOS = [
 
 const ultima = (n) => {
   if (!n.ultimoresultado) return null
+  // saída (etapa C) com o negócio ainda pendente só existe na reposição: a retirada pelo
+  // entregador da entrega no endereço já dá o negócio por entregue e ele sai da lista
+  if (n.ultimaetapa === 'C') return `${SAIDA.L.label} ${tempoRelativo(n.ultimadata)}`
   const r = RESULTADOS.find((x) => x.value === n.ultimoresultado)
   const m = (MOTIVOS[n.ultimoresultado] || []).find((x) => x.value === n.ultimomotivo)
-  return `${r?.label}${m ? ' · ' + m.label : ''} ${tempoRelativo(n.ultimadata)}`
+  return `${r?.label}${m ? ' - ' + m.label : ''} ${tempoRelativo(n.ultimadata)}`
 }
 
 watch([lado, codestoquelocal], () => sEntrega.carregarPendentes())

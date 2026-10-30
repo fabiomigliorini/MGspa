@@ -11,6 +11,8 @@ use Mg\Usuario\Usuario;
  * registro E ou P ativo (tblnegocio.entregue, gravado pelo NegocioEntregaService).
  * Na requisicao com entrega no endereco, a etapa C (retirado pelo entregador da
  * loja que pediu) e' o que marca o negocio entregue; a etapa E e' a entrega ao cliente.
+ * Na reposicao, a etapa C e' a saida para entrega (quem leva e' da loja que atende) e
+ * nao marca o negocio entregue: quem marca e' o Recebido (etapa E) da loja que pediu.
  */
 class NegocioEntrega extends MgModel
 {

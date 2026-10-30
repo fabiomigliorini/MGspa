@@ -52,15 +52,20 @@ class PdvNegocioReaberturaService
             abort(422, 'Este negócio é um Vale Compras convertido do sistema antigo e não pode ser alterado!');
         }
         // separacao de requisicao que ja' saiu da loja (TASK-55): fechado de novo, continuaria
-        // contando como retirado/entregue, ate' com item que nao foi junto
-        if (!empty($negocio->entregue)) {
+        // contando como retirado/entregue, ate' com item que nao foi junto. A saida da
+        // reposicao nao marca o entregue (so' o Recebido): confere a etapa C ativa
+        $saiu = !empty($negocio->entregue) || \Mg\Negocio\NegocioEntrega::where('codnegocio', $negocio->codnegocio)
+            ->where('etapa', \Mg\Negocio\NegocioEntrega::ETAPA_RETIRADA)
+            ->whereNull('inativo')->exists();
+        if ($saiu) {
             $req = \Mg\Requisicao\RequisicaoNegocioService::requisicoesAtivas($negocio->codnegocio)->first();
             if ($req) {
                 $cod = str_pad($req->codrequisicao, 8, '0', STR_PAD_LEFT);
-                abort(422, match ($req->destino) {
-                    \Mg\Requisicao\Requisicao::DESTINO_ENTREGA => "Este negócio da requisição #{$cod} já foi retirado pelo entregador: estorne a retirada antes de reabrir.",
-                    \Mg\Requisicao\Requisicao::DESTINO_RETIRA => "Este negócio da requisição #{$cod} já foi entregue ao cliente: estorne a entrega antes de reabrir.",
-                    default => "Este negócio da requisição #{$cod} já foi recebido pela loja que pediu: estorne o recebido antes de reabrir.",
+                abort(422, match (true) {
+                    $req->destino === \Mg\Requisicao\Requisicao::DESTINO_ENTREGA => "Este negócio da requisição #{$cod} já foi retirado pelo entregador: estorne a retirada antes de reabrir.",
+                    $req->destino === \Mg\Requisicao\Requisicao::DESTINO_RETIRA => "Este negócio da requisição #{$cod} já foi entregue ao cliente: estorne a entrega antes de reabrir.",
+                    !empty($negocio->entregue) => "Este negócio da requisição #{$cod} já foi recebido pela loja que pediu: estorne o recebido antes de reabrir.",
+                    default => "Este negócio da requisição #{$cod} já saiu para entrega: estorne a saída antes de reabrir.",
                 });
             }
         }

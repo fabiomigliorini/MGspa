@@ -31,12 +31,19 @@ class Requisicao extends MgModel
         self::DESTINO_LOJA => 'Reposição',
     ];
 
+    // destinos em que a mercadoria sai da loja que atende num passo proprio (etapa C da
+    // entrega, registrada por ela) antes do segundo, da loja que pediu: na entrega no endereco
+    // o entregador de quem pediu busca e depois entrega ao cliente; na reposicao um
+    // funcionario de quem atende leva e a loja que pediu da' o Recebido
+    const DESTINOS_COM_SAIDA = [self::DESTINO_ENTREGA, self::DESTINO_LOJA];
+
     const STATUS_AGUARDANDO = 'A';
     const STATUS_EM_SEPARACAO = 'S';
     const STATUS_PARCIAL = 'P';
     const STATUS_TOTAL = 'T';
     const STATUS_DIVERGENCIA = 'D';
-    // entrega no endereco: o entregador da loja que pediu ja' retirou tudo, falta o cliente
+    // tudo ja' saiu da loja que atende (DESTINOS_COM_SAIDA): na entrega no endereco falta o
+    // cliente receber; na reposicao, a loja que pediu dar o Recebido
     const STATUS_COM_ENTREGADOR = 'R';
     const STATUS_ENTREGUE = 'E';
     const STATUS_CANCELADA = 'C';

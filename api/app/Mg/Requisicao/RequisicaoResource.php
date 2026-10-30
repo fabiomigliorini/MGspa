@@ -95,8 +95,11 @@ class RequisicaoResource extends JsonResource
                 'codnegocio' => $n['codnegocio'],
                 'codnegociostatus' => $n['codnegociostatus'],
                 'lancamento' => $n['lancamento'],
-                // na entrega no endereco, entregue = retirado pelo entregador
+                // nos destinos com saida, retirado = saiu da loja que atende e entreguecliente =
+                // entregue ao cliente ou recebido; no cliente retira, entregue
                 'entregue' => $n['entregue'],
+                'retirado' => $n['retirado'],
+                'retiradopor' => $n['retiradopor'],
                 'entreguecliente' => $n['entreguecliente'],
             ], array_filter($calc['negocios'], fn ($n) => in_array($req->codrequisicao, $n['requisicoes'])))),
             'foradopedido' => array_map(fn ($f) => [

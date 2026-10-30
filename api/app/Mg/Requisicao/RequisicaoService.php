@@ -18,7 +18,8 @@ use Mg\Usuario\Autorizador;
 // O status nao se grava aqui: quem decide e' o RequisicaoProcessamentoService.
 class RequisicaoService
 {
-    // a linha das listas (painel e listagem): as duas lojas, quem retira e quantos itens
+    // a linha das listas (painel e listagem): as duas lojas, quem pediu (o usuario), quem
+    // retira e quantos itens
     // nao atendida: finalizada (D) sem nenhuma parte separada (negocio fechado ligado), a
     // loja que atende nao tinha. Nao e' status gravado: e' a D sem parte, a tela mostra
     // "Nao atendida" e o painel nao mostra (nao ha' o que entregar nem receber)
@@ -38,10 +39,12 @@ class RequisicaoService
             eld.estoquelocal as requisitada,
             (select count(*) from tblrequisicaoitem ri
               where ri.codrequisicao = r.codrequisicao and ri.quantidade > 0) as itens,
-            " . self::SQL_NAO_ATENDIDA . " as naoatendida
+            " . self::SQL_NAO_ATENDIDA . " as naoatendida,
+            uc.usuario as usuariocriacao
         from tblrequisicao r
         inner join tblestoquelocal elr on (elr.codestoquelocal = r.codestoquelocalrequisitante)
         left join tblestoquelocal eld on (eld.codestoquelocal = r.codestoquelocalrequisitada)
+        left join tblusuario uc on (uc.codusuario = r.codusuariocriacao)
     ";
 
     const POR_PAGINA = 50;
@@ -464,11 +467,11 @@ class RequisicaoService
     }
 
     // Painel por loja: o que ela tem para atender (requisitada) e o que ela pediu
-    // (requisitante), a tela separa. Saiu para entrega (entrega no endereco, tudo retirado) so'
-    // no lado de quem pediu: o servico de quem atende acabou na retirada.
-    // Separada (total ou finalizada) fica nas duas lojas ate'
-    // ser entregue: quem separou acompanha o que ainda nao chegou (28/10/2026), e sai quando a
-    // loja que pediu da' o Recebido ou o cliente retira. Da mais urgente para a menos e, na
+    // (requisitante), a tela separa. Saiu para entrega (entrega no endereco ou reposicao, tudo
+    // ja' saiu da loja que atende) so' no lado de quem pediu: o servico de quem atende acabou na
+    // saida. Separada (total ou finalizada) fica nas duas lojas ate' sair: quem separou
+    // acompanha o que ainda nao saiu (28/10/2026), e sai do painel dela na saida para entrega
+    // ou quando o cliente retira. Da mais urgente para a menos e, na
     // mesma prioridade, da mais antiga para a mais nova; as entregues, nao atendidas
     // (SQL_NAO_ATENDIDA) e canceladas ficam na listagem.
     public static function painel(int $codestoquelocal): array

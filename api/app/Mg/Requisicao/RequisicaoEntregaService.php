@@ -11,9 +11,12 @@ use Mg\Pdv\Pdv;
 // Entrega pela requisicao (TASK-55, doc-6): cada parte (negocio fechado ainda sem
 // entrega) ganha um registro de entrega do negocio. Retirada/entrega ao cliente pede o
 // codigo de retirada de todas as requisicoes daquele negocio, ou justificativa sem ele;
-// reposicao e' a loja que pediu dando o recebido, sem codigo. Entrega no endereco tem dois
-// passos: a loja que atende registra a retirada pelo entregador da loja que pediu (etapa C,
-// sem codigo, e' o que marca o negocio entregue) e a loja que pediu, a entrega ao cliente.
+// reposicao e' a loja que pediu dando o recebido, sem codigo. Entrega no endereco e reposicao
+// tem dois passos (Requisicao::DESTINOS_COM_SAIDA): a loja que atende registra a saida (etapa
+// C, sem codigo, com o nome de quem leva) e a loja que pediu, a entrega ao cliente ou o
+// Recebido. Na entrega no endereco quem busca e' o entregador da loja que pediu, e a saida ja'
+// marca o negocio entregue; na reposicao quem leva e' de quem atende, e o negocio so' fica
+// entregue no Recebido (NegocioEntregaService::atualizarEntregue).
 class RequisicaoEntregaService
 {
     const JUSTIFICATIVA_MINIMA = 15;
@@ -31,28 +34,29 @@ class RequisicaoEntregaService
             && $filtro($n))));
     }
 
-    // partes do Entregar/Recebido: sem entrega; na entrega no endereco, as ja' retiradas pelo
-    // entregador e ainda nao entregues ao cliente
+    // partes do Entregar/Recebido: sem entrega; na entrega no endereco e na reposicao, as que
+    // ja' sairam da loja que atende e ainda nao foram entregues ao cliente (ou recebidas)
     public static function partesPendentes(Requisicao $req): array
     {
         if (static::emDoisPassos($req)) {
-            return static::partes($req, fn ($n) => !empty($n['entregue']) && empty($n['entreguecliente']));
+            return static::partes($req, fn ($n) => !empty($n['retirado']) && empty($n['entreguecliente']));
         }
         return static::partes($req, fn ($n) => empty($n['entregue']));
     }
 
-    // partes que o entregador ainda nao retirou (so' na entrega no endereco)
+    // partes que ainda nao sairam da loja que atende (so' nos destinos com saida); a entregue
+    // antes de existir a saida ja' saiu
     public static function partesARetirar(Requisicao $req): array
     {
         if (!static::emDoisPassos($req)) {
             return [];
         }
-        return static::partes($req, fn ($n) => empty($n['entregue']));
+        return static::partes($req, fn ($n) => empty($n['retirado']) && empty($n['entreguecliente']));
     }
 
     public static function emDoisPassos(Requisicao $req): bool
     {
-        return $req->destino === Requisicao::DESTINO_ENTREGA;
+        return in_array($req->destino, Requisicao::DESTINOS_COM_SAIDA);
     }
 
     public static function comCodigo(Requisicao $req): bool
@@ -87,7 +91,8 @@ class RequisicaoEntregaService
         return ($lado || RequisicaoService::ehAdministrador()) && !empty(static::partesPendentes($req));
     }
 
-    // entrega no endereco: a loja que atende registra a retirada pelo entregador da loja que pediu
+    // entrega no endereco e reposicao: a loja que atende registra a saida (o entregador da
+    // loja que pediu buscou, ou o funcionario dela levou)
     public static function podeRetirar(Requisicao $req, ?Pdv $pdv): bool
     {
         if (!static::emDoisPassos($req)
@@ -100,15 +105,18 @@ class RequisicaoEntregaService
 
     public static function retirar(Requisicao $req, array $dados, ?Pdv $pdv): array
     {
+        $reposicao = $req->destino === Requisicao::DESTINO_LOJA;
         if (!static::podeRetirar($req, $pdv)) {
-            abort(403, 'A retirada pelo entregador é registrada pela loja que atende, com parte separada a retirar!');
+            abort(403, $reposicao
+                ? 'A saída para entrega é registrada pela loja que atende, com parte separada que ainda não saiu!'
+                : 'A retirada pelo entregador é registrada pela loja que atende, com parte separada a retirar!');
         }
         $partes = static::partesARetirar($req);
         if (!empty($dados['codnegocios'])) {
             $partes = array_values(array_filter($partes, fn ($p) => in_array($p['codnegocio'], $dados['codnegocios'])));
         }
         if (empty($partes)) {
-            abort(422, 'Nenhuma parte separada a retirar!');
+            abort(422, $reposicao ? 'Nenhuma parte separada que ainda não saiu!' : 'Nenhuma parte separada a retirar!');
         }
         $registros = [];
         foreach ($partes as $parte) {
@@ -130,7 +138,7 @@ class RequisicaoEntregaService
             abort(403, match ($req->destino) {
                 Requisicao::DESTINO_RETIRA => 'A entrega ao cliente é registrada pela loja que atende, com parte separada pendente!',
                 Requisicao::DESTINO_ENTREGA => 'A entrega ao cliente é registrada pela loja que pediu, com parte já retirada pelo entregador!',
-                default => 'O recebido da reposição é registrado pela loja que pediu, com parte separada pendente!',
+                default => 'O recebido da reposição é registrado pela loja que pediu, com parte que já saiu para entrega!',
             });
         }
         $partes = static::partesPendentes($req);
