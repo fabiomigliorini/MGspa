@@ -82,7 +82,8 @@ o que depende dela por último.
    Fiscal fora de discussão: todos geram transferência B→A; na entrega vai a NF-e de transferência + a nota de venda.
    **E é entregue pelo entregador de quem pede** (28/10/2026): a loja A já tem a venda, o entregador dela
    busca a mercadoria na B e entrega ao cliente, e a entrega é responsabilidade da A. R continua com a B
-   (o cliente vai até ela).
+   (o cliente vai até ela). **L é levada por um funcionário da B** (30/10/2026, TASK-261): a mercadoria
+   segue com quem enviou até a A dar o Recebido.
 3. Item pedido = `codprodutobarra` + quantidade; **a mesma variação pode repetir** em embalagens diferentes
    (ex.: 1 CX c/10 resmas + 5 pacotes avulsos); não repete a mesma barra.
 4. Criar: no painel (do zero, `MgInputProdutoBarras`) ou a partir de negócio **fechado** (itens e cliente
@@ -141,7 +142,15 @@ o que depende dela por último.
     destino, "com divergências" no D e os itens. Não atendida, E e C ficam só na listagem.
     **Entregar no endereço** (28/10/2026): status novo **R Saiu para entrega** (o entregador de
     quem pediu já retirou todas as partes separadas; falta entregar ao cliente): sai do painel de quem
-    separou (o serviço da B acabou) e fica só em "{Loja} pediu".
+    separou (o serviço da B acabou) e fica só em "{Loja} pediu". **Reposição** (30/10/2026, TASK-261):
+    o mesmo R quando todas as partes saíram da B (falta o Recebido da A), com a mesma regra do painel.
+    **Linha das listas** (30/10/2026, TASK-261): painel e listagem usam o mesmo componente
+    (`RequisicaoLinha`), em colunas alinhadas como uma listagem: ícone do destino; código; lojas
+    (trajeto) com a legenda embaixo; **quem pediu** (o usuário que criou); a marca (prioridade no painel,
+    situação na listagem); e quando (há quanto tempo no painel, data e hora na listagem). Em cima, a
+    linha com o título das colunas (`RequisicaoCabecalho`), como o cabeçalho da tabela da /vale-modelo;
+    no celular ela some, porque a linha quebra em duas. O título do card, o das colunas, o do grupo e a
+    linha têm o ícone na mesma coluna e o texto no mesmo recuo.
 15. **Finalizar = acabou a separação**; não existe "o resto vem depois" (decisão 6). Enquanto a separação
     está aberta (A/S/P, também depois de Reabrir), a loja **requisitada** ou **Gerente** clica no item e lança
     **motivo** (estoque do sistema errado, avariado/vencido, não localizado, enviado a mais, sem saldo) +
@@ -163,7 +172,8 @@ o que depende dela por último.
     (com problema: mercadoria errada, avariada, faltando item; não entregue: cliente ausente, recusou,
     endereço não encontrado), recebedor, observação. `tblnegocio.entregue` (data) gravado pelo serviço.
 18. Duas listas por loja: **Entregas a fazer** (origem: retirada e entrega ao cliente) e **A receber**
-    (destino: reposição e transferência).
+    (destino: reposição e transferência). A reposição que já saiu continua nas duas até o Recebido, com
+    "Saiu para entrega" na última tentativa (30/10/2026).
 19. Negócio de requisição R/E se entrega **pela requisição**, com o código de **todas** as requisições do
     negócio; sem código, com justificativa obrigatória (marca "entregue sem código"). Reposição (L): a loja A
     registra o recebido, sem código, também **pela requisição** — quem enviou não confirma o próprio
@@ -175,9 +185,20 @@ o que depende dela por último.
     mão com o entregador presente na B, não "quem enviou confirma o próprio recebido". 2) **Entregar ao
     cliente**: a loja A registra, só nas partes já retiradas, com o código de todas as requisições do negócio
     ou justificativa, como no R; tentativas não entregues ficam registradas; todas entregues → E.
-    Negócio de separação que já saiu da loja (retirado, entregue ou recebido) **não reabre**: recusa pedindo
-    para estornar antes (`PdvNegocioReaberturaService::reabrir`, 28/10/2026); senão, fechado de novo,
-    continuaria contando como entregue até com item que não foi junto.
+    **Reposição em dois passos** (30/10/2026, TASK-261; decisão 2), com o mesmo botão, rota
+    (`POST v1/requisicao/{id}/retirar`) e registro (etapa C) da retirada: 1) **Saiu para entrega**: a loja
+    B registra, em cada parte fechada que ainda não saiu, quem levou (o funcionário dela, obrigatório, sem
+    código); todas saíram → R. **A transferência não fica entregue**: a mercadoria continua com quem
+    enviou, então a saída não preenche o `tblnegocio.entregue` (`NegocioEntregaService::atualizarEntregue`
+    ignora a etapa C da L) e o negócio segue no A receber da A. 2) **Recebido**: a loja A registra, **só
+    nas partes que já saíram**, como antes; todas recebidas → E. Quem decide os destinos com saída é
+    `Requisicao::DESTINOS_COM_SAIDA`; o processo lê os dois passos das etapas (`retirado` = etapa C,
+    `entreguecliente` = etapa E), não do `tblnegocio.entregue`. A parte recebida antes de existir a
+    saída conta como saída. O estorno vai na ordem inversa (Recebido, depois a saída).
+    Negócio de separação que já saiu da loja (retirado, saiu para entrega, entregue ou recebido) **não
+    reabre**: recusa pedindo para estornar antes (`PdvNegocioReaberturaService::reabrir`, 28/10/2026; a
+    saída da reposição pela etapa C ativa, 30/10/2026); senão, fechado de novo, continuaria contando como
+    entregue até com item que não foi junto.
 
 **Impressão e impressoras**
 20. Um blade, duas vias × térmica/A5: via **requisitante** (autorização de retirada com o código) na térmica
@@ -200,13 +221,14 @@ o que depende dela por último.
     botões do seu serviço** (28/10/2026): botão que não pode, não aparece. Gerente **não** faz o serviço do
     outro lado; só o **Administrador** age em qualquer PDV.
     - **Quem pede**: Editar (aguardando), Cancelar (fora de C/E), Prioridade (A/S/P/T/D), Recebido da
-      reposição (com parte fechada ainda não entregue), **Entregar ao cliente no E** (com parte retirada pelo
-      entregador ainda não entregue) e a via do cliente (com o código inteiro).
+      reposição (com parte que já saiu para entrega e ainda não foi recebida; 30/10/2026), **Entregar ao
+      cliente no E** (com parte retirada pelo entregador ainda não entregue) e a via do cliente (com o
+      código inteiro).
     - **Quem atende**: Separar (A/S/P; o negócio sai do local do PDV e o Fechar recusa negócio de outra
       loja, decisão 10; com separação em andamento neste PDV, abre esse negócio), Justificar, tirar
       justificativa e Finalizar (A/S/P), Entregar ao cliente **só no R** (com parte fechada ainda não
-      entregue), **Retirado pelo entregador no E** (com parte fechada ainda não retirada)
-      e **Reabrir** (D, também a não atendida) — este só o **Gerente**.
+      entregue), **Retirado pelo entregador no E** e **Saiu para entrega na L** (o mesmo botão, com parte
+      fechada que ainda não saiu) e **Reabrir** (D, também a não atendida) — este só o **Gerente**.
     - **Qualquer PDV**: ver, Reprocessar e a via de separação.
     - Gerente continua escolhendo outra loja que pede ao criar (formulário e Gerador).
 
