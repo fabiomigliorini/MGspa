@@ -683,6 +683,9 @@ class PdvNegocioService
             throw new Exception("Status do Negócio Não Permite Cancelamento!", 1);
         }
 
+        // separacao de requisicao: so' a loja que separou, e nao depois de entregue
+        RequisicaoNegocioService::validarCancelamento($negocio, $pdv);
+
         // vale ja' usado nao volta: avisa antes de comecar a estornar
         // qualquer coisa
         PdvNegocioValeService::validarCancelamento($negocio);

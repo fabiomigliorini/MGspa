@@ -329,12 +329,13 @@ class RequisicaoService
         if (!static::podeCancelar($req, $pdv)) {
             abort(403, 'Só a loja que pediu cancela a requisição!');
         }
+        // a separacao so' a loja que separou cancela (RequisicaoNegocioService::validarCancelamento)
         $ativos = RequisicaoProcessamentoService::negociosAtivos($req);
         if (!empty($ativos)) {
-            abort(422, 'Cancele antes o(s) negócio(s) de transferência ' . implode(', ', array_map(
+            abort(422, ($req->EstoqueLocalRequisitada?->estoquelocal ?? 'Compras') . " precisa cancelar antes a separação (negócio(s) " . implode(', ', array_map(
                 fn ($cod) => '#' . str_pad($cod, 8, '0', STR_PAD_LEFT),
                 $ativos
-            )) . '!');
+            )) . ')!');
         }
         $req->cancelamento = now();
         $req->codusuariocancelamento = Auth::user()?->codusuario;
@@ -467,19 +468,16 @@ class RequisicaoService
     }
 
     // Painel por loja: o que ela tem para atender (requisitada) e o que ela pediu
-    // (requisitante), a tela separa. Saiu para entrega (entrega no endereco ou reposicao, tudo
-    // ja' saiu da loja que atende) so' no lado de quem pediu: o servico de quem atende acabou na
-    // saida. Separada (total ou finalizada) fica nas duas lojas ate' sair: quem separou
-    // acompanha o que ainda nao saiu (28/10/2026), e sai do painel dela na saida para entrega
-    // ou quando o cliente retira. Da mais urgente para a menos e, na
-    // mesma prioridade, da mais antiga para a mais nova; as entregues, nao atendidas
-    // (SQL_NAO_ATENDIDA) e canceladas ficam na listagem.
+    // (requisitante), a tela separa. Fica nas duas lojas ate' a entrega: quem separou acompanha
+    // o separado e o que saiu para entrega (TASK-261) ate' quem pediu dar o Recebido ou
+    // entregar ao cliente. Da mais urgente para a menos e, na mesma prioridade, da mais antiga
+    // para a mais nova; as entregues, nao atendidas (SQL_NAO_ATENDIDA) e canceladas ficam na
+    // listagem.
     public static function painel(int $codestoquelocal): array
     {
         $sql = self::SELECT_LISTA . "
             where (r.codestoquelocalrequisitada = :codestoquelocal or r.codestoquelocalrequisitante = :codestoquelocal2)
-            and (r.status in ('A', 'S', 'P', 'T', 'D')
-                or (r.status = 'R' and r.codestoquelocalrequisitante = :codestoquelocal3))
+            and r.status in ('A', 'S', 'P', 'T', 'D', 'R')
             and not " . self::SQL_NAO_ATENDIDA . "
             order by r.prioridade desc, r.criacao, r.codrequisicao
             limit 500
@@ -487,7 +485,6 @@ class RequisicaoService
         return DB::select($sql, [
             'codestoquelocal' => $codestoquelocal,
             'codestoquelocal2' => $codestoquelocal,
-            'codestoquelocal3' => $codestoquelocal,
         ]);
     }
 

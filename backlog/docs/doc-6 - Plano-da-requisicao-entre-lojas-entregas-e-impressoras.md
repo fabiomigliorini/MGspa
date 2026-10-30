@@ -89,7 +89,10 @@ o que depende dela por último.
 4. Criar: no painel (do zero, `MgInputProdutoBarras`) ou a partir de negócio **fechado** (itens e cliente
    preenchidos e editáveis; guarda o negócio de origem). Requisitante ou **Gerente** edita itens e cliente
    **só enquanto aguardando**. Cancelar: PDV da loja **requisitante** ou **Gerente**; recusa se houver
-   negócio ativo ligado (mostra o link do negócio, onde se cancela). **A loja que pede é a do PDV**: só
+   negócio ativo ligado ("Deposito precisa cancelar antes a separação (negócio #…)"). **A separação só a
+   loja que separou cancela** (ou o Administrador), também depois de sair; cancelada, a requisição volta
+   para A separar e quem pediu pode cancelar. Entregue ao cliente ou recebida não cancela: estorna antes,
+   como no reabrir (`RequisicaoNegocioService::validarCancelamento`, 30/10/2026, TASK-261). **A loja que pede é a do PDV**: só
    Gerente escolhe outra, no formulário e no Gerador; o servidor recusa (27/10/2026). Nascida do negócio
    (botão do PDV), não pergunta o número nem quem pede: é a loja da venda.
 5. Código de retirada de 6 dígitos, só no lado A (comprovante e tela da A; nunca na tela nem na via da B).
@@ -134,18 +137,19 @@ o que depende dela por último.
     Cancelada · Não atendida. O filtro da listagem junta os que têm o mesmo nome (S,P e T,D). Destino com
     um nome só: **Cliente retira**, **Entrega no endereço**, **Reposição** (o formulário mantém a frase com
     as lojas).
-    **Painel** (28/10/2026): três cards. A situação é uma coluna da linha (TASK-261, no lugar das linhas
+    **Painel** (28/10/2026): quatro cards. A situação é uma coluna da linha (TASK-261, no lugar das linhas
     de grupo), e o card vem em blocos dela: A separar, Em separação, Separado, Saiu para entrega; na
     mesma situação, a mais urgente e, na mesma prioridade, a mais antiga. **Atender**: A separar e Em
-    separação. **Separados**: as separadas (T ou D; fica nas duas lojas até sair; quem separou
-    acompanha).
+    separação. **Separados**: as separadas (T ou D) que ainda não saíram.
     **"{Loja} pediu"** (tudo o que a loja pediu, de qualquer loja): A separar, Em separação, Separado e Saiu
-    para entrega. A linha é **quem pediu → quem atende** (`CEN → BOT`), com o ícone do destino; embaixo, o
-    destino, "com divergências" no D e os itens. Não atendida, E e C ficam só na listagem.
+    para entrega. **Saiu para entrega**, o último (30/10/2026, TASK-261): o R que a loja separou; quem
+    separou acompanha até quem pediu dar o Recebido ou entregar ao cliente (E sai do painel).
+    A linha é **quem pediu → quem atende** (`CEN → BOT`), com o ícone do destino; embaixo, o destino,
+    "com divergências" no D e os itens. Não atendida, E e C ficam só na listagem.
     **Entregar no endereço** (28/10/2026): status novo **R Saiu para entrega** (o entregador de
-    quem pediu já retirou todas as partes separadas; falta entregar ao cliente): sai do painel de quem
-    separou (o serviço da B acabou) e fica só em "{Loja} pediu". **Reposição** (30/10/2026, TASK-261):
-    o mesmo R quando todas as partes saíram da B (falta o Recebido da A), com a mesma regra do painel.
+    quem pediu já retirou todas as partes separadas; falta entregar ao cliente): fica em "{Loja} pediu"
+    na A e no card Saiu para entrega da B. **Reposição** (30/10/2026, TASK-261): o mesmo R quando todas
+    as partes saíram da B (falta o Recebido da A), com a mesma regra do painel.
     **Linha das listas** (30/10/2026, TASK-261): painel e listagem usam o mesmo componente
     (`RequisicaoLinha`), em colunas alinhadas como uma listagem: ícone do destino; código com **quem
     pediu** (o usuário que criou) embaixo; lojas (trajeto) com a legenda embaixo; situação (ícone e texto

@@ -6,14 +6,15 @@ import { db } from 'boot/db'
 import MgEmptyState from '@components/MgEmptyState.vue'
 import { tempoRelativo } from '@components/formatters'
 import { useConsultaAutomatica } from '@components/cobranca/useConsultaAutomatica'
-import { requisicaoStore, lojaDaRequisicao } from 'stores/requisicao'
+import { requisicaoStore, lojaDaRequisicao, STATUS } from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
 import RequisicaoLinha from 'components/requisicao/RequisicaoLinha.vue'
 
-// Painel de requisições (TASK-55, doc-6): uma aba por loja; nela, os cards Atender, Separados e
-// Pedidos, cada um por situação e, na mesma situação, da mais urgente para a menos e das mais
-// antigas para as mais novas (essa ordem vem do backend). Só as abertas: entregues e canceladas
-// ficam na listagem. Atualiza sozinho a cada 30 s. A loja da aba vem do endereço (/requisicao/painel/101001); sem ela, a do PDV.
+// Painel de requisições (TASK-55, doc-6): uma aba por loja; nela, os cards Atender, Separados,
+// Pedidos e Saiu para entrega, cada um por situação e, na mesma situação, da mais urgente para a
+// menos e das mais antigas para as mais novas (essa ordem vem do backend). Só as abertas:
+// entregues e canceladas ficam na listagem. Atualiza sozinho a cada 30 s. A loja da aba vem do
+// endereço (/requisicao/painel/101001); sem ela, a do PDV.
 const route = useRoute()
 const router = useRouter()
 const sRequisicao = requisicaoStore()
@@ -26,16 +27,18 @@ const lojas = ref([])
 
 // a situação é coluna da linha (TASK-261), e o card vem em blocos dela: A separar, Em separação,
 // Separado, Saiu para entrega. P está em separação como o S, e D está separado como o T; o sort é
-// estável, então dentro da situação fica a ordem do backend. Separada (T ou D) fica nas duas
-// lojas até sair: quem separou acompanha no card Separados; na entrega no endereço e na
-// reposição, depois que tudo sai da loja que atende (R), o painel só manda para quem pediu
+// estável, então dentro da situação fica a ordem do backend. Quem separou acompanha nas duas
+// lojas até a entrega: o separado (T ou D) no card Separados e, na entrega no endereço e na
+// reposição, o que já saiu (R) no Saiu para entrega, até quem pediu dar o Recebido ou entregar
+// ao cliente (TASK-261)
 const separada = (r) => ['T', 'D'].includes(r.status)
 const ORDEM = ['A', 'S', 'T', 'R']
 const ordemDe = (r) => ORDEM.indexOf({ P: 'S', D: 'T' }[r.status] || r.status)
 const ordenar = (lista) => [...lista].sort((a, b) => ordemDe(a) - ordemDe(b))
 
-// três cards: o que a loja tem para separar, o que ela separou e falta entregar, e o que ela
-// pediu (de qualquer loja, ou Compras: a linha diz para quem)
+// quatro cards: o que a loja tem para separar, o que ela separou e não saiu, o que ela pediu
+// (de qualquer loja, ou Compras: a linha diz para quem) e, por último, o que ela separou e já
+// saiu para entrega
 const cards = computed(() => {
   const loja = codestoquelocal.value
   const nome = lojas.value.find((l) => l.codestoquelocal === loja)?.estoquelocal
@@ -46,7 +49,7 @@ const cards = computed(() => {
       chave: 'atender',
       titulo: 'Atender',
       icone: 'move_to_inbox',
-      itens: ordenar(minhas.filter((r) => !separada(r))),
+      itens: ordenar(minhas.filter((r) => !separada(r) && r.status !== 'R')),
     },
     {
       chave: 'separados',
@@ -59,6 +62,12 @@ const cards = computed(() => {
       titulo: `${nome} pediu`,
       icone: 'outbox',
       itens: ordenar(pedidas),
+    },
+    {
+      chave: 'saiu',
+      titulo: STATUS.R.label,
+      icone: STATUS.R.icone,
+      itens: ordenar(minhas.filter((r) => r.status === 'R')),
     },
   ].filter((c) => c.itens.length)
 })

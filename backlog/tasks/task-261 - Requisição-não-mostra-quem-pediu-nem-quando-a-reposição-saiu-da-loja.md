@@ -1,11 +1,11 @@
 ---
 id: TASK-261
 title: Requisição não mostra quem pediu nem quando a reposição saiu da loja
-status: In Progress
+status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-10-30 15:32'
-updated_date: '2026-10-30 21:32'
+updated_date: '2026-10-30 22:02'
 labels:
   - negocios
 dependencies: []
@@ -24,11 +24,13 @@ Decidido em 30/10/2026: linha em colunas alinhadas (usuário em coluna própria,
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Painel e listagem de requisições mostram o usuário que pediu, embaixo do código
-- [ ] #2 Painel e listagem em formato de listagem: título do card e linha no mesmo recuo; código (com quem pediu embaixo), lojas, situação, prioridade e criada em colunas alinhadas; botão + não cobre a última linha
-- [ ] #3 No detalhe da requisição, o nome do produto (pedido, substituto e fora do pedido) abre o cadastro no MGLara em nova aba, sem abrir o Justificar
-- [ ] #4 Reposição: a loja que atende registra 'Saiu para entrega' com o nome de quem leva; a requisição fica 'Saiu para entrega' e o Recebido só aparece depois
-- [ ] #5 No detalhe, a entrega no endereço e a reposição têm o card 'Endereço para entrega' (rótulo fixo) com o endereço do cliente ou só o nome da loja que pediu; na entrega no endereço o cabeçalho diz 'O entregador de A busca em B'
+- [x] #1 Painel e listagem de requisições mostram o usuário que pediu, embaixo do código
+- [x] #2 Painel e listagem em formato de listagem: título do card e linha no mesmo recuo; código (com quem pediu embaixo), lojas, situação, prioridade e criada em colunas alinhadas; botão + não cobre a última linha
+- [x] #3 No detalhe da requisição, o nome do produto (pedido, substituto e fora do pedido) abre o cadastro no MGLara em nova aba, sem abrir o Justificar
+- [x] #4 Reposição: a loja que atende registra 'Saiu para entrega' com o nome de quem leva; a requisição fica 'Saiu para entrega' e o Recebido só aparece depois
+- [x] #5 No detalhe, a entrega no endereço e a reposição têm o card 'Endereço para entrega' (rótulo fixo) com o endereço do cliente ou só o nome da loja que pediu; na entrega no endereço o cabeçalho diz 'O entregador de A busca em B'
+- [x] #6 A separação só é cancelada pela loja que separou, e nunca depois de entregue ou recebida (estorna antes); cancelada, a requisição volta para A separar e quem pediu pode cancelá-la
+- [x] #7 No painel de quem separou, o card 'Saiu para entrega' (o último) mostra o que já saiu, até quem pediu dar o Recebido ou entregar ao cliente
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -61,4 +63,6 @@ Link do produto testado no Chrome headless: clique e Enter no link não disparam
 30/10 (revisão): bateria refeita depois dos commits, 43/43 OK (reposição, entrega no endereço, cliente retira, recálculo de todas). Cliente retira a fundo, 20/20 OK: sem botão de saída; só a loja que atende entrega; código errado e justificativa curta recusados; Não entregue (cliente ausente) mantém pendente; sem código com justificativa entrega e grava a justificativa; com código marca conferido; estorno volta a Separado; reabrir o negócio entregue recusado; entrega direta pelo negócio recusada. Critérios #1 e #2 reescritos para o layout validado (quem pediu embaixo do código, situação em coluna).
 
 30/10 (#5 refeito a pedido): o rótulo do card é fixo, 'Endereço para entrega', e nenhum texto fala em funcionário. Embaixo, em destaque: o endereço do cliente na entrega no endereço, só o nome da loja que pediu na reposição. A frase 'O entregador de A busca em B' foi para o cabeçalho da entrega no endereço, no lugar de 'A pede para B · Entrega no endereço'. Saiu do RequisicaoResource o enderecoentrega (e o RequisicaoService::enderecoDe, que voltou para dentro do rascunhoDoNegocio): a tela usa o endereco e o requisitante que já vinham.
+
+30/10 (#6 e #7). Trava: o cancelamento do negócio de separação (PdvNegocioService::cancelar) chama RequisicaoNegocioService::validarCancelamento: só o PDV da loja que separou (ou o Administrador) cancela, 403 'só Deposito cancela'; com a etapa E ativa (entregue ao cliente ou recebido) recusa 422 'estorne a entrega/o recebido antes de cancelar'. A saída (etapa C) não trava, a pedido. Já existia: a requisição só cancela sem negócio ativo, e o cancelamento do negócio derruba a finalização e volta para A separar; a recusa da requisição agora diz quem cancela ('Deposito precisa cancelar antes a separação (negócio #…)'). Painel: o R vem para as duas lojas (RequisicaoService::painel) e quem separou vê no card 'Saiu para entrega', o último; some quando vira E. Testado com transação desfeita (tatiane, não admin, e luiz, admin): 25 checagens nas três requisições de teste (73 reposição, 88 entrega no endereço, 80 cliente retira) e numa venda comum; os testes antigos 43 + 20 passam. Na base de dev o negócio da #73 tem NF de transferência ativa: o cancelamento real ainda recusa por ela (regra que já existia), então a volta para A separar foi conferida simulando o cancelamento.
 <!-- SECTION:NOTES:END -->
