@@ -304,7 +304,8 @@ class RequisicaoController extends Controller
         return new RequisicaoResource(Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao));
     }
 
-    // entrega no endereco: o entregador da loja que pediu retirou as partes na loja que atende
+    // a saida das partes da loja que atende: na entrega no endereco o entregador da loja que
+    // pediu buscou; na reposicao, um funcionario da loja que atende levou
     public function retirar(Request $request, $codrequisicao)
     {
         $dados = $request->validate([
