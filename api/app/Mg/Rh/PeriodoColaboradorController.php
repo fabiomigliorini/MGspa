@@ -231,9 +231,23 @@ class PeriodoColaboradorController extends Controller
         }
     }
 
+    // O RH recalcula qualquer um; o colaborador, só o próprio, pelo Meu Painel (TASK-263).
     public function recalcular(int $codperiodo, int $codperiodocolaborador)
     {
-        Autorizador::autoriza(['Recursos Humanos']);
+        $pc = PeriodoColaborador::where('codperiodo', $codperiodo)
+            ->where('codperiodocolaborador', $codperiodocolaborador)
+            ->firstOrFail();
+
+        if (!Autorizador::pode(['Recursos Humanos'])) {
+            $proprio = MeuPainelService::resolverColaborador();
+            if (!$proprio || $proprio->codcolaborador !== $pc->codcolaborador) {
+                abort(403, 'Você só pode recalcular o seu próprio painel.');
+            }
+        }
+
+        if ($pc->status === PeriodoService::STATUS_COLABORADOR_ENCERRADO) {
+            abort(422, 'Colaborador encerrado — os valores já foram fechados.');
+        }
 
         DB::beginTransaction();
         try {

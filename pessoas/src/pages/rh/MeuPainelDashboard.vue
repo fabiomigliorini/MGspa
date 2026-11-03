@@ -109,6 +109,28 @@ const carregar = async () => {
   }
 }
 
+// A venda atualiza o indicador mas não a comissão: o Recalcular é o mesmo da
+// tela do RH, aqui só para o próprio colaborador (TASK-263).
+const recalculando = ref(false)
+
+const recalcular = async () => {
+  recalculando.value = true
+  try {
+    await sRh.recalcular(route.params.codperiodo, colaborador.value.codperiodocolaborador)
+    $q.notify({ color: 'green-5', textColor: 'white', icon: 'done', message: 'Recalculado' })
+    await carregar()
+  } catch (error) {
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao recalcular'),
+    })
+  } finally {
+    recalculando.value = false
+  }
+}
+
 onMounted(() => carregar())
 watch(
   () => route.params.codperiodo,
@@ -137,6 +159,18 @@ watch(
               tempoRelativo(colaborador.colaborador.contratacao)
             }})
           </div>
+        </q-item-section>
+        <q-item-section side v-if="colaborador.status === 'A'">
+          <q-btn
+            flat
+            round
+            icon="refresh"
+            color="grey-7"
+            :loading="recalculando"
+            @click="recalcular()"
+          >
+            <q-tooltip>Recalcular</q-tooltip>
+          </q-btn>
         </q-item-section>
       </q-item>
 
