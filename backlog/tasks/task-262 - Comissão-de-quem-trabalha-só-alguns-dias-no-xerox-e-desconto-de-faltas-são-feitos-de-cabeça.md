@@ -3,11 +3,11 @@ id: TASK-262
 title: >-
   Comissão de quem trabalha só alguns dias no xerox e desconto de faltas são
   feitos de cabeça
-status: In Progress
+status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-11-03 19:06'
-updated_date: '2026-11-03 20:22'
+updated_date: '2026-11-03 21:16'
 labels:
   - pessoas
 dependencies: []
@@ -32,12 +32,12 @@ Decisões (03/11/2026):
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Faltas informadas no acerto descontam proporcionalmente as rubricas marcadas no catálogo; dias da rubrica têm precedência
-- [ ] #2 Catálogo de Rubricas tem o toggle 'Desconta absenteísmo' (nulo = não desconta) e a coluna na listagem
-- [ ] #3 Período novo copia os dias da rubrica recorrente; faltas não copiam
-- [ ] #4 Tela do colaborador mostra faltas e dias da rubrica
-- [ ] #5 Rubrica percentual tem 'Dias no setor' e paga percentual × dias ÷ dias úteis (Xerox Centro per. 9: fulano 6% com 16 dias = R$ 277,29; Zezinho 6% com 10 dias = R$ 173,30)
-- [ ] #6 Sem legendas de rateio e sem 'Fatia do pool %'/'% do pool': o percentual da rubrica é a comissão que o gerente deu; sobra do setor é o que o RH não distribui
+- [x] #1 Faltas informadas no acerto descontam proporcionalmente as rubricas marcadas no catálogo; dias da rubrica têm precedência
+- [x] #2 Catálogo de Rubricas tem o toggle 'Desconta absenteísmo' (nulo = não desconta) e a coluna na listagem
+- [x] #3 Período novo copia os dias da rubrica recorrente; faltas não copiam
+- [x] #4 Tela do colaborador mostra faltas e dias da rubrica
+- [x] #5 Rubrica percentual tem 'Dias no setor' e paga percentual × dias ÷ dias úteis (Xerox Centro per. 9: fulano 6% com 16 dias = R$ 277,29; Zezinho 6% com 10 dias = R$ 173,30)
+- [x] #6 Sem legendas de rateio e sem 'Fatia do pool %'/'% do pool': o percentual da rubrica é a comissão que o gerente deu; sobra do setor é o que o RH não distribui
 <!-- AC:END -->
 
 ## Implementation Notes
