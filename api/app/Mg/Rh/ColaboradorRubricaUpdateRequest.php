@@ -24,6 +24,7 @@ class ColaboradorRubricaUpdateRequest extends FormRequest
             'valorfixo' => 'nullable|numeric',
             'valorunitario' => 'nullable|numeric',
             'quantidade' => 'nullable|numeric',
+            'diastrabalhados' => 'nullable|integer|min:0',
             'tipocondicao' => 'nullable|string|size:1|in:M,R',
             'concedido' => 'nullable|boolean',
             'recorrente' => 'nullable|boolean',

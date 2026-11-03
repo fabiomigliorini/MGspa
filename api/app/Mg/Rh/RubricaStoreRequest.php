@@ -20,6 +20,7 @@ class RubricaStoreRequest extends FormRequest
             'valorpadrao' => 'nullable|numeric',
             'valorunitariopadrao' => 'nullable|numeric',
             'recorrente' => 'nullable|boolean',
+            'descontaabsenteismo' => 'nullable|boolean',
         ];
     }
 }

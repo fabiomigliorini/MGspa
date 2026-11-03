@@ -34,10 +34,12 @@ class CalculoRubricaService
 
     public static function calcularColaborador(int $codperiodocolaborador): void
     {
-        $pc = PeriodoColaborador::findOrFail($codperiodocolaborador);
+        $pc = PeriodoColaborador::with('Periodo')->findOrFail($codperiodocolaborador);
+        $diasuteis = $pc->Periodo->diasuteis;
 
         // Ordenação: sem condição → meta → ranking
-        $rubricas = ColaboradorRubrica::where('codperiodocolaborador', $codperiodocolaborador)
+        $rubricas = ColaboradorRubrica::with('Rubrica')
+            ->where('codperiodocolaborador', $codperiodocolaborador)
             ->orderByRaw("CASE WHEN tipocondicao IS NULL THEN 0 WHEN tipocondicao = 'M' THEN 1 WHEN tipocondicao = 'R' THEN 2 END")
             ->get();
 
@@ -77,6 +79,13 @@ class CalculoRubricaService
                 $valor = $rubrica->valorfixo ?? 0;
             }
 
+            $valor *= static::fatorDias(
+                $rubrica->diastrabalhados,
+                $pc->faltas,
+                $rubrica->Rubrica?->descontaabsenteismo,
+                $diasuteis
+            );
+
             $rubrica->valorcalculado = round($valor, 2);
             $rubrica->save();
         }
@@ -87,59 +96,30 @@ class CalculoRubricaService
     }
 
     /**
-     * Rateio dos indicadores COLETIVOS: quanto do pool do setor já está
-     * distribuído em comissão. Devolve, por indicador,
-     * ['pool' => 6.0, 'soma' => 4.68, 'distribuido' => 78.0].
+     * Quanto da rubrica a pessoa leva pelos dias trabalhados, de 0 a 1.
      *
-     * O pool não tem coluna própria — vem do catálogo, do "Percentual Padrão"
-     * da tblrubrica de onde a rubrica saiu, que para um setor coletivo é o
-     * percentual CHEIO do setor (ex.: 6% da venda do xerox). Já o percentual
-     * gravado na rubrica do colaborador é o efetivo, com a fatia da pessoa
-     * embutida — o rh_rubricas.sql colapsou o rateio dentro dele ("50% de 5%
-     * = 2,5%"). Daí: fatia da pessoa = percentual / pool, e o quanto o setor
-     * distribuiu = soma dos percentuais / pool.
-     *
-     * Sem pool no catálogo devolve 'distribuido' nulo: a tela simplesmente não
-     * mostra o rateio, em vez de inventar um número.
-     *
-     * Uma query para a lista toda — o cockpit de uma unidade tem dezenas de
-     * indicadores e um accessor no model viraria N+1.
-     *
-     * Conta só rubrica concedida: a não concedida vale zero no cálculo, então
-     * somá-la faria o setor parecer distribuído sem ninguém receber.
+     * Dias gravados na própria rubrica — quem cobre alguns dias num setor,
+     * como o xerox — pagam dias / dias úteis e têm precedência: a pessoa
+     * recebe a fatia de quem trabalha o período inteiro, proporcional aos
+     * dias (TASK-262). Sem eles, a rubrica do catálogo marcada "desconta
+     * absenteísmo" perde as faltas que o RH lançou no acerto. Nulo é o
+     * período inteiro: fator 1.
      */
-    public static function rateioDistribuido(array $codsIndicador): array
+    public static function fatorDias(?int $diastrabalhados, ?int $faltas, ?bool $descontaabsenteismo, ?int $diasuteis): float
     {
-        if (empty($codsIndicador)) {
-            return [];
+        if (!$diasuteis || $diasuteis <= 0) {
+            return 1;
         }
 
-        $linhas = ColaboradorRubrica::query()
-            ->leftJoin('tblrubrica', 'tblrubrica.codrubrica', '=', 'tblcolaboradorrubrica.codrubrica')
-            ->whereIn('tblcolaboradorrubrica.codindicador', $codsIndicador)
-            ->where('tblcolaboradorrubrica.tipovalor', self::TIPO_PERCENTUAL)
-            ->where('tblcolaboradorrubrica.concedido', true)
-            ->whereNotNull('tblcolaboradorrubrica.percentual')
-            ->groupBy('tblcolaboradorrubrica.codindicador')
-            ->selectRaw('tblcolaboradorrubrica.codindicador as codindicador')
-            ->selectRaw('sum(tblcolaboradorrubrica.percentual) as soma')
-            ->selectRaw('max(tblrubrica.valorpadrao) as pool')
-            ->get();
-
-        $ret = [];
-
-        foreach ($linhas as $linha) {
-            $pool = (float) $linha->pool;
-            $soma = (float) $linha->soma;
-
-            $ret[(int) $linha->codindicador] = [
-                'pool' => $pool ?: null,
-                'soma' => round($soma, 6),
-                'distribuido' => $pool ? round($soma / $pool * 100, 3) : null,
-            ];
+        if ($diastrabalhados !== null) {
+            return min($diastrabalhados, $diasuteis) / $diasuteis;
         }
 
-        return $ret;
+        if ($descontaabsenteismo && $faltas > 0) {
+            return max($diasuteis - $faltas, 0) / $diasuteis;
+        }
+
+        return 1;
     }
 
     protected static function metaAtingida(ColaboradorRubrica $rubrica): bool

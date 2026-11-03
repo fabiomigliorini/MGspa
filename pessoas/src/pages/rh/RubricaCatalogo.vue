@@ -239,6 +239,7 @@ onMounted(() => {
                   <th class="text-right">Padrão</th>
                   <th>Condição</th>
                   <th>Recorrente</th>
+                  <th>Desc. faltas</th>
                   <th>Ativo</th>
                   <th class="text-right">Ações</th>
                 </tr>
@@ -260,6 +261,10 @@ onMounted(() => {
                   <td>{{ condicaoLabel(r.tipocondicao) }}</td>
                   <td>
                     <q-icon v-if="r.recorrente" name="check" color="green" />
+                    <span v-else>—</span>
+                  </td>
+                  <td>
+                    <q-icon v-if="r.descontaabsenteismo" name="check" color="green" />
                     <span v-else>—</span>
                   </td>
                   <td>

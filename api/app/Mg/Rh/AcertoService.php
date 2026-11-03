@@ -214,6 +214,8 @@ class AcertoService
                 'tempo_casa'              => $tempoCasa,
                 'salario'                 => $salario ? (float) $salario : null,
                 'valortotal'              => (float) $pc->valortotal,
+                'faltas'                  => $pc->faltas,
+                'diasuteis'               => $periodo->diasuteis,
                 'beneficio_restante'      => $beneficioRestante,
                 'percentual_max_desconto' => (float) ($periodo->percentualmaxdesconto ?? 30),
             ],

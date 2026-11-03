@@ -17,6 +17,7 @@ class Rubrica extends MgModel
         'valorpadrao',
         'valorunitariopadrao',
         'recorrente',
+        'descontaabsenteismo',
         'inativo',
     ];
 
@@ -26,6 +27,7 @@ class Rubrica extends MgModel
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
+        'descontaabsenteismo' => 'boolean',
         'inativo' => 'datetime',
         'recorrente' => 'boolean',
         'valorpadrao' => 'float',

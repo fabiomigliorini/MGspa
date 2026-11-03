@@ -143,6 +143,15 @@ export const rhStore = defineStore('rh', {
       return ret
     },
 
+    // Faltas no período (lançadas no acerto): o backend grava e recalcula as rubricas.
+    async atualizarFaltasColaborador(codperiodo, codperiodocolaborador, faltas) {
+      const ret = await api.patch(
+        'v1/rh/periodo/' + codperiodo + '/colaborador/' + codperiodocolaborador + '/faltas',
+        { faltas },
+      )
+      return ret
+    },
+
     // --- UNIDADES DE NEGÓCIO (cadastro global) ---
 
     async criarUnidade(data) {

@@ -94,9 +94,17 @@ const cad = computed(() => props.cad)
       </div>
     </div>
 
-    <!-- RECORRENTE -->
+    <!-- RECORRENTE / ABSENTEÍSMO -->
     <div class="col-12">
       <q-toggle v-model="cad.recorrente" label="Recorrente" />
+      <!-- nulo (padrão) aparece desmarcado e só grava se mexer -->
+      <q-toggle
+        :model-value="!!cad.descontaabsenteismo"
+        @update:model-value="(v) => (cad.descontaabsenteismo = v)"
+        label="Desconta absenteísmo"
+      >
+        <q-tooltip>Valor × (dias úteis − faltas) ÷ dias úteis</q-tooltip>
+      </q-toggle>
     </div>
   </div>
 </template>

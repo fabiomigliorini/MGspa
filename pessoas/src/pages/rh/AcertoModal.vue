@@ -17,7 +17,7 @@ const props = defineProps({
   dias: { type: Number, default: 5 },
 })
 
-const emit = defineEmits(['update:modelValue', 'efetivado'])
+const emit = defineEmits(['update:modelValue', 'efetivado', 'faltas'])
 
 const $q = useQuasar()
 const sRh = rhStore()
@@ -80,10 +80,45 @@ const excedeLimite = computed(() => {
   return pctDesconto.value > limite
 })
 
+// --- FALTAS ---
+// Lançadas aqui, antes do acerto. Aplicar grava no período e o backend
+// recalcula as rubricas: a linha de Remuneração Variável volta descontada.
+// Sem aplicar, o Confirmar fica travado — senão acertaria o valor sem o desconto.
+const faltas = ref(null)
+const faltasSalvas = ref(null)
+const aplicandoFaltas = ref(false)
+
+const faltasPendentes = computed(() => (faltas.value || null) !== (faltasSalvas.value || null))
+
+const aplicarFaltas = async () => {
+  if (!faltasPendentes.value || aplicandoFaltas.value) return
+  aplicandoFaltas.value = true
+  try {
+    await sRh.atualizarFaltasColaborador(
+      props.codperiodo,
+      props.colaborador.codperiodocolaborador,
+      faltas.value || null,
+    )
+    faltasSalvas.value = faltas.value || null
+    emit('faltas')
+    await buscarTitulos()
+  } catch (error) {
+    $q.notify({
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
+      message: extrairErro(error, 'Erro ao lançar as faltas'),
+    })
+  } finally {
+    aplicandoFaltas.value = false
+  }
+}
+
 const podeSalvar = computed(
   () =>
     (totalPagando.value > 0 || totalDescontando.value > 0) &&
-    (forma.value !== 'D' || !!codportador.value || resultado.value == 0),
+    (forma.value !== 'D' || !!codportador.value || resultado.value == 0) &&
+    !faltasPendentes.value,
 )
 
 // --- LINHAS ---
@@ -118,6 +153,23 @@ const toggleLinha = (titulo) => {
 
 // --- CARREGAMENTO ---
 
+// Títulos e dados do colaborador. Separado do carregar para as faltas poderem
+// recarregar a grade sem apagar forma, data e observação já escolhidas.
+const buscarTitulos = async () => {
+  const ret = await sRh.getTitulosAcerto(
+    props.codperiodo,
+    props.colaborador.codperiodocolaborador,
+    props.dias,
+  )
+  dadosColaborador.value = ret.data.data.colaborador
+  titulos.value = ret.data.data.titulos.map((t) => ({
+    ...t,
+    pagando: t.saldo < 0 ? parseFloat(t.sugestao_pagando) || null : null,
+    descontando: t.saldo > 0 ? parseFloat(t.sugestao_descontando) || null : null,
+  }))
+  if (!formaTocada.value) forma.value = formaSugerida.value
+}
+
 const carregar = async () => {
   if (!props.colaborador) return
   loading.value = true
@@ -128,18 +180,9 @@ const carregar = async () => {
   dataEvento.value = hoje()
   codportador.value = null
   try {
-    const ret = await sRh.getTitulosAcerto(
-      props.codperiodo,
-      props.colaborador.codperiodocolaborador,
-      props.dias,
-    )
-    dadosColaborador.value = ret.data.data.colaborador
-    titulos.value = ret.data.data.titulos.map((t) => ({
-      ...t,
-      pagando: t.saldo < 0 ? parseFloat(t.sugestao_pagando) || null : null,
-      descontando: t.saldo > 0 ? parseFloat(t.sugestao_descontando) || null : null,
-    }))
-    forma.value = formaSugerida.value
+    await buscarTitulos()
+    faltas.value = dadosColaborador.value.faltas ?? null
+    faltasSalvas.value = faltas.value
   } catch (error) {
     $q.notify({
       color: 'red-5',
@@ -220,6 +263,41 @@ const confirmar = async () => {
             <template v-if="dadosColaborador.salario">
               · Salário: {{ formataNumero(dadosColaborador.salario) }}
             </template>
+          </div>
+
+          <!-- FALTAS NO PERÍODO -->
+          <div class="row items-center q-col-gutter-sm q-mt-xs">
+            <div class="col-6 col-sm-3">
+              <MgInputValor
+                v-model="faltas"
+                :decimals="0"
+                :min="0"
+                :max="dadosColaborador.diasuteis || null"
+                label="Faltas"
+                :suffix="'de ' + (dadosColaborador.diasuteis || 0)"
+                dense
+                @keyup.enter="aplicarFaltas()"
+              />
+            </div>
+            <div class="col-auto" v-if="faltasPendentes">
+              <q-btn
+                flat
+                dense
+                color="primary"
+                icon="check"
+                label="Aplicar"
+                :loading="aplicandoFaltas"
+                @click="aplicarFaltas()"
+              />
+            </div>
+            <div class="col text-caption text-grey-7">
+              <template v-if="faltasPendentes">
+                Aplique para descontar da remuneração variável antes de confirmar.
+              </template>
+              <template v-else>
+                Descontam as rubricas marcadas "Desconta absenteísmo" no catálogo.
+              </template>
+            </div>
           </div>
         </q-card-section>
 

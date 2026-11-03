@@ -13,7 +13,7 @@ class SelectRubricaController extends Controller
     // os valores padrao) — o MgSelectRubrica emite a opcao inteira no @select.
     const COLUNAS = '
         codrubrica, descricao, tipovalor, tipocondicao,
-        valorpadrao, valorunitariopadrao, recorrente, inativo,
+        valorpadrao, valorunitariopadrao, recorrente, descontaabsenteismo, inativo,
         codrubrica as value, descricao as label
     ';
 
