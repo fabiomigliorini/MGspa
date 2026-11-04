@@ -12,100 +12,66 @@ class AcertoRelatorioFolhaPdf
     {
         $periodo = Periodo::findOrFail($codperiodo);
 
-        // Uma "página" por FORMA de acerto (Recarga Bee / Dinheiro / Desconto Folha),
-        // cada uma agrupada por filial e unidade de negócio — mesma estrutura que a
-        // view espera ($paginas[].nome_portador / porFilial / porUnidade / linhas).
+        // Uma linha por vínculo, com Recarga Bee e Dinheiro lado a lado, agrupada
+        // pela EMPRESA da filial do vínculo (tblcolaborador.codfilial ->
+        // tblfilial.codempresa) — o mesmo corte do Gerar Recarga — na ordem do
+        // código: Migliorini (1), FDF (2), Fazenda (4). Desconto Folha não entra.
+        // Vários eventos da mesma forma no vínculo saem somados.
         $rows = DB::select("
             SELECT
-                a.forma,
-                p.pessoa   AS nome_colaborador,
-                p.cnpj     AS cpf_colaborador,
+                e.codempresa,
+                e.empresa,
+                pc.codperiodocolaborador,
+                p.pessoa AS nome,
+                p.cnpj   AS cpf,
                 p.fisica,
-                f.codfilial,
-                f.filial,
-                fp.cnpj    AS cnpj_filial,
-                un.codunidadenegocio,
-                un.descricao AS unidade,
-                ABS(a.saldo) AS valor
+                COALESCE(SUM(a.saldo) FILTER (WHERE a.forma = :bee), 0)      AS bee,
+                COALESCE(SUM(a.saldo) FILTER (WHERE a.forma = :dinheiro), 0) AS dinheiro
             FROM tblperiodocolaboradoracerto a
             JOIN tblperiodocolaborador pc ON pc.codperiodocolaborador = a.codperiodocolaborador
             JOIN tblcolaborador col       ON col.codcolaborador = pc.codcolaborador
             JOIN tblpessoa p              ON p.codpessoa = col.codpessoa
             JOIN tblfilial f              ON f.codfilial = col.codfilial
-            JOIN tblpessoa fp             ON fp.codpessoa = f.codpessoa
-            LEFT JOIN tblsetor s          ON s.codsetor = pc.codsetor
-            LEFT JOIN tblunidadenegocio un ON un.codunidadenegocio = s.codunidadenegocio
+            JOIN tblempresa e             ON e.codempresa = f.codempresa
             WHERE pc.codperiodo = :codperiodo
               AND a.inativo IS NULL
               AND a.saldo <> 0
-            ORDER BY a.forma, f.filial, p.pessoa
-        ", ['codperiodo' => $codperiodo]);
+              AND a.forma IN (:bee2, :dinheiro2)
+            GROUP BY e.codempresa, e.empresa, pc.codperiodocolaborador, p.pessoa, p.cnpj, p.fisica
+            ORDER BY e.codempresa, p.pessoa
+        ", [
+            'codperiodo' => $codperiodo,
+            'bee'        => PeriodoColaboradorAcerto::FORMA_BEE,
+            'dinheiro'   => PeriodoColaboradorAcerto::FORMA_DINHEIRO,
+            'bee2'       => PeriodoColaboradorAcerto::FORMA_BEE,
+            'dinheiro2'  => PeriodoColaboradorAcerto::FORMA_DINHEIRO,
+        ]);
 
-        // Agrupa forma -> filial -> unidade
-        $porForma = [];
+        $empresas = [];
+        $totalBee = 0;
+        $totalDinheiro = 0;
         foreach ($rows as $row) {
-            $forma = $row->forma;
-            if (!isset($porForma[$forma])) {
-                $porForma[$forma] = [];
-            }
-
-            $filialKey = $row->codfilial;
-            if (!isset($porForma[$forma][$filialKey])) {
-                $porForma[$forma][$filialKey] = [
-                    'filial'      => $row->filial,
-                    'cnpj_filial' => $row->cnpj_filial,
-                    'porUnidade'  => [],
+            if (!isset($empresas[$row->codempresa])) {
+                $empresas[$row->codempresa] = [
+                    'empresa'        => $row->empresa,
+                    'linhas'         => [],
+                    'total_bee'      => 0,
+                    'total_dinheiro' => 0,
                 ];
             }
-
-            $unidadeKey = $row->codunidadenegocio ?? '__sem_unidade__';
-            if (!isset($porForma[$forma][$filialKey]['porUnidade'][$unidadeKey])) {
-                $porForma[$forma][$filialKey]['porUnidade'][$unidadeKey] = [
-                    'unidade' => $row->unidade,
-                    'linhas'  => [],
-                ];
-            }
-
-            $porForma[$forma][$filialKey]['porUnidade'][$unidadeKey]['linhas'][] = [
-                'nome_colaborador' => $row->nome_colaborador,
-                'cpf_colaborador'  => $row->cpf_colaborador,
-                'fisica'           => (bool) $row->fisica,
-                'valor'            => (float) $row->valor,
+            $bee = (float) $row->bee;
+            $dinheiro = (float) $row->dinheiro;
+            $empresas[$row->codempresa]['linhas'][] = [
+                'nome'     => $row->nome,
+                'cpf'      => $row->cpf,
+                'fisica'   => (bool) $row->fisica,
+                'bee'      => $bee,
+                'dinheiro' => $dinheiro,
             ];
-        }
-
-        // Ordena as unidades alfabeticamente (sem unidade por último)
-        foreach ($porForma as &$filiais) {
-            foreach ($filiais as &$fil) {
-                uasort($fil['porUnidade'], function ($a, $b) {
-                    if ($a['unidade'] === null) {
-                        return 1;
-                    }
-                    if ($b['unidade'] === null) {
-                        return -1;
-                    }
-                    return strcasecmp($a['unidade'], $b['unidade']);
-                });
-            }
-            unset($fil);
-        }
-        unset($filiais);
-
-        // Monta as páginas na ordem B, D, F
-        $ordem   = [
-            PeriodoColaboradorAcerto::FORMA_BEE,
-            PeriodoColaboradorAcerto::FORMA_DINHEIRO,
-            PeriodoColaboradorAcerto::FORMA_FOLHA,
-        ];
-        $paginas = [];
-        foreach ($ordem as $forma) {
-            if (empty($porForma[$forma])) {
-                continue;
-            }
-            $paginas[] = [
-                'nome_portador' => PeriodoColaboradorAcerto::FORMA_DESCRICAO[$forma] ?? $forma,
-                'porFilial'     => $porForma[$forma],
-            ];
+            $empresas[$row->codempresa]['total_bee'] += $bee;
+            $empresas[$row->codempresa]['total_dinheiro'] += $dinheiro;
+            $totalBee += $bee;
+            $totalDinheiro += $dinheiro;
         }
 
         $periodo_label = $periodo->periodoinicial->format('d/m/Y')
@@ -114,9 +80,11 @@ class AcertoRelatorioFolhaPdf
         $dataGeracao = Carbon::now()->format('d/m/Y H:i');
 
         $html = view('rh.acerto-relatorio-folha', [
-            'paginas'     => $paginas,
-            'periodo'     => $periodo_label,
-            'dataGeracao' => $dataGeracao,
+            'empresas'      => $empresas,
+            'totalBee'      => $totalBee,
+            'totalDinheiro' => $totalDinheiro,
+            'periodo'       => $periodo_label,
+            'dataGeracao'   => $dataGeracao,
         ])->render();
 
         $dompdf = new Dompdf();
