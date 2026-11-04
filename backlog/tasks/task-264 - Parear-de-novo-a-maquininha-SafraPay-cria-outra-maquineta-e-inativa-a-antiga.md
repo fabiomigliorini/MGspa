@@ -4,6 +4,7 @@ title: Parear de novo a maquininha SafraPay cria outra maquineta e inativa a ant
 status: To Do
 assignee: []
 created_date: '2026-11-04 15:42'
+updated_date: '2026-11-04 18:44'
 labels:
   - contas
 dependencies: []
@@ -39,4 +40,24 @@ Teste em dev: tinker em transação com rollback. Não chamar saurus/qrcode nem 
 <!-- AC:BEGIN -->
 - [ ] #1 Parear de novo mantém a mesma maquineta com qualquer aparelho que leia o QR (o mesmo, com o app reinstalado, um novo ou um vindo de outro QR): pagamentos, períodos e maquineta padrão do PDV ficam nela; só o pinpad troca e o anterior é inativado
 - [ ] #2 O cartão cobrado no QR cai na maquineta do QR, sem nascer outra: inclusive do pinpad antigo confirmado depois do novo pareamento e do aparelho cuja leitura ainda não foi confirmada (hoje dá erro)
+- [x] #3 A maquineta duplicada em produção (153) foi juntada na 108 sem perder nada
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+CORREÇÃO DE DADOS EM PRODUÇÃO (04/11/2026) — juntar a 153 na 108, por SQL, sem perder nada.
+
+Diagnóstico de produção (cópia de segurança, antes da correção):
+- QR (PDV Saurus) da 108: pinpad 19, id 0ba11877-b74c-418f-9b82-bb158e229520, criado 2025-09-26 11:06:29, inativado 2026-11-04 10:47:42 → maquineta 108 (inativada 2026-11-04 10:47:42).
+- Pinpad 32, id b8a36e05-cbaa-4c62-8f38-af44b43de0d0, criado 2026-11-04 10:43:24, ativo → maquineta 153 (ativa).
+- 153: 0 pagamentos, 0 períodos, 0 cartões Saurus. 108: 16 pagamentos. 5 cobranças pendentes no QR nos últimos 3 dias (conferir as de antes das 10:43 antes de corrigir).
+
+Por que não apontar a 108 para o pinpad 32: sem esta task no ar, o pinpad 19 ficaria sem maquineta e todo cartão antigo re-consultado (ou usado numa baixa de título, já no portadorPrevisto) criaria maquineta fantasma via daSaurusPinPad. Então o pinpad 19 recebe o id do aparelho novo; a 153 e o pinpad 32 saem. Efeito até esta task entrar: re-consultar na Saurus um cartão do aparelho velho dá erro sem gravar nada.
+
+Ensaio no dev (transação com ROLLBACK, 04/11/2026): incidente simulado na 108 (pinpad novo 32, maquineta nova 140, um cartão Saurus no pinpad novo) → depois da correção a 108 fica ativa no pinpad 19 com o id novo, 140 e 32 saem, pagamentos (10) e períodos (1) da 108 iguais, cartão passa para o 19, id novo resolve na 108. Trava: com pagamento na nova, o DELETE falha na fk_tblpagamento_tblmaquineta e nada é gravado.
+
+Para a implementação: com o pinpad 19 levando o id novo, o consultarPedido desta task não pode sobrescrever com nulo o codsauruspinpad já gravado de um cartão antigo (pinpad não achado → mantém o gravado).
+
+Executado em produção em 04/11/2026. Conferência: só a 108, ativa, no pinpad 19 com o id b8a36e05-cbaa-4c62-8f38-af44b43de0d0 (ativo), 16 pagamentos, pinpad 32 removido.
+<!-- SECTION:NOTES:END -->
