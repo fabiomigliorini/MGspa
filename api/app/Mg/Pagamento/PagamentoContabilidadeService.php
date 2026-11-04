@@ -12,8 +12,9 @@ use Mpdf\Mpdf;
 // titulo efetivados em que saiu dinheiro, encontro de contas e folha, ou que
 // mexeram em titulo a pagar; cada um com as linhas ativas dos titulos
 // (principal, juros, multa, desconto e total), por fiscal/gerencial, filial e
-// portador. Filial e gerencial sao do titulo: o pagamento que tem titulos fora
-// do filtro aparece com o valor cheio e so os titulos do filtro.
+// dia, em ordem crescente de valor (TASK-267). Filial e gerencial sao do
+// titulo: o pagamento que tem titulos fora do filtro aparece com o valor cheio
+// e so os titulos do filtro.
 class PagamentoContabilidadeService
 {
     // linhas de titulo
@@ -148,39 +149,46 @@ class PagamentoContabilidadeService
                     and {$ativa('x')}
                 )
             )
-            order by t.gerencial, f.filial, po.portador nulls last, p.transacao, p.codpagamento,
-                t.vencimento, t.numero, mt.codmovimentotitulo
+            order by t.gerencial, f.filial, p.transacao::date, p.codpagamento,
+                mt.total, t.vencimento, t.numero, mt.codmovimentotitulo
             limit {$limite}
         ", $params);
     }
 
-    // fiscal/gerencial > filial > portador > pagamento > linhas, com os totais
-    // de cada nivel
+    // fiscal/gerencial > filial > dia > pagamento > linhas, com os totais de
+    // cada nivel; os pagamentos do dia em valor crescente, e no fim de cada
+    // filial o resumo por portador. As linhas ja chegam por valor (linhas()).
     public static function agrupar(array $linhas): array
     {
         $grupos = [];
         foreach ($linhas as $l) {
             $g = $l->gerencial ? 'G' : 'F';
             $f = $l->codfilial;
-            $p = $l->portador ?? PagamentoService::MEIOS[$l->meio] ?? 'Sem portador';
+            $d = substr($l->transacao, 0, 10);
             $grupos[$g] ??= ['rotulo' => $l->gerencial ? 'Gerencial' : 'Fiscal', 'filiais' => []];
             $filiais = &$grupos[$g]['filiais'];
-            $filiais[$f] ??= ['rotulo' => $l->filial, 'portadores' => []];
-            $portadores = &$filiais[$f]['portadores'];
-            $portadores[$p] ??= ['rotulo' => $p, 'pagamentos' => []];
-            $pagamentos = &$portadores[$p]['pagamentos'];
-            $pagamentos[$l->codpagamento] ??= [
-                'codpagamento' => $l->codpagamento,
-                'transacao' => $l->transacao,
-                'pessoa' => $l->pagamentopessoa,
-                'observacoes' => $l->observacoes,
-                'valor' => (float) $l->pagamentototal,
-                'operacao' => static::operacao($l),
-                'linhaspagamento' => (int) $l->linhaspagamento,
-                'linhas' => [],
-            ];
+            $filiais[$f] ??= ['rotulo' => $l->filial, 'dias' => [], 'portadores' => []];
+            $dias = &$filiais[$f]['dias'];
+            $dias[$d] ??= ['rotulo' => $d, 'pagamentos' => []];
+            $pagamentos = &$dias[$d]['pagamentos'];
+            if (!isset($pagamentos[$l->codpagamento])) {
+                $operacao = static::operacao($l);
+                $pagamentos[$l->codpagamento] = [
+                    'codpagamento' => $l->codpagamento,
+                    'transacao' => $l->transacao,
+                    'portador' => $l->portador ?? PagamentoService::MEIOS[$l->meio] ?? 'Sem portador',
+                    'semportador' => $l->portador === null,
+                    'pessoa' => $l->pagamentopessoa,
+                    'observacoes' => $l->observacoes,
+                    // o valor do comprovante com o sinal das linhas: saiu positivo, entrou negativo
+                    'valor' => $operacao == 'R' ? -(float) $l->pagamentototal : (float) $l->pagamentototal,
+                    'operacao' => $operacao,
+                    'linhaspagamento' => (int) $l->linhaspagamento,
+                    'linhas' => [],
+                ];
+            }
             $pagamentos[$l->codpagamento]['linhas'][] = $l;
-            unset($filiais, $portadores, $pagamentos);
+            unset($filiais, $dias, $pagamentos);
         }
 
         $somar = function (array $itens) {
@@ -194,16 +202,36 @@ class PagamentoContabilidadeService
         };
         foreach ($grupos as &$g) {
             foreach ($g['filiais'] as &$f) {
-                foreach ($f['portadores'] as &$p) {
-                    foreach ($p['pagamentos'] as &$pag) {
+                $portadores = [];
+                foreach ($f['dias'] as &$d) {
+                    foreach ($d['pagamentos'] as &$pag) {
                         $pag['totais'] = $somar($pag['linhas']);
                         $pag['parcial'] = count($pag['linhas']) < $pag['linhaspagamento'];
+                        $portadores[$pag['portador']] ??= [
+                            'rotulo' => $pag['portador'],
+                            'semportador' => $pag['semportador'],
+                            'pagamentos' => [],
+                        ];
+                        $portadores[$pag['portador']]['pagamentos'][] = $pag;
                     }
                     unset($pag);
+                    uasort($d['pagamentos'], fn($a, $b) => [$a['valor'], $a['transacao'], $a['codpagamento']]
+                        <=> [$b['valor'], $b['transacao'], $b['codpagamento']]);
+                    $d['totais'] = $somar($d['pagamentos']);
+                }
+                unset($d);
+                // resumo por portador: os com nome em ordem alfabetica, sem portador
+                // (Compensacao/Folha) por ultimo
+                uasort($portadores, fn($a, $b) => [$a['semportador'], mb_strtolower($a['rotulo'])]
+                    <=> [$b['semportador'], mb_strtolower($b['rotulo'])]);
+                foreach ($portadores as &$p) {
                     $p['totais'] = $somar($p['pagamentos']);
+                    $p['quantidade'] = count($p['pagamentos']);
+                    unset($p['pagamentos']);
                 }
                 unset($p);
-                $f['totais'] = $somar($f['portadores']);
+                $f['portadores'] = $portadores;
+                $f['totais'] = $somar($f['dias']);
             }
             unset($f);
             $g['totais'] = $somar($g['filiais']);

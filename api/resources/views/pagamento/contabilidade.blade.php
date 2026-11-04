@@ -158,7 +158,7 @@
         font-size: 12pt;
     }
 
-    tr.portador td {
+    tr.dia td {
         background: #eef3f8;
         color: #1a4b7a;
         font-weight: bold;
@@ -167,12 +167,39 @@
         vertical-align: middle;
     }
 
-    tr.portador td.rotulo {
+    tr.dia td.rotulo {
         font-size: 9pt;
         border-left: 1mm solid #1a4b7a;
     }
 
-    tr.portador span.sec {
+    tr.dia span.sec {
+        font-weight: normal;
+    }
+
+    /* resumo por portador, no fim da filial */
+    tr.resumo-cab td {
+        font-size: 6pt;
+        font-weight: bold;
+        color: #78909c;
+        text-transform: uppercase;
+        border-bottom: 0.4mm solid #1a4b7a;
+        padding-bottom: 0.5mm;
+        vertical-align: bottom;
+    }
+
+    tr.resumo td {
+        font-size: 8pt;
+        border-bottom: 0.2mm solid #cfd8dc;
+        padding-top: 0.8mm;
+        padding-bottom: 0.8mm;
+    }
+
+    tr.resumo td.rotulo {
+        color: #1a4b7a;
+        font-weight: bold;
+    }
+
+    tr.resumo span.sec {
         font-weight: normal;
     }
 
@@ -184,10 +211,15 @@
         vertical-align: bottom;
     }
 
-    tr.pag td.data,
     tr.pag td.pessoa,
     tr.pag td.num {
         font-weight: bold;
+    }
+
+    tr.pag td.portador {
+        font-size: 7.5pt;
+        font-weight: bold;
+        color: #1a4b7a;
     }
 
     tr.pag span.sec {
@@ -266,22 +298,22 @@
                             </td>
                             {!! $celulas($f['totais']) !!}
                         </tr>
-                        @foreach ($f['portadores'] as $p)
+                        @foreach ($f['dias'] as $d)
                             <tr class="espaco">
                                 <td colspan="9"></td>
                             </tr>
-                            <tr class="portador">
+                            <tr class="dia">
                                 <td colspan="4" class="rotulo">
-                                    {{ $p['rotulo'] }}
-                                    <span class="sec">&nbsp;&middot;&nbsp;{{ count($p['pagamentos']) }}
-                                        {{ count($p['pagamentos']) == 1 ? 'pagamento' : 'pagamentos' }}</span>
+                                    {{ $fmtData($d['rotulo']) }}
+                                    <span class="sec">&nbsp;&middot;&nbsp;{{ count($d['pagamentos']) }}
+                                        {{ count($d['pagamentos']) == 1 ? 'pagamento' : 'pagamentos' }}</span>
                                 </td>
-                                {!! $celulas($p['totais']) !!}
+                                {!! $celulas($d['totais']) !!}
                             </tr>
-                            @foreach ($p['pagamentos'] as $pag)
+                            {{-- os pagamentos do dia em valor crescente (o do comprovante, ja com o sinal) --}}
+                            @foreach ($d['pagamentos'] as $pag)
                                 @php
-                                    // o valor com o sinal das linhas: saiu positivo, entrou negativo
-                                    $valorPag = $pag['operacao'] == 'R' ? -$pag['valor'] : $pag['valor'];
+                                    $valorPag = $pag['valor'];
                                     // pessoa e observacao dividem uma linha (a observacao e' menor)
                                     $obs = trim((string) $pag['observacoes']);
                                     $pessoaPag = $corta($pag['pessoa'], $obs === '' ? 56 : 40);
@@ -298,7 +330,7 @@
                                     <td colspan="9"></td>
                                 </tr>
                                 <tr class="pag">
-                                    <td class="data">{{ $fmtData($pag['transacao']) }}</td>
+                                    <td class="portador">{{ $pag['portador'] }}</td>
                                     <td colspan="3" class="pessoa">
                                         {{ $pessoaPag }}
                                         @if ($obs !== '')
@@ -336,6 +368,26 @@
                                     </tr>
                                 @endforeach
                             @endforeach
+                        @endforeach
+                        {{-- resumo por portador da filial: soma o total dela --}}
+                        <tr class="espaco">
+                            <td colspan="9"></td>
+                        </tr>
+                        <tr class="resumo-cab">
+                            <td colspan="4">Por portador &middot; {{ $f['rotulo'] }}</td>
+                            @foreach (array_slice(array_keys($colunas), 4) as $c)
+                                <td class="num">{{ $c }}</td>
+                            @endforeach
+                        </tr>
+                        @foreach ($f['portadores'] as $p)
+                            <tr class="resumo">
+                                <td colspan="4" class="rotulo">
+                                    {{ $p['rotulo'] }}
+                                    <span class="sec">&nbsp;&middot;&nbsp;{{ $p['quantidade'] }}
+                                        {{ $p['quantidade'] == 1 ? 'pagamento' : 'pagamentos' }}</span>
+                                </td>
+                                {!! $celulas($p['totais']) !!}
+                            </tr>
                         @endforeach
                     @endforeach
                 @endforeach
