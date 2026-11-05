@@ -18,7 +18,6 @@ const concluirEtapa = inject('concluirEtapa')
 const proximoPasso = inject('proximoPasso')
 const calc = inject('calc')
 const itensCarga = inject('itensCarga')
-const sacasLiquido = inject('sacasLiquido')
 
 // Indireção (padrão ContratoForm/SafraForm): muta o objeto reativo compartilhado
 // sem disparar vue/no-mutating-props — é a MESMA referência que o CargaForm.vue
@@ -36,7 +35,16 @@ const mostrarTara = computed(
   () => idxEtapa.value >= ordem.value.indexOf('TARA') || carga.value.tara != null,
 )
 const temDados = computed(() => carga.value.pbt != null || carga.value.tara != null)
-const mostrarResultado = computed(() => calc.value.bruto !== null && calc.value.bruto !== undefined)
+// Uma linha só, na ordem da balança: o que ainda não foi pesado sai "—"
+// (fmtNumero devolve "—" pra null). PB/Descontos/Líquido vêm do mesmo calc que
+// o form usa pra validar e imprimir.
+const pesos = computed(() => [
+  { label: 'PBT', valor: carga.value.pbt },
+  { label: 'Tara', valor: carga.value.tara },
+  { label: 'PB', valor: calc.value.bruto },
+  { label: 'Descontos', valor: calc.value.desconto, classe: 'text-orange-9' },
+  { label: 'Líquido', valor: calc.value.liquido, classe: 'text-green-9' },
+])
 
 const dialogAberto = ref(false)
 const formRef = ref(null)
@@ -112,51 +120,12 @@ async function salvar() {
         />
       </div>
 
-      <div v-if="mostrarResultado" class="row text-center bg-grey-1 rounded-borders q-pa-sm">
-        <div class="col">
-          <div class="text-body2 text-grey-6">Bruto</div>
-          <div class="text-h6">{{ fmt(calc.bruto) }} <small>kg</small></div>
-        </div>
-        <div class="col">
-          <div class="text-body2 text-grey-6">Desconto</div>
-          <div class="text-h6 text-orange-9">{{ fmt(calc.desconto) }} <small>kg</small></div>
-        </div>
-        <div class="col">
-          <div class="text-body2 text-grey-6">Líquido</div>
-          <div class="text-h6 text-green-9">{{ fmt(calc.liquido) }} <small>kg</small></div>
-        </div>
-        <div class="col">
-          <div class="text-body2 text-grey-6">Sacas</div>
-          <div class="text-h6">{{ fmt(sacasLiquido, 1) }}</div>
-        </div>
-      </div>
-      <div v-else class="row q-col-gutter-md">
-        <div v-if="mostrarPbt" class="col-6">
-          <div class="text-body2 text-grey-6">Peso bruto total</div>
-          <div class="row items-center no-wrap">
-            <q-icon
-              :name="ETAPA_META.PBT.icon"
-              :color="ETAPA_META.PBT.color"
-              size="24px"
-              class="q-mr-sm"
-            />
-            <span class="text-h6 text-weight-medium">
-              {{ carga.pbt != null ? `${fmt(carga.pbt)} kg` : '—' }}
-            </span>
-          </div>
-        </div>
-        <div v-if="mostrarTara" class="col-6">
-          <div class="text-body2 text-grey-6">Tara</div>
-          <div class="row items-center no-wrap">
-            <q-icon
-              :name="ETAPA_META.TARA.icon"
-              :color="ETAPA_META.TARA.color"
-              size="24px"
-              class="q-mr-sm"
-            />
-            <span class="text-h6 text-weight-medium">
-              {{ carga.tara != null ? `${fmt(carga.tara)} kg` : '—' }}
-            </span>
+      <!-- 5 lado a lado do tablet pra cima; no celular quebra em 3 + 2, centrado. -->
+      <div class="row justify-center text-center rounded-borders q-pa-sm">
+        <div v-for="p in pesos" :key="p.label" class="col-4 col-sm q-py-xs">
+          <div class="text-body2 text-grey-6">{{ p.label }}</div>
+          <div class="text-h6" :class="p.valor != null ? p.classe : 'text-grey-5'">
+            {{ fmt(p.valor) }} <small v-if="p.valor != null">kg</small>
           </div>
         </div>
       </div>

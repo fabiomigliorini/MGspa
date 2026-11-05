@@ -603,7 +603,6 @@ provide('proximoPasso', proximoPasso)
 provide('trocarOperacao', trocarOperacao)
 provide('calc', calc)
 provide('itensCarga', itensCarga)
-provide('sacasLiquido', sacasLiquido)
 provide('avisoClassificacao', avisoClassificacao)
 provide('finalizando', finalizando)
 
