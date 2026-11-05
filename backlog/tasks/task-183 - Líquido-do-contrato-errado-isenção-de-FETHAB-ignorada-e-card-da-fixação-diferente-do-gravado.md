@@ -3,11 +3,11 @@ id: TASK-183
 title: >-
   Líquido do contrato errado: isenção de FETHAB ignorada e card da fixação
   diferente do gravado
-status: In Progress
+status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-28 21:11'
-updated_date: '2026-10-22 19:26'
+updated_date: '2026-11-05 13:03'
 labels:
   - agro
 dependencies: []
@@ -32,7 +32,7 @@ ContratoFixacaoService::recalcular nunca passa isentofethab, então contrato ise
 - [x] #6 O preço médio é o mesmo no contrato, na safra e no detalhe
 - [x] #7 A comissão é calculada pelo servidor
 - [x] #8 No pátio, o mapa do talhão não troca a safra já escolhida em Operação
-- [ ] #9 Excluir, inativar ou reativar uma fixação atualiza a comissão do contrato
+- [x] #9 Excluir, inativar ou reativar uma fixação atualiza a comissão do contrato
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -45,4 +45,6 @@ Linha de base 28/09 (api/tests/agro, camada V): a isenção de FETHAB DECLARADA 
 22/10/2026 — conferência no código (só leitura) e critérios #1 a #8 ticados com a validação do usuário. Ressalvas: #1 a isenção é declarada zerando a linha do FETHAB no modal da fixação; não há isenção automática por cooperativa. #3 os tributos da época só ficam gravados quando a fixação é recalculada (fixação antiga sem tributos não tem backfill). #6 o preço médio dá o mesmo número, mas a conta está em 3 cópias (ContratoCalculoService::calcularDoContrato, ContratoResource, SafraService::resumoComercial). Critério #9 novo: ContratoFixacaoController::destroy/inativar/ativar não chamam ContratoFixacaoService::recalcular nem ContratoService::aplicarComissao (só o update recalcula), então a comissão em % fica com o valor antigo. Como ver: contrato com comissão %, excluir uma fixação e olhar o Total da comissão (ContratoDados). Volta para To Do por causa do #9; responsável mantido.
 
 22/10/2026 (2) — #9 implementado, aguardando validação. ContratoFixacaoController::destroy/inativar/ativar chamam reaplicarComissao (ContratoService::aplicarComissao + save no contrato). Não usa recalcular() para não regravar a fixação excluída nem congelar tributos ao inativar. Conferido no dev (transação desfeita): contrato 2 com 1% de comissão, 9.700 → 0 ao inativar a fixação de R$ 970.000 → 9.700 ao reativar. Como testar: contrato com comissão em %, excluir uma fixação e olhar o Total da comissão (ContratoDados).
+
+05/11/2026 — #9 validado pelo Claude a pedido do usuário, com as rotas reais (rota + middleware + controller, autenticado em memória) numa transação desfeita: contrato 2 (0,8% sobre a fixação de R$ 970.000) — inativar HTTP 200 → comissão 0,00; reativar HTTP 200 → 7.760,00 (GET do contrato devolve 7.760); excluir HTTP 204 → 0,00. Front: excluirFixacao (stores/contratoDetalhe.js) recarrega o contrato e ContratoDados mostra o comissaototal do servidor. Achado relatado ao usuário (sem AC): no dev, os contratos 2 e 4 (editados em jul/2026, antes do cálculo no servidor) têm comissão gravada 0 contra 7.760 e 15.360 calculados; só se corrige quando uma fixação do contrato muda.
 <!-- SECTION:NOTES:END -->

@@ -1,11 +1,11 @@
 ---
 id: TASK-171
 title: 'Agro/Patio: da pra alterar sem querer um campo ja lancado da carga'
-status: In Progress
+status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-23 19:56'
-updated_date: '2026-10-22 19:26'
+updated_date: '2026-11-05 13:03'
 labels:
   - agro
 dependencies: []
@@ -49,8 +49,8 @@ Os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) estao implementad
 - [x] #23 Enter funciona em Placa/Motorista tambem (nao so Safra/Operacao) quando a lista esta fechada
 - [x] #24 Modal de Operacao: na Expedicao, 2 campos de Reboque (nao obrigatorios, formato de placa) lado a lado; Motorista numa linha propria
 - [x] #25 FAB 'salvar sem avancar' removido; FAB principal (Registrar/etapa/Salvar) some quando a carga ja esta finalizada
-- [ ] #26 Carga com dois reboques não perde o segundo ao ser aberta em outro aparelho
-- [ ] #27 O segundo reboque sai no romaneio impresso e nas telas da carga
+- [x] #26 Carga com dois reboques não perde o segundo ao ser aberta em outro aparelho
+- [x] #27 O segundo reboque sai no romaneio impresso e nas telas da carga
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -120,4 +120,6 @@ Com os 4 blocos (Caminhao, Pesagem, Classificacao, Origem/Destino) salvando indi
 22/10/2026 — conferência no código (só leitura). Texto dos critérios #4, #11, #14 e #24 ajustado ao comportamento atual: o modal de Origem/Destino empilha os lados; reboques e o layout de 6 campos só na Expedição; motorista sem cadastro exige só o nome desde o commit 87776bfb (07/10, confirmado pelo usuário como proposital). Critérios novos: #26 normalizarCargaDoServidor (agro/src/utils/carga.js) copia placacarreta mas não placacarreta2, embora a API devolva; salvar a Operação de uma carga puxada do servidor grava o 2º reboque NULL. Como ver: limpar o IndexedDB, abrir uma Expedição com 2 reboques e salvar a Operação. #27 CargaForm.vue (imprimir) não passa placacarreta2 ao imprimirTicket, que já sabe imprimir; CargaResumo, CargaListItem e CargaDetailPage só mostram o 1º reboque; a 2ª via da ficha (ticketDoServidor) mostra os dois, então 2ª via e original saem diferentes. Como ver: F4 numa Expedição finalizada com 2 reboques. Volta para To Do por causa de #26 e #27; responsável mantido.
 
 22/10/2026 (2) — #26/#27 implementados, aguardando validação. normalizarCargaDoServidor e o patch pós-sync (stores/sincronizacao.js) passam a guardar placacarreta2 (o patch também guarda placacarreta); CargaForm.imprimir passa placacarreta2 ao imprimirTicket; o ticket mostra a linha Reboque com qualquer um dos dois; helper reboques(carga) em utils/carga.js usado em CargaResumo, CargaListItem, CargaDetailPage e CargaBlocoOperacao. Como testar: limpar o IndexedDB, abrir uma Expedição com 2 reboques, salvar a Operação (o 2º continua), F4 imprime os dois; lista, resumo e detalhe mostram os dois.
+
+05/11/2026 — #26/#27 validados pelo Claude a pedido do usuário. #26 de ponta a ponta: carga SAIDA com reboques REB1A11/REB2B22 criada pelo sincronizar (aparelho A, transação desfeita); o GET v1/carga devolve placacarreta2; o código real do front (normalizarCargaDoServidor + abrir/Salvar do modal de Operação) monta o envio com REB2B22; reenviado ao sincronizar, o banco fica com REB1A11 / REB2B22. Controle com a versão anterior do utils/carga.js (git c9254aae^): o mesmo fluxo gravava o 2º reboque NULL — o defeito original. #27: imprimirTicket real (F4 do pátio) sai com 'Reboque REB1A11 / REB2B22' e também com só o 2º reboque; CargaListItem renderizado no Chrome headless (Quasar real, dados da API) mostra 'ABC1D23 REB1A11 / REB2B22'; CargaResumo, CargaDetailPage e CargaBlocoOperacao usam o mesmo reboques(carga).
 <!-- SECTION:NOTES:END -->
