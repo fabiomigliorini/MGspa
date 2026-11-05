@@ -4,6 +4,8 @@ namespace Mg\Grao;
 
 use Mg\MgService;
 use Mg\Safra\Safra;
+use Mg\Fazenda\Plantio;
+use Mg\Contrato\Contrato;
 use Mg\Classificacao\ParametroClassificacao;
 use Mg\Classificacao\ParametroClassificacaoService;
 use Mg\Veiculo\Veiculo;
@@ -58,6 +60,14 @@ class CargaService extends MgService
     const SENTIDOS = ['ENTRADA', 'SAIDA', 'TRANSFERENCIA'];
     const CONTATIPOS = ['PLANTIO', 'UNIDADE', 'CONTRATO'];
     const ETAPA_FINAL = 'FINALIZADO';
+
+    // Combinacoes de origem/destino por sentido (D2 do doc-5). Espelho em
+    // agro/src/utils/carga.js (PONTOS_POR_SENTIDO).
+    const PONTOS_POR_SENTIDO = [
+        'ENTRADA' => ['ORIGEM' => ['PLANTIO', 'CONTRATO'], 'DESTINO' => ['UNIDADE', 'CONTRATO']],
+        'SAIDA' => ['ORIGEM' => ['UNIDADE'], 'DESTINO' => ['CONTRATO']],
+        'TRANSFERENCIA' => ['ORIGEM' => ['UNIDADE'], 'DESTINO' => ['UNIDADE']],
+    ];
 
     /**
      * @param array|null $with Relacoes do eager load. Default = WITH (contrato do
@@ -264,6 +274,7 @@ class CargaService extends MgService
                 throw new CargaConflitoException($carga->fresh(static::WITH));
             }
 
+            $pontosAntes = $carga->exists ? $carga->CargaPontoS()->get() : collect();
             $carga->fill($data);
             $carga->versao = $carga->exists ? ((int) $carga->versao + 1) : 1;
             static::snapshotCaminhaoMotorista($carga);
@@ -273,6 +284,9 @@ class CargaService extends MgService
             $carga->load('CargaPontoS');
             static::calcular($carga);
             $carga->save();
+            if ($carga->inativo === null) {
+                static::validarPontos($carga, $pontosAntes);
+            }
             static::validar($carga);
             static::gerarMovimento($carga);
             return $carga->fresh(static::WITH);
@@ -481,7 +495,7 @@ class CargaService extends MgService
      */
     protected static function validar(Carga $carga): void
     {
-        if ($carga->etapa !== static::ETAPA_FINAL) {
+        if ($carga->etapa !== static::ETAPA_FINAL || $carga->inativo !== null) {
             return;
         }
         $liq = (float) $carga->liquido;
@@ -503,6 +517,107 @@ class CargaService extends MgService
                 throw ValidationException::withMessages([
                     'pontos' => "A soma das " . ($papel === 'ORIGEM' ? 'origens' : 'destinos')
                         . " (" . round($soma) . " kg) deve fechar com o liquido (" . round($liq) . " kg).",
+                ]);
+            }
+        }
+        static::validarSaldoSilo($carga);
+    }
+
+    /**
+     * Pontos coerentes com a carga, em qualquer etapa: tipo permitido no sentido,
+     * talhao e contrato da safra da carga (a safra define a cultura: milho nao
+     * entra em talhao nem contrato de soja), compra so na origem e venda so no
+     * destino, origem e destino nunca o mesmo silo. Silo/contrato inativo so e
+     * recusado como ponto NOVO: carga antiga continua editavel.
+     */
+    protected static function validarPontos(Carga $carga, $pontosAntes): void
+    {
+        $erro = fn ($msg) => throw ValidationException::withMessages(['pontos' => $msg]);
+        $pontos = $carga->CargaPontoS()->get();
+        $permitidos = static::PONTOS_POR_SENTIDO[$carga->sentido] ?? null;
+        $safra = Safra::find($carga->codsafra);
+        $nomeSafra = fn ($s) => $s->safra ?? 'sem safra';
+        $nomes = ['PLANTIO' => 'talhão', 'UNIDADE' => 'silo', 'CONTRATO' => 'contrato'];
+        $jaExistia = fn ($p, $fk) => $pontosAntes->contains(
+            fn ($a) => $a->contatipo === $p->contatipo && (int) $a->$fk === (int) $p->$fk
+        );
+
+        foreach ($pontos as $p) {
+            $lado = $p->papel === 'ORIGEM' ? 'a origem' : 'o destino';
+            if ($permitidos && !in_array($p->contatipo, $permitidos[$p->papel], true)) {
+                $ok = implode(' ou ', array_map(fn ($t) => $nomes[$t], $permitidos[$p->papel]));
+                $erro("Nesta operação {$lado} precisa ser {$ok}, não {$nomes[$p->contatipo]}.");
+            }
+            if ($p->contatipo === 'PLANTIO') {
+                $plantio = Plantio::with('Safra')->find($p->codplantio);
+                if ($plantio && (int) $plantio->codsafra !== (int) $carga->codsafra) {
+                    $erro("O talhão {$plantio->talhao} é da safra {$nomeSafra($plantio->Safra)}; esta carga é da {$nomeSafra($safra)}.");
+                }
+            }
+            if ($p->contatipo === 'CONTRATO') {
+                $contrato = Contrato::with('Safra')->find($p->codcontrato);
+                if (!$contrato) {
+                    continue;
+                }
+                if ((int) $contrato->codsafra !== (int) $carga->codsafra) {
+                    $erro("O contrato {$contrato->codcontrato} é da safra {$nomeSafra($contrato->Safra)}; esta carga é da {$nomeSafra($safra)}.");
+                }
+                $esperada = $p->papel === 'ORIGEM' ? 'COMPRA' : 'VENDA';
+                if ($contrato->operacao !== $esperada) {
+                    $erro("O contrato {$contrato->codcontrato} é de " . mb_strtolower($contrato->operacao)
+                        . ': ' . ($p->papel === 'ORIGEM' ? 'na origem' : 'no destino')
+                        . ' só entra contrato de ' . mb_strtolower($esperada) . '.');
+                }
+                if ($contrato->inativo && !$jaExistia($p, 'codcontrato')) {
+                    $erro("O contrato {$contrato->codcontrato} está inativo.");
+                }
+            }
+            if ($p->contatipo === 'UNIDADE') {
+                $unidade = UnidadeArmazenadora::find($p->codunidadearmazenadora);
+                if ($unidade && $unidade->inativo && !$jaExistia($p, 'codunidadearmazenadora')) {
+                    $erro("O silo {$unidade->unidadearmazenadora} está inativo.");
+                }
+            }
+        }
+
+        $silos = fn ($papel) => $pontos->where('papel', $papel)->where('contatipo', 'UNIDADE')
+            ->pluck('codunidadearmazenadora')->map(fn ($c) => (int) $c)->all();
+        if (array_intersect($silos('ORIGEM'), $silos('DESTINO'))) {
+            $erro('Origem e destino são o mesmo silo.');
+        }
+    }
+
+    /**
+     * Silo sem saldo nao despacha (TASK-130): na finalizacao, o bruto que cada
+     * silo de origem entrega (D6) nao pode passar do saldo dele na safra da
+     * carga, sem contar o extrato da propria carga (edicao de carga finalizada).
+     * A trava por silo serializa duas expedicoes do mesmo silo ao mesmo tempo.
+     */
+    protected static function validarSaldoSilo(Carga $carga): void
+    {
+        $origens = $carga->CargaPontoS->where('papel', 'ORIGEM')->values();
+        $pesos = $origens->map(fn ($p) => (float) $p->liquido)->all();
+        $brutos = static::ratear((float) $carga->bruto, $pesos);
+        $porSilo = [];
+        foreach ($origens as $i => $p) {
+            if ($p->contatipo === 'UNIDADE') {
+                $porSilo[$p->codunidadearmazenadora] = ($porSilo[$p->codunidadearmazenadora] ?? 0) + $brutos[$i];
+            }
+        }
+        ksort($porSilo);
+        foreach ($porSilo as $cod => $kg) {
+            DB::select('select pg_advisory_xact_lock(hashtext(?))', ['silo:' . $cod]);
+            $saldo = (float) MovimentoGrao::where('contatipo', 'UNIDADE')
+                ->where('codunidadearmazenadora', $cod)
+                ->where('codsafra', $carga->codsafra)
+                ->whereNull('inativo')
+                ->where(fn ($q) => $q->whereNull('codcarga')->orWhere('codcarga', '<>', $carga->codcarga))
+                ->sum('liquido');
+            if ($kg > $saldo + 1) {
+                $nome = optional(UnidadeArmazenadora::find($cod))->unidadearmazenadora ?? "Silo {$cod}";
+                throw ValidationException::withMessages([
+                    'pontos' => "{$nome} tem " . number_format(max($saldo, 0), 0, ',', '.')
+                        . ' kg desta safra e a carga tira ' . number_format($kg, 0, ',', '.') . ' kg.',
                 ]);
             }
         }
@@ -543,8 +658,12 @@ class CargaService extends MgService
             $brutoShares = static::ratear($bruto, $pesos);
             foreach ($pontos as $i => $p) {
                 $sinal = static::sinal($p->contatipo, $papel);
-                $liq = round($liqShares[$i] * $sinal, 3);
                 $bru = round($brutoShares[$i] * $sinal, 3);
+                // D6: o silo de origem baixa o bruto inteiro (desconto 0); a
+                // quebra fica com quem recebe o liquido.
+                $liq = $p->contatipo === 'UNIDADE' && $papel === 'ORIGEM'
+                    ? $bru
+                    : round($liqShares[$i] * $sinal, 3);
                 $des = round($bru - $liq, 3);
                 MovimentoGrao::create([
                     'codcarga' => $carga->codcarga,
@@ -624,6 +743,9 @@ class CargaService extends MgService
             $model = Carga::where('codcarga', $model->codcarga)->lockForUpdate()->firstOrFail();
             $model->versao++;
             $model = parent::ativar($model);
+            // Reativar expedicao cancelada tambem nao pode tirar do silo o que
+            // ele nao tem (TASK-130).
+            static::validar($model->fresh('CargaPontoS'));
             static::gerarMovimento($model->fresh('CargaPontoS'));
             return $model;
         }, 3);

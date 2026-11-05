@@ -4,9 +4,10 @@ title: >-
   Agro/Patio: expedicao nao avisa saldo do silo e deixa estoque negativo em
   silencio
 status: In Progress
-assignee: []
+assignee:
+  - '@eduardo'
 created_date: '2026-09-21 21:33'
-updated_date: '2026-10-10 19:06'
+updated_date: '2026-11-05 16:17'
 labels:
   - agro
 dependencies: []
@@ -25,14 +26,17 @@ A store do patio ja tem saldoUnidadeOffline(cod) (snapshot do servidor + delta d
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Linha de ORIGEM (silo) mostra o saldo do silo na safra da carga, como a do contrato mostra o saldo a entregar
-- [ ] #2 Saída maior que o saldo pede confirmação no pátio; entrada acima da capacidade também
-- [ ] #3 Tela de Estoque destaca silo com saldo negativo e mostra a quebra
-- [ ] #4 Saída de silo baixa o peso bruto; o destino recebe o líquido e a quebra aparece no relatório
+- [x] #1 Linha de ORIGEM (silo) mostra o saldo do silo na safra da carga, como a do contrato mostra o saldo a entregar
+- [x] #2 Saída de silo baixa o peso bruto; o destino recebe o líquido e a quebra aparece no relatório
+- [x] #3 Silo sem saldo na safra da carga não despacha: a tela avisa e o servidor recusa a finalização
 <!-- AC:END -->
 
 ## Implementation Notes
 
 <!-- SECTION:NOTES:BEGIN -->
 Revisão do backlog com o Fábio (10/10/2026, 2ª varredura): o AC 'Silo inativo não recebe carga nova' saiu: a tela já só oferece silo ativo desde jun/26 (agro/src/stores/carga.js unidadesAtivas, SelectUnidade); a recusa no servidor ficou na TASK-181.
+
+05/11/2026 — escopo simplificado pelo Fábio: silo sem saldo não despacha (substitui a D1 'silo pode ficar negativo' e o pedir confirmação; o destaque de silo negativo no Estoque saiu junto). Servidor: CargaService::validarSaldoSilo na finalização compara o bruto que cada silo de origem entrega com o saldo dele na safra da carga, sem o extrato da própria carga, com trava por silo. D6 no gerarMovimento: silo de origem baixa o bruto, desconto 0; o destino recebe o líquido (só cargas finalizadas/editadas daqui pra frente). saldosUnidades devolve também o saldo por safra (safras[]). Tela: linha do silo de origem mostra 'Saldo no silo nesta safra · esta carga · faltam', vermelha e com regra quando falta. Testado no dev (rollback): 30 t de silo com 90,6 t aceita; 100 t recusa 'SILO tem 90.665 kg desta safra e a carga tira 100.000 kg' (os 180 t de soja do mesmo silo não contam); 30 t com 600 kg de desconto grava silo −30.000 e contrato 29.400.
+
+05/11/2026 (revisão): reativar expedição cancelada passa pela mesma conferência de saldo (testado: 80 t aceita, cancela, outra de 80 t, reativar a 1ª recusa 'SILO tem 10.665 kg'). Cancelar carga antiga fora da matriz segue aceito (validarPontos não roda em carga inativa). Saldo offline: carga local pendente desconta do silo a parte do bruto (D6). Gap conhecido: ajuste manual de silo sem safra não entra no saldo por safra (no dev não há nenhum).
 <!-- SECTION:NOTES:END -->

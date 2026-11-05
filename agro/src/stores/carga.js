@@ -270,25 +270,32 @@ export const useCargaStore = defineStore('carga', () => {
   // ---- Saldos offline (snapshot do servidor + pendências locais) ----
   // Soma o líquido das cargas locais ainda NÃO sincronizadas (finalizadas) que
   // movem uma conta, com o sinal (UNIDADE: +destino/-origem; CONTRATO sempre +).
-  function deltaPendente(contatipo, campoCod, cod) {
+  function deltaPendente(contatipo, campoCod, cod, codsafra = null) {
     let delta = 0
     for (const c of cargas.value) {
       if (c.inativo || c.sincronizado || c.etapa !== 'FINALIZADO') continue
+      if (codsafra && c.codsafra !== codsafra) continue
       for (const p of c.pontos || []) {
         if (p.contatipo !== contatipo || p[campoCod] !== cod) continue
-        const sinal = contatipo === 'UNIDADE' && p.papel === 'ORIGEM' ? -1 : 1
-        delta += sinal * kgRateado(c, p)
+        // Silo de origem baixa a parte do bruto (D6); o resto, a do líquido.
+        if (contatipo === 'UNIDADE' && p.papel === 'ORIGEM' && p.percentual != null && c.bruto != null) {
+          delta -= Math.round(((Number(c.bruto) || 0) * (Number(p.percentual) || 0)) / 100)
+        } else {
+          delta += kgRateado(c, p)
+        }
       }
     }
     return delta
   }
 
-  function saldoUnidadeOffline(cod) {
+  // Com `codsafra`, só o grão daquela safra: é contra ele que a expedição é
+  // conferida (TASK-130).
+  function saldoUnidadeOffline(cod, codsafra = null) {
     const snap = saldosUnidades.value.find((s) => s.codunidadearmazenadora === cod)
-    return (
-      (snap ? Number(snap.saldokg) || 0 : 0) +
-      deltaPendente('UNIDADE', 'codunidadearmazenadora', cod)
-    )
+    const base = codsafra
+      ? snap?.safras?.find((s) => s.codsafra === codsafra)?.saldokg
+      : snap?.saldokg
+    return (Number(base) || 0) + deltaPendente('UNIDADE', 'codunidadearmazenadora', cod, codsafra)
   }
 
   // Saldo a entregar de um contrato (kg): snapshot do servidor menos o que as

@@ -4,9 +4,10 @@ title: >-
   Pátio deixa lançar grão no contrato ou talhão errado (milho em contrato de
   soja)
 status: In Progress
-assignee: []
+assignee:
+  - '@eduardo'
 created_date: '2026-09-28 21:11'
-updated_date: '2026-10-10 19:06'
+updated_date: '2026-11-05 16:13'
 labels:
   - agro
 dependencies: []
@@ -25,9 +26,15 @@ O pátio aceita contrato de outra cultura, talhão de outra safra, contrato de v
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 Contrato de outra cultura é recusado, e o select só oferece contratos da cultura da safra
-- [ ] #2 Talhão de outra safra é recusado como origem
-- [ ] #3 Origem e destino seguem as combinações permitidas por sentido (D2)
-- [ ] #4 Tara maior que o PBT é recusada com mensagem clara
-- [ ] #5 Unidade ou contrato inativo é recusado no servidor (a tela já só oferece silo e contrato ativos)
+- [x] #1 Contrato de outra cultura é recusado, e o select só oferece contratos da cultura da safra
+- [x] #2 Talhão de outra safra é recusado como origem
+- [x] #3 Origem e destino seguem as combinações permitidas por sentido (D2)
+- [x] #4 Tara maior que o PBT é recusada com mensagem clara
+- [x] #5 Unidade ou contrato inativo é recusado no servidor (a tela já só oferece silo e contrato ativos)
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+05/11/2026 — CargaService::validarPontos em toda gravação: tipo de ponto pela matriz D2 (PONTOS_POR_SENTIDO, espelhado em agro utils/carga.js), talhão e contrato da safra da carga (a safra define a cultura), compra só na origem e venda só no destino, mesmo silo nos dois lados recusado, silo/contrato inativo recusado só como ponto novo. Tela: SelectContaTipo filtra pelo sentido, SelectContrato pela safra e operação, SelectUnidade esconde o silo do outro lado; os três passaram para MgSelect. Testado no dev (rollback): milho em talhão de soja, contrato de milho em carga de soja, silo→mesmo silo, expedição saindo de talhão e contrato de venda como origem → todos 422 com mensagem; milho em talhão de milho aceita. Cargas antigas do dev fora da matriz (não editáveis sem corrigir o ponto): 1, 4 e 21706 (recebimento com origem silo) e 8 (expedição talhão→silo).
+<!-- SECTION:NOTES:END -->
