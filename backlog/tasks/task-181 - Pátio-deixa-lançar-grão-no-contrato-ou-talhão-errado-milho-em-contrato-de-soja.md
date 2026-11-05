@@ -3,11 +3,11 @@ id: TASK-181
 title: >-
   Pátio deixa lançar grão no contrato ou talhão errado (milho em contrato de
   soja)
-status: In Progress
+status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-09-28 21:11'
-updated_date: '2026-11-05 16:13'
+updated_date: '2026-11-05 19:51'
 labels:
   - agro
 dependencies: []
@@ -37,4 +37,28 @@ O pátio aceita contrato de outra cultura, talhão de outra safra, contrato de v
 
 <!-- SECTION:NOTES:BEGIN -->
 05/11/2026 — CargaService::validarPontos em toda gravação: tipo de ponto pela matriz D2 (PONTOS_POR_SENTIDO, espelhado em agro utils/carga.js), talhão e contrato da safra da carga (a safra define a cultura), compra só na origem e venda só no destino, mesmo silo nos dois lados recusado, silo/contrato inativo recusado só como ponto novo. Tela: SelectContaTipo filtra pelo sentido, SelectContrato pela safra e operação, SelectUnidade esconde o silo do outro lado; os três passaram para MgSelect. Testado no dev (rollback): milho em talhão de soja, contrato de milho em carga de soja, silo→mesmo silo, expedição saindo de talhão e contrato de venda como origem → todos 422 com mensagem; milho em talhão de milho aceita. Cargas antigas do dev fora da matriz (não editáveis sem corrigir o ponto): 1, 4 e 21706 (recebimento com origem silo) e 8 (expedição talhão→silo).
+
+05/11/2026 — fechamento. Diagnóstico completo no dev (inclui transferência e mesmo silo nos dois lados): as cargas 1, 4, 6, 8, 21499 e 21706 ficam fora das regras e só voltam a ser salvas com a origem/destino corrigidos (o dev tem um silo só, então toda transferência lá é silo → mesmo silo). Na PROD, rodar à mão para saber quais cargas antigas vão recusar edição:
+
+-- Cargas ativas que as regras da TASK-181 passam a recusar se forem salvas de novo
+select c.codcarga, c.sentido, c.etapa, p.papel, p.contatipo, c.codsafra,
+       coalesce(pl.codsafra, ct.codsafra) as safra_ponto, ct.operacao
+from tblcarga c
+join tblcargaponto p using (codcarga)
+left join tblplantio pl on pl.codplantio = p.codplantio
+left join tblcontrato ct on ct.codcontrato = p.codcontrato
+where c.inativo is null and (
+     (c.sentido = 'ENTRADA' and p.papel = 'ORIGEM' and p.contatipo not in ('PLANTIO', 'CONTRATO'))
+  or (c.sentido = 'ENTRADA' and p.papel = 'DESTINO' and p.contatipo not in ('UNIDADE', 'CONTRATO'))
+  or (c.sentido in ('SAIDA', 'TRANSFERENCIA') and p.papel = 'ORIGEM' and p.contatipo <> 'UNIDADE')
+  or (c.sentido = 'SAIDA' and p.papel = 'DESTINO' and p.contatipo <> 'CONTRATO')
+  or (c.sentido = 'TRANSFERENCIA' and p.papel = 'DESTINO' and p.contatipo <> 'UNIDADE')
+  or coalesce(pl.codsafra, ct.codsafra) <> c.codsafra
+  or (p.contatipo = 'CONTRATO' and ct.operacao <> case p.papel when 'ORIGEM' then 'COMPRA' else 'VENDA' end)
+  or (p.contatipo = 'UNIDADE' and exists (
+        select 1 from tblcargaponto o
+        where o.codcarga = c.codcarga and o.papel <> p.papel
+          and o.contatipo = 'UNIDADE' and o.codunidadearmazenadora = p.codunidadearmazenadora))
+)
+order by 1, 4;
 <!-- SECTION:NOTES:END -->
