@@ -1,11 +1,11 @@
 ---
 id: TASK-269
 title: 'Pátio: pesagem da carga esconde o PBT e a tara depois de pesar'
-status: In Progress
+status: Done
 assignee:
   - '@eduardo'
 created_date: '2026-11-05 20:19'
-updated_date: '2026-11-05 20:26'
+updated_date: '2026-11-05 20:45'
 labels:
   - agro
 dependencies: []

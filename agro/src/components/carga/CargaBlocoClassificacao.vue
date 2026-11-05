@@ -29,8 +29,7 @@ const idxEtapa = computed(() => indiceEtapa(props.carga))
 const ordem = computed(() => etapasDaCarga(props.carga))
 const mostrarClassificacao = computed(
   () =>
-    (props.carga.sentido === 'ENTRADA' &&
-      idxEtapa.value >= ordem.value.indexOf('CLASSIFICACAO')) ||
+    (props.carga.sentido === 'ENTRADA' && idxEtapa.value >= ordem.value.indexOf('CLASSIFICACAO')) ||
     temLeitura.value,
 )
 
@@ -39,10 +38,11 @@ function linhaDe(codparam) {
     (props.carga.classificacao || []).find((c) => c.codparametroclassificacao === codparam) || {}
   )
 }
+// null = ainda sem kg (falta a tara); 0 = leitura dentro da tolerância.
 function descontoParam(codparam) {
   return (
     (calc.value.classificacao || []).find((c) => c.codparametroclassificacao === codparam)
-      ?.desconto || null
+      ?.desconto ?? null
   )
 }
 function hintItem(item) {
@@ -58,6 +58,25 @@ function foraTolerancia(item, leitura) {
   if (leitura === null || leitura === undefined || leitura === '') return false
   return Number(leitura) > (Number(item.tolerancia) || 0)
 }
+
+// Card: só o que o grão tem — leitura vazia ou 0 não aparece.
+const leituras = computed(() =>
+  itensCarga.value
+    .map((item) => ({ item, leitura: linhaDe(item.codparametroclassificacao).leitura }))
+    .filter((l) => Number(l.leitura) > 0),
+)
+
+// Detalhes: todo parâmetro lido (0 inclusive) com o desconto em kg do calc.
+const detalhesAberto = ref(false)
+const detalhes = computed(() =>
+  itensCarga.value
+    .map((item) => ({
+      item,
+      leitura: linhaDe(item.codparametroclassificacao).leitura,
+      desconto: descontoParam(item.codparametroclassificacao),
+    }))
+    .filter((d) => !leituraVazia(d.leitura)),
+)
 
 const dialogAberto = ref(false)
 const formRef = ref(null)
@@ -128,6 +147,18 @@ async function salvar() {
         <div class="text-subtitle1 text-grey-8">Classificação</div>
         <q-space />
         <q-btn
+          v-if="temLeitura"
+          flat
+          round
+          dense
+          size="sm"
+          icon="info"
+          color="grey-7"
+          @click="detalhesAberto = true"
+        >
+          <q-tooltip>Detalhes</q-tooltip>
+        </q-btn>
+        <q-btn
           flat
           round
           dense
@@ -142,31 +173,21 @@ async function salvar() {
         {{ avisoClassificacao.titulo }}
         <div class="text-caption">{{ avisoClassificacao.dica }}</div>
       </q-banner>
-      <div class="row q-col-gutter-md">
+      <!-- Mesmo desenho da linha da Pesagem; acima da tolerância pinta de laranja. -->
+      <div v-if="leituras.length" class="row justify-center text-center rounded-borders q-pa-sm">
         <div
-          v-for="item in itensCarga"
-          :key="item.codparametroclassificacao"
-          class="col-6 col-sm-4 col-md-3"
+          v-for="l in leituras"
+          :key="l.item.codparametroclassificacao"
+          class="col-4 col-sm q-py-xs"
         >
-          <div class="text-body2 text-grey-6 ellipsis">
-            {{ item.ordem }}. {{ item.parametroclassificacao }}
-          </div>
-          <div class="text-h6 text-weight-medium">
-            <template v-if="linhaDe(item.codparametroclassificacao).leitura != null">
-              {{ fmt(linhaDe(item.codparametroclassificacao).leitura, 1) }}%
-            </template>
-            <template v-else>—</template>
-          </div>
-          <div
-            v-if="foraTolerancia(item, linhaDe(item.codparametroclassificacao).leitura)"
-            class="text-caption text-orange-9"
-          >
-            acima da tolerância
-          </div>
-          <div v-if="descontoParam(item.codparametroclassificacao)" class="text-caption text-orange-8">
-            − {{ fmt(descontoParam(item.codparametroclassificacao)) }} kg
+          <div class="text-body2 text-grey-6 ellipsis">{{ l.item.parametroclassificacao }}</div>
+          <div class="text-h6" :class="{ 'text-orange-9': foraTolerancia(l.item, l.leitura) }">
+            {{ fmt(l.leitura, 1) }}%
           </div>
         </div>
+      </div>
+      <div v-else-if="itensCarga.length" class="text-grey-6">
+        {{ temLeitura ? 'Todas as leituras em 0%.' : 'Ainda sem leitura.' }}
       </div>
     </q-card-section>
   </q-card>
@@ -190,7 +211,12 @@ async function salvar() {
             />
             Classificação
           </div>
-          <q-banner v-if="avisoClassificacao" dense rounded class="bg-orange-1 text-orange-9 q-mb-sm">
+          <q-banner
+            v-if="avisoClassificacao"
+            dense
+            rounded
+            class="bg-orange-1 text-orange-9 q-mb-sm"
+          >
             <template #avatar><q-icon name="warning" color="orange-8" /></template>
             {{ avisoClassificacao.titulo }}
             <div class="text-caption">{{ avisoClassificacao.dica }}</div>
@@ -220,12 +246,7 @@ async function salvar() {
                   (v) => v == null || (v >= 0 && v <= 100) || 'Leitura deve ficar entre 0 e 100%.',
                 ]"
               />
-              <div
-                v-if="foraTolerancia(item, linhaEdicao(item.codparametroclassificacao).leitura)"
-                class="text-caption text-orange-9 q-pl-sm"
-              >
-                acima da tolerância
-              </div>
+              <!-- Só o desconto, quando há: acima da tolerância a leitura já fica laranja. -->
               <div
                 v-if="descontoPreview(item.codparametroclassificacao)"
                 class="text-caption text-orange-8 q-pl-sm"
@@ -248,4 +269,88 @@ async function salvar() {
       </q-form>
     </q-card>
   </q-dialog>
+
+  <!-- Detalhes (só leitura). O .stop segura o F3 da página, que avançaria a
+       etapa por baixo do dialog. -->
+  <q-dialog v-model="detalhesAberto" :maximized="$q.screen.lt.sm">
+    <q-card
+      flat
+      class="column no-wrap"
+      :class="{ 'carga-dialog': !$q.screen.lt.sm }"
+      @keydown.f3.prevent.stop
+    >
+      <q-card-section class="col-auto row items-center text-subtitle1">
+        <q-icon
+          :name="ETAPA_META.CLASSIFICACAO.icon"
+          :color="ETAPA_META.CLASSIFICACAO.color"
+          size="24px"
+          class="q-mr-sm"
+        />
+        Descontos da classificação
+      </q-card-section>
+      <q-card-section class="col scroll q-pt-none">
+        <!-- Mesmas colunas da ficha do romaneio (CargaDetailPage). -->
+        <q-markup-table flat class="tabela-descontos">
+          <thead>
+            <tr>
+              <th class="text-left">Parâmetro</th>
+              <th class="text-right">Leitura</th>
+              <th class="text-right">Tolerância</th>
+              <th class="text-right">Desconto</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="d in detalhes" :key="d.item.codparametroclassificacao">
+              <td class="text-left">{{ d.item.parametroclassificacao }}</td>
+              <td class="text-right">{{ fmt(d.leitura, 1) }} %</td>
+              <td class="text-right text-grey-6">{{ fmt(d.item.tolerancia, 1) }} %</td>
+              <td class="text-right" :class="d.desconto ? 'text-orange-9' : 'text-grey-6'">
+                {{ fmt(d.desconto) }} <template v-if="d.desconto != null">kg</template>
+              </td>
+            </tr>
+            <tr class="text-weight-bold">
+              <td class="text-left" colspan="3">Total</td>
+              <td class="text-right" :class="calc.desconto ? 'text-orange-9' : 'text-grey-6'">
+                {{ fmt(calc.desconto) }} <template v-if="calc.desconto != null">kg</template>
+              </td>
+            </tr>
+          </tbody>
+        </q-markup-table>
+        <div v-if="calc.desconto == null" class="text-grey-6 q-mt-sm">
+          O desconto em kg sai depois da tara.
+        </div>
+      </q-card-section>
+      <q-card-actions align="right" class="col-auto">
+        <q-btn label="Fechar (Esc)" flat color="grey-8" v-close-popup />
+      </q-card-actions>
+    </q-card>
+  </q-dialog>
 </template>
+
+<style scoped>
+/* O q-table fixa 12px no cabeçalho e 13px nas células, e essa regra vence as
+   classes de tipografia do Quasar. No diálogo de descontos a tabela é o
+   conteúdo todo: cabeçalho no tamanho dos rótulos dos cards, linhas maiores. */
+.tabela-descontos :deep(th) {
+  font-size: 14px;
+}
+.tabela-descontos :deep(td) {
+  font-size: 16px;
+}
+
+/* No celular o diálogo abre maximizado e a tabela fica com ~330px: com o
+   respiro padrão do q-table (16px de cada lado) a coluna Desconto saía cortada. */
+@media (max-width: 599px) {
+  .tabela-descontos :deep(th),
+  .tabela-descontos :deep(td) {
+    padding-left: 6px;
+    padding-right: 6px;
+  }
+  .tabela-descontos :deep(th) {
+    font-size: 13px;
+  }
+  .tabela-descontos :deep(td) {
+    font-size: 15px;
+  }
+}
+</style>
