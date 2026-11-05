@@ -3,15 +3,16 @@ id: TASK-246
 title: >-
   Sangria entre caixas cancelada deixa o caixa que recebeu Sobrando e sem
   conseguir fechar
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-10-21 13:59'
+updated_date: '2026-11-05 21:45'
 labels:
   - contas
 dependencies: []
 priority: high
 type: bug
-ordinal: 256000
+ordinal: 4000
 ---
 
 ## Description

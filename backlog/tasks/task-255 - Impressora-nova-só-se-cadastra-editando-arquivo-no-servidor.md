@@ -1,17 +1,17 @@
 ---
 id: TASK-255
 title: Impressora nova só se cadastra editando arquivo no servidor
-status: In Progress
+status: To Do
 assignee:
   - '@fabio'
 created_date: '2026-10-22 00:43'
-updated_date: '2026-10-23 16:48'
+updated_date: '2026-11-05 21:41'
 labels:
   - api
 dependencies: []
 priority: high
 type: feature
-ordinal: 263000
+ordinal: 273000
 ---
 
 ## Description

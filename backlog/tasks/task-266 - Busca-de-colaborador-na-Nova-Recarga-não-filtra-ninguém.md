@@ -1,17 +1,17 @@
 ---
 id: TASK-266
 title: Busca de colaborador na Nova Recarga não filtra ninguém
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-11-04 19:43'
-updated_date: '2026-11-04 19:44'
+updated_date: '2026-11-05 21:40'
 labels:
   - pessoas
 dependencies: []
 priority: low
 type: bug
-ordinal: 274000
+ordinal: 281000
 ---
 
 ## Description

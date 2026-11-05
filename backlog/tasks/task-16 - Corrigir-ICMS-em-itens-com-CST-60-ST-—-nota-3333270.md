@@ -1,16 +1,16 @@
 ---
 id: TASK-16
 title: Nota com item CST 60 é rejeitada (531) e precisa ser inutilizada
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-10 19:07'
+updated_date: '2026-11-05 21:42'
 labels:
   - notas
 dependencies: []
 priority: high
 type: bug
-ordinal: 18000
+ordinal: 1000
 ---
 
 ## Description

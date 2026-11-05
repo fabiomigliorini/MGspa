@@ -3,17 +3,17 @@ id: TASK-267
 title: >-
   Títulos pagos da contabilidade não seguem a ordem dos dias: o mesmo dia
   aparece espalhado em cada portador
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-11-04 21:08'
-updated_date: '2026-11-04 21:11'
+updated_date: '2026-11-05 21:40'
 labels:
   - contas
 dependencies: []
 priority: medium
 type: enhancement
-ordinal: 275000
+ordinal: 280000
 ---
 
 ## Description

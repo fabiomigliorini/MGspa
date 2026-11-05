@@ -1,16 +1,16 @@
 ---
 id: TASK-37
 title: Excluir transferencia de entrada quando a de saida for cancelada
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-10 18:49'
+updated_date: '2026-11-05 21:42'
 labels:
   - notas
 dependencies: []
 priority: high
 type: feature
-ordinal: 57000
+ordinal: 2000
 ---
 
 ## Description
