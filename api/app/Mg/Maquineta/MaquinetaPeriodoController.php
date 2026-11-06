@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Mg\Conferencia\ConferenciaAutorizador;
+use Mg\Conferencia\PagamentoCorrecaoService;
 use Mg\Pagamento\Pagamento;
 use Mg\Portador\LancamentoDataService;
 
@@ -124,7 +125,9 @@ class MaquinetaPeriodoController extends Controller
 
     // alterar a data do cartao (TASK-204): a data manda no periodo, o cartao
     // vai para o periodo da data; `cancelamento`: a data do cancelamento.
-    // Devolve a tela no periodo de onde saiu
+    // Quem pode: o Gerente da filial da venda, como o Corrigir e o Registro
+    // indevido da mesma linha, sem papel no portador da adquirente; tambem
+    // para antes do go-live (TASK-271). Devolve a tela no periodo de onde saiu
     public function data(Request $request, int $id, int $codpagamento)
     {
         $dados = $request->validate([
@@ -137,9 +140,10 @@ class MaquinetaPeriodoController extends Controller
         if ($pag->codmaquinetalote != $lote->codmaquinetalote && $pag->codmaquinetalotecancelamento != $lote->codmaquinetalote) {
             abort(422, 'O pagamento não é deste período.');
         }
+        PagamentoCorrecaoService::autorizar($pag);
         DB::transaction(fn () => empty($dados['cancelamento'])
-            ? LancamentoDataService::alterarPagamento($pag, Carbon::parse($dados['transacao']), $dados['justificativa'])
-            : LancamentoDataService::alterarCancelamento($pag, Carbon::parse($dados['transacao']), $dados['justificativa']));
+            ? LancamentoDataService::alterarPagamento($pag, Carbon::parse($dados['transacao']), $dados['justificativa'], true)
+            : LancamentoDataService::alterarCancelamento($pag, Carbon::parse($dados['transacao']), $dados['justificativa'], true));
         return $this->resposta($lote->fresh('Maquineta'));
     }
 

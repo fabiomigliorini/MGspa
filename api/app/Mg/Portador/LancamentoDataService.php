@@ -32,8 +32,9 @@ use Mg\Titulo\MovimentoTituloService;
  * Periodo fechado (caixa, banco) ou conferido (maquineta) nao recebe nem perde
  * lancamento. Antes do go-live so' o pagamento vai, pelo gestor, e sai da
  * conferencia. Justificativa obrigatoria, com o antes/depois na auditoria. So' o
- * gestor do portador (o cartao, quem confere a maquineta; no PDV, a gaveta
- * dele). Sem transacao interna: o controller abre.
+ * gestor do portador (no PDV, a gaveta dele); o cartao na tela da maquineta,
+ * quem confere (Gerente da filial, TASK-271). Sem transacao interna: o
+ * controller abre.
  */
 class LancamentoDataService
 {
@@ -334,8 +335,8 @@ class LancamentoDataService
         return $pag->fresh();
     }
 
-    // `$autorizado`: quem chama ja' autorizou com a regra dele (o lapis do
-    // recebimento, PagamentoTituloAutorizador)
+    // `$autorizado`: quem chama ja' autorizou com a regra dele, inclusive para
+    // antes do go-live (a tela da maquineta: o Gerente que confere, TASK-271)
     public static function alterarPagamento(Pagamento $pag, Carbon $data, ?string $justificativa, bool $autorizado = false): Pagamento
     {
         $justificativa = static::justificativa($justificativa);
@@ -344,7 +345,7 @@ class LancamentoDataService
         // da maquineta nem razao, como o historico): so' o gestor de cada
         // portador (Fabio, 14/10/2026)
         $foraDoRazao = $data->lt(ConferenciaService::inicio());
-        if ($foraDoRazao && !static::podePortadores(static::portadoresDoPagamento($pag))) {
+        if (!$autorizado && $foraDoRazao && !static::podePortadores(static::portadoresDoPagamento($pag))) {
             abort(403, 'Antes do início do razão (' . ConferenciaService::inicio()->format('d/m/Y') . '), só o gestor de cada portador do pagamento altera a data (no cartão, o da adquirente).');
         }
         if (!$autorizado && !$foraDoRazao) {
@@ -433,12 +434,14 @@ class LancamentoDataService
     }
 
     // a data do cancelamento do cartao: o periodo do cancelamento segue a
-    // data, sem mexer na venda
-    public static function alterarCancelamento(Pagamento $pag, Carbon $data, ?string $justificativa): Pagamento
+    // data, sem mexer na venda; `$autorizado` como no alterarPagamento
+    public static function alterarCancelamento(Pagamento $pag, Carbon $data, ?string $justificativa, bool $autorizado = false): Pagamento
     {
         $justificativa = static::justificativa($justificativa);
         $data = static::exigirData($data);
-        static::autorizarPagamento($pag, $data, true);
+        if (!$autorizado) {
+            static::autorizarPagamento($pag, $data, true);
+        }
         if (!empty($pag->codmaquineta)) {
             MaquinetaLoteService::travar($pag->codmaquineta);
         }
