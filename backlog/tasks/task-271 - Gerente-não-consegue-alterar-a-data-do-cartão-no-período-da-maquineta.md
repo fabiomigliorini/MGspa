@@ -1,11 +1,11 @@
 ---
 id: TASK-271
 title: Gerente não consegue alterar a data do cartão no período da maquineta
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-11-06 14:07'
-updated_date: '2026-11-06 15:10'
+updated_date: '2026-11-06 15:43'
 labels:
   - contas
 dependencies: []

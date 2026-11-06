@@ -6,15 +6,17 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Mg\Filial\Filial;
 use Mg\Portador\Portador;
+use Mg\Titulo\MovimentoTituloService;
 use Mpdf\Mpdf;
 
 // Titulos pagos no periodo, para a contabilidade (TASK-256): os pagamentos de
 // titulo efetivados em que saiu dinheiro, encontro de contas e folha, ou que
 // mexeram em titulo a pagar; cada um com as linhas ativas dos titulos
 // (principal, juros, multa, desconto e total), por fiscal/gerencial, filial e
-// dia, em ordem crescente de valor (TASK-267). Filial e gerencial sao do
-// titulo: o pagamento que tem titulos fora do filtro aparece com o valor cheio
-// e so os titulos do filtro.
+// dia, em ordem crescente de valor (TASK-267); a compensacao vai para baixo do
+// adiantamento que ela consome, mesmo de outro dia (TASK-272). Filial e
+// gerencial sao do titulo: o pagamento que tem titulos fora do filtro aparece
+// com o valor cheio e so os titulos do filtro.
 class PagamentoContabilidadeService
 {
     // linhas de titulo
@@ -156,8 +158,9 @@ class PagamentoContabilidadeService
     }
 
     // fiscal/gerencial > filial > dia > pagamento > linhas, com os totais de
-    // cada nivel; os pagamentos do dia em valor crescente, e no fim de cada
-    // filial o resumo por portador. As linhas ja chegam por valor (linhas()).
+    // cada nivel; os pagamentos do dia em valor crescente (o bloco do
+    // adiantamento com a compensacao, junto), e no fim de cada filial o resumo
+    // por portador. As linhas ja chegam por valor (linhas()).
     public static function agrupar(array $linhas): array
     {
         $grupos = [];
@@ -202,6 +205,7 @@ class PagamentoContabilidadeService
         };
         foreach ($grupos as &$g) {
             foreach ($g['filiais'] as &$f) {
+                $f['dias'] = static::juntarCompensacoes($f['dias']);
                 $portadores = [];
                 foreach ($f['dias'] as &$d) {
                     foreach ($d['pagamentos'] as &$pag) {
@@ -215,8 +219,8 @@ class PagamentoContabilidadeService
                         $portadores[$pag['portador']]['pagamentos'][] = $pag;
                     }
                     unset($pag);
-                    uasort($d['pagamentos'], fn($a, $b) => [$a['valor'], $a['transacao'], $a['codpagamento']]
-                        <=> [$b['valor'], $b['transacao'], $b['codpagamento']]);
+                    $chave = fn($p) => $p['chave'] ?? [$p['valor'], $p['transacao'], $p['codpagamento'], 0];
+                    uasort($d['pagamentos'], fn($a, $b) => $chave($a) <=> $chave($b));
                     $d['totais'] = $somar($d['pagamentos']);
                 }
                 unset($d);
@@ -244,6 +248,82 @@ class PagamentoContabilidadeService
             'grupos' => $grupos,
             'totais' => $somar($grupos),
         ];
+    }
+
+    // A compensacao vai para baixo do adiantamento que ela consome (TASK-272): o
+    // pagamento que implantou o titulo que ela liquida. Adiantamentos e
+    // compensacoes ligados viram um bloco so', no dia do primeiro, em ordem de
+    // data; o bloco se ordena no dia pelo primeiro. So' o encontro de contas:
+    // a baixa que pagou a diferenca em dinheiro fica no dia dela. O adiantamento
+    // de antes do periodo nao esta' aqui, e a compensacao fica onde esta'.
+    public static function juntarCompensacoes(array $dias): array
+    {
+        // o titulo que nasceu com o pagamento -> o pagamento
+        $implantou = [];
+        $diaDe = [];
+        foreach ($dias as $d => $dia) {
+            foreach ($dia['pagamentos'] as $cod => $pag) {
+                $diaDe[$cod] = $d;
+                if ($pag['operacao'] == 'E') {
+                    continue;
+                }
+                foreach ($pag['linhas'] as $l) {
+                    if ((int) $l->codtipomovimentotitulo == MovimentoTituloService::TIPO_IMPLANTACAO) {
+                        $implantou[$l->codtitulo] = $cod;
+                    }
+                }
+            }
+        }
+        if (empty($implantou)) {
+            return $dias;
+        }
+
+        // a compensacao com cada adiantamento que ela consome; a corrente
+        // (dois adiantamentos numa compensacao, um adiantamento em duas) fecha
+        $pai = [];
+        $raiz = function ($c) use (&$pai) {
+            while (($pai[$c] ?? $c) != $c) {
+                $c = $pai[$c];
+            }
+            return $c;
+        };
+        foreach ($dias as $dia) {
+            foreach ($dia['pagamentos'] as $cod => $pag) {
+                if ($pag['operacao'] != 'E') {
+                    continue;
+                }
+                foreach ($pag['linhas'] as $l) {
+                    $adto = $implantou[$l->codtitulo] ?? null;
+                    if ($adto !== null && $raiz($adto) != $raiz($cod)) {
+                        $pai[$raiz($cod)] = $raiz($adto);
+                    }
+                }
+            }
+        }
+        $blocos = [];
+        foreach (array_keys($pai) as $cod) {
+            $blocos[$raiz($cod)][$cod] = true;
+            $blocos[$raiz($cod)][$raiz($cod)] = true;
+        }
+
+        foreach ($blocos as $membros) {
+            $pags = [];
+            foreach (array_keys($membros) as $cod) {
+                $pags[] = $dias[$diaDe[$cod]]['pagamentos'][$cod];
+                unset($dias[$diaDe[$cod]]['pagamentos'][$cod]);
+            }
+            usort($pags, fn($a, $b) => [$a['transacao'], $a['codpagamento']] <=> [$b['transacao'], $b['codpagamento']]);
+            $primeiro = $pags[0];
+            $d = $diaDe[$primeiro['codpagamento']];
+            foreach ($pags as $i => $pag) {
+                $pag['bloco'] = $primeiro['codpagamento'];
+                $pag['primeiro'] = $i == 0;
+                $pag['chave'] = [$primeiro['valor'], $primeiro['transacao'], $primeiro['codpagamento'], $i];
+                $dias[$d]['pagamentos'][$pag['codpagamento']] = $pag;
+            }
+        }
+
+        return array_filter($dias, fn($dia) => !empty($dia['pagamentos']));
     }
 
     // E encontro de contas, S saiu dinheiro, R entrou, O o resto (folha sem portador)

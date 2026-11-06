@@ -310,7 +310,8 @@
                                 </td>
                                 {!! $celulas($d['totais']) !!}
                             </tr>
-                            {{-- os pagamentos do dia em valor crescente (o do comprovante, ja com o sinal) --}}
+                            {{-- os pagamentos do dia em valor crescente (o do comprovante, ja com o sinal);
+                                 a compensacao logo abaixo do adiantamento que ela consome --}}
                             @foreach ($d['pagamentos'] as $pag)
                                 @php
                                     $valorPag = $pag['valor'];
@@ -325,10 +326,18 @@
                                         $info = count($pag['linhas']) . ' de ' . $pag['linhaspagamento']
                                             . ' títulos no filtro · ' . $info;
                                     }
+                                    // o bloco do adiantamento com a compensacao junta dias
+                                    // diferentes: cada um com a sua data, colados (TASK-272)
+                                    $bloco = !empty($pag['bloco']);
+                                    if ($bloco) {
+                                        $info = $fmtData($pag['transacao']) . ' · ' . $info;
+                                    }
                                 @endphp
-                                <tr class="espaco">
-                                    <td colspan="9"></td>
-                                </tr>
+                                @if (!$bloco || $pag['primeiro'])
+                                    <tr class="espaco">
+                                        <td colspan="9"></td>
+                                    </tr>
+                                @endif
                                 <tr class="pag">
                                     <td class="portador">{{ $pag['portador'] }}</td>
                                     <td colspan="3" class="pessoa">
