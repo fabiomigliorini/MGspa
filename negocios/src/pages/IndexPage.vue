@@ -46,6 +46,11 @@ const iFrameOrcamentoTermicaRef = ref(null)
 
 const hotkeys = (event) => {
   // o cursor ja descansa no campo Barras (useCursorNoLeitor, TASK-244)
+  // atalho só vale tecla de teclado, cujo code é o da própria tecla: o leitor do PDA manda
+  // key 'F8' com code 'F12' a cada leitura, e abria o Receber (TASK-273)
+  if (event.code !== event.key) {
+    return
+  }
   switch (event.key) {
     case 'F1': // Pesquisa
       event.preventDefault()
