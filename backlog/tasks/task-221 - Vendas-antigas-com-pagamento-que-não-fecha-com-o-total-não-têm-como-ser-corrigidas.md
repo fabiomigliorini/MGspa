@@ -3,17 +3,17 @@ id: TASK-221
 title: >-
   Vendas antigas com pagamento que não fecha com o total não têm como ser
   corrigidas
-status: In Progress
+status: To Do
 assignee: []
 created_date: '2026-10-12 01:37'
-updated_date: '2026-11-05 21:45'
+updated_date: '2026-11-10 12:27'
 labels:
   - contas
 dependencies:
   - TASK-218
 priority: high
 type: bug
-ordinal: 3000
+ordinal: 275000
 ---
 
 ## Description
@@ -44,3 +44,9 @@ Como corrigir: decidir depois (Fábio, 11/10/2026).
 - [ ] #6 Vendas em que o dinheiro a mais é do tamanho de um pagamento em dinheiro inteiro (21.284 no dev; não é troco, parece dinheiro lançado junto com outra forma) corrigidas
 - [ ] #7 Vendas com pagamento repetido integrado, com baixa ou cheque, ou que não bate exato sem a cópia (o script não cancela) corrigidas
 <!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Parada até o Fábio decidir como corrigir (09/11/2026). Achados da análise de 09/11: (1) a Venda com diferença só trava a venda antiga no incluir e no trocar para dinheiro, pela sessão do caixa (PagamentoCorrecaoService::sessaoDoDinheiro); antes do go-live o pagamento nem gera movimento no caixa (PortadorMovimentoService::desejadas), então dá para dispensar a sessão nesse período; o indevido e a troca só de valor já funcionam. Nenhuma ação mexe em parcela. (2) As categorias dos critérios não existem no código: todas caem no caso venda da tela Divergências. (3) O pagamento_historico.sql corta em 02/10 (o padrão do dev), mas o go-live em produção foi em 12/10 (CONFERENCIA_INICIO); e não há registro de que ele tenha rodado em produção.
+<!-- SECTION:NOTES:END -->

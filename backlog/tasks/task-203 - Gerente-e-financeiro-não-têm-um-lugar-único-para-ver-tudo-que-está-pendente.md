@@ -1,17 +1,17 @@
 ---
 id: TASK-203
 title: Gerente e financeiro não têm um lugar único para ver tudo que está pendente
-status: In Progress
+status: To Do
 assignee:
   - '@fabio'
 created_date: '2026-10-07 19:27'
-updated_date: '2026-10-13 16:29'
+updated_date: '2026-11-09 20:15'
 labels:
   - contas
 dependencies: []
 priority: medium
 type: feature
-ordinal: 214000
+ordinal: 274000
 ---
 
 ## Description
