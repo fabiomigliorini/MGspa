@@ -115,8 +115,10 @@ const selecionarDoDialog = (barras) => {
 }
 
 // ---- leitor de codigo de barras ----
-// o leitor (USB ou o embutido do Android) escreve no campo invisivel, que guarda o cursor;
-// o Enter do leitor dispara o change (TASK-244)
+// o leitor (USB ou o embutido do Android) escreve no campo, que guarda o cursor; o Enter do
+// leitor dispara o change (TASK-244). O campo nao aparece, mas tambem nao e' opacity: 0: o
+// Chrome trata opacidade zero como invisivel, e o leitor do PDA nao escrevia nele. Fica com
+// tamanho normal, opaco e dentro da tela, so com texto, fundo, borda e cursor transparentes
 const campoLeitor = ref(null)
 const codigoDigitando = ref('')
 let timerDigitando = null
@@ -223,14 +225,14 @@ onUnmounted(() => {
 
     <!-- conteudo normal: so quando o dispositivo esta ativo -->
     <template v-else>
-      <!-- campo do leitor: invisivel, guarda o cursor para o leitor ter onde escrever (TASK-244) -->
+      <!-- campo do leitor: transparente, guarda o cursor para o leitor ter onde escrever (TASK-244) -->
       <input
         ref="campoLeitor"
         v-model="codigoDigitando"
-        class="absolute"
-        style="opacity: 0; pointer-events: none"
+        class="campo-leitor"
         inputmode="none"
         autocomplete="off"
+        autofocus
         @change="lerCampo"
       />
 
@@ -567,3 +569,20 @@ onUnmounted(() => {
     </template>
   </q-page>
 </template>
+
+<style scoped>
+/* fixo no topo, sempre dentro da tela; o toque passa para o que estiver embaixo */
+.campo-leitor {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 12rem;
+  height: 2.5rem;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: transparent;
+  caret-color: transparent;
+  pointer-events: none;
+}
+</style>
