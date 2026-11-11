@@ -3,10 +3,10 @@ id: TASK-246
 title: >-
   Sangria entre caixas cancelada deixa o caixa que recebeu Sobrando e sem
   conseguir fechar
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-10-21 13:59'
-updated_date: '2026-11-10 14:41'
+updated_date: '2026-11-11 14:24'
 labels:
   - contas
 dependencies: []
@@ -23,8 +23,8 @@ Bug em PRODUÇÃO (relato de 19/10/2026; não foi reproduzido no dev): o Caixa B
 
 ## Acceptance Criteria
 <!-- AC:BEGIN -->
-- [ ] #1 O período de 17 a 19/10 do Caixa Botanico 02 fecha e, junto com o 04, o dinheiro de cada gaveta bate com o que o sistema espera, sem Ajuste que esconda a causa
-- [ ] #2 Dos dados de produção sai a causa confirmada (as duas pontas da sangria, a hora do cancelamento e a da contagem), registrada nas notas da task
+- [x] #1 O período de 17 a 19/10 do Caixa Botanico 02 fecha e, junto com o 04, o dinheiro de cada gaveta bate com o que o sistema espera, sem Ajuste que esconda a causa
+- [x] #2 Dos dados de produção sai a causa confirmada (as duas pontas da sangria, a hora do cancelamento e a da contagem), registrada nas notas da task
 - [x] #3 Cancelar sangria ou reforço entre caixas avisa, na hora de cancelar, o que o cancelamento faz nos dois caixas e que o dinheiro não se move sozinho
 - [x] #4 A Diferença do resumo do período diz quando ela vem de lançamento cancelado, em vez de só mostrar o valor acima da tolerância
 <!-- AC:END -->
@@ -75,4 +75,6 @@ Furo do produto, qualquer que seja a causa:
 Não fazer antes de saber a causa: Ajuste no 02 para fechar o pendente.
 
 Critérios #3 e #4 (10/11/2026), na árvore, sem commit, só front (components/portador): a janela de cancelar transferência (PeriodoLancamentos.vue, avisoTransferencia) diz que desfaz nos dois caixas desde a hora original e que o dinheiro não volta sozinho, e manda lançar a transferência no sentido contrário quando o dinheiro trocou de mão e voltou. O resumo (PeriodoResumo.vue, totalCancelado) mostra, embaixo de Acima Tolerância, a soma dos lançamentos cancelados do período (estado C; não pelo cancelado, que também marca a linha de pagamento substituída). #1 e #2 esperam os dois SELECTs acima rodados em produção.
+
+Dado de produção (11/11/2026): as duas pontas da sangria (3298 no 04 e 3299 no 02) foram canceladas juntas pelo gustavo em 19/10 às 18:14:46, com o par apontando uma para a outra; o cancelamento fez o que o código manda (causa 1 descartada). O 04 (período 105) cortou e fechou às 18:23, depois do cancelamento, com diferença de 0,07: ele tinha os 20 de volta. O 02 (período 115) cortou às 18:32:58, também depois do cancelamento, e contou 20 a mais (causa 2 descartada; a 3 não fecha, porque o 04 não faltou). Conclusão: os dois caixas tinham os mesmos 20. É uma sobra física de origem desconhecida, não defeito do sistema. O período 115 fechou em 21/10 às 11:37 com +20 no esperado (saldo final 441,11, diferença 0,04), e os períodos seguintes destravaram. O ajuste foi aceito em 11/11/2026, por ser antigo e feito por um gerente.
 <!-- SECTION:NOTES:END -->

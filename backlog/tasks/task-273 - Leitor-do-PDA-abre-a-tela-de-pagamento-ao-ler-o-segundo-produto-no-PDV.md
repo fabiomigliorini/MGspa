@@ -1,17 +1,17 @@
 ---
 id: TASK-273
 title: Leitor do PDA abre a tela de pagamento ao ler o segundo produto no PDV
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-11-10 19:13'
-updated_date: '2026-11-10 19:16'
+updated_date: '2026-11-11 13:47'
 labels:
   - negocios
 dependencies: []
 priority: high
 type: bug
-ordinal: 284000
+ordinal: 283000
 ---
 
 ## Description
