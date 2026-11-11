@@ -1,16 +1,16 @@
 ---
 id: TASK-264
 title: Parear de novo a maquininha SafraPay cria outra maquineta e inativa a antiga
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-11-04 15:42'
-updated_date: '2026-11-04 18:44'
+updated_date: '2026-11-11 18:34'
 labels:
   - contas
 dependencies: []
 priority: critical
 type: bug
-ordinal: 272000
+ordinal: 3000
 ---
 
 ## Description

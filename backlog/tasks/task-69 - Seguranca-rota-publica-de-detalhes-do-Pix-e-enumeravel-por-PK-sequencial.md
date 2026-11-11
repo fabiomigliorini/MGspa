@@ -1,16 +1,16 @@
 ---
 id: TASK-69
 title: 'Seguranca: rota publica de detalhes do Pix e enumeravel por PK sequencial'
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-09-12 15:54'
-updated_date: '2026-09-12 17:13'
+updated_date: '2026-11-11 18:34'
 labels:
   - api
 dependencies: []
 priority: critical
 type: bug
-ordinal: 72000
+ordinal: 1000
 ---
 
 ## Description

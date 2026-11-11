@@ -3,16 +3,16 @@ id: TASK-272
 title: >-
   No relatório de títulos pagos, a compensação fica em outro dia, longe do
   adiantamento que ela consome
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-11-06 20:23'
-updated_date: '2026-11-06 20:26'
+updated_date: '2026-11-11 18:27'
 labels:
   - contas
 dependencies: []
 priority: high
 type: enhancement
-ordinal: 283000
+ordinal: 284000
 ---
 
 ## Description
