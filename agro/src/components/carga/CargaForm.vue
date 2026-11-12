@@ -26,7 +26,6 @@ import {
   cargaFinalizada,
   cargaPesada,
   sentidoMeta,
-  fmtNumero as fmt,
 } from 'src/utils/carga'
 import { imprimirTicket } from 'src/utils/ticket'
 import CargaBlocoOperacao from './CargaBlocoOperacao.vue'
@@ -358,9 +357,10 @@ function pularEtapasPreenchidas() {
 const finalizando = computed(() => proxima.value === 'FINALIZADO')
 
 // Revisão antes de fechar (`revisando`, declarado no topo): o clique da ÚLTIMA
-// etapa (pesar tara, no recebimento) não grava mais direto — ele valida, mostra a
-// conta fechada e vira "Salvar". O operador confere bruto/desconto/líquido/sacas
-// com o caminhão ainda na balança, e só o segundo clique finaliza o romaneio.
+// etapa (pesar tara, no recebimento) não grava mais direto — ele valida, grava o
+// peso e vira "Salvar". O operador confere bruto/desconto/líquido (Pesagem) e as
+// sacas (card de Origem / Destino) com o caminhão ainda na balança, e só o
+// segundo clique finaliza o romaneio.
 //
 // Mexeu num número, o que ele conferiu não vale mais: volta pra revisão. Só os
 // campos que mudam a conta — um retorno do sync (codcarga/sincronizado) não pode
@@ -646,15 +646,6 @@ defineExpose({
       <CargaBlocoPontos ref="blocoPontos" :carga="local" :novo="ehNova" />
       <CargaBlocoPesagem ref="blocoPesagem" :carga="local" :novo="ehNova" />
       <CargaBlocoClassificacao ref="blocoClassificacao" :carga="local" :novo="ehNova" />
-
-      <q-banner v-if="revisando" dense rounded class="bg-green-1 text-green-9">
-        <template #avatar><q-icon name="fact_check" color="green-8" /></template>
-        Confira a operação: <b>{{ fmt(calc.liquido) }} kg</b> líquidos ·
-        {{ fmt(sacasLiquido, 1) }} sacas.
-        <div class="text-caption">
-          <b>Salvar</b> fecha o romaneio e libera a tela pro próximo caminhão.
-        </div>
-      </q-banner>
 
       <MgInput
         v-model="local.observacao"

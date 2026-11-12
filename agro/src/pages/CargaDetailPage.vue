@@ -11,6 +11,7 @@ import { sentidoMeta, ETAPA_META, fmtNumero, reboques } from 'src/utils/carga'
 import { imprimirTicket, ticketDoServidor } from 'src/utils/ticket'
 import { notifyError } from 'src/utils/notify'
 import { goBack } from 'src/utils/goBack'
+import { useCargaStore } from 'src/stores/carga'
 import CargaEtapaProgresso from 'components/carga/CargaEtapaProgresso.vue'
 
 const route = useRoute()
@@ -20,6 +21,7 @@ const router = useRouter()
 // nova ou por link direto, cai na listagem.
 const voltar = () => goBack(router, { name: 'cargas' })
 const $q = useQuasar()
+const store = useCargaStore()
 
 const carga = ref(null)
 const carregando = ref(false)
@@ -80,6 +82,14 @@ function imprimir() {
   if (!imprimirTicket(ticketDoServidor(carga.value))) {
     $q.notify({ type: 'warning', message: 'Permita pop-ups para imprimir o romaneio.' })
   }
+}
+
+// Abre o pátio com uma carga nova igual a este romaneio (cancelado inclusive).
+// Só abre: nada é gravado até o Registrar da carga nova.
+function duplicar() {
+  if (!carga.value) return
+  store.duplicar(carga.value)
+  router.push({ name: 'carga', params: { uuid: 'nova' } })
 }
 
 // Recarrega ao navegar de um romaneio pro outro sem remontar a página.
@@ -332,9 +342,14 @@ onMounted(() => carregar(route.params.codcarga))
     </div>
 
     <q-page-sticky v-if="carga" position="bottom-right" :offset="[18, 18]">
-      <q-btn fab icon="print" color="primary" @click="imprimir">
-        <q-tooltip>Imprimir romaneio</q-tooltip>
-      </q-btn>
+      <div class="row items-center q-gutter-sm">
+        <q-btn fab icon="content_copy" color="secondary" @click="duplicar">
+          <q-tooltip>Duplicar romaneio</q-tooltip>
+        </q-btn>
+        <q-btn fab icon="print" color="primary" @click="imprimir">
+          <q-tooltip>Imprimir romaneio</q-tooltip>
+        </q-btn>
+      </div>
     </q-page-sticky>
   </q-page>
 </template>

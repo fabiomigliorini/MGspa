@@ -3,17 +3,17 @@ id: TASK-221
 title: >-
   Vendas antigas com pagamento que não fecha com o total não têm como ser
   corrigidas
-status: To Do
+status: In Progress
 assignee: []
-created_date: "2026-10-12 01:37"
-updated_date: "2026-11-11 18:33"
+created_date: '2026-10-12 01:37'
+updated_date: '2026-11-12 18:48'
 labels:
   - contas
 dependencies:
   - TASK-218
 priority: high
 type: bug
-ordinal: 285000
+ordinal: 9000
 ---
 
 ## Description

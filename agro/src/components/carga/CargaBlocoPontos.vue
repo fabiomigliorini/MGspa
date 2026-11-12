@@ -2,6 +2,7 @@
 import { ref, computed, inject } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCargaStore } from 'src/stores/carga'
+import { sacas } from 'src/utils/desconto'
 import {
   CONTATIPO_PADRAO,
   novoPonto,
@@ -69,6 +70,9 @@ function kgDoPonto(p) {
   if (!(liq > 0)) return null
   return Math.round((liq * (Number(p.percentual) || 0)) / 100)
 }
+// Sacas líquidas da carga (líquido ÷ peso da saca da cultura) — null até as
+// duas pesagens. Era o aviso verde da conferência no CargaForm; virou campo fixo.
+const sacasLiquido = computed(() => sacas(calc.value.liquido, store.pesosacaDaCarga(carga.value)))
 function saldoContrato(cod) {
   return store.saldoContratoOffline(cod)
 }
@@ -211,8 +215,11 @@ async function salvar() {
           @click="abrir"
         />
       </div>
-      <div class="row q-col-gutter-lg">
-        <div class="col-12 col-md-6">
+      <!-- Grade 4+4+4 com o mesmo gutter do card de Operação: Origem, Destino e
+           Sacas caem exatamente embaixo de Operação, Safra e Chegada (empilham
+           abaixo do md, como antes). -->
+      <div class="row q-col-gutter-md">
+        <div class="col-12 col-md-4">
           <!-- login/logout: os mesmos ícones que o CargaResumo usa pra origem e
                destino no drawer da direita. -->
           <div class="text-body2 text-grey-6 q-mb-xs">
@@ -232,9 +239,11 @@ async function salvar() {
               <div class="text-h6 text-weight-medium ellipsis">
                 {{ p.rotulo || 'Não informado' }}
               </div>
+              <!-- &nbsp; segura cada pedaço inteiro: na coluna estreita a legenda
+                   só quebra antes do "·" (nunca "R$" ou "≈" sozinho no fim). -->
               <div class="text-caption text-grey-6">
                 {{ fmt(p.percentual, 1) }}%
-                <span v-if="kgDoPonto(p)"> · ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
+                <span v-if="kgDoPonto(p)"> ·&nbsp;≈&nbsp;{{ fmt(kgDoPonto(p)) }}&nbsp;kg</span>
               </div>
             </div>
           </div>
@@ -246,7 +255,7 @@ async function salvar() {
             Soma: {{ fmt(somaPercOrigens, 1) }}%
           </div>
         </div>
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
           <div class="text-body2 text-grey-6 q-mb-xs">
             <q-icon name="logout" size="16px" class="q-mr-xs" />Destino
           </div>
@@ -266,9 +275,10 @@ async function salvar() {
               </div>
               <div class="text-caption text-grey-6">
                 {{ fmt(p.percentual, 1) }}%
-                <span v-if="kgDoPonto(p)"> · ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
+                <span v-if="kgDoPonto(p)"> ·&nbsp;≈&nbsp;{{ fmt(kgDoPonto(p)) }}&nbsp;kg</span>
                 <span v-if="mostrarFiscal && p.numeronf">
-                  · NF {{ p.numeronf }}<span v-if="p.valornf"> · R$ {{ fmt(p.valornf, 2) }}</span>
+                  ·&nbsp;NF&nbsp;{{ p.numeronf
+                  }}<span v-if="p.valornf"> ·&nbsp;R$&nbsp;{{ fmt(p.valornf, 2) }}</span>
                 </span>
               </div>
             </div>
@@ -279,6 +289,15 @@ async function salvar() {
             :class="somaPercBate(destinos) ? 'text-grey-7' : 'text-orange-8'"
           >
             Soma: {{ fmt(somaPercDestinos, 1) }}%
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="text-body2 text-grey-6 q-mb-xs">
+            <q-icon name="inventory_2" size="16px" class="q-mr-xs" />Sacas
+          </div>
+          <!-- Unidade em <small>, como o "kg" do card de Pesagem. -->
+          <div class="text-h6 text-weight-medium text-no-wrap">
+            {{ fmt(sacasLiquido, 1) }} <small v-if="sacasLiquido != null">SC</small>
           </div>
         </div>
       </div>

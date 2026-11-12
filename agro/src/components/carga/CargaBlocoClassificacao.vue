@@ -27,9 +27,15 @@ const temLeitura = computed(() =>
 )
 const idxEtapa = computed(() => indiceEtapa(props.carga))
 const ordem = computed(() => etapasDaCarga(props.carga))
+// Na expedição a classificação é OPCIONAL: não é etapa do fluxo, o card fica à
+// vista com o "+" e as leituras não são obrigatórias (o dialog abre sem etapa).
+// Cultura sem parâmetro não tem o que classificar — o card some em vez de
+// mostrar o aviso laranja em toda expedição.
+const opcional = computed(() => props.carga.sentido === 'SAIDA')
 const mostrarClassificacao = computed(
   () =>
     (props.carga.sentido === 'ENTRADA' && idxEtapa.value >= ordem.value.indexOf('CLASSIFICACAO')) ||
+    (opcional.value && itensCarga.value.length > 0) ||
     temLeitura.value,
 )
 
@@ -187,7 +193,13 @@ async function salvar() {
         </div>
       </div>
       <div v-else-if="itensCarga.length" class="text-grey-6">
-        {{ temLeitura ? 'Todas as leituras em 0%.' : 'Ainda sem leitura.' }}
+        {{
+          temLeitura
+            ? 'Todas as leituras em 0%.'
+            : opcional
+              ? 'Classificação opcional na expedição.'
+              : 'Ainda sem leitura.'
+        }}
       </div>
     </q-card-section>
   </q-card>

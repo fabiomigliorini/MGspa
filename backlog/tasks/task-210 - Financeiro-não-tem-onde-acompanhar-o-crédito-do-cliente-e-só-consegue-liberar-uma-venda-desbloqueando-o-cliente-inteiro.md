@@ -3,15 +3,16 @@ id: TASK-210
 title: >-
   Financeiro não tem onde acompanhar o crédito do cliente e só consegue liberar
   uma venda desbloqueando o cliente inteiro
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-10-10 20:17'
+updated_date: '2026-11-12 18:48'
 labels:
   - contas
 dependencies: []
 priority: high
 type: feature
-ordinal: 222000
+ordinal: 5000
 ---
 
 ## Description
