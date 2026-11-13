@@ -1,5 +1,5 @@
 ---
-id: TASK-258
+id: TASK-260
 title: Toda cópia da base de produção exige trocar o pg_hba.conf para md5 na mão
 status: To Do
 assignee: []

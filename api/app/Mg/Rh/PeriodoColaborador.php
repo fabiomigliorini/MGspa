@@ -25,6 +25,7 @@ class PeriodoColaborador extends MgModel
         'codsetor',
         'codtitulo',
         'encerramento',
+        'faltas',
         'gestor',
         'status',
         'valortotal'
@@ -41,6 +42,7 @@ class PeriodoColaborador extends MgModel
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
         'encerramento' => 'datetime',
+        'faltas' => 'integer',
         'gestor' => 'boolean',
         'valortotal' => 'float'
     ];

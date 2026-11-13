@@ -558,6 +558,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('requisicao/{codrequisicao}/finalizar', [\Mg\Requisicao\RequisicaoController::class, 'finalizar'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/reabrir', [\Mg\Requisicao\RequisicaoController::class, 'reabrir'])->whereNumber('codrequisicao');
         Route::post('requisicao/{codrequisicao}/reprocessar', [\Mg\Requisicao\RequisicaoController::class, 'reprocessar'])->whereNumber('codrequisicao');
+        Route::post('requisicao/{codrequisicao}/retirar', [\Mg\Requisicao\RequisicaoController::class, 'retirar'])->whereNumber('codrequisicao');
         // conferencia do codigo de retirada: poucas tentativas por minuto
         Route::post('requisicao/{codrequisicao}/entregar', [\Mg\Requisicao\RequisicaoController::class, 'entregar'])
             ->whereNumber('codrequisicao')->middleware('throttle:10,1');
@@ -1519,6 +1520,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::post('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/recalcular', '\Mg\Rh\PeriodoColaboradorController@recalcular');
         Route::patch('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/gestor', '\Mg\Rh\PeriodoColaboradorController@toggleGestor');
         Route::patch('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/setor', '\Mg\Rh\PeriodoColaboradorController@atualizarSetor');
+        Route::patch('periodo/{codperiodo}/colaborador/{codperiodocolaborador}/faltas', '\Mg\Rh\PeriodoColaboradorController@atualizarFaltas');
 
         // Catalogo de rubricas (tblrubrica)
         Route::get('rubrica', '\Mg\Rh\RubricaController@index');

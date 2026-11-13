@@ -1,6 +1,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { db } from 'boot/db'
+import MgSelect from '@components/MgSelect.vue'
 
 const props = defineProps({
   somenteAtivos: {
@@ -53,7 +54,7 @@ const pesquisa = (val, update) => {
 }
 </script>
 <template>
-  <q-select
+  <MgSelect
     :options="filtrado"
     use-input
     @filter="pesquisa"
@@ -82,5 +83,5 @@ const pesquisa = (val, update) => {
         </q-item-section>
       </q-item>
     </template>
-  </q-select>
+  </MgSelect>
 </template>

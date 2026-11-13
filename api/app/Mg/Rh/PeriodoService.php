@@ -207,6 +207,8 @@ class PeriodoService
                 $novaRubrica->valorfixo = $rubrica->valorfixo;
                 $novaRubrica->valorunitario = $rubrica->valorunitario;
                 $novaRubrica->quantidade = $rubrica->quantidade;
+                // Dias no setor seguem: vazio pagaria a fatia cheia a quem só cobre alguns dias
+                $novaRubrica->diastrabalhados = $rubrica->diastrabalhados;
                 $novaRubrica->tipocondicao = $rubrica->tipocondicao;
                 $novaRubrica->observacao = $rubrica->observacao;
                 if (!$novaRubrica->exists) {

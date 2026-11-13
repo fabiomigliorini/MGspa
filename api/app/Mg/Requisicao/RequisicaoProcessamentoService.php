@@ -3,6 +3,7 @@
 namespace Mg\Requisicao;
 
 use Illuminate\Support\Facades\DB;
+use Mg\Negocio\NegocioEntrega;
 use Mg\Negocio\NegocioService;
 
 // Processo idempotente da requisicao (TASK-55, doc-6): o unico que grava o atendido
@@ -109,7 +110,7 @@ class RequisicaoProcessamentoService
         $lista = implode(',', $grupo);
 
         $requisicoes = [];
-        foreach (DB::select("select codrequisicao, criacao, cancelamento, finalizacao, status
+        foreach (DB::select("select codrequisicao, criacao, cancelamento, finalizacao, status, destino
                 from tblrequisicao where codrequisicao in ({$lista})") as $r) {
             $requisicoes[(int) $r->codrequisicao] = $r;
         }
@@ -162,9 +163,37 @@ class RequisicaoProcessamentoService
                 'codnegociostatus' => (int) $n->codnegociostatus,
                 'lancamento' => $n->lancamento,
                 'entregue' => $n->entregue,
+                'retirado' => null,
+                'retiradopor' => null,
+                'entreguecliente' => null,
                 'requisicoes' => [],
             ];
             $negocios[$cod]['requisicoes'][] = (int) $n->codrequisicao;
+        }
+
+        // os dois passos da entrega, por etapa: a saida da loja que atende (C: o entregador de
+        // quem pediu buscou, ou o funcionario de quem atende levou a reposicao) e a entrega ao
+        // cliente ou o Recebido da reposicao (E). O tblnegocio.entregue nao serve aqui: na
+        // entrega no endereco ele e' a saida, na reposicao e' o Recebido. Da saida vem tambem
+        // quem levou (ou buscou), para a loja que pediu saber quem esta' trazendo
+        if (!empty($negocios)) {
+            foreach (DB::select("
+                select distinct on (codnegocio, etapa) codnegocio, etapa, data, recebedor
+                from tblnegocioentrega
+                where codnegocio in (" . implode(',', array_keys($negocios)) . ")
+                and inativo is null and resultado in (:entregue, :problema)
+                order by codnegocio, etapa, data, codnegocioentrega
+            ", [
+                'entregue' => NegocioEntrega::RESULTADO_ENTREGUE,
+                'problema' => NegocioEntrega::RESULTADO_PROBLEMA,
+            ]) as $e) {
+                if ($e->etapa === NegocioEntrega::ETAPA_RETIRADA) {
+                    $negocios[(int) $e->codnegocio]['retirado'] = $e->data;
+                    $negocios[(int) $e->codnegocio]['retiradopor'] = $e->recebedor;
+                } else {
+                    $negocios[(int) $e->codnegocio]['entreguecliente'] = $e->data;
+                }
+            }
         }
 
         $fora = [];
@@ -285,8 +314,17 @@ class RequisicaoProcessamentoService
         } else {
             return Requisicao::STATUS_PARCIAL;
         }
-        if (!empty($fechados) && !array_filter($fechados, fn ($n) => empty($n['entregue']))) {
+        // entrega no endereco e reposicao: entregue quando o cliente (ou a loja que pediu)
+        // recebeu todas as partes; saiu para entrega quando todas ja' sairam da loja que atende
+        // (a parte entregue antes de existir a saida conta como saida)
+        $comSaida = in_array($r->destino, Requisicao::DESTINOS_COM_SAIDA);
+        $campo = $comSaida ? 'entreguecliente' : 'entregue';
+        if (!empty($fechados) && !array_filter($fechados, fn ($n) => empty($n[$campo]))) {
             return Requisicao::STATUS_ENTREGUE;
+        }
+        if ($comSaida && !empty($fechados)
+            && !array_filter($fechados, fn ($n) => empty($n['retirado']) && empty($n['entreguecliente']))) {
+            return Requisicao::STATUS_COM_ENTREGADOR;
         }
         return $status;
     }

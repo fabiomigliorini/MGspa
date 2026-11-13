@@ -54,23 +54,6 @@
             margin-bottom: 6px;
         }
 
-        /* Sub-grupo: Unidade de Negócio */
-        .unidade-titulo {
-            font-size: 9pt;
-            font-weight: bold;
-            margin: 8px 0 3px 8px;
-            padding-left: 5px;
-            border-left: 3px solid #888;
-        }
-        .filial-total {
-            text-align: right;
-            font-weight: bold;
-            font-size: 9.5pt;
-            border-top: 1px solid #999;
-            margin-top: 6px;
-            padding-top: 3px;
-        }
-
         /* Tabela */
         table {
             width: 100%;
@@ -102,115 +85,89 @@
             text-align: right;
         }
 
-        /* Total geral */
-        .total-geral {
-            border-top: 2px solid #000;
-            margin-top: 14px;
-            padding-top: 6px;
-            text-align: right;
-            font-size: 11pt;
-            font-weight: bold;
+        .col-cpf {
+            width: 22mm;
         }
 
-        /* Quebra de página entre portadores */
-        .page-break {
-            page-break-before: always;
+        .col-valor {
+            width: 25mm;
+        }
+
+        /* Total geral */
+        table.total-geral {
+            margin-top: 14px;
+            font-size: 10pt;
+        }
+
+        table.total-geral td {
+            border: none;
+            border-top: 2px solid #000;
+            background: none;
+            font-weight: bold;
         }
     </style>
 </head>
 
 <body>
 
-    @if (empty($paginas))
-        <div class="report-header">
-            <div class="report-header-right">
-                <div class="page_number"></div>
-                <div>{{ $dataGeracao }}</div>
-            </div>
-            <h1>Relatório de Acertos</h1>
-            <p>Período: {{ $periodo }}</p>
+    <div class="report-header">
+        <div class="report-header-right">
+            <div class="page_number"></div>
+            <div>{{ $dataGeracao }}</div>
         </div>
-        <p style="color: #666; font-style: italic;">Nenhum acerto efetivado para este período.</p>
+        <h1>Relatório Folha</h1>
+        <p>Recarga Bee e Dinheiro</p>
+        <p>Período: {{ $periodo }}</p>
+    </div>
+
+    @if (empty($empresas))
+        <p style="color: #666; font-style: italic;">Nenhum acerto em Recarga Bee ou Dinheiro neste período.</p>
     @else
-        @foreach ($paginas as $idx => $pagina)
-            <div @if ($idx > 0) class="page-break" @endif>
+        @foreach ($empresas as $emp)
+            <div class="empresa-grupo">
+                <div class="empresa-titulo">{{ $emp['empresa'] }}</div>
 
-                {{-- Cabeçalho --}}
-                <div class="report-header">
-                    <div class="report-header-right">
-                        <div class="page_number"></div>
-                        <div>{{ $dataGeracao }}</div>
-                    </div>
-                    <h1>Relatório de {{ $pagina['nome_portador'] }}</h1>
-                    <p>Período: {{ $periodo }}</p>
-                </div>
-
-                @if (empty($pagina['porFilial']))
-                    <p style="color: #666; font-style: italic;">Nenhum lançamento para este portador.</p>
-                @else
-                    @php $totalGeral = 0; @endphp
-
-                    @foreach ($pagina['porFilial'] as $fil)
-                        @php
-                            $totalFilial = collect($fil['porUnidade'])
-                                ->flatMap(fn ($u) => $u['linhas'])
-                                ->sum('valor');
-                            $totalGeral += $totalFilial;
-                        @endphp
-
-                        <div class="empresa-grupo">
-                            <div class="empresa-titulo">
-                                {{ $fil['filial'] }}
-                                @if ($fil['cnpj_filial'])
-                                    &mdash; CNPJ: {{ formataCnpj($fil['cnpj_filial']) }}
-                                @endif
-                            </div>
-
-                            @foreach ($fil['porUnidade'] as $uni)
-                                @php $totalUnidade = collect($uni['linhas'])->sum('valor'); @endphp
-
-                                <div class="unidade-titulo">{{ $uni['unidade'] ?: 'Sem Unidade' }}</div>
-
-                                <table>
-                                    <thead>
-                                        <tr>
-                                            <th>Nome</th>
-                                            <th>CPF</th>
-                                            <th class="text-right">Valor</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        @foreach ($uni['linhas'] as $linha)
-                                            <tr>
-                                                <td>{{ $linha['nome_colaborador'] }}</td>
-                                                <td>{{ $linha['fisica'] ? formataCpf($linha['cpf_colaborador']) : '' }}</td>
-                                                <td class="text-right">R$ {{ formataNumero($linha['valor']) }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                    <tfoot>
-                                        <tr>
-                                            <td colspan="2">Subtotal {{ $uni['unidade'] ?: 'Sem Unidade' }}</td>
-                                            <td class="text-right">R$ {{ formataNumero($totalUnidade) }}</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-                            @endforeach
-
-                            <div class="filial-total">
-                                Total {{ $fil['filial'] }}: R$ {{ formataNumero($totalFilial) }}
-                            </div>
-                        </div>
-                    @endforeach
-
-                    <div class="total-geral">
-                        TOTAL GERAL: R$ {{ formataNumero($totalGeral) }}
-                    </div>
-                @endif
-
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Nome</th>
+                            <th class="col-cpf">CPF</th>
+                            <th class="col-valor text-right">Recarga Bee</th>
+                            <th class="col-valor text-right">Dinheiro</th>
+                            <th class="col-valor text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach ($emp['linhas'] as $linha)
+                            <tr>
+                                <td>{{ $linha['nome'] }}</td>
+                                <td>{{ $linha['fisica'] ? formataCpf($linha['cpf']) : '' }}</td>
+                                <td class="text-right">{{ $linha['bee'] != 0 ? formataNumero($linha['bee']) : '' }}</td>
+                                <td class="text-right">{{ $linha['dinheiro'] != 0 ? formataNumero($linha['dinheiro']) : '' }}</td>
+                                <td class="text-right">{{ formataNumero($linha['bee'] + $linha['dinheiro']) }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="2">Total {{ $emp['empresa'] }}</td>
+                            <td class="text-right">{{ formataNumero($emp['total_bee']) }}</td>
+                            <td class="text-right">{{ formataNumero($emp['total_dinheiro']) }}</td>
+                            <td class="text-right">{{ formataNumero($emp['total_bee'] + $emp['total_dinheiro']) }}</td>
+                        </tr>
+                    </tfoot>
+                </table>
             </div>
         @endforeach
 
+        <table class="total-geral">
+            <tr>
+                <td>TOTAL GERAL</td>
+                <td class="col-valor text-right">{{ formataNumero($totalBee) }}</td>
+                <td class="col-valor text-right">{{ formataNumero($totalDinheiro) }}</td>
+                <td class="col-valor text-right">{{ formataNumero($totalBee + $totalDinheiro) }}</td>
+            </tr>
+        </table>
     @endif
 
 </body>

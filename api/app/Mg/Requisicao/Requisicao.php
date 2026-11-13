@@ -27,24 +27,36 @@ class Requisicao extends MgModel
 
     const DESTINOS = [
         self::DESTINO_RETIRA => 'Cliente retira',
-        self::DESTINO_ENTREGA => 'Entregar no endereço',
-        self::DESTINO_LOJA => 'Reposição da loja',
+        self::DESTINO_ENTREGA => 'Entrega no endereço',
+        self::DESTINO_LOJA => 'Reposição',
     ];
+
+    // destinos em que a mercadoria sai da loja que atende num passo proprio (etapa C da
+    // entrega, registrada por ela) antes do segundo, da loja que pediu: na entrega no endereco
+    // o entregador de quem pediu busca e depois entrega ao cliente; na reposicao um
+    // funcionario de quem atende leva e a loja que pediu da' o Recebido
+    const DESTINOS_COM_SAIDA = [self::DESTINO_ENTREGA, self::DESTINO_LOJA];
 
     const STATUS_AGUARDANDO = 'A';
     const STATUS_EM_SEPARACAO = 'S';
     const STATUS_PARCIAL = 'P';
     const STATUS_TOTAL = 'T';
     const STATUS_DIVERGENCIA = 'D';
+    // tudo ja' saiu da loja que atende (DESTINOS_COM_SAIDA): na entrega no endereco falta o
+    // cliente receber; na reposicao, a loja que pediu dar o Recebido
+    const STATUS_COM_ENTREGADOR = 'R';
     const STATUS_ENTREGUE = 'E';
     const STATUS_CANCELADA = 'C';
 
+    // um nome por situacao, o mesmo das telas (stores/requisicao.js): P esta' em separacao como
+    // o S, e D esta' separado como o T (a divergencia aparece nos itens)
     const STATUS = [
-        self::STATUS_AGUARDANDO => 'Aguardando',
+        self::STATUS_AGUARDANDO => 'A separar',
         self::STATUS_EM_SEPARACAO => 'Em separação',
-        self::STATUS_PARCIAL => 'Separado parcial',
-        self::STATUS_TOTAL => 'Separado total',
-        self::STATUS_DIVERGENCIA => 'Separado com divergências',
+        self::STATUS_PARCIAL => 'Em separação',
+        self::STATUS_TOTAL => 'Separado',
+        self::STATUS_DIVERGENCIA => 'Separado',
+        self::STATUS_COM_ENTREGADOR => 'Saiu para entrega',
         self::STATUS_ENTREGUE => 'Entregue',
         self::STATUS_CANCELADA => 'Cancelada',
     ];

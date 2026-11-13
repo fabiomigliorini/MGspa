@@ -48,8 +48,8 @@ class EstoqueLocalService extends MgService
     }
 
     // Indicadores de qualidade do estoque do local como requisitado (TASK-55, etapa 11):
-    // os itens das requisicoes que ele atendeu (separado total, com divergencias ou
-    // entregue) criadas no periodo. Conta por item; tudo de colunas gravadas.
+    // os itens das requisicoes que ele atendeu (separado, saiu para entrega ou entregue:
+    // T, D, R, E) criadas no periodo. Conta por item; tudo de colunas gravadas.
     public static function indicadores(int $codestoquelocal, string $inicio, string $fim): array
     {
         $itens = DB::select("
@@ -77,7 +77,7 @@ class EstoqueLocalService extends MgService
             left join tblprodutovariacao pvs on (pvs.codprodutovariacao = pbs.codprodutovariacao)
             left join tblusuario u on (u.codusuario = ri.codusuarioalteracao)
             where r.codestoquelocalrequisitada = :codestoquelocal
-            and r.status in ('T', 'D', 'E')
+            and r.status in ('T', 'D', 'R', 'E')
             and r.criacao >= :inicio
             and r.criacao < (cast(:fim as date) + 1)
             order by r.criacao, r.codrequisicao, ri.codrequisicaoitem

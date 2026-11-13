@@ -73,6 +73,14 @@ export const CONTATIPO_PADRAO = {
   TRANSFERENCIA: { ORIGEM: 'UNIDADE', DESTINO: 'UNIDADE' },
 }
 
+// Combinações de origem/destino por sentido (D2 do doc-5). Espelho de
+// CargaService::PONTOS_POR_SENTIDO, que recusa no servidor o que sair daqui.
+export const PONTOS_POR_SENTIDO = {
+  ENTRADA: { ORIGEM: ['PLANTIO', 'CONTRATO'], DESTINO: ['UNIDADE', 'CONTRATO'] },
+  SAIDA: { ORIGEM: ['UNIDADE'], DESTINO: ['CONTRATO'] },
+  TRANSFERENCIA: { ORIGEM: ['UNIDADE'], DESTINO: ['UNIDADE'] },
+}
+
 // Ícone/cor por tipo de ponto (contatipo). Mora aqui, junto de SENTIDOS e
 // ETAPA_META, porque quem EXIBE o ponto (bloco de origem/destino, resumo)
 // precisa do mesmo par que o SelectContaTipo usa nas opções — sem duplicar o
@@ -259,12 +267,12 @@ export function semearPontos(carga) {
 
 // Troca o sentido de uma carga ainda não pesada: volta pra 1ª etapa do novo
 // fluxo e re-semeia o TIPO dos pontos que o operador ainda não preencheu (os
-// completos ficam — ele pode ter escolhido de propósito).
+// completos ficam se o novo sentido aceita o tipo deles).
 export function aplicarSentido(carga, sentido) {
   carga.sentido = sentido
   carga.etapa = ETAPAS_POR_SENTIDO[sentido][0]
   for (const p of carga.pontos || []) {
-    if (pontoCompleto(p)) continue
+    if (pontoCompleto(p) && PONTOS_POR_SENTIDO[sentido]?.[p.papel]?.includes(p.contatipo)) continue
     p.contatipo = CONTATIPO_PADRAO[sentido]?.[p.papel] || 'UNIDADE'
     p.codplantio = null
     p.codunidadearmazenadora = null

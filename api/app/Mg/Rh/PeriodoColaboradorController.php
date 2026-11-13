@@ -58,30 +58,6 @@ class PeriodoColaboradorController extends Controller
             ->with(['Setor', 'UnidadeNegocio'])
             ->get();
 
-        // Quanto do pool de cada setor coletivo já está distribuído em comissão.
-        // Calculado aqui, uma query para todos: a coleção de coletivos é a mesma
-        // para todo colaborador, então fazer isso no Resource viraria N+1. O
-        // valor viaja no próprio model e sai no JSON junto com o indicador.
-        $rateio = CalculoRubricaService::rateioDistribuido(
-            $coletivos->where('tipo', ProcessarVendaService::TIPO_SETOR)->pluck('codindicador')->all()
-        );
-
-        foreach ($coletivos as $ind) {
-            $dados = $rateio[$ind->codindicador] ?? null;
-
-            if (!$dados || !$dados['pool']) {
-                continue;
-            }
-
-            $ind->rateio = [
-                'pool_percentual' => $dados['pool'],
-                'pool_valor' => round($ind->valoracumulado * $dados['pool'] / 100, 2),
-                'soma_percentual' => $dados['soma'],
-                'distribuido' => $dados['distribuido'],
-                'sobra' => round(100 - $dados['distribuido'], 3),
-            ];
-        }
-
         foreach ($colaboradores as $c) {
             $c->indicadores_pessoais = $indicadores->get($c->codcolaborador, collect());
             $c->indicadores_coletivos = $coletivos;
@@ -255,9 +231,23 @@ class PeriodoColaboradorController extends Controller
         }
     }
 
+    // O RH recalcula qualquer um; o colaborador, só o próprio, pelo Meu Painel (TASK-263).
     public function recalcular(int $codperiodo, int $codperiodocolaborador)
     {
-        Autorizador::autoriza(['Recursos Humanos']);
+        $pc = PeriodoColaborador::where('codperiodo', $codperiodo)
+            ->where('codperiodocolaborador', $codperiodocolaborador)
+            ->firstOrFail();
+
+        if (!Autorizador::pode(['Recursos Humanos'])) {
+            $proprio = MeuPainelService::resolverColaborador();
+            if (!$proprio || $proprio->codcolaborador !== $pc->codcolaborador) {
+                abort(403, 'Você só pode recalcular o seu próprio painel.');
+            }
+        }
+
+        if ($pc->status === PeriodoService::STATUS_COLABORADOR_ENCERRADO) {
+            abort(422, 'Colaborador encerrado — os valores já foram fechados.');
+        }
 
         DB::beginTransaction();
         try {
@@ -298,5 +288,37 @@ class PeriodoColaboradorController extends Controller
         $pc->save();
 
         return new PeriodoColaboradorResource($pc->load('Setor.UnidadeNegocio'));
+    }
+
+    // Faltas do colaborador no período, lançadas no acerto. Descontam as
+    // rubricas do catálogo marcadas "desconta absenteísmo" (TASK-262).
+    public function atualizarFaltas(int $codperiodo, int $codperiodocolaborador, Request $request)
+    {
+        Autorizador::autoriza(['Recursos Humanos']);
+
+        $pc = PeriodoColaborador::with('Periodo')
+            ->where('codperiodo', $codperiodo)
+            ->where('codperiodocolaborador', $codperiodocolaborador)
+            ->firstOrFail();
+
+        $request->validate([
+            'faltas' => 'nullable|integer|min:0|max:' . (int) $pc->Periodo->diasuteis,
+        ]);
+
+        if ($pc->status === PeriodoService::STATUS_COLABORADOR_ENCERRADO) {
+            abort(422, 'Colaborador encerrado — reabra para lançar as faltas.');
+        }
+
+        DB::beginTransaction();
+        try {
+            $pc->faltas = $request->input('faltas') ?: null;
+            $pc->save();
+            CalculoRubricaService::calcularColaborador($codperiodocolaborador);
+            DB::commit();
+            return new PeriodoColaboradorResource($pc->refresh());
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return response()->json(['erro' => $e->getMessage()], 422);
+        }
     }
 }

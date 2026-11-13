@@ -6,14 +6,17 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Mg\Filial\Filial;
 use Mg\Portador\Portador;
+use Mg\Titulo\MovimentoTituloService;
 use Mpdf\Mpdf;
 
 // Titulos pagos no periodo, para a contabilidade (TASK-256): os pagamentos de
 // titulo efetivados em que saiu dinheiro, encontro de contas e folha, ou que
 // mexeram em titulo a pagar; cada um com as linhas ativas dos titulos
 // (principal, juros, multa, desconto e total), por fiscal/gerencial, filial e
-// portador. Filial e gerencial sao do titulo: o pagamento que tem titulos fora
-// do filtro aparece com o valor cheio e so os titulos do filtro.
+// dia, em ordem crescente de valor (TASK-267); a compensacao vai para baixo do
+// adiantamento que ela consome, mesmo de outro dia (TASK-272). Filial e
+// gerencial sao do titulo: o pagamento que tem titulos fora do filtro aparece
+// com o valor cheio e so os titulos do filtro.
 class PagamentoContabilidadeService
 {
     // linhas de titulo
@@ -148,39 +151,47 @@ class PagamentoContabilidadeService
                     and {$ativa('x')}
                 )
             )
-            order by t.gerencial, f.filial, po.portador nulls last, p.transacao, p.codpagamento,
-                t.vencimento, t.numero, mt.codmovimentotitulo
+            order by t.gerencial, f.filial, p.transacao::date, p.codpagamento,
+                mt.total, t.vencimento, t.numero, mt.codmovimentotitulo
             limit {$limite}
         ", $params);
     }
 
-    // fiscal/gerencial > filial > portador > pagamento > linhas, com os totais
-    // de cada nivel
+    // fiscal/gerencial > filial > dia > pagamento > linhas, com os totais de
+    // cada nivel; os pagamentos do dia em valor crescente (o bloco do
+    // adiantamento com a compensacao, junto), e no fim de cada filial o resumo
+    // por portador. As linhas ja chegam por valor (linhas()).
     public static function agrupar(array $linhas): array
     {
         $grupos = [];
         foreach ($linhas as $l) {
             $g = $l->gerencial ? 'G' : 'F';
             $f = $l->codfilial;
-            $p = $l->portador ?? PagamentoService::MEIOS[$l->meio] ?? 'Sem portador';
+            $d = substr($l->transacao, 0, 10);
             $grupos[$g] ??= ['rotulo' => $l->gerencial ? 'Gerencial' : 'Fiscal', 'filiais' => []];
             $filiais = &$grupos[$g]['filiais'];
-            $filiais[$f] ??= ['rotulo' => $l->filial, 'portadores' => []];
-            $portadores = &$filiais[$f]['portadores'];
-            $portadores[$p] ??= ['rotulo' => $p, 'pagamentos' => []];
-            $pagamentos = &$portadores[$p]['pagamentos'];
-            $pagamentos[$l->codpagamento] ??= [
-                'codpagamento' => $l->codpagamento,
-                'transacao' => $l->transacao,
-                'pessoa' => $l->pagamentopessoa,
-                'observacoes' => $l->observacoes,
-                'valor' => (float) $l->pagamentototal,
-                'operacao' => static::operacao($l),
-                'linhaspagamento' => (int) $l->linhaspagamento,
-                'linhas' => [],
-            ];
+            $filiais[$f] ??= ['rotulo' => $l->filial, 'dias' => [], 'portadores' => []];
+            $dias = &$filiais[$f]['dias'];
+            $dias[$d] ??= ['rotulo' => $d, 'pagamentos' => []];
+            $pagamentos = &$dias[$d]['pagamentos'];
+            if (!isset($pagamentos[$l->codpagamento])) {
+                $operacao = static::operacao($l);
+                $pagamentos[$l->codpagamento] = [
+                    'codpagamento' => $l->codpagamento,
+                    'transacao' => $l->transacao,
+                    'portador' => $l->portador ?? PagamentoService::MEIOS[$l->meio] ?? 'Sem portador',
+                    'semportador' => $l->portador === null,
+                    'pessoa' => $l->pagamentopessoa,
+                    'observacoes' => $l->observacoes,
+                    // o valor do comprovante com o sinal das linhas: saiu positivo, entrou negativo
+                    'valor' => $operacao == 'R' ? -(float) $l->pagamentototal : (float) $l->pagamentototal,
+                    'operacao' => $operacao,
+                    'linhaspagamento' => (int) $l->linhaspagamento,
+                    'linhas' => [],
+                ];
+            }
             $pagamentos[$l->codpagamento]['linhas'][] = $l;
-            unset($filiais, $portadores, $pagamentos);
+            unset($filiais, $dias, $pagamentos);
         }
 
         $somar = function (array $itens) {
@@ -194,16 +205,37 @@ class PagamentoContabilidadeService
         };
         foreach ($grupos as &$g) {
             foreach ($g['filiais'] as &$f) {
-                foreach ($f['portadores'] as &$p) {
-                    foreach ($p['pagamentos'] as &$pag) {
+                $f['dias'] = static::juntarCompensacoes($f['dias']);
+                $portadores = [];
+                foreach ($f['dias'] as &$d) {
+                    foreach ($d['pagamentos'] as &$pag) {
                         $pag['totais'] = $somar($pag['linhas']);
                         $pag['parcial'] = count($pag['linhas']) < $pag['linhaspagamento'];
+                        $portadores[$pag['portador']] ??= [
+                            'rotulo' => $pag['portador'],
+                            'semportador' => $pag['semportador'],
+                            'pagamentos' => [],
+                        ];
+                        $portadores[$pag['portador']]['pagamentos'][] = $pag;
                     }
                     unset($pag);
+                    $chave = fn($p) => $p['chave'] ?? [$p['valor'], $p['transacao'], $p['codpagamento'], 0];
+                    uasort($d['pagamentos'], fn($a, $b) => $chave($a) <=> $chave($b));
+                    $d['totais'] = $somar($d['pagamentos']);
+                }
+                unset($d);
+                // resumo por portador: os com nome em ordem alfabetica, sem portador
+                // (Compensacao/Folha) por ultimo
+                uasort($portadores, fn($a, $b) => [$a['semportador'], mb_strtolower($a['rotulo'])]
+                    <=> [$b['semportador'], mb_strtolower($b['rotulo'])]);
+                foreach ($portadores as &$p) {
                     $p['totais'] = $somar($p['pagamentos']);
+                    $p['quantidade'] = count($p['pagamentos']);
+                    unset($p['pagamentos']);
                 }
                 unset($p);
-                $f['totais'] = $somar($f['portadores']);
+                $f['portadores'] = $portadores;
+                $f['totais'] = $somar($f['dias']);
             }
             unset($f);
             $g['totais'] = $somar($g['filiais']);
@@ -216,6 +248,82 @@ class PagamentoContabilidadeService
             'grupos' => $grupos,
             'totais' => $somar($grupos),
         ];
+    }
+
+    // A compensacao vai para baixo do adiantamento que ela consome (TASK-272): o
+    // pagamento que implantou o titulo que ela liquida. Adiantamentos e
+    // compensacoes ligados viram um bloco so', no dia do primeiro, em ordem de
+    // data; o bloco se ordena no dia pelo primeiro. So' o encontro de contas:
+    // a baixa que pagou a diferenca em dinheiro fica no dia dela. O adiantamento
+    // de antes do periodo nao esta' aqui, e a compensacao fica onde esta'.
+    public static function juntarCompensacoes(array $dias): array
+    {
+        // o titulo que nasceu com o pagamento -> o pagamento
+        $implantou = [];
+        $diaDe = [];
+        foreach ($dias as $d => $dia) {
+            foreach ($dia['pagamentos'] as $cod => $pag) {
+                $diaDe[$cod] = $d;
+                if ($pag['operacao'] == 'E') {
+                    continue;
+                }
+                foreach ($pag['linhas'] as $l) {
+                    if ((int) $l->codtipomovimentotitulo == MovimentoTituloService::TIPO_IMPLANTACAO) {
+                        $implantou[$l->codtitulo] = $cod;
+                    }
+                }
+            }
+        }
+        if (empty($implantou)) {
+            return $dias;
+        }
+
+        // a compensacao com cada adiantamento que ela consome; a corrente
+        // (dois adiantamentos numa compensacao, um adiantamento em duas) fecha
+        $pai = [];
+        $raiz = function ($c) use (&$pai) {
+            while (($pai[$c] ?? $c) != $c) {
+                $c = $pai[$c];
+            }
+            return $c;
+        };
+        foreach ($dias as $dia) {
+            foreach ($dia['pagamentos'] as $cod => $pag) {
+                if ($pag['operacao'] != 'E') {
+                    continue;
+                }
+                foreach ($pag['linhas'] as $l) {
+                    $adto = $implantou[$l->codtitulo] ?? null;
+                    if ($adto !== null && $raiz($adto) != $raiz($cod)) {
+                        $pai[$raiz($cod)] = $raiz($adto);
+                    }
+                }
+            }
+        }
+        $blocos = [];
+        foreach (array_keys($pai) as $cod) {
+            $blocos[$raiz($cod)][$cod] = true;
+            $blocos[$raiz($cod)][$raiz($cod)] = true;
+        }
+
+        foreach ($blocos as $membros) {
+            $pags = [];
+            foreach (array_keys($membros) as $cod) {
+                $pags[] = $dias[$diaDe[$cod]]['pagamentos'][$cod];
+                unset($dias[$diaDe[$cod]]['pagamentos'][$cod]);
+            }
+            usort($pags, fn($a, $b) => [$a['transacao'], $a['codpagamento']] <=> [$b['transacao'], $b['codpagamento']]);
+            $primeiro = $pags[0];
+            $d = $diaDe[$primeiro['codpagamento']];
+            foreach ($pags as $i => $pag) {
+                $pag['bloco'] = $primeiro['codpagamento'];
+                $pag['primeiro'] = $i == 0;
+                $pag['chave'] = [$primeiro['valor'], $primeiro['transacao'], $primeiro['codpagamento'], $i];
+                $dias[$d]['pagamentos'][$pag['codpagamento']] = $pag;
+            }
+        }
+
+        return array_filter($dias, fn($dia) => !empty($dia['pagamentos']));
     }
 
     // E encontro de contas, S saiu dinheiro, R entrou, O o resto (folha sem portador)

@@ -75,15 +75,19 @@ const envolvidas = computed(() =>
   props.linhas.filter((l) => Number(l.extrato) !== 0 || Number(l.recarga) !== 0),
 )
 
+// Cada palavra digitada tem que estar no nome ou no setor, em qualquer ordem
+// ("luiz sec" acha "Luiz Benedito Secolini"). O CPF só entra quando há número
+// digitado: sem dígito, includes('') casaria com todo mundo.
 const filtradas = computed(() => {
   const termo = semAcento(busca.value).trim()
   if (!termo) return envolvidas.value
-  return envolvidas.value.filter(
-    (l) =>
-      semAcento(l.nome).includes(termo) ||
-      semAcento(l.setor).includes(termo) ||
-      String(l.cpf || '').includes(termo.replace(/\D/g, '')),
-  )
+  const palavras = termo.split(/\s+/)
+  const digitos = termo.replace(/\D/g, '')
+  return envolvidas.value.filter((l) => {
+    const texto = semAcento(l.nome + ' ' + (l.setor || ''))
+    if (palavras.every((p) => texto.includes(p))) return true
+    return !!digitos && String(l.cpf || '').includes(digitos)
+  })
 })
 
 const marcada = (l) => !!marcados.value[l.codperiodocolaborador]

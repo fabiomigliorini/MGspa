@@ -18,7 +18,8 @@ use Mg\Usuario\Autorizador;
 // O status nao se grava aqui: quem decide e' o RequisicaoProcessamentoService.
 class RequisicaoService
 {
-    // a linha das listas (painel e listagem): as duas lojas, quem retira e quantos itens
+    // a linha das listas (painel e listagem): as duas lojas, quem pediu (o usuario), quem
+    // retira e quantos itens
     // nao atendida: finalizada (D) sem nenhuma parte separada (negocio fechado ligado), a
     // loja que atende nao tinha. Nao e' status gravado: e' a D sem parte, a tela mostra
     // "Nao atendida" e o painel nao mostra (nao ha' o que entregar nem receber)
@@ -38,10 +39,12 @@ class RequisicaoService
             eld.estoquelocal as requisitada,
             (select count(*) from tblrequisicaoitem ri
               where ri.codrequisicao = r.codrequisicao and ri.quantidade > 0) as itens,
-            " . self::SQL_NAO_ATENDIDA . " as naoatendida
+            " . self::SQL_NAO_ATENDIDA . " as naoatendida,
+            uc.usuario as usuariocriacao
         from tblrequisicao r
         inner join tblestoquelocal elr on (elr.codestoquelocal = r.codestoquelocalrequisitante)
         left join tblestoquelocal eld on (eld.codestoquelocal = r.codestoquelocalrequisitada)
+        left join tblusuario uc on (uc.codusuario = r.codusuariocriacao)
     ";
 
     const POR_PAGINA = 50;
@@ -64,27 +67,36 @@ class RequisicaoService
         return Autorizador::pode(['Gerente']);
     }
 
+    // pode([]) e' so' o Administrador
+    public static function ehAdministrador(): bool
+    {
+        return Autorizador::pode([]);
+    }
+
+    // Os botoes sao do lado do PDV (28/10/2026): quem pede edita, cancela, troca a prioridade e
+    // da' o recebido; quem atende separa, justifica, finaliza e entrega ao cliente. Gerente nao
+    // faz o servico do outro lado; so' o Administrador age em qualquer PDV.
     public static function podeEditar(Requisicao $req, ?Pdv $pdv): bool
     {
         return $req->status == Requisicao::STATUS_AGUARDANDO
-            && (static::ehRequisitante($req, $pdv) || static::ehGerente());
+            && (static::ehRequisitante($req, $pdv) || static::ehAdministrador());
     }
 
     public static function podeCancelar(Requisicao $req, ?Pdv $pdv): bool
     {
         return !in_array($req->status, [Requisicao::STATUS_CANCELADA, Requisicao::STATUS_ENTREGUE])
-            && (static::ehRequisitante($req, $pdv) || static::ehGerente());
+            && (static::ehRequisitante($req, $pdv) || static::ehAdministrador());
     }
 
-    // justificar os itens e finalizar: quem atende ou Gerente, enquanto a separacao nao
-    // acabou (tambem sem nada separado: e' assim que quem atende diz que nao tem)
+    // justificar os itens e finalizar: quem atende, enquanto a separacao nao acabou (tambem
+    // sem nada separado: e' assim que quem atende diz que nao tem)
     public static function podeFinalizar(Requisicao $req, ?Pdv $pdv): bool
     {
         return in_array($req->status, [
             Requisicao::STATUS_AGUARDANDO,
             Requisicao::STATUS_EM_SEPARACAO,
             Requisicao::STATUS_PARCIAL,
-        ]) && (static::ehRequisitada($req, $pdv) || static::ehGerente());
+        ]) && (static::ehRequisitada($req, $pdv) || static::ehAdministrador());
     }
 
     // separar: so' a loja que atende, enquanto nao esta' finalizada
@@ -97,8 +109,7 @@ class RequisicaoService
         ]) && static::ehRequisitada($req, $pdv);
     }
 
-    // trocar a prioridade: quem pediu ou Administrador (pode([]) e' so' o Administrador),
-    // enquanto a requisicao esta' aberta
+    // trocar a prioridade: quem pediu, enquanto a requisicao esta' aberta
     public static function podePrioridade(Requisicao $req, ?Pdv $pdv): bool
     {
         return in_array($req->status, [
@@ -107,15 +118,15 @@ class RequisicaoService
             Requisicao::STATUS_PARCIAL,
             Requisicao::STATUS_TOTAL,
             Requisicao::STATUS_DIVERGENCIA,
-        ]) && (static::ehRequisitante($req, $pdv) || Autorizador::pode([]));
+        ]) && (static::ehRequisitante($req, $pdv) || static::ehAdministrador());
     }
 
-    // reabrir, desfazendo o Finalizar com divergencias (tambem a nao atendida): Administrador
-    // em qualquer PDV; Gerente so' no PDV da loja que atende (pode([]) e' so' o Administrador)
+    // reabrir, desfazendo o Finalizar com divergencias (tambem a nao atendida): o Gerente, no
+    // PDV da loja que atende
     public static function podeReabrir(Requisicao $req, ?Pdv $pdv): bool
     {
         return $req->status == Requisicao::STATUS_DIVERGENCIA
-            && (Autorizador::pode([]) || (static::ehGerente() && static::ehRequisitada($req, $pdv)));
+            && (static::ehAdministrador() || (static::ehGerente() && static::ehRequisitada($req, $pdv)));
     }
 
     // depois de criada, a prioridade so' muda aqui, com o motivo na auditoria
@@ -147,7 +158,7 @@ class RequisicaoService
     protected static function exigirJustificar(Requisicao $req, ?Pdv $pdv): void
     {
         if (!static::podeFinalizar($req, $pdv)) {
-            abort(403, 'Só a loja que atende ou um Gerente justifica e finaliza, e só enquanto a separação não acabou (finalizada, reabra antes)!');
+            abort(403, 'Só a loja que atende justifica e finaliza, e só enquanto a separação não acabou (finalizada, reabra antes)!');
         }
     }
 
@@ -302,7 +313,7 @@ class RequisicaoService
     public static function atualizar(Requisicao $req, array $dados, Pdv $pdv): Requisicao
     {
         if (!static::podeEditar($req, $pdv)) {
-            abort(422, 'Só a loja que pediu ou um Gerente altera, e só enquanto a requisição está aguardando!');
+            abort(422, 'Só a loja que pediu altera, e só enquanto a requisição está aguardando!');
         }
         $dados['codestoquelocalrequisitante'] = $req->codestoquelocalrequisitante;
         static::validarCabecalho($dados);
@@ -316,14 +327,15 @@ class RequisicaoService
     public static function cancelar(Requisicao $req, Pdv $pdv): Requisicao
     {
         if (!static::podeCancelar($req, $pdv)) {
-            abort(403, 'Só a loja que pediu ou um Gerente cancela a requisição!');
+            abort(403, 'Só a loja que pediu cancela a requisição!');
         }
+        // a separacao so' a loja que separou cancela (RequisicaoNegocioService::validarCancelamento)
         $ativos = RequisicaoProcessamentoService::negociosAtivos($req);
         if (!empty($ativos)) {
-            abort(422, 'Cancele antes o(s) negócio(s) de transferência ' . implode(', ', array_map(
+            abort(422, ($req->EstoqueLocalRequisitada?->estoquelocal ?? 'Compras') . " precisa cancelar antes a separação (negócio(s) " . implode(', ', array_map(
                 fn ($cod) => '#' . str_pad($cod, 8, '0', STR_PAD_LEFT),
                 $ativos
-            )) . '!');
+            )) . ')!');
         }
         $req->cancelamento = now();
         $req->codusuariocancelamento = Auth::user()?->codusuario;
@@ -456,26 +468,24 @@ class RequisicaoService
     }
 
     // Painel por loja: o que ela tem para atender (requisitada) e o que ela pediu
-    // (requisitante), a tela separa. Separada (total ou finalizada) sai de quem separou e
-    // fica so' para quem recebe: na reposicao, a loja que pediu; na retirada/entrega, a
-    // propria loja que separou entrega ao cliente, entao fica nela tambem. Da mais urgente
-    // para a menos e, na mesma prioridade, da mais antiga para a mais nova; as entregues,
-    // nao atendidas (SQL_NAO_ATENDIDA) e canceladas ficam na listagem.
+    // (requisitante), a tela separa. Fica nas duas lojas ate' a entrega: quem separou acompanha
+    // o separado e o que saiu para entrega (TASK-261) ate' quem pediu dar o Recebido ou
+    // entregar ao cliente. Da mais urgente para a menos e, na mesma prioridade, da mais antiga
+    // para a mais nova; as entregues, nao atendidas (SQL_NAO_ATENDIDA) e canceladas ficam na
+    // listagem.
     public static function painel(int $codestoquelocal): array
     {
         $sql = self::SELECT_LISTA . "
-            where (
-                (r.codestoquelocalrequisitada = :codestoquelocal and (
-                    r.status in ('A', 'S', 'P')
-                    or (r.status in ('T', 'D') and r.destino in ('R', 'E'))
-                ))
-                or (r.codestoquelocalrequisitante = :codestoquelocal2 and r.status in ('A', 'S', 'P', 'T', 'D'))
-            )
+            where (r.codestoquelocalrequisitada = :codestoquelocal or r.codestoquelocalrequisitante = :codestoquelocal2)
+            and r.status in ('A', 'S', 'P', 'T', 'D', 'R')
             and not " . self::SQL_NAO_ATENDIDA . "
             order by r.prioridade desc, r.criacao, r.codrequisicao
             limit 500
         ";
-        return DB::select($sql, ['codestoquelocal' => $codestoquelocal, 'codestoquelocal2' => $codestoquelocal]);
+        return DB::select($sql, [
+            'codestoquelocal' => $codestoquelocal,
+            'codestoquelocal2' => $codestoquelocal,
+        ]);
     }
 
     // Listagem: todas as requisicoes, da mais nova para a mais antiga, nos filtros
@@ -484,11 +494,20 @@ class RequisicaoService
     {
         $where = ['true'];
         $bind = [];
-        foreach (['codrequisicao', 'codnegocio', 'codpessoa', 'codestoquelocalrequisitante', 'codestoquelocalrequisitada', 'status', 'destino', 'prioridade'] as $campo) {
+        foreach (['codrequisicao', 'codnegocio', 'codpessoa', 'codestoquelocalrequisitante', 'codestoquelocalrequisitada', 'destino', 'prioridade'] as $campo) {
             if (!empty($filtros[$campo])) {
                 $where[] = "r.{$campo} = :{$campo}";
                 $bind[$campo] = $filtros[$campo];
             }
+        }
+        // o status pode vir em lista ("S,P"): o filtro da tela junta os que tem o mesmo nome
+        if (!empty($filtros['status'])) {
+            $marcas = [];
+            foreach (explode(',', $filtros['status']) as $i => $letra) {
+                $marcas[] = ":status{$i}";
+                $bind["status{$i}"] = $letra;
+            }
+            $where[] = 'r.status in (' . implode(', ', $marcas) . ')';
         }
         if (!empty($filtros['de'])) {
             $where[] = 'r.criacao >= :de';

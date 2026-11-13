@@ -4,6 +4,8 @@ namespace Mg\Requisicao;
 
 use Exception;
 use Mg\Negocio\Negocio;
+use Mg\Negocio\NegocioEntrega;
+use Mg\Pdv\Pdv;
 
 // O que o negocio do PDV carrega da requisicao (TASK-55, doc-6): so' a lista das
 // requisicoes que ele atende. Gravar a lista e conferir a coerencia no Fechar; o
@@ -61,6 +63,31 @@ class RequisicaoNegocioService
             ->get();
     }
 
+    // No Cancelar (TASK-261): a separacao de requisicao so' a loja que separou cancela (ou o
+    // Administrador), tambem depois de sair; cancelada, a requisicao volta a "A separar" e quem
+    // pediu pode cancelar ela. Entregue ao cliente ou recebida nao cancela: estorna antes, como
+    // no reabrir. A saida (etapa C) nao trava, e o tblnegocio.entregue nao serve: na entrega no
+    // endereco ele ja' marca na retirada pelo entregador
+    public static function validarCancelamento(Negocio $negocio, ?Pdv $pdv): void
+    {
+        $req = static::requisicoesAtivas($negocio->codnegocio)->first();
+        if (!$req) {
+            return;
+        }
+        $cod = str_pad($req->codrequisicao, 8, '0', STR_PAD_LEFT);
+        if (!RequisicaoService::ehRequisitada($req, $pdv) && !RequisicaoService::ehAdministrador()) {
+            abort(403, "Este negócio é a separação da requisição #{$cod}: só " . ($req->EstoqueLocalRequisitada?->estoquelocal ?? 'quem separou') . " cancela.");
+        }
+        $chegou = NegocioEntrega::where('codnegocio', $negocio->codnegocio)
+            ->where('etapa', NegocioEntrega::ETAPA_CLIENTE)
+            ->whereNull('inativo')->exists();
+        if ($chegou) {
+            abort(422, $req->destino === Requisicao::DESTINO_LOJA
+                ? "Este negócio da requisição #{$cod} já foi recebido pela loja que pediu: estorne o recebido antes de cancelar."
+                : "Este negócio da requisição #{$cod} já foi entregue ao cliente: estorne a entrega antes de cancelar.");
+        }
+    }
+
     // No Fechar: cada requisicao ligada existe, esta' aberta, e' atendida pela loja do
     // negocio e vai para a loja destino dele; todas com o mesmo destino da mercadoria e,
     // na retirada/entrega, do mesmo cliente. Divergiu, recusa mostrando o que.
@@ -80,9 +107,10 @@ class RequisicaoNegocioService
                 Requisicao::STATUS_CANCELADA,
                 Requisicao::STATUS_TOTAL,
                 Requisicao::STATUS_DIVERGENCIA,
+                Requisicao::STATUS_COM_ENTREGADOR,
                 Requisicao::STATUS_ENTREGUE,
             ])) {
-                $erros[] = "a requisição {$cod} está " . mb_strtolower(Requisicao::STATUS[$req->status]);
+                $erros[] = "a requisição {$cod} não aceita mais separação (situação: " . Requisicao::STATUS[$req->status] . ')';
             }
             if ($req->codestoquelocalrequisitada != $negocio->codestoquelocal) {
                 $erros[] = "a requisição {$cod} é para "

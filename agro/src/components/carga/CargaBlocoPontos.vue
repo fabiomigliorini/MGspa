@@ -2,6 +2,7 @@
 import { ref, computed, inject } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCargaStore } from 'src/stores/carga'
+import { sacas } from 'src/utils/desconto'
 import {
   CONTATIPO_PADRAO,
   novoPonto,
@@ -29,7 +30,7 @@ const props = defineProps({
 })
 
 const store = useCargaStore()
-const { unidadesAtivas } = storeToRefs(store)
+const { unidades } = storeToRefs(store)
 
 // Providos pelo CargaForm.vue.
 const persistirBloco = inject('persistirBloco')
@@ -51,11 +52,15 @@ const somaPercDestinos = computed(() => somaPercentual(destinos.value))
 // Linha semeada sem talhão/unidade/contrato escolhido não conta como informada.
 const temDados = computed(() => (carga.value.pontos || []).some(pontoCompleto))
 
-const temNf = computed(() => (carga.value.pontos || []).some((p) => !!p.numeronf || p.valornf != null))
+const temNf = computed(() =>
+  (carga.value.pontos || []).some((p) => !!p.numeronf || p.valornf != null),
+)
 const idxEtapa = computed(() => indiceEtapa(carga.value))
 const ordem = computed(() => etapasDaCarga(carga.value))
 const mostrarFiscal = computed(
-  () => (carga.value.sentido === 'SAIDA' && idxEtapa.value >= ordem.value.indexOf('FISCAL')) || temNf.value,
+  () =>
+    (carga.value.sentido === 'SAIDA' && idxEtapa.value >= ordem.value.indexOf('FISCAL')) ||
+    temNf.value,
 )
 
 // kg estimado de um ponto — só depois de pesar (líquido já salvo × %). Serve
@@ -65,14 +70,46 @@ function kgDoPonto(p) {
   if (!(liq > 0)) return null
   return Math.round((liq * (Number(p.percentual) || 0)) / 100)
 }
+// Sacas líquidas da carga (líquido ÷ peso da saca da cultura) — null até as
+// duas pesagens. Era o aviso verde da conferência no CargaForm; virou campo fixo.
+const sacasLiquido = computed(() => sacas(calc.value.liquido, store.pesosacaDaCarga(carga.value)))
 function saldoContrato(cod) {
   return store.saldoContratoOffline(cod)
+}
+// Silo de origem (TASK-130): baixa a parte do BRUTO (D6) e não pode tirar mais
+// que o saldo dele na safra da carga. Carga já finalizada no servidor está no
+// snapshot do saldo — nela a conta não vale (contaria em dobro); o servidor
+// confere de novo de qualquer jeito.
+function brutoDoPonto(p) {
+  const bru = Number(calc.value.bruto)
+  if (!(bru > 0)) return null
+  return Math.round((bru * (Number(p.percentual) || 0)) / 100)
+}
+const confereSaldoSilo = computed(() => carga.value.etapa !== 'FINALIZADO')
+function saldoSilo(cod) {
+  return store.saldoUnidadeOffline(cod, edicao.value.codsafra)
+}
+function faltaNoSilo(p) {
+  if (!confereSaldoSilo.value || !p.codunidadearmazenadora) return 0
+  const tira = origensEdicao.value
+    .filter(
+      (o) => o.contatipo === 'UNIDADE' && o.codunidadearmazenadora === p.codunidadearmazenadora,
+    )
+    .reduce((s, o) => s + (brutoDoPonto(o) || 0), 0)
+  const falta = tira - saldoSilo(p.codunidadearmazenadora)
+  return falta > 1 ? falta : 0
+}
+// Silos já escolhidos num lado — o outro lado não oferece o mesmo silo.
+function silosDo(papel) {
+  return edicao.value.pontos
+    .filter((p) => p.papel === papel && p.contatipo === 'UNIDADE' && p.codunidadearmazenadora)
+    .map((p) => p.codunidadearmazenadora)
 }
 function rotuloPlantio(cod) {
   return store.plantioPorId(cod)?.rotulo || null
 }
 function rotuloUnidade(cod) {
-  return unidadesAtivas.value.find((o) => o.codunidadearmazenadora === cod)?.unidadearmazenadora || null
+  return unidades.value.find((o) => o.codunidadearmazenadora === cod)?.unidadearmazenadora || null
 }
 
 // ---- Edição (cópia local — clone do array de pontos + codsafra, que pode
@@ -178,8 +215,11 @@ async function salvar() {
           @click="abrir"
         />
       </div>
-      <div class="row q-col-gutter-lg">
-        <div class="col-12 col-md-6">
+      <!-- Grade 4+4+4 com o mesmo gutter do card de Operação: Origem, Destino e
+           Sacas caem exatamente embaixo de Operação, Safra e Chegada (empilham
+           abaixo do md, como antes). -->
+      <div class="row q-col-gutter-md">
+        <div class="col-12 col-md-4">
           <!-- login/logout: os mesmos ícones que o CargaResumo usa pra origem e
                destino no drawer da direita. -->
           <div class="text-body2 text-grey-6 q-mb-xs">
@@ -199,17 +239,23 @@ async function salvar() {
               <div class="text-h6 text-weight-medium ellipsis">
                 {{ p.rotulo || 'Não informado' }}
               </div>
+              <!-- &nbsp; segura cada pedaço inteiro: na coluna estreita a legenda
+                   só quebra antes do "·" (nunca "R$" ou "≈" sozinho no fim). -->
               <div class="text-caption text-grey-6">
                 {{ fmt(p.percentual, 1) }}%
-                <span v-if="kgDoPonto(p)"> · ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
+                <span v-if="kgDoPonto(p)"> ·&nbsp;≈&nbsp;{{ fmt(kgDoPonto(p)) }}&nbsp;kg</span>
               </div>
             </div>
           </div>
-          <div v-if="origens.length > 1" class="text-caption" :class="somaPercBate(origens) ? 'text-grey-7' : 'text-orange-8'">
+          <div
+            v-if="origens.length > 1"
+            class="text-caption"
+            :class="somaPercBate(origens) ? 'text-grey-7' : 'text-orange-8'"
+          >
             Soma: {{ fmt(somaPercOrigens, 1) }}%
           </div>
         </div>
-        <div class="col-12 col-md-6">
+        <div class="col-12 col-md-4">
           <div class="text-body2 text-grey-6 q-mb-xs">
             <q-icon name="logout" size="16px" class="q-mr-xs" />Destino
           </div>
@@ -229,15 +275,29 @@ async function salvar() {
               </div>
               <div class="text-caption text-grey-6">
                 {{ fmt(p.percentual, 1) }}%
-                <span v-if="kgDoPonto(p)"> · ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
+                <span v-if="kgDoPonto(p)"> ·&nbsp;≈&nbsp;{{ fmt(kgDoPonto(p)) }}&nbsp;kg</span>
                 <span v-if="mostrarFiscal && p.numeronf">
-                  · NF {{ p.numeronf }}<span v-if="p.valornf"> · R$ {{ fmt(p.valornf, 2) }}</span>
+                  ·&nbsp;NF&nbsp;{{ p.numeronf
+                  }}<span v-if="p.valornf"> ·&nbsp;R$&nbsp;{{ fmt(p.valornf, 2) }}</span>
                 </span>
               </div>
             </div>
           </div>
-          <div v-if="destinos.length > 1" class="text-caption" :class="somaPercBate(destinos) ? 'text-grey-7' : 'text-orange-8'">
+          <div
+            v-if="destinos.length > 1"
+            class="text-caption"
+            :class="somaPercBate(destinos) ? 'text-grey-7' : 'text-orange-8'"
+          >
             Soma: {{ fmt(somaPercDestinos, 1) }}%
+          </div>
+        </div>
+        <div class="col-12 col-md-4">
+          <div class="text-body2 text-grey-6 q-mb-xs">
+            <q-icon name="inventory_2" size="16px" class="q-mr-xs" />Sacas
+          </div>
+          <!-- Unidade em <small>, como o "kg" do card de Pesagem. -->
+          <div class="text-h6 text-weight-medium text-no-wrap">
+            {{ fmt(sacasLiquido, 1) }} <small v-if="sacasLiquido != null">SC</small>
           </div>
         </div>
       </div>
@@ -271,81 +331,103 @@ async function salvar() {
               <div class="row items-center q-mb-xs">
                 <div class="text-subtitle2 text-grey-8">Origem do grão</div>
                 <q-space />
-                <q-btn flat round dense size="sm" color="primary" icon="add" @click="addPonto('ORIGEM')">
+                <q-btn
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="primary"
+                  icon="add"
+                  @click="addPonto('ORIGEM')"
+                >
                   <q-tooltip>Adicionar origem</q-tooltip>
                 </q-btn>
               </div>
-              <div
-                v-for="(p, i) in origensEdicao"
-                :key="'o' + i"
-                class="row q-col-gutter-sm items-center q-mb-xs"
-              >
-                <!-- `bottom-slots`: os campos ao lado têm :rules e o Quasar reserva 20px
+              <div v-for="(p, i) in origensEdicao" :key="'o' + i" class="q-mb-xs">
+                <div class="row q-col-gutter-sm items-center">
+                  <!-- `bottom-slots`: os campos ao lado têm :rules e o Quasar reserva 20px
                      embaixo deles (q-field--with-bottom). Sem reservar aqui também, este
                      select desce 10px em relação ao resto da linha. -->
-                <SelectContaTipo
-                  v-model="p.contatipo"
-                  papel="ORIGEM"
-                  label="Origem"
-                  bottom-slots
-                  class="col-4"
-                  @update:model-value="onTipoChange(p)"
-                />
-                <SelectTalhao
-                  v-if="p.contatipo === 'PLANTIO'"
-                  :model-value="p.codplantio"
-                  :codsafra="edicao.codsafra"
-                  class="col"
-                  lazy-rules
-                  :rules="[(v) => !!v || 'Selecione o talhão.']"
-                  @update:model-value="(v) => onEntidade(p, v)"
-                  @select="onPlantioSelecionado"
-                />
-                <SelectUnidade
-                  v-else-if="p.contatipo === 'UNIDADE'"
-                  :model-value="p.codunidadearmazenadora"
-                  class="col"
-                  lazy-rules
-                  :rules="[(v) => !!v || 'Selecione a unidade.']"
-                  @update:model-value="(v) => onEntidade(p, v)"
-                />
-                <SelectContrato
-                  v-else
-                  :model-value="p.codcontrato"
-                  operacao="compra"
-                  class="col"
-                  lazy-rules
-                  :rules="[(v) => !!v || 'Selecione o contrato.']"
-                  @update:model-value="(v) => onEntidade(p, v)"
-                />
-                <MgInputValor
-                  v-model="p.percentual"
-                  :decimals="1"
-                  suffix="%"
-                  :min="0"
-                  :max="100"
-                  label="%"
-                  :readonly="origensEdicao.length === 1"
-                  class="col-3"
-                  lazy-rules
-                  :rules="[
-                    () => !finalizando || somaPercBate(origensEdicao) || 'Soma dos % deve ser 100',
-                  ]"
-                />
-                <!-- Só nas linhas a mais: origem e destino são obrigatórios, a última
+                  <SelectContaTipo
+                    v-model="p.contatipo"
+                    papel="ORIGEM"
+                    :sentido="carga.sentido"
+                    label="Origem"
+                    bottom-slots
+                    class="col-4"
+                    @update:model-value="onTipoChange(p)"
+                  />
+                  <SelectTalhao
+                    v-if="p.contatipo === 'PLANTIO'"
+                    :model-value="p.codplantio"
+                    :codsafra="edicao.codsafra"
+                    class="col"
+                    lazy-rules
+                    :rules="[(v) => !!v || 'Selecione o talhão.']"
+                    @update:model-value="(v) => onEntidade(p, v)"
+                    @select="onPlantioSelecionado"
+                  />
+                  <SelectUnidade
+                    v-else-if="p.contatipo === 'UNIDADE'"
+                    :model-value="p.codunidadearmazenadora"
+                    :excluir="silosDo('DESTINO')"
+                    class="col"
+                    lazy-rules
+                    :rules="[
+                      (v) => !!v || 'Selecione a unidade.',
+                      () => !faltaNoSilo(p) || 'Silo sem saldo para esta carga.',
+                    ]"
+                    @update:model-value="(v) => onEntidade(p, v)"
+                  />
+                  <SelectContrato
+                    v-else
+                    :model-value="p.codcontrato"
+                    operacao="compra"
+                    :codsafra="edicao.codsafra"
+                    class="col"
+                    lazy-rules
+                    :rules="[(v) => !!v || 'Selecione o contrato.']"
+                    @update:model-value="(v) => onEntidade(p, v)"
+                  />
+                  <MgInputValor
+                    v-model="p.percentual"
+                    :decimals="1"
+                    suffix="%"
+                    :min="0"
+                    :max="100"
+                    label="%"
+                    :readonly="origensEdicao.length === 1"
+                    class="col-3"
+                    lazy-rules
+                    :rules="[
+                      () =>
+                        !finalizando || somaPercBate(origensEdicao) || 'Soma dos % deve ser 100',
+                    ]"
+                  />
+                  <!-- Só nas linhas a mais: origem e destino são obrigatórios, a última
                      linha não sai. Linha que não dá pra preencher (ex.: safra sem
                      talhão) troca de tipo no select ao lado. -->
-                <q-btn
-                  v-if="origensEdicao.length > 1"
-                  flat
-                  round
-                  color="grey-7"
-                  icon="close"
-                  class="col-auto ponto-remover"
-                  @click="removerPonto(p)"
+                  <q-btn
+                    v-if="origensEdicao.length > 1"
+                    flat
+                    round
+                    color="grey-7"
+                    icon="close"
+                    class="col-auto ponto-remover"
+                    @click="removerPonto(p)"
+                  >
+                    <q-tooltip>Remover origem</q-tooltip>
+                  </q-btn>
+                </div>
+                <div
+                  v-if="p.contatipo === 'UNIDADE' && p.codunidadearmazenadora && confereSaldoSilo"
+                  class="text-caption"
+                  :class="faltaNoSilo(p) ? 'text-negative text-weight-medium' : 'text-grey-6'"
                 >
-                  <q-tooltip>Remover origem</q-tooltip>
-                </q-btn>
+                  Saldo no silo nesta safra: {{ fmt(saldoSilo(p.codunidadearmazenadora)) }} kg
+                  <span v-if="brutoDoPonto(p)"> · esta carga ≈ {{ fmt(brutoDoPonto(p)) }} kg</span>
+                  <span v-if="faltaNoSilo(p)"> · faltam {{ fmt(faltaNoSilo(p)) }} kg</span>
+                </div>
               </div>
               <div
                 v-if="origensEdicao.length > 1"
@@ -360,7 +442,15 @@ async function salvar() {
               <div class="row items-center q-mb-xs">
                 <div class="text-subtitle2 text-grey-8">Destino do grão</div>
                 <q-space />
-                <q-btn flat round dense size="sm" color="primary" icon="add" @click="addPonto('DESTINO')">
+                <q-btn
+                  flat
+                  round
+                  dense
+                  size="sm"
+                  color="primary"
+                  icon="add"
+                  @click="addPonto('DESTINO')"
+                >
                   <q-tooltip>Adicionar destino</q-tooltip>
                 </q-btn>
               </div>
@@ -370,6 +460,7 @@ async function salvar() {
                   <SelectContaTipo
                     v-model="p.contatipo"
                     papel="DESTINO"
+                    :sentido="carga.sentido"
                     label="Destino"
                     bottom-slots
                     class="col-4"
@@ -378,6 +469,7 @@ async function salvar() {
                   <SelectUnidade
                     v-if="p.contatipo === 'UNIDADE'"
                     :model-value="p.codunidadearmazenadora"
+                    :excluir="silosDo('ORIGEM')"
                     class="col"
                     lazy-rules
                     :rules="[(v) => !!v || 'Selecione a unidade.']"
@@ -387,6 +479,7 @@ async function salvar() {
                     v-else
                     :model-value="p.codcontrato"
                     operacao="venda"
+                    :codsafra="edicao.codsafra"
                     class="col"
                     lazy-rules
                     :rules="[(v) => !!v || 'Selecione o contrato.']"
@@ -403,7 +496,8 @@ async function salvar() {
                     class="col-3"
                     lazy-rules
                     :rules="[
-                      () => !finalizando || somaPercBate(destinosEdicao) || 'Soma dos % deve ser 100',
+                      () =>
+                        !finalizando || somaPercBate(destinosEdicao) || 'Soma dos % deve ser 100',
                     ]"
                   />
                   <q-btn
@@ -433,7 +527,8 @@ async function salvar() {
                     Saldo a entregar: {{ fmt(saldoContrato(p.codcontrato)) }} kg
                     <span v-if="kgDoPonto(p)"> · esta carga ≈ {{ fmt(kgDoPonto(p)) }} kg</span>
                     <span v-if="(kgDoPonto(p) || 0) > saldoContrato(p.codcontrato) + 1">
-                      · passa {{ fmt(kgDoPonto(p) - saldoContrato(p.codcontrato)) }} kg do contratado
+                      · passa {{ fmt(kgDoPonto(p) - saldoContrato(p.codcontrato)) }} kg do
+                      contratado
                     </span>
                   </span>
                 </div>

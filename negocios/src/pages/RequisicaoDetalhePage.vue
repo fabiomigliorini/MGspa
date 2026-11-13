@@ -6,6 +6,7 @@ import { storeToRefs } from 'pinia'
 import MgHistorico from '@components/MgHistorico.vue'
 import MgInfoCriacao from '@components/MgInfoCriacao.vue'
 import MgInput from '@components/MgInput.vue'
+import MgLinkProduto from '@components/MgLinkProduto.vue'
 import MgSelect from '@components/MgSelect.vue'
 import ListaOpcoes from '@components/cobranca/ListaOpcoes.vue'
 import { useSelectCacheStore } from '@components/stores/selectCacheStore'
@@ -15,7 +16,14 @@ import {
   formataTelefone,
   formataTimestamp,
 } from '@components/formatters'
-import { requisicaoStore, statusDe, MOTIVOS, PRIORIDADES, PRIORIDADE } from 'stores/requisicao'
+import {
+  requisicaoStore,
+  statusDe,
+  MOTIVOS,
+  PRIORIDADES,
+  PRIORIDADE,
+  SAIDA,
+} from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
 import { RESULTADOS, MOTIVOS as MOTIVOS_ENTREGA } from 'stores/entrega'
 
@@ -51,19 +59,9 @@ const STATUS_NEGOCIO = { 1: 'Aberto', 2: 'Fechado', 3: 'Cancelado' }
 const partesAbertas = computed(() => (r.value?.partes || []).filter((p) => p.codnegociostatus == 1))
 
 // Separar (TASK-55): abre um negócio no PDV já ligado a esta requisição; o negócio novo vai
-// ao servidor uma vez só, já ligado (o ligar é que sincroniza). O botão aparece em qualquer
-// PDV enquanto a requisição está aberta, mas só separa o da loja que atende.
-const separavel = computed(() => ['A', 'S', 'P'].includes(r.value?.status))
+// ao servidor uma vez só, já ligado (o ligar é que sincroniza). Só no PDV da loja que atende,
+// com a requisição aberta: quem pede não tem o botão.
 async function separar() {
-  if (!r.value.podeseparar) {
-    $q.notify({
-      type: 'negative',
-      message: `Separe no PDV do ${r.value.requisitada}: o negócio de separação sai do estoque do PDV.`,
-      timeout: 5000,
-      actions: [{ icon: 'close', color: 'white' }],
-    })
-    return
-  }
   // já em separação neste PDV: abre o negócio em andamento
   const andamento = await sNegocio.negocioAbertoDaRequisicao(r.value.codrequisicao)
   if (andamento) {
@@ -185,6 +183,31 @@ async function entregar() {
   if (await sRequisicao.entregar(r.value, dados)) dialogEntregar.value = false
 }
 
+// Entrega no endereço: o entregador da loja que pediu busca na loja que atende, que registra
+// a retirada (quem buscou, sem código); depois a loja que pediu entrega ao cliente. Reposição:
+// a loja que atende registra a saída para entrega (quem levou), com o mesmo botão e o mesmo
+// registro; depois a loja que pediu dá o Recebido. Os textos de cada um vêm do SAIDA
+const entregaNoEndereco = computed(() => r.value?.destino === 'E')
+const saida = computed(() => SAIDA[r.value?.destino])
+// onde a mercadoria chega: o endereço do cliente na entrega no endereço, a loja que pediu na
+// reposição
+const enderecoParaEntrega = computed(
+  () => ({ E: r.value?.endereco, L: r.value?.requisitante })[r.value?.destino],
+)
+const dialogRetirar = ref(false)
+const retirada = ref({})
+function abrirRetirar() {
+  retirada.value = {
+    codnegocios: r.value.partesaretirar.map((p) => p.codnegocio),
+    recebedor: '',
+    observacao: '',
+  }
+  dialogRetirar.value = true
+}
+async function retirar() {
+  if (await sRequisicao.retirar(r.value, retirada.value)) dialogRetirar.value = false
+}
+
 // Impressão em etapas, no formato do wizard de pagamento do PDV: a via, o
 // formato, a janela do PDF (com o botão do cabeçalho, igual à DANFE da NFC-e) e,
 // ao imprimir, a impressora. Cada loja imprime a sua via (a do cliente só na loja
@@ -296,7 +319,7 @@ async function abrirImpressora() {
   impressoras.value = [...itens.filter(doPdv), ...itens.filter((i) => !doPdv(i))].map((i) => ({
     valor: i.value,
     label: i.label,
-    caption: [TIPOS_IMPRESSORA[i.tipo], doPdv(i) && 'Deste PDV'].filter(Boolean).join(' · '),
+    caption: [TIPOS_IMPRESSORA[i.tipo], doPdv(i) && 'Deste PDV'].filter(Boolean).join(' - '),
     icone: 'print',
     cor: 'blue-grey-5',
   }))
@@ -369,7 +392,9 @@ watch(
             <q-avatar :icon="status.icone" :color="status.cor" text-color="white" class="q-mr-md" />
             <div class="col" style="min-width: 0">
               <div class="text-h5 ellipsis">Requisição {{ formataCodigo(r.codrequisicao) }}</div>
-              <div class="text-caption text-grey-7">
+              <!-- na entrega no endereço, quem busca onde; o endereço vai no card de entrega -->
+              <div v-if="saida?.frase" class="text-caption text-grey-7">{{ saida.frase(r) }}</div>
+              <div v-else class="text-caption text-grey-7">
                 {{ r.requisitante }} pede para {{ r.requisitada || 'Compras' }} ·
                 {{ r.destinodescricao }}
               </div>
@@ -389,7 +414,7 @@ watch(
                 <q-tooltip>Prioridade</q-tooltip>
               </q-btn>
               <q-btn
-                v-if="separavel"
+                v-if="r.podeseparar"
                 flat
                 round
                 size="sm"
@@ -398,6 +423,17 @@ watch(
                 @click="separar"
               >
                 <q-tooltip>Separar (abre um negócio no PDV ligado a esta requisição)</q-tooltip>
+              </q-btn>
+              <q-btn
+                v-if="r.poderetirar"
+                flat
+                round
+                size="sm"
+                color="grey-7"
+                icon="handshake"
+                @click="abrirRetirar"
+              >
+                <q-tooltip>{{ saida?.label }}</q-tooltip>
               </q-btn>
               <q-btn
                 v-if="r.podeentregar"
@@ -496,10 +532,26 @@ watch(
                 <q-item-label>{{ prioridadeAtual.label }}</q-item-label>
               </q-item-section>
             </q-item>
+            <q-item v-if="enderecoParaEntrega">
+              <q-item-section avatar>
+                <q-icon name="delivery_dining" color="teal-7" />
+              </q-item-section>
+              <q-item-section>
+                <q-item-label caption>Endereço para entrega</q-item-label>
+                <q-item-label class="text-subtitle1 text-weight-medium">
+                  {{ enderecoParaEntrega }}
+                </q-item-label>
+              </q-item-section>
+            </q-item>
             <!-- só as pontas do código (77XX82, o XX em cinza), com os dígitos espaçados (1,8x
                  a largura do dígito), para conferir com o do cliente; o inteiro sai só na via
                  do cliente e a entrega pede ele digitado -->
-            <q-item v-if="r.comcodigo && r.codigoretiradamascarado">
+            <!-- na entrega no endereço quem atende não confere código: entrega ao entregador -->
+            <q-item
+              v-if="
+                r.comcodigo && r.codigoretiradamascarado && (r.ehrequisitante || !entregaNoEndereco)
+              "
+            >
               <q-item-section avatar><q-icon name="key" color="primary" /></q-item-section>
               <q-item-section>
                 <q-item-label caption>
@@ -528,7 +580,10 @@ watch(
                   {{ nome }}
                   <span class="text-grey-7">· {{ formataTelefone(r.telefones[i]) }}</span>
                 </q-item-label>
-                <q-item-label v-if="r.endereco" caption>{{ r.endereco }}</q-item-label>
+                <!-- na entrega no endereço, ele está em destaque no card de entrega -->
+                <q-item-label v-if="r.endereco && !entregaNoEndereco" caption>
+                  {{ r.endereco }}
+                </q-item-label>
               </q-item-section>
             </q-item>
             <q-item v-if="r.codnegocio" clickable :to="`/negocio/${r.codnegocio}`">
@@ -582,12 +637,19 @@ watch(
                 </q-avatar>
               </q-item-section>
               <q-item-section>
-                <q-item-label>{{ i.produto.descricao }}</q-item-label>
+                <q-item-label>
+                  <MgLinkProduto :codproduto="i.produto.codproduto">{{
+                    i.produto.descricao
+                  }}</MgLinkProduto>
+                </q-item-label>
                 <q-item-label caption>{{ i.produto.barras }}</q-item-label>
                 <q-item-label caption v-if="i.motivo" class="text-deep-orange-7">
                   {{ nomeMotivo(i.motivo) }}
                   <template v-if="i.substituto">
-                    · substituído por {{ i.substituto.descricao }}</template
+                    · substituído por
+                    <MgLinkProduto :codproduto="i.substituto.codproduto">{{
+                      i.substituto.descricao
+                    }}</MgLinkProduto></template
                   >
                   <template v-if="i.observacao"> · {{ i.observacao }}</template>
                 </q-item-label>
@@ -624,7 +686,11 @@ watch(
           <q-list separator>
             <q-item v-for="(f, indice) in r.foradopedido" :key="indice">
               <q-item-section>
-                <q-item-label>{{ f.produto.descricao }}</q-item-label>
+                <q-item-label>
+                  <MgLinkProduto :codproduto="f.produto.codproduto">{{
+                    f.produto.descricao
+                  }}</MgLinkProduto>
+                </q-item-label>
                 <q-item-label caption>
                   {{ formataNumeroInteligente(f.quantidade) }} {{ f.sigla }} no negócio
                   {{ formataCodigo(f.codnegocio) }}
@@ -657,7 +723,19 @@ watch(
                 <q-item-label>Negócio {{ formataCodigo(p.codnegocio) }}</q-item-label>
                 <q-item-label caption>
                   {{ STATUS_NEGOCIO[p.codnegociostatus] }} · {{ formataTimestamp(p.lancamento) }}
-                  <template v-if="p.entregue">
+                  <template v-if="saida">
+                    <template v-if="p.retirado">
+                      · {{ saida.parte }} {{ formataTimestamp(p.retirado) }}
+                      <template v-if="p.retiradopor">
+                        ({{ saida.verbo }} {{ p.retiradopor }})</template
+                      ></template
+                    >
+                    <template v-if="p.entreguecliente">
+                      · {{ r.comcodigo ? 'entregue' : 'recebido' }}
+                      {{ formataTimestamp(p.entreguecliente) }}</template
+                    >
+                  </template>
+                  <template v-else-if="p.entregue">
                     · entregue {{ formataTimestamp(p.entregue) }}</template
                   >
                 </q-item-label>
@@ -668,6 +746,60 @@ watch(
         </q-card>
       </template>
     </div>
+
+    <q-dialog v-model="dialogRetirar">
+      <q-card flat style="width: 600px; max-width: 95vw">
+        <q-form @submit.prevent="retirar">
+          <q-card-section class="text-grey-9 text-overline text-uppercase">
+            {{ saida?.label }}
+          </q-card-section>
+          <q-card-section>
+            <div class="row q-col-gutter-md">
+              <div class="col-12">
+                <div class="text-caption text-grey-7">Partes</div>
+                <q-option-group
+                  v-model="retirada.codnegocios"
+                  type="checkbox"
+                  :options="
+                    (r?.partesaretirar || []).map((p) => ({
+                      value: p.codnegocio,
+                      label: `Negócio ${formataCodigo(p.codnegocio)} · ${formataTimestamp(p.lancamento)}`,
+                    }))
+                  "
+                />
+              </div>
+              <div class="col-12">
+                <MgInput
+                  v-model="retirada.recebedor"
+                  :label="saida?.quem(r)"
+                  maxlength="100"
+                  autofocus
+                  :rules="[(v) => !!(v || '').trim() || `Informe quem ${saida?.verbo}`]"
+                />
+              </div>
+              <div class="col-12">
+                <MgInput
+                  v-model="retirada.observacao"
+                  label="Observação"
+                  maxlength="500"
+                  autogrow
+                />
+              </div>
+            </div>
+          </q-card-section>
+          <q-card-actions align="right">
+            <q-btn flat label="Cancelar" color="grey-8" tabindex="-1" v-close-popup />
+            <q-btn
+              flat
+              label="Registrar"
+              color="primary"
+              type="submit"
+              :disable="!retirada.codnegocios?.length"
+            />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
 
     <q-dialog v-model="dialogEntregar">
       <q-card flat style="width: 600px; max-width: 95vw">

@@ -3,17 +3,17 @@ id: TASK-55
 title: >-
   Loja vende sem estoque e o cliente retira em outra loja com vale de papel;
   entregas e transferências sem controle
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-09-12 15:53'
-updated_date: '2026-10-28 17:11'
+updated_date: '2026-10-28 21:17'
 labels:
   - negocios
 dependencies: []
 priority: high
 type: feature
-ordinal: 133000
+ordinal: 134000
 ---
 
 ## Description
@@ -66,18 +66,27 @@ As impressoras em tabela estão na task própria das impressoras.
 - [x] #29 Requisição: o lado do dispositivo (quem pede ou quem atende) é decidido pelo local de estoque do PDV, não pela filial
 - [x] #30 A loja que pede é a do PDV; só Gerente/Admin escolhe outra (formulário e Gerador; o servidor recusa)
 - [x] #31 Ligar recusa na hora a requisição de outra loja atender ou já finalizada/cancelada (Separar, QR e número)
-- [x] #32 Separar aparece em qualquer PDV com a requisição aberta e, fora da loja que atende, recusa dizendo onde separar
-- [x] #33 Detalhe mostra 'Em separação no negócio #X' enquanto há negócio de separação aberto
-- [x] #34 Gerente/Admin em qualquer PDV edita a requisição (aguardando); a prioridade só a loja que pediu ou Administrador
-- [x] #35 ESC volta uma etapa no formulário da requisição (com o select aberto, só fecha o menu)
-- [ ] #36 Requisição a partir do negócio não pergunta o número do negócio nem quem pede (é a loja da venda)
-- [ ] #37 Separar com negócio de separação em andamento neste PDV abre esse negócio em vez de criar outro
-- [ ] #38 Requisição a partir do negócio: 'Marcar todos' na lista de produtos (parcial quando só alguns estão marcados)
-- [ ] #39 Reabrir a requisição com divergências: Gerente só no PDV da loja que atende, Administrador em qualquer PDV; motivo no Histórico; volta a pendente
-- [ ] #40 Separada (total sozinha ou finalizada) sai do painel de quem separou: reposição fica em 'A receber' na loja que pediu; retira/entrega fica em 'Aguardando o cliente' na loja que separou
-- [ ] #41 Finalizar sem nada separado → 'Não atendida' (D sem parte, sem mudar o banco): sai dos painéis e do 'já pedido' do Gerador, não liga negócio; Reabrir vale para ela
-- [ ] #42 Reaberta (ou antes de finalizar), quem atende ou Gerente tira a justificativa de um item (achou o produto); o enviado a mais sai e o produto volta ao fora do pedido
-- [ ] #43 Finalizar separação só confirma; item que não bateu sem motivo ou fora do pedido sem destino → recusa 'Justifique antes de finalizar' com cada produto; finalizada, o botão some
+- [x] #32 Detalhe mostra 'Em separação no negócio #X' enquanto há negócio de separação aberto
+- [x] #33 ESC volta uma etapa no formulário da requisição (com o select aberto, só fecha o menu)
+- [x] #34 Requisição a partir do negócio não pergunta o número do negócio nem quem pede (é a loja da venda)
+- [x] #35 Separar com negócio de separação em andamento neste PDV abre esse negócio em vez de criar outro
+- [x] #36 Requisição a partir do negócio: 'Marcar todos' na lista de produtos (parcial quando só alguns estão marcados)
+- [x] #37 Reabrir a requisição com divergências: Gerente só no PDV da loja que atende, Administrador em qualquer PDV; motivo no Histórico; volta a pendente
+- [x] #38 Finalizar sem nada separado → 'Não atendida' (D sem parte, sem mudar o banco): sai dos painéis e do 'já pedido' do Gerador, não liga negócio; Reabrir vale para ela
+- [x] #39 Reaberta (ou antes de finalizar), quem atende ou Gerente tira a justificativa de um item (achou o produto); o enviado a mais sai e o produto volta ao fora do pedido
+- [x] #40 Finalizar separação só confirma; item que não bateu sem motivo ou fora do pedido sem destino → recusa 'Justifique antes de finalizar' com cada produto; finalizada, o botão some
+- [x] #41 Separar só aparece no PDV da loja que atende, com a requisição aberta (A/S/P); no de quem pede, não aparece
+- [x] #42 Editar (aguardando), Cancelar e Prioridade só no PDV da loja que pediu (ou Administrador)
+- [x] #43 Reposição: o Recebido é só do PDV da loja que pediu (ou Administrador), nunca de quem enviou; a entrega direta pelo negócio (lista de Entregas) recusa negócio ligado a requisição
+- [x] #44 Os botões da requisição são do lado do PDV: Gerente não faz o serviço do outro lado (Separar, Justificar, Finalizar, Entregar ao cliente, Editar, Cancelar, Recebido, via do cliente com o código); só o Administrador age em qualquer PDV
+- [x] #45 A linha da requisição é só 'quem pediu → quem atende' (sem o nome do cliente), com o destino embaixo, no painel e na listagem (os grupos do painel estão no #52)
+- [x] #46 Painel com três cards: Atender (o que a loja tem para separar), Separados (o que ela separou e ainda não saiu) e '{Loja} pediu' (tudo o que ela pediu, de qualquer loja ou Compras, num card só)
+- [x] #47 Entregar no endereço: a entrega ao cliente é da loja que pediu (o entregador dela busca na loja que atende); a loja que atende só tem o Entregar ao cliente na retirada (R)
+- [x] #48 Entregar no endereço: a loja que atende registra 'Retirado pelo entregador' (quem buscou, sem código) em cada parte separada; a transferência sai do 'A receber' e a requisição fica 'Saiu para entrega'
+- [x] #49 Entregar no endereço: a loja que pediu registra 'Entregar ao cliente' com o código de retirada (ou justificativa), só nas partes já retiradas; tentativa não entregue fica registrada; todas entregues → Entregue
+- [x] #50 Entregar no endereço: a via de separação e o detalhe dizem que o entregador da loja que pediu vem buscar (os grupos do painel estão no #52)
+- [x] #51 Negócio de separação que já saiu da loja (retirado pelo entregador, entregue ao cliente ou recebido) não reabre: recusa pedindo para estornar a retirada/entrega antes
+- [x] #52 Um nome por situação em todo lugar (A separar · Em separação · Separado · Saiu para entrega · Entregue · Cancelada · Não atendida; tabela na decisão 14 do doc-6); no painel, os grupos são esses nomes (no card Separados, sem subtítulo), com o ícone do destino na linha; destino com um nome só (Cliente retira · Entrega no endereço · Reposição)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -98,4 +107,20 @@ Painel no endereço (#24, 24/10/2026): a aba é /requisicao/painel/{codestoquelo
 24/10/2026: o "Sugerir abaixo do mínimo" do AC #5 (botão no formulário + GET v1/requisicao/sugestao, commit 86f4ac958) saiu: não funcionava e não foi pedido. A reposição pelo mínimo foi para a TASK-258 (gerador de requisição). O PDF Sugestão de Transferências do estoque continua.
 
 Go-live 26/10: produção quebrou no painel (column r.nomes does not exist). A tblrequisicao de prod foi criada pela versão de 21/10 do requisicao.sql (nome/telefone); a de 24/10 trocou para nomes/telefones dentro do CREATE TABLE IF NOT EXISTS, que não mexe na tabela existente. O requisicao.sql agora converte nome/telefone em nomes/telefones (telefone só dígitos, até 11) e cria os checks que faltarem; reaplicável. Já aplicado em prod em 26/10 (4 requisições convertidas; a nº 3 ficou sem telefone, o antigo estava vazio).
+
+Painel 28/10/2026: a regra da antiga AC #40 (separada sai de quem separou) mudou a pedido do usuário — quem separou quer acompanhar a transferência até ser entregue, num card separado. GET v1/requisicao/painel traz A/S/P/T/D dos dois lados (RequisicaoService::painel); a tela separa em 'Para X atender' (A/S/P), 'X separou, falta entregar' (T/D por destino) e 'X pediu para Y'. Status gravados não mudam: só os nomes dos grupos do painel. Seta pelo helper trajeto() de stores/requisicao.js (painel e listagem); na listagem a legenda ganhou 'pedida por'.
+
+Recebido da reposição (28/10/2026): Gerente no PDV do Depósito dava o Recebido da reposição que o próprio Depósito separou (#73/#74 da massa de teste). RequisicaoEntregaService::podeEntregar: na L, requisitante ou Gerente que não esteja na requisitada. NegocioEntregaService::registrar recusava a entrega direta só de negócio de requisição R/E; agora de qualquer destino (a lista de Entregas era o outro caminho para quem enviou marcar o recebido).
+
+Botões pelo lado do PDV (28/10/2026): no PDV do Botânico (quem pede) o Gustavo, Gerente, via Separar e Finalizar da #69. Separar aparecia em qualquer PDV por decisão (antiga AC #32, doc-6 decisão 24) e os pode* aceitavam 'ou Gerente' em qualquer PDV, então o Gerente fazia o serviço do outro lado (Finalizar/Justificar, Editar, Cancelar, Entregar, via do cliente com o código inteiro). Regra nova: o lado do PDV decide; Gerente só onde precisa de autoridade dentro do lado (Reabrir, na loja que atende) e para criar em nome de outra loja (AC #30, Gerador); Administrador (RequisicaoService::ehAdministrador = Autorizador::pode([])) em qualquer PDV. Detalhe: o Separar usa r.podeseparar.
+
+Linha da requisição (28/10/2026): a seta no sentido da mercadoria ('BOT → Luiz') confundiu; volta a 'quem pediu → quem atende' (CEN → BOT), sem o nome do cliente, e embaixo o destino (cliente retira · 1 item), sem o 'pedida por'.
+
+Cards do painel (28/10/2026): um card por loja a que se pediu ficava solto; agora três cards fixos, Atender / Separados / Pedidos. Os grupos de dentro ficam como estão por enquanto: o usuário vai decidir a unificação dos substatus depois.
+
+Entrega no endereço pela loja que pediu (28/10/2026): na empresa, a loja que pede já tem a venda; o entregador dela passa na loja que atende, busca a mercadoria e entrega ao cliente, e a entrega é responsabilidade de quem pediu. Hoje o sistema põe a entrega ao cliente do E na loja que atende (RequisicaoEntregaService::podeEntregar com ehRequisitada para R e E). Decidido: R (cliente retira) continua com quem atende; o E tem dois passos, cada um um botão: 'Retirado pelo entregador' (quem atende, nome de quem buscou, sem código; é passagem de mão, não quem enviou confirmando o próprio recebido da decisão 19) e 'Entregar ao cliente' (quem pediu, com o código de retirada ou justificativa); o código continua no E (o cliente fica com a via e informa ao entregador). Fluxo: separa (T/D) → retirado pelo entregador → 'Com o entregador' → entregue ao cliente → E. Proposta técnica, a conferir na implementação: tblnegocioentrega.etapa (C retirada / E cliente; os registros existentes ficam E), a retirada preenche tblnegocio.entregue pelo atualizarEntregue de hoje (primeiro E/P); status novo 'Com o entregador' no CHECK de tblrequisicao.status e no RequisicaoProcessamentoService; podeEntregar com E = ehRequisitante e podeRetirar com E = ehRequisitada no RequisicaoResource; partesPendentes separando falta retirar de falta entregar ao cliente.
+
+Implementação #47–#50 (28/10/2026): tblnegocioentrega.etapa (C retirada pelo entregador / E cliente) e status R 'Com o entregador' em api/database/requisicao_entregador.sql — go-live: rodar ANTES do deploy (o calcular da requisição lê a etapa). RequisicaoEntregaService: podeRetirar/retirar (POST v1/requisicao/{id}/retirar, loja que atende), partesARetirar; podeEntregar só é da loja que atende no R (E e L, de quem pediu); no E, partesPendentes = retiradas e ainda não entregues ao cliente. RequisicaoProcessamentoService: entreguecliente por negócio; no E, Entregue quando todas as partes chegaram ao cliente e R quando todas foram retiradas. Painel: R só no lado de quem pediu. NegocioEntregaService::inativar reprocessa sempre (estornar a entrega ao cliente não muda o tblnegocio.entregue).
+
+Nomes unificados (28/10/2026): os grupos com o nome da ação de cada lado (antigo #45) e os da entrega no endereço (#50: Entregador vem buscar, Buscar em XXX, Com o entregador) saíram a pedido do usuário — 'salada de fruta'. Decidido caso a caso: A 'A separar'; S e P 'Em separação'; T e D 'Separado' (D mostra 'com divergências' na legenda, agora também na listagem — legenda() em stores/requisicao.js); R 'Saiu para entrega'; E, C e Não atendida sem mudança. Painel: GRUPOS = A, S, T, R com grupoDe (P→S, D→T) nos três cards. Filtro da listagem: FILTRO_STATUS manda 'S,P' / 'T,D' e o backend aceita a lista (RequisicaoService::pesquisar). Destino: Cliente retira / Entrega no endereço / Reposição. Partes do detalhe: 'retirado pelo entregador' e 'entregue'. Recusa de ligar: 'não aceita mais separação (situação: X)'. Os critérios #45 e #50 ficam superados pela regra nova (o #52 descreve).
 <!-- SECTION:NOTES:END -->

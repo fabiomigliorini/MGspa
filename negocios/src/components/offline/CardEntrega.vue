@@ -6,6 +6,7 @@ import MgInput from '@components/MgInput.vue'
 import { formataTimestamp } from '@components/formatters'
 import { negocioStore } from 'stores/negocio'
 import { entregaStore, RESULTADOS, MOTIVOS } from 'stores/entrega'
+import { SAIDA } from 'stores/requisicao'
 
 // Entrega do negócio fechado (TASK-55): um card com a situação; clicando, o histórico das
 // tentativas e o registro de uma nova. Só online.
@@ -18,6 +19,13 @@ const dialog = ref(false)
 const ativas = computed(() => entregas.value.filter((e) => !e.inativo))
 const ultima = computed(() => ativas.value[ativas.value.length - 1] || null)
 const resultado = (valor) => RESULTADOS.find((r) => r.value === valor) || RESULTADOS[0]
+// requisição com saída (etapa C): a retirada pelo entregador da loja que pediu (entrega no
+// endereço) ou a saída para entrega da reposição; o destino vem com o registro
+const saidaDe = (e) => SAIDA[e.destinorequisicao] || SAIDA.E
+const situacao = (e) =>
+  e.etapa === 'C'
+    ? { label: saidaDe(e).label, icone: 'delivery_dining', cor: 'teal-7' }
+    : resultado(e.resultado)
 const mostrar = computed(() => controla.value || entregas.value.length > 0)
 
 watch(
@@ -54,7 +62,7 @@ async function registrar() {
 function estornar(e) {
   $q.dialog({
     title: 'Estornar',
-    message: `Estornar o registro "${resultado(e.resultado).label}" de ${formataTimestamp(e.data)}?`,
+    message: `Estornar o registro "${situacao(e).label}" de ${formataTimestamp(e.data)}?`,
     cancel: { label: 'Voltar', color: 'grey-8', flat: true },
     ok: { label: 'Estornar', color: 'red-5', flat: true },
   }).onOk(async () => {
@@ -81,7 +89,7 @@ function estornar(e) {
             {{ entregue ? 'Entregue ' + formataTimestamp(entregue) : 'Pendente' }}
           </q-item-label>
           <q-item-label caption class="ellipsis" v-if="ultima && !entregue">
-            {{ resultado(ultima.resultado).label }}
+            {{ situacao(ultima).label }}
             <template v-if="ultima.motivodescricao"> · {{ ultima.motivodescricao }}</template>
           </q-item-label>
         </q-item-section>
@@ -94,16 +102,18 @@ function estornar(e) {
         <q-list v-if="entregas.length" separator>
           <q-item v-for="e in entregas" :key="e.codnegocioentrega">
             <q-item-section avatar>
-              <q-icon :name="resultado(e.resultado).icone" :color="resultado(e.resultado).cor" />
+              <q-icon :name="situacao(e).icone" :color="situacao(e).cor" />
             </q-item-section>
             <q-item-section :class="{ 'text-strike text-grey-6': e.inativo }">
               <q-item-label>
-                {{ resultado(e.resultado).label }}
+                {{ situacao(e).label }}
                 <template v-if="e.motivodescricao"> · {{ e.motivodescricao }}</template>
               </q-item-label>
               <q-item-label caption>
                 {{ formataTimestamp(e.data) }} · {{ e.usuariocriacao }}
-                <template v-if="e.recebedor"> · recebeu {{ e.recebedor }}</template>
+                <template v-if="e.recebedor">
+                  · {{ e.etapa === 'C' ? saidaDe(e).verbo : 'recebeu' }} {{ e.recebedor }}</template
+                >
               </q-item-label>
               <q-item-label caption v-if="e.justificativa">
                 Sem código: {{ e.justificativa }}

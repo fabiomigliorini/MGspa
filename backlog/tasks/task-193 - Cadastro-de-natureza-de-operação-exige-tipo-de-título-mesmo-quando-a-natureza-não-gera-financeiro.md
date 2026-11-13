@@ -3,15 +3,16 @@ id: TASK-193
 title: >-
   Cadastro de natureza de operação exige tipo de título mesmo quando a natureza
   não gera financeiro
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-10-02 15:36'
+updated_date: '2026-11-12 18:48'
 labels:
   - notas
 dependencies: []
 priority: high
 type: feature
-ordinal: 206000
+ordinal: 4000
 ---
 
 ## Description

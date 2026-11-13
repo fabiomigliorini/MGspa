@@ -2,12 +2,15 @@
     // Uma view, duas vias x dois formatos (TASK-55, doc-6):
     //   via requisitante — autorizacao de retirada, com o codigo (entregue ao cliente)
     //   via requisitada  — lista para separar, com a localizacao e o QR; o codigo so'
-    //                      mascarado (77XX82), para conferir a caixa com o do cliente
+    //                      mascarado (77XX82), para conferir a caixa com o do cliente;
+    //                      na entrega no endereco, quem busca e' o entregador da loja
+    //                      que pediu (ela entrega ao cliente), entao vai o aviso no lugar
     //   formato termica (80 mm) ou a5
     $a5 = $formato === 'a5';
     $daRequisitante = $via === 'requisitante';
     $comCodigo = $daRequisitante && in_array($req->destino, ['R', 'E']);
-    $codigoMascarado = $daRequisitante ? null : \Mg\Requisicao\RequisicaoEntregaService::codigoRetiradaMascarado($req);
+    $entregador = $req->destino === 'E';
+    $codigoMascarado = ($daRequisitante || $entregador) ? null : \Mg\Requisicao\RequisicaoEntregaService::codigoRetiradaMascarado($req);
     $lojaRetirada = $req->EstoqueLocalRequisitada;
     $pessoaRetirada = $lojaRetirada?->Filial?->Pessoa;
 @endphp
@@ -147,7 +150,15 @@
                 @endif
             </div>
         @endif
-        <div class="bloco cinza">Apresente este comprovante e o código para retirar a mercadoria.</div>
+        @if ($entregador)
+            <div class="bloco cinza">Informe este código ao entregador na entrega.</div>
+        @else
+            <div class="bloco cinza">Apresente este comprovante e o código para retirar a mercadoria.</div>
+        @endif
+    @endif
+
+    @if (!$daRequisitante && $entregador)
+        <div class="bloco">O entregador de <b>{{ $req->EstoqueLocalRequisitante->estoquelocal }}</b> vem buscar.</div>
     @endif
 
     @if ($codigoMascarado)

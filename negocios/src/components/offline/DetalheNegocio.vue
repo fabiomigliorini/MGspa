@@ -37,8 +37,11 @@ watch(
   () => edicaoNatureza.value.codnaturezaoperacao,
   async (cod) => {
     naturezaEdicao.value = cod ? await db.naturezaOperacao.get(cod) : null
+    if (cod === sNegocio.negocio?.codnaturezaoperacao) return
+    // trocou a natureza: a loja destino recomeça em branco (TASK-274)
+    edicaoNatureza.value.codestoquelocaldestino = null
     // trocou para transferência: já vem marcado o controle de entrega
-    if (cod !== sNegocio.negocio?.codnaturezaoperacao && naturezaEdicao.value?.transferencia) {
+    if (naturezaEdicao.value?.transferencia) {
       edicaoNatureza.value.entrega = true
     }
   },
@@ -268,6 +271,7 @@ const apropriar = () => {
                 outlined
                 v-model="edicaoNatureza.codestoquelocaldestino"
                 label="Loja destino"
+                clearable
                 :rules="[
                   (val) => !naturezaEdicao?.transferencia || !!val || 'Informe a loja destino',
                   (val) =>

@@ -5,13 +5,13 @@ status: In Progress
 assignee:
   - '@fabio'
 created_date: '2026-10-22 00:43'
-updated_date: '2026-10-23 16:48'
+updated_date: '2026-11-12 18:48'
 labels:
   - api
 dependencies: []
 priority: high
 type: feature
-ordinal: 263000
+ordinal: 6000
 ---
 
 ## Description

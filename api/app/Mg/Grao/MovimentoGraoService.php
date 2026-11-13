@@ -79,6 +79,15 @@ class MovimentoGraoService extends MgService
     public static function saldosUnidades(?int $codsafra = null): array
     {
         $unidades = UnidadeArmazenadora::orderBy('unidadearmazenadora')->get();
+        // Saldo por safra de cada silo: o patio confere a expedicao contra o
+        // saldo da safra da carga (TASK-130).
+        $porSafra = MovimentoGrao::where('contatipo', 'UNIDADE')
+            ->whereNull('inativo')
+            ->whereNotNull('codsafra')
+            ->groupBy('codunidadearmazenadora', 'codsafra')
+            ->selectRaw('codunidadearmazenadora, codsafra, SUM(liquido) as saldokg')
+            ->get()
+            ->groupBy('codunidadearmazenadora');
         $ret = [];
         foreach ($unidades as $u) {
             $saldokg = static::saldo('UNIDADE', $u->codunidadearmazenadora, $codsafra);
@@ -88,6 +97,10 @@ class MovimentoGraoService extends MgService
                 'tipo' => $u->tipo,
                 'inativo' => $u->inativo,
                 'saldokg' => round($saldokg, 3),
+                'safras' => ($porSafra[$u->codunidadearmazenadora] ?? collect())
+                    ->map(fn ($l) => ['codsafra' => (int) $l->codsafra, 'saldokg' => round((float) $l->saldokg, 3)])
+                    ->values()
+                    ->all(),
             ];
         }
         return $ret;

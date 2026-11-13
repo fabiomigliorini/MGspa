@@ -1,5 +1,5 @@
 <script setup>
-import { requisicaoStore, STATUS, DESTINOS, PRIORIDADES } from 'stores/requisicao'
+import { requisicaoStore, FILTRO_STATUS, DESTINOS, PRIORIDADES } from 'stores/requisicao'
 import FilterDrawerShell from 'components/FilterDrawerShell.vue'
 import FilterGroup from 'components/FilterGroup.vue'
 import MgInput from '@components/MgInput.vue'
@@ -12,7 +12,7 @@ import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 // A página observa os filtros e recarrega; aqui é só o formulário.
 const sRequisicao = requisicaoStore()
 
-const opcoesStatus = Object.entries(STATUS).map(([value, s]) => ({ value, label: s.label }))
+const opcoesStatus = FILTRO_STATUS
 const opcoesDestino = DESTINOS.map((d) => ({ value: d.value, label: d.label }))
 const opcoesPrioridade = PRIORIDADES.map((p) => ({ value: p.value, label: p.label }))
 </script>

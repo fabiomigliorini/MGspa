@@ -149,11 +149,11 @@ async function editar(dados) {
   if (await store.editar(editando.value.codportadormovimento, dados)) dialogEditar.value = false
 }
 
-const justificar = (title, ok, fn) =>
+const justificar = (title, ok, fn, message = 'Motivo:') =>
   $q
     .dialog({
       title,
-      message: 'Motivo:',
+      message,
       prompt: {
         model: '',
         type: 'text',
@@ -165,13 +165,25 @@ const justificar = (title, ok, fn) =>
     })
     .onOk(fn)
 
+// cancelar é para a transferência lançada por engano (TASK-246): desfaz os dois
+// lados lá na hora original, e o dinheiro que trocou de mão não volta sozinho
+const avisoTransferencia = (l) =>
+  `Desfaz a transferência em ${portador.value?.portador} e em ${l.contraparte?.portador}` +
+  ` desde ${formataTimestamp(l.transacao)}, como se ela nunca tivesse existido. O dinheiro` +
+  ' não volta sozinho: se ele mudou de gaveta e voltou, lance uma transferência no' +
+  ' sentido contrário em vez de cancelar. Motivo:'
+
 // ajuste, item e transferência pelo movimento; taxa/tarifa/rendimento pelo pagamento
 function cancelar(l) {
   const titulo = l.tipo === 'T' ? 'Cancelar transferência' : 'Cancelar lançamento'
-  justificar(titulo, titulo, (j) =>
-    l.tipo === 'P'
-      ? store.cancelarTaxa(l.codpagamento, j)
-      : store.cancelarMovimento(l.codportadormovimento, j),
+  justificar(
+    titulo,
+    titulo,
+    (j) =>
+      l.tipo === 'P'
+        ? store.cancelarTaxa(l.codpagamento, j)
+        : store.cancelarMovimento(l.codportadormovimento, j),
+    l.tipo === 'T' ? avisoTransferencia(l) : undefined,
   )
 }
 </script>

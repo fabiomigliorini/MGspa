@@ -12,6 +12,7 @@ import {
   novoPonto,
   pontoCompleto,
   ratearPontos,
+  normalizarCargaDoServidor,
   CAMPOS_MOTORISTA_SEM_CADASTRO,
 } from 'src/utils/carga'
 import { agora } from '@components/utils/datas'
@@ -45,6 +46,8 @@ export const useCargaStore = defineStore('carga', () => {
   const codsafraAtiva = ref(null)
   const uuidAtivo = ref(null) // carga aberta no centro da tela (rota carga/:uuid)
   const dataFiltro = ref(null) // dia filtrado na listagem (ISO YYYY-MM-DD); vazio = todos
+  // Romaneio (do servidor) que a próxima carga nova copia — o Duplicar da ficha.
+  const modeloDuplicacao = ref(null)
 
   const veiculosAtivos = computed(() => veiculos.value.filter((v) => !v.inativo))
   const veiculoPorId = (codveiculo) =>
@@ -270,25 +273,32 @@ export const useCargaStore = defineStore('carga', () => {
   // ---- Saldos offline (snapshot do servidor + pendências locais) ----
   // Soma o líquido das cargas locais ainda NÃO sincronizadas (finalizadas) que
   // movem uma conta, com o sinal (UNIDADE: +destino/-origem; CONTRATO sempre +).
-  function deltaPendente(contatipo, campoCod, cod) {
+  function deltaPendente(contatipo, campoCod, cod, codsafra = null) {
     let delta = 0
     for (const c of cargas.value) {
       if (c.inativo || c.sincronizado || c.etapa !== 'FINALIZADO') continue
+      if (codsafra && c.codsafra !== codsafra) continue
       for (const p of c.pontos || []) {
         if (p.contatipo !== contatipo || p[campoCod] !== cod) continue
-        const sinal = contatipo === 'UNIDADE' && p.papel === 'ORIGEM' ? -1 : 1
-        delta += sinal * kgRateado(c, p)
+        // Silo de origem baixa a parte do bruto (D6); o resto, a do líquido.
+        if (contatipo === 'UNIDADE' && p.papel === 'ORIGEM' && p.percentual != null && c.bruto != null) {
+          delta -= Math.round(((Number(c.bruto) || 0) * (Number(p.percentual) || 0)) / 100)
+        } else {
+          delta += kgRateado(c, p)
+        }
       }
     }
     return delta
   }
 
-  function saldoUnidadeOffline(cod) {
+  // Com `codsafra`, só o grão daquela safra: é contra ele que a expedição é
+  // conferida (TASK-130).
+  function saldoUnidadeOffline(cod, codsafra = null) {
     const snap = saldosUnidades.value.find((s) => s.codunidadearmazenadora === cod)
-    return (
-      (snap ? Number(snap.saldokg) || 0 : 0) +
-      deltaPendente('UNIDADE', 'codunidadearmazenadora', cod)
-    )
+    const base = codsafra
+      ? snap?.safras?.find((s) => s.codsafra === codsafra)?.saldokg
+      : snap?.saldokg
+    return (Number(base) || 0) + deltaPendente('UNIDADE', 'codunidadearmazenadora', cod, codsafra)
   }
 
   // Saldo a entregar de um contrato (kg): snapshot do servidor menos o que as
@@ -406,7 +416,12 @@ export const useCargaStore = defineStore('carga', () => {
   // origem), e o Registrar não passa sem ela. Sem nenhuma safra sincronizada
   // retorna null — não haveria o que escolher.
   function nova(sentido = 'ENTRADA') {
+    // O modelo vale pra UMA carga nova: sai da store já aqui, antes de qualquer
+    // retorno, pra não reaparecer na próxima "Nova carga".
+    const modelo = modeloDuplicacao.value
+    modeloDuplicacao.value = null
     if (!safrasAtivas.value.length) return null
+    if (modelo) return copiaDe(modelo)
     const s = sentido
     return {
       uuid: uid(),
@@ -430,6 +445,39 @@ export const useCargaStore = defineStore('carga', () => {
       observacao: null,
       classificacao: [],
       pontos: [],
+      sincronizado: 0,
+      syncerro: null,
+    }
+  }
+
+  // Duplicar romaneio (ativo ou cancelado): a ficha guarda o romaneio aqui e
+  // abre a carga nova, que nasce com os mesmos dados. Nada é gravado até o
+  // Registrar.
+  function duplicar(cargaDoServidor) {
+    modeloDuplicacao.value = cargaDoServidor
+  }
+
+  // Carga nova com os dados de um romaneio do servidor: tudo (operação, safra,
+  // caminhão, motorista, origem/destino, pesos, classificação, NF, observação)
+  // menos a identidade — uuid novo, sem codcarga/versão, ativa, chegando agora e
+  // na 1ª etapa (o Registrar pula as etapas já preenchidas). O `percentual` dos
+  // pontos fica null: o CargaForm (normalizarPontos) reconstrói pelo kg copiado.
+  function copiaDe(cs) {
+    const base = normalizarCargaDoServidor(cs)
+    return {
+      ...base,
+      uuid: uid(),
+      codcarga: null,
+      versao: null,
+      inativo: null,
+      data: agora(),
+      etapa: ETAPAS_POR_SENTIDO[base.sentido][0],
+      // Rótulo das caches, como no carregarCargas; talhão/contrato fora do cache
+      // deste aparelho fica com o rótulo que o servidor mandou.
+      pontos: base.pontos.map((p, i) => ({
+        ...p,
+        rotulo: rotuloPonto(p) || cs.CargaPontoS?.[i]?.rotulo || null,
+      })),
       sincronizado: 0,
       syncerro: null,
     }
@@ -559,6 +607,7 @@ export const useCargaStore = defineStore('carga', () => {
     abrir,
     sincronizar,
     nova,
+    duplicar,
     salvar,
     reenviar,
     inativar,

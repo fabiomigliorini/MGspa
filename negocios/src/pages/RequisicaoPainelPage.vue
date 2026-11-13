@@ -4,15 +4,17 @@ import { onBeforeRouteUpdate, useRoute, useRouter } from 'vue-router'
 import { storeToRefs } from 'pinia'
 import { db } from 'boot/db'
 import MgEmptyState from '@components/MgEmptyState.vue'
-import { formataCodigo, tempoRelativo } from '@components/formatters'
+import { tempoRelativo } from '@components/formatters'
 import { useConsultaAutomatica } from '@components/cobranca/useConsultaAutomatica'
-import { requisicaoStore, STATUS, DESTINO, PRIORIDADE, lojaDaRequisicao } from 'stores/requisicao'
+import { requisicaoStore, lojaDaRequisicao, STATUS } from 'stores/requisicao'
 import { negocioStore } from 'stores/negocio'
+import RequisicaoLinha from 'components/requisicao/RequisicaoLinha.vue'
 
-// Painel de requisições (TASK-55, doc-6): uma aba por loja; nela, o card do que a loja tem
-// para atender e um card por loja a que ela pediu, cada um por status, da mais urgente para a
-// menos e, na mesma prioridade, das mais antigas para as mais novas (a ordem vem do backend). Só as abertas: entregues e canceladas ficam na listagem. Atualiza sozinho a
-// cada 30 s. A loja da aba vem do endereço (/requisicao/painel/101001); sem ela, a do PDV.
+// Painel de requisições (TASK-55, doc-6): uma aba por loja; nela, os cards Atender, Separados,
+// Pedidos e Saiu para entrega, cada um por situação e, na mesma situação, da mais urgente para a
+// menos e das mais antigas para as mais novas (essa ordem vem do backend). Só as abertas:
+// entregues e canceladas ficam na listagem. Atualiza sozinho a cada 30 s. A loja da aba vem do
+// endereço (/requisicao/painel/101001); sem ela, a do PDV.
 const route = useRoute()
 const router = useRouter()
 const sRequisicao = requisicaoStore()
@@ -23,65 +25,52 @@ const { codestoquelocal } = storeToRefs(sRequisicao)
 // sincronizou o campo; mostra como antes)
 const lojas = ref([])
 
-// grupos por etapa: separada (total ou finalizada com divergência) é de quem recebe — na
-// reposição, a loja que pediu; na retirada/entrega, a loja que separou entrega ao cliente
-const ETAPAS = [
-  { chave: 'A', ...STATUS.A },
-  { chave: 'S', ...STATUS.S },
-  { chave: 'P', ...STATUS.P },
-  { chave: 'cliente', label: 'Aguardando o cliente', cor: 'green-7', icone: 'person_pin_circle' },
-  { chave: 'receber', label: 'A receber', cor: 'green-7', icone: 'local_shipping' },
-]
-const etapa = (r) =>
-  ['T', 'D'].includes(r.status) ? (r.destino === 'L' ? 'receber' : 'cliente') : r.status
+// a situação é coluna da linha (TASK-261), e o card vem em blocos dela: A separar, Em separação,
+// Separado, Saiu para entrega. P está em separação como o S, e D está separado como o T; o sort é
+// estável, então dentro da situação fica a ordem do backend. Quem separou acompanha nas duas
+// lojas até a entrega: o separado (T ou D) no card Separados e, na entrega no endereço e na
+// reposição, o que já saiu (R) no Saiu para entrega, até quem pediu dar o Recebido ou entregar
+// ao cliente (TASK-261)
+const separada = (r) => ['T', 'D'].includes(r.status)
+const ORDEM = ['A', 'S', 'T', 'R']
+const ordemDe = (r) => ORDEM.indexOf({ P: 'S', D: 'T' }[r.status] || r.status)
+const ordenar = (lista) => [...lista].sort((a, b) => ordemDe(a) - ordemDe(b))
 
-const porEtapa = (requisicoes) =>
-  ETAPAS.map((e) => ({
-    ...e,
-    itens: requisicoes.filter((r) => etapa(r) === e.chave),
-  })).filter((g) => g.itens.length)
-
-// "para atender" primeiro; depois um card por loja a que esta pediu (sem loja = Compras)
+// quatro cards: o que a loja tem para separar, o que ela separou e não saiu, o que ela pediu
+// (de qualquer loja, ou Compras: a linha diz para quem) e, por último, o que ela separou e já
+// saiu para entrega
 const cards = computed(() => {
   const loja = codestoquelocal.value
   const nome = lojas.value.find((l) => l.codestoquelocal === loja)?.estoquelocal
+  const minhas = sRequisicao.lista.filter((r) => r.codestoquelocalrequisitada === loja)
   const pedidas = sRequisicao.lista.filter((r) => r.codestoquelocalrequisitada !== loja)
-  const atendentes = [...new Set(pedidas.map((r) => r.codestoquelocalrequisitada))].sort(
-    (a, b) => (a ?? Infinity) - (b ?? Infinity),
-  )
   return [
     {
       chave: 'atender',
-      titulo: `Para ${nome} atender`,
+      titulo: 'Atender',
       icone: 'move_to_inbox',
-      atender: true,
-      requisicoes: sRequisicao.lista.filter((r) => r.codestoquelocalrequisitada === loja),
+      itens: ordenar(minhas.filter((r) => !separada(r) && r.status !== 'R')),
     },
-    ...atendentes.map((cod) => {
-      const requisicoes = pedidas.filter((r) => r.codestoquelocalrequisitada === cod)
-      return {
-        chave: cod ?? 'compras',
-        titulo: `${nome} pediu para ${requisicoes[0].requisitada || 'Compras'}`,
-        icone: 'outbox',
-        atender: false,
-        requisicoes,
-      }
-    }),
-  ]
-    .filter((c) => c.requisicoes.length)
-    .map((c) => ({ ...c, grupos: porEtapa(c.requisicoes) }))
+    {
+      chave: 'separados',
+      titulo: 'Separados',
+      icone: 'local_shipping',
+      itens: ordenar(minhas.filter(separada)),
+    },
+    {
+      chave: 'pedidos',
+      titulo: `${nome} pediu`,
+      icone: 'outbox',
+      itens: ordenar(pedidas),
+    },
+    {
+      chave: 'saiu',
+      titulo: STATUS.R.label,
+      icone: STATUS.R.icone,
+      itens: ordenar(minhas.filter((r) => r.status === 'R')),
+    },
+  ].filter((c) => c.itens.length)
 })
-
-// no "para atender" a linha diz quem pediu; no "que pedi" quem atende já é o card
-const legenda = (r, atender) =>
-  [
-    atender && `pedida por ${r.requisitante}`,
-    DESTINO[r.destino].curto,
-    r.status === 'D' && 'com divergências',
-    `${r.itens} ${r.itens == 1 ? 'item' : 'itens'}`,
-  ]
-    .filter(Boolean)
-    .join(' · ')
 
 const quantas = (n) => `${n} ${n === 1 ? 'requisição' : 'requisições'}`
 
@@ -148,56 +137,31 @@ onMounted(async () => {
         Nenhuma requisição nesta loja.
       </MgEmptyState>
 
+      <!-- uma lista por card: o título do card e a linha têm o ícone na mesma coluna e o texto
+           no mesmo recuo (TASK-261) -->
       <q-card v-for="c in cards" :key="c.chave" flat bordered class="q-mb-md">
-        <q-item>
-          <q-item-section avatar>
-            <q-avatar :icon="c.icone" color="primary" text-color="white" />
-          </q-item-section>
-          <q-item-section>
-            <q-item-label class="text-subtitle1 text-weight-medium">{{ c.titulo }}</q-item-label>
-            <q-item-label caption>{{ quantas(c.requisicoes.length) }}</q-item-label>
-          </q-item-section>
-        </q-item>
+        <q-list separator>
+          <q-item>
+            <q-item-section avatar>
+              <q-icon :name="c.icone" color="primary" />
+            </q-item-section>
+            <q-item-section>
+              <q-item-label class="text-subtitle1 text-weight-medium">{{ c.titulo }}</q-item-label>
+              <q-item-label caption>{{ quantas(c.itens.length) }}</q-item-label>
+            </q-item-section>
+          </q-item>
 
-        <template v-for="g in c.grupos" :key="g.chave">
-          <q-separator />
-          <q-item-label header class="row items-center text-weight-medium" :class="`text-${g.cor}`">
-            <q-icon :name="g.icone" size="xs" class="q-mr-sm" />
-            {{ g.label }} · {{ g.itens.length }}
-          </q-item-label>
-          <q-list separator>
-            <q-item
-              v-for="r in g.itens"
-              :key="r.codrequisicao"
-              clickable
-              :to="`/requisicao/${r.codrequisicao}`"
-            >
-              <q-item-section>
-                <q-item-label class="ellipsis">
-                  {{ formataCodigo(r.codrequisicao) }} · {{ r.siglarequisitante }} →
-                  {{ r.siglarequisitada || 'Compras' }}
-                  <template v-if="r.nome"> · {{ r.nome }}</template>
-                </q-item-label>
-                <q-item-label caption class="ellipsis">{{ legenda(r, c.atender) }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-chip
-                  size="sm"
-                  :color="PRIORIDADE[r.prioridade]?.cor"
-                  text-color="white"
-                  :label="PRIORIDADE[r.prioridade]?.label"
-                />
-              </q-item-section>
-              <q-item-section side>
-                <q-item-label caption>{{ tempoRelativo(r.criacao) }}</q-item-label>
-              </q-item-section>
-              <q-item-section side>
-                <q-icon name="chevron_right" />
-              </q-item-section>
-            </q-item>
-          </q-list>
-        </template>
+          <RequisicaoLinha
+            v-for="r in c.itens"
+            :key="r.codrequisicao"
+            :requisicao="r"
+            :quando="tempoRelativo(r.criacao)"
+          />
+        </q-list>
       </q-card>
+
+      <!-- espaço para o botão + não cobrir a última requisição -->
+      <div class="q-py-xl" />
     </div>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">

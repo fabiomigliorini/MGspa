@@ -1857,7 +1857,8 @@ export const negocioStore = defineStore('negocio', {
       // as mesmas conferências do Fechar (RequisicaoNegocioService::conferirCoerencia)
       let recusa = null
       if (!['A', 'S', 'P'].includes(req.status)) {
-        recusa = `A requisição #${cod} está ${req.statusdescricao?.toLowerCase()}.`
+        const situacao = req.naoatendida ? 'Não atendida' : req.statusdescricao
+        recusa = `A requisição #${cod} não aceita mais separação (situação: ${situacao}).`
       } else if (req.codestoquelocalrequisitada != this.negocio.codestoquelocal) {
         const local = await db.estoqueLocal.get(this.negocio.codestoquelocal)
         recusa = `A requisição #${cod} é para ${req.requisitada} atender, e este negócio é do ${local?.estoquelocal ?? 'outro local'}.`

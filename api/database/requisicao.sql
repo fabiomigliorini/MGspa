@@ -46,7 +46,8 @@ CREATE TABLE IF NOT EXISTS tblrequisicao (
     codpdv bigint NOT NULL,
     observacoes varchar(500),
     -- A aguardando, S em separacao, P separado parcial / pendente, T separado
-    -- total, D separado com divergencias, E entregue, C cancelada
+    -- total, D separado com divergencias, R com o entregador (destino E,
+    -- requisicao_entregador.sql), E entregue, C cancelada
     status char(1) NOT NULL DEFAULT 'A',
     -- finalizacao manual (com divergencias), por quem atende
     finalizacao timestamp(0) without time zone,
@@ -69,7 +70,7 @@ CREATE TABLE IF NOT EXISTS tblrequisicao (
     CONSTRAINT tblrequisicao_telefones_check
         CHECK (coalesce(cardinality(telefones), 0) = coalesce(cardinality(nomes), 0)),
     CONSTRAINT tblrequisicao_endereco_check CHECK (destino <> 'E' OR endereco IS NOT NULL),
-    CONSTRAINT tblrequisicao_status_check CHECK (status IN ('A', 'S', 'P', 'T', 'D', 'E', 'C')),
+    CONSTRAINT tblrequisicao_status_check CHECK (status IN ('A', 'S', 'P', 'T', 'D', 'R', 'E', 'C')),
     CONSTRAINT tblrequisicao_codigoretirada_check CHECK (codigoretirada ~ '^[0-9]{6}$')
 );
 

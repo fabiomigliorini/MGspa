@@ -31,7 +31,8 @@ class RequisicaoController extends Controller
             'codpessoa' => 'nullable|integer',
             'codestoquelocalrequisitante' => 'nullable|integer',
             'codestoquelocalrequisitada' => 'nullable|integer',
-            'status' => 'nullable|in:A,S,P,T,D,E,C',
+            // uma letra ou uma lista ("S,P": o filtro junta os status que tem o mesmo nome)
+            'status' => ['nullable', 'regex:/^[' . implode('', array_keys(Requisicao::STATUS)) . '](,[' . implode('', array_keys(Requisicao::STATUS)) . '])*$/'],
             'destino' => 'nullable|in:R,E,L',
             'prioridade' => 'nullable|in:' . implode(',', array_keys(Requisicao::PRIORIDADES)),
             'de' => 'nullable|date',
@@ -141,7 +142,7 @@ class RequisicaoController extends Controller
     }
 
     // PDF de uma via. Pela URL assinada (o MGprint baixa) ou logado: a via da loja que
-    // pede tem o codigo de retirada, so' o dispositivo dela (ou Gerente) abre
+    // pede tem o codigo de retirada, so' o dispositivo dela (ou Administrador) abre
     public function pdf(Request $request, $codrequisicao)
     {
         $request->validate([
@@ -151,7 +152,7 @@ class RequisicaoController extends Controller
         $req = Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao);
         if (!$request->hasValidSignature() && $request->via === RequisicaoImpressaoService::VIA_REQUISITANTE) {
             $pdv = PdvService::podeAcessar(PdvService::uuid($request)) ?: null;
-            if (!RequisicaoService::ehRequisitante($req, $pdv) && !RequisicaoService::ehGerente()) {
+            if (!RequisicaoService::ehRequisitante($req, $pdv) && !RequisicaoService::ehAdministrador()) {
                 abort(403, 'A via do cliente (com o código de retirada) só abre no dispositivo da loja que pediu!');
             }
         }
@@ -172,7 +173,7 @@ class RequisicaoController extends Controller
         $pdv = $request->attributes->get('pdv');
         $req = Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao);
         if ($request->via === RequisicaoImpressaoService::VIA_REQUISITANTE
-            && !RequisicaoService::ehRequisitante($req, $pdv) && !RequisicaoService::ehGerente()) {
+            && !RequisicaoService::ehRequisitante($req, $pdv) && !RequisicaoService::ehAdministrador()) {
             abort(403, 'A via do cliente (com o código de retirada) só imprime na loja que pediu!');
         }
         $impressora = $request->filled('impressora')
@@ -299,6 +300,24 @@ class RequisicaoController extends Controller
         DB::transaction(function () use ($codrequisicao, $dados, $pdv) {
             $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
             RequisicaoEntregaService::entregar($req, $dados, $pdv);
+        });
+        return new RequisicaoResource(Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao));
+    }
+
+    // a saida das partes da loja que atende: na entrega no endereco o entregador da loja que
+    // pediu buscou; na reposicao, um funcionario da loja que atende levou
+    public function retirar(Request $request, $codrequisicao)
+    {
+        $dados = $request->validate([
+            'recebedor' => 'required|string|max:100',
+            'observacao' => 'nullable|string|max:500',
+            'codnegocios' => 'nullable|array',
+            'codnegocios.*' => 'integer',
+        ]);
+        $pdv = $request->attributes->get('pdv');
+        DB::transaction(function () use ($codrequisicao, $dados, $pdv) {
+            $req = Requisicao::lockForUpdate()->findOrFail($codrequisicao);
+            RequisicaoEntregaService::retirar($req, $dados, $pdv);
         });
         return new RequisicaoResource(Requisicao::with(RequisicaoResource::RELACOES)->findOrFail($codrequisicao));
     }

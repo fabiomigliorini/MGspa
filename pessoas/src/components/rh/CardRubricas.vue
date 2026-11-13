@@ -20,6 +20,9 @@ const props = defineProps({
   podeEditar: { type: Boolean, default: false },
   codperiodo: { type: [Number, String], default: null },
   nomeRotaExtrato: { type: String, default: 'rhIndicadorExtrato' },
+  // Faltas do colaborador no período e dias úteis — para explicar o desconto.
+  faltas: { type: Number, default: null },
+  diasuteis: { type: Number, default: null },
 })
 
 const emit = defineEmits(['editar', 'excluir', 'toggle-concedido', 'nova-rubrica', 'editar-meta'])
@@ -38,15 +41,18 @@ const tipoValorColor = (tipo) => {
 
 const rubricaDescricao = (r) => r.descricao || r.rubrica?.descricao || '—'
 
-// Rubrica percentual sobre indicador de SETOR é fatia de um bolo coletivo: o
-// "Percentual Padrão" do catálogo é o pool cheio do setor (ex.: 6% da venda do
-// xerox) e o percentual da rubrica já vem com a fatia embutida. Mostrar os dois
-// deixa à vista quanto do pool é desta pessoa — sem isso a conta era de cabeça.
-const fatiaPool = (r) => {
-  if (r.tipovalor !== 'P' || r.indicador?.tipo !== 'S') return null
-  const pool = parseFloat(r.rubrica?.valorpadrao) || 0
-  if (!pool) return null
-  return Math.round(((parseFloat(r.percentual) || 0) / pool) * 100 * 10) / 10
+// Por que o valor saiu menor: os dias da própria rubrica (quem cobre alguns
+// dias no setor) ou as faltas do período, se o catálogo desconta absenteísmo.
+const diasRubrica = (r) => {
+  if (r.diastrabalhados !== null && r.diastrabalhados !== undefined) {
+    return props.diasuteis
+      ? Math.min(r.diastrabalhados, props.diasuteis) + ' de ' + props.diasuteis + ' dias'
+      : r.diastrabalhados + ' dias'
+  }
+  if (r.rubrica?.descontaabsenteismo && props.faltas > 0) {
+    return '− ' + props.faltas + (props.faltas === 1 ? ' falta' : ' faltas')
+  }
+  return null
 }
 
 const condicaoLabel = (rubrica) => {
@@ -181,16 +187,14 @@ const linhaClasse = (r) => (!r.concedido ? 'text-grey-5' : '')
       </template>
 
       <template #celula-valor="{ linha }">
-        <template v-if="linha.tipovalor === 'P'">
-          {{ linha.percentual }}%
-          <div v-if="fatiaPool(linha)" class="text-caption text-grey-7">
-            {{ fatiaPool(linha) }}% do pool
-          </div>
-        </template>
+        <template v-if="linha.tipovalor === 'P'">{{ linha.percentual }}%</template>
         <template v-else-if="linha.tipovalor === 'Q'">
           {{ formataNumero(linha.valorunitario) }} × {{ linha.quantidade }}
         </template>
         <template v-else>{{ formataNumero(linha.valorfixo) }}</template>
+        <div v-if="diasRubrica(linha)" class="text-caption text-red-7">
+          {{ diasRubrica(linha) }}
+        </div>
       </template>
 
       <template #celula-indicador="{ linha }">

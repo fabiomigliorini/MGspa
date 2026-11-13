@@ -37,6 +37,17 @@ const abertura = computed(() => periodo.value?.contagem?.abertura ?? null)
 // abre a contagem só daquele bloco; `confere`: a contagem inicial do bloco bate com a abertura
 // (azul) ou não (roxo, "Divergente"); null sem contagem inicial
 const quadro = computed(() => periodo.value?.quadro ?? null)
+// lançamento cancelado muda o esperado e não a contagem (TASK-246); só o cancelado no
+// portador (transferência, ajuste, item), pelo estado: `cancelado` também marca a linha de
+// pagamento trocada, que somaria em dobro
+const totalCancelado = computed(
+  () =>
+    Math.round(
+      (periodo.value?.lancamentos ?? [])
+        .filter((l) => l.estado === 'C')
+        .reduce((t, l) => t + l.valor, 0) * 100,
+    ) / 100,
+)
 const linhasEspecie = computed(() => quadro.value?.linhas ?? [])
 const corConfere = (c) => (c === true ? 'text-blue-8' : c === false ? 'text-purple-8' : '')
 
@@ -172,6 +183,12 @@ const saldoInicialSaida = computed(() =>
                 class="text-caption text-weight-regular text-grey-7"
               >
                 Acima Tolerância {{ formataNumero(periodo.tolerancia) }}
+              </div>
+              <div
+                v-if="!naTolerancia(contado('final').diferenca) && totalCancelado"
+                class="text-caption text-weight-regular text-grey-7"
+              >
+                Lançamento cancelado neste período: {{ sinal(totalCancelado) }}
               </div>
             </td>
           </tr>
