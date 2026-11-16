@@ -3,17 +3,17 @@ id: TASK-265
 title: >-
   Relatório Folha do período é confuso: mesmo nome de loja em dois níveis, 7
   páginas de tabelas picadas
-status: In Progress
+status: Done
 assignee:
   - '@fabio'
 created_date: '2026-11-04 19:36'
-updated_date: '2026-11-16 14:21'
+updated_date: '2026-11-16 15:19'
 labels:
   - pessoas
 dependencies: []
 priority: medium
 type: enhancement
-ordinal: 279000
+ordinal: 287000
 ---
 
 ## Description
