@@ -1,16 +1,16 @@
 ---
 id: TASK-166
 title: Cancelar nota pode deixar ela cancelada na SEFAZ e autorizada no sistema
-status: To Do
+status: In Progress
 assignee: []
 created_date: '2026-09-23 20:38'
-updated_date: '2026-09-23 21:17'
+updated_date: '2026-11-16 15:20'
 labels:
   - api
 dependencies: []
 priority: medium
 type: bug
-ordinal: 175000
+ordinal: 11000
 ---
 
 ## Description
