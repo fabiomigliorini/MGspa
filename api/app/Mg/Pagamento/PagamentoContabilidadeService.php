@@ -9,9 +9,9 @@ use Mg\Portador\Portador;
 use Mg\Titulo\MovimentoTituloService;
 use Mpdf\Mpdf;
 
-// Titulos pagos no periodo, para a contabilidade (TASK-256): os pagamentos de
-// titulo efetivados em que saiu dinheiro, encontro de contas e folha, ou que
-// mexeram em titulo a pagar; cada um com as linhas ativas dos titulos
+// Titulos pagos no periodo, para a contabilidade (TASK-256): os titulos a pagar
+// (despesa, tbltipotitulo.pagar: TASK-277) baixados nos pagamentos efetivados
+// do periodo; cada um com as linhas ativas desses titulos
 // (principal, juros, multa, desconto e total), por fiscal/gerencial, filial e
 // dia, em ordem crescente de valor (TASK-267); a compensacao vai para baixo do
 // adiantamento que ela consome, mesmo de outro dia (TASK-272). Filial e
@@ -107,8 +107,6 @@ class PagamentoContabilidadeService
             $where .= ' and coalesce(p.codportadordestino, p.codportadororigem) = :codportador';
             $params['codportador'] = (int) $filtros['codportador'];
         }
-        $compensacao = PagamentoService::MEIO_COMPENSACAO;
-        $folha = PagamentoService::MEIO_FOLHA;
         $limite = static::LIMITE + 1;
 
         return DB::select("
@@ -136,21 +134,10 @@ class PagamentoContabilidadeService
             and p.transacao between :de and :ate
             and {$ativa('mt')}
             {$where}
-            and (
-                -- saiu dinheiro
-                (p.codportadororigem is not null and p.codportadordestino is null)
-                -- encontro de contas e acerto do RH
-                or p.meio in ({$compensacao}, {$folha})
-                -- mexeu em titulo a pagar (baixa contra adiantamento com sobra, devolucao do adiantamento)
-                or exists (
-                    select 1 from tblmovimentotitulo x
-                    inner join tbltitulo xt on (xt.codtitulo = x.codtitulo)
-                    inner join tbltipotitulo xtt on (xtt.codtipotitulo = xt.codtipotitulo)
-                    where x.codpagamento = p.codpagamento
-                    and xtt.pagar
-                    and {$ativa('x')}
-                )
-            )
+            -- so' despesa: o lado a receber do encontro de contas, vales e
+            -- creditos de cliente ficam fora; o pagamento conta todas as linhas
+            -- em linhaspagamento ('1 de 2 titulos no filtro')
+            and tt.pagar
             order by t.gerencial, f.filial, p.transacao::date, p.codpagamento,
                 mt.total, t.vencimento, t.numero, mt.codmovimentotitulo
             limit {$limite}

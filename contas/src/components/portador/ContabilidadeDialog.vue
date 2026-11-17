@@ -1,6 +1,6 @@
 <script setup>
 // Títulos pagos no período, para a contabilidade (TASK-256), aberto pelo cabeçalho do painel
-// /portador. Filial e fiscal/gerencial são do título; o PDF agrupa por fiscal/gerencial, filial e
+// /portador. Só títulos a pagar (TASK-277). Filial e fiscal/gerencial são do título; o PDF agrupa por fiscal/gerencial, filial e
 // dia, com os pagamentos em valor crescente e o resumo por portador no fim de cada filial
 // (TASK-267). Fica aberto para gerar a próxima filial.
 import { ref } from 'vue'
