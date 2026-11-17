@@ -4,11 +4,11 @@ title: Cancelar nota pode deixar ela cancelada na SEFAZ e autorizada no sistema
 status: In Progress
 assignee: []
 created_date: '2026-09-23 20:38'
-updated_date: '2026-11-16 15:20'
+updated_date: '2026-11-16 19:55'
 labels:
   - api
 dependencies: []
-priority: medium
+priority: high
 type: bug
 ordinal: 11000
 ---
@@ -26,3 +26,16 @@ Fix: ao receber 573 no cancelamento, consultar a chave e vincular o evento de ca
 
 Conferir no banco se ha notas nessa situacao: AUT aqui, canceladas na SEFAZ.
 <!-- SECTION:DESCRIPTION:END -->
+
+## Acceptance Criteria
+<!-- AC:BEGIN -->
+- [ ] #1 Cancelar uma NF-e ou NFC-e que a SEFAZ aceitou deixa a nota Cancelada no sistema, inclusive quando a resposta se perde e a nova tentativa volta 'duplicidade de evento' (573)
+- [ ] #2 A causa do caso relatado em 16/11/2026 está identificada no log do cancelamento; se não for a 573, vira critério próprio
+- [ ] #3 Levantadas as notas Autorizadas aqui e canceladas na SEFAZ, e as devoluções emitidas em cima delas
+<!-- AC:END -->
+
+## Implementation Notes
+
+<!-- SECTION:NOTES:BEGIN -->
+Relato de 16/11/2026: o usuário cancela a NF-e ou NFC-e, a SEFAZ cancela, mas o sistema continua 'Autorizada'. Ele acha que não cancelou e pede a devolução, que gera nota de devolução de nota já cancelada na SEFAZ. Com a nota Cancelada no sistema, a devolução do notas já recusa (NotaFiscalDevolucaoService::gerarDevolucao só aceita Autorizada ou Lançada). Contorno a confirmar: o Consultar da nota (NFePHPService::consultar) lê o evento de cancelamento (tpEvento 110111) e deve corrigir a situação. Prioridade subiu de Medium para High.
+<!-- SECTION:NOTES:END -->
