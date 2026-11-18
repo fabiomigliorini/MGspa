@@ -22,6 +22,16 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Ambiente da SEFAZ (NF-e, NFC-e, MDF-e)
+    |--------------------------------------------------------------------------
+    | 1 = produção, 2 = homologação. É do servidor, não da filial: assim a cópia
+    | da base de produção para o dev não traz o ambiente junto. Só é produção se
+    | o .env disser 1 — sem a variável, ou com outro valor, é homologação.
+    */
+    'nfe_ambiente' => env('NFE_AMBIENTE') == 1 ? 1 : 2,
+
+    /*
+    |--------------------------------------------------------------------------
     | Caminhos em disco
     |--------------------------------------------------------------------------
     */

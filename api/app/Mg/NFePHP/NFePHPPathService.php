@@ -91,7 +91,7 @@ class NFePHPPathService
      */
     public static function pathDiretorio(string $tipo, Filial $filial, Carbon $data)
     {
-        $ambiente = ($filial->nfeambiente == 1) ? 'producao' : 'homologacao';
+        $ambiente = (config('mg.nfe_ambiente') == 1) ? 'producao' : 'homologacao';
         return rtrim(config('mg.paths.nfe_php'), '/')
             . "/{$tipo}/{$filial->codfilial}/{$ambiente}/"
             . $data->format('Y/m/d');
@@ -102,7 +102,7 @@ class NFePHPPathService
      */
     public static function pathDiretorioMes(string $tipo, Filial $filial, Carbon $mes)
     {
-        $ambiente = ($filial->nfeambiente == 1) ? 'producao' : 'homologacao';
+        $ambiente = (config('mg.nfe_ambiente') == 1) ? 'producao' : 'homologacao';
         return rtrim(config('mg.paths.nfe_php'), '/')
             . "/{$tipo}/{$filial->codfilial}/{$ambiente}/"
             . $mes->format('Y/m');

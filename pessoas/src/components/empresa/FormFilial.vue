@@ -34,11 +34,6 @@ const opcoesCrt = [
   { label: '3 - Regime Normal', value: 3 },
 ]
 
-const opcoesAmbiente = [
-  { label: 'Produção', value: 1 },
-  { label: 'Homologação', value: 2 },
-]
-
 const validaObrigatorio = (val) => !!val || 'Campo obrigatório'
 
 const submit = async () => {
@@ -74,15 +69,6 @@ defineExpose({
       emit-value
       map-options
       clearable
-    />
-
-    <q-select
-      outlined
-      v-model="model.nfeambiente"
-      :options="opcoesAmbiente"
-      label="Ambiente NFe"
-      emit-value
-      map-options
     />
 
     <MgInputValor v-model="model.nfeserie" :decimals="0" :grouping="false" label="Série NFe" />

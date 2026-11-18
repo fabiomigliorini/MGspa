@@ -38,7 +38,7 @@ class InutilizacaoService
             'serie' => $serie,
             'numeroinicial' => $numeroInicial,
             'numerofinal' => $numeroFinal,
-            'ambiente' => $filial->nfeambiente,
+            'ambiente' => config('mg.nfe_ambiente'),
             'justificativa' => $justificativa,
         ]);
 

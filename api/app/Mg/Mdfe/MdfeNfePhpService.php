@@ -51,7 +51,7 @@ class MdfeNfePhpService
          */
         $std = new \stdClass();
         $std->cUF = $mdfe->Filial->Pessoa->Cidade->Estado->codigooficial;
-        $std->tpAmb = $mdfe->Filial->nfeambiente;
+        $std->tpAmb = config('mg.nfe_ambiente');
         $std->tpEmit = $mdfe->tipoemitente;
         // 458 - Rejeição: Tipo de Transportador não deve ser informado para Emitente de Carga Própria proprietário do veículo
         //foreach ($mdfe->MdfeVeiculoS as $mdfeVeiculo) {

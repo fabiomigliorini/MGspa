@@ -40,7 +40,6 @@ class NFePHPDistDfeService
         $tools->model('55');
 
         // mesmo em teste utilizar na producao
-        // $tools->setEnvironment($filial->nfeambiente);
         $tools->setEnvironment(1);
 
         //este numero deverá vir do banco de dados nas proximas buscas para reduzir

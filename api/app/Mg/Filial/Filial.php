@@ -37,8 +37,6 @@ class Filial extends MgModel
     const CRT_SIMPLES = 1;
     const CRT_SIMPLES_EXCESSO = 2;
     const CRT_REGIME_NORMAL = 3;
-    const NFEAMBIENTE_PRODUCAO = 1;
-    const NFEAMBIENTE_HOMOLOGACAO = 2;
 
     protected $table = 'tblfilial';
     protected $primaryKey = 'codfilial';
@@ -61,15 +59,13 @@ class Filial extends MgModel
         'inativo',
         'nfcetoken',
         'nfcetokenid',
-        'nfeambiente',
         'nfeserie',
         'odbcnumeronotafiscal',
         'pagarmeid',
         'pagarmesk',
         'senhacertificado',
         'tokenibpt',
-        'ultimonsu',
-        'validadecertificado'
+        'ultimonsu'
     ];
 
     protected $casts = [
@@ -88,10 +84,8 @@ class Filial extends MgModel
         'emitenfe' => 'boolean',
         'empresadominio' => 'float',
         'inativo' => 'datetime',
-        'nfeambiente' => 'integer',
         'nfeserie' => 'integer',
-        'ultimonsu' => 'integer',
-        'validadecertificado' => 'date'
+        'ultimonsu' => 'integer'
     ];
 
 

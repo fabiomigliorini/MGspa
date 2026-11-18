@@ -39,7 +39,7 @@ class NFePHPConfigService
 
         $config = [
            'atualizacao' => '2018-02-06 06:01:21',
-           'tpAmb' => $filial->nfeambiente, // Se deixar o tpAmb como 2 você emitirá a nota em ambiente de homologação(teste) e as notas fiscais aqui não tem valor fiscal
+           'tpAmb' => config('mg.nfe_ambiente'), // Se deixar o tpAmb como 2 você emitirá a nota em ambiente de homologação(teste) e as notas fiscais aqui não tem valor fiscal
            'razaosocial' => $filial->Pessoa->pessoa,
            'siglaUF' => $filial->Pessoa->Cidade->Estado->sigla,
            'cnpj' => $cnpj,

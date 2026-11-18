@@ -43,7 +43,7 @@ class SefazLogService
                 'codfilial' => $filial->codfilial,
                 'codnotafiscal' => $nf?->codnotafiscal,
                 'operacao' => mb_substr($operacao, 0, 50),
-                'ambiente' => $filial->nfeambiente,
+                'ambiente' => config('mg.nfe_ambiente'),
                 'tentativa' => $tentativa,
                 'duracaoms' => 0,
                 'sucesso' => false,
@@ -99,7 +99,7 @@ class SefazLogService
                     'codfilial' => $filial->codfilial,
                     'codnotafiscal' => $nf?->codnotafiscal,
                     'operacao' => mb_substr($operacao, 0, 50),
-                    'ambiente' => $filial->nfeambiente,
+                    'ambiente' => config('mg.nfe_ambiente'),
                     'tentativa' => $tentativa,
                     'codusuariocriacao' => static::codusuario(),
                 ]));

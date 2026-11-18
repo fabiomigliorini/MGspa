@@ -1,5 +1,5 @@
 <script>
-import { formataData, formataCodigo, formataTimestamp } from '@components/formatters'
+import { formataCodigo, formataTimestamp } from '@components/formatters'
 import { ref, onMounted, defineAsyncComponent, computed } from 'vue'
 import { empresaStore } from 'src/stores/empresa'
 import { useQuasar } from 'quasar'
@@ -22,14 +22,6 @@ export default {
       return formataCodigo(cod)
     }
 
-    const ambienteNfeLabel = computed(() => {
-      const ambientes = {
-        1: 'Produção',
-        2: 'Homologação',
-      }
-      return ambientes[sEmpresa.filial.nfeambiente] || '-'
-    })
-
     const criacaoFormatada = computed(() => {
       if (!sEmpresa.filial.criacao) return '-'
       return formataTimestamp(sEmpresa.filial.criacao)
@@ -38,11 +30,6 @@ export default {
     const alteracaoFormatada = computed(() => {
       if (!sEmpresa.filial.alteracao) return '-'
       return formataTimestamp(sEmpresa.filial.alteracao)
-    })
-
-    const validadeCertificadoFormatada = computed(() => {
-      if (!sEmpresa.filial.validadecertificado) return '-'
-      return formataData(sEmpresa.filial.validadecertificado)
     })
 
     const carregarFilial = async () => {
@@ -114,10 +101,8 @@ export default {
       loading,
       erro,
       formatarCodigo,
-      ambienteNfeLabel,
       criacaoFormatada,
       alteracaoFormatada,
-      validadeCertificadoFormatada,
       confirmarExclusao,
     }
   },
@@ -266,16 +251,6 @@ export default {
                       </div>
 
                       <div class="col-xs-12 col-sm-6">
-                        <div class="text-overline text-grey-7">Ambiente NFe</div>
-                        <div class="text-body2">
-                          <q-badge
-                            :color="sEmpresa.filial.nfeambiente === 1 ? 'green' : 'orange'"
-                            :label="ambienteNfeLabel"
-                          />
-                        </div>
-                      </div>
-
-                      <div class="col-xs-12 col-sm-6">
                         <div class="text-overline text-grey-7">Série NFe</div>
                         <div class="text-body2">
                           {{ sEmpresa.filial.nfeserie || '-' }}
@@ -313,13 +288,6 @@ export default {
                         <div class="text-overline text-grey-7">Último NSU</div>
                         <div class="text-body2">
                           {{ sEmpresa.filial.ultimonsu }}
-                        </div>
-                      </div>
-
-                      <div class="col-xs-12 col-sm-6" v-if="sEmpresa.filial.validadecertificado">
-                        <div class="text-overline text-grey-7">Validade Certificado</div>
-                        <div class="text-body2">
-                          {{ validadeCertificadoFormatada }}
                         </div>
                       </div>
 
