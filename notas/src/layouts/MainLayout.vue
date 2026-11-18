@@ -13,27 +13,19 @@ const auth = useAuth()
 
 const menuGroups = [
   {
-    label: 'Emissões',
+    label: 'Produtos',
     items: [
-      { label: 'Início', icon: 'home', color: 'brown', to: '/' },
       { label: 'Notas de Produtos', icon: 'description', color: 'blue', to: '/nota' },
-      { label: 'Notas de Serviço', icon: 'receipt', color: 'teal', to: '/nota-servico' },
+      { label: 'DFe NFe', icon: 'sync', color: 'blue', to: '/dfe' },
       { label: 'NFe Terceiro', icon: 'move_to_inbox', color: 'orange', to: '/nfe-terceiro' },
       { label: 'Inutilizações', icon: 'block', color: 'red', to: '/inutilizacao' },
     ],
   },
   {
-    label: 'Parametrização',
+    label: 'Serviços',
     items: [
-      { label: 'Reforma', icon: 'account_balance', color: 'green', to: '/tributacao' },
-      { label: 'Naturezas', icon: 'percent', color: 'green', to: '/natureza-operacao' },
-      { label: 'Tributações', icon: 'receipt_long', color: 'teal', to: '/tributacao-cadastro' },
-      { label: 'CFOPs', icon: 'compare_arrows', color: 'warning', to: '/cfop' },
-      { label: 'Cidades', icon: 'location_city', color: 'purple', to: '/cidade' },
-      { label: 'DFe', icon: 'sync', color: 'blue', to: '/dfe' },
-      { label: 'DFe NFS-e', icon: 'sync', color: 'teal', to: '/nfse-dfe' },
-      { label: 'Domínio', icon: 'file_download', color: 'deep-orange', to: '/dominio' },
-      { label: 'IBPT', icon: 'upload_file', color: 'deep-purple', to: '/ibpt' },
+      { label: 'Notas de Serviço', icon: 'description', color: 'green', to: '/nota-servico' },
+      { label: 'DFe NFS-e', icon: 'sync', color: 'green', to: '/nfse-dfe' },
     ],
   },
   {
@@ -41,6 +33,18 @@ const menuGroups = [
     items: [
       { label: 'MDFe', icon: 'receipt_long', color: 'teal', to: '/mdfe' },
       { label: 'Veículos', icon: 'local_shipping', color: 'indigo', to: '/veiculo' },
+    ],
+  },
+  {
+    label: 'Configurações',
+    items: [
+      { label: 'Reforma', icon: 'account_balance', color: 'green', to: '/tributacao' },
+      { label: 'Naturezas', icon: 'percent', color: 'green', to: '/natureza-operacao' },
+      { label: 'Tributações', icon: 'receipt_long', color: 'teal', to: '/tributacao-cadastro' },
+      { label: 'CFOPs', icon: 'compare_arrows', color: 'warning', to: '/cfop' },
+      { label: 'Cidades', icon: 'location_city', color: 'purple', to: '/cidade' },
+      { label: 'Domínio', icon: 'file_download', color: 'deep-orange', to: '/dominio' },
+      { label: 'IBPT', icon: 'upload_file', color: 'deep-purple', to: '/ibpt' },
     ],
   },
 ]

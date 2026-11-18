@@ -1,10 +1,10 @@
 ---
 id: TASK-279
 title: 'Emitir nota de serviço pelo app notas, agora que Sinop usa o emissor nacional'
-status: Done
+status: In Progress
 assignee: []
 created_date: '2026-11-18 02:01'
-updated_date: '2026-11-18 21:43'
+updated_date: '2026-11-18 22:20'
 labels:
   - notas
 dependencies: []
@@ -46,6 +46,11 @@ Prazo: emitir em 18/11/2026 (testes de manhã, deploy ao meio-dia). Mínimo para
 - [ ] #7 Enviar o DANFSe e o XML por e-mail ao tomador, por botão no detalhe da nota
 - [x] #8 Tabelas oficiais de código de tributação nacional e NBS importadas (Anexo B v1.01) e emitenfse/nfseserie no formulário da filial do pessoas
 - [x] #9 Menu do notas separa Notas de Produtos de Notas de Serviço
+- [x] #10 Menu do notas separa DFe NFe de DFe NFS-e
+- [x] #11 DFe NFS-e: a lista mostra só a outra parte (o tomador quando a filial emitiu, o emitente quando ela é a tomadora)
+- [ ] #12 DFe NFS-e: filtro para ver só as notas em que a filial é a emitente, ou só as em que ela é a tomadora
+- [ ] #13 DFe NFS-e: botão para abrir o DANFSe de qualquer NFS-e da caixa, inclusive as emitidas por outros contra nós
+- [ ] #14 Menu do notas agrupado em Produtos, Serviços, Transporte e Configurações, com o mesmo ícone de nota (azul produtos, verde serviços)
 <!-- AC:END -->
 
 ## Implementation Notes
