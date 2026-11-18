@@ -4,7 +4,7 @@ title: 'Emitir nota de serviço pelo app notas, agora que Sinop usa o emissor na
 status: In Progress
 assignee: []
 created_date: '2026-11-18 02:01'
-updated_date: '2026-11-18 15:06'
+updated_date: '2026-11-18 15:21'
 labels:
   - notas
 dependencies: []
@@ -146,7 +146,7 @@ Terceira rodada de testes (18/11/2026):
 Ajustes pedidos no teste do Fábio (18/11/2026):
 - DANFSe não quebrava a linha da descrição e das observações (a NFS-e guarda ' | ' no lugar da quebra, porque o XSD não aceita quebra de linha). Agora a cópia do XML que vai para o DANFSe volta o ' | ' para quebra de linha (o XML fiscal fica igual): nas observações sempre; na descrição só se couber — a caixa 'Descrição do Serviço' do sped-da tem altura fixa (~3 linhas inteiras a 7pt) e o resto invadia o bloco de Tributação Municipal (os métodos de desenho do sped-da são private, não dá para mudar a altura). Sem caber em linhas, fica corrido; acima de 500 caracteres, corta com reticências só no PDF. Hint do formulário: 'No DANFSe cabem cerca de 3 linhas: o detalhe vai nas Observações'.
 - Duplicar agora pede confirmação ('Tem certeza que quer duplicar…'); Cancelar não cria nada (testado no Chrome sem tela).
-- Alterar a nota recusada continuava mostrando a recusa antiga (trocou o tomador, a faixa vermelha seguia com o E0240 do tomador anterior). Agora salvar a alteração apaga a mensagem da recusa; o status fica 'Não Autorizada' (DPS numerada pode ter sido autorizada sem resposta, e o Enviar consulta antes de reenviar).
+- Alterar a nota recusada continuava mostrando a recusa antiga (trocou o tomador, a faixa vermelha seguia com o E0240 do tomador anterior). Agora salvar a alteração apaga a mensagem da recusa; o status fica 'Não Autorizada' (DPS numerada pode ter sido autorizada sem resposta, e o Enviar consulta antes de reenviar). Testado pela API em transação desfeita (nota 16, ERR E0204): trocar o tomador limpa a mensagem e mantém ERR e o número; alteração recusada (validação, troca de filial da DPS numerada) não apaga a recusa; nota autorizada segue sem alterar; nota em digitação segue DIG.
 
 Formulário da nota de serviço refeito para celular (pedido do Fábio, 18/11/2026): cinco cards com o cabeçalho azul da tela de detalhe — Nota (filial e competência na mesma linha), Tomador (tomador; Retenção do ISS como select e a alíquota ao lado, desabilitada sem retenção em vez de sumir), Serviço (código, NBS, descrição, local da prestação), Valores (valor, % tributos, descontos, 2 por linha no celular e 4 no desktop, com o resumo base/ISS retido/líquido no rodapé do card) e Observações. Conferido no Chrome sem tela a 412 px: sem rolagem lateral; retenção habilita a alíquota e deixa o tomador obrigatório.
 <!-- SECTION:NOTES:END -->
