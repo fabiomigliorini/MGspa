@@ -93,6 +93,10 @@
             width: 25mm;
         }
 
+        .quebra-pagina {
+            page-break-before: always;
+        }
+
         /* Total geral */
         table.total-geral {
             margin-top: 14px;
@@ -168,6 +172,57 @@
                 <td class="col-valor text-right">{{ formataNumero($totalBee + $totalDinheiro) }}</td>
             </tr>
         </table>
+    @endif
+
+    @if (!empty($empresasFolha))
+        <div class="quebra-pagina">
+            <div class="report-header">
+                <div class="report-header-right">
+                    <div class="page_number"></div>
+                    <div>{{ $dataGeracao }}</div>
+                </div>
+                <h1>Relatório Desconto em Folha</h1>
+                <p>Período: {{ $periodo }}</p>
+            </div>
+
+            @foreach ($empresasFolha as $emp)
+                <div class="empresa-grupo">
+                    <div class="empresa-titulo">{{ $emp['empresa'] }}</div>
+
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Nome</th>
+                                <th class="col-cpf">CPF</th>
+                                <th class="col-valor text-right">Valor</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach ($emp['linhas'] as $linha)
+                                <tr>
+                                    <td>{{ $linha['nome'] }}</td>
+                                    <td>{{ $linha['fisica'] ? formataCpf($linha['cpf']) : '' }}</td>
+                                    <td class="text-right">{{ formataNumero($linha['valor']) }}</td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <td colspan="2">Total {{ $emp['empresa'] }}</td>
+                                <td class="text-right">{{ formataNumero($emp['total']) }}</td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            @endforeach
+
+            <table class="total-geral">
+                <tr>
+                    <td>TOTAL GERAL</td>
+                    <td class="col-valor text-right">{{ formataNumero($totalFolha) }}</td>
+                </tr>
+            </table>
+        </div>
     @endif
 
 </body>
