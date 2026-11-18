@@ -857,7 +857,7 @@ class NFePHPService extends MgService
         $tools->model($modelo);
 
         $resp = static::chamarSefazComRetry(
-            fn() => $tools->sefazInutiliza($serie, $numeroInicial, $numeroFinal, $justificativa, $filial->nfeambiente),
+            fn() => $tools->sefazInutiliza($serie, $numeroInicial, $numeroFinal, $justificativa, config('mg.nfe_ambiente')),
             'inutiliza',
             $tools,
             $filial
@@ -1088,7 +1088,7 @@ class NFePHPService extends MgService
 
         // consulta chave da NFe na sefaz
         $resp = static::chamarSefazComRetry(
-            fn() => $tools->sefazConsultaChave($nf->nfechave, $nf->Filial->nfeambiente),
+            fn() => $tools->sefazConsultaChave($nf->nfechave, config('mg.nfe_ambiente')),
             "consultaChave",
             $tools,
             null,

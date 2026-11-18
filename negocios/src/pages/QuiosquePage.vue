@@ -19,13 +19,13 @@ const alternarTelaCheia = () => $q.fullscreen.toggle()
 // so abre o quiosque se o dispositivo (PDV) estiver ativo (ativo = autorizado)
 const ativo = computed(() => !!sSinc.pdv.codpdv && !sSinc.pdv.inativo)
 
-const TEMPO_ESPERA = 60000 // 60s depois da consulta -> volta pra tela de espera
+const TEMPO_ESPERA = 60000 // 60s sem uso -> volta pra tela de espera
 const TEMPO_NAO_ENCONTRADO = 8000 // limpa o "nao encontrado" mais rapido
 const TEMPO_LIMPAR_DIGITACAO = 10000 // pausa max entre teclas antes de zerar o codigo (digitacao manual lenta)
+const EVENTOS_USO = ['pointerdown', 'keydown', 'wheel', 'touchstart', 'scroll']
 
 // ---- estado de exibicao ----
 const slide = ref(0)
-let timerEspera = null
 
 const produto = computed(() => sQuiosque.produto)
 const detalhe = computed(() => sQuiosque.detalhe)
@@ -76,10 +76,41 @@ const descricaoLinhas = computed(() => {
 const urlImagem = (codimagem) => sProduto.urlImagem(codimagem)
 
 // ---- timer da tela de espera ----
+// fixada: o colaborador travou a consulta pelo cadeado do menu e nada volta sozinho para a tela
+// de espera ate destravar. Fica so' na pagina: recarregar ou sair do quiosque destrava (TASK-281)
+const fixada = ref(false)
+let timerEspera = null
+let tempoEspera = TEMPO_ESPERA
+
 const agendarEspera = (ms) => {
-  if (timerEspera) clearTimeout(timerEspera)
-  timerEspera = setTimeout(() => sQuiosque.limpar(), ms)
+  clearTimeout(timerEspera)
+  timerEspera = null
+  tempoEspera = ms
+  if (fixada.value) return
+  timerEspera = setTimeout(() => {
+    timerEspera = null
+    sQuiosque.limpar()
+  }, ms)
 }
+
+// cada toque, tecla ou rolagem reinicia a contagem que estiver correndo
+const reiniciarEspera = () => {
+  if (timerEspera) agendarEspera(tempoEspera)
+}
+
+const fixar = () => {
+  fixada.value = true
+  clearTimeout(timerEspera)
+  timerEspera = null
+}
+
+const destravar = () => {
+  fixada.value = false
+  // volta a contar o tempo do que esta na tela
+  if (produto.value || sQuiosque.semResultado) agendarEspera(tempoEspera)
+}
+
+const alternarFixada = () => (fixada.value ? destravar() : fixar())
 
 // ---- consulta ----
 const consultar = (barras) => {
@@ -184,12 +215,17 @@ onMounted(() => {
   if (!ativo.value) return
   document.addEventListener('keydown', onKeydown)
   document.addEventListener('paste', onPaste)
+  // captura no document: pega tambem o que acontece dentro da pesquisa e a rolagem, que nao borbulha
+  EVENTOS_USO.forEach((ev) =>
+    document.addEventListener(ev, reiniciarEspera, { capture: true, passive: true }),
+  )
 })
 
 onUnmounted(() => {
   document.removeEventListener('keydown', onKeydown)
   document.removeEventListener('paste', onPaste)
-  if (timerEspera) clearTimeout(timerEspera)
+  EVENTOS_USO.forEach((ev) => document.removeEventListener(ev, reiniciarEspera, { capture: true }))
+  clearTimeout(timerEspera)
   if (timerDigitando) clearTimeout(timerDigitando)
 })
 </script>
@@ -250,12 +286,27 @@ onUnmounted(() => {
         </q-chip>
       </q-page-sticky>
 
-      <!-- indicador de atualizacao (discreto, canto inferior esquerdo) -->
+      <!-- consulta fixada (um toque destrava) e indicador de atualizacao, canto inferior esquerdo -->
       <q-page-sticky position="bottom-left" :offset="[18, 18]" class="z-fab">
-        <q-chip v-if="sQuiosque.atualizando" color="primary" text-color="white" class="shadow-2">
-          <q-spinner class="q-mr-sm" size="18px" />
-          atualizando…
-        </q-chip>
+        <div class="column items-start">
+          <q-chip
+            v-if="fixada"
+            clickable
+            icon="lock"
+            color="orange-8"
+            text-color="white"
+            size="lg"
+            class="shadow-2 text-weight-bold"
+            @click="destravar"
+          >
+            Consulta fixada
+            <q-tooltip>Toque para destravar</q-tooltip>
+          </q-chip>
+          <q-chip v-if="sQuiosque.atualizando" color="primary" text-color="white" class="shadow-2">
+            <q-spinner class="q-mr-sm" size="18px" />
+            atualizando…
+          </q-chip>
+        </div>
       </q-page-sticky>
 
       <!-- controles do operador: FAB que expande os botoes -->
@@ -269,6 +320,16 @@ onUnmounted(() => {
         >
           <q-fab-action color="white" text-color="primary" icon="search" @click="abrirPesquisa">
             <q-tooltip anchor="center left" self="center right">Pesquisar produto (F1)</q-tooltip>
+          </q-fab-action>
+          <q-fab-action
+            color="white"
+            text-color="primary"
+            :icon="fixada ? 'lock_open' : 'lock'"
+            @click="alternarFixada"
+          >
+            <q-tooltip anchor="center left" self="center right">
+              {{ fixada ? 'Destravar consulta' : 'Fixar consulta' }}
+            </q-tooltip>
           </q-fab-action>
           <q-fab-action
             color="white"

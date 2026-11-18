@@ -63,6 +63,8 @@ function mapPessoa(item) {
     inativo: item.inativo,
     codgrupoeconomico: item.codgrupoeconomico,
     grupoeconomico: item.grupoeconomico,
+    // cliente que retem o ISS: a nota de servico pre-seleciona a retencao (TASK-282)
+    retemiss: item.retemiss,
   }
 }
 

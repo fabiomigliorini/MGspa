@@ -146,7 +146,7 @@ class NFePHPMakeService
         $std->idDest = ($nf->Pessoa->Cidade->codestado == $nf->Filial->Pessoa->Cidade->codestado) ? 1 : 2; //1=Operação interna; 2=Operação interestadual; 3=Operação com exterior.
         $std->cMunFG = $nf->Filial->Pessoa->Cidade->codigooficial;
 
-        $std->tpAmb = $nf->Filial->nfeambiente; // Se deixar o tpAmb como 2 você emitirá a nota em ambiente de homologação(teste) e as notas fiscais aqui não tem valor fiscal
+        $std->tpAmb = config('mg.nfe_ambiente'); // Se deixar o tpAmb como 2 você emitirá a nota em ambiente de homologação(teste) e as notas fiscais aqui não tem valor fiscal
         $std->finNFe = $nf->NaturezaOperacao->finnfe; //1=NF-e normal; 2=NF-e complementar; 3=NF-e de ajuste; 4=Devolução/Retorno.
         $std->indFinal = ($nf->Pessoa->consumidor) ? 1 : 0; //0=Não; 1=Consumidor final;
 

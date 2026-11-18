@@ -144,6 +144,7 @@ class NotaFiscalDevolucaoService
             // Recalcula valores de impostos proporcionais
             $itemNovo->icmsbase = round(($itemOriginal->icmsbase ?? 0) * $proporcao, 2);
             $itemNovo->icmsvalor = round(($itemOriginal->icmsvalor ?? 0) * $proporcao, 2);
+            NotaFiscalProdutoBarraService::zerarIcmsSemIcmsProprio($itemNovo);
             $itemNovo->icmsstbase = round(($itemOriginal->icmsstbase ?? 0) * $proporcao, 2);
             $itemNovo->icmsstvalor = round(($itemOriginal->icmsstvalor ?? 0) * $proporcao, 2);
             $itemNovo->ipibase = round(($itemOriginal->ipibase ?? 0) * $proporcao, 2);

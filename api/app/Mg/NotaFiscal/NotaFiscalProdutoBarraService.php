@@ -11,6 +11,24 @@ use Mg\Filial\Filial;
 
 class NotaFiscalProdutoBarraService
 {
+    // CSTs de ICMS sem ICMS proprio: base, percentual e valor ficam zerados
+    // (o ICMS60 nao leva vBC, e a base somada na nota da a rejeicao 531)
+    const ICMS_CST_SEM_ICMS_PROPRIO = [30, 40, 41, 50, 60];
+
+    public static function zerarIcmsSemIcmsProprio(NotaFiscalProdutoBarra $nfpb): void
+    {
+        if ($nfpb->icmscst === null || $nfpb->icmscst === '') {
+            return;
+        }
+        if (!in_array((int) $nfpb->icmscst, static::ICMS_CST_SEM_ICMS_PROPRIO)) {
+            return;
+        }
+        $nfpb->icmsbasepercentual = null;
+        $nfpb->icmsbase = null;
+        $nfpb->icmspercentual = null;
+        $nfpb->icmsvalor = null;
+    }
+
     public static function calcularTributacao(NotaFiscalProdutoBarra &$nfpb, $somenteVazios = true)
     {
         if ($somenteVazios) {
@@ -136,6 +154,8 @@ class NotaFiscalProdutoBarraService
                 if ((!empty($nfpb->icmsbase)) and (!empty($nfpb->icmspercentual))) {
                     $nfpb->icmsvalor = round(($nfpb->icmsbase * $nfpb->icmspercentual) / 100, 2);
                 }
+
+                static::zerarIcmsSemIcmsProprio($nfpb);
 
                 //Calcula PIS
                 if ($trib->pispercentual > 0) {

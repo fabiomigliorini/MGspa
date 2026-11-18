@@ -26,6 +26,8 @@ Schedule::command('nfe-php:resolver-pendentes')->everyTenMinutes();
 // de documento fiscal ficam para sempre.
 Schedule::command('nfe-php:limpar-conversas')->dailyAt('03:20');
 Schedule::command('nfe-php:dist-dfe')->everyThirtyMinutes();
+// Caixa de DF-e da NFS-e no ADN (TASK-279)
+Schedule::command('nfse:dist-dfe')->everyThirtyMinutes();
 Schedule::command('estoque:calcular-minimo-maximo --enviar-mail-faltando')->dailyAt('00:01');
 Schedule::command('boleto-bb:consultar-liquidados')->twiceDaily(4, 13);
 Schedule::command('pix:consultar --horas=36')->everyTenMinutes();

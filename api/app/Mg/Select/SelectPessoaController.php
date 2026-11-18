@@ -19,7 +19,7 @@ class SelectPessoaController extends Controller
                 p.endereco, p.numero, p.complemento, p.bairro,
                 p.codgrupoeconomico, ge.grupoeconomico,
                 c.cidade, e.sigla as uf,
-                p.vendedor, p.inativo
+                p.vendedor, p.inativo, p.retemiss
             from tblpessoa p
             left join tblgrupoeconomico ge on (ge.codgrupoeconomico = p.codgrupoeconomico)
             left join tblcidade c on (c.codcidade = p.codcidade)
@@ -75,7 +75,7 @@ class SelectPessoaController extends Controller
                 p.endereco, p.numero, p.complemento, p.bairro,
                 p.codgrupoeconomico, ge.grupoeconomico,
                 c.cidade, e.sigla as uf,
-                p.vendedor, p.inativo
+                p.vendedor, p.inativo, p.retemiss
             from tblpessoa p
             left join tblgrupoeconomico ge on (ge.codgrupoeconomico = p.codgrupoeconomico)
             left join tblcidade c on (c.codcidade = p.codcidade)

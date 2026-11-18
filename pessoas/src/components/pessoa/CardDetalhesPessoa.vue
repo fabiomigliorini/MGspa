@@ -150,6 +150,8 @@ const editarDetalhes = async () => {
       : String(sPessoa.item.cnpj).padStart(14, '0'),
     rntrc: sPessoa.item.rntrc,
     ie: sPessoa.item.ie,
+    inscricaomunicipal: sPessoa.item.inscricaomunicipal,
+    retemiss: sPessoa.item.retemiss,
     fantasia: sPessoa.item.fantasia,
     pessoa: sPessoa.item.pessoa,
     tipotransportador: sPessoa.item.tipotransportador,
@@ -278,9 +280,7 @@ const salvarDetalhes = async () => {
 
         <q-card-section class="row q-col-gutter-md">
           <MgInput
-            :class="
-              modelPessoa.fisica ? 'col-md-3 col-sm-6 col-xs-12' : 'col-md-4 col-sm-6 col-xs-12'
-            "
+            class="col-md-3 col-sm-6 col-xs-12"
             outlined
             v-model="modelPessoa.cnpj"
             :label="modelPessoa.fisica ? 'CPF' : 'CNPJ'"
@@ -297,17 +297,36 @@ const salvarDetalhes = async () => {
             unmasked-value
           />
           <input-ie
-            :class="
-              modelPessoa.fisica ? 'col-md-3 col-sm-6 col-xs-12' : 'col-md-4 col-sm-6 col-xs-12'
-            "
+            class="col-md-3 col-sm-6 col-xs-12"
             v-model="modelPessoa.ie"
             label="Inscrição Estadual"
             disable
           />
+          <MgInput
+            class="col-md-3 col-sm-6 col-xs-12"
+            outlined
+            v-model="modelPessoa.inscricaomunicipal"
+            label="Inscrição Municipal"
+            maxlength="15"
+          />
+          <!-- A nota de servico pre-seleciona a retencao ao escolher este tomador (TASK-282) -->
+          <MgSelect
+            :class="
+              modelPessoa.fisica ? 'col-md-6 col-sm-6 col-xs-12' : 'col-md-3 col-sm-6 col-xs-12'
+            "
+            v-model="modelPessoa.retemiss"
+            label="Retenção do ISS"
+            :options="[
+              { label: 'Não retém', value: false },
+              { label: 'Retém', value: true },
+            ]"
+            map-options
+            emit-value
+          />
           <MgInputData
             type="date"
             :class="
-              modelPessoa.fisica ? 'col-md-3 col-sm-6 col-xs-12' : 'col-md-4 col-sm-6 col-xs-12'
+              modelPessoa.fisica ? 'col-md-6 col-sm-6 col-xs-12' : 'col-md-4 col-sm-6 col-xs-12'
             "
             v-model="modelPessoa.nascimento"
             :label="modelPessoa.fisica ? 'Nascimento' : 'Fundação'"
@@ -638,8 +657,12 @@ const salvarDetalhes = async () => {
         <div class="text-body2">
           {{ sPessoa.item.fisica ? formataCpf(sPessoa.item.cnpj) : formataCnpj(sPessoa.item.cnpj) }}
           <span v-if="sPessoa.item.ie"> / {{ formataIe(sPessoa.item.ie, ufNfe) }} </span>
+          <span v-if="sPessoa.item.inscricaomunicipal">
+            / IM {{ sPessoa.item.inscricaomunicipal }}
+          </span>
           <span v-if="sPessoa.item.rg"> / {{ sPessoa.item.rg }} </span>
         </div>
+        <div class="text-body2" v-if="sPessoa.item.retemiss">Retém ISS</div>
       </div>
 
       <div class="col-xs-12 col-sm-6" v-if="sPessoa.item.nascimento">

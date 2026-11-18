@@ -1,5 +1,5 @@
 <script>
-import { formataData, formataCodigo, formataTimestamp } from '@components/formatters'
+import { formataCodigo, formataTimestamp } from '@components/formatters'
 import { ref, onMounted, defineAsyncComponent, computed } from 'vue'
 import { empresaStore } from 'src/stores/empresa'
 import { useQuasar } from 'quasar'
@@ -7,6 +7,9 @@ import { useRoute, useRouter } from 'vue-router'
 export default {
   components: {
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
+    CardFilialSimples: defineAsyncComponent(
+      () => import('components/empresa/CardFilialSimples.vue'),
+    ),
   },
 
   setup() {
@@ -22,14 +25,6 @@ export default {
       return formataCodigo(cod)
     }
 
-    const ambienteNfeLabel = computed(() => {
-      const ambientes = {
-        1: 'Produção',
-        2: 'Homologação',
-      }
-      return ambientes[sEmpresa.filial.nfeambiente] || '-'
-    })
-
     const criacaoFormatada = computed(() => {
       if (!sEmpresa.filial.criacao) return '-'
       return formataTimestamp(sEmpresa.filial.criacao)
@@ -38,11 +33,6 @@ export default {
     const alteracaoFormatada = computed(() => {
       if (!sEmpresa.filial.alteracao) return '-'
       return formataTimestamp(sEmpresa.filial.alteracao)
-    })
-
-    const validadeCertificadoFormatada = computed(() => {
-      if (!sEmpresa.filial.validadecertificado) return '-'
-      return formataData(sEmpresa.filial.validadecertificado)
     })
 
     const carregarFilial = async () => {
@@ -114,10 +104,8 @@ export default {
       loading,
       erro,
       formatarCodigo,
-      ambienteNfeLabel,
       criacaoFormatada,
       alteracaoFormatada,
-      validadeCertificadoFormatada,
       confirmarExclusao,
     }
   },
@@ -266,16 +254,6 @@ export default {
                       </div>
 
                       <div class="col-xs-12 col-sm-6">
-                        <div class="text-overline text-grey-7">Ambiente NFe</div>
-                        <div class="text-body2">
-                          <q-badge
-                            :color="sEmpresa.filial.nfeambiente === 1 ? 'green' : 'orange'"
-                            :label="ambienteNfeLabel"
-                          />
-                        </div>
-                      </div>
-
-                      <div class="col-xs-12 col-sm-6">
                         <div class="text-overline text-grey-7">Série NFe</div>
                         <div class="text-body2">
                           {{ sEmpresa.filial.nfeserie || '-' }}
@@ -288,6 +266,23 @@ export default {
                           <q-badge
                             :color="sEmpresa.filial.emitenfe ? 'green' : 'grey'"
                             :label="sEmpresa.filial.emitenfe ? 'Sim' : 'Não'"
+                          />
+                        </div>
+                      </div>
+
+                      <div class="col-xs-12 col-sm-6">
+                        <div class="text-overline text-grey-7">Série DPS (NFS-e)</div>
+                        <div class="text-body2">
+                          {{ sEmpresa.filial.nfseserie || '-' }}
+                        </div>
+                      </div>
+
+                      <div class="col-xs-12 col-sm-6">
+                        <div class="text-overline text-grey-7">Emite NFS-e</div>
+                        <div class="text-body2">
+                          <q-badge
+                            :color="sEmpresa.filial.emitenfse ? 'green' : 'grey'"
+                            :label="sEmpresa.filial.emitenfse ? 'Sim' : 'Não'"
                           />
                         </div>
                       </div>
@@ -316,13 +311,6 @@ export default {
                         </div>
                       </div>
 
-                      <div class="col-xs-12 col-sm-6" v-if="sEmpresa.filial.validadecertificado">
-                        <div class="text-overline text-grey-7">Validade Certificado</div>
-                        <div class="text-body2">
-                          {{ validadeCertificadoFormatada }}
-                        </div>
-                      </div>
-
                       <div class="col-xs-12 col-sm-6" v-if="sEmpresa.filial.criacao">
                         <div class="text-overline text-grey-7">Criação</div>
                         <div class="text-body2">
@@ -345,6 +333,11 @@ export default {
             <!-- COLUNA LATERAL -->
             <div class="col-xs-12 col-md-4">
               <div class="row q-col-gutter-md">
+                <!-- CARD SIMPLES: percentuais do mes para a nota de servico (TASK-280) -->
+                <div class="col-12" v-if="sEmpresa.filial.emitenfse">
+                  <CardFilialSimples :codfilial="sEmpresa.filial.codfilial" />
+                </div>
+
                 <!-- CARD TOKENS -->
                 <div
                   class="col-12"
