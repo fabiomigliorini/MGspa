@@ -4,7 +4,7 @@ title: 'Emitir nota de serviço pelo app notas, agora que Sinop usa o emissor na
 status: In Progress
 assignee: []
 created_date: '2026-11-18 02:01'
-updated_date: '2026-11-18 15:34'
+updated_date: '2026-11-18 21:40'
 labels:
   - notas
 dependencies: []
@@ -45,6 +45,7 @@ Prazo: emitir em 18/11/2026 (testes de manhã, deploy ao meio-dia). Mínimo para
 - [x] #6 Ler a caixa do ADN em estrutura própria: nossas notas e eventos (cancelamento de fora leva a CAN) e as notas emitidas contra nós
 - [ ] #7 Enviar o DANFSe e o XML por e-mail ao tomador, por botão no detalhe da nota
 - [x] #8 Tabelas oficiais de código de tributação nacional e NBS importadas (Anexo B v1.01) e emitenfse/nfseserie no formulário da filial do pessoas
+- [x] #9 Menu do notas separa Notas de Produtos de Notas de Serviço
 <!-- AC:END -->
 
 ## Implementation Notes

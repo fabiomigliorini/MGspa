@@ -16,7 +16,7 @@ const menuGroups = [
     label: 'Emissões',
     items: [
       { label: 'Início', icon: 'home', color: 'brown', to: '/' },
-      { label: 'Notas', icon: 'description', color: 'blue', to: '/nota' },
+      { label: 'Notas de Produtos', icon: 'description', color: 'blue', to: '/nota' },
       { label: 'Notas de Serviço', icon: 'receipt', color: 'teal', to: '/nota-servico' },
       { label: 'NFe Terceiro', icon: 'move_to_inbox', color: 'orange', to: '/nfe-terceiro' },
       { label: 'Inutilizações', icon: 'block', color: 'red', to: '/inutilizacao' },
