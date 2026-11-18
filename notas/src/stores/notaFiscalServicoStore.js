@@ -50,6 +50,9 @@ export const useNotaFiscalServicoStore = defineStore('notaFiscalServico', {
     // Formulario de criar/editar
     form: null,
     salvando: false,
+    // O que o cadastro do tomador diz da retencao do ISS (null = sem tomador). Fica fora
+    // do form (nao vai no payload): o formulario avisa quando a nota diverge (TASK-282)
+    tomadorRetemIss: null,
   }),
 
   getters: {
@@ -186,6 +189,7 @@ export const useNotaFiscalServicoStore = defineStore('notaFiscalServico', {
       await this.carregarFiliais()
       // Uma filial so emitindo NFS-e: ja vem escolhida
       const filial = this.filiais.length === 1 ? this.filiais[0] : null
+      this.tomadorRetemIss = null
       this.form = {
         codnotafiscalservico: null,
         codfilial: filial?.codfilial ?? null,
@@ -209,6 +213,7 @@ export const useNotaFiscalServicoStore = defineStore('notaFiscalServico', {
     async editarNota(codnotafiscalservico) {
       await this.carregarFiliais()
       const nota = await this.fetchNota(codnotafiscalservico)
+      this.tomadorRetemIss = nota.pessoa ? !!nota.pessoa.retemiss : null
       this.form = {
         codnotafiscalservico: nota.codnotafiscalservico,
         codfilial: nota.codfilial,

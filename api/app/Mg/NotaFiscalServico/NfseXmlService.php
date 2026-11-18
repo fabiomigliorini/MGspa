@@ -113,9 +113,10 @@ class NfseXmlService
         // tira do cadastro (CNC) quando quem emite e' o proprio prestador.
         $prest = static::el($doc, $inf, 'prest');
         static::el($doc, $prest, $filial->Pessoa->fisica ? 'CPF' : 'CNPJ', static::documentoFilial($filial));
-        // Sinop exige a IM do prestador (E0116)
-        if (!empty(trim((string) $filial->inscricaomunicipal))) {
-            static::el($doc, $prest, 'IM', trim($filial->inscricaomunicipal));
+        // Sinop exige a IM do prestador (E0116). Documento da empresa: mora na pessoa da filial
+        $im = trim((string) $filial->Pessoa->inscricaomunicipal);
+        if ($im !== '') {
+            static::el($doc, $prest, 'IM', $im);
         }
         $regTrib = static::el($doc, $prest, 'regTrib');
         if (static::simples($filial)) {

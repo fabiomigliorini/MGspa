@@ -285,13 +285,6 @@ export default {
                       </div>
 
                       <div class="col-xs-12 col-sm-6">
-                        <div class="text-overline text-grey-7">Inscrição Municipal</div>
-                        <div class="text-body2">
-                          {{ sEmpresa.filial.inscricaomunicipal || '-' }}
-                        </div>
-                      </div>
-
-                      <div class="col-xs-12 col-sm-6">
                         <div class="text-overline text-grey-7">DF-e</div>
                         <div class="text-body2">
                           <q-badge

@@ -45,6 +45,22 @@ const aliquotaSeRetido = (v) => {
 
 const valores = computed(() => calculaValoresNfse(cad.value.form || {}))
 
+// Retencao do ISS: o cadastro do cliente diz se ele retem (TASK-282). Escolher o tomador
+// pre-seleciona; quem emite pode trocar, e o campo avisa quando a nota diverge do cadastro.
+// Abrir uma nota salva nao dispara o @select, entao o que foi gravado nao muda.
+function escolheuTomador(pessoa) {
+  cad.value.tomadorRetemIss = !!pessoa.retemiss
+  cad.value.form.issretido = !!pessoa.retemiss
+}
+
+const avisoRetencao = computed(() => {
+  const cadastro = cad.value.tomadorRetemIss
+  if (cadastro === null || cad.value.form?.issretido === cadastro) return undefined
+  return cadastro
+    ? 'No cadastro do cliente: retém o ISS'
+    : 'No cadastro do cliente: não retém o ISS'
+})
+
 // Local da prestacao: padrao e a cidade da filial. Ao trocar a filial, acompanha so se
 // ainda estava na cidade da filial anterior (ou vazio) — se a pessoa escolheu outra, fica.
 watch(
@@ -112,6 +128,8 @@ watch(
               clearable
               :disable="disable"
               :autofocus="!!cad.form.codfilial"
+              @select="escolheuTomador"
+              @clear="cad.tomadorRetemIss = null"
             >
               <template v-slot:hint>Em branco: tomador não identificado</template>
             </MgSelectPessoa>
@@ -123,6 +141,7 @@ watch(
               label="Retenção do ISS"
               emit-value
               map-options
+              :hint="avisoRetencao"
               :disable="disable"
             />
           </div>

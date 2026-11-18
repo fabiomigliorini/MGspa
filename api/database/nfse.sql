@@ -13,12 +13,14 @@
 --                          Sistema Nacional). Um servico e um valor por nota.
 --   tbldistribuicaonfse    caixa de DF-e do ADN: o que o Sistema Nacional
 --                          distribuiu para a filial, uma linha por NSU.
---   tblfilial              emitenfse, nfseserie e inscricaomunicipal (Sinop
---                          exige a IM na DPS: rejeicao E0116).
+--   tblfilial              emitenfse e nfseserie.
+--   tblpessoa              inscricaomunicipal, ao lado da ie: documento da
+--                          empresa, nao da filial (a filial le pela pessoa dela).
+--                          Sinop exige a IM do prestador na DPS (rejeicao E0116).
 --
 -- SOMENTE ESTRUTURA. Os dados das tabelas oficiais estao no nfse_tabelas.sql,
--- que roda DEPOIS deste. Este script ja liga a filial 201 (FDF) com serie 1 e a
--- inscricao municipal dela.
+-- que roda DEPOIS deste. Este script ja liga a filial 201 (FDF) com serie 1 e
+-- grava a inscricao municipal na pessoa dela.
 --
 -- Idempotente (IF NOT EXISTS + guards em pg_constraint). Transacional.
 -- =====================================================================
@@ -34,14 +36,22 @@ SET LOCAL statement_timeout = '120s';
 -- ---------------------------------------------------------------------
 ALTER TABLE tblfilial ADD COLUMN IF NOT EXISTS emitenfse boolean NOT NULL DEFAULT false;
 ALTER TABLE tblfilial ADD COLUMN IF NOT EXISTS nfseserie integer;
--- inscricao municipal do prestador: Sinop exige na DPS (rejeicao E0116)
-ALTER TABLE tblfilial ADD COLUMN IF NOT EXISTS inscricaomunicipal varchar(15);
 
--- FDF: serie 1 e a inscricao municipal que Sinop cadastrou no CNC (lida das NFS-e
--- que ela ja emitiu, no ADN de producao)
-UPDATE tblfilial SET emitenfse = true, nfseserie = coalesce(nfseserie, 1),
-    inscricaomunicipal = coalesce(inscricaomunicipal, '14644')
+-- FDF: serie 1
+UPDATE tblfilial SET emitenfse = true, nfseserie = coalesce(nfseserie, 1)
 WHERE codfilial = 201 AND emitenfse = false;
+
+-- ---------------------------------------------------------------------
+-- Pessoa: inscricao municipal (ao lado da ie). Sinop exige a do prestador
+-- na DPS (rejeicao E0116); a filial le pela pessoa dela.
+-- ---------------------------------------------------------------------
+ALTER TABLE tblpessoa ADD COLUMN IF NOT EXISTS inscricaomunicipal varchar(15);
+
+-- FDF: a inscricao municipal que Sinop cadastrou no CNC (lida das NFS-e que ela
+-- ja emitiu, no ADN de producao)
+UPDATE tblpessoa SET inscricaomunicipal = '14644'
+WHERE codpessoa = (SELECT codpessoa FROM tblfilial WHERE codfilial = 201)
+  AND inscricaomunicipal IS NULL;
 
 -- ---------------------------------------------------------------------
 -- Tabelas oficiais

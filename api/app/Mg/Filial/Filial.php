@@ -58,7 +58,6 @@ class Filial extends MgModel
         'empresadominio',
         'filial',
         'inativo',
-        'inscricaomunicipal',
         'nfcetoken',
         'nfcetokenid',
         'nfeserie',

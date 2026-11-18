@@ -73,7 +73,8 @@ class NotaFiscalServicoResource extends JsonResource
         if (!$this->Pessoa) {
             return null;
         }
-        $ret = $this->Pessoa->only(['codpessoa', 'pessoa', 'fantasia', 'cnpj', 'fisica']);
+        // retemiss: o formulario avisa quando a retencao da nota diverge do cadastro (TASK-282)
+        $ret = $this->Pessoa->only(['codpessoa', 'pessoa', 'fantasia', 'cnpj', 'fisica', 'retemiss']);
         $ret['cidade'] = $this->Pessoa->Cidade?->cidade;
         $ret['uf'] = $this->Pessoa->Cidade?->Estado?->sigla;
         // Os mesmos destinatarios que o NfseService::mail usa quando ninguem informa
