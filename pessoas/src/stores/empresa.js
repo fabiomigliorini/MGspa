@@ -17,6 +17,8 @@ export const empresaStore = defineStore('empresa', {
     },
     filiais: [],
     filial: {},
+    // Percentuais do Simples por mes da filial aberta (TASK-280)
+    filialSimples: [],
     filtroFilial: {
       filial: '',
     },
@@ -106,6 +108,28 @@ export const empresaStore = defineStore('empresa', {
       const ret = await api.delete('v1/filial/' + codfilial)
       this.filiais = this.filiais.filter((f) => f.codfilial !== codfilial)
       return ret
+    },
+
+    // Percentuais do Simples por mes da filial, para a nota de servico (TASK-280)
+    async simplesListar(codfilial) {
+      const ret = await api.get('v1/filial/' + codfilial + '/simples')
+      this.filialSimples = ret.data.data
+      return this.filialSimples
+    },
+
+    async simplesCriar(codfilial, model) {
+      await api.post('v1/filial/' + codfilial + '/simples', model)
+      return this.simplesListar(codfilial)
+    },
+
+    async simplesAtualizar(codfilial, codfilialsimples, model) {
+      await api.put('v1/filial/' + codfilial + '/simples/' + codfilialsimples, model)
+      return this.simplesListar(codfilial)
+    },
+
+    async simplesExcluir(codfilial, codfilialsimples) {
+      await api.delete('v1/filial/' + codfilial + '/simples/' + codfilialsimples)
+      return this.simplesListar(codfilial)
     },
 
     async removerEmpresa(codempresa) {

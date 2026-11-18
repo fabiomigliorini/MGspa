@@ -647,6 +647,13 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('filial/{id}/autor', [\Mg\Filial\FilialController::class, 'autor']);
     Route::apiResource('filial', \Mg\Filial\FilialController::class)->parameters(['filial' => 'id']);
 
+    // Percentuais do Simples por mes da filial, para a nota de servico (TASK-280)
+    Route::get('filial/{codfilial}/simples', [\Mg\Filial\FilialSimplesController::class, 'index'])->whereNumber('codfilial');
+    Route::get('filial/{codfilial}/simples/{competencia}', [\Mg\Filial\FilialSimplesController::class, 'mes'])->whereNumber('codfilial')->where('competencia', '\d{4}-\d{2}-\d{2}');
+    Route::post('filial/{codfilial}/simples', [\Mg\Filial\FilialSimplesController::class, 'store'])->whereNumber('codfilial');
+    Route::put('filial/{codfilial}/simples/{codfilialsimples}', [\Mg\Filial\FilialSimplesController::class, 'update'])->whereNumber(['codfilial', 'codfilialsimples']);
+    Route::delete('filial/{codfilial}/simples/{codfilialsimples}', [\Mg\Filial\FilialSimplesController::class, 'destroy'])->whereNumber(['codfilial', 'codfilialsimples']);
+
     // GrupoEconomico (migrado em 23/05/2026)
     Route::get('grupoeconomico/', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'index']);
     Route::get('grupoeconomico/select', [\Mg\GrupoEconomico\GrupoEconomicoController::class, 'pesquisaGrupoEconomico']);

@@ -53,6 +53,11 @@ export const useNotaFiscalServicoStore = defineStore('notaFiscalServico', {
     // O que o cadastro do tomador diz da retencao do ISS (null = sem tomador). Fica fora
     // do form (nao vai no payload): o formulario avisa quando a nota diverge (TASK-282)
     tomadorRetemIss: null,
+    // Percentuais do Simples do mes no cadastro da filial (TASK-280): o registro, ou null
+    // quando o mes nao tem cadastro. Tambem fica fora do form; simplesConsultado diz se ja
+    // houve resposta para a filial e o mes do form
+    simplesMes: null,
+    simplesConsultado: false,
   }),
 
   getters: {
@@ -183,6 +188,41 @@ export const useNotaFiscalServicoStore = defineStore('notaFiscalServico', {
       return this.filiais.find((f) => f.codfilial === codfilial) || null
     },
 
+    // ==================== SIMPLES DO MES ====================
+
+    // Busca no cadastro da filial os percentuais do Simples do mes da competencia do form.
+    // Devolve o registro, null (mes sem cadastro) ou undefined quando nao ha o que buscar
+    // ou a resposta chegou depois de trocarem a filial ou o mes.
+    async buscarSimplesMes() {
+      const codfilial = this.form?.codfilial
+      const competencia = this.form?.competencia
+      if (!codfilial || !competencia) {
+        this.simplesMes = null
+        this.simplesConsultado = false
+        return undefined
+      }
+      const mes = competencia.substring(0, 7)
+      let registro
+      try {
+        registro = await notaFiscalServicoService.simples(codfilial, competencia)
+      } catch (error) {
+        this.simplesConsultado = false
+        Notify.create({
+          color: 'red-5',
+          icon: 'error',
+          message: 'Erro ao buscar os percentuais do Simples do mês',
+          caption: mensagemErro(error),
+        })
+        return undefined
+      }
+      if (this.form?.codfilial !== codfilial || this.form?.competencia?.substring(0, 7) !== mes) {
+        return undefined
+      }
+      this.simplesMes = registro
+      this.simplesConsultado = true
+      return registro
+    },
+
     // ==================== FORMULARIO ====================
 
     async novaNota() {
@@ -190,6 +230,8 @@ export const useNotaFiscalServicoStore = defineStore('notaFiscalServico', {
       // Uma filial so emitindo NFS-e: ja vem escolhida
       const filial = this.filiais.length === 1 ? this.filiais[0] : null
       this.tomadorRetemIss = null
+      this.simplesMes = null
+      this.simplesConsultado = false
       this.form = {
         codnotafiscalservico: null,
         codfilial: filial?.codfilial ?? null,
@@ -201,7 +243,7 @@ export const useNotaFiscalServicoStore = defineStore('notaFiscalServico', {
         valorservico: null,
         valordescontoincondicionado: null,
         valordescontocondicionado: null,
-        // Aliquota efetiva do ISS no Simples: muda todo mes, por isso vem vazia
+        // Percentuais do Simples: mudam todo mes, o formulario puxa do cadastro da filial
         issaliquota: null,
         issretido: false,
         tributospercentual: null,
@@ -214,6 +256,8 @@ export const useNotaFiscalServicoStore = defineStore('notaFiscalServico', {
       await this.carregarFiliais()
       const nota = await this.fetchNota(codnotafiscalservico)
       this.tomadorRetemIss = nota.pessoa ? !!nota.pessoa.retemiss : null
+      this.simplesMes = null
+      this.simplesConsultado = false
       this.form = {
         codnotafiscalservico: nota.codnotafiscalservico,
         codfilial: nota.codfilial,

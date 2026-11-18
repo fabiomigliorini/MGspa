@@ -7,6 +7,9 @@ import { useRoute, useRouter } from 'vue-router'
 export default {
   components: {
     MGLayout: defineAsyncComponent(() => import('layouts/MGLayout.vue')),
+    CardFilialSimples: defineAsyncComponent(
+      () => import('components/empresa/CardFilialSimples.vue'),
+    ),
   },
 
   setup() {
@@ -330,6 +333,11 @@ export default {
             <!-- COLUNA LATERAL -->
             <div class="col-xs-12 col-md-4">
               <div class="row q-col-gutter-md">
+                <!-- CARD SIMPLES: percentuais do mes para a nota de servico (TASK-280) -->
+                <div class="col-12" v-if="sEmpresa.filial.emitenfse">
+                  <CardFilialSimples :codfilial="sEmpresa.filial.codfilial" />
+                </div>
+
                 <!-- CARD TOKENS -->
                 <div
                   class="col-12"

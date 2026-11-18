@@ -1,5 +1,5 @@
 <script setup>
-import { computed, watch } from 'vue'
+import { computed, onMounted, watch } from 'vue'
 import MgInput from '@components/MgInput.vue'
 import MgInputData from '@components/MgInputData.vue'
 import MgInputValor from '@components/MgInputValor.vue'
@@ -8,7 +8,7 @@ import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectCidade from '@components/MgSelectCidade.vue'
 import MgSelectTributacaoNacional from '@components/MgSelectTributacaoNacional.vue'
 import MgSelectNbs from '@components/MgSelectNbs.vue'
-import { formataNumero } from '@components/formatters'
+import { formataNumero, formataPercentual } from '@components/formatters'
 import { hoje, lerDataBr } from '@components/utils/datas'
 import { ISS_RETIDO_OPTIONS, calculaValoresNfse } from '../constants/notaFiscalServico'
 
@@ -34,10 +34,18 @@ const competenciaAteHoje = (v) => {
 const tomadorSeRetido = (v) =>
   !cad.value.form?.issretido || !!v || 'Com ISS retido, informe o tomador'
 
+// Mes da competencia sem percentual no cadastro da filial (TASK-280): o campo vazio diz o
+// porque no proprio erro, que esconderia o aviso do hint
+const SEM_CADASTRO = 'Mês sem percentual no cadastro da filial'
+const semCadastroDoMes = () => cad.value.simplesConsultado && !cad.value.simplesMes
+
+const tributosInformado = (v) =>
+  Number(v) > 0 || (semCadastroDoMes() ? SEM_CADASTRO : 'Informe o percentual')
+
 // A aliquota so vale com ISS retido (Simples, ISS no DAS: sem retencao ela nao vai na nota)
 const aliquotaSeRetido = (v) => {
   if (!cad.value.form?.issretido) return true
-  if (!(Number(v) > 0)) return 'Informe a alíquota'
+  if (!(Number(v) > 0)) return semCadastroDoMes() ? SEM_CADASTRO : 'Informe a alíquota'
   // No Simples o ISS e' uma fatia do DAS: nunca passa do % total de tributos
   const tributos = Number(cad.value.form?.tributospercentual)
   return !(tributos > 0 && Number(v) > tributos) || 'Não pode passar dos Tributos'
@@ -74,6 +82,42 @@ watch(
       cad.value.form.codcidadeprestacao = filialNova?.codcidade ?? null
     }
   },
+)
+
+// Percentuais do Simples do mes (TASK-280): a nota nova e a troca de filial ou de mes puxam
+// do cadastro da filial (mes sem cadastro esvazia os campos); abrir uma nota salva so
+// consulta, para avisar, sem mudar o que foi gravado. Quem emite pode trocar o valor.
+async function puxarSimples(preencher) {
+  const mes = await cad.value.buscarSimplesMes()
+  if (!preencher || mes === undefined) return
+  cad.value.form.tributospercentual = mes?.tributospercentual ?? null
+  cad.value.form.issaliquota = mes?.issaliquota ?? null
+}
+
+// So o mes conta: trocar o dia dentro do mes nao busca de novo
+watch(
+  () => [cad.value.form?.codfilial, cad.value.form?.competencia?.substring(0, 7)].join('|'),
+  () => puxarSimples(true),
+)
+
+onMounted(() => puxarSimples(cad.value.isNovo))
+
+function avisoSimples(campo, padrao) {
+  if (!cad.value.simplesConsultado) return padrao
+  const mes = cad.value.simplesMes
+  if (!mes) return SEM_CADASTRO
+  if (Number(cad.value.form?.[campo]) !== Number(mes[campo])) {
+    return 'No cadastro da filial: ' + formataPercentual(mes[campo])
+  }
+  return padrao
+}
+
+const avisoTributos = computed(() => avisoSimples('tributospercentual', 'Aprox. do Simples no mês'))
+
+const avisoAliquota = computed(() =>
+  cad.value.form?.issretido
+    ? avisoSimples('issaliquota', 'Do mês no Simples')
+    : 'Só com ISS retido',
 )
 </script>
 
@@ -224,8 +268,8 @@ watch(
               suffix="%"
               :min="0"
               :max="99.99"
-              hint="Aprox. do Simples no mês"
-              :rules="[(v) => Number(v) > 0 || 'Informe o percentual']"
+              :hint="avisoTributos"
+              :rules="[tributosInformado]"
               :disable="disable"
             />
           </div>
@@ -237,7 +281,7 @@ watch(
               suffix="%"
               :min="0"
               :max="5"
-              :hint="cad.form.issretido ? 'Do mês no Simples' : 'Só com ISS retido'"
+              :hint="avisoAliquota"
               :rules="[aliquotaSeRetido]"
               :disable="disable || !cad.form.issretido"
             />

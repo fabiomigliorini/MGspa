@@ -33,4 +33,10 @@ export default {
     const response = await api.get('/v1/nota-fiscal-servico/filiais')
     return Array.isArray(response.data) ? response.data : response.data?.data || []
   },
+
+  // Percentuais do Simples do mes no cadastro da filial (TASK-280); null = mes sem cadastro
+  async simples(codfilial, competencia) {
+    const response = await api.get(`/v1/filial/${codfilial}/simples/${competencia}`)
+    return response.data?.data ?? null
+  },
 }

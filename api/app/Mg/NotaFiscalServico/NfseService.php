@@ -76,7 +76,22 @@ class NfseService
                 'mensagem' => 'Só dá para enviar nota em digitação ou não autorizada.',
             ];
         }
-        NotaFiscalServicoService::verificarFilial($nfs->codfilial);
+        $filial = NotaFiscalServicoService::verificarFilial($nfs->codfilial);
+
+        // Percentuais do Simples faltando (o Duplicar deixa vazio quando o mes nao esta
+        // no cadastro da filial): recusa antes de numerar, sem virar ERR (TASK-280)
+        if (NfseXmlService::simples($filial) && empty($nfs->tributospercentual)) {
+            return [
+                'sucesso' => false,
+                'mensagem' => 'Falta o % de Tributos do Simples: cadastre o mês na filial ou informe na nota.',
+            ];
+        }
+        if ($nfs->issretido && empty($nfs->issaliquota)) {
+            return [
+                'sucesso' => false,
+                'mensagem' => 'Falta a alíquota do ISS retido: cadastre o mês na filial ou informe na nota.',
+            ];
+        }
 
         return static::lock($nfs, function () use ($nfs) {
             // Reenvio: a tentativa anterior pode ter sido autorizada sem a resposta chegar.

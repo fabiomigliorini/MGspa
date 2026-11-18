@@ -4,6 +4,7 @@ namespace Mg\NotaFiscalServico;
 
 use Illuminate\Support\Facades\DB;
 use Mg\Filial\Filial;
+use Mg\Filial\FilialSimplesService;
 
 /**
  * Cadastro da nota fiscal de servico (TASK-279). A conversa com o Sistema Nacional
@@ -154,14 +155,18 @@ class NotaFiscalServicoService
             'valorservico',
             'valordescontoincondicionado',
             'valordescontocondicionado',
-            'issaliquota',
             'issretido',
-            'tributospercentual',
             'codcidadeprestacao',
             'observacoes',
         ]));
         $nova->serie = $filial->nfseserie;
         $nova->competencia = now()->format('Y-m-d');
+        // Os percentuais do Simples sao do mes: vem do cadastro da filial para a nova
+        // competencia, nunca da original. Mes sem cadastro fica vazio e o Enviar
+        // recusa ate alguem informar (TASK-280)
+        $mes = FilialSimplesService::doMes($nova->codfilial, $nova->competencia);
+        $nova->tributospercentual = $mes?->tributospercentual;
+        $nova->issaliquota = $nova->issretido ? $mes?->issaliquota : null;
         $nova->status = NotaFiscalServico::STATUS_DIGITACAO;
         $nova->save();
         return $nova;
