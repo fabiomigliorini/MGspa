@@ -7,7 +7,7 @@ status: Done
 assignee:
   - '@fabio'
 created_date: '2026-11-18 15:12'
-updated_date: '2026-11-18 16:57'
+updated_date: '2026-11-18 21:00'
 labels:
   - notas
 dependencies: []
@@ -32,6 +32,7 @@ Pedido do Fábio: marcar no cadastro do cliente se ele retém o ISS, e a nota pr
 - [x] #2 Nota de serviço pré-seleciona a retenção do ISS ao escolher o tomador
 - [x] #3 Definido com o Fábio se a retenção pré-selecionada pode ser trocada na nota
 - [x] #4 Inscrição municipal no cadastro da pessoa, ao lado da inscrição estadual, com o Retém ISS do lado (Documentos)
+- [x] #5 Clientes que já retinham o ISS nas notas emitidas pelo Coplan vêm marcados no go-live
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -50,4 +51,6 @@ Consulta ao ADN refeita em 18/11/2026 (só leitura, certificado da FDF, produç�
 - Parametrização: o swagger real só tem aliquota, historicoaliquotas, beneficio (por número), convenio, regimes_especiais (por serviço) e retencoes (por município + competência). Não existe rota por CPF/CNPJ (a do manual dá 404). Retenções de Sinop: 'não encontrados'; regimes especiais do 17.03.01: 'não encontrados'.
 - CNC (cadastro de IM): a API só tem POST /CNC (a prefeitura envia). Não há consulta.
 - As NFS-e que a FDF emitiu pelo Coplan estão no ADN de produção (124 NSUs, desde jan/2025) e trazem a IM do tomador (toma/IM) e a retenção (tpRetISSQN), preenchidas pelo Coplan a partir do cadastro da prefeitura. Retidos: Migliorini & Migliorini (04576775000160, IM 9552, 24 notas) e Imobiliária Irmãos Nogueira (00360408000174, IM 5735, 9 notas); os outros 15 tomadores, não retido.
+
+Go-live (pedido do Fábio, 18/11/2026): o pessoa_retemiss.sql também marca retemiss nos clientes que retiveram o ISS nas notas da FDF emitidas pelo Coplan (histórico do ADN de produção): CNPJ 04576775000160 (Migliorini & Migliorini) e 00360408000174 (Imobiliária Irmãos Nogueira). Por CNPJ, todo cadastro de pessoa jurídica com o mesmo CNPJ (no dev: 442, 1514 e 6563, este o 'X - MG Papelaria Deposito - Itens com Defeito').
 <!-- SECTION:NOTES:END -->
