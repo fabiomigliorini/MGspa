@@ -1,10 +1,10 @@
 ---
 id: TASK-279
 title: 'Emitir nota de serviço pelo app notas, agora que Sinop usa o emissor nacional'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-11-18 02:01'
-updated_date: '2026-11-18 21:40'
+updated_date: '2026-11-18 21:43'
 labels:
   - notas
 dependencies: []
@@ -156,4 +156,6 @@ Formulário da nota de serviço refeito para celular (pedido do Fábio, 18/11/20
 - Correção (18/11/2026, conferido no Anexo I do leiaute): valor líquido = serviço − descontos − retenções (vTotalRet), e o ISS entra quando retido. A homologação devolveu vLiq sem descontar o ISS retido, contra a própria regra (e o Coplan descontava): a conta da tela e do backend voltou a seguir a regra. Alíquota do ISS limitada a 5% (E0595/E1300); antes o limite era só o formato do campo (9,99).
 
 - Alíquota do ISS não pode passar do % de Tributos do Simples (decisão do Fábio, 18/11/2026: no Simples o ISS é uma fatia do DAS; a regra nacional só limita a 5%). Validado no formulário ('Não pode passar dos Tributos') e no servidor.
+
+Fechada em 18/11/2026 a pedido do Fábio com dois critérios em aberto: #5 (substituir a NFS-e) não foi feito; #7 (e-mail) tem o botão e a janela, mas o envio real não foi testado (workers da fila parados no dev).
 <!-- SECTION:NOTES:END -->
