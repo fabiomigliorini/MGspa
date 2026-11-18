@@ -8,8 +8,10 @@ import CidadeFiltrosDrawer from 'src/components/drawers/CidadeFiltrosDrawer.vue'
 import NaturezaOperacaoFiltrosDrawer from 'src/components/drawers/NaturezaOperacaoFiltrosDrawer.vue'
 import TributacaoNaturezaOperacaoFiltrosDrawer from 'src/components/drawers/TributacaoNaturezaOperacaoFiltrosDrawer.vue'
 import DfeDistribuicaoFiltrosDrawer from 'src/components/drawers/DfeDistribuicaoFiltrosDrawer.vue'
+import NfseDfeFiltrosDrawer from 'src/components/drawers/NfseDfeFiltrosDrawer.vue'
 import NfeTerceiroFiltrosDrawer from 'src/components/drawers/NfeTerceiroFiltrosDrawer.vue'
 import InutilizacaoAnosDrawer from 'src/components/drawers/InutilizacaoAnosDrawer.vue'
+import NotaFiscalServicoFiltrosDrawer from 'src/components/drawers/NotaFiscalServicoFiltrosDrawer.vue'
 
 const routes = [
   {
@@ -79,6 +81,47 @@ const routes = [
         },
       },
       {
+        path: 'nota-servico',
+        name: 'notas-servico',
+        component: () => import('pages/NotaFiscalServicoListPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Notas de Serviço',
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+          leftDrawer: NotaFiscalServicoFiltrosDrawer,
+        },
+      },
+      {
+        path: 'nota-servico/criar',
+        name: 'nota-servico-create',
+        component: () => import('pages/NotaFiscalServicoFormPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Notas de Serviço',
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+      {
+        path: 'nota-servico/:codnotafiscalservico',
+        name: 'nota-servico-view',
+        component: () => import('pages/NotaFiscalServicoViewPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Notas de Serviço',
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+      {
+        path: 'nota-servico/:codnotafiscalservico/editar',
+        name: 'nota-servico-edit',
+        component: () => import('pages/NotaFiscalServicoFormPage.vue'),
+        meta: {
+          auth: true,
+          title: 'Notas de Serviço',
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+      {
         path: 'nota/:codnotafiscal/devolucao',
         name: 'nota-fiscal-devolucao',
         component: () => import('pages/NotaFiscalDevolucaoPage.vue'),
@@ -121,6 +164,24 @@ const routes = [
           auth: true,
           title: "Distribuição de DFe's",
           leftDrawer: DfeDistribuicaoFiltrosDrawer,
+          permissions: ['Administrador', 'Financeiro', 'Publico'],
+        },
+      },
+    ],
+  },
+
+  {
+    path: '/nfse-dfe',
+    component: () => import('layouts/MainLayout.vue'),
+    children: [
+      {
+        path: '',
+        name: 'nfse-dfe-distribuicao',
+        component: () => import('pages/NfseDfeDistribuicaoPage.vue'),
+        meta: {
+          auth: true,
+          title: 'DFe de NFS-e',
+          leftDrawer: NfseDfeFiltrosDrawer,
           permissions: ['Administrador', 'Financeiro', 'Publico'],
         },
       },

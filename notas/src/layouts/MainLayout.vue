@@ -17,6 +17,7 @@ const menuGroups = [
     items: [
       { label: 'Início', icon: 'home', color: 'brown', to: '/' },
       { label: 'Notas', icon: 'description', color: 'blue', to: '/nota' },
+      { label: 'Notas de Serviço', icon: 'receipt', color: 'teal', to: '/nota-servico' },
       { label: 'NFe Terceiro', icon: 'move_to_inbox', color: 'orange', to: '/nfe-terceiro' },
       { label: 'Inutilizações', icon: 'block', color: 'red', to: '/inutilizacao' },
     ],
@@ -30,6 +31,7 @@ const menuGroups = [
       { label: 'CFOPs', icon: 'compare_arrows', color: 'warning', to: '/cfop' },
       { label: 'Cidades', icon: 'location_city', color: 'purple', to: '/cidade' },
       { label: 'DFe', icon: 'sync', color: 'blue', to: '/dfe' },
+      { label: 'DFe NFS-e', icon: 'sync', color: 'teal', to: '/nfse-dfe' },
       { label: 'Domínio', icon: 'file_download', color: 'deep-orange', to: '/dominio' },
       { label: 'IBPT', icon: 'upload_file', color: 'deep-purple', to: '/ibpt' },
     ],

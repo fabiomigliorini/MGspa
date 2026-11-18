@@ -54,12 +54,15 @@ class Filial extends MgModel
         'crt',
         'dfe',
         'emitenfe',
+        'emitenfse',
         'empresadominio',
         'filial',
         'inativo',
+        'inscricaomunicipal',
         'nfcetoken',
         'nfcetokenid',
         'nfeserie',
+        'nfseserie',
         'odbcnumeronotafiscal',
         'pagarmeid',
         'pagarmesk',
@@ -82,9 +85,11 @@ class Filial extends MgModel
         'crt' => 'integer',
         'dfe' => 'boolean',
         'emitenfe' => 'boolean',
+        'emitenfse' => 'boolean',
         'empresadominio' => 'float',
         'inativo' => 'datetime',
         'nfeserie' => 'integer',
+        'nfseserie' => 'integer',
         'ultimonsu' => 'integer'
     ];
 

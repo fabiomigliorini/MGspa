@@ -32,6 +32,17 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Leiaute da DPS da NFS-e Nacional em producao (TASK-279)
+    |--------------------------------------------------------------------------
+    | A homologacao (producao restrita) ja roda o leiaute da reforma tributaria
+    | (finNFSe obrigatorio, xDescServ no fim do cServ); a producao ainda roda o
+    | "atual" do portal. Quando o portal publicar a troca em producao, ligar aqui
+    | (NFSE_LEIAUTE_RTC=true) sem mexer no codigo. Na homologacao vale sempre o novo.
+    */
+    'nfse_leiaute_rtc' => filter_var(env('NFSE_LEIAUTE_RTC', false), FILTER_VALIDATE_BOOLEAN),
+
+    /*
+    |--------------------------------------------------------------------------
     | Caminhos em disco
     |--------------------------------------------------------------------------
     */

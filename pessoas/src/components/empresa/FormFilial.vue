@@ -73,8 +73,23 @@ defineExpose({
 
     <MgInputValor v-model="model.nfeserie" :decimals="0" :grouping="false" label="Série NFe" />
 
+    <MgInputValor
+      v-model="model.nfseserie"
+      :decimals="0"
+      :grouping="false"
+      label="Série DPS (NFS-e)"
+    />
+
+    <MgInput
+      outlined
+      v-model="model.inscricaomunicipal"
+      label="Inscrição Municipal"
+      maxlength="15"
+    />
+
     <div class="row q-gutter-sm">
       <q-toggle v-model="model.emitenfe" label="Emite NFe" />
+      <q-toggle v-model="model.emitenfse" label="Emite NFS-e" />
       <q-toggle v-model="model.dfe" label="DF-e" />
     </div>
 

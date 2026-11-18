@@ -10,6 +10,8 @@ use Mg\Dfe\DistribuicaoDfe;
 use Mg\Filial\Filial;
 use Mg\Mdfe\Mdfe;
 use Mg\NfeTerceiro\NfeTerceiro;
+use Mg\NotaFiscalServico\NotaFiscalServico;
+use Mg\NotaFiscalServico\DistribuicaoNfse;
 
 /**
  * Caminhos em disco de tudo que a biblioteca NFePHP gera ou recebe.
@@ -26,6 +28,15 @@ use Mg\NfeTerceiro\NfeTerceiro;
  *                              {chave}-encerrado.xml  encerramento (so MDF-e)
  *                              {chave}-cce-{seq}.xml  carta de correcao, uma por sequencia
  *                              {chave}.pdf            DANFE / DANFCE / DAMDFE
+ *
+ *   nfse/                      NFS-e Nacional (TASK-279), pasta do dia da emissao da DPS:
+ *                              {iddps}-dps.xml        DPS assinada (o que foi enviado)
+ *                              {chave}-nfse.xml       NFS-e devolvida pelo Sistema Nacional
+ *                              {chave}-cancelado.xml  evento de cancelamento registrado
+ *                              {chave}.pdf            DANFSe
+ *
+ *   nfse-dfe/                  {nsu}-{chave}.xml.gz   documento distribuido pelo ADN (NFS-e ou
+ *                              evento), pela data em que chegou. NSU do ADN, outra sequencia.
  *
  *   inutilizacoes/             {modelo}-{serie}-{nIni}-{nFin}-inut.xml
  *                              Arvore propria porque inutilizacao cobre uma FAIXA de
@@ -64,6 +75,8 @@ class NFePHPPathService
     const TIPO_NFE = 'nfe';
     const TIPO_NFCE = 'nfce';
     const TIPO_MDFE = 'mdfe';
+    const TIPO_NFSE = 'nfse';
+    const TIPO_NFSE_DFE = 'nfse-dfe';
     const TIPO_INUTILIZACAO = 'inutilizacoes';
     const TIPO_DFE = 'dfe';
     const TIPO_CONVERSA = 'conversas';
@@ -220,6 +233,65 @@ class NFePHPPathService
     public static function pathDamdfe(Mdfe $mdfe, bool $criar = false)
     {
         return static::pathMdfeArquivo($mdfe, '.pdf', $criar);
+    }
+
+    // ------------------------------------------------------------------ NFS-e Nacional
+
+    /**
+     * Pasta do dia da emissao da DPS (gravada no envio). Antes do autorizar so existe a
+     * DPS, nomeada pelo id dela; o que vem depois leva a chave da NFS-e.
+     */
+    protected static function pathNfseArquivo(NotaFiscalServico $nfs, string $arquivo, bool $criar = false)
+    {
+        return static::path(
+            static::TIPO_NFSE,
+            $nfs->Filial,
+            $nfs->emissao ?? Carbon::now(),
+            $arquivo,
+            $criar
+        );
+    }
+
+    public static function pathNfseDps(NotaFiscalServico $nfs, string $idDps, bool $criar = false)
+    {
+        return static::pathNfseArquivo($nfs, "{$idDps}-dps.xml", $criar);
+    }
+
+    public static function pathNfseAutorizada(NotaFiscalServico $nfs, bool $criar = false)
+    {
+        return static::pathNfseArquivo($nfs, "{$nfs->nfsechave}-nfse.xml", $criar);
+    }
+
+    public static function pathNfseCancelada(NotaFiscalServico $nfs, bool $criar = false)
+    {
+        return static::pathNfseArquivo($nfs, "{$nfs->nfsechave}-cancelado.xml", $criar);
+    }
+
+    public static function pathDanfse(NotaFiscalServico $nfs, bool $criar = false)
+    {
+        return static::pathNfseArquivo($nfs, "{$nfs->nfsechave}.pdf", $criar);
+    }
+
+    public static function pathNfseDfe(DistribuicaoNfse $dist, bool $criar = false)
+    {
+        $arquivo = empty($dist->nfsechave) ? "{$dist->nsu}.xml.gz" : "{$dist->nsu}-{$dist->nfsechave}.xml.gz";
+        return static::path(static::TIPO_NFSE_DFE, $dist->Filial, $dist->criacao ?? Carbon::now(), $arquivo, $criar);
+    }
+
+    /**
+     * Request + response de cada chamada ao Sistema Nacional, na arvore de conversas
+     * (retencao de 2 anos, como as da SEFAZ).
+     */
+    public static function pathNfseConversa(NotaFiscalServico $nfs, string $idDps, string $operacao, bool $criar = false)
+    {
+        return static::pathNfseConversaFilial($nfs->Filial, "{$idDps}-nfse-{$operacao}", $criar);
+    }
+
+    // Conversa sem nota (distribuicao do ADN): o nome vem pronto
+    public static function pathNfseConversaFilial(Filial $filial, string $nome, bool $criar = false)
+    {
+        $agora = Carbon::now();
+        return static::path(static::TIPO_CONVERSA, $filial, $agora, "{$nome}-" . $agora->format('His') . '.json.gz', $criar);
     }
 
     // ------------------------------------------------------------------ DFe (terceiros)

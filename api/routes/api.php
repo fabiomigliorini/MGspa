@@ -193,6 +193,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/vale-modelo', [\Mg\Select\SelectValeModeloController::class, 'index']);
     Route::get('select/maquineta', [\Mg\Select\SelectMaquinetaController::class, 'index']);
     Route::get('select/pdv', [\Mg\Select\SelectPdvController::class, 'index']);
+    Route::get('select/tributacao-nacional', [\Mg\Select\SelectTributacaoNacionalController::class, 'index']);
+    Route::get('select/nbs', [\Mg\Select\SelectNbsController::class, 'index']);
 
     // Selects: resolução por id (objeto único ou 404) — padrão GET select/{ent}/{id}
     Route::get('select/pessoa/{id}', [\Mg\Select\SelectPessoaController::class, 'show'])->whereNumber('id');
@@ -219,6 +221,8 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::get('select/moeda/{id}', [\Mg\Select\SelectMoedaController::class, 'show']);
     Route::get('select/maquineta/{id}', [\Mg\Select\SelectMaquinetaController::class, 'show'])->whereNumber('id');
     Route::get('select/pdv/{id}', [\Mg\Select\SelectPdvController::class, 'show'])->whereNumber('id');
+    Route::get('select/tributacao-nacional/{id}', [\Mg\Select\SelectTributacaoNacionalController::class, 'show'])->whereNumber('id');
+    Route::get('select/nbs/{id}', [\Mg\Select\SelectNbsController::class, 'show'])->whereNumber('id');
 
     // Selects novos (entidades LOCAL pequenas, padrão index + show)
     Route::get('select/forma-pagamento', [\Mg\Select\SelectFormaPagamentoController::class, 'index']);
@@ -795,6 +799,34 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
             ->parameters(['duplicata' => 'codnotafiscalduplicatas']);
         Route::apiResource('{codnotafiscal}/referenciada', '\Mg\NotaFiscal\NotaFiscalReferenciadaController')
             ->parameters(['referenciada' => 'codnotafiscalreferenciada']);
+    });
+
+    // DF-e da NFS-e: caixa de distribuicao do ADN (TASK-279)
+    Route::prefix('nfse-dfe')->group(function () {
+        Route::get('distribuicao', '\Mg\NotaFiscalServico\NfseDistribuicaoController@index');
+        Route::get('filiais-habilitadas', '\Mg\NotaFiscalServico\NfseDistribuicaoController@filiaisHabilitadas');
+        Route::post('consultar/{codfilial}/{nsu?}', '\Mg\NotaFiscalServico\NfseDistribuicaoController@consultar')->whereNumber(['codfilial', 'nsu']);
+        Route::get('distribuicao/{coddistribuicaonfse}/xml', '\Mg\NotaFiscalServico\NfseDistribuicaoController@xml');
+        Route::post('distribuicao/{coddistribuicaonfse}/processar', '\Mg\NotaFiscalServico\NfseDistribuicaoController@processar');
+        Route::post('distribuicao/{coddistribuicaonfse}/consultar-adn', '\Mg\NotaFiscalServico\NfseDistribuicaoController@consultarNsu');
+        Route::post('consultar-eventos/{codfilial}/{chave}', '\Mg\NotaFiscalServico\NfseDistribuicaoController@consultarEventos')->whereNumber(['codfilial', 'chave']);
+    });
+
+    // NOTA FISCAL DE SERVICO (NFS-e Nacional, TASK-279)
+    Route::prefix('nota-fiscal-servico')->group(function () {
+        Route::get('filiais', '\Mg\NotaFiscalServico\NotaFiscalServicoController@filiais');
+        Route::get('/', '\Mg\NotaFiscalServico\NotaFiscalServicoController@index');
+        Route::post('/', '\Mg\NotaFiscalServico\NotaFiscalServicoController@store');
+        Route::get('{codnotafiscalservico}', '\Mg\NotaFiscalServico\NotaFiscalServicoController@show')->whereNumber('codnotafiscalservico');
+        Route::put('{codnotafiscalservico}', '\Mg\NotaFiscalServico\NotaFiscalServicoController@update')->whereNumber('codnotafiscalservico');
+        Route::delete('{codnotafiscalservico}', '\Mg\NotaFiscalServico\NotaFiscalServicoController@destroy')->whereNumber('codnotafiscalservico');
+        Route::post('{codnotafiscalservico}/duplicar', '\Mg\NotaFiscalServico\NotaFiscalServicoController@duplicar');
+        Route::post('{codnotafiscalservico}/enviar', '\Mg\NotaFiscalServico\NotaFiscalServicoController@enviar');
+        Route::post('{codnotafiscalservico}/consultar', '\Mg\NotaFiscalServico\NotaFiscalServicoController@consultar');
+        Route::post('{codnotafiscalservico}/cancelar', '\Mg\NotaFiscalServico\NotaFiscalServicoController@cancelar');
+        Route::post('{codnotafiscalservico}/mail', '\Mg\NotaFiscalServico\NotaFiscalServicoController@mail');
+        Route::get('{codnotafiscalservico}/danfse', '\Mg\NotaFiscalServico\NotaFiscalServicoController@danfse');
+        Route::get('{codnotafiscalservico}/xml/{tipo}', '\Mg\NotaFiscalServico\NotaFiscalServicoController@xml');
     });
 
     // Inutilizacao de numeracao (por FAIXA)
