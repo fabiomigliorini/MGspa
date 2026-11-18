@@ -38,17 +38,24 @@ async function carregar() {
   }
 }
 
-async function salvar() {
-  try {
-    const salva = await store.salvarNota()
-    if (!salva) return
-    router.push({
-      name: 'nota-servico-view',
-      params: { codnotafiscalservico: salva.codnotafiscalservico },
-    })
-  } catch {
-    // a store ja notificou o erro
-  }
+function salvar() {
+  $q.dialog({
+    title: 'Confirmação',
+    message: 'Tem certeza que deseja salvar?',
+    cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
+    ok: { label: 'Salvar', color: 'primary', flat: true },
+  }).onOk(async () => {
+    try {
+      const salva = await store.salvarNota()
+      if (!salva) return
+      router.push({
+        name: 'nota-servico-view',
+        params: { codnotafiscalservico: salva.codnotafiscalservico },
+      })
+    } catch {
+      // a store ja notificou o erro
+    }
+  })
 }
 
 onMounted(() => carregar())

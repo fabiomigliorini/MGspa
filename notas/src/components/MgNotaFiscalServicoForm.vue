@@ -207,7 +207,7 @@ watch(
       </q-card-section>
       <q-card-section>
         <div class="row q-col-gutter-md">
-          <div class="col-12">
+          <div class="col-xs-6 col-md-6">
             <MgInputValor
               v-model="cad.form.valorservico"
               label="Valor do Serviço *"
@@ -217,29 +217,7 @@ watch(
               :disable="disable"
             />
           </div>
-          <div class="col-6">
-            <MgInputValor
-              v-model="cad.form.valordescontoincondicionado"
-              label="Desc. Incond."
-              prefix="R$"
-              :min="0"
-              clearable
-              hint="Abate a base do ISS"
-              :disable="disable"
-            />
-          </div>
-          <div class="col-6">
-            <MgInputValor
-              v-model="cad.form.valordescontocondicionado"
-              label="Desc. Cond."
-              prefix="R$"
-              :min="0"
-              clearable
-              hint="Não abate a base"
-              :disable="disable"
-            />
-          </div>
-          <div class="col-6">
+          <div class="col-xs-3 col-md-3">
             <MgInputValor
               v-model="cad.form.tributospercentual"
               label="Tributos *"
@@ -252,7 +230,7 @@ watch(
             />
           </div>
           <!-- No Simples (ISS no DAS) a aliquota so vai na nota com ISS retido -->
-          <div class="col-6">
+          <div class="col-xs-3 col-md-3">
             <MgInputValor
               v-model="cad.form.issaliquota"
               label="Alíquota ISS"
@@ -262,6 +240,28 @@ watch(
               :hint="cad.form.issretido ? 'Do mês no Simples' : 'Só com ISS retido'"
               :rules="[aliquotaSeRetido]"
               :disable="disable || !cad.form.issretido"
+            />
+          </div>
+          <div class="col-xs-6 col-md-6">
+            <MgInputValor
+              v-model="cad.form.valordescontoincondicionado"
+              label="Desconto Incondicionado"
+              prefix="R$"
+              :min="0"
+              clearable
+              hint="Abate a base do ISS"
+              :disable="disable"
+            />
+          </div>
+          <div class="col-xs-6 col-md-6">
+            <MgInputValor
+              v-model="cad.form.valordescontocondicionado"
+              label="Desconto Condicionado"
+              prefix="R$"
+              :min="0"
+              clearable
+              hint="Não abate a base"
+              :disable="disable"
             />
           </div>
         </div>
