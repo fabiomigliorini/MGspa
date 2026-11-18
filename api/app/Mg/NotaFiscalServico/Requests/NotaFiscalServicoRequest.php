@@ -27,9 +27,9 @@ class NotaFiscalServicoRequest extends FormRequest
             'valorservico' => 'required|numeric|gt:0|max:999999999999.99',
             'valordescontoincondicionado' => 'nullable|numeric|min:0',
             'valordescontocondicionado' => 'nullable|numeric|min:0',
-            // pAliq da DPS: um digito inteiro e duas casas (ate 9,99%). Obrigatoria so
-            // com ISS retido; sem retencao (Simples, ISS no DAS) nao vai na nota (E0625).
-            'issaliquota' => 'nullable|required_if:issretido,true,1|numeric|gt:0|max:9.99',
+            // Ate 5% (E0595). Obrigatoria so com ISS retido; sem retencao (Simples, ISS
+            // no DAS) nao vai na nota (E0625).
+            'issaliquota' => 'nullable|required_if:issretido,true,1|numeric|gt:0|max:5',
             'issretido' => 'required|boolean',
             // pTotTribSN: ate 99,99%. Obrigatorio para filial do Simples (ver withValidator)
             'tributospercentual' => 'nullable|numeric|gt:0|max:99.99',
@@ -45,6 +45,15 @@ class NotaFiscalServicoRequest extends FormRequest
             $filial = Filial::find($this->input('codfilial'));
             if ($filial && NfseXmlService::simples($filial) && empty($this->input('tributospercentual'))) {
                 $validator->errors()->add('tributospercentual', 'Informe o % aproximado dos tributos do Simples.');
+            }
+            // No Simples o ISS e' uma fatia do DAS: nunca passa do % total de tributos
+            if (
+                $this->boolean('issretido')
+                && $this->filled('issaliquota')
+                && $this->filled('tributospercentual')
+                && (float) $this->input('issaliquota') > (float) $this->input('tributospercentual')
+            ) {
+                $validator->errors()->add('issaliquota', 'A alíquota do ISS não pode passar do % de Tributos do Simples.');
             }
             $descontos = (float) $this->input('valordescontoincondicionado', 0)
                 + (float) $this->input('valordescontocondicionado', 0);
@@ -67,7 +76,7 @@ class NotaFiscalServicoRequest extends FormRequest
             'descricao.max' => 'A descrição do serviço aceita até 2000 caracteres.',
             'valorservico.required' => 'Informe o valor do serviço.',
             'valorservico.gt' => 'O valor do serviço tem que ser maior que zero.',
-            'issaliquota.max' => 'A alíquota do ISS aceita até 9,99%.',
+            'issaliquota.max' => 'A alíquota do ISS não pode passar de 5%.',
             'issaliquota.required_if' => 'Com ISS retido, informe a alíquota do ISS.',
             'issaliquota.gt' => 'A alíquota do ISS tem que ser maior que zero.',
             'tributospercentual.max' => 'O % de tributos aceita até 99,99%.',

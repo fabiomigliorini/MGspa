@@ -35,7 +35,13 @@ const tomadorSeRetido = (v) =>
   !cad.value.form?.issretido || !!v || 'Com ISS retido, informe o tomador'
 
 // A aliquota so vale com ISS retido (Simples, ISS no DAS: sem retencao ela nao vai na nota)
-const aliquotaSeRetido = (v) => !cad.value.form?.issretido || Number(v) > 0 || 'Informe a alíquota'
+const aliquotaSeRetido = (v) => {
+  if (!cad.value.form?.issretido) return true
+  if (!(Number(v) > 0)) return 'Informe a alíquota'
+  // No Simples o ISS e' uma fatia do DAS: nunca passa do % total de tributos
+  const tributos = Number(cad.value.form?.tributospercentual)
+  return !(tributos > 0 && Number(v) > tributos) || 'Não pode passar dos Tributos'
+}
 
 const valores = computed(() => calculaValoresNfse(cad.value.form || {}))
 
@@ -110,7 +116,7 @@ watch(
               <template v-slot:hint>Em branco: tomador não identificado</template>
             </MgSelectPessoa>
           </div>
-          <div class="col-7">
+          <div class="col-12">
             <MgSelect
               v-model="cad.form.issretido"
               :options="ISS_RETIDO_OPTIONS"
@@ -118,19 +124,6 @@ watch(
               emit-value
               map-options
               :disable="disable"
-            />
-          </div>
-          <!-- No Simples (ISS no DAS) a aliquota so vai na nota com ISS retido -->
-          <div class="col-5">
-            <MgInputValor
-              v-model="cad.form.issaliquota"
-              label="Alíquota ISS"
-              suffix="%"
-              :min="0"
-              :max="9.99"
-              :hint="cad.form.issretido ? 'Do mês no Simples' : 'Só com ISS retido'"
-              :rules="[aliquotaSeRetido]"
-              :disable="disable || !cad.form.issretido"
             />
           </div>
         </div>
@@ -195,17 +188,39 @@ watch(
       </q-card-section>
       <q-card-section>
         <div class="row q-col-gutter-md">
-          <div class="col-6 col-sm-3">
+          <div class="col-12">
             <MgInputValor
               v-model="cad.form.valorservico"
-              label="Valor *"
+              label="Valor do Serviço *"
               prefix="R$"
               :min="0"
               :rules="[(v) => Number(v) > 0 || 'Informe o valor']"
               :disable="disable"
             />
           </div>
-          <div class="col-6 col-sm-3">
+          <div class="col-6">
+            <MgInputValor
+              v-model="cad.form.valordescontoincondicionado"
+              label="Desc. Incond."
+              prefix="R$"
+              :min="0"
+              clearable
+              hint="Abate a base do ISS"
+              :disable="disable"
+            />
+          </div>
+          <div class="col-6">
+            <MgInputValor
+              v-model="cad.form.valordescontocondicionado"
+              label="Desc. Cond."
+              prefix="R$"
+              :min="0"
+              clearable
+              hint="Não abate a base"
+              :disable="disable"
+            />
+          </div>
+          <div class="col-6">
             <MgInputValor
               v-model="cad.form.tributospercentual"
               label="Tributos *"
@@ -217,26 +232,17 @@ watch(
               :disable="disable"
             />
           </div>
-          <div class="col-6 col-sm-3">
+          <!-- No Simples (ISS no DAS) a aliquota so vai na nota com ISS retido -->
+          <div class="col-6">
             <MgInputValor
-              v-model="cad.form.valordescontoincondicionado"
-              label="Desc. Incond."
-              prefix="R$"
+              v-model="cad.form.issaliquota"
+              label="Alíquota ISS"
+              suffix="%"
               :min="0"
-              clearable
-              hint="Abate a base do ISS"
-              :disable="disable"
-            />
-          </div>
-          <div class="col-6 col-sm-3">
-            <MgInputValor
-              v-model="cad.form.valordescontocondicionado"
-              label="Desc. Cond."
-              prefix="R$"
-              :min="0"
-              clearable
-              hint="Não abate a base"
-              :disable="disable"
+              :max="5"
+              :hint="cad.form.issretido ? 'Do mês no Simples' : 'Só com ISS retido'"
+              :rules="[aliquotaSeRetido]"
+              :disable="disable || !cad.form.issretido"
             />
           </div>
         </div>

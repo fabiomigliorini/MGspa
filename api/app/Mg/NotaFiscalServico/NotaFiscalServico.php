@@ -100,13 +100,15 @@ class NotaFiscalServico extends MgModel
         return round($this->base_calculo * $this->issaliquota / 100, 2);
     }
 
-    // Como o Sistema Nacional calcula o vLiq: servico menos os dois descontos. O ISS
-    // retido NAO sai do liquido (conferido na homologacao; o Coplan descontava).
+    // Regra do leiaute (Anexo I): vLiq = vServ - vDescCond - vDescIncond - vTotalRet, e o
+    // ISS entra no vTotalRet quando e' retido. (A homologacao devolveu vLiq sem descontar
+    // o ISS retido, contra a propria regra; o Coplan descontava.)
     public function getValorLiquidoAttribute(): float
     {
         $liquido = $this->valorservico
             - ($this->valordescontoincondicionado ?? 0)
-            - ($this->valordescontocondicionado ?? 0);
+            - ($this->valordescontocondicionado ?? 0)
+            - ($this->issretido ? ($this->iss_valor ?? 0) : 0);
         return round($liquido, 2);
     }
 

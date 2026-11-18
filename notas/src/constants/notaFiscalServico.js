@@ -50,7 +50,8 @@ export const calculaValoresNfse = ({
   const aliquota = issretido ? Number(issaliquota) || 0 : 0
   const basecalculo = Math.round((servico - incondicionado) * 100) / 100
   const issvalor = issretido ? Math.round(basecalculo * aliquota) / 100 : null
-  // Como o Sistema Nacional calcula o vLiq: o ISS retido nao sai do liquido
-  const valorliquido = Math.round((servico - incondicionado - condicionado) * 100) / 100
+  // Regra do leiaute: vLiq = servico - descontos - retencoes (o ISS, quando retido)
+  const valorliquido =
+    Math.round((servico - incondicionado - condicionado - (issvalor ?? 0)) * 100) / 100
   return { basecalculo, issvalor, valorliquido }
 }

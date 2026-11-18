@@ -4,7 +4,7 @@ title: 'Emitir nota de serviço pelo app notas, agora que Sinop usa o emissor na
 status: In Progress
 assignee: []
 created_date: '2026-11-18 02:01'
-updated_date: '2026-11-18 15:21'
+updated_date: '2026-11-18 15:34'
 labels:
   - notas
 dependencies: []
@@ -149,4 +149,10 @@ Ajustes pedidos no teste do Fábio (18/11/2026):
 - Alterar a nota recusada continuava mostrando a recusa antiga (trocou o tomador, a faixa vermelha seguia com o E0240 do tomador anterior). Agora salvar a alteração apaga a mensagem da recusa; o status fica 'Não Autorizada' (DPS numerada pode ter sido autorizada sem resposta, e o Enviar consulta antes de reenviar). Testado pela API em transação desfeita (nota 16, ERR E0204): trocar o tomador limpa a mensagem e mantém ERR e o número; alteração recusada (validação, troca de filial da DPS numerada) não apaga a recusa; nota autorizada segue sem alterar; nota em digitação segue DIG.
 
 Formulário da nota de serviço refeito para celular (pedido do Fábio, 18/11/2026): cinco cards com o cabeçalho azul da tela de detalhe — Nota (filial e competência na mesma linha), Tomador (tomador; Retenção do ISS como select e a alíquota ao lado, desabilitada sem retenção em vez de sumir), Serviço (código, NBS, descrição, local da prestação), Valores (valor, % tributos, descontos, 2 por linha no celular e 4 no desktop, com o resumo base/ISS retido/líquido no rodapé do card) e Observações. Conferido no Chrome sem tela a 412 px: sem rolagem lateral; retenção habilita a alíquota e deixa o tomador obrigatório.
+
+- Formulário (pedido do Fábio): alíquota do ISS saiu do card do Tomador (lá fica só a Retenção do ISS, linha inteira) e foi para Valores, que ficou: Valor do Serviço / Desc. Incond. + Desc. Cond. / Tributos + Alíquota ISS (desabilitada sem retenção).
+
+- Correção (18/11/2026, conferido no Anexo I do leiaute): valor líquido = serviço − descontos − retenções (vTotalRet), e o ISS entra quando retido. A homologação devolveu vLiq sem descontar o ISS retido, contra a própria regra (e o Coplan descontava): a conta da tela e do backend voltou a seguir a regra. Alíquota do ISS limitada a 5% (E0595/E1300); antes o limite era só o formato do campo (9,99).
+
+- Alíquota do ISS não pode passar do % de Tributos do Simples (decisão do Fábio, 18/11/2026: no Simples o ISS é uma fatia do DAS; a regra nacional só limita a 5%). Validado no formulário ('Não pode passar dos Tributos') e no servidor.
 <!-- SECTION:NOTES:END -->
