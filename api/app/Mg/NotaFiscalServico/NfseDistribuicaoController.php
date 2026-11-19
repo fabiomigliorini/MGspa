@@ -60,6 +60,13 @@ class NfseDistribuicaoController extends Controller
         return response($xml, 200)->header('Content-Type', 'text/xml');
     }
 
+    // DANFSe da NFS-e da chave desta linha (NFS-e ou evento)
+    public function danfse(int $coddistribuicaonfse)
+    {
+        $pdf = NfseDistribuicaoService::danfse(DistribuicaoNfse::findOrFail($coddistribuicaonfse));
+        return response($pdf, 200)->header('Content-Type', 'application/pdf');
+    }
+
     public function processar(int $coddistribuicaonfse)
     {
         $dist = NfseDistribuicaoService::processar(DistribuicaoNfse::findOrFail($coddistribuicaonfse));

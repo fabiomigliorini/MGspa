@@ -355,15 +355,23 @@ class NfseService
         if (!in_array($nfs->status, [NotaFiscalServico::STATUS_AUTORIZADA, NotaFiscalServico::STATUS_CANCELADA])) {
             abort(422, 'O DANFSe só existe para nota autorizada ou cancelada.');
         }
-        $xml = static::xmlParaDanfse(static::xml($nfs, 'nfse'));
-        $danfse = new Danfse($xml);
-        if ($nfs->status == NotaFiscalServico::STATUS_CANCELADA) {
-            $danfse->setAsCanceled();
-        }
-        $pdf = $danfse->render();
+        $pdf = static::renderDanfse(static::xml($nfs, 'nfse'), $nfs->status == NotaFiscalServico::STATUS_CANCELADA);
         $path = NFePHPPathService::pathDanfse($nfs, true);
         file_put_contents($path, $pdf);
         return $path;
+    }
+
+    /**
+     * PDF do DANFSe a partir do XML da NFS-e: o da nossa nota e o de qualquer NFS-e da caixa
+     * do ADN (NfseDistribuicaoService::danfse).
+     */
+    public static function renderDanfse(string $xml, bool $cancelada): string
+    {
+        $danfse = new Danfse(static::xmlParaDanfse($xml));
+        if ($cancelada) {
+            $danfse->setAsCanceled();
+        }
+        return $danfse->render();
     }
 
     /**

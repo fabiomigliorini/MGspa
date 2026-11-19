@@ -7,6 +7,7 @@ import { useNfseDfeStore } from '../../stores/nfseDfeStore'
 import { useDebounceFn } from '@vueuse/core'
 import nfseDfeService from '../../services/nfseDfeService'
 import MgInputData from '@components/MgInputData.vue'
+import { EMITIDA_OPTIONS } from '../../constants/notaFiscal'
 
 const dfeStore = useNfseDfeStore()
 const isInitializing = ref(true)
@@ -15,6 +16,8 @@ const tipoOptions = [
   { label: 'NFS-e', value: 'NFSE' },
   { label: 'Evento', value: 'EVENTO' },
 ]
+// Mesmas opcoes das notas de produto: true = nossa emissao, false = emitida por terceiro
+const emitidaOptions = EMITIDA_OPTIONS
 
 const activeFiltersCount = computed(() => {
   let count = 0
@@ -36,6 +39,7 @@ const debouncedApplyFilters = useDebounceFn(() => {
 const filters = reactive({
   nfsechave: null,
   tipodocumento: null,
+  emitida: null,
   codfilial: null,
   datade: null,
   dataate: null,
@@ -72,7 +76,8 @@ onMounted(() => {
   loadFiliais()
 
   Object.keys(filters).forEach((key) => {
-    filters[key] = dfeStore.filters[key] || null
+    // ?? e nao ||: false (emitida por terceiro) e' filtro valido
+    filters[key] = dfeStore.filters[key] ?? null
   })
 
   setTimeout(() => {
@@ -163,6 +168,24 @@ onMounted(() => {
         >
           <template v-slot:prepend>
             <q-icon name="category" />
+          </template>
+        </MgSelect>
+      </div>
+
+      <!-- Emissao: a filial emitiu ou e' a tomadora -->
+      <div class="q-mb-md">
+        <MgSelect
+          v-model="filters.emitida"
+          :options="emitidaOptions"
+          label="Emissão"
+          outlined
+          clearable
+          emit-value
+          map-options
+          :bottom-slots="false"
+        >
+          <template v-slot:prepend>
+            <q-icon name="swap_horiz" />
           </template>
         </MgSelect>
       </div>

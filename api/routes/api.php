@@ -814,6 +814,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('filiais-habilitadas', '\Mg\NotaFiscalServico\NfseDistribuicaoController@filiaisHabilitadas');
         Route::post('consultar/{codfilial}/{nsu?}', '\Mg\NotaFiscalServico\NfseDistribuicaoController@consultar')->whereNumber(['codfilial', 'nsu']);
         Route::get('distribuicao/{coddistribuicaonfse}/xml', '\Mg\NotaFiscalServico\NfseDistribuicaoController@xml');
+        Route::get('distribuicao/{coddistribuicaonfse}/danfse', '\Mg\NotaFiscalServico\NfseDistribuicaoController@danfse');
         Route::post('distribuicao/{coddistribuicaonfse}/processar', '\Mg\NotaFiscalServico\NfseDistribuicaoController@processar');
         Route::post('distribuicao/{coddistribuicaonfse}/consultar-adn', '\Mg\NotaFiscalServico\NfseDistribuicaoController@consultarNsu');
         Route::post('consultar-eventos/{codfilial}/{chave}', '\Mg\NotaFiscalServico\NfseDistribuicaoController@consultarEventos')->whereNumber(['codfilial', 'chave']);

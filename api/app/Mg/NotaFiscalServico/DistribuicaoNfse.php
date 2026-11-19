@@ -9,7 +9,8 @@ use Mg\Usuario\Usuario;
 /**
  * Caixa de DF-e da NFS-e (TASK-279): o que o ADN distribuiu para a filial (NFS-e em que
  * ela e' emitente, tomadora ou intermediaria, e os eventos delas), uma linha por NSU.
- * O XML fica em disco (NFePHPPathService::pathNfseDfe).
+ * O XML fica em disco (NFePHPPathService::pathNfseDfe). emitida = a filial e' a emitente
+ * (como na tblnotafiscal), lida da chave.
  */
 class DistribuicaoNfse extends MgModel
 {
@@ -33,6 +34,7 @@ class DistribuicaoNfse extends MgModel
         'tomador',
         'valorservico',
         'codnotafiscalservico',
+        'emitida',
     ];
 
     protected $casts = [
@@ -44,6 +46,7 @@ class DistribuicaoNfse extends MgModel
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
         'data' => 'datetime',
+        'emitida' => 'boolean',
         'nfsenumero' => 'integer',
         'nsu' => 'integer',
         'valorservico' => 'float',

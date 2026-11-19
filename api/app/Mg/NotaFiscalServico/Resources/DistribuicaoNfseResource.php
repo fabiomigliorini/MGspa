@@ -23,6 +23,7 @@ class DistribuicaoNfseResource extends JsonResource
             'tomadorcnpj' => $this->tomadorcnpj,
             'tomador' => $this->tomador,
             'valorservico' => $this->valorservico,
+            'emitida' => $this->emitida,
             'codnotafiscalservico' => $this->codnotafiscalservico,
             'notafiscalservico' => $this->NotaFiscalServico?->only(['codnotafiscalservico', 'status', 'nfsenumero']),
             'criacao' => $this->criacao,

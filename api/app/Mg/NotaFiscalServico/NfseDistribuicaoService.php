@@ -199,6 +199,10 @@ class NfseDistribuicaoService
         $xml = $xml ?? static::xml($dist);
         if (!empty($dist->nfsechave)) {
             $dist->codnotafiscalservico = NotaFiscalServico::where('nfsechave', $dist->nfsechave)->value('codnotafiscalservico');
+            // A chave leva o CNPJ/CPF do emitente nos digitos 10 a 23 (inscricao com 14 posicoes):
+            // vale para a NFS-e e para os eventos, que so tem a chave
+            $dist->emitida = substr($dist->nfsechave, 9, 14)
+                === str_pad(NfseXmlService::documentoFilial($dist->Filial), 14, '0', STR_PAD_LEFT);
         }
 
         if ($dist->tipodocumento == DistribuicaoNfse::TIPO_NFSE && !empty($xml)) {
@@ -251,6 +255,37 @@ class NfseDistribuicaoService
     }
 
     /**
+     * DANFSe da NFS-e da chave desta linha (NFS-e ou evento), nossa ou de terceiro. O XML da
+     * nota nao muda: o cancelamento chega como outro documento da caixa, e com ele (ou com a
+     * substituicao) o PDF sai com a marca de CANCELADA, como no processar.
+     */
+    public static function danfse(DistribuicaoNfse $dist): string
+    {
+        if (empty($dist->nfsechave)) {
+            abort(422, 'Este documento não tem chave de NFS-e.');
+        }
+        $nfse = DistribuicaoNfse::where('nfsechave', $dist->nfsechave)
+            ->where('tipodocumento', DistribuicaoNfse::TIPO_NFSE)
+            ->orderByDesc('nsu')
+            ->first();
+        $xml = $nfse ? static::xml($nfse) : null;
+        if (empty($xml)) {
+            abort(404, 'A NFS-e desta chave não está na caixa. Busque pelo botão "Eventos desta NFS-e no ADN".');
+        }
+        $cancelada = DistribuicaoNfse::where('nfsechave', $dist->nfsechave)
+            ->where('tipodocumento', DistribuicaoNfse::TIPO_EVENTO)
+            ->whereIn('tipoevento', ['CANCELAMENTO', 'SUBSTITUICAO'])
+            ->exists();
+        try {
+            return NfseService::renderDanfse($xml, $cancelada);
+        } catch (\Throwable $e) {
+            // XML de outro municipio ou de outro leiaute que o sped-da nao desenha
+            Log::error("DANFSe da NFS-e {$dist->nfsechave} (caixa do ADN): " . $e->getMessage());
+            abort(422, 'Não foi possível gerar o DANFSe desta NFS-e: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Filiais que emitem NFS-e, com o ultimo NSU lido (para a janela de consulta).
      */
     public static function filiaisHabilitadas(): array
@@ -285,6 +320,14 @@ class NfseDistribuicaoService
         }
         if (!empty($filtros['tipodocumento'])) {
             $qry->where('tipodocumento', $filtros['tipodocumento']);
+        }
+        // "true"/"false" em texto na query string: false e' filtro valido (emitida por terceiro).
+        // Sem o parametro (ou vazio) nao filtra: o filter_var leria null e '' como false.
+        if (isset($filtros['emitida']) && $filtros['emitida'] !== '') {
+            $emitida = filter_var($filtros['emitida'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+            if ($emitida !== null) {
+                $qry->where('emitida', $emitida);
+            }
         }
         if (!empty($filtros['nsude'])) {
             $qry->where('nsu', '>=', (int) $filtros['nsude']);

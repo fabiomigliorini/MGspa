@@ -22,6 +22,7 @@ export const useNfseDfeStore = defineStore('nfseDfe', {
       dataate: null,
       nfsechave: null,
       tipodocumento: null,
+      emitida: null,
       nsude: null,
       nsuate: null,
     },
@@ -97,6 +98,7 @@ export const useNfseDfeStore = defineStore('nfseDfe', {
         dataate: null,
         nfsechave: null,
         tipodocumento: null,
+        emitida: null,
         nsude: null,
         nsuate: null,
       }

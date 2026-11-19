@@ -5,7 +5,13 @@ import { useDfeDistribuicaoStore } from '../stores/dfeDistribuicaoStore'
 import dfeDistribuicaoService from '../services/dfeDistribuicaoService'
 import api from '../services/api'
 import { abrirXml } from '@components/abrirXml'
-import { formataChave, formataCnpjCpf, formataNumero, tempoRelativo } from '@components/formatters'
+import {
+  formataChave,
+  formataCnpjCpf,
+  formataNumero,
+  formataTimestamp,
+} from '@components/formatters'
+import MgEmptyState from '@components/MgEmptyState.vue'
 import DfeConsultarSefazDialog from '../components/dialogs/DfeConsultarSefazDialog.vue'
 
 const $q = useQuasar()
@@ -40,13 +46,29 @@ const formatNsu = (nsu) => {
   return formataNumero(nsu, 0)
 }
 
+// O que o documento e': o evento pelo nome; a NF-e (completa ou resumida) pelo tipo
+const titulo = (item) => item.DistribuicaoDfeEvento?.DfeEvento?.dfeevento || item.DfeTipo?.dfetipo
+
+// Quem: o emitente da NF-e, ou o autor do evento (CNPJ/CPF e orgao)
+const quem = (item) => {
+  if (item.codnfeterceiro > 0) {
+    return item.NfeTerceiro?.Pessoa?.fantasia || item.NfeTerceiro?.emitente
+  }
+  const ev = item.DistribuicaoDfeEvento
+  if (!ev?.coddistribuicaodfeevento) return null
+  const doc = ev.cnpj ? formataCnpjCpf(ev.cnpj, false) : ev.cpf ? formataCnpjCpf(ev.cpf, true) : ''
+  return [doc, ev.orgao ? `órgão ${ev.orgao}` : ''].filter(Boolean).join(' - ')
+}
+
 const onLoad = async (index, done) => {
   try {
     await dfeStore.fetchItems()
     done(!dfeStore.pagination.hasMore)
   } catch (error) {
     $q.notify({
-      type: 'negative',
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: 'Erro ao carregar distribuições DFe',
       caption: error.message,
     })
@@ -58,12 +80,16 @@ const handleProcessar = async (coddistribuicaodfe) => {
   try {
     await dfeDistribuicaoService.processar(coddistribuicaodfe)
     $q.notify({
-      type: 'positive',
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
       message: 'Reprocessamento solicitado',
     })
   } catch (error) {
     $q.notify({
-      type: 'negative',
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: 'Erro ao reprocessar',
       caption: error.message,
     })
@@ -74,12 +100,16 @@ const handleConsultarSefaz = async (coddistribuicaodfe) => {
   try {
     await dfeDistribuicaoService.consultarSefaz(coddistribuicaodfe)
     $q.notify({
-      type: 'positive',
+      color: 'green-5',
+      textColor: 'white',
+      icon: 'done',
       message: 'Consulta na SEFAZ realizada',
     })
   } catch (error) {
     $q.notify({
-      type: 'negative',
+      color: 'red-5',
+      textColor: 'white',
+      icon: 'error',
       message: 'Erro ao consultar SEFAZ',
       caption: error.response?.data?.message || error.message,
     })
@@ -98,13 +128,27 @@ const handleVerXml = (coddistribuicaodfe) =>
     },
   )
 
+// Acoes da linha. Sem tela de detalhe: no celular e no tablet os botoes descem para baixo
+// da linha; no desktop ficam a direita (o template desenha a mesma lista nos dois)
+const acoes = (item) => [
+  {
+    icon: 'cloud_sync',
+    tooltip: 'Consultar na SEFAZ',
+    click: () => handleConsultarSefaz(item.coddistribuicaodfe),
+  },
+  { icon: 'replay', tooltip: 'Reprocessar', click: () => handleProcessar(item.coddistribuicaodfe) },
+  { icon: 'code', tooltip: 'Arquivo XML', click: () => handleVerXml(item.coddistribuicaodfe) },
+]
+
 onMounted(async () => {
   if (!dfeStore.initialLoadDone) {
     try {
       await dfeStore.fetchItems(true)
     } catch (error) {
       $q.notify({
-        type: 'negative',
+        color: 'red-5',
+        textColor: 'white',
+        icon: 'error',
         message: 'Erro ao carregar distribuições DFe',
         caption: error.response?.data?.message || error.message,
       })
@@ -115,157 +159,136 @@ onMounted(async () => {
 
 <template>
   <q-page>
-    <!-- Loading inicial -->
-    <div v-if="loading && items.length === 0" class="row justify-center q-py-xl">
-      <q-spinner color="primary" size="3em" />
-    </div>
-
-    <!-- Empty State -->
-    <q-card v-else-if="items.length === 0" flat bordered class="q-pa-xl text-center">
-      <q-icon name="inbox" size="4em" color="grey-5" />
-      <div class="text-h6 text-grey-7 q-mt-md">Nenhuma distribuição DFe encontrada</div>
-      <div class="text-caption text-grey-7 q-mt-sm">
-        <template v-if="hasActiveFilters">Tente ajustar os filtros no menu lateral</template>
-        <template v-else>Nenhum documento fiscal eletrônico distribuído</template>
+    <div class="q-pa-md" style="max-width: 1086px; margin: auto">
+      <div v-if="loading && items.length === 0" class="row justify-center q-py-xl">
+        <q-spinner color="primary" size="3em" />
       </div>
-    </q-card>
 
-    <!-- Lista com Scroll Infinito -->
-    <q-infinite-scroll v-else @load="onLoad" :offset="250">
-      <q-list separator>
-        <q-item v-for="item in items" :key="item.coddistribuicaodfe">
-          <!-- Ícone por tipo -->
-          <q-item-section top avatar>
-            <q-avatar
-              color="teal"
-              text-color="white"
-              :icon="iconeDfeTipo(item.DfeTipo?.schemaxml)"
-            />
-          </q-item-section>
-
-          <!-- Filial e Schema -->
-          <q-item-section top class="col-sm-2 gt-xs">
-            <q-item-label class="text-weight-medium">
-              {{ item.Filial?.filial }}
-            </q-item-label>
-            <q-item-label caption>
-              {{ item.DfeTipo?.schemaxml }}
-            </q-item-label>
-          </q-item-section>
-
-          <!-- Dados da nota/evento -->
-          <q-item-section top>
-            <!-- NfeTerceiro -->
-            <template v-if="item.codnfeterceiro > 0">
-              <q-item-label lines="1">
-                <span class="text-weight-medium" v-if="item.NfeTerceiro?.codpessoa">
-                  {{ item.NfeTerceiro.Pessoa?.fantasia }}
-                </span>
-                <span class="text-weight-medium" v-else>
-                  {{ item.NfeTerceiro?.emitente }}
-                </span>
-              </q-item-label>
-              <q-item-label lines="1">
-                <span class="text-grey-8 text-weight-medium" v-if="item.NfeTerceiro?.valortotal">
-                  R$ {{ formataNumero(item.NfeTerceiro.valortotal) }}
-                </span>
-                <span class="text-grey-8" v-if="item.NfeTerceiro?.natureza">
-                  - {{ item.NfeTerceiro.natureza }}
-                </span>
-              </q-item-label>
-            </template>
-
-            <!-- Evento -->
-            <template v-if="item.coddistribuicaodfeevento > 0">
-              <q-item-label lines="1">
-                <span class="text-weight-medium">
-                  {{ item.DistribuicaoDfeEvento?.orgao }}
-                </span>
-                <span class="text-weight-medium">
-                  {{
-                    item.DistribuicaoDfeEvento?.cnpj
-                      ? formataCnpjCpf(item.DistribuicaoDfeEvento.cnpj, false)
-                      : ''
-                  }}
-                  {{
-                    item.DistribuicaoDfeEvento?.cpf
-                      ? formataCnpjCpf(item.DistribuicaoDfeEvento.cpf, true)
-                      : ''
-                  }}
-                </span>
-              </q-item-label>
-              <q-item-label
-                lines="1"
-                v-if="item.DistribuicaoDfeEvento?.coddistribuicaodfeevento > 0"
-              >
-                <span class="text-grey-8">
-                  {{ item.DistribuicaoDfeEvento?.DfeEvento?.dfeevento }}
-                  ({{ item.DistribuicaoDfeEvento?.DfeEvento?.tpevento }})
-                </span>
-              </q-item-label>
-            </template>
-
-            <!-- Chave -->
-            <q-item-label caption lines="1">
-              {{ formataChave(item.nfechave) }}
-            </q-item-label>
-          </q-item-section>
-
-          <!-- NSU e Data -->
-          <q-item-section top side class="gt-xs">
-            <q-chip size="sm" square icon="dialpad">
-              {{ formatNsu(item.nsu) }}
-            </q-chip>
-            <span class="text-caption">
-              {{ tempoRelativo(item.data) }}
-            </span>
-          </q-item-section>
-
-          <!-- Ações -->
-          <q-item-section side>
-            <q-btn-group flat>
-              <q-btn
-                flat
-                dense
-                color="orange"
-                icon="cloud_download"
-                @click="handleConsultarSefaz(item.coddistribuicaodfe)"
-              >
-                <q-tooltip>Consultar SEFAZ</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                dense
-                color="blue"
-                icon="replay"
-                @click="handleProcessar(item.coddistribuicaodfe)"
-              >
-                <q-tooltip>Reprocessar</q-tooltip>
-              </q-btn>
-              <q-btn
-                flat
-                dense
-                color="blue"
-                icon="code"
-                @click="handleVerXml(item.coddistribuicaodfe)"
-              >
-                <q-tooltip>Arquivo XML</q-tooltip>
-              </q-btn>
-            </q-btn-group>
-          </q-item-section>
-        </q-item>
-      </q-list>
-
-      <template v-slot:loading>
-        <div class="row justify-center q-my-md">
-          <q-spinner-dots color="primary" size="40px" />
+      <MgEmptyState v-else-if="items.length === 0" icon="inbox">
+        Nenhuma distribuição DFe encontrada.
+        <div class="text-caption q-mt-xs">
+          <template v-if="hasActiveFilters">Tente ajustar os filtros.</template>
+          <template v-else>Nenhum documento fiscal eletrônico distribuído.</template>
         </div>
-      </template>
-    </q-infinite-scroll>
+      </MgEmptyState>
+
+      <q-infinite-scroll v-else @load="onLoad" :offset="250">
+        <q-card flat bordered>
+          <q-list separator>
+            <q-item v-for="item in items" :key="item.coddistribuicaodfe">
+              <q-item-section avatar style="min-width: 32px" class="items-center">
+                <q-icon :name="iconeDfeTipo(item.DfeTipo?.schemaxml)" color="teal" />
+              </q-item-section>
+
+              <q-item-section>
+                <div class="row items-start full-width">
+                  <!-- Documento (evento pelo nome, NF-e pelo tipo), com a filial embaixo -->
+                  <div class="q-px-sm col-6 col-md-3">
+                    <div class="text-weight-medium text-caption ellipsis">
+                      {{ titulo(item) || '-' }}
+                    </div>
+                    <div class="text-caption text-grey-7 ellipsis">
+                      {{ item.Filial?.filial }}
+                    </div>
+                  </div>
+
+                  <!-- Emitente da NF-e (com o CNPJ embaixo) ou autor do evento -->
+                  <div class="q-px-sm col-6 col-md-5">
+                    <div
+                      v-if="quem(item)"
+                      class="text-weight-bold text-caption text-primary ellipsis"
+                    >
+                      {{ quem(item) }}
+                    </div>
+                    <div v-if="item.NfeTerceiro?.cnpj" class="text-caption text-grey-7 ellipsis">
+                      {{ formataCnpjCpf(item.NfeTerceiro.cnpj, false) }}
+                    </div>
+                  </div>
+
+                  <div class="q-px-sm col-6 col-md-2 text-caption text-grey-7">
+                    <div class="ellipsis">
+                      {{ item.data ? formataTimestamp(item.data, 4, true) : '-' }}
+                    </div>
+                    <div class="ellipsis">NSU {{ formatNsu(item.nsu) }}</div>
+                  </div>
+
+                  <!-- Valor da NF-e, com a natureza embaixo -->
+                  <div class="q-px-sm col-6 col-md-2 text-caption text-right">
+                    <div
+                      v-if="item.NfeTerceiro?.valortotal"
+                      class="text-weight-bold text-primary ellipsis"
+                    >
+                      R$ {{ formataNumero(item.NfeTerceiro.valortotal) }}
+                    </div>
+                    <div
+                      v-if="item.NfeTerceiro?.natureza"
+                      class="text-grey-7 ellipsis"
+                      :title="item.NfeTerceiro.natureza"
+                    >
+                      {{ item.NfeTerceiro.natureza }}
+                    </div>
+                  </div>
+
+                  <!-- Chave: linha inteira, para caber os 44 dígitos -->
+                  <div class="q-px-sm col-12 text-caption text-grey-7">
+                    {{ formataChave(item.nfechave) }}
+                  </div>
+
+                  <!-- Ações no celular e no tablet: embaixo, à direita -->
+                  <div class="q-px-sm col-12 row justify-end lt-md">
+                    <q-btn
+                      v-for="acao in acoes(item)"
+                      :key="acao.icon"
+                      flat
+                      round
+                      size="sm"
+                      color="grey-7"
+                      :icon="acao.icon"
+                      @click="acao.click()"
+                    >
+                      <q-tooltip>{{ acao.tooltip }}</q-tooltip>
+                    </q-btn>
+                  </div>
+                </div>
+              </q-item-section>
+
+              <!-- Largura fixa: as colunas alinham entre as linhas -->
+              <q-item-section side top style="width: 110px" class="gt-sm">
+                <div class="row no-wrap justify-end full-width">
+                  <q-btn
+                    v-for="acao in acoes(item)"
+                    :key="acao.icon"
+                    flat
+                    round
+                    size="sm"
+                    color="grey-7"
+                    :icon="acao.icon"
+                    @click="acao.click()"
+                  >
+                    <q-tooltip>{{ acao.tooltip }}</q-tooltip>
+                  </q-btn>
+                </div>
+              </q-item-section>
+            </q-item>
+          </q-list>
+        </q-card>
+
+        <template v-slot:loading>
+          <div class="row justify-center q-my-md">
+            <q-spinner-dots color="primary" size="40px" />
+          </div>
+        </template>
+      </q-infinite-scroll>
+
+      <!-- respiro para o FAB não cobrir o fim da lista -->
+      <div class="q-py-xl" />
+    </div>
 
     <q-page-sticky position="bottom-right" :offset="[18, 18]">
       <q-btn fab icon="cloud_download" color="primary" @click="consultarSefazDialog = true">
-        <q-tooltip>Consultar SEFAZ por novos documentos</q-tooltip>
+        <q-tooltip anchor="top middle" self="bottom middle">
+          Consultar SEFAZ por novos documentos
+        </q-tooltip>
       </q-btn>
     </q-page-sticky>
 

@@ -4,7 +4,7 @@ title: 'Emitir nota de serviço pelo app notas, agora que Sinop usa o emissor na
 status: In Progress
 assignee: []
 created_date: '2026-11-18 02:01'
-updated_date: '2026-11-18 22:20'
+updated_date: '2026-11-19 20:53'
 labels:
   - notas
 dependencies: []
@@ -48,9 +48,10 @@ Prazo: emitir em 18/11/2026 (testes de manhã, deploy ao meio-dia). Mínimo para
 - [x] #9 Menu do notas separa Notas de Produtos de Notas de Serviço
 - [x] #10 Menu do notas separa DFe NFe de DFe NFS-e
 - [x] #11 DFe NFS-e: a lista mostra só a outra parte (o tomador quando a filial emitiu, o emitente quando ela é a tomadora)
-- [ ] #12 DFe NFS-e: filtro para ver só as notas em que a filial é a emitente, ou só as em que ela é a tomadora
-- [ ] #13 DFe NFS-e: botão para abrir o DANFSe de qualquer NFS-e da caixa, inclusive as emitidas por outros contra nós
+- [x] #12 DFe NFS-e: filtro para ver só as notas em que a filial é a emitente, ou só as em que ela é a tomadora
+- [x] #13 DFe NFS-e: botão para abrir o DANFSe de qualquer NFS-e da caixa, inclusive as emitidas por outros contra nós
 - [ ] #14 Menu do notas agrupado em Produtos, Serviços, Transporte e Configurações, com o mesmo ícone de nota (azul produtos, verde serviços)
+- [x] #15 As duas telas de DFe (NF-e e NFS-e) com o layout de listagem das Notas de Serviço
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -163,4 +164,26 @@ Formulário da nota de serviço refeito para celular (pedido do Fábio, 18/11/20
 - Alíquota do ISS não pode passar do % de Tributos do Simples (decisão do Fábio, 18/11/2026: no Simples o ISS é uma fatia do DAS; a regra nacional só limita a 5%). Validado no formulário ('Não pode passar dos Tributos') e no servidor.
 
 Fechada em 18/11/2026 a pedido do Fábio com dois critérios em aberto: #5 (substituir a NFS-e) não foi feito; #7 (e-mail) tem o botão e a janela, mas o envio real não foi testado (workers da fila parados no dev).
+
+DFe NFS-e: outra parte, filtro Emissão e DANFSe (critérios #11 a #13, pedidos pelo Fábio em 18/11/2026; plano aprovado):
+- tbldistribuicaonfse.emitida boolean (padrão da tblnotafiscal.emitida): true quando o CNPJ que a chave traz (dígitos 10 a 23: município 7 + ambiente 1 + tipo de inscrição 1 + inscrição 14 + ...) é o da filial. Vale para os eventos, que só têm a chave. Preenchida no NfseDistribuicaoService::processar; as linhas antigas, pelo api/database/nfse_emitida.sql.
+- Lista: a linha 1 mostra só a outra parte (tomador quando emitida, com 'Tomador não identificado' na nota sem tomador; emitente quando não). Ícone call_made (emitida) / call_received (tomada); eventos como antes.
+- Filtro 'Emissão' no drawer com o EMITIDA_OPTIONS das notas de produto ('Nossa Emissão' / 'Emitida por Terceiro'); o false é tratado no drawer (?? null), na store e no backend (filter_var só com o parâmetro presente).
+- DANFSe: GET /v1/nfse-dfe/distribuicao/{id}/danfse, botão em toda linha com chave (NFS-e e eventos). Pega o XML da NFS-e da chave na caixa e marca CANCELADA se há evento CANCELAMENTO ou SUBSTITUICAO da mesma chave. Render separado em NfseService::renderDanfse (o DANFSe das nossas notas usa o mesmo). Falha do sped-da (XML de outro município/leiaute) vira 422 com o motivo.
+- Filial só intermediária entra como emitida = false (mostra o emitente); aceito pelo Fábio, não ocorreu nos 124 documentos reais.
+Go-live: rodar api/database/nfse_emitida.sql ANTES do deploy do api (sem a coluna, o processar falha e o nfse:dist-dfe para de gravar a caixa).
+
+Layout das duas telas de DFe (critério #15, pedido do Fábio em 19/11/2026: 'o padrão das telas de listagem é o das Notas de Serviço'):
+- DfeDistribuicaoPage (NF-e) e NfseDfeDistribuicaoPage (NFS-e) no molde da NotaFiscalServicoListPage: q-page com max-width 1086px, q-card flat bordered + q-list separator, q-icon pequeno à esquerda, quatro colunas (documento + filial | outra parte + CNPJ | data + NSU | valor), MgEmptyState, respiro para o FAB.
+- Diferenças do molde: a chave ganhou uma linha inteira embaixo (na coluna do meio só cabiam ~40 dos 62 caracteres e sumia o número da nota); as ações ficam à direita com largura fixa (210px NFS-e, 110px NF-e, para as colunas alinharem) e, como DFe não tem tela de detalhe, descem para baixo da linha no celular e no tablet (lt-md) em vez de sumir. Botões flat round sm grey-7; na NF-e o 'Consultar SEFAZ' da linha virou cloud_sync (o mesmo do 'Buscar este NSU no ADN'). Avisos da NF-e em red-5/green-5.
+- NF-e: título = nome do evento ou tipo do DF-e (NFe Completa/Resumida); meio = emitente (fantasia da pessoa ou nome do XML) com o CNPJ, ou o autor do evento (CNPJ - órgão); valor com a natureza embaixo.
+
+Testes de 19/11/2026 (autorizados pelo Fábio):
+- nfse_emitida.sql no banco de dev: 22 linhas marcadas (19 NFS-e + 3 eventos, todas da FDF); rodado de novo, não mexe em nada.
+- API por script em transação desfeita: filtro emitida (sem parâmetro, true, false, vazio, inválido); NFS-e de terceiro (chave com outro CNPJ) fica emitida = false; DANFSe da NFS-e, pelo evento de cancelamento (marca CANCELADA conferida na imagem do PDF) e pela linha da NFS-e cancelada (mesmo PDF); 404 sem a NFS-e na caixa; 422 com XML que o sped-da não desenha e sem chave; DANFSe da nossa nota (render separado) igual.
+- Bug corrigido no teste: filter_var(null/'') devolve false — a lista sem filtro mostraria só as de terceiro. O filtro só se aplica com o parâmetro presente e não vazio.
+- Telas no Chrome sem tela contra o quasar dev do notas, API simulada (com linhas de terceiro, que o dev não tem): outra parte, setas, 'Tomador não identificado', evento, DANFSe (modal e erro 422), filtro Emissão (pedido emitida=false/true, sobrevive ao recarregar, limpar tira o parâmetro), celular 412px e tablet 800px sem rolagem lateral e com as 6 ações, desktop sem duplicar ações; DFe NF-e com NF-e, evento e documento não processado.
+- Não testado: DANFSe de NFS-e de terceiro de verdade (o dev só tem as nossas de homologação) — fica com o Fábio, com as notas da Bee, do Rogério e do Wellington.
+
+Achado fora do escopo (relatado, sem mexer): a DFe NF-e ordena por data desc e o Postgres põe as linhas sem data (documentos não processados, 309 no dev) no topo da lista.
 <!-- SECTION:NOTES:END -->
