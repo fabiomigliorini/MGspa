@@ -4,7 +4,7 @@ title: 'Emitir nota de serviço pelo app notas, agora que Sinop usa o emissor na
 status: In Progress
 assignee: []
 created_date: '2026-11-18 02:01'
-updated_date: '2026-11-18 15:34'
+updated_date: '2026-11-18 22:20'
 labels:
   - notas
 dependencies: []
@@ -45,6 +45,12 @@ Prazo: emitir em 18/11/2026 (testes de manhã, deploy ao meio-dia). Mínimo para
 - [x] #6 Ler a caixa do ADN em estrutura própria: nossas notas e eventos (cancelamento de fora leva a CAN) e as notas emitidas contra nós
 - [ ] #7 Enviar o DANFSe e o XML por e-mail ao tomador, por botão no detalhe da nota
 - [x] #8 Tabelas oficiais de código de tributação nacional e NBS importadas (Anexo B v1.01) e emitenfse/nfseserie no formulário da filial do pessoas
+- [x] #9 Menu do notas separa Notas de Produtos de Notas de Serviço
+- [x] #10 Menu do notas separa DFe NFe de DFe NFS-e
+- [x] #11 DFe NFS-e: a lista mostra só a outra parte (o tomador quando a filial emitiu, o emitente quando ela é a tomadora)
+- [ ] #12 DFe NFS-e: filtro para ver só as notas em que a filial é a emitente, ou só as em que ela é a tomadora
+- [ ] #13 DFe NFS-e: botão para abrir o DANFSe de qualquer NFS-e da caixa, inclusive as emitidas por outros contra nós
+- [ ] #14 Menu do notas agrupado em Produtos, Serviços, Transporte e Configurações, com o mesmo ícone de nota (azul produtos, verde serviços)
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -155,4 +161,6 @@ Formulário da nota de serviço refeito para celular (pedido do Fábio, 18/11/20
 - Correção (18/11/2026, conferido no Anexo I do leiaute): valor líquido = serviço − descontos − retenções (vTotalRet), e o ISS entra quando retido. A homologação devolveu vLiq sem descontar o ISS retido, contra a própria regra (e o Coplan descontava): a conta da tela e do backend voltou a seguir a regra. Alíquota do ISS limitada a 5% (E0595/E1300); antes o limite era só o formato do campo (9,99).
 
 - Alíquota do ISS não pode passar do % de Tributos do Simples (decisão do Fábio, 18/11/2026: no Simples o ISS é uma fatia do DAS; a regra nacional só limita a 5%). Validado no formulário ('Não pode passar dos Tributos') e no servidor.
+
+Fechada em 18/11/2026 a pedido do Fábio com dois critérios em aberto: #5 (substituir a NFS-e) não foi feito; #7 (e-mail) tem o botão e a janela, mas o envio real não foi testado (workers da fila parados no dev).
 <!-- SECTION:NOTES:END -->
