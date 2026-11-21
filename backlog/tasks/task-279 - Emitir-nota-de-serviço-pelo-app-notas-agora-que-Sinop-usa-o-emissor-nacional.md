@@ -4,7 +4,7 @@ title: 'Emitir nota de serviço pelo app notas, agora que Sinop usa o emissor na
 status: In Progress
 assignee: []
 created_date: '2026-11-18 02:01'
-updated_date: '2026-11-21 18:47'
+updated_date: '2026-11-21 18:49'
 labels:
   - notas
 dependencies: []
@@ -50,7 +50,7 @@ Prazo: emitir em 18/11/2026 (testes de manhã, deploy ao meio-dia). Mínimo para
 - [x] #11 DFe NFS-e: a lista mostra só a outra parte (o tomador quando a filial emitiu, o emitente quando ela é a tomadora)
 - [x] #12 DFe NFS-e: filtro para ver só as notas em que a filial é a emitente, ou só as em que ela é a tomadora
 - [x] #13 DFe NFS-e: botão para abrir o DANFSe de qualquer NFS-e da caixa, inclusive as emitidas por outros contra nós
-- [ ] #14 Menu do notas agrupado em Produtos, Serviços, Transporte e Configurações, com o mesmo ícone de nota (azul produtos, verde serviços)
+- [x] #14 Menu do notas agrupado em Produtos, Serviços, Transporte e Configurações, com o mesmo ícone de nota (azul produtos, verde serviços)
 - [x] #15 As duas telas de DFe (NF-e e NFS-e) com o layout de listagem das Notas de Serviço
 - [ ] #16 E-mail ao tomador sai sozinho quando a nota é autorizada, como na NF-e, num layout simples
 <!-- AC:END -->
