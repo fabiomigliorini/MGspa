@@ -61,7 +61,7 @@ class NotaFiscalRelatorioService
             $query->where('numero', $filtros['numero']);
         }
         if (!empty($filtros['nfechave'])) {
-            $query->where('nfechave', 'like', '%' . $filtros['nfechave'] . '%');
+            $query->where('nfechave', 'like', '%' . chaveDfeLimpa($filtros['nfechave']) . '%');
         }
         if (!empty($filtros['emissao_inicio'])) {
             $query->where('emissao', '>=', $filtros['emissao_inicio'] . ' 00:00:00');
@@ -146,7 +146,7 @@ class NotaFiscalRelatorioService
         if (!empty($filtros['modelo']))        $q->where('nf.modelo', $filtros['modelo']);
         if (!empty($filtros['serie']))         $q->where('nf.serie', $filtros['serie']);
         if (!empty($filtros['numero']))        $q->where('nf.numero', $filtros['numero']);
-        if (!empty($filtros['nfechave']))      $q->where('nf.nfechave', 'like', '%' . $filtros['nfechave'] . '%');
+        if (!empty($filtros['nfechave']))      $q->where('nf.nfechave', 'like', '%' . chaveDfeLimpa($filtros['nfechave']) . '%');
         if (!empty($filtros['emissao_inicio'])) $q->where('nf.emissao', '>=', $filtros['emissao_inicio'] . ' 00:00:00');
         if (!empty($filtros['emissao_fim']))    $q->where('nf.emissao', '<=', $filtros['emissao_fim'] . ' 23:59:59');
         if (!empty($filtros['saida_inicio']))   $q->where('nf.saida', '>=', $filtros['saida_inicio'] . ' 00:00:00');

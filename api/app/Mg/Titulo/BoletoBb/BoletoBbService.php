@@ -158,7 +158,7 @@ class BoletoBbService
             $numeroTituloBeneficiario,
             $nossonumero,
             $titulo->Pessoa->fisica ? 1 : 2,
-            (int)$titulo->Pessoa->cnpj,
+            cnpjCpfLimpo($titulo->Pessoa->cnpj, $titulo->Pessoa->fisica),
             $titulo->Pessoa->pessoa,
             $endereco,
             $titulo->Pessoa->cepcobranca,

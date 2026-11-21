@@ -246,9 +246,9 @@ class NFePHPMakeService
         $std->IE = numeroLimpo($nf->Filial->Pessoa->ie);
         $std->CRT = $nf->Filial->crt;
         if ($nf->Filial->Pessoa->fisica) {
-            $std->CPF = str_pad($nf->Filial->Pessoa->cnpj, 11, '0', STR_PAD_LEFT);
+            $std->CPF = cpfLimpo($nf->Filial->Pessoa->cnpj);
         } else {
-            $std->CNPJ = str_pad($nf->Filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
+            $std->CNPJ = cnpjLimpo($nf->Filial->Pessoa->cnpj);
         }
         $nfe->tagemit($std);
 
@@ -275,7 +275,7 @@ class NFePHPMakeService
         if ($nf->codpessoa == Pessoa::CONSUMIDOR) {
             if (!empty($nf->cpf)) {
                 $std = new stdClass();
-                $std->CPF = str_pad($nf->cpf, 11, '0', STR_PAD_LEFT); //'58716523000119';
+                $std->CPF = cpfLimpo($nf->cpf);
                 $nfe->tagdest($std);
             }
         } else {
@@ -309,9 +309,9 @@ class NFePHPMakeService
 
             if ($nf->Pessoa->fisica) {
                 $std->CNPJ = '';
-                $std->CPF = str_pad($nf->Pessoa->cnpj, 11, '0', STR_PAD_LEFT); //'58716523000119';
+                $std->CPF = cpfLimpo($nf->Pessoa->cnpj);
             } else {
-                $std->CNPJ = str_pad($nf->Pessoa->cnpj, 14, '0', STR_PAD_LEFT); //'58716523000119';
+                $std->CNPJ = cnpjLimpo($nf->Pessoa->cnpj);
                 $std->CPF = '';
             }
             if ($pe = $nf->Pessoa->PessoaEmailS()->where('nfe', true)->orderBy('ordem')->first()) {
@@ -764,9 +764,9 @@ class NFePHPMakeService
             $std->IE = numeroLimpo($nf->PessoaTransportador->ie);
             if ($nf->PessoaTransportador->fisica) {
                 $std->CNPJ = '';
-                $std->CPF = str_pad($nf->PessoaTransportador->cnpj, 11, '0', STR_PAD_LEFT); //'58716523000119';
+                $std->CPF = cpfLimpo($nf->PessoaTransportador->cnpj);
             } else {
-                $std->CNPJ = str_pad($nf->PessoaTransportador->cnpj, 14, '0', STR_PAD_LEFT); //'58716523000119';
+                $std->CNPJ = cnpjLimpo($nf->PessoaTransportador->cnpj);
                 $std->CPF = '';
             }
             if ($end = $nf->PessoaTransportador->PessoaEnderecoS()->where('nfe', true)->orderBy('ordem')->first()) {
@@ -874,7 +874,7 @@ class NFePHPMakeService
             if (in_array($nfp->tipo, [3, 4])) {
                 $std->tpIntegra = $nfp->integracao ? 1 : 2;
                 if (!empty($nfp->codpessoa)) {
-                    $std->CNPJ = str_pad($nfp->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
+                    $std->CNPJ = cnpjLimpo($nfp->Pessoa->cnpj);
                 }
                 $std->tBand = str_pad($nfp->bandeira, 2, '0', STR_PAD_LEFT);
                 $std->cAut = $nfp->autorizacao;
@@ -884,7 +884,7 @@ class NFePHPMakeService
             if (in_array($nfp->tipo, [17])) {
                 $std->tpIntegra = $nfp->integracao ? 1 : 2;
                 if (!empty($nfp->codpessoa)) {
-                    $std->CNPJ = str_pad($nfp->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
+                    $std->CNPJ = cnpjLimpo($nfp->Pessoa->cnpj);
                 }
                 $std->cAut = $nfp->autorizacao;
             }
@@ -965,9 +965,7 @@ class NFePHPMakeService
             ]);
         }
 
-        // Retorna o XML
-        $path = NFePHPPathService::pathNFeAssinada($nf, true);
-        file_put_contents($path, $xml);
+        // Retorna o XML (quem grava é o NFePHPService::criar, já assinado e com a chave no nome)
         return $xml;
     }
 

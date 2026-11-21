@@ -8,13 +8,8 @@ import {
   primeiraLetraMaiuscula,
   mascaraTelefone,
 } from '@components/formatters'
-import {
-  isCpfValido,
-  isCnpjValido,
-  isCnpjCpfValido,
-  isEmailValido,
-  isTelefoneValido,
-} from 'src/utils/validador.js'
+import { documentoLimpo, isCpfValido, isCnpjValido, isCnpjCpfValido } from '@components/validador'
+import { isEmailValido, isTelefoneValido } from 'src/utils/validador.js'
 import SelectCidade from '@components/MgSelectCidade.vue'
 import MgInputFormatado from '@components/MgInputFormatado.vue'
 import { sincronizacaoStore } from 'src/stores/sincronizacao'
@@ -87,7 +82,7 @@ const abrir = () => {
   if (sNegocio.negocio.cpf) {
     cnpj.value = sNegocio.negocio.cpf
   } else if (sNegocio.negocio.codpessoa != 1) {
-    const numero = String(sNegocio.negocio.Pessoa.cnpj).replace(/\D/g, '')
+    const numero = documentoLimpo(sNegocio.negocio.Pessoa.cnpj)
     if (sNegocio.negocio.Pessoa.fisica) {
       cnpj.value = numero.padStart(11, '0')
     } else {
@@ -143,18 +138,23 @@ const pesquisa = debounce(async () => {
   consultando.value = true
 
   // monta array de palavras pra buscas
+  // CNPJ/CPF valido, com ou sem pontuacao (o CNPJ pode ter letras), busca pelo documento limpo
+  const documento = documentoLimpo(texto)
   const numeric = texto.replace(/\D/g, '')
   const alpha = texto.replace(/[^\w\s]/gi, '')
   var palavras = []
-  if (!/\s/g.test(texto) && numeric == alpha && numeric.length > 3) {
+  if (isCnpjCpfValido(documento)) {
+    palavras = [documento]
+  } else if (!/\s/g.test(texto) && numeric == alpha && numeric.length > 3) {
     palavras = [numeric]
   } else {
     palavras = texto.split(' ')
   }
 
-  if (isCnpjCpfValido(numeric)) {
+  const documentoServidor = [documento, numeric].find(isCnpjCpfValido)
+  if (documentoServidor) {
     try {
-      await sSinc.pessoaPeloCnpj(numeric)
+      await sSinc.pessoaPeloCnpj(documentoServidor)
     } catch (error) {
       console.log(error)
     }
@@ -252,17 +252,18 @@ const soltaTeclaPesquisa = (e) => {
   if (consultando.value || (cnpj.value ?? '').trim() != textoPesquisado.value) {
     return
   }
+  // CNPJ antes do CPF: o isCpfValido ignora letras, e um CNPJ alfanumerico pode ter 11 digitos
   if (opcoes.value.length) {
     confirmar(opcoes.value[indice.value].codpessoa, null)
-  } else if (isCpfValido(cnpj.value)) {
-    confirmar(1, cnpj.value)
   } else if (isCnpjValido(cnpj.value)) {
     nova(false)
+  } else if (isCpfValido(cnpj.value)) {
+    confirmar(1, cnpj.value)
   }
 }
 
 const nova = async (fisica) => {
-  cnpj.value = cnpj.value.replace(/\D/g, '')
+  cnpj.value = fisica ? cnpj.value.replace(/\D/g, '') : documentoLimpo(cnpj.value)
   pessoa.value = {
     cnpj: cnpj.value,
     fisica: fisica,
@@ -614,7 +615,10 @@ const salvar = async (e) => {
     cancel: { label: 'Cancelar', color: 'grey-8', flat: true },
     ok: { label: 'OK', color: 'primary', flat: true },
   }).onOk(async () => {
-    const codpessoa = await sSinc.postPessoa(pessoa.value)
+    const codpessoa = await sSinc.postPessoa({
+      ...pessoa.value,
+      cnpj: documentoLimpo(pessoa.value.cnpj),
+    })
     if (codpessoa) {
       selecionar(codpessoa, null)
     }
@@ -757,7 +761,7 @@ watch(
                 <q-spinner color="primary" size="200px" v-if="consultando" />
               </div>
               <q-list separator v-else>
-                <template v-for="(ie, i) in consultaSefaz.retSefaz" :key="i">
+                <template v-for="(ie, i) in consultaSefaz?.retSefaz" :key="i">
                   <q-item clickable v-ripple @click="parseIe(ie)">
                     <q-item-section avatar>
                       <q-avatar color="primary" text-color="white">
@@ -825,13 +829,12 @@ watch(
                   outlined
                   v-model="pessoa.cnpj"
                   label="CNPJ"
-                  mask="##.###.###/####-##"
+                  mask="XX.XXX.XXX/XXXX-##"
                   :rules="[
                     (val) => !!val || 'Obrigatório',
                     (val) => isCnpjValido(val) || 'Inválido',
                   ]"
                   v-else
-                  inputmode="numeric"
                 />
                 <MgInput
                   class="col-md-3 col-sm-6 col-xs-12"

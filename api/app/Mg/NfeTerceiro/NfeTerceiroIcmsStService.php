@@ -328,7 +328,7 @@ class NfeTerceiroIcmsStService
     {
         $codfilial = $nft->codfilial;
         $ie = $nft->Filial->Pessoa->ie;
-        $cnpj = $nft->Filial->Pessoa->cnpj;
+        $cnpj = cnpjLimpo($nft->Filial->Pessoa->cnpj);
         $cnae = self::CNAE_FILIAL[$codfilial];
         $numrPessoaDestinatario = self::PESSOA_DESTINATARIO_FILIAL[$codfilial];
         $numrContribuinte = self::CONTRIBUINTE_FILIAL[$codfilial];

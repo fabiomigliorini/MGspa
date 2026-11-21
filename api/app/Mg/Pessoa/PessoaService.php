@@ -11,9 +11,7 @@ use Mg\Cidade\Cidade;
 use Mg\Cidade\CidadeService;
 use Mg\Cidade\Estado;
 use Mg\Filial\Filial;
-use Mg\GrupoEconomico\GrupoEconomicoService;
 use Mg\Usuario\Autorizador;
-use Mg\Pessoa\GrupoClienteService;
 use Mg\NFePHP\NFePHPService;
 use Mg\Pix\Pix;
 
@@ -39,9 +37,11 @@ class PessoaService
             $qry->orWhere(function ($q) use ($nome) {
                 $q->palavras('fantasia', $nome);
             });
-            $num = preg_replace('/\D/', '', $nome);
-            if ($num == $nome) {
-                $qry->orWhere('cnpj', $num);
+            // Digitou só letras e dígitos terminando em 2 dígitos: pode ser CPF ou CNPJ, que
+            // pode ter letras (TASK-283)
+            $doc = documentoLimpo($nome);
+            if ($doc == strtoupper($nome) && preg_match('/^[0-9A-Z]{0,12}[0-9]{2}$/', $doc)) {
+                $qry->orWhereIn('cnpj', static::cnpjCpfCandidatos($doc));
             }
         }
         $qry->orderBy('fantasia', 'asc');
@@ -103,8 +103,8 @@ class PessoaService
         }
 
         if (!empty($cnpj)) {
-            $cnpj = numerolimpo($cnpj);
-            $where[] = 'to_char(p.cnpj, case when fisica then \'FM00000000000\' else \'FM00000000000000\' end) ilike :cnpj';
+            $cnpj = documentoLimpo($cnpj);
+            $where[] = 'p.cnpj ilike :cnpj';
             $params['cnpj'] = "{$cnpj}%";
         }
 
@@ -161,9 +161,27 @@ class PessoaService
         return $result;
     }
 
+    // Formatos em que o documento pode estar gravado no tblpessoa.cnpj (TASK-283). Só dígitos e
+    // cabe em 11: pode ser CPF ou CNPJ que perdeu os zeros à esquerda, procura os dois, como a
+    // coluna numeric fazia.
+    public static function cnpjCpfCandidatos($documento): array
+    {
+        $documento = documentoLimpo($documento);
+        $docs = [cnpjLimpo($documento)];
+        if (ctype_digit($documento) && strlen($documento) <= 11) {
+            $docs[] = cpfLimpo($documento);
+        }
+        return $docs;
+    }
+
+    // $cnpj é CNPJ ou CPF, texto ou número, com ou sem pontuação (vem também do XML da NF-e)
     public static function buscarPorCnpjIe($cnpj, $ie)
     {
-        $qry = Pessoa::where('cnpj', $cnpj);
+        if (documentoLimpo($cnpj) === '') {
+            $qry = Pessoa::whereNull('cnpj');
+        } else {
+            $qry = Pessoa::whereIn('cnpj', static::cnpjCpfCandidatos($cnpj));
+        }
         $ie = (int) numeroLimpo($ie);
         if (!empty($ie)) {
             $qry = $qry->where(DB::raw("cast(regexp_replace(ie, '[^0-9]+', '', 'g') as numeric)"), $ie);
@@ -175,11 +193,15 @@ class PessoaService
 
     public static function buscaCodGrupoEconomicoPelaRaizCnpj($cnpj): ?int
     {
-        $raiz = substr(str_pad(numeroLimpo($cnpj), 14, '0'), 0, 8);
+        $raiz = substr(cnpjLimpo($cnpj) ?? '', 0, 8);
+        if ($raiz === '') {
+            return null;
+        }
         $sql = "
             select codgrupoeconomico
             from tblpessoa
-            where to_char(cnpj, 'FM00000000000000') ilike :raiz
+            where cnpj like :raiz
+            and fisica = false
             and codgrupoeconomico is not null
             order by alteracao desc
             limit 1
@@ -195,12 +217,12 @@ class PessoaService
         $sql = '
             select codgrupoeconomico
             from tblpessoa
-            where to_char(cnpj, \'FM00000000000\') ilike :cpf
+            where cnpj = :cpf
             and codgrupoeconomico is not null
             order by alteracao desc
             limit 1
         ';
-        if ($ret = DB::selectOne($sql, ['cpf' => $cpf])) {
+        if ($ret = DB::selectOne($sql, ['cpf' => cpfLimpo($cpf)])) {
             return $ret->codgrupoeconomico;
         }
         return null;
@@ -247,7 +269,7 @@ class PessoaService
         and regexp_replace(ie, '[^0-9]+', '', 'g')::numeric = regexp_replace(:ie, '[^0-9]+', '', 'g')::numeric
         ";
 
-        $params['cnpj'] = $cnpj;
+        $params['cnpj'] = cnpjCpfLimpo($cnpj);
         $params['ie'] = $ie;
 
         $result = DB::select($sql, $params);
@@ -438,255 +460,6 @@ class PessoaService
         return $pessoa->refresh();
     }
 
-    public static function importar($codfilial, $uf, $cnpj, $cpf, $ie)
-    {
-        $retReceita = null;
-        if (!empty($cnpj)) {
-            $cnpj = str_pad(numeroLimpo($cnpj), 14, '0', STR_PAD_LEFT);
-            $retReceita = static::buscarReceitaWs($cnpj);
-            if ($retReceita->status() != 200 || $retReceita['status'] == "ERROR") {
-                throw new \Exception($retReceita['message'], 1);
-            }
-            $uf = $retReceita['uf'] ?? null;
-        }
-
-        // Consulta o CNPJ / CPF ou IE na Sefaz
-        $retSefaz = null;
-        $retIes = [];
-        if (!empty($cnpj) || !empty($cpf) || (!empty($ie))) {
-            $filial = Filial::findOrFail($codfilial);
-            if (empty($uf)) {
-                $uf = $filial->Pessoa->Cidade->Estado->sigla;
-            }
-
-            try {
-
-                $retSefaz = NFePHPService::sefazCadastro($filial, $uf, $cnpj, $cpf, $ie);
-                switch ($retSefaz->infCons->cStat) {
-                    case '259': // Rejeição: CNPJ da consulta não cadastrado como contribuinte na UF
-                    case '264': // Rejeicao: CPF da consulta nao cadastrado como contribuinte na UF
-                        break;
-                    case '111': // Consulta cadastro com uma ocorrência
-                        $retIes = [$retSefaz->infCons->infCad];
-                        break;
-                    case '112': // Consulta cadastro com mais de uma ocorrencia
-                        $retIes = $retSefaz->infCons->infCad;
-                        break;
-                    default:
-                        break;
-                }
-            } catch (\Exception $e) {
-
-                $message = $e->getMessage();
-                if (substr($message, 0, 45) != "Servico [NfeConsultaCadastro] indisponivel UF") {
-                    throw new \Exception($e->getMessage());
-                }
-            }
-
-            if (isset($retIes[0])) {
-                $cnpj = $retIes[0]->CNPJ ?? '';
-                $cpf = $retIes[0]->CPF ?? '';
-            }
-        }
-
-        // Caso a consulta da sefaz tenha retornado um CNPJ
-        // Faz a consulta na receita para esse CNPJ
-        if (!empty($cnpj) && empty($retReceita)) {
-            $retReceita = static::buscarReceitaWs($cnpj);
-        }
-
-        // Se nao estiver vazio o CNPJ/CPF, tenta descobrir Grupo Economico/Cliente de outros cadastros
-        // do mesmo CNPJ/CPF
-        if (!empty($cnpj)) {
-            $grupo = GrupoEconomicoService::buscarPeloCnpjCpf(false, $cnpj);
-            $grupocliente = GrupoClienteService::buscarPeloCnpjCpfGrupoCliente(false, $cnpj);
-        } elseif (!empty($cpf)) {
-            $grupo = GrupoEconomicoService::buscarPeloCnpjCpf(true, $cpf);
-            $grupocliente = GrupoClienteService::buscarPeloCnpjCpfGrupoCliente(true, $cpf);
-        }
-        $codgrupoeconomico = @$grupo->codgrupoeconomico;
-        $codgrupocliente = @$grupocliente->codgrupocliente;
-
-        // Percorre todas as inscricoes da sefaz, criando uma tblPessoa para cada
-        $retPessoas = [];
-
-        dd($retIes);
-
-        foreach ($retIes as $retIe) {
-
-            // Verifica se combinacao CPF/CNPJ/IE ja esta cadastrada
-            $pessoa = static::buscarPorCnpjIe($retIe->CNPJ ?? $retIe->CPF, $retIe->IE);
-
-            if ($pessoa == null) {
-                if ($retIe->cSit == 0) {
-                    continue;
-                }
-                $pessoa = new Pessoa();
-                $pessoa->fantasia = substr($retIe->xFant ?? $retIe->xNome, 0, 50);
-                $pessoa->ie = $retIe->IE;
-            }
-
-            // Vincula ao GrupoEonomico/Cliente buscado anteriormente
-            $pessoa->codgrupocliente = $codgrupocliente;
-
-            // Marca se fisica ou juridica
-            if (isset($retIe->CNPJ)) {
-                $pessoa->fisica = false;
-                $pessoa->cnpj = $retIe->CNPJ;
-                $pessoa->codgrupoeconomico = static::buscaCodGrupoEconomicoPelaRaizCnpj($retIe->CNPJ);
-            } else {
-                $pessoa->fisica = true;
-                $pessoa->cnpj = $retIe->CPF;
-                $pessoa->codgrupoeconomico = static::buscaCodGrupoEconomicoPeloCpf($retIe->CNPJ);
-            }
-
-            // Se IE Ativa / Inativa
-            if ($retIe->cSit == 1) {
-                $pessoa->inativo = null;
-            } elseif (empty($pessoa->inativo)) {
-                $pessoa->inativo = Carbon::now();
-            }
-
-            // Vinclua razao social
-            $pessoa->pessoa = $retIe->xNome;
-            $pessoa->notafiscal = 0;
-
-            // Se veio somente um endereco, forca como array de enderecos pra simplificar logica
-            if (!is_array($retIe->ender)) {
-                $retIe->ender = [$retIe->ender];
-            }
-
-            // Descobre o codigo da cidade
-            if (isset($retIe->ender[0]->cMun)) {
-                $cidade = Cidade::where('codigooficial', $retIe->ender[0]->cMun)->first();
-                $estado = $cidade->Estado;
-            } else {
-                $estado = Estado::firstWhere(['sigla' => $retIe->UF]);
-                $cidade = Cidade::where('codestado', $estado->codestado)
-                    ->where('cidade', 'ilike', trim(removeAcentos($retIe->ender[0]->xMun)))
-                    ->first();
-            }
-            $pessoa->codcidade = $cidade->codcidade;
-
-            // salva e acumula no array de pessoas criadas
-            $pessoa->save();
-            $retPessoas[] = $pessoa->fresh();
-
-            // cria os enderecos vinculados a pessoa
-            foreach ($retIe->ender as $endIe) {
-                PessoaEnderecoService::createOrUpdate([
-                    'codpessoa' => $pessoa->codpessoa,
-                    'endereco' => substr($endIe->xLgr, 0, 60),
-                    'numero' => substr(@$endIe->nro, 0, 10),
-                    'complemento' => substr(trim($endIe->xCpl ?? null), 0, 50),
-                    'bairro' => substr($endIe->xBairro, 0, 50),
-                    'codcidade' => $cidade->codcidade,
-                    'cep'   => numeroLimpo($endIe->CEP)
-                ]);
-            }
-        }
-
-        // caso nao tenha achado nenhuma IE na sefaz
-        // cria a pessoa com base no array da receita ws
-        if (sizeof($retPessoas) == 0 && !empty($retReceita)) {
-            // dd($retReceita->json());
-
-            // verifica se a pessoa ja existe
-            $pessoa = static::buscarPorCnpjIe(numeroLimpo($retReceita['cnpj']), null);
-            if ($pessoa == null) {
-                $pessoa = new Pessoa();
-                $pessoa->fantasia = substr($retReceita['fantasia'], 0, 50);
-                if (empty($pessoa->fantasia)) {
-                    $pessoa->fantasia = substr($retReceita['nome'], 0, 50);
-                }
-            }
-
-            // Vincula ao GrupoEonomico/Cliente buscado anteriormente
-            $pessoa->codgrupocliente = $codgrupocliente;
-            $pessoa->codgrupoeconomico = $codgrupoeconomico;
-
-            // vincula CNPJ
-            $pessoa->fisica = false;
-            $pessoa->cnpj = numeroLimpo($retReceita['cnpj']);
-            $pessoa->pessoa = $retReceita['nome'];
-            $pessoa->notafiscal = 0;
-
-            // Se CNPJ Ativa / Inativa
-            if ($retReceita['situacao'] == 'ATIVA') {
-                $pessoa->inativo = null;
-            } elseif (empty($pessoa->inativo)) {
-                $pessoa->inativo = Carbon::now();
-            }
-
-            // Descobre o codigo da cidade
-            $estado = Estado::firstWhere(['sigla' => $retReceita['uf']]);
-            $cidade = Cidade::where(
-                'codestado',
-                $estado->codestado
-            )->where(
-                'cidade',
-                'ilike',
-                removeAcentos($retReceita['municipio'])
-            )->first();
-            $pessoa->codcidade = $cidade->codcidade;
-
-            // salva e acumula no array de pessoas criadas
-            $pessoa->save();
-            $retPessoas[] = $pessoa->fresh();
-        }
-
-        // Sempre cria o endereco, email e telefone retornado pela receita
-        // porque a sefaz nao retorna essas informacoes na api dela
-        if (!empty($retReceita)) {
-            foreach ($retPessoas as $pessoa) {
-
-                // Endereco
-                PessoaEnderecoService::createOrUpdate([
-                    'codpessoa' => $pessoa->codpessoa,
-                    'endereco' => substr($retReceita['logradouro'], 0, 60),
-                    'numero' => substr($retReceita['numero'], 0, 10),
-                    'bairro' => substr($retReceita['bairro'], 0, 50),
-                    'complemento' => substr(trim($retReceita['complemento']), 0, 50),
-                    'codcidade' => $pessoa->codcidade,
-                    'cep'   => numeroLimpo($retReceita['cep'])
-                ]);
-
-                // Email
-                if (!empty($retReceita['email'])) {
-                    PessoaEmailService::createOrUpdate([
-                        'codpessoa' => $pessoa->codpessoa,
-                        'email' => $retReceita['email']
-                    ]);
-                }
-
-                // Telefone (Pode retornar string com vario separado por /)
-                // Ex. "(66) 3532-7678 / (66) 99999-9999"
-                $strtel = $retReceita['telefone'];
-                $tels = explode("/", $strtel);
-                $telefones = [];
-                foreach ($tels as $tel) {
-                    $tel = (int) numeroLimpo($tel);
-                    if (empty($tel)) {
-                        continue;
-                    }
-                    $telefones[] = PessoaTelefoneService::createOrUpdate([
-                        'codpessoa' => $pessoa->codpessoa,
-                        'ddd'       => substr($tel, 0, 2),
-                        'telefone'  => substr($tel, 2)
-                    ]);
-                }
-            }
-        }
-
-        // Atualiza campos legados de email/telefone/endereco
-        foreach ($retPessoas as $pessoa) {
-            static::atualizaCamposLegado($pessoa);
-        }
-
-        // retorna todas as pessoas criadas/atualizadas
-        return $retPessoas;
-    }
-
     public static function atualizaCamposLegado(Pessoa $pessoa)
     {
         $data = [];
@@ -761,7 +534,7 @@ class PessoaService
 
     public static function buscarNomePeloPixCnpj($cnpj)
     {
-        return Pix::select(['nome'])->where('cnpj', $cnpj)->orderBy('criacao', 'desc')->first();
+        return Pix::select(['nome'])->where('cnpj', cnpjLimpo($cnpj))->orderBy('criacao', 'desc')->first();
     }
 
     public static function buscarReceitaWs($cnpj)
@@ -769,7 +542,7 @@ class PessoaService
         return Http::withHeaders([
             'Accept' => 'application/json',
             'Authorization' => 'Bearer' . config('services.receitaws.token'),
-        ])->get('https://receitaws.com.br/v1/cnpj/' . $cnpj);
+        ])->get('https://receitaws.com.br/v1/cnpj/' . cnpjLimpo($cnpj));
     }
 
     public static function verificaIeSefaz($codfilial, $uf, $cnpj, $cpf, $ie)
@@ -779,8 +552,7 @@ class PessoaService
 
         // Se veio um CNPJ, consulta a receita com esse CNPJ
         if (!empty($cnpj)) {
-            $cnpj = numeroLimpo($cnpj);
-            $cnpj = str_pad($cnpj, 14, '0', STR_PAD_LEFT);
+            $cnpj = cnpjLimpo($cnpj);
             $retReceita = static::buscarReceitaWs($cnpj);
             // if ($retReceita->status() != 200 || $retReceita['status'] == "ERROR") {
             // throw new \Exception($retReceita['message'], 1);

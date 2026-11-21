@@ -30,7 +30,6 @@ class DistribuicaoDfeEvento extends MgModel
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'cnpj' => 'float',
         'coddfeevento' => 'integer',
         'coddistribuicaodfeevento' => 'integer',
         'codusuarioalteracao' => 'integer',

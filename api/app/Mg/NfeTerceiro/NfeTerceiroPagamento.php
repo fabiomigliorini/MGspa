@@ -28,7 +28,6 @@ class NfeTerceiroPagamento extends MgModel
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'cnpj' => 'float',
         'codnfeterceiro' => 'integer',
         'codnfeterceiropagamento' => 'integer',
         'codusuarioalteracao' => 'integer',

@@ -10,7 +10,7 @@ class ApiService
     const TIMEOUT = 5;
 
     public static function functionAutorizacao($chavePDV, $cnpj) {
-        $chave = base64_encode($chavePDV . '|' . str_pad($cnpj, 14, '0', STR_PAD_LEFT));
+        $chave = base64_encode($chavePDV . '|' . cnpjLimpo($cnpj));
 
         try {
             $curl = curl_init();
@@ -67,7 +67,7 @@ class ApiService
             'dominio' => config('services.saurus.dominio'),
             'numero' => "$numero",
             'razaoSocial' => $pessoa->pessoa,#pessoa-filial
-            'documento' => str_pad($pessoa->cnpj, 14, '0', STR_PAD_LEFT),#pessoa-filial
+            'documento' => cnpjLimpo($pessoa->cnpj),#pessoa-filial
             'chavePublica' => config('services.saurus.credential'), #env
         ];
 

@@ -6,6 +6,7 @@ use Mg\Banco\Banco;
 use Mg\Cheque\Cmc7\Cmc7;
 use Mg\MgService;
 use Mg\Pessoa\Pessoa;
+use Mg\Pessoa\PessoaService;
 use RuntimeException;
 
 class ChequeService extends MgService
@@ -131,8 +132,8 @@ class ChequeService extends MgService
         foreach ($emitentes as $dados) {
             // a lista de emitentes é por CPF/CNPJ (coluna obrigatória); só o nome fica no
             // próprio cheque (tblcheque.emitente)
-            $cnpj = preg_replace('/[^0-9]/', '', (string) ($dados['cnpj'] ?? ''));
-            if ($cnpj === '') {
+            $cnpj = cnpjCpfLimpo($dados['cnpj'] ?? '');
+            if ($cnpj === null) {
                 continue;
             }
             if (!empty($dados['codchequeemitente'])) {
@@ -210,8 +211,7 @@ class ChequeService extends MgService
 
     public static function consultaEmitente(string $cnpj): array
     {
-        $cnpj = preg_replace('/[^0-9]/', '', $cnpj);
-        $pessoa = Pessoa::where('cnpj', $cnpj)->first();
+        $pessoa = Pessoa::whereIn('cnpj', PessoaService::cnpjCpfCandidatos($cnpj))->first();
         return [
             'codpessoa' => $pessoa ? $pessoa->codpessoa : null,
             'pessoa' => $pessoa ? $pessoa->pessoa : null,

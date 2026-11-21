@@ -131,7 +131,6 @@ class Pessoa extends MgModel
     protected $casts = [
         'alteracao' => 'datetime',
         'cliente' => 'boolean',
-        'cnpj' => 'float',
         'codcidade' => 'integer',
         'codcidadecobranca' => 'integer',
         'codcidadenascimento' => 'integer',
@@ -168,6 +167,20 @@ class Pessoa extends MgModel
         'toleranciaatraso' => 'integer',
         'vendedor' => 'boolean'
     ];
+
+    // CPF (11) ou CNPJ (14, pode ter letras) no formato do banco, venha de onde vier
+    // (TASK-283). creating/updating, nao saving: o saving do MgModel devolve true e
+    // interrompe os outros ouvintes.
+    protected static function booted()
+    {
+        $limpar = function (Pessoa $pessoa) {
+            if ($pessoa->isDirty(['cnpj', 'fisica'])) {
+                $pessoa->cnpj = cnpjCpfLimpo($pessoa->cnpj, $pessoa->fisica);
+            }
+        };
+        static::creating($limpar);
+        static::updating($limpar);
+    }
 
 
     // Chaves Estrangeiras

@@ -2,6 +2,7 @@
 import MgInput from '@components/MgInput.vue'
 import { ref, watch } from 'vue'
 import { validarChaveNFe } from 'src/utils/validators'
+import { documentoLimpo } from '@components/validador'
 
 const props = defineProps({
   modelValue: {
@@ -52,19 +53,19 @@ const close = () => {
   emit('update:modelValue', false)
 }
 
-// Limpa caracteres não numéricos ao colar
+// Limpa a pontuação ao colar (a chave pode ter letras no CNPJ do emitente)
 const handlePaste = (evt) => {
   const pastedText = evt.clipboardData?.getData('text')
   if (pastedText) {
     evt.preventDefault()
-    const cleanedText = pastedText.replace(/\D/g, '').substring(0, 44)
+    const cleanedText = documentoLimpo(pastedText).substring(0, 44)
     form.value.nfechave = cleanedText
   }
 }
 
 const handleSave = () => {
-  // Remove espaços e caracteres não numéricos
-  const chaveNumeros = form.value.nfechave.replace(/\D/g, '')
+  // Remove espaços e pontuação (a chave pode ter letras no CNPJ do emitente)
+  const chaveNumeros = documentoLimpo(form.value.nfechave)
 
   // Validação
   if (!chaveNumeros || chaveNumeros.length !== 44) {
@@ -121,7 +122,7 @@ watch(
                 v-model="form.nfechave"
                 label="Chave de Acesso da NFe *"
                 outlined
-                mask="#### #### #### #### #### #### #### #### #### #### ####"
+                mask="XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX"
                 unmasked-value
                 placeholder="Digite os 44 dígitos da chave de acesso"
                 :rules="[

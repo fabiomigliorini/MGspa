@@ -3,6 +3,7 @@ import { ref, onMounted, watch } from 'vue'
 import { db } from 'boot/db'
 import { LoadingBar } from 'quasar'
 import { formataCnpjCpf } from '@components/formatters'
+import { documentoLimpo, isCnpjCpfValido } from '@components/validador'
 
 const props = defineProps({
   modelValue: {
@@ -60,10 +61,14 @@ const pesquisa = (textoPesquisa, update) => {
     LoadingBar.start()
 
     // monta array de palavras pra buscas
+    // CNPJ/CPF valido, com ou sem pontuacao (o CNPJ pode ter letras), busca pelo documento limpo
+    const documento = documentoLimpo(texto)
     const numeric = texto.replace(/\D/g, '')
     const alpha = texto.replace(/[^\w\s]/gi, '')
     var palavras = []
-    if (!/\s/g.test(texto) && numeric == alpha && numeric.length > 3) {
+    if (isCnpjCpfValido(documento)) {
+      palavras = [documento]
+    } else if (!/\s/g.test(texto) && numeric == alpha && numeric.length > 3) {
       palavras = [numeric]
     } else {
       palavras = texto.split(' ')

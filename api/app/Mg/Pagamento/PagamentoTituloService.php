@@ -357,7 +357,7 @@ class PagamentoTituloService
             $campos += [
                 'cmc7' => $forma['cmc7'] ?? null,
                 'chequevencimento' => $forma['chequevencimento'] ?? null,
-                'chequecnpj' => $forma['chequecnpj'] ?? null,
+                'chequecnpj' => cnpjCpfLimpo($forma['chequecnpj'] ?? null),
                 'chequeemitente' => $forma['chequeemitente'] ?? null,
             ];
         }

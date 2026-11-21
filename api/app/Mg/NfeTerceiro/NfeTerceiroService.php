@@ -39,7 +39,7 @@ class NfeTerceiroService
         }
 
         if (!empty($filtros['nfechave'])) {
-            $query->where('nfechave', 'like', '%' . $filtros['nfechave'] . '%');
+            $query->where('nfechave', 'like', '%' . chaveDfeLimpa($filtros['nfechave']) . '%');
         }
 
         if (!empty($filtros['emissao_inicio'])) {
@@ -223,11 +223,12 @@ class NfeTerceiroService
         }
 
         $infNFe = $dom->getElementsByTagName('infNFe')->item(0);
-        $chave = $infNFe ? preg_replace('/[^0-9]/', '', $infNFe->getAttribute('Id')) : null;
+        // Id = 'NFe' + chave; a chave pode ter letras no CNPJ do emitente (TASK-283)
+        $chave = $infNFe ? chaveDfeLimpa(preg_replace('/^NFe/', '', $infNFe->getAttribute('Id'))) : null;
 
         if (empty($chave)) {
             $chave = @$dom->getElementsByTagName('chNFe')->item(0)?->nodeValue;
-            $chave = preg_replace('/[^0-9]/', '', (string) $chave);
+            $chave = chaveDfeLimpa((string) $chave);
         }
 
         if (strlen((string) $chave) != 44) {

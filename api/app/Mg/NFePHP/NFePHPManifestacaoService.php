@@ -20,7 +20,10 @@ class NFePHPManifestacaoService
      */
     public static function manifestacao(Filial $filial, $chNFe, $tpEvento, string $justificativa, $nSeqEvento)
     {
-        $tools = NFePHPConfigService::instanciaTools($filial);
+        // Schema PL_010_V1.30 (já vem no sped-nfe): no PL_009_V4 a chave do evento só aceita
+        // dígitos, e a NF-e de emitente com CNPJ alfanumérico seria recusada antes de mandar
+        // (TASK-283). O leiaute da manifestação é o mesmo.
+        $tools = NFePHPConfigService::instanciaTools($filial, '4.00', 'PL_010_V1.30');
         $tools->model(55);
         //este serviço somente opera em ambiente de produção
         $tools->setEnvironment(1);

@@ -350,7 +350,7 @@ const submit = () => {
                   outlined
                   v-model="modelContaBancaria.pixcnpj"
                   label="Pix cnpj"
-                  mask="##.###.###/####-##"
+                  mask="XX.XXX.XXX/XXXX-##"
                   type="text"
                   unmasked-value
                   :rules="[

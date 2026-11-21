@@ -35,7 +35,7 @@ class CargaMotoristaRequest extends FormRequest
                 'digits:11',
                 'cpf_cnpj',
                 function (string $attribute, mixed $value, Closure $fail) {
-                    $existe = Pessoa::where('fisica', true)->where('cnpj', (int) $value)->first();
+                    $existe = Pessoa::where('fisica', true)->where('cnpj', cpfLimpo($value))->first();
                     if ($existe) {
                         $fail("CPF já cadastrado: {$existe->fantasia} (#{$existe->codpessoa}).");
                     }

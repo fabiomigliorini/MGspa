@@ -368,7 +368,7 @@ class PdvCatalogoService
                 p.codpessoa,
                 p.pessoa,
                 p.fantasia,
-                case when p.fisica then to_char(p.cnpj, \'FM00000000000\') else to_char(p.cnpj, \'FM00000000000000\') end as cnpj,
+                p.cnpj,
                 p.ie,
                 p.fisica,
                 p.endereco,
@@ -387,9 +387,10 @@ class PdvCatalogoService
             left join tblestado e on (e.codestado = c.codestado)
         ';
         if (!empty($cnpj)) {
+            $cnpj = documentoLimpo($cnpj);
             $params['cnpj'] = "%{$cnpj}%";
             $sql .= '
-                where to_char(cnpj, \'FM00000000000000\') ilike :cnpj
+                where p.cnpj ilike :cnpj
             ';
         } else {
             $params['codpessoa'] = $codpessoa;

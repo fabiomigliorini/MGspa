@@ -267,7 +267,8 @@ class NfseService
         $dom->loadXML($xmlNfse);
         $infNfse = $dom->getElementsByTagName('infNFSe')->item(0);
         if (empty($chave) && $infNfse) {
-            $chave = preg_replace('/\D/', '', (string) $infNfse->getAttribute('Id'));
+            // Id = 'NFS' + chave; a chave pode ter letras no CNPJ do emitente (TASK-283)
+            $chave = chaveDfeLimpa(preg_replace('/^NFS/', '', (string) $infNfse->getAttribute('Id')));
         }
         $numero = $dom->getElementsByTagName('nNFSe')->item(0)?->nodeValue;
         $dhProc = $dom->getElementsByTagName('dhProc')->item(0)?->nodeValue;

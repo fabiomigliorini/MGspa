@@ -98,10 +98,10 @@ class PixSicrediApiService
         }
         if (!empty($cpf)) {
             $arr['devedor']['nome'] = $nome;
-            $arr['devedor']['cpf'] = str_pad(number_format($cpf, 0, '.', ''), 11, '0', STR_PAD_LEFT);
+            $arr['devedor']['cpf'] = cpfLimpo($cpf);
         } elseif (!empty($cnpj)) {
             $arr['devedor']['nome'] = $nome;
-            $arr['devedor']['cnpj'] = str_pad(number_format($cnpj, 0, '.', ''), 14, '0', STR_PAD_LEFT);
+            $arr['devedor']['cnpj'] = cnpjLimpo($cnpj);
         }
 
         $body = json_encode($arr);

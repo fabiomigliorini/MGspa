@@ -52,12 +52,11 @@ class NfseXmlService
         return in_array((int) $filial->crt, [static::CRT_SIMPLES, static::CRT_SIMPLES_EXCESSO]);
     }
 
+    // CPF com 11 ou CNPJ com 14 (pode ter letras, TASK-283)
     public static function documentoFilial(Filial $filial): string
     {
         $pessoa = $filial->Pessoa;
-        return $pessoa->fisica
-            ? str_pad(number_format($pessoa->cnpj, 0, '', ''), 11, '0', STR_PAD_LEFT)
-            : str_pad(number_format($pessoa->cnpj, 0, '', ''), 14, '0', STR_PAD_LEFT);
+        return (string) ($pessoa->fisica ? cpfLimpo($pessoa->cnpj) : cnpjLimpo($pessoa->cnpj));
     }
 
     /**
@@ -190,11 +189,10 @@ class NfseXmlService
     {
         $pessoa = $nfs->Pessoa;
         $toma = static::el($doc, $inf, 'toma');
-        $documento = number_format($pessoa->cnpj, 0, '', '');
         if ($pessoa->fisica) {
-            static::el($doc, $toma, 'CPF', str_pad($documento, 11, '0', STR_PAD_LEFT));
+            static::el($doc, $toma, 'CPF', cpfLimpo($pessoa->cnpj));
         } else {
-            static::el($doc, $toma, 'CNPJ', str_pad($documento, 14, '0', STR_PAD_LEFT));
+            static::el($doc, $toma, 'CNPJ', cnpjLimpo($pessoa->cnpj));
         }
         static::el($doc, $toma, 'xNome', static::texto($pessoa->pessoa, 300));
 

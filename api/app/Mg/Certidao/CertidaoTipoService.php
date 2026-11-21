@@ -30,9 +30,10 @@ class CertidaoTipoService
             $qry->orWhere(function ($q) use ($nome) {
                 $q->palavras('fantasia', $nome);
             });
-            $num = preg_replace('/\D/', '', $nome);
-            if ($num == $nome) {
-                $qry->orWhere('cnpj', $num);
+            // CPF ou CNPJ, que pode ter letras (TASK-283)
+            $doc = documentoLimpo($nome);
+            if ($doc == strtoupper($nome) && preg_match('/^[0-9A-Z]{0,12}[0-9]{2}$/', $doc)) {
+                $qry->orWhereIn('cnpj', \Mg\Pessoa\PessoaService::cnpjCpfCandidatos($doc));
             }
         }
         $qry->orderBy('fantasia', 'asc');
@@ -57,7 +58,7 @@ class CertidaoTipoService
 
     public static function buscarPorCnpjIe($cnpj, $ie)
     {
-        $qry = Pessoa::where('cnpj', $cnpj);
+        $qry = Pessoa::whereIn('cnpj', \Mg\Pessoa\PessoaService::cnpjCpfCandidatos($cnpj));
         $ie = (int) numeroLimpo($ie);
         if (!empty($ie)) {
             $qry = $qry->where(DB::raw("cast(regexp_replace(ie, '[^0-9]+', '', 'g') as numeric)"), $ie);

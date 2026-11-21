@@ -65,8 +65,10 @@ class MercosClienteService {
         return $mp;
     }
 
-    public static function buscaPessoa ($cnpj, $ie)
+    public static function buscaPessoa ($cnpj, $ie, $fisica = null)
     {
+        // CPF (11) ou CNPJ (14, pode ter letras) no formato do banco (TASK-283)
+        $cnpj = cnpjCpfLimpo($cnpj, $fisica);
         if (empty($cnpj)) {
             return null;
         }
@@ -76,9 +78,9 @@ class MercosClienteService {
             where p.cnpj = :cnpj
         ";
         $params = [
-            'cnpj' => intval($cnpj)
+            'cnpj' => $cnpj
         ];
-	if ($cnpj < 99999999999) {
+	if (strlen($cnpj) == 11) {
             $ie = numeroLimpo($ie);
             if (!empty($ie)) {
                 $sql .= " and regexp_replace(p.ie, '[^0-9]+', '', 'g')::numeric = :ie ";
@@ -107,7 +109,7 @@ class MercosClienteService {
             return $mc;
         }
         if ((empty($mc->codpessoa) || ($mc->cliente == 1))) {
-            $p = static::buscaPessoa($cli->cnpj, $cli->inscricao_estadual);
+            $p = static::buscaPessoa($cli->cnpj, $cli->inscricao_estadual, $cli->tipo == 'F');
             if ($p == null) {
                 $p = new Pessoa();
             } else {

@@ -40,7 +40,6 @@ class PixCob extends MgModel
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'cnpj' => 'float',
         'codnegocio' => 'integer',
         'codpdv' => 'integer',
         'codpixcob' => 'integer',

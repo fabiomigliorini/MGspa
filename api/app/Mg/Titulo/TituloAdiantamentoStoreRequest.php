@@ -40,7 +40,7 @@ class TituloAdiantamentoStoreRequest extends FormRequest
             'pagamentos.*.parcelas'           => 'nullable|integer|min:1',
             'pagamentos.*.cmc7'               => 'nullable|string|max:40',
             'pagamentos.*.chequevencimento'   => 'nullable|date',
-            'pagamentos.*.chequecnpj'         => 'nullable|numeric',
+            'pagamentos.*.chequecnpj'         => 'nullable|max:20',
             'pagamentos.*.chequeemitente'     => 'nullable|string|max:100',
         ];
     }

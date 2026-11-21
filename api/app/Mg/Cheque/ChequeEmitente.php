@@ -24,7 +24,6 @@ class ChequeEmitente extends MgModel
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'cnpj' => 'float',
         'codcheque' => 'integer',
         'codchequeemitente' => 'integer',
         'codusuarioalteracao' => 'integer',

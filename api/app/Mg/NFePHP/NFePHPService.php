@@ -1083,7 +1083,9 @@ class NFePHPService extends MgService
 
         // Instancia Tools para a configuracao e certificado
         // $tools = NFePHPConfigService::instanciaTools($nf->Filial, '3.10');
-        $tools = NFePHPConfigService::instanciaTools($nf->Filial);
+        // Schema PL_010_V1.30: o consSitNFe do PL_009_V4 só aceita chave com dígitos, e a
+        // chave pode ter letras no CNPJ do emitente (TASK-283). O leiaute é o mesmo.
+        $tools = NFePHPConfigService::instanciaTools($nf->Filial, '4.00', 'PL_010_V1.30');
         $tools->model($nf->modelo);
 
         // consulta chave da NFe na sefaz
@@ -1486,12 +1488,16 @@ class NFePHPService extends MgService
 
     public static function sefazCadastro(Filial $filial, $uf = 'MT', $cnpj = '', $cpf = '', $iest = '')
     {
-        $tools = NFePHPConfigService::instanciaTools($filial);
+        // Schema PL_010_V1.30 (já vem no sped-nfe): o consCad do PL_009_V4 só aceita CNPJ
+        // com dígitos e recusa o alfanumérico antes de mandar (TASK-283). O leiaute da
+        // consulta é o mesmo, só o tipo do CNPJ muda.
+        $tools = NFePHPConfigService::instanciaTools($filial, '4.00', 'PL_010_V1.30');
         $tools->model('55');
         $uf = $uf;
-        $cnpj = $cnpj;
+        // CNPJ pode ter letras (TASK-283): vai no formato do banco, 14 caracteres maiúsculos
+        $cnpj = (string) cnpjLimpo($cnpj);
         $iest = $iest;
-        $cpf = $cpf;
+        $cpf = (string) cpfLimpo($cpf);
         $response = static::chamarSefazComRetry(
             fn() => $tools->sefazCadastro($uf, $cnpj, $iest, $cpf),
             'cadastro',

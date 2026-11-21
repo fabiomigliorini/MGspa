@@ -31,8 +31,14 @@ class FilialService extends MgService
         return $qry;
     }
 
-    public static function buscarPorCnpjIe(string $cnpj, ?string $ie, bool $primeiroComDfeHabilitada = true)
+    // $cnpj é o CNPJ (pode ter letras) ou o CPF da filial de pessoa física, com ou sem
+    // pontuação, como vem do XML (TASK-283)
+    public static function buscarPorCnpjIe($cnpj, ?string $ie, bool $primeiroComDfeHabilitada = true)
     {
+        $cnpj = cnpjCpfLimpo($cnpj);
+        if ($cnpj === null) {
+            return null;
+        }
         if (empty($ie)) {
             $sql = "SELECT codpessoa FROM tblpessoa WHERE cnpj = :cnpj AND ie IS NULL";
             $params = ['cnpj' => $cnpj];

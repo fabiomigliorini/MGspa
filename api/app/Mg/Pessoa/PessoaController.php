@@ -133,20 +133,6 @@ class PessoaController extends MgController
         return new PessoaResource($pessoa);
     }
 
-    public function importar(Request $request)
-    {
-        $request->validate([
-            // 'cnpj' => 'required'
-        ]);
-        $cnpj = $request->cnpj ?? '';
-        $codfilial = $request->codfilial;
-        $cpf = $request->cpf ?? '';
-        $ie = $request->ie ?? '';
-        $uf = $request->uf ?? '';
-        $pessoas = PessoaService::importar($codfilial, $uf, $cnpj, $cpf, $ie);
-        return PessoaResource::collection($pessoas);
-    }
-
     public function comandaVendedor(Request $request, $codpessoa)
     {
         $pessoa = Pessoa::findOrFail($codpessoa);

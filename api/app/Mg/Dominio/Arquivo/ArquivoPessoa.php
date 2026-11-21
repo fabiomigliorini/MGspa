@@ -101,9 +101,9 @@ class ArquivoPessoa extends Arquivo
             $reg->enderecoNumero = $pessoa->numero;
             $reg->cep = $pessoa->cep;
             if ($pessoa->fisica) {
-                $reg->inscricao = str_pad($pessoa->cnpj, 11, '0', STR_PAD_LEFT);
+                $reg->inscricao = cpfLimpo($pessoa->cnpj);
             } else {
-                $reg->inscricao = str_pad($pessoa->cnpj, 14, '0', STR_PAD_LEFT);
+                $reg->inscricao = cnpjLimpo($pessoa->cnpj);
             }
             $reg->inscricaoEstadual = $pessoa->ie;
             $reg->fone = preg_replace('/[^0-9]/', '', $pessoa->telefone1);

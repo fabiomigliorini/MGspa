@@ -231,9 +231,10 @@ export function formataCpf(cpf) {
   );
 }
 
+// CNPJ alfanumérico (desde 07/2026): letras nas 12 primeiras posições.
 export function formataCnpj(cnpj) {
   if (cnpj == null) return null;
-  const s = String(cnpj).padStart(14, "0");
+  const s = String(cnpj).toUpperCase().padStart(14, "0");
   return (
     s.slice(0, 2) +
     "." +
@@ -247,10 +248,10 @@ export function formataCnpj(cnpj) {
   );
 }
 
-// fisica: true=CPF, false=CNPJ, null/undefined=auto-detecta pelo length (≤11 dígitos = CPF)
+// fisica: true=CPF, false=CNPJ, null/undefined=auto-detecta (só dígitos e ≤11 = CPF)
 export function formataCnpjCpf(cnpjcpf, fisica = null) {
   if (cnpjcpf == null) return null;
-  if (fisica == null) fisica = String(cnpjcpf).length <= 11;
+  if (fisica == null) fisica = /^\d{0,11}$/.test(String(cnpjcpf));
   return fisica ? formataCpf(cnpjcpf) : formataCnpj(cnpjcpf);
 }
 
@@ -522,7 +523,8 @@ export const localeBrasil = {
 // ---------- Máscaras de input (q-input :mask) ----------
 
 export const MASCARA_CPF = "###.###.###-##";
-export const MASCARA_CNPJ = "##.###.###/####-##";
+// X = letra ou dígito (CNPJ alfanumérico); os 2 dígitos verificadores são só número.
+export const MASCARA_CNPJ = "XX.XXX.XXX/XXXX-##";
 export const MASCARA_CEP = "#####-###";
 export const MASCARA_DATA = "##/##/####";
 export const MASCARA_TELEFONE_FIXO = "(##) ####-####";

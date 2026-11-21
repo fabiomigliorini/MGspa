@@ -33,7 +33,7 @@ class MgIbpt extends Ibpt
         RestInterface $rest = null
     ) {
         $this->filial = $filial;
-        $cnpj = mascarar($filial->Pessoa->cnpj, '##############');
+        $cnpj = cnpjLimpo($filial->Pessoa->cnpj);
         $token = $filial->tokenibpt;
         parent::__construct($cnpj, $token, $proxy, $rest ?: new MgIbptRest());
     }

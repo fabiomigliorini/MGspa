@@ -15,10 +15,10 @@ class MdfeNfePhpConfigService
 
         if ($filial->Pessoa->fisica) {
             $cnpj = '';
-            $cpf = str_pad($filial->Pessoa->cnpj, 11, '0', STR_PAD_LEFT);
+            $cpf = cpfLimpo($filial->Pessoa->cnpj);
             // $typePerson = 'F';
         } else {
-            $cnpj = str_pad($filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
+            $cnpj = cnpjLimpo($filial->Pessoa->cnpj);
             $cpf = '';
             // $typePerson = 'J';
         }

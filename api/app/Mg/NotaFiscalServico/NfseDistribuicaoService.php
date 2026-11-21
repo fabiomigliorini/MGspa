@@ -109,9 +109,9 @@ class NfseDistribuicaoService
      */
     public static function consultarEventos(Filial $filial, string $chave): array
     {
-        $chave = preg_replace('/\D/', '', $chave);
+        $chave = chaveDfeLimpa($chave);
         if (strlen($chave) != 50) {
-            abort(422, 'A chave da NFS-e tem 50 dígitos.');
+            abort(422, 'A chave da NFS-e tem 50 caracteres.');
         }
         $resp = NfseSefinService::getAdn(
             $filial,
@@ -175,7 +175,7 @@ class NfseDistribuicaoService
         ]);
         $dist->tipodocumento = mb_substr((string) ($item['TipoDocumento'] ?? '?'), 0, 20);
         $dist->tipoevento = empty($item['TipoEvento']) ? null : mb_substr((string) $item['TipoEvento'], 0, 50);
-        $dist->nfsechave = empty($item['ChaveAcesso']) ? null : (string) $item['ChaveAcesso'];
+        $dist->nfsechave = empty($item['ChaveAcesso']) ? null : chaveDfeLimpa($item['ChaveAcesso']);
         // O ADN manda a hora de Brasilia sem fuso: converte para a do app (Cuiaba)
         $dist->data = empty($item['DataHoraGeracao'])
             ? null
@@ -199,8 +199,9 @@ class NfseDistribuicaoService
         $xml = $xml ?? static::xml($dist);
         if (!empty($dist->nfsechave)) {
             $dist->codnotafiscalservico = NotaFiscalServico::where('nfsechave', $dist->nfsechave)->value('codnotafiscalservico');
-            // A chave leva o CNPJ/CPF do emitente nos digitos 10 a 23 (inscricao com 14 posicoes):
-            // vale para a NFS-e e para os eventos, que so tem a chave
+            // A chave leva o CNPJ (pode ter letras, TASK-283) ou o CPF com zeros a esquerda do
+            // emitente nas posicoes 10 a 23 (inscricao com 14 posicoes): vale para a NFS-e e
+            // para os eventos, que so tem a chave
             $dist->emitida = substr($dist->nfsechave, 9, 14)
                 === str_pad(NfseXmlService::documentoFilial($dist->Filial), 14, '0', STR_PAD_LEFT);
         }
@@ -315,7 +316,7 @@ class NfseDistribuicaoService
             $qry->where('data', '<=', $filtros['dataate'] . ' 23:59:59');
         }
         if (!empty($filtros['nfsechave'])) {
-            $chave = preg_replace('/\D/', '', $filtros['nfsechave']);
+            $chave = chaveDfeLimpa($filtros['nfsechave']);
             $qry->where('nfsechave', 'ilike', "%{$chave}%");
         }
         if (!empty($filtros['tipodocumento'])) {

@@ -473,7 +473,8 @@ class PagamentoReciboService
     // sem documento (Consumidor), sem ele
     protected static function documento($p): ?string
     {
-        return $p && (int) $p->cnpj
+        // texto: o CNPJ pode ter letras (TASK-283); só zeros continua sendo sem documento
+        return $p && ltrim((string) $p->cnpj, '0') !== ''
             ? ($p->fisica ? 'CPF ' : 'CNPJ ') . formataCnpjCpf($p->cnpj, $p->fisica)
             : null;
     }

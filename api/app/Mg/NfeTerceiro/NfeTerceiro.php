@@ -80,7 +80,6 @@ class NfeTerceiro extends MgModel
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'cnpj' => 'float',
         'codfilial' => 'integer',
         'codnaturezaoperacao' => 'integer',
         'codnegocio' => 'integer',

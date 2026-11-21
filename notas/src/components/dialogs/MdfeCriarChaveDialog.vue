@@ -5,6 +5,7 @@ import { useRouter } from 'vue-router'
 import mdfeService from '../../services/mdfeService'
 import { notificarSucesso, notificarErro } from '../../utils/notify'
 import { validarChaveNFe } from 'src/utils/validators'
+import { documentoLimpo } from '@components/validador'
 
 const props = defineProps({
   modelValue: { type: Boolean, required: true },
@@ -28,12 +29,12 @@ const handlePaste = (evt) => {
   const texto = evt.clipboardData?.getData('text')
   if (texto) {
     evt.preventDefault()
-    nfechave.value = texto.replace(/\D/g, '').substring(0, 44)
+    nfechave.value = documentoLimpo(texto).substring(0, 44)
   }
 }
 
 const submit = async () => {
-  const chave = nfechave.value.replace(/\D/g, '')
+  const chave = documentoLimpo(nfechave.value)
   if (chave.length !== 44 || !validarChaveNFe(chave)) {
     notificarErro(null, 'Chave da NFe inválida')
     return
@@ -68,7 +69,7 @@ const submit = async () => {
             label="Chave da NFe *"
             outlined
             autofocus
-            mask="#### #### #### #### #### #### #### #### #### #### ####"
+            mask="XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX"
             unmasked-value
             placeholder="Digite os 44 dígitos da chave de acesso"
             :rules="[

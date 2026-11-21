@@ -4,6 +4,7 @@ import nfseDfeService from '../../services/nfseDfeService'
 import { notificarSucesso, notificarErro } from '../../utils/notify'
 import { formataNumero } from '@components/formatters'
 import MgInput from '@components/MgInput.vue'
+import { documentoLimpo } from '@components/validador'
 
 const props = defineProps({
   modelValue: { type: Boolean, required: true },
@@ -21,7 +22,8 @@ const algumaSelecionada = computed(() => filiais.value.some((f) => f.selecionada
 // filial marcada — serve tambem para trazer uma nota que ainda nao chegou pela caixa.
 const chave = ref('')
 const buscandoChave = ref(false)
-const chaveLimpa = computed(() => String(chave.value || '').replace(/\D/g, ''))
+// a chave pode ter letras no CNPJ do emitente (CNPJ alfanumérico)
+const chaveLimpa = computed(() => documentoLimpo(chave.value))
 const selecionadas = computed(() => filiais.value.filter((f) => f.selecionada))
 const podeBuscarChave = computed(
   () => chaveLimpa.value.length === 50 && selecionadas.value.length === 1,

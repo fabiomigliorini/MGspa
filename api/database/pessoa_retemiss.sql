@@ -26,6 +26,6 @@ ALTER TABLE tblpessoa ADD COLUMN IF NOT EXISTS retemiss boolean NOT NULL DEFAULT
 --   04.576.775/0001-60  Migliorini & Migliorini Ltda      (24 notas retidas, IM 9552)
 --   00.360.408/0001-74  Imobiliaria Irmaos Nogueira Ltda  (9 notas retidas, IM 5735)
 UPDATE tblpessoa SET retemiss = true
-WHERE cnpj IN (4576775000160, 360408000174) AND fisica = false AND retemiss = false;
+WHERE lpad(cnpj::text, 14, '0') IN ('04576775000160', '00360408000174') AND fisica = false AND retemiss = false;
 
 COMMIT;

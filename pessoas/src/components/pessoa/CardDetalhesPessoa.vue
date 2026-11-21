@@ -284,7 +284,7 @@ const salvarDetalhes = async () => {
             outlined
             v-model="modelPessoa.cnpj"
             :label="modelPessoa.fisica ? 'CPF' : 'CNPJ'"
-            :mask="modelPessoa.fisica ? '###.###.###-##' : '##.###.###/####-##'"
+            :mask="modelPessoa.fisica ? '###.###.###-##' : 'XX.XXX.XXX/XXXX-##'"
             unmasked-value
             disable
           />

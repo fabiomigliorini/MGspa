@@ -16,6 +16,7 @@ import { getModeloLabel } from 'src/constants/notaFiscal'
 import { formataNumeroNota } from '@components/formatters'
 import { agora } from '@components/utils/datas'
 import { validarChaveNFe } from 'src/utils/validators'
+import { documentoLimpo } from '@components/validador'
 
 const router = useRouter()
 const route = useRoute()
@@ -210,12 +211,12 @@ const handleClearPessoa = () => {
   form.value.codpessoa = 1 // Define como Consumidor ao invés de null
 }
 
-// Limpa caracteres não numéricos ao colar
+// Limpa a pontuação ao colar (a chave pode ter letras no CNPJ do emitente)
 const handlePaste = (evt) => {
   const pastedText = evt.clipboardData?.getData('text')
   if (pastedText) {
     evt.preventDefault()
-    const cleanedText = pastedText.replace(/\D/g, '').substring(0, 44)
+    const cleanedText = documentoLimpo(pastedText).substring(0, 44)
     form.value.nfechave = cleanedText
   }
 }
@@ -442,7 +443,7 @@ onMounted(() => {
                   v-model="form.nfechave"
                   label="Chave de Acesso da NFe *"
                   outlined
-                  mask="#### #### #### #### #### #### #### #### #### #### ####"
+                  mask="XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX XXXX"
                   unmasked-value
                   placeholder="Digite os 44 dígitos da chave de acesso"
                   :rules="[

@@ -693,9 +693,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
 |  - `cors` middleware: removido (CORS é nativo no L13)
 |  - PdvNegocioPrazoService::emAberto retorna 0 no PessoaResource
 |    (Pdv ainda não foi inteligentemente integrado)
-|  - PessoaService::importar foi simplificado pra usar só ReceitaWS
-|    (consultaSefazCadastro de NFePHPService pode falhar até ajustar
-|    dependências da lib nfephp-org no composer)
 |  - Observers (PessoaObserver, ColaboradorObserver, FeriasObserver,
 |    DependenteObserver, NotaFiscalObserver) NÃO estão registrados em
 |    bootstrap/app.php — quando precisar do comportamento, registrar
@@ -710,7 +707,6 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
     Route::apiResource('permissao', '\Mg\Permissao\PermissaoController');
 
     // Pessoa
-    Route::post('pessoa/importar', '\Mg\Pessoa\PessoaController@importar');
     Route::get('pessoa/verifica-ie-sefaz', '\Mg\Pessoa\PessoaController@verificaIeSefaz');
     Route::get('pessoa/{codpessoa}/anexo/{status}/{arquivo}', '\Mg\Pessoa\PessoaAnexoController@get');
 
@@ -817,7 +813,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::get('distribuicao/{coddistribuicaonfse}/danfse', '\Mg\NotaFiscalServico\NfseDistribuicaoController@danfse');
         Route::post('distribuicao/{coddistribuicaonfse}/processar', '\Mg\NotaFiscalServico\NfseDistribuicaoController@processar');
         Route::post('distribuicao/{coddistribuicaonfse}/consultar-adn', '\Mg\NotaFiscalServico\NfseDistribuicaoController@consultarNsu');
-        Route::post('consultar-eventos/{codfilial}/{chave}', '\Mg\NotaFiscalServico\NfseDistribuicaoController@consultarEventos')->whereNumber(['codfilial', 'chave']);
+        Route::post('consultar-eventos/{codfilial}/{chave}', '\Mg\NotaFiscalServico\NfseDistribuicaoController@consultarEventos')->whereNumber('codfilial')->whereAlphaNumeric('chave');
     });
 
     // NOTA FISCAL DE SERVICO (NFS-e Nacional, TASK-279)

@@ -91,7 +91,6 @@ class Pagamento extends MgModel
         'alteracao' => 'datetime',
         'bandeira' => 'integer',
         'cancelamento' => 'datetime',
-        'chequecnpj' => 'integer',
         'chequevencimento' => 'date',
         'codfilial' => 'integer',
         'codliopedido' => 'integer',

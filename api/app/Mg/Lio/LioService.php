@@ -7,6 +7,7 @@ use Carbon\Carbon;
 // use Illuminate\Support\Facades\DB;
 
 use Mg\Pessoa\Pessoa;
+use Mg\Pessoa\PessoaService;
 use Mg\Negocio\Negocio;
 use Mg\Pagamento\Pagamento;
 use Mg\Pagamento\PagamentoService;
@@ -75,7 +76,7 @@ class LioService
             if (!$terminal->exists) {
                 $terminal->lioterminal = $terminal->terminal;
                 if (isset($payment->paymentFields->document)) {
-                    $pessoas = Pessoa::where('cnpj', $payment->paymentFields->document)->get();
+                    $pessoas = Pessoa::whereIn('cnpj', PessoaService::cnpjCpfCandidatos($payment->paymentFields->document))->get();
                     foreach ($pessoas as $pessoa) {
                         foreach ($pessoa->FilialS as $filial) {
                             $terminal->codfilial = $filial->codfilial;

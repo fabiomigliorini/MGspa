@@ -19,6 +19,14 @@ class NotaFiscalRequest extends FormRequest
         return true;
     }
 
+    // Chave sem pontuação e em maiúsculo: pode ter letras no CNPJ do emitente (TASK-283)
+    protected function prepareForValidation(): void
+    {
+        if ($this->filled('nfechave')) {
+            $this->merge(['nfechave' => chaveDfeLimpa($this->input('nfechave'))]);
+        }
+    }
+
     public function rules(): array
     {
         return [
@@ -272,7 +280,7 @@ class NotaFiscalRequest extends FormRequest
             return;
         }
 
-        $digito = $this->calculaDigitoChaveNFE($nfechave);
+        $digito = digitoChaveDfe($nfechave);
 
         if ($digito == -1) {
             $validator->errors()->add('nfechave', 'Chave da NFE Inválida!');
@@ -310,8 +318,10 @@ class NotaFiscalRequest extends FormRequest
             return;
         }
 
-        $chaveNumeros = preg_replace('/\D/', '', $nfechave);
-        $cnpj = substr($chaveNumeros, 6, 14);
+        // CNPJ do emitente nas posições 7 a 20; pode ter letras (TASK-283). Emitente pessoa
+        // física leva '000' + CPF.
+        $chave = chaveDfeLimpa($nfechave);
+        $cnpj = substr($chave, 6, 14);
 
         if (strlen($cnpj) != 14) {
             return;
@@ -334,13 +344,17 @@ class NotaFiscalRequest extends FormRequest
         if ($emitida) {
             $filial = \Mg\Filial\Filial::with('Pessoa')->find($codfilial);
             if ($filial && $filial->Pessoa) {
-                $cnpjFilial = $filial->Pessoa->cnpj;
-                if ($cnpj != $cnpjFilial) {
+                $cnpjFilial = str_pad(cnpjCpfLimpo($filial->Pessoa->cnpj, $filial->Pessoa->fisica), 14, '0', STR_PAD_LEFT);
+                if ($cnpj !== $cnpjFilial) {
                     $validator->errors()->add('nfechave', 'A filial selecionada não bate com o CNPJ da chave da NFE!');
                 }
             }
         } else {
-            $pessoas = Pessoa::where('cnpj', $cnpj)->get();
+            $documentos = [$cnpj];
+            if (substr($cnpj, 0, 3) == '000' && cpfValido(substr($cnpj, 3))) {
+                $documentos[] = substr($cnpj, 3);
+            }
+            $pessoas = Pessoa::whereIn('cnpj', $documentos)->get();
             $achou = false;
 
             foreach ($pessoas as $pessoa) {
@@ -365,8 +379,8 @@ class NotaFiscalRequest extends FormRequest
             return;
         }
 
-        $chaveNumeros = preg_replace('/\D/', '', $nfechave);
-        $serieChave = intval(substr($chaveNumeros, 22, 3));
+        $chave = chaveDfeLimpa($nfechave);
+        $serieChave = intval(substr($chave, 22, 3));
 
         if ($serieChave != $serie) {
             $validator->errors()->add('serie', 'A série informada não bate com a chave da NFE!');
@@ -382,8 +396,8 @@ class NotaFiscalRequest extends FormRequest
             return;
         }
 
-        $chaveNumeros = preg_replace('/\D/', '', $nfechave);
-        $numeroChave = intval(substr($chaveNumeros, 25, 9));
+        $chave = chaveDfeLimpa($nfechave);
+        $numeroChave = intval(substr($chave, 25, 9));
 
         if ($numeroChave != $numero) {
             $validator->errors()->add('numero', 'O número informado não bate com a chave da NFE!');
@@ -399,11 +413,11 @@ class NotaFiscalRequest extends FormRequest
             return;
         }
 
-        $chaveNumeros = preg_replace('/\D/', '', $nfechave);
+        $chave = chaveDfeLimpa($nfechave);
 
         // Chave NFE: posições 2-3 = ano (YY), posições 4-5 = mês (MM)
-        $anoChave = intval(substr($chaveNumeros, 2, 2));
-        $mesChave = substr($chaveNumeros, 4, 2);
+        $anoChave = intval(substr($chave, 2, 2));
+        $mesChave = substr($chave, 4, 2);
 
         // Converte ano de 2 dígitos para 4 dígitos (ex: 25 -> 2025)
         $anoChave = ($anoChave >= 0 && $anoChave <= 99) ? $anoChave + 2000 : $anoChave;
@@ -423,38 +437,5 @@ class NotaFiscalRequest extends FormRequest
             $mesAnoEmissao = $mesEmissao . '/' . $anoEmissao;
             $validator->errors()->add('emissao', "A data de emissão ({$mesAnoEmissao}) não corresponde ao mês/ano da chave NFE ({$mesAnoChave})!");
         }
-    }
-
-    /**
-     * Calcula o dígito verificador da chave da NFE
-     */
-    protected function calculaDigitoChaveNFE(string $chave): int
-    {
-        $chaveNumeros = preg_replace('/\D/', '', $chave);
-        $chaveNumeros = substr($chaveNumeros, 0, 43);
-
-        if (strlen($chaveNumeros) != 43) {
-            return -1;
-        }
-
-        $key = 0;
-        $c = 2;
-
-        for ($i = strlen($chaveNumeros); $i >= 1; $i--) {
-            if ($c > 9) {
-                $c = 2;
-            }
-
-            $key += (intval(substr($chaveNumeros, $i - 1, 1)) * $c);
-            $c++;
-        }
-
-        $resto = $key % 11;
-
-        if ($resto == 0 || $resto == 1) {
-            return 0;
-        }
-
-        return 11 - $resto;
     }
 }

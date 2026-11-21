@@ -87,7 +87,7 @@ if (!function_exists('mascarar')) {
 if (!function_exists('formataCnpj')) {
     function formataCnpj($numero)
     {
-        return mascarar(numeroLimpo($numero), '##.###.###/####-##');
+        return mascarar(documentoLimpo($numero), '##.###.###/####-##');
     }
 }
 
@@ -294,19 +294,15 @@ if (!function_exists('linkRel')) {
 if (!function_exists('formataCnpjCpf')) {
     function formataCnpjCpf($string, $fisica = '?')
     {
-        if ($fisica == '?') {
-            $string = numeroLimpo($string);
-            if (strlen($string) <= 11) {
-                $fisica = true;
-            } else {
-                $fisica = false;
-            }
+        if ($fisica === '?' || $fisica === null) {
+            $string = documentoLimpo($string);
+            $fisica = ctype_digit($string) && strlen($string) <= 11;
         }
 
         if ($fisica) {
-            return formataPorMascara($string, '###.###.###-##');
+            return formataCpf($string);
         } else {
-            return formataPorMascara($string, '##.###.###/####-##');
+            return formataCnpj($string);
         }
     }
 }
@@ -464,7 +460,7 @@ if (!function_exists('formataNumeroNota')) {
 if (!function_exists('formataChaveNfe')) {
     function formataChaveNfe($chave)
     {
-        return formataPorMascara($chave, "#### #### #### #### #### #### #### #### #### #### ####");
+        return formataPorMascara(chaveDfeLimpa($chave), "#### #### #### #### #### #### #### #### #### #### ####", false);
     }
 }
 
@@ -601,6 +597,158 @@ if (!function_exists('numeroLimpo')) {
     function numeroLimpo($numero)
     {
         return preg_replace('/[^0-9]|\s+/', '', $numero);
+    }
+}
+
+/*
+ * CPF e CNPJ (TASK-283). Desde jul/2026 a Receita emite CNPJ com letras: 14 caracteres, os
+ * 12 primeiros de A-Z/0-9 e os 2 dígitos verificadores numéricos. O banco guarda texto
+ * maiúsculo com zeros à esquerda, cada um no seu tamanho: CPF com 11, CNPJ com 14.
+ */
+
+if (!function_exists('documentoLimpo')) {
+    // Tira pontuação e espaço, mantém letras (em maiúsculo) e dígitos. Não completa zeros.
+    function documentoLimpo($documento)
+    {
+        return preg_replace('/[^0-9A-Z]/', '', strtoupper((string) $documento));
+    }
+}
+
+if (!function_exists('cnpjLimpo')) {
+    // CNPJ no formato do banco: 14 caracteres, maiúsculo, zeros à esquerda. Vazio vira null.
+    function cnpjLimpo($cnpj)
+    {
+        $cnpj = documentoLimpo($cnpj);
+        if ($cnpj === '') {
+            return null;
+        }
+        return str_pad($cnpj, 14, '0', STR_PAD_LEFT);
+    }
+}
+
+if (!function_exists('cpfLimpo')) {
+    // CPF no formato do banco: 11 dígitos, zeros à esquerda. Vazio vira null.
+    function cpfLimpo($cpf)
+    {
+        $cpf = numeroLimpo((string) $cpf);
+        if ($cpf === '') {
+            return null;
+        }
+        return str_pad($cpf, 11, '0', STR_PAD_LEFT);
+    }
+}
+
+if (!function_exists('cnpjCpfLimpo')) {
+    // CPF (11) ou CNPJ (14) no formato do banco. Sem $fisica, é CPF quando só tem dígitos,
+    // cabe em 11 e o dígito de CPF bate; senão é CNPJ.
+    function cnpjCpfLimpo($documento, $fisica = null)
+    {
+        $documento = documentoLimpo($documento);
+        if ($documento === '') {
+            return null;
+        }
+        if ($fisica === null) {
+            $fisica = ctype_digit($documento)
+                && strlen($documento) <= 11
+                && cpfValido($documento);
+        }
+        return $fisica ? cpfLimpo($documento) : cnpjLimpo($documento);
+    }
+}
+
+if (!function_exists('cpfValido')) {
+    function cpfValido($cpf)
+    {
+        $cpf = numeroLimpo((string) $cpf);
+        if ($cpf === '' || strlen($cpf) > 11) {
+            return false;
+        }
+        $cpf = str_pad($cpf, 11, '0', STR_PAD_LEFT);
+        if (preg_match('/^(\d)\1{10}$/', $cpf)) {
+            return false;
+        }
+        for ($t = 9; $t < 11; $t++) {
+            $d = 0;
+            for ($c = 0; $c < $t; $c++) {
+                $d += (int) $cpf[$c] * (($t + 1) - $c);
+            }
+            $d = ((10 * $d) % 11) % 10;
+            if ((int) $cpf[$t] !== $d) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+if (!function_exists('cnpjValido')) {
+    // Módulo 11 com cada caractere valendo (ASCII - 48): dígito vale ele mesmo, A=17, B=18...
+    function cnpjValido($cnpj)
+    {
+        $cnpj = documentoLimpo($cnpj);
+        if ($cnpj === '' || strlen($cnpj) > 14) {
+            return false;
+        }
+        $cnpj = str_pad($cnpj, 14, '0', STR_PAD_LEFT);
+        if (!preg_match('/^[0-9A-Z]{12}[0-9]{2}$/', $cnpj)) {
+            return false;
+        }
+        if (preg_match('/^(.)\1{13}$/', $cnpj)) {
+            return false;
+        }
+        $pesos = [6, 5, 4, 3, 2, 9, 8, 7, 6, 5, 4, 3, 2];
+        foreach ([12, 13] as $posicao) {
+            $soma = 0;
+            for ($i = 0; $i < $posicao; $i++) {
+                $soma += (ord($cnpj[$i]) - 48) * $pesos[$i + 13 - $posicao];
+            }
+            $resto = $soma % 11;
+            $digito = ($resto < 2) ? 0 : 11 - $resto;
+            if ((int) $cnpj[$posicao] !== $digito) {
+                return false;
+            }
+        }
+        return true;
+    }
+}
+
+if (!function_exists('cnpjCpfValido')) {
+    function cnpjCpfValido($documento)
+    {
+        $documento = documentoLimpo($documento);
+        if (ctype_digit($documento) && strlen($documento) <= 11 && cpfValido($documento)) {
+            return true;
+        }
+        return cnpjValido($documento);
+    }
+}
+
+if (!function_exists('chaveDfeLimpa')) {
+    // Chave de acesso (NF-e, NFC-e, MDF-e 44; NFS-e 50) sem pontuação. Pode ter letras nas
+    // posições do CNPJ do emitente.
+    function chaveDfeLimpa($chave)
+    {
+        return documentoLimpo($chave);
+    }
+}
+
+if (!function_exists('digitoChaveDfe')) {
+    // Dígito verificador da chave de 44 posições (módulo 11, pesos 2 a 9 da direita para a
+    // esquerda), com cada caractere valendo (ASCII - 48). Recebe as 43 primeiras posições.
+    function digitoChaveDfe($chave43)
+    {
+        $chave43 = substr(chaveDfeLimpa($chave43), 0, 43);
+        if (strlen($chave43) != 43) {
+            return -1;
+        }
+        $soma = 0;
+        $peso = 2;
+        for ($i = 42; $i >= 0; $i--) {
+            $soma += (ord($chave43[$i]) - 48) * $peso;
+            $peso = ($peso == 9) ? 2 : $peso + 1;
+        }
+        $resto = $soma % 11;
+        return ($resto < 2) ? 0 : 11 - $resto;
     }
 }
 

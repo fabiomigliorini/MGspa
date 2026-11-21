@@ -5,6 +5,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { api } from 'src/services/api'
 import { notifySuccess, notifyError } from 'src/utils/notify'
 import { formataDataIso } from '@components/formatters'
+import { documentoLimpo } from '@components/validador'
 import SelectPessoa from '@components/MgSelectPessoa.vue'
 import MgInputValor from '@components/MgInputValor.vue'
 import MgInputData from '@components/MgInputData.vue'
@@ -72,7 +73,7 @@ async function consultarCmc7() {
     const ultimosEmit = data.ultimo?.emitentes || []
     const todosVazios = emitentes.value.every((e) => !e.cnpj && !e.emitente)
     if (ultimosEmit.length && todosVazios) {
-      emitentes.value = ultimosEmit.map((e) => novaLinha(somenteDigitos(e.cnpj), e.emitente))
+      emitentes.value = ultimosEmit.map((e) => novaLinha(documentoLimpo(e.cnpj), e.emitente))
     } else if (!emitentes.value.length) {
       adicionarEmitente()
     }
@@ -89,7 +90,7 @@ watch(
 )
 
 async function consultarEmitenteCnpj(linha) {
-  const cnpj = somenteDigitos(linha.cnpj)
+  const cnpj = documentoLimpo(linha.cnpj)
   if (!cnpj) return
   try {
     const { data } = await api.get(`v1/cheque/consulta-emitente/${cnpj}`)
@@ -133,7 +134,7 @@ async function carregar() {
     cmc7Info.value = { valido: true, error: null }
     ultimoCmc7Consultado = somenteDigitos(data.cmc7)
     emitentes.value = (data.cheque_emitente_s || []).map((e) =>
-      novaLinha(somenteDigitos(e.cnpj), e.emitente, e.codchequeemitente),
+      novaLinha(documentoLimpo(e.cnpj), e.emitente, e.codchequeemitente),
     )
     if (!emitentes.value.length) emitentes.value = [novaLinha()]
   } catch (e) {
@@ -154,10 +155,10 @@ async function submit() {
       codpessoa: model.value.codpessoa,
       observacao: model.value.observacao,
       emitentes: emitentes.value
-        .filter((e) => somenteDigitos(e.cnpj) || e.emitente)
+        .filter((e) => documentoLimpo(e.cnpj) || e.emitente)
         .map((e) => ({
           codchequeemitente: e.codchequeemitente,
-          cnpj: somenteDigitos(e.cnpj),
+          cnpj: documentoLimpo(e.cnpj),
           emitente: e.emitente,
         })),
     }
@@ -292,7 +293,7 @@ onMounted(carregar)
                   v-model="linha.cnpj"
                   outlined
                   label="CNPJ / CPF"
-                  mask="##############"
+                  mask="XXXXXXXXXXXXXX"
                   unmasked-value
                   @blur="consultarEmitenteCnpj(linha)"
                 >

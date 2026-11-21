@@ -45,7 +45,7 @@ class ArquivoEntrada extends Arquivo
 
         $reg = new RegistroEntradaCabecalho();
         $reg->codigoEmpresa = $this->filial->empresadominio;
-        $reg->cnpj = $this->filial->Pessoa->cnpj;
+        $reg->cnpj = cnpjLimpo($this->filial->Pessoa->cnpj);
         $reg->dataInicial = $this->inicio;
         $reg->dataFinal = $this->fim;
         $this->registros[] = $reg;
@@ -425,9 +425,9 @@ class ArquivoEntrada extends Arquivo
             $reg->inscricao = '';
         } else {
             if ($doc->fisica) {
-                $reg->inscricao = str_pad($doc->cnpj, 11, '0', STR_PAD_LEFT);
+                $reg->inscricao = cpfLimpo($doc->cnpj);
             } else {
-                $reg->inscricao = str_pad($doc->cnpj, 14, '0', STR_PAD_LEFT);
+                $reg->inscricao = cnpjLimpo($doc->cnpj);
             }
         }
 

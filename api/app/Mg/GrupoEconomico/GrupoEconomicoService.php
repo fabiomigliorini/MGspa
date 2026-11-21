@@ -36,27 +36,6 @@ class GrupoEconomicoService
         return (bool) $grupo->delete();
     }
 
-    public static function buscarPeloCnpjCpf(bool $fisica, string $cnpj): ?GrupoEconomico
-    {
-        $cnpj = trim(preg_replace('/\D+/', '', $cnpj));
-        if ($fisica) {
-            $pessoa = Pessoa::where('cnpj', $cnpj)
-                ->where('fisica', $fisica)
-                ->whereNotNull('codgrupoeconomico')
-                ->orderBy('alteracao', 'desc')
-                ->first();
-        } else {
-            $cnpj = str_pad($cnpj, 14, '0', STR_PAD_LEFT);
-            $raiz = substr($cnpj, 0, 8);
-            $pessoa = Pessoa::whereRaw("substring(trim(to_char(cnpj, '00000000000000')), 1, 8) ilike ?", [$raiz . '%'])
-                ->where('fisica', $fisica)
-                ->whereNotNull('codgrupoeconomico')
-                ->orderBy('alteracao', 'desc')
-                ->first();
-        }
-        return $pessoa?->GrupoEconomico;
-    }
-
     public static function removerDoGrupo(Pessoa $pessoa): Pessoa
     {
         $pessoa->update(['codgrupoeconomico' => null]);

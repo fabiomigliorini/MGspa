@@ -33,6 +33,6 @@ FROM tblfilial f
 JOIN tblpessoa p ON p.codpessoa = f.codpessoa
 WHERE f.codfilial = d.codfilial
   AND d.emitida = false
-  AND substring(d.nfsechave from 10 for 14) = lpad(p.cnpj::bigint::text, 14, '0');
+  AND substring(d.nfsechave from 10 for 14) = lpad(p.cnpj::text, 14, '0');
 
 COMMIT;

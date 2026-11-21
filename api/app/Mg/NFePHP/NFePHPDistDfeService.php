@@ -181,7 +181,7 @@ class NFePHPDistDfeService
         // Associa os dados do XML no registro
         $dde->coddfeevento = $de->coddfeevento;
         $dde->orgao = @$dom->getElementsByTagName('cOrgao')->item(0)->nodeValue;
-        $dde->cnpj = @$dom->getElementsByTagName('CNPJ')->item(0)->nodeValue;
+        $dde->cnpj = cnpjLimpo(@$dom->getElementsByTagName('CNPJ')->item(0)->nodeValue);
         $dde->cpf = @$dom->getElementsByTagName('CPF')->item(0)->nodeValue;
         $dde->sequencia = @$dom->getElementsByTagName('nSeqEvento')->item(0)->nodeValue;
         $dde->recebimento = @Carbon::parse($dom->getElementsByTagName('dhRecbto')->item(0)->nodeValue);
@@ -208,7 +208,7 @@ class NFePHPDistDfeService
 
         // associa valores recebidos pelo xml
         $nft->codfilial = $nft->codfilial??$dd->codfilial;
-        $nft->cnpj = $nft->cnpj??@$dom->getElementsByTagName('CPF')->item(0)->nodeValue??@$dom->getElementsByTagName('CNPJ')->item(0)->nodeValue;
+        $nft->cnpj = $nft->cnpj??cpfLimpo(@$dom->getElementsByTagName('CPF')->item(0)->nodeValue)??cnpjLimpo(@$dom->getElementsByTagName('CNPJ')->item(0)->nodeValue);
         $nft->emitente = $nft->emitente??@$dom->getElementsByTagName('xNome')->item(0)->nodeValue;
         $nft->ie = $nft->ie??@$dom->getElementsByTagName('IE')->item(0)->nodeValue;
         if ($pessoa = PessoaService::buscarPorCnpjIe($nft->cnpj??$nft->cpf, $nft->ie)) {
@@ -267,7 +267,7 @@ class NFePHPDistDfeService
         // Associa os dados do XML no registro
         $dde->coddfeevento = $de->coddfeevento;
         $dde->orgao = @$dom->getElementsByTagName('cOrgao')->item(0)->nodeValue;
-        $dde->cnpj = @$dom->getElementsByTagName('CNPJ')->item(0)->nodeValue;
+        $dde->cnpj = cnpjLimpo(@$dom->getElementsByTagName('CNPJ')->item(0)->nodeValue);
         $dde->cpf = @$dom->getElementsByTagName('CPF')->item(0)->nodeValue;
         $dde->sequencia = @$dom->getElementsByTagName('nSeqEvento')->item(0)->nodeValue;
         $dde->recebimento = @Carbon::parse($dom->getElementsByTagName('dhRegEvento')->item(0)->nodeValue);
@@ -294,7 +294,7 @@ class NFePHPDistDfeService
 
         // procura se tem a nota no banco ja
         $nft = NfeTerceiro::firstOrNew([
-            'nfechave' => numeroLimpo($dom->getElementsByTagName('chNFe')->item(0)->nodeValue)
+            'nfechave' => chaveDfeLimpa($dom->getElementsByTagName('chNFe')->item(0)->nodeValue)
         ]);
 
         // dados da Nfe
@@ -341,7 +341,7 @@ class NFePHPDistDfeService
 
         // emitente
         $emit = $dom->getElementsByTagName('emit')->item(0);
-        $nft->cnpj = $nft->cnpj??@$emit->getElementsByTagName('CPF')->item(0)->nodeValue??@$emit->getElementsByTagName('CNPJ')->item(0)->nodeValue;
+        $nft->cnpj = $nft->cnpj??cpfLimpo(@$emit->getElementsByTagName('CPF')->item(0)->nodeValue)??cnpjLimpo(@$emit->getElementsByTagName('CNPJ')->item(0)->nodeValue);
         $nft->emitente = $nft->emitente??@$emit->getElementsByTagName('xNome')->item(0)->nodeValue;
         $nft->ie = $nft->ie??@$emit->getElementsByTagName('IE')->item(0)->nodeValue;
 
@@ -441,8 +441,8 @@ class NFePHPDistDfeService
 
         // Filial
         $dest = $dom->getElementsByTagName('dest')->item(0);
-        $cnpj = @$dest->getElementsByTagName('CNPJ')->item(0)->nodeValue;
-        $cpf = @$dest->getElementsByTagName('CPF')->item(0)->nodeValue;
+        $cnpj = cnpjLimpo(@$dest->getElementsByTagName('CNPJ')->item(0)->nodeValue);
+        $cpf = cpfLimpo(@$dest->getElementsByTagName('CPF')->item(0)->nodeValue);
         $elementIe = @$dest->getElementsByTagName('IE');
         // Se nao tem IE - Ex Filial Pessoa Fisica (Arquitetura, Fabio, Mari, Etc)
         if ($elementIe->length == 0) {
@@ -585,7 +585,7 @@ class NFePHPDistDfeService
             ]);
             $nftp->indpag = @$pag->getElementsByTagName('indPag')->item(0)->nodeValue;
             $nftp->vpag = @$pag->getElementsByTagName('vPag')->item(0)->nodeValue;
-            $nftp->cnpj = @$pag->getElementsByTagName('CNPJ')->item(0)->nodeValue;
+            $nftp->cnpj = cnpjLimpo(@$pag->getElementsByTagName('CNPJ')->item(0)->nodeValue);
             $nftp->tband = @$pag->getElementsByTagName('tBand')->item(0)->nodeValue;
             $nftp->caut = @$pag->getElementsByTagName('cAut')->item(0)->nodeValue;
             $nftp->save();

@@ -47,7 +47,7 @@ class AcertoPlanilhaCartaoXlsx implements RecargaCartaoDriver
 
         $linha = 2;
         foreach ($linhas as $l) {
-            $cpf = $l->fisica ? formataCpf(sprintf('%.0f', (float) $l->cpf)) : formataCnpj(sprintf('%.0f', (float) $l->cpf));
+            $cpf = $l->fisica ? formataCpf($l->cpf) : formataCnpj($l->cpf);
             $sheet->setCellValueExplicit("A{$linha}", $cpf, DataType::TYPE_STRING);
             $sheet->setCellValue("B{$linha}", (float) $l->valor);
             $linha++;

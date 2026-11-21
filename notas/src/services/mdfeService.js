@@ -1,4 +1,5 @@
 import api from './api'
+import { documentoLimpo } from '@components/validador'
 
 // MDFe — Manifesto Eletrônico de Documentos Fiscais.
 // index/show/update retornam API Resource embrulhado em { data: ... }.
@@ -18,7 +19,7 @@ export default {
     return response.data.data
   },
   async criarDaNfeChave(nfechave) {
-    const chave = String(nfechave).replace(/\D/g, '')
+    const chave = documentoLimpo(nfechave)
     const response = await api.post(`/v1/mdfe/criar-da-nfechave/${chave}`)
     return response.data.data
   },

@@ -133,7 +133,7 @@ class PdvNegocioPagamentoService
             'codtitulo' => $dados['codtitulo'] ?? null,
             'cmc7' => $dados['cmc7'] ?? null,
             'chequevencimento' => $dados['chequevencimento'] ?? null,
-            'chequecnpj' => $dados['chequecnpj'] ?? null,
+            'chequecnpj' => cnpjCpfLimpo($dados['chequecnpj'] ?? null),
             'chequeemitente' => $dados['chequeemitente'] ?? null,
         ]);
         if ($pag->desconto > 0 && $meio != PagamentoService::MEIO_DINHEIRO) {

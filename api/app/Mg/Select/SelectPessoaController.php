@@ -50,16 +50,26 @@ class SelectPessoaController extends Controller
             $numeros = preg_replace('/[^\d]/', '', $busca);
 
             if (strlen($letras) == 0 && strlen($numeros) > 0) {
-                $sql .= " {$where} (to_char(p.cnpj, case when p.fisica then 'FM00000000000' else 'FM00000000000000' end) ilike :cnpj or to_char(p.codpessoa, 'FM00000000') ilike :codpessoa)";
+                $sql .= " {$where} (p.cnpj ilike :cnpj or to_char(p.codpessoa, 'FM00000000') ilike :codpessoa)";
                 $params['cnpj'] = "%{$numeros}%";
                 $params['codpessoa'] = "{$numeros}%";
             } else {
                 $palavras = explode(' ', preg_replace('/\s+/', ' ', $busca));
+                $nomes = [];
                 foreach ($palavras as $i => $palavra) {
-                    $sql .= " {$where} p.fantasia || ' ' || p.pessoa ilike :palavra{$i}";
+                    $nomes[] = "p.fantasia || ' ' || p.pessoa ilike :palavra{$i}";
                     $params["palavra{$i}"] = "%{$palavra}%";
-                    $where = 'and';
                 }
+                $condicao = implode(' and ', $nomes);
+                // CNPJ com letras (TASK-283): termo único, com dígito e do tamanho de pelo menos
+                // a raiz, procura também no CNPJ, sem deixar de procurar no nome
+                $documento = documentoLimpo($busca);
+                if (!preg_match('/\s/', $busca) && strlen($documento) >= 8 && preg_match('/\d/', $documento)) {
+                    $condicao = "({$condicao}) or p.cnpj ilike :cnpj";
+                    $params['cnpj'] = "%{$documento}%";
+                }
+                $sql .= " {$where} ({$condicao})";
+                $where = 'and';
             }
         }
 

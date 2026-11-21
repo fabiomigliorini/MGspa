@@ -100,9 +100,9 @@ class MdfeNfePhpService
          */
         $std = new \stdClass();
         if ($mdfe->Filial->Pessoa->fisica) {
-            $std->CPF = str_pad($mdfe->Filial->Pessoa->cnpj, 11, '0', STR_PAD_LEFT);
+            $std->CPF = cpfLimpo($mdfe->Filial->Pessoa->cnpj);
         } else {
-            $std->CNPJ = str_pad($mdfe->Filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
+            $std->CNPJ = cnpjLimpo($mdfe->Filial->Pessoa->cnpj);
         }
         $std->IE = $mdfe->Filial->Pessoa->ie;
         $std->xNome = $mdfe->Filial->Pessoa->pessoa;
@@ -190,7 +190,7 @@ class MdfeNfePhpService
                     if (!$mdfeVeiculo->PessoaCondutor->fisica) {
                         throw new \Exception("Informado condutor pessoa jurídica!", 1);
                     }
-                    $condutor->CPF = str_pad($mdfeVeiculo->PessoaCondutor->cnpj, 11, '0', STR_PAD_LEFT);
+                    $condutor->CPF = cpfLimpo($mdfeVeiculo->PessoaCondutor->cnpj);
                     $veicTracao->condutor = [$condutor];
                 }
 
@@ -199,9 +199,9 @@ class MdfeNfePhpService
                 if (!empty($mdfeVeiculo->Veiculo->codpessoaproprietario)) {
                     $prop = new \stdClass();
                     if ($mdfeVeiculo->Veiculo->PessoaProprietario->fisica) {
-                        $prop->CPF = str_pad($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj, 11, '0', STR_PAD_LEFT);
+                        $prop->CPF = cpfLimpo($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj);
                     } else {
-                        $prop->CNPJ = str_pad($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj, 14, '0', STR_PAD_LEFT);
+                        $prop->CNPJ = cnpjLimpo($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj);
                     }
                     $prop->RNTRC = substr($mdfeVeiculo->Veiculo->PessoaProprietario->rntrc, -8);
                     $prop->xNome = $mdfeVeiculo->Veiculo->PessoaProprietario->pessoa;
@@ -237,9 +237,9 @@ class MdfeNfePhpService
                 if (!empty($mdfeVeiculo->Veiculo->codpessoaproprietario)) {
                     $prop = new \stdClass();
                     if ($mdfeVeiculo->Veiculo->PessoaProprietario->fisica) {
-                        $prop->CPF = str_pad($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj, 11, '0', STR_PAD_LEFT);
+                        $prop->CPF = cpfLimpo($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj);
                     } else {
-                        $prop->CNPJ = str_pad($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj, 14, '0', STR_PAD_LEFT);
+                        $prop->CNPJ = cnpjLimpo($mdfeVeiculo->Veiculo->PessoaProprietario->cnpj);
                     }
                     $prop->RNTRC = substr($mdfeVeiculo->Veiculo->PessoaProprietario->rntrc, -8);
                     $prop->xNome = $mdfeVeiculo->Veiculo->PessoaProprietario->pessoa;
@@ -752,8 +752,11 @@ class MdfeNfePhpService
         }
 
         $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
-        // Workaround CPF
-        $tools->config->cnpj = $tools->config->cpf;
+        // Workaround CPF: nos eventos o sped-mdfe só lê o config->cnpj (e decide CPF ou CNPJ
+        // pelo tamanho); filial com CNPJ já está nele
+        if ($mdfe->Filial->Pessoa->fisica) {
+            $tools->config->cnpj = $tools->config->cpf;
+        }
 
         $resp = NFePHPService::chamarSefazComRetry(
             fn() => $tools->sefazCancela($mdfe->chmdfe, $justificativa, $mdfe->protocoloautorizacao),
@@ -802,8 +805,11 @@ class MdfeNfePhpService
         }
 
         $tools = MdfeNfePhpConfigService::instanciaTools($mdfe->Filial);
-        // Workaround CPF
-        $tools->config->cnpj = $tools->config->cpf;
+        // Workaround CPF: nos eventos o sped-mdfe só lê o config->cnpj (e decide CPF ou CNPJ
+        // pelo tamanho); filial com CNPJ já está nele
+        if ($mdfe->Filial->Pessoa->fisica) {
+            $tools->config->cnpj = $tools->config->cpf;
+        }
 
         if ($mdfeNfe = $mdfe->MdfeNfeS()->whereNotNull('codnotafiscal')->first()) {
             $cidade = $mdfeNfe->NotaFiscal->Pessoa->Cidade;

@@ -34,20 +34,21 @@
                 <p>Informe o número do documento.</p>
 
                 <MgInput
+                  ref="campoDocumento"
                   autofocus
                   outlined
                   v-model="model.cnpj"
                   label="CNPJ"
                   v-if="model.fisica == false"
-                  mask="##.###.###/####-##"
+                  mask="XX.XXX.XXX/XXXX-##"
                   unmasked-value
                   required
                   :rules="[validaObrigatorio, validaCpfCnpj]"
                   @update:model-value="continuaSeCnpjValido()"
                   style="max-width: 200px"
-                  inputmode="numeric"
                 />
                 <MgInput
+                  ref="campoDocumento"
                   autofocus
                   outlined
                   v-model="model.cnpj"
@@ -195,12 +196,7 @@
 
               <template v-slot:navigation>
                 <q-stepper-navigation>
-                  <q-btn
-                    v-if="step != 4"
-                    @click="step = step + 1"
-                    color="primary"
-                    label="Continuar"
-                  />
+                  <q-btn v-if="step != 4" @click="continuar()" color="primary" label="Continuar" />
                   <q-btn v-else @click="salvar()" color="primary" label="Salvar" />
                   <q-btn
                     v-if="step > 0"
@@ -226,7 +222,7 @@ import { ref, defineAsyncComponent } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from 'src/stores'
 import { pessoaStore } from 'src/stores/pessoa'
-import { isCnpjCpfValido } from 'src/utils/validador'
+import { isCnpjCpfValido } from '@components/validador'
 import { formataIe, primeiraLetraMaiuscula, removerAcentos } from '@components/formatters'
 
 export default {
@@ -267,6 +263,19 @@ export default {
         return 'Número de Documento Inválido!'
       }
       return true
+    },
+
+    // no passo do documento só avança com CPF/CNPJ válido; nos outros, segue para o próximo
+    async continuar() {
+      if (this.step != 1) {
+        this.step = this.step + 1
+        return
+      }
+      if (!isCnpjCpfValido(this.model.cnpj)) {
+        this.$refs.campoDocumento?.validate()
+        return
+      }
+      await this.continuaSeCnpjValido()
     },
 
     async continuaSeCnpjValido() {

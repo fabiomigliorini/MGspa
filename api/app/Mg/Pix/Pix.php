@@ -39,7 +39,6 @@ class Pix extends MgModel
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'cnpj' => 'float',
         'codpagamento' => 'integer',
         'codpdv' => 'integer',
         'codpix' => 'integer',

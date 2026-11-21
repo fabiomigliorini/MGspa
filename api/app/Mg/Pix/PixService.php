@@ -247,7 +247,7 @@ class PixService
         if (isset($arrPix['pagador'])) {
             $pix->nome = $arrPix['pagador']['nome'] ?? null;
             $pix->cpf = $arrPix['pagador']['cpf'] ?? null;
-            $pix->cnpj = $arrPix['pagador']['cnpj'] ?? null;
+            $pix->cnpj = cnpjLimpo($arrPix['pagador']['cnpj'] ?? null);
         }
         if (!empty($pix->nome)) {
             $pix->nome = primeiraLetraMaiuscula($pix->nome);
@@ -289,7 +289,7 @@ class PixService
     // Pessoa do pagador (CPF/CNPJ do PIX ou da cobranca), quando cadastrada
     public static function pessoaDoPagador($cpf, $cnpj): ?int
     {
-        $doc = !empty($cpf) ? $cpf : $cnpj;
+        $doc = !empty($cpf) ? cpfLimpo($cpf) : cnpjLimpo($cnpj);
         if (empty($doc)) {
             return null;
         }
@@ -565,9 +565,9 @@ class PixService
         }
 
         if (!empty($cpf)) {
-            $cpf = numeroLimpo($cpf);
+            $cpf = documentoLimpo($cpf);
             if (!empty($cpf)) {
-                $sql .= " {$where} coalesce(to_char(cpf, '00000000000'), to_char(cnpj, '00000000000000')) ilike :cpf ";
+                $sql .= " {$where} coalesce(to_char(cpf, '00000000000'), cnpj) ilike :cpf ";
                 $params['cpf'] = "%{$cpf}%";
                 $where = 'and';
             }
@@ -614,13 +614,13 @@ class PixService
                 pi.cnpj,
                 pi.nome
             from tblpix pi
-            where cast(coalesce(to_char(pi.cnpj, \'FM00000000000000\'), to_char(pi.cpf, \'FM00000000000\')) as varchar) = :cnpjCpf
+            where coalesce(pi.cnpj, to_char(pi.cpf, \'FM00000000000\')) = :cnpjCpf
             ORDER BY criacao desc
             LIMIT 1
         ';
 
         $result = DB::select($sql, [
-            'cnpjCpf' => $cnpjCpf
+            'cnpjCpf' => cnpjCpfLimpo($cnpjCpf)
         ]);
 
         return $result[0] ?? null;

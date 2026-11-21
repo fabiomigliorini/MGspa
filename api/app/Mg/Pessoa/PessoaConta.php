@@ -37,14 +37,12 @@ class PessoaConta extends MgModel
     protected $casts = [
         'alteracao' => 'datetime',
         'banco' => 'integer',
-        'cnpj' => 'float',
         'codpessoa' => 'integer',
         'codpessoaconta' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
         'inativo' => 'datetime',
-        'pixcnpj' => 'integer',
         'pixcpf' => 'integer',
         'pixtelefone' => 'float',
         'tipo' => 'float'

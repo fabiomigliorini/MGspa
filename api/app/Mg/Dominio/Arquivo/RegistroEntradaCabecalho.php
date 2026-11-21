@@ -15,9 +15,10 @@ class RegistroEntradaCabecalho extends Registro
                 'tamanho' => 7,
                 'tipo' => 'numeric'
             ],
+            // char: o CNPJ pode ter letras (TASK-283); quem preenche manda com os 14
             'cnpj' => [
                 'tamanho' => 14,
-                'tipo' => 'numeric'
+                'tipo' => 'char'
             ],
             'dataInicial' => [
                 'tamanho' => 10,

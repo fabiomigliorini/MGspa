@@ -29,10 +29,10 @@ class NFePHPConfigService
         }
 
         if ($filial->Pessoa->fisica) {
-            $cnpj = str_pad($filial->Pessoa->cnpj, 11, '0', STR_PAD_LEFT);
+            $cnpj = cpfLimpo($filial->Pessoa->cnpj);
             $typePerson = 'F';
         } else {
-            $cnpj = str_pad($filial->Pessoa->cnpj, 14, '0', STR_PAD_LEFT);
+            $cnpj = cnpjLimpo($filial->Pessoa->cnpj);
             $typePerson = 'J';
         }
 

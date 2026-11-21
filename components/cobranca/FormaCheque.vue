@@ -8,6 +8,7 @@ import { api } from 'src/services/api'
 import { cobrancaStore } from '@components/stores/cobrancaStore'
 import { formataData } from '@components/formatters'
 import { hoje } from '@components/utils/datas'
+import { documentoLimpo } from '@components/validador'
 import MgInputData from '@components/MgInputData.vue'
 import { parseCmc7 } from './cmc7.js'
 import MgInput from '@components/MgInput.vue'
@@ -91,13 +92,14 @@ const escolherConta = (opcao) => {
 }
 
 const salvar = () => {
-  const cnpjDigitos = String(cnpj.value ?? '').replace(/\D/g, '')
+  // CNPJ pode ter letras (alfanumérico): vai como texto, sem pontuação
+  const cnpjLimpo = documentoLimpo(cnpj.value)
   const nome = (emitente.value ?? '').trim()
   if (!nome) {
     nomeRef.value?.focus()
     return
   }
-  if (cnpjDigitos && ![11, 14].includes(cnpjDigitos.length)) {
+  if (cnpjLimpo && ![11, 14].includes(cnpjLimpo.length)) {
     avisar('CPF/CNPJ do emitente inválido!')
     return
   }
@@ -106,7 +108,7 @@ const salvar = () => {
     principal: valor.value,
     cmc7: cmc7.value.cmc7,
     chequevencimento: vencimento.value,
-    chequecnpj: cnpjDigitos ? parseInt(cnpjDigitos) : null,
+    chequecnpj: cnpjLimpo || null,
     chequeemitente: nome,
   })
 }
