@@ -72,6 +72,7 @@ Cada premissa diz a origem e se está **definida** (por nós) ou se é para **le
 | 19/11/2026 | — | Reajuste de preço em lote fica no go-live, junto com a reprecificação (TASK-289) | É a parte menos importante e só existe para a virada de preço |
 | 19/11/2026 | — | Até a TASK-289 entrar, os preços ficam os de hoje e a diferença de imposto sai da margem | Consequência da ordem acima |
 | 19/11/2026 | — | Tasks com título de ação e prefixo "Reforma Tributária:"; todas novas, sem reaproveitar task antiga | Pedido do Fábio |
+| 21/11/2026 | TASK-284 | TASK-20 ("Amarrar cClassTrib ao produto", aberta desde 12/09 a partir do `notas/todo.md`) arquivada como coberta pela TASK-284. A ideia dela, o cClassTrib num campo do produto, fica como opção a avaliar na execução da 284, ao lado da regra por prefixo de NCM que o motor já aceita | A 284 começa pela classificação de cada produto; duas tasks abertas para a mesma coisa |
 
 ## Perguntas para a consultoria
 
