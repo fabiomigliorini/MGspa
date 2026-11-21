@@ -731,6 +731,14 @@ para leitura de histórico não convertido.
     PDV Saurus (7 PDVs têm 2 ou 3, de fev–mar/2025): o substituído entra **inativo**; parear de novo
     cria a maquineta nova e inativa a anterior do mesmo PDV Saurus. Apelido vem do PDV Saurus. A
     cobrança continua indo ao PDV Saurus (maquineta → pinpad → PDV Saurus).
+    **Revisto na TASK-264 (21/11/2026):** isso partia a maquineta a cada aparelho novo e as cópias
+    de nome divergiam (venda da BOT Golf aparecia como BOT Foxtrott). Agora a regra é: o que é comum
+    a todas as maquinetas e 1:1 fica na `tblmaquineta`; o específico da operadora ou N:1 fica na
+    tabela dela. **Maquineta = PDV Saurus** (`tblmaquineta.codsauruspdv`, único); o pinpad é o
+    histórico de aparelhos do `tblsauruspdv` (inativo = substituído). Nome, serial, filial e inativo só na maquineta: o PDV
+    Saurus perdeu apelido/codfilial/inativo, o pinpad apelido/serial/codfilial/observacoes, o POS
+    PagarMe ficou só com o código. A SafraPay se cria como as outras e se pareia dentro dela. As 10
+    maquinetas de 2025 do mesmo `tblsauruspdv` foram juntadas na ativa (`api/database/maquineta_campo_unico.sql`).
   - **Cartão manual no PDV continua perguntando o parceiro**; depois lista as maquinetas daquele
     parceiro na filial (recentes primeiro, sem digitar) e **pula a etapa quando só há uma**.
     Maquineta **obrigatória em todo cartão manual** (422 no `fechar`).

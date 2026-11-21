@@ -36,7 +36,8 @@ class CobrancaController extends Controller
     public function saurus(Request $request)
     {
         Autorizador::autoriza(self::GRUPOS);
-        $request->validate(['valor' => 'required|numeric|min:0.01', 'codsauruspos' => 'required|integer']);
+        // codsauruspos (o codsauruspdv) nulo = maquineta sem aparelho pareado: o service recusa
+        $request->validate(['valor' => 'required|numeric|min:0.01', 'codsauruspos' => 'nullable|integer']);
         return new SaurusPedidoResource(CobrancaService::saurus($request->all())->fresh());
     }
 

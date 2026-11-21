@@ -9,9 +9,11 @@ namespace Mg\Saurus;
 use Mg\MgModel;
 use Mg\Saurus\SaurusPagamento;
 use Mg\Usuario\Usuario;
-use Mg\Filial\Filial;
 use Mg\Saurus\SaurusPdv;
 
+// Aparelho pareado a um PDV Saurus: id = uuid do aparelho na Saurus. Um PDV Saurus tem varios ao
+// longo do tempo, um cobrando por vez: inativo = aparelho substituido (outro foi pareado no mesmo
+// PDV Saurus, ou este foi pareado em outro). Nome, serial e filial sao da maquineta (TASK-264).
 class SaurusPinPad extends MgModel
 {
     protected $table = 'tblsauruspinpad';
@@ -19,18 +21,13 @@ class SaurusPinPad extends MgModel
 
 
     protected $fillable = [
-        'apelido',
-        'codfilial',
         'codsauruspdv',
         'id',
-        'inativo',
-        'observacoes',
-        'serial'
+        'inativo'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'codfilial' => 'integer',
         'codsauruspdv' => 'integer',
         'codsauruspinpad' => 'integer',
         'codusuarioalteracao' => 'integer',
@@ -41,11 +38,6 @@ class SaurusPinPad extends MgModel
 
 
     // Chaves Estrangeiras
-    public function Filial()
-    {
-        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
-    }
-
     public function SaurusPdv()
     {
         return $this->belongsTo(SaurusPdv::class, 'codsauruspdv', 'codsauruspdv');

@@ -6,8 +6,8 @@ import { notifySuccess, notifyError } from 'src/utils/notify'
 import { useMaquinetaPeriodoStore } from 'src/stores/maquinetaPeriodoStore'
 
 // Domínio maquineta: listagem (por filial e adquirente, como o painel do portador), cadastro
-// (manual, Stone integrada, SafraPay pelo QR), parear de novo, juntar e inativar. A lista abre a
-// maquineta; as ações ficam no cabeçalho dela.
+// (manual, Stone integrada, SafraPay), parear a SafraPay pelo QR Code, juntar e inativar. A lista abre
+// a maquineta; as ações ficam no cabeçalho dela.
 
 const defaultFilters = () => ({
   texto: null,
@@ -117,13 +117,9 @@ export const useMaquinetaStore = defineStore(
     const salvando = ref(false)
     const isNovo = computed(() => !model.value.codmaquineta)
 
-    // SafraPay: QR do PDV Saurus que o pinpad lê
-    const qr = ref({ pdv_uuid: null, qrcode: null })
-
     function abrirNovo() {
       model.value = modeloVazio()
       registro.value = null
-      qr.value = { pdv_uuid: null, qrcode: null }
       dialog.value = true
     }
 
@@ -138,7 +134,6 @@ export const useMaquinetaStore = defineStore(
         codpessoa: row.codpessoa,
       }
       registro.value = row
-      qr.value = { pdv_uuid: null, qrcode: null }
       dialog.value = true
     }
 
@@ -170,14 +165,16 @@ export const useMaquinetaStore = defineStore(
       }
     }
 
-    async function gerarQrCode(codmaquineta = null) {
+    // ---- parear (SafraPay): o mesmo botão para o primeiro pareamento e para o de novo ----
+    const dialogParear = ref(false)
+    // QR Code do PDV Saurus da maquineta, que o aparelho lê
+    const qr = ref({ qrcode: null })
+
+    async function gerarQrCode() {
       salvando.value = true
       try {
         const { data } = await api.post('v1/maquineta/saurus/qrcode', {
-          codmaquineta,
-          pdv_uuid: qr.value.pdv_uuid,
-          apelido: model.value.apelido,
-          codfilial: model.value.codfilial,
+          codmaquineta: registro.value.codmaquineta,
         })
         qr.value = data
       } catch (e) {
@@ -191,16 +188,11 @@ export const useMaquinetaStore = defineStore(
       salvando.value = true
       try {
         const { data } = await api.post('v1/maquineta/saurus/confirmar', {
-          pdv_uuid: qr.value.pdv_uuid,
+          codmaquineta: registro.value.codmaquineta,
         })
+        upsertLocal(data.data)
         notifySuccess(`Maquineta ${data.data.apelido} pareada`)
-        dialog.value = false
         dialogParear.value = false
-        // pinpad anterior do mesmo PDV Saurus foi inativado: recarrega
-        await fetchItems()
-        useSelectCacheStore().invalidate('maquineta')
-        const sPeriodo = useMaquinetaPeriodoStore()
-        if (sPeriodo.maquineta) sPeriodo.recarregar()
       } catch (e) {
         notifyError(e, 'Erro ao confirmar a leitura')
       } finally {
@@ -208,14 +200,11 @@ export const useMaquinetaStore = defineStore(
       }
     }
 
-    // ---- parear de novo (SafraPay) ----
-    const dialogParear = ref(false)
-
     async function abrirParear(row) {
       registro.value = row
-      qr.value = { pdv_uuid: null, qrcode: null }
+      qr.value = { qrcode: null }
       dialogParear.value = true
-      await gerarQrCode(row.codmaquineta)
+      await gerarQrCode()
     }
 
     // ---- juntar (manual criada por serial errado) ----

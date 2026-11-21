@@ -58,15 +58,15 @@ const outraFilial = (m) => !!m.outrafilial
 const avisoFilial = (m) => (outraFilial(m) ? `${m.filial} · outra filial` : null)
 
 // ---- maquininhas integradas (todas as filiais, as desta primeiro); a padrão do PDV só vem
-// pré-selecionada (pode estar com defeito). Quem recebe a cobrança Saurus é o PDV Saurus (codsauruspdv), então dois pinpads
-// ativos no mesmo PDV Saurus são uma opção só.
-const maquinetasEnvio = computed(() => {
-  const todas = maquinetas.value
+// pré-selecionada (pode estar com defeito). Uma opção por maquineta: a SafraPay não pareada (sem
+// codsauruspdv) também aparece, e a cobrança recusa com a mensagem (TASK-264).
+const maquinetasEnvio = computed(() =>
+  maquinetas.value
     .filter((m) => m.integracao === 'P' || m.integracao === 'S')
     .map((m) =>
       m.integracao === 'S'
         ? {
-            valor: `saurus-${m.codsauruspdv}`,
+            valor: `saurus-${m.codmaquineta}`,
             tipoMaquineta: 'saurus',
             nome: 'SafraPay',
             logo: logo('/logo-cartoes/Safra.jpg'),
@@ -79,9 +79,8 @@ const maquinetasEnvio = computed(() => {
             logo: logo('/logo-cartoes/Stone.jpg'),
             pos: m,
           },
-    )
-  return todas.filter((m, i) => todas.findIndex((o) => o.valor === m.valor) === i)
-})
+    ),
+)
 
 const valorPadrao = computed(() => {
   const padrao = sCobranca.padrao
@@ -91,10 +90,9 @@ const valorPadrao = computed(() => {
   if (estoque && estoque != padrao.codestoquelocal) {
     return null
   }
-  // dois pinpads no mesmo PDV Saurus são uma opção só: procura na lista inteira
   const m = maquinetas.value.find((m) => m.codmaquineta == padrao.codmaquineta)
   if (m?.integracao === 'S') {
-    return `saurus-${m.codsauruspdv}`
+    return `saurus-${m.codmaquineta}`
   }
   if (m?.integracao === 'P') {
     return `pagarme-${m.codpagarmepos}`

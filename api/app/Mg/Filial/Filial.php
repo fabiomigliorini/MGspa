@@ -22,10 +22,7 @@ use Mg\NfeTerceiro\NfeTerceiro;
 use Mg\NotaFiscal\NotaFiscal;
 use Mg\PagarMe\PagarMePagamento;
 use Mg\PagarMe\PagarMePedido;
-use Mg\PagarMe\PagarMePos;
 use Mg\Portador\Portador;
-use Mg\Saurus\SaurusPdv;
-use Mg\Saurus\SaurusPinPad;
 use Mg\Titulo\Titulo;
 use Mg\Filial\UnidadeNegocio;
 use Mg\Usuario\Usuario;
@@ -196,24 +193,9 @@ class Filial extends MgModel
         return $this->hasMany(PagarMePedido::class, 'codfilial', 'codfilial');
     }
 
-    public function PagarMePosS()
-    {
-        return $this->hasMany(PagarMePos::class, 'codfilial', 'codfilial');
-    }
-
     public function PortadorS()
     {
         return $this->hasMany(Portador::class, 'codfilial', 'codfilial');
-    }
-
-    public function SaurusPdvS()
-    {
-        return $this->hasMany(SaurusPdv::class, 'codfilial', 'codfilial');
-    }
-
-    public function SaurusPinPadS()
-    {
-        return $this->hasMany(SaurusPinPad::class, 'codfilial', 'codfilial');
     }
 
     public function TituloS()

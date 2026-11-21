@@ -9,9 +9,12 @@ namespace Mg\Saurus;
 use Mg\MgModel;
 use Mg\Saurus\SaurusPedido;
 use Mg\Saurus\SaurusPinPad;
-use Mg\Filial\Filial;
+use Mg\Maquineta\Maquineta;
 use Mg\Usuario\Usuario;
 
+// PDV Saurus: a credencial na Saurus (uuid, numero, chaves, contrato); a chavepublica vira o QR
+// Code que o aparelho le. E' 1:1 com a maquineta, que guarda nome, filial e inativo (TASK-264). Os
+// aparelhos pareados ficam em SaurusPinPadS.
 class SaurusPdv extends MgModel
 {
     protected $table = 'tblsauruspdv';
@@ -19,36 +22,26 @@ class SaurusPdv extends MgModel
 
 
     protected $fillable = [
-        'apelido',
         'autorizacao',
         'chavepublica',
-        'codfilial',
         'contratoid',
         'id',
-        'inativo',
         'numero',
         'vencimento'
     ];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'codfilial' => 'integer',
         'codsauruspdv' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'criacao' => 'datetime',
-        'inativo' => 'datetime',
         'numero' => 'integer',
         'vencimento' => 'datetime'
     ];
 
 
     // Chaves Estrangeiras
-    public function Filial()
-    {
-        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
-    }
-
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');
@@ -59,6 +52,12 @@ class SaurusPdv extends MgModel
         return $this->belongsTo(Usuario::class, 'codusuariocriacao', 'codusuario');
     }
 
+
+    // a maquineta deste PDV Saurus
+    public function Maquineta()
+    {
+        return $this->hasOne(Maquineta::class, 'codsauruspdv', 'codsauruspdv');
+    }
 
     // Tabelas Filhas
     public function SaurusPedidoS()

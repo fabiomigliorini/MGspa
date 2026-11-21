@@ -52,19 +52,22 @@ class PagarMeService
         return $reg;
     }
 
-    // Cadastra se POS novo
+    // POS do serial na conta da filial: serial e filial moram na maquineta (TASK-264), a mesma
+    // chave de antes (o mesmo POS pode estar em duas contas). Sem maquineta, nasce o POS (so' o
+    // codigo) e a maquineta.
     public static function buscaOuCriaPos(int $codfilial, string $serial)
     {
-        $reg = PagarMePos::firstOrNew([
-            'codfilial' => $codfilial,
-            'serial' => $serial
-        ]);
-        if (empty($reg->codpagarmepos)) {
-            $reg->apelido = $serial;
-            $reg->codfilial = $codfilial;
-            $reg->save();
-            MaquinetaService::daPagarMePos($reg);
+        $maquineta = Maquineta::where('integracao', Maquineta::INTEGRACAO_PAGARME)
+            ->where('serial', $serial)
+            ->where('codfilial', $codfilial)
+            ->orderByRaw('inativo is null desc')
+            ->orderBy('codmaquineta', 'desc')
+            ->first();
+        if ($maquineta) {
+            return $maquineta->PagarMePos;
         }
+        $reg = PagarMePos::create();
+        MaquinetaService::daPagarMePos($reg, $serial, $codfilial);
         return $reg;
     }
 
@@ -211,10 +214,11 @@ class PagarMeService
             $descricao = 'Valor Avulso';
         }
 
-        // Busca POS e Filial
+        // Busca POS e Filial: a conta (chave) e o serial sao os da maquineta do POS
         $pos = PagarMePos::findOrFail($codpagarmepos);
-        if (!empty($pos->codfilial)) {
-            $codfilial = $pos->codfilial;
+        $maquineta = $pos->Maquineta;
+        if (!empty($maquineta->codfilial)) {
+            $codfilial = $maquineta->codfilial;
         }
 
         // Pega Secret da Filial
@@ -229,7 +233,7 @@ class PagarMeService
             1,
             false,
             true,
-            $pos->serial,
+            $maquineta->serial ?? null,
             static::TYPE_DESCRIPTION[$tipo],
             $parcelas,
             $jurosloja ? 'merchant' : 'issuer'
@@ -475,7 +479,7 @@ class PagarMeService
             'nsu' => $nsu,
             'parcelas' => $ped->parcelas,
             'bandeira' => $bandeira,
-            'codmaquineta' => $pos ? MaquinetaService::daPagarMePos($pos)->codmaquineta : null,
+            'codmaquineta' => $pos->Maquineta->codmaquineta ?? null,
         ];
     }
 

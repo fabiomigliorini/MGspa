@@ -1,27 +1,16 @@
 <script setup>
 // Cadastro da maquineta: o mesmo form para criar (FAB da lista) e editar (cabeçalho da
-// maquineta). SafraPay nova pareia pelo QR Code que o pinpad lê.
+// maquineta). A SafraPay salva como as outras e se pareia dentro dela (botão Parear).
 import { storeToRefs } from 'pinia'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
 import MgSelectFilial from '@components/MgSelectFilial.vue'
 import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import { useMaquinetaStore } from 'src/stores/maquinetaStore'
 import { MAQUINETA_INTEGRACAO_OPTIONS } from 'src/constants/maquinetaIntegracao'
 
 const store = useMaquinetaStore()
-const { dialog, model, salvando, isNovo, qr } = storeToRefs(store)
-
-const submit = () => {
-  if (isNovo.value && model.value.integracao === 'S') {
-    if (qr.value.qrcode) {
-      store.confirmarLeitura()
-    } else {
-      store.gerarQrCode()
-    }
-    return
-  }
-  store.salvar()
-}
+const { dialog, model, salvando, isNovo } = storeToRefs(store)
 </script>
 
 <template>
@@ -30,20 +19,18 @@ const submit = () => {
       <q-card-section class="text-grey-9 text-overline">
         {{ isNovo ? 'NOVA MAQUINETA' : 'EDITAR MAQUINETA' }}
       </q-card-section>
-      <q-form @submit.prevent="submit">
+      <q-form @submit.prevent="store.salvar()">
         <q-separator inset />
         <q-card-section>
           <div class="row q-col-gutter-md">
             <div class="col-12">
-              <q-select
+              <MgSelect
                 v-model="model.integracao"
                 :options="MAQUINETA_INTEGRACAO_OPTIONS"
                 emit-value
                 map-options
-                outlined
                 label="Integração"
-                :readonly="!isNovo || !!qr.qrcode"
-                :tabindex="!isNovo || !!qr.qrcode ? -1 : undefined"
+                :readonly="!isNovo"
               />
             </div>
 
@@ -53,7 +40,6 @@ const submit = () => {
                 label="Apelido"
                 maxlength="50"
                 autofocus
-                :readonly="!!qr.qrcode"
                 lazy-rules
                 :rules="[(v) => !!v && v.length >= 3]"
               />
@@ -64,13 +50,12 @@ const submit = () => {
                 v-model="model.codfilial"
                 outlined
                 label="Filial"
-                :readonly="!!qr.qrcode"
                 lazy-rules
                 :rules="[(v) => !!v]"
               />
             </div>
 
-            <div v-if="model.integracao !== 'S' || !isNovo" class="col-12 col-sm-6">
+            <div class="col-12 col-sm-6">
               <MgInput
                 v-model="model.serial"
                 label="Serial"
@@ -96,16 +81,8 @@ const submit = () => {
               />
             </div>
 
-            <div v-if="isNovo && model.integracao === 'S'" class="col-12">
-              <div v-if="qr.qrcode" class="column items-center">
-                <img :src="qr.qrcode" style="width: 220px; height: 220px" alt="QR Code" />
-                <div class="text-caption text-grey-7 q-mt-sm text-center">
-                  Leia o QR Code no pinpad e clique em Confirmar leitura.
-                </div>
-              </div>
-              <div v-else class="text-caption text-grey-7">
-                Gera o QR Code que o pinpad lê para parear com a SafraPay.
-              </div>
+            <div v-if="isNovo && model.integracao === 'S'" class="col-12 text-caption text-grey-7">
+              Depois de salvar, abra a maquineta e clique em Parear para ler o QR Code no pinpad.
             </div>
           </div>
         </q-card-section>
@@ -113,14 +90,7 @@ const submit = () => {
         <q-separator inset />
         <q-card-actions align="right" class="text-primary">
           <q-btn flat label="Cancelar" color="grey-8" v-close-popup tabindex="-1" />
-          <q-btn
-            v-if="isNovo && model.integracao === 'S'"
-            flat
-            :label="qr.qrcode ? 'Confirmar leitura' : 'Gerar QR Code'"
-            type="submit"
-            :loading="salvando"
-          />
-          <q-btn v-else flat label="Salvar" type="submit" :loading="salvando" />
+          <q-btn flat label="Salvar" type="submit" :loading="salvando" />
         </q-card-actions>
       </q-form>
     </q-card>

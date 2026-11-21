@@ -145,6 +145,12 @@ watch(
                 :label="maquinetaIntegracaoLabel(maquineta.integracao)"
                 class="q-mr-xs"
               />
+              <q-badge
+                v-if="maquineta.integracao === 'S' && !maquineta.pareada"
+                color="orange-8"
+                label="Sem aparelho pareado"
+                class="q-mr-xs"
+              />
               {{ maquineta.adquirente }} ·
               {{ maquineta.compartilhada ? 'Todas as filiais' : maquineta.filial }}
               <template v-if="maquineta.serial"> · {{ maquineta.serial }}</template>
@@ -173,7 +179,7 @@ watch(
                 icon="qr_code_2"
                 @click="sMaquineta.abrirParear(maquineta)"
               >
-                <q-tooltip>Parear de novo</q-tooltip>
+                <q-tooltip>Parear</q-tooltip>
               </q-btn>
               <q-btn
                 v-if="!maquineta.integracao"
@@ -197,7 +203,9 @@ watch(
                 <q-tooltip>{{ maquineta.inativo ? 'Reativar' : 'Inativar' }}</q-tooltip>
               </q-btn>
               <q-btn
-                v-if="!maquineta.integracao"
+                v-if="
+                  !maquineta.integracao || (maquineta.integracao === 'S' && !maquineta.codsauruspdv)
+                "
                 flat
                 round
                 size="sm"

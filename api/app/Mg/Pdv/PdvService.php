@@ -10,9 +10,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Mg\Filial\Setor;
 use Mg\Portador\Portador;
-use Mg\PagarMe\PagarMePos;
-use Mg\Saurus\SaurusPdv;
-use Mg\Saurus\SaurusPinPad;
 use Mg\Maquineta\MaquinetaService;
 use Mg\Estoque\EstoqueLocal;
 use Mg\NaturezaOperacao\NaturezaOperacao;
@@ -171,7 +168,7 @@ class PdvService
     }
 
     // o navegador guardava o POS PagarMe ou o PDV Saurus; a maquineta e' o
-    // cadastro unificado. Saurus com mais de um pinpad no mesmo PDV fica sem.
+    // cadastro unificado (a SafraPay e' uma por PDV Saurus).
     public static function maquinetaLegado(array $legado)
     {
         $maquineta = $legado['maquineta'] ?? null;
@@ -182,9 +179,8 @@ class PdvService
             ', ['codpagarmepos' => $legado['codpagarmepos']]);
         } elseif ($maquineta === 'saurus' && !empty($legado['codsauruspos'])) {
             $regs = DB::select('
-                select m.codmaquineta from tblmaquineta m
-                inner join tblsauruspinpad pin on (pin.codsauruspinpad = m.codsauruspinpad)
-                where pin.codsauruspdv = :codsauruspdv and m.inativo is null
+                select codmaquineta from tblmaquineta
+                where codsauruspdv = :codsauruspdv and inativo is null
             ', ['codsauruspdv' => $legado['codsauruspos']]);
         } else {
             return null;
@@ -373,15 +369,6 @@ class PdvService
         foreach ($regs as $reg) {
             // maquinetas ativas da filial + compartilhadas (cartão integrado e manual no Receber)
             $reg->MaquinetaS = MaquinetaService::paraPdv($reg->codfilial);
-            $reg->PagarMePosS = PagarMePos::select(['codpagarmepos', 'serial', 'apelido'])->where('codfilial', $reg->codfilial)->whereNull('inativo')->get();
-            // um registro por pinpad; serial é o número de série físico (null até o 1º uso no PDV)
-            $reg->SaurusPosS = SaurusPinPad::select(['tblsauruspinpad.codsauruspinpad', 'tblsauruspinpad.serial', 'tblsauruspdv.codsauruspdv', 'tblsauruspdv.apelido'])
-                ->join('tblsauruspdv', 'tblsauruspdv.codsauruspdv', '=', 'tblsauruspinpad.codsauruspdv')
-                ->where('tblsauruspdv.codfilial', $reg->codfilial)
-                ->whereNull('tblsauruspdv.inativo')
-                ->whereNull('tblsauruspinpad.inativo')
-                ->orderBy('tblsauruspdv.apelido')
-                ->get();
         }
         return $regs;
     }

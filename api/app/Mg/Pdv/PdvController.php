@@ -26,7 +26,6 @@ use Mg\Produto\ProdutoService;
 use Mg\Saurus\SaurusPdv;
 use Mg\Saurus\SaurusPedido;
 use Mg\Saurus\SaurusPedidoResource;
-use Mg\Saurus\SaurusPinPad;
 use Mg\Saurus\SaurusService;
 use Mg\Rh\ProcessarVendaJob;
 use Mg\Usuario\Autorizador;
@@ -466,7 +465,10 @@ class PdvController
         $pedido = SaurusPedido::findOrFail($codsauruspedido);
 
         $pdv = SaurusPdv::where('codsauruspdv', $pedido->codsauruspdv)->firstOrFail();
-        $pos = SaurusPinPad::where('codsauruspdv', $pdv->codsauruspdv)->firstOrFail();
+        $pos = SaurusService::pinpadAtivo($pdv);
+        if (!$pos) {
+            abort(422, SaurusService::SEM_APARELHO);
+        }
 
         SaurusService::enviarPedido($pedido, $pdv, $pos);
 

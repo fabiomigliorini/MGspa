@@ -7,12 +7,14 @@ use Mg\Filial\Filial;
 use Mg\Pagamento\Pagamento;
 use Mg\PagarMe\PagarMePos;
 use Mg\Pessoa\Pessoa;
-use Mg\Saurus\SaurusPinPad;
+use Mg\Saurus\SaurusPdv;
 use Mg\Usuario\Usuario;
 
 /**
  * Terminal de cartão (cadastro único, M3 do plano doc-3).
- * Manual (integracao nula), PagarMe (P, um por POS) ou Saurus (S, um por pinpad).
+ * Manual (integracao nula), PagarMe (P, um por POS) ou Saurus (S, um por PDV Saurus,
+ * tblsauruspdv; os aparelhos pareados ficam na tblsauruspinpad). Nome, serial, filial e inativo moram
+ * só aqui (TASK-264): as tabelas da operadora guardam só o que é dela.
  * codpessoa = adquirente; compartilhada = aparece no PDV de todas as filiais.
  */
 class Maquineta extends MgModel
@@ -31,7 +33,7 @@ class Maquineta extends MgModel
         'codpessoa',
         'integracao',
         'codpagarmepos',
-        'codsauruspinpad',
+        'codsauruspdv',
         'inativo',
     ];
 
@@ -41,7 +43,7 @@ class Maquineta extends MgModel
         'codmaquineta' => 'integer',
         'codpagarmepos' => 'integer',
         'codpessoa' => 'integer',
-        'codsauruspinpad' => 'integer',
+        'codsauruspdv' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
         'compartilhada' => 'boolean',
@@ -70,9 +72,9 @@ class Maquineta extends MgModel
         return $this->belongsTo(PagarMePos::class, 'codpagarmepos', 'codpagarmepos');
     }
 
-    public function SaurusPinPad()
+    public function SaurusPdv()
     {
-        return $this->belongsTo(SaurusPinPad::class, 'codsauruspinpad', 'codsauruspinpad');
+        return $this->belongsTo(SaurusPdv::class, 'codsauruspdv', 'codsauruspdv');
     }
 
     public function UsuarioAlteracao()

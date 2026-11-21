@@ -15,8 +15,13 @@ class SaurusPedidoResource extends Resource
     public function toArray($request)
     {
         $ret = parent::toArray($request);
-        $ret['pos'] = SaurusPinPad::select('serial')->where('codsauruspdv', $this->codsauruspdv)->first()->serial??null;
-        $ret['apelido'] = $this->SaurusPdv->apelido??null;
+        // PDV Saurus e cartoes carregados antes levam as chaves da Saurus: nao saem (os cartoes
+        // vao em SaurusPagamentoS)
+        unset($ret['saurus_pdv'], $ret['saurus_pagamento_s']);
+        // nome e serial sao da maquineta do PDV Saurus (TASK-264)
+        $maquineta = $this->SaurusPdv->Maquineta ?? null;
+        $ret['pos'] = $maquineta->serial ?? null;
+        $ret['apelido'] = $maquineta->apelido ?? null;
         $ret['statusdescricao'] = SaurusService::STATUS_DESCRIPTION[$this->status]??null;
         $ret['tipodescricao'] = SaurusService::TYPE_DESCRIPTION[$this->modpagamento]??null;
         // pagamento que a confirmacao criou (o da venda)

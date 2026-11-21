@@ -9,7 +9,6 @@ use Mg\Pdv\Pdv;
 use Mg\Pessoa\Pessoa;
 use Mg\Pix\PixService;
 use Mg\Saurus\SaurusPdv;
-use Mg\Saurus\SaurusPinPad;
 use Mg\Saurus\SaurusService;
 use Ramsey\Uuid\Uuid;
 
@@ -41,7 +40,7 @@ class CobrancaService
         PagarMeService::cancelarPedidosAbertosPos($pos->codpagarmepos);
         $juros = (float) ($dados['valorjuros'] ?? 0);
         return PagarMeService::criarPedido(
-            $pdv->EstoqueLocal->codfilial ?? $pos->codfilial,
+            $pdv->EstoqueLocal->codfilial ?? $pos->Maquineta->codfilial,
             $pos->codpagarmepos,
             $dados['tipo'],
             $dados['valor'],
@@ -59,8 +58,12 @@ class CobrancaService
 
     public static function saurus(array $dados)
     {
-        $pdvSaurus = SaurusPdv::findOrFail($dados['codsauruspos']);
-        $pos = SaurusPinPad::where('codsauruspdv', $pdvSaurus->codsauruspdv)->firstOrFail();
+        // a cobranca vai para o PDV Saurus e leva o aparelho ativo dele (TASK-264)
+        $pdvSaurus = SaurusPdv::find($dados['codsauruspos'] ?? null);
+        $pos = SaurusService::pinpadAtivo($pdvSaurus);
+        if (!$pos) {
+            abort(422, SaurusService::SEM_APARELHO);
+        }
         // a cobranca anterior do PDV Saurus fica como esta': a maquininha pode
         // estar no meio do pagamento dela. Quem cancela e' fechar ou cancelar
         // a venda (TASK-233). Na Stone a dinamica e' outra, la' cancela.

@@ -157,7 +157,8 @@ class ApiService
                 "ExternalId" => null
             ],
             "IdPedido" => $ped->idpedido,
-            "IdPinPad" => $pos->serial,
+            // o aparelho ativo do PDV Saurus (uuid da Saurus); quem recebe a cobranca e' o PDV (ChavePDV)
+            "IdPinPad" => $pos->id,
             "IndStatus" => 0,
             "Itens" => [
                 [

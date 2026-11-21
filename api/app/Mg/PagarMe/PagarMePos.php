@@ -9,39 +9,35 @@ namespace Mg\PagarMe;
 use Mg\MgModel;
 use Mg\PagarMe\PagarMePagamento;
 use Mg\PagarMe\PagarMePedido;
-use Mg\Filial\Filial;
+use Mg\Maquineta\Maquineta;
 use Mg\Usuario\Usuario;
 
+// So' o codigo: ancora de pedido e pagamento PagarMe. Serial, filial (a conta da PagarMe), nome
+// e inativo sao da maquineta (TASK-264).
 class PagarMePos extends MgModel
 {
     protected $table = 'tblpagarmepos';
     protected $primaryKey = 'codpagarmepos';
 
 
-    protected $fillable = [
-        'apelido',
-        'codfilial',
-        'inativo',
-        'serial'
-    ];
+    protected $fillable = [];
 
     protected $casts = [
         'alteracao' => 'datetime',
-        'codfilial' => 'integer',
         'codpagarmepos' => 'integer',
         'codusuarioalteracao' => 'integer',
         'codusuariocriacao' => 'integer',
-        'criacao' => 'datetime',
-        'inativo' => 'datetime'
+        'criacao' => 'datetime'
     ];
 
 
-    // Chaves Estrangeiras
-    public function Filial()
+    // a maquineta deste POS
+    public function Maquineta()
     {
-        return $this->belongsTo(Filial::class, 'codfilial', 'codfilial');
+        return $this->hasOne(Maquineta::class, 'codpagarmepos', 'codpagarmepos');
     }
 
+    // Chaves Estrangeiras
     public function UsuarioAlteracao()
     {
         return $this->belongsTo(Usuario::class, 'codusuarioalteracao', 'codusuario');

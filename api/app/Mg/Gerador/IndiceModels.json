@@ -240,25 +240,10 @@
         "coluna": "codfilial",
         "metodo": "PagarMePedidoS"
       },
-      "tblpagarmepos.codfilial": {
-        "tabela": "tblpagarmepos",
-        "coluna": "codfilial",
-        "metodo": "PagarMePosS"
-      },
       "tblportador.codfilial": {
         "tabela": "tblportador",
         "coluna": "codfilial",
         "metodo": "PortadorS"
-      },
-      "tblsauruspdv.codfilial": {
-        "tabela": "tblsauruspdv",
-        "coluna": "codfilial",
-        "metodo": "SaurusPdvS"
-      },
-      "tblsauruspinpad.codfilial": {
-        "tabela": "tblsauruspinpad",
-        "coluna": "codfilial",
-        "metodo": "SaurusPinPadS"
       },
       "tblstonefilial.codfilial": {
         "tabela": "tblstonefilial",
@@ -5536,11 +5521,6 @@
     "classe": "PagarMePos",
     "arquivo": "/opt/www/MGspa/api/app/Mg/PagarMe/PagarMePos.php",
     "belongsTo": {
-      "codfilial": {
-        "tabela": "tblfilial",
-        "coluna": "codfilial",
-        "metodo": "Filial"
-      },
       "codusuarioalteracao": {
         "tabela": "tblusuario",
         "coluna": "codusuarioalteracao",
@@ -6775,11 +6755,6 @@
     "classe": "SaurusPdv",
     "arquivo": "/opt/www/MGspa/api/app/Mg/Saurus/SaurusPdv.php",
     "belongsTo": {
-      "codfilial": {
-        "tabela": "tblfilial",
-        "coluna": "codfilial",
-        "metodo": "Filial"
-      },
       "codusuarioalteracao": {
         "tabela": "tblusuario",
         "coluna": "codusuarioalteracao",
@@ -6922,11 +6897,6 @@
         "tabela": "tblusuario",
         "coluna": "codusuariocriacao",
         "metodo": "UsuarioCriacao"
-      },
-      "codfilial": {
-        "tabela": "tblfilial",
-        "coluna": "codfilial",
-        "metodo": "Filial"
       },
       "codsauruspdv": {
         "tabela": "tblsauruspdv",

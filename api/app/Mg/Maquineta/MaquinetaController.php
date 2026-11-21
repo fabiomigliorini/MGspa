@@ -5,10 +5,9 @@ namespace Mg\Maquineta;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Mg\Saurus\SaurusPdv;
-use Mg\Saurus\SaurusService;
 use Mg\Usuario\Autorizador;
 use SimpleSoftwareIO\QrCode\Generator;
+use Symfony\Component\HttpKernel\Exception\HttpException;
 
 class MaquinetaController extends Controller
 {
@@ -94,36 +93,20 @@ class MaquinetaController extends Controller
         return new MaquinetaResource($certa);
     }
 
-    // Saurus, passo 1: registra o PDV Saurus e devolve o QR que o pinpad lê.
-    // Com codmaquineta = parear de novo (mesmo PDV Saurus, pinpad novo).
+    // Parear (SafraPay), passo 1: o QR Code do PDV Saurus da maquineta para o aparelho ler. O
+    // mesmo botão serve para o primeiro pareamento e para o de novo (TASK-264).
     public function saurusQrCode(Request $request)
     {
         $request->validate([
-            'codmaquineta' => 'nullable|integer|exists:tblmaquineta,codmaquineta',
-            'pdv_uuid' => 'nullable|uuid',
-            'apelido' => 'required_without:codmaquineta|nullable|string|min:3|max:50',
-            'codfilial' => 'required_without:codmaquineta|nullable|integer|exists:tblfilial,codfilial',
+            'codmaquineta' => 'required|integer|exists:tblmaquineta,codmaquineta',
         ]);
-
-        $apelido = $request->apelido;
-        $codfilial = $request->codfilial;
-        $pdv_uuid = $request->pdv_uuid;
-
-        if ($request->codmaquineta) {
-            $maquineta = Maquineta::findOrFail($request->codmaquineta);
-            if ($maquineta->integracao !== Maquineta::INTEGRACAO_SAURUS) {
-                abort(422, 'Só maquineta SafraPay integrada é pareada pelo QR.');
-            }
-            $pdv = $maquineta->SaurusPinPad->SaurusPdv;
-            $apelido = $pdv->apelido;
-            $codfilial = $pdv->codfilial;
-            $pdv_uuid = $pdv->id;
-        }
-
-        MaquinetaService::autorizar($codfilial);
+        $maquineta = Maquineta::findOrFail($request->codmaquineta);
+        MaquinetaService::autorizar($maquineta->codfilial);
 
         try {
-            $pdv = SaurusService::registrarPdv($apelido, $codfilial, $pdv_uuid);
+            $pdv = DB::transaction(fn () => MaquinetaService::qrCode($maquineta));
+        } catch (HttpException $e) {
+            throw $e; // recusa nossa (abort), com a mensagem
         } catch (\Exception $e) {
             abort(502, 'Falha ao acessar a API da Saurus. Tente de novo em instantes.');
         }
@@ -132,31 +115,26 @@ class MaquinetaController extends Controller
             ->generate($pdv->chavepublica);
 
         return response()->json([
-            'pdv_uuid' => $pdv->id,
             'qrcode' => 'data:image/svg+xml;base64,' . base64_encode($svg),
         ]);
     }
 
-    // Saurus, passo 2: depois que o pinpad leu o QR, grava o pinpad e a maquineta
+    // Parear (SafraPay), passo 2: o aparelho leu o QR Code e vira o aparelho ativo da maquineta
     public function saurusConfirmar(Request $request)
     {
         $request->validate([
-            'pdv_uuid' => 'required|uuid',
+            'codmaquineta' => 'required|integer|exists:tblmaquineta,codmaquineta',
         ]);
-
-        $pdv = SaurusPdv::where('id', $request->pdv_uuid)->firstOrFail();
-        MaquinetaService::autorizar($pdv->codfilial);
+        $maquineta = Maquineta::findOrFail($request->codmaquineta);
+        MaquinetaService::autorizar($maquineta->codfilial);
 
         try {
-            $pin = SaurusService::verificarLeitura($pdv);
+            $maquineta = DB::transaction(fn () => MaquinetaService::confirmarLeitura($maquineta));
+        } catch (HttpException $e) {
+            throw $e;
         } catch (\Exception $e) {
             abort(502, 'Falha ao acessar a API da Saurus. Tente de novo em instantes.');
         }
-        if (!$pin) {
-            abort(422, 'O pinpad ainda não leu o QR Code. Leia na maquininha e confirme de novo.');
-        }
-
-        $maquineta = DB::transaction(fn () => MaquinetaService::parearSaurusPinPad($pin));
         return new MaquinetaResource($maquineta);
     }
 }

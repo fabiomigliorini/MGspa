@@ -1,6 +1,7 @@
 <script setup>
-// Parear de novo (SafraPay): QR Code para o pinpad novo; a maquineta do pinpad anterior é
-// inativada.
+// Parear (SafraPay): o QR Code da maquineta para o pinpad ler. O mesmo para o primeiro pareamento
+// e para o de novo (aparelho trocado ou app reinstalado): a maquineta é a mesma, só o aparelho
+// muda e o anterior deixa de receber a cobrança.
 import { storeToRefs } from 'pinia'
 import { useMaquinetaStore } from 'src/stores/maquinetaStore'
 
@@ -20,8 +21,8 @@ const { dialogParear, registro, salvando, qr } = storeToRefs(store)
         <q-spinner-dots v-else-if="salvando" color="primary" size="32px" />
         <div v-else class="text-negative text-center">Não foi possível gerar o QR Code.</div>
         <div class="text-caption text-grey-7 q-mt-sm text-center">
-          Leia o QR Code no pinpad novo e clique em Confirmar leitura. A maquineta do pinpad
-          anterior é inativada.
+          Leia o QR Code no pinpad e clique em Confirmar leitura. Se a maquineta já tinha outro
+          pinpad, ele deixa de receber a cobrança.
         </div>
       </q-card-section>
       <q-separator inset />
@@ -32,7 +33,7 @@ const { dialogParear, registro, salvando, qr } = storeToRefs(store)
           flat
           label="Gerar QR Code"
           :loading="salvando"
-          @click="store.gerarQrCode(registro.codmaquineta)"
+          @click="store.gerarQrCode()"
         />
         <q-btn
           v-else

@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\DB;
 use Mg\Pagamento\Pagamento;
 use Mg\PagarMe\PagarMePos;
 use Mg\Saurus\SaurusPdv;
-use Mg\Saurus\SaurusPinPad;
+use Mg\Saurus\SaurusService;
 use Mg\Conferencia\ConferenciaAutorizador;
 
 class MaquinetaService
 {
-    const RELACOES = ['Filial', 'Pessoa', 'SaurusPinPad'];
+    const RELACOES = ['Filial', 'Pessoa', 'SaurusPdv'];
 
     // Admin e Financeiro em qualquer filial; Gerente só na própria
     public static function podeGerenciar(?int $codfilial): bool
@@ -88,40 +88,43 @@ class MaquinetaService
         ');
     }
 
-    // Manual ou PagarMe (o POS nasce junto). Saurus nasce do pareamento (parearSaurusPinPad).
+    // Manual, PagarMe (o POS nasce junto, só com o código) ou SafraPay (nasce sem PDV Saurus: o
+    // Parear, dentro dela, registra o PDV Saurus e o aparelho). Nome, serial e filial ficam só na
+    // maquineta.
     public static function criar(array $dados): Maquineta
     {
         $integracao = $dados['integracao'] ?? null;
-
-        if ($integracao === Maquineta::INTEGRACAO_PAGARME) {
-            $pos = PagarMePos::firstOrNew([
-                'codfilial' => $dados['codfilial'],
-                'serial' => $dados['serial'],
-            ]);
-            if ($pos->exists && Maquineta::where('codpagarmepos', $pos->codpagarmepos)->exists()) {
-                abort(422, 'Já existe maquineta para este POS PagarMe nesta filial!');
-            }
-            $pos->apelido = mb_substr($dados['apelido'], 0, 20);
-            $pos->inativo = null;
-            $pos->save();
-            $maquineta = static::daPagarMePos($pos);
-            $maquineta->apelido = $dados['apelido'];
-            $maquineta->save();
-            return $maquineta->fresh(static::RELACOES);
-        }
-
-        $maquineta = Maquineta::create([
+        $maquineta = new Maquineta([
             'apelido' => $dados['apelido'],
             'serial' => $dados['serial'] ?? null,
             'codfilial' => $dados['codfilial'],
             'compartilhada' => $dados['compartilhada'] ?? false,
-            'codpessoa' => $dados['codpessoa'],
+            'codpessoa' => $dados['codpessoa'] ?? null,
         ]);
+
+        if ($integracao === Maquineta::INTEGRACAO_PAGARME) {
+            $existe = Maquineta::where('integracao', Maquineta::INTEGRACAO_PAGARME)
+                ->where('serial', $maquineta->serial)
+                ->where('codfilial', $maquineta->codfilial)
+                ->exists();
+            if ($existe) {
+                abort(422, 'Já existe maquineta para este POS PagarMe nesta filial!');
+            }
+            $maquineta->integracao = Maquineta::INTEGRACAO_PAGARME;
+            $maquineta->codpessoa = config('services.pagarme.codpessoa');
+            $maquineta->codpagarmepos = PagarMePos::create()->codpagarmepos;
+        }
+
+        if ($integracao === Maquineta::INTEGRACAO_SAURUS) {
+            $maquineta->integracao = Maquineta::INTEGRACAO_SAURUS;
+            $maquineta->codpessoa = config('mg.codpessoa_safra');
+        }
+
+        $maquineta->save();
         return $maquineta->fresh(static::RELACOES);
     }
 
-    // Integradas replicam apelido, serial e filial no POS PagarMe ou no pinpad/PDV Saurus.
-    // Adquirente só muda na manual.
+    // Adquirente só muda na manual. Nada é copiado para a operadora (TASK-264).
     public static function atualizar(Maquineta $maquineta, array $dados): Maquineta
     {
         $maquineta->apelido = $dados['apelido'];
@@ -132,55 +135,13 @@ class MaquinetaService
             $maquineta->codpessoa = $dados['codpessoa'];
         }
         $maquineta->save();
-
-        if ($maquineta->integracao === Maquineta::INTEGRACAO_PAGARME) {
-            $pos = $maquineta->PagarMePos;
-            $pos->apelido = mb_substr($maquineta->apelido, 0, 20);
-            $pos->serial = $maquineta->serial ?? $pos->serial;
-            $pos->codfilial = $maquineta->codfilial;
-            $pos->save();
-        }
-
-        // o serial físico fica só na maquineta: tblsauruspinpad.serial vai como IdPinPad na
-        // cobrança (ApiService::functionPedidoCriar) e hoje é nulo
-        if ($maquineta->integracao === Maquineta::INTEGRACAO_SAURUS) {
-            $pin = $maquineta->SaurusPinPad;
-            $pin->apelido = mb_substr($maquineta->apelido, 0, 20);
-            $pin->codfilial = $maquineta->codfilial;
-            $pin->save();
-            if (static::pinpadAtual($pin)) {
-                $pdv = $pin->SaurusPdv;
-                $pdv->apelido = $maquineta->apelido;
-                $pdv->codfilial = $maquineta->codfilial;
-                $pdv->save();
-            }
-        }
-
         return $maquineta->fresh(static::RELACOES);
     }
 
     public static function inativar(Maquineta $maquineta): Maquineta
     {
-        $agora = Carbon::now();
-        $maquineta->inativo = $agora;
+        $maquineta->inativo = Carbon::now();
         $maquineta->save();
-
-        if ($maquineta->integracao === Maquineta::INTEGRACAO_PAGARME) {
-            $maquineta->PagarMePos->update(['inativo' => $agora]);
-        }
-
-        if ($maquineta->integracao === Maquineta::INTEGRACAO_SAURUS) {
-            $pin = $maquineta->SaurusPinPad;
-            $pin->update(['inativo' => $agora]);
-            // PDV Saurus sem nenhuma maquineta ativa sai da lista de cobrança
-            $outros = Maquineta::whereNull('inativo')
-                ->whereIn('codsauruspinpad', SaurusPinPad::where('codsauruspdv', $pin->codsauruspdv)->select('codsauruspinpad'))
-                ->exists();
-            if (!$outros && $pin->SaurusPdv) {
-                $pin->SaurusPdv->update(['inativo' => $agora]);
-            }
-        }
-
         return $maquineta->fresh(static::RELACOES);
     }
 
@@ -188,26 +149,15 @@ class MaquinetaService
     {
         $maquineta->inativo = null;
         $maquineta->save();
-
-        if ($maquineta->integracao === Maquineta::INTEGRACAO_PAGARME) {
-            $maquineta->PagarMePos->update(['inativo' => null]);
-        }
-
-        if ($maquineta->integracao === Maquineta::INTEGRACAO_SAURUS) {
-            $pin = $maquineta->SaurusPinPad;
-            $pin->update(['inativo' => null]);
-            if ($pin->SaurusPdv) {
-                $pin->SaurusPdv->update(['inativo' => null]);
-            }
-        }
-
         return $maquineta->fresh(static::RELACOES);
     }
 
-    // Só manual: a integrada é inativada (o webhook/pareamento recriaria)
+    // Manual, ou SafraPay que nunca foi pareada (sem PDV Saurus: criada por engano). As outras
+    // integradas são inativadas (o webhook da PagarMe recriaria; a SafraPay pareada tem PDV Saurus)
     public static function excluir(Maquineta $maquineta): void
     {
-        if (!$maquineta->ehManual()) {
+        $nuncaPareada = $maquineta->integracao === Maquineta::INTEGRACAO_SAURUS && !$maquineta->codsauruspdv;
+        if (!$maquineta->ehManual() && !$nuncaPareada) {
             abort(422, 'Maquineta integrada não pode ser excluída. Inative ao invés de excluir.');
         }
         try {
@@ -243,66 +193,56 @@ class MaquinetaService
 
     // ---- integrações ----
 
-    public static function daPagarMePos(PagarMePos $pos): Maquineta
+    // POS que o webhook da PagarMe trouxe e ainda não tem maquineta: nasce com o serial e a
+    // filial da conta (PagarMeService::buscaOuCriaPos)
+    public static function daPagarMePos(PagarMePos $pos, string $serial, int $codfilial): Maquineta
     {
         return Maquineta::firstOrCreate(
             ['codpagarmepos' => $pos->codpagarmepos],
             [
-                'apelido' => $pos->apelido,
-                'serial' => $pos->serial,
-                'codfilial' => $pos->codfilial,
+                'apelido' => mb_substr($serial, 0, 50),
+                'serial' => $serial,
+                'codfilial' => $codfilial,
                 'codpessoa' => config('services.pagarme.codpessoa'),
                 'integracao' => Maquineta::INTEGRACAO_PAGARME,
-                'inativo' => $pos->inativo,
             ]
         );
     }
 
-    public static function daSaurusPinPad(SaurusPinPad $pin): Maquineta
+    // Parear, passo 1: o PDV Saurus da maquineta (registra na Saurus com a filial dela, ou renova
+    // o mesmo), cuja chavepublica vira o QR Code que o aparelho lê
+    public static function qrCode(Maquineta $maquineta): SaurusPdv
     {
-        $pdv = $pin->SaurusPdv;
-        return Maquineta::firstOrCreate(
-            ['codsauruspinpad' => $pin->codsauruspinpad],
-            [
-                'apelido' => $pdv->apelido ?? $pin->apelido ?? "Pinpad {$pin->codsauruspinpad}",
-                'serial' => $pin->serial,
-                'codfilial' => $pdv->codfilial ?? $pin->codfilial,
-                'codpessoa' => config('mg.codpessoa_safra'),
-                'integracao' => Maquineta::INTEGRACAO_SAURUS,
-            ]
-        );
+        static::exigirSaurus($maquineta);
+        $pdv = SaurusService::registrarPdv($maquineta);
+        if ($maquineta->codsauruspdv !== $pdv->codsauruspdv) {
+            $maquineta->codsauruspdv = $pdv->codsauruspdv;
+            $maquineta->save();
+        }
+        return $pdv;
     }
 
-    // Pinpad que acabou de ler o QR: a maquineta dele fica ativa e as dos pinpads anteriores
-    // do mesmo PDV Saurus são inativadas (o aparelho foi trocado ou pareado de novo).
-    public static function parearSaurusPinPad(SaurusPinPad $pin): Maquineta
+    // Parear, passo 2: o aparelho leu o QR Code — ele vira o aparelho ativo da maquineta
+    public static function confirmarLeitura(Maquineta $maquineta): Maquineta
     {
-        $agora = Carbon::now();
-        $pin->update(['inativo' => null]);
-        if ($pin->SaurusPdv) {
-            $pin->SaurusPdv->update(['inativo' => null]);
+        static::exigirSaurus($maquineta);
+        if (!$maquineta->SaurusPdv) {
+            abort(422, 'Gere o QR Code antes de confirmar a leitura.');
         }
-
-        $maquineta = static::daSaurusPinPad($pin);
-        if ($maquineta->inativo) {
-            $maquineta->update(['inativo' => null]);
+        if (!SaurusService::verificarLeitura($maquineta->SaurusPdv)) {
+            abort(422, 'O pinpad ainda não leu o QR Code. Leia na maquininha e confirme de novo.');
         }
-
-        $anteriores = SaurusPinPad::where('codsauruspdv', $pin->codsauruspdv)
-            ->where('codsauruspinpad', '!=', $pin->codsauruspinpad)
-            ->pluck('codsauruspinpad');
-        SaurusPinPad::whereIn('codsauruspinpad', $anteriores)->whereNull('inativo')->update(['inativo' => $agora]);
-        Maquineta::whereIn('codsauruspinpad', $anteriores)->whereNull('inativo')->update(['inativo' => $agora]);
-
         return $maquineta->fresh(static::RELACOES);
     }
 
-    // pinpad mais novo do PDV Saurus (o que recebe a cobrança hoje)
-    public static function pinpadAtual(SaurusPinPad $pin): bool
+    private static function exigirSaurus(Maquineta $maquineta): void
     {
-        return !SaurusPinPad::where('codsauruspdv', $pin->codsauruspdv)
-            ->where('codsauruspinpad', '>', $pin->codsauruspinpad)
-            ->exists();
+        if ($maquineta->integracao !== Maquineta::INTEGRACAO_SAURUS) {
+            abort(422, 'Só maquineta SafraPay integrada é pareada pelo QR Code.');
+        }
+        if ($maquineta->inativo) {
+            abort(422, 'Ative a maquineta antes de parear.');
+        }
     }
 
     // ---- PDV ----
@@ -351,11 +291,10 @@ class MaquinetaService
                 m.codmaquineta, m.apelido, m.serial, m.codfilial, f.filial, m.compartilhada,
                 (m.codfilial <> :codfilial and not m.compartilhada) as outrafilial,
                 m.codpessoa, trim(p.fantasia) as adquirente, m.integracao, m.codpagarmepos,
-                pin.codsauruspdv
+                m.codsauruspdv
             from tblmaquineta m
             inner join tblpessoa p on (p.codpessoa = m.codpessoa)
             inner join tblfilial f on (f.codfilial = m.codfilial)
-            left join tblsauruspinpad pin on (pin.codsauruspinpad = m.codsauruspinpad)
             where m.inativo is null
             order by (m.codfilial <> :codfilial2 and not m.compartilhada), m.apelido, m.codmaquineta
         ', ['codfilial' => $codfilial, 'codfilial2' => $codfilial]);

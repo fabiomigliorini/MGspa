@@ -4,7 +4,8 @@ namespace Mg\Maquineta;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-// Manual (integracao vazia) ou PagarMe (P, cria o POS junto). Saurus nasce do pareamento.
+// Manual (integracao vazia), PagarMe (P, cria o POS junto) ou SafraPay (S, nasce sem PDV Saurus
+// e se pareia dentro dela).
 class MaquinetaStoreRequest extends FormRequest
 {
     public function authorize(): bool
@@ -15,7 +16,7 @@ class MaquinetaStoreRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'integracao' => 'nullable|in:P',
+            'integracao' => 'nullable|in:P,S',
             'apelido' => 'required|string|max:50',
             'serial' => 'nullable|required_if:integracao,P|string|max:50',
             'codfilial' => 'required|integer|exists:tblfilial,codfilial',
