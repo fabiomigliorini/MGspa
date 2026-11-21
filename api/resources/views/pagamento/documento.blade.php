@@ -1,5 +1,5 @@
-{{-- $recibos: lista de PagamentoReciboService::montar, um recibo por pagina (o lote dos acertos do
-     RH; no mais, um so'). O documento do pagamento que alguem assina, no jeito do bloco de papel: o
+{{-- $recibos: lista de PagamentoReciboService::recibos, um recibo por pagina (o lote dos acertos
+     do RH e o acerto com os dois lados, TASK-290; no mais, um so'). O documento do pagamento que alguem assina, no jeito do bloco de papel: o
      VALE do colaborador com a NOTA PROMISSORIA que o garante, numa folha A5 em pe (uma em cada
      metade, com a mesma regua: fonte, tamanhos, caixas); os demais (ADIANTAMENTO, RECIBO, ENCONTRO DE
      CONTAS) sem promissoria, na A5 deitada (mesmos campos, letra e caixas maiores para encher a

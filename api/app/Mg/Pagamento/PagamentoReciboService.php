@@ -18,7 +18,8 @@ use Mg\Titulo\TituloValeService;
  *   adiantamento   ADIANTAMENTO a fornecedor
  *   pagamento   a loja pagou titulos
  *   recebimento o cliente pagou titulos
- *   encontro    ENCONTRO DE CONTAS: titulos a receber e a pagar no mesmo pagamento
+ *   encontro    ENCONTRO DE CONTAS: titulos a receber e a pagar no mesmo pagamento (o acerto de
+ *               RH nao: sai um recibo do que a loja pagou e outro do que descontou, TASK-290)
  *   venda       pagamento de venda, sem titulo
  *   generico    o que nao e' de nenhum modelo (sobra livre, devolucao de pagamento...)
  *
@@ -51,13 +52,20 @@ class PagamentoReciboService
         return $pags;
     }
 
-    public static function montar(Collection $pags): array
+    // Os recibos do pagamento: um; o acerto de RH com os dois lados, dois (TASK-290)
+    public static function recibos(Collection $pags): array
     {
         $primeiro = $pags->first();
         // o acerto de RH: o beneficio nao e' titulo; monta do acerto (o mesmo documento)
         if (!empty($primeiro->codperiodocolaboradoracerto)) {
             return static::montarAcerto($primeiro);
         }
+        return [static::montar($pags)];
+    }
+
+    public static function montar(Collection $pags): array
+    {
+        $primeiro = $pags->first();
         $entrada = PagamentoListaService::operacao($primeiro) != 'DB';
         // o sinal das baixas no sentido do recibo: recebimento baixa com total negativo
         $sinal = $entrada ? -1 : 1;
@@ -277,8 +285,9 @@ class PagamentoReciboService
 
     // O acerto de RH: o beneficio (as rubricas) que a loja entregou e os creditos pagos ao
     // colaborador, contra os vales descontados dele. Os titulos saem pelo liquido de todos os
-    // movimentos do acerto (os ajustes de quem reativou o acerto, 930, se anulam). So' um lado,
-    // recibo de quem recebeu; os dois, encontro de contas. Sem valor, nao tem recibo.
+    // movimentos do acerto (os ajustes de quem reativou o acerto, 930, se anulam). Um recibo por
+    // lado (TASK-290): o do que a loja pagou, o colaborador assina; o do que descontou, a loja
+    // assina; com os dois, os dois recibos, nessa ordem. Sem valor, nao tem recibo.
     protected static function montarAcerto(Pagamento $pag): array
     {
         $ev = \Mg\Rh\PeriodoColaboradorAcerto::with([
@@ -324,64 +333,50 @@ class PagamentoReciboService
         if (!$receber && !$pagar) {
             abort(422, 'Acerto sem valores: não tem recibo.');
         }
-        $somaPagar = round(collect($pagar)->sum('valor'), 2);
-        $somaReceber = round(collect($receber)->sum('valor'), 2);
-        $total = round(abs($somaPagar - $somaReceber), 2);
         $singular = (bool) ($pessoa->fisica ?? true);
         $da = fn($p) => ($p->pessoa ?? '') . (($d = static::documento($p)) ? ', ' . $d : '');
-        $itens = count($pagar) + count($receber) > 1;
 
-        if ($pagar && $receber) {
-            $encontro = static::encontro(array_merge($receber, $pagar), $total, $empresa, $pessoa, $da);
-            $modelo = 'encontro';
-            $declaracao = $encontro['declaracao'];
-            $tabelas = $encontro['tabelas'];
-        } elseif ($pagar) {
+        // o recibo de um lado: o valor e' a soma das linhas dele; a forma e' a do pagamento
+        $recibo = function (string $modelo, array $linhas, string $rotulo, string $declaracao, $assina) use ($pag, $pessoa) {
+            $total = round(collect($linhas)->sum('valor'), 2);
+            return static::comum(collect([$pag])) + [
+                'modelo' => $modelo,
+                'vale' => false,
+                'valeCredito' => null,
+                'titulo' => 'RECIBO',
+                'vencimento' => null,
+                'total' => $total,
+                'valores' => [['rotulo' => 'Valor', 'valor' => $total]],
+                'extensos' => [formataValorPorExtenso((float) $total, true)],
+                'rotuloDe' => 'Colaborador',
+                'de' => static::parte($pessoa, false),
+                'declaracao' => $declaracao,
+                'tabelas' => [['rotulo' => $rotulo, 'linhas' => $linhas, 'livre' => 0,
+                    'total' => count($linhas) > 1 ? $total : null]],
+                'saldo' => null,
+                'promissoria' => null,
+                'assinantes' => [static::parte($assina, false)],
+            ];
+        };
+
+        $recibos = [];
+        if ($pagar) {
             // a loja pagou o colaborador: ele declara e assina
-            $modelo = 'pagamento';
+            $itens = count($pagar) > 1;
             $beneficio = (float) $ev->rubricas > 0;
-            $declaracao = ($singular ? 'Recebi de ' : 'Recebemos de ') . $da($empresa) . ', a importância acima, referente '
+            $recibos[] = $recibo('pagamento', $pagar, $beneficio ? 'Benefício' : ($itens ? 'Títulos' : 'Título'),
+                ($singular ? 'Recebi de ' : 'Recebemos de ') . $da($empresa) . ', a importância acima, referente '
                 . ($beneficio ? 'ao benefício abaixo discriminado' : ($itens ? 'ao pagamento dos títulos abaixo' : 'ao pagamento do título abaixo'))
-                . ', pelo que ' . ($singular ? 'dou' : 'damos') . ' quitação do valor recebido.';
-            $tabelas = [['rotulo' => $beneficio ? 'Benefício' : ($itens ? 'Títulos' : 'Título'), 'linhas' => $pagar, 'livre' => 0,
-                'total' => count($pagar) > 1 ? $somaPagar : null]];
-        } else {
-            // o colaborador pagou (vales descontados): a loja declara e assina
-            $modelo = 'recebimento';
-            $declaracao = 'Recebemos de ' . $da($pessoa) . ', a importância acima, referente ao pagamento '
-                . ($itens ? 'dos títulos abaixo' : 'do título abaixo') . ', pelo que damos quitação do valor recebido.';
-            $tabelas = [['rotulo' => $itens ? 'Títulos' : 'Título', 'linhas' => $receber, 'livre' => 0,
-                'total' => count($receber) > 1 ? $somaReceber : null]];
+                . ', pelo que ' . ($singular ? 'dou' : 'damos') . ' quitação do valor recebido.', $pessoa);
         }
-
-        return static::comum(collect([$pag])) + [
-            'modelo' => $modelo,
-            'vale' => false,
-            'valeCredito' => null,
-            'titulo' => $modelo == 'encontro' ? 'ENCONTRO DE CONTAS' : 'RECIBO',
-            'vencimento' => null,
-            'total' => $total,
-            'valores' => $modelo == 'encontro'
-                ? [['rotulo' => 'Compensado', 'valor' => $encontro['compensado']], ['rotulo' => 'Diferença paga', 'valor' => $total]]
-                : [['rotulo' => 'Valor', 'valor' => $total]],
-            'extensos' => $modelo == 'encontro'
-                ? [
-                    'Compensado: ' . formataValorPorExtenso((float) $encontro['compensado'], true),
-                    'Diferença paga: ' . ($total != 0 ? formataValorPorExtenso((float) $total, true) : 'sem diferença'),
-                ]
-                : [formataValorPorExtenso((float) $total, true)],
-            'rotuloDe' => 'Colaborador',
-            'de' => static::parte($pessoa, false),
-            'declaracao' => $declaracao,
-            'tabelas' => $tabelas,
-            'saldo' => $encontro['saldo'] ?? null,
-            'promissoria' => null,
-            'assinantes' => match ($modelo) {
-                'encontro' => [static::parte($empresa, false), static::parte($pessoa, false)],
-                'pagamento' => [static::parte($pessoa, false)],
-                default => [static::parte($empresa, false)],
-            },
-        ];
+        if ($receber) {
+            // o colaborador pagou (vales descontados): a loja declara e assina
+            $itens = count($receber) > 1;
+            $recibos[] = $recibo('recebimento', $receber, $itens ? 'Títulos' : 'Título',
+                'Recebemos de ' . $da($pessoa) . ', a importância acima, referente ao pagamento '
+                . ($itens ? 'dos títulos abaixo' : 'do título abaixo') . ', pelo que damos quitação do valor recebido.', $empresa);
+        }
+        return $recibos;
     }
 
     // Encontro de contas: o que cada lado pagou ao outro em titulos se compensa; a diferenca e' o
@@ -482,35 +477,35 @@ class PagamentoReciboService
     // A5 deitado; o vale, A5 em pe com a promissoria; o adiantamento de cliente, o vale de credito
     public static function pdf(int $codpagamento): string
     {
-        $r = static::montar(static::carregar([$codpagamento]));
-        if ($r['valeCredito']) {
-            return TituloValeService::pdfTitulos([$r['valeCredito']]);
+        $recibos = static::recibos(static::carregar([$codpagamento]));
+        if ($recibos[0]['valeCredito']) {
+            return TituloValeService::pdfTitulos([$recibos[0]['valeCredito']]);
         }
-        return static::render(view('pagamento.documento', ['recibos' => [$r]])->render());
+        return static::render(view('pagamento.documento', compact('recibos'))->render());
     }
 
-    // varios pagamentos, um recibo por pagamento, no mesmo PDF (os recibos do acerto de RH); o que
+    // varios pagamentos, os recibos de cada um, no mesmo PDF (os recibos do acerto de RH); o que
     // nao tem recibo (acerto sem valor, credito de cliente) fica de fora; nenhum, vazio
     public static function pdfLote(array $codpagamentos): string
     {
-        $recibos = collect($codpagamentos)->map(function ($cod) {
+        $recibos = collect($codpagamentos)->flatMap(function ($cod) {
             try {
-                return static::montar(static::carregar([$cod]));
+                return static::recibos(static::carregar([$cod]));
             } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
-                return null;
+                return [];
             }
-        })->filter(fn($r) => $r && !$r['valeCredito'])->values()->all();
+        })->filter(fn($r) => !$r['valeCredito'])->values()->all();
         return $recibos ? static::render(view('pagamento.documento', compact('recibos'))->render()) : '';
     }
 
     // bobina 80mm
     public static function pdfTermica(array $codpagamentos): string
     {
-        $r = static::montar(static::carregar($codpagamentos));
-        if ($r['valeCredito']) {
-            return TituloValeService::pdfTitulos([$r['valeCredito']]);
+        $recibos = static::recibos(static::carregar($codpagamentos));
+        if ($recibos[0]['valeCredito']) {
+            return TituloValeService::pdfTitulos([$recibos[0]['valeCredito']]);
         }
-        return static::render(view('pagamento.documento-termica', compact('r'))->render(), [0.0, 0.0, 226.77, 841.89]);
+        return static::render(view('pagamento.documento-termica', compact('recibos'))->render(), [0.0, 0.0, 226.77, 841.89]);
     }
 
     protected static function render(string $html, ?array $papel = null): string
