@@ -45,7 +45,19 @@ class NfseXmlService
         9 => 'Outros',
     ];
 
+    // subst/cMotivo da substituicao (TASK-279 #5); vai na DPS com dois digitos
+    const MOTIVOS_SUBSTITUICAO = [
+        1 => 'Desenquadramento do Simples Nacional',
+        2 => 'Enquadramento no Simples Nacional',
+        3 => 'Inclusão retroativa de imunidade/isenção',
+        4 => 'Exclusão retroativa de imunidade/isenção',
+        5 => 'Rejeição pelo tomador ou intermediário',
+        99 => 'Outros',
+    ];
+
     const TIPO_EVENTO_CANCELAMENTO = '101101';
+    // Gerado pelo Sistema Nacional ao autorizar a substituta: cancela a anterior
+    const TIPO_EVENTO_SUBSTITUICAO = '105102';
 
     public static function simples(Filial $filial): bool
     {
@@ -107,6 +119,18 @@ class NfseXmlService
             static::el($doc, $inf, 'finNFSe', '0');
         }
         static::el($doc, $inf, 'cLocEmi', (string) $filial->Pessoa->Cidade->codigooficial);
+
+        // Substituicao (TASK-279 #5): autorizada esta, o Sistema Nacional cancela a
+        // anterior. A descricao do motivo e' opcional; quando vem, de 15 a 255 caracteres.
+        if (!empty($nfs->codnotafiscalservicosubstituida)) {
+            $subst = static::el($doc, $inf, 'subst');
+            static::el($doc, $subst, 'chSubstda', $nfs->NotaFiscalServicoSubstituida->nfsechave);
+            static::el($doc, $subst, 'cMotivo', str_pad((string) $nfs->substituicaomotivo, 2, '0', STR_PAD_LEFT));
+            $xMotivo = static::texto($nfs->substituicaojustificativa, 255);
+            if (mb_strlen($xMotivo) >= 15) {
+                static::el($doc, $subst, 'xMotivo', $xMotivo);
+            }
+        }
 
         // Prestador: documento, IM e regime; nome e endereco o Sistema Nacional
         // tira do cadastro (CNC) quando quem emite e' o proprio prestador.

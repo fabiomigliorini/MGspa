@@ -4,6 +4,11 @@ import { useQuasar } from 'quasar'
 import { abrirPdf } from '@components/abrirPdf'
 import { abrirXml } from '@components/abrirXml'
 import MgInput from '@components/MgInput.vue'
+import MgSelect from '@components/MgSelect.vue'
+import {
+  NFSE_MOTIVOS_SUBSTITUICAO,
+  descricaoMotivoSubstituicao,
+} from '@components/nfseSubstituicao'
 
 // Acoes da nota fiscal de servico no Sistema Nacional da NFS-e (TASK-279). Espelha o
 // MgNotaFiscalAcoes da NF-e, bem mais simples: a emissao e sincrona (o POST ja devolve a
@@ -12,7 +17,7 @@ const props = defineProps({
   nota: { type: Object, required: true },
   api: { type: [Function, Object], required: true },
   compact: { type: Boolean, default: false },
-  // XML, e-mail e duplicar: so no detalhe
+  // XML, e-mail, duplicar e substituir: so no detalhe
   showExtras: { type: Boolean, default: false },
   // Exibe o botao Excluir para notas em digitacao (status DIG)
   mostrarExcluir: { type: Boolean, default: false },
@@ -31,10 +36,14 @@ const loadingEmail = ref(false)
 const loadingDanfse = ref(false)
 const loadingXml = ref(false)
 const loadingDuplicar = ref(false)
+const loadingSubstituir = ref(false)
 const loadingExcluir = ref(false)
 
 const cancelarDialog = ref(false)
 const cancelamento = ref({ motivo: 1, justificativa: '' })
+
+const substituirDialog = ref(false)
+const substituicao = ref({ motivo: 99, justificativa: '' })
 
 const MOTIVOS_CANCELAMENTO = [
   { label: 'Erro na emissão', value: 1 },
@@ -64,6 +73,7 @@ const ocupado = computed(
     loadingDanfse.value ||
     loadingXml.value ||
     loadingDuplicar.value ||
+    loadingSubstituir.value ||
     loadingExcluir.value,
 )
 
@@ -71,6 +81,8 @@ const podeEnviar = computed(() => ['DIG', 'ERR'].includes(status.value))
 // A consulta e pelo identificador da DPS, que existe desde o primeiro envio (numero)
 const podeConsultar = computed(() => ['ERR', 'AUT'].includes(status.value) && !!props.nota?.numero)
 const podeCancelar = computed(() => status.value === 'AUT')
+// Substituir (TASK-279 #5): cria a substituta em digitacao, ligada a esta
+const podeSubstituir = computed(() => status.value === 'AUT')
 const podeEnviarEmail = computed(() => status.value === 'AUT')
 const podeAbrirDanfse = computed(() => ['AUT', 'CAN'].includes(status.value))
 const xmlsDisponiveis = computed(() =>
@@ -282,6 +294,32 @@ function duplicar(event) {
   })
 }
 
+function abrirSubstituir(event) {
+  stop(event)
+  substituicao.value = { motivo: 99, justificativa: '' }
+  substituirDialog.value = true
+}
+
+// Cria a substituta (copia desta, em digitacao) e devolve para a tela abrir o formulario
+// dela. Nada vai ao Sistema Nacional aqui: a substituicao acontece no Enviar da substituta.
+async function substituir() {
+  if (loadingSubstituir.value) return
+  loadingSubstituir.value = true
+  try {
+    const { data } = await props.api.post(`/v1/nota-fiscal-servico/${cod.value}/substituir`, {
+      motivo: substituicao.value.motivo,
+      justificativa: substituicao.value.justificativa?.trim() || null,
+    })
+    substituirDialog.value = false
+    $q.notify({ color: 'green-5', icon: 'done', message: 'Nota substituta criada' })
+    if (!desmontado) emit('action-completed', 'substituir', data?.data ?? data)
+  } catch (error) {
+    notificarErro(error, 'Erro ao criar a nota substituta')
+  } finally {
+    loadingSubstituir.value = false
+  }
+}
+
 function excluir(event) {
   stop(event)
   $q.dialog({
@@ -393,6 +431,20 @@ defineExpose({ enviar, podeEnviar })
     </q-btn>
 
     <q-btn
+      v-if="showExtras && podeSubstituir"
+      flat
+      round
+      :size="btnSize"
+      color="grey-7"
+      icon="find_replace"
+      :loading="loadingSubstituir"
+      :disable="ocupado && !loadingSubstituir"
+      @click="abrirSubstituir"
+    >
+      <q-tooltip>Substituir NFS-e</q-tooltip>
+    </q-btn>
+
+    <q-btn
       v-if="podeCancelar"
       flat
       round
@@ -419,6 +471,55 @@ defineExpose({ enviar, podeEnviar })
     >
       <q-tooltip>Excluir</q-tooltip>
     </q-btn>
+
+    <q-dialog v-model="substituirDialog">
+      <q-card flat style="width: 600px; max-width: 90vw">
+        <q-form @submit.prevent="substituir">
+          <q-card-section>
+            <div class="text-h6">Substituir NFS-e {{ nota.nfsenumero }}</div>
+            <div class="text-caption text-grey-7">
+              Cria uma cópia em digitação para você corrigir. Quando ela for autorizada, o Sistema
+              Nacional cancela esta.
+            </div>
+          </q-card-section>
+
+          <q-card-section class="q-pt-none">
+            <div class="row q-col-gutter-md">
+              <div class="col-12">
+                <MgSelect
+                  v-model="substituicao.motivo"
+                  :options="NFSE_MOTIVOS_SUBSTITUICAO"
+                  label="Motivo"
+                  emit-value
+                  map-options
+                  autofocus
+                />
+              </div>
+              <div class="col-12">
+                <MgInput
+                  v-model="substituicao.justificativa"
+                  label="Descrição do motivo (opcional)"
+                  maxlength="255"
+                  counter
+                  :rules="[descricaoMotivoSubstituicao]"
+                />
+              </div>
+            </div>
+          </q-card-section>
+
+          <q-card-actions align="right">
+            <q-btn flat label="Voltar" color="grey-8" v-close-popup tabindex="-1" />
+            <q-btn
+              flat
+              label="Substituir"
+              color="primary"
+              type="submit"
+              :loading="loadingSubstituir"
+            />
+          </q-card-actions>
+        </q-form>
+      </q-card>
+    </q-dialog>
 
     <q-dialog v-model="cancelarDialog">
       <q-card flat style="width: 600px; max-width: 90vw">

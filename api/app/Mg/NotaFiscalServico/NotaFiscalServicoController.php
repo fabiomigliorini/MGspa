@@ -71,6 +71,26 @@ class NotaFiscalServicoController extends Controller
             ->setStatusCode(201);
     }
 
+    // Cria a substituta em digitacao (TASK-279 #5). O motivo pode ser trocado no formulario.
+    public function substituir(Request $request, int $codnotafiscalservico)
+    {
+        $request->validate([
+            'motivo' => 'required|integer|in:' . implode(',', array_keys(NfseXmlService::MOTIVOS_SUBSTITUICAO)),
+            'justificativa' => 'nullable|string|min:15|max:255',
+        ], [
+            'motivo.required' => 'Informe o motivo da substituição.',
+            'justificativa.min' => 'A descrição do motivo precisa de pelo menos 15 caracteres.',
+        ]);
+        $nova = DB::transaction(fn () => NotaFiscalServicoService::substituir(
+            $codnotafiscalservico,
+            (int) $request->motivo,
+            $request->justificativa
+        ));
+        return (new NotaFiscalServicoResource($this->nota($nova->codnotafiscalservico)))
+            ->response()
+            ->setStatusCode(201);
+    }
+
     // As acoes no Sistema Nacional nao rodam em transacao: cada passo grava o que o
     // Sistema Nacional confirmou, e um rollback apagaria a autorizacao ja concedida.
 

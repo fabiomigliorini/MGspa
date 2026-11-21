@@ -8,7 +8,11 @@ import MgSelectPessoa from '@components/MgSelectPessoa.vue'
 import MgSelectCidade from '@components/MgSelectCidade.vue'
 import MgSelectTributacaoNacional from '@components/MgSelectTributacaoNacional.vue'
 import MgSelectNbs from '@components/MgSelectNbs.vue'
-import { formataNumero, formataPercentual } from '@components/formatters'
+import { formataNumero, formataPercentual, formataTimestamp } from '@components/formatters'
+import {
+  NFSE_MOTIVOS_SUBSTITUICAO,
+  descricaoMotivoSubstituicao,
+} from '@components/nfseSubstituicao'
 import { hoje, lerDataBr } from '@components/utils/datas'
 import { ISS_RETIDO_OPTIONS, calculaValoresNfse } from '../constants/notaFiscalServico'
 
@@ -52,6 +56,14 @@ const aliquotaSeRetido = (v) => {
 }
 
 const valores = computed(() => calculaValoresNfse(cad.value.form || {}))
+
+// Substituta (TASK-279 #5): a nota anterior vem do detalhe que a store carregou para editar.
+// A filial fica travada: o prestador tem que ser o mesmo.
+const substituida = computed(() =>
+  !cad.value.isNovo && cad.value.nota?.codnotafiscalservico === cad.value.form?.codnotafiscalservico
+    ? cad.value.nota?.substituida
+    : null,
+)
 
 // Retencao do ISS: o cadastro do cliente diz se ele retem (TASK-282). Escolher o tomador
 // pre-seleciona; quem emite pode trocar, e o campo avisa quando a nota diverge do cadastro.
@@ -140,6 +152,7 @@ const avisoAliquota = computed(() =>
               map-options
               :rules="[obrigatorio]"
               :disable="disable"
+              :readonly="!!substituida"
               :autofocus="!cad.form.codfilial"
             />
           </div>
@@ -149,6 +162,59 @@ const avisoAliquota = computed(() =>
               type="date"
               label="Competência *"
               :rules="[obrigatorio, competenciaAteHoje]"
+              :disable="disable"
+            />
+          </div>
+        </div>
+      </q-card-section>
+    </q-card>
+
+    <!-- Substituicao: so na substituta (TASK-279 #5) -->
+    <q-card v-if="substituida" flat bordered class="q-mb-md">
+      <q-card-section class="bg-primary text-white text-body2">
+        <q-icon name="find_replace" size="1.5em" class="q-mr-sm" />
+        Substituição
+      </q-card-section>
+      <q-card-section>
+        <div class="row q-col-gutter-md">
+          <div class="col-12">
+            <div class="text-caption text-grey-7">Substitui a</div>
+            <div class="text-body2">
+              <!-- outra aba: sair do formulario perderia o que foi digitado -->
+              <router-link
+                :to="{
+                  name: 'nota-servico-view',
+                  params: { codnotafiscalservico: substituida.codnotafiscalservico },
+                }"
+                target="_blank"
+                class="text-primary"
+              >
+                NFS-e {{ substituida.nfsenumero }}
+                <q-icon name="open_in_new" size="xs" />
+              </router-link>
+              <span v-if="substituida.nfseautorizacao" class="text-grey-7">
+                autorizada em {{ formataTimestamp(substituida.nfseautorizacao, 4, true) }}
+              </span>
+            </div>
+          </div>
+          <div class="col-12">
+            <MgSelect
+              v-model="cad.form.substituicaomotivo"
+              :options="NFSE_MOTIVOS_SUBSTITUICAO"
+              label="Motivo *"
+              emit-value
+              map-options
+              :rules="[obrigatorio]"
+              :disable="disable"
+            />
+          </div>
+          <div class="col-12">
+            <MgInput
+              v-model="cad.form.substituicaojustificativa"
+              label="Descrição do motivo (opcional)"
+              maxlength="255"
+              counter
+              :rules="[descricaoMotivoSubstituicao]"
               :disable="disable"
             />
           </div>

@@ -4,7 +4,7 @@ title: 'Emitir nota de serviço pelo app notas, agora que Sinop usa o emissor na
 status: In Progress
 assignee: []
 created_date: '2026-11-18 02:01'
-updated_date: '2026-11-19 20:53'
+updated_date: '2026-11-21 18:19'
 labels:
   - notas
 dependencies: []
@@ -186,4 +186,17 @@ Testes de 19/11/2026 (autorizados pelo Fábio):
 - Não testado: DANFSe de NFS-e de terceiro de verdade (o dev só tem as nossas de homologação) — fica com o Fábio, com as notas da Bee, do Rogério e do Wellington.
 
 Achado fora do escopo (relatado, sem mexer): a DFe NF-e ordena por data desc e o Postgres põe as linhas sem data (documentos não processados, 309 no dev) no topo da lista.
+
+Substituição da NFS-e (critério #5), decidida com o Fábio em 21/11/2026 — precisa por causa das notas sem tomador (E0824: Sinop não deixa cancelar):
+- Botão Substituir (find_replace) no detalhe da nota AUT: janela com o motivo (os 6 oficiais do subst/cMotivo, padrão Outros) e a descrição opcional (15 a 255, como o XSD). Cria a substituta em digitação, cópia fiel da anterior (inclusive competência e % do Simples: é o mesmo serviço, corrigido), e abre o formulário dela. Recusa nota que não é AUT e nota que já tem substituta DIG/ERR/AUT.
+- tblnotafiscalservico: codnotafiscalservicosubstituida (FK para a própria tabela), substituicaomotivo (1-5, 99), substituicaojustificativa — api/database/nfse_substituicao.sql.
+- Formulário: card Substituição depois do card Nota (link para a anterior em outra aba, motivo e descrição editáveis); filial travada. Detalhe: card Substituição nas duas pontas (Substitui a / Substituída pela), com link, status, motivo e descrição.
+- DPS: grupo subst (chSubstda, cMotivo com 2 dígitos, xMotivo só com 15+) depois do cLocEmi, nos dois leiautes.
+- Enviar: recusa (sem numerar nem virar ERR) se a anterior não está mais AUT. Autorizada a substituta, consulta a anterior e só marca CAN com o evento 105102 na mão; sem ele, a anterior fica AUT e a mensagem manda usar o Consultar dela (ou a caixa do ADN confirma).
+- Consultar procura também o evento 105102 (antes só o 101101). A caixa do ADN já tratava SUBSTITUICAO.
+- Duplicar não copia o vínculo; excluir a substituta em digitação desfaz o vínculo.
+
+Teste na homologação antes de codar (autorizado): não aconteceu — a Sefin de homologação (189.9.67.145) não abre conexão desde 21/11 13:42 (a de produção e a ADN de homologação respondem). Nada foi enviado. Script de teste (sem gravar no banco, série 99): /tmp/claude-1000/-opt-www-MGspa/62b07405-5346-51a2-a047-b76bf83a4afd/scratchpad/subst/teste.php, cenários semtomador e comtomador. Em aberto: se Sinop aceita substituir NFS-e sem tomador e o que a substituta pode mudar.
+
+Go-live: nfse_substituicao.sql ANTES do deploy do api.
 <!-- SECTION:NOTES:END -->

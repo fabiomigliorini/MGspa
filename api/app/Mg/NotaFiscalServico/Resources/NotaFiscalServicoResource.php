@@ -4,6 +4,7 @@ namespace Mg\NotaFiscalServico\Resources;
 
 use Illuminate\Http\Resources\Json\JsonResource;
 use Mg\NotaFiscalServico\Nbs;
+use Mg\NotaFiscalServico\NfseXmlService;
 use Mg\NotaFiscalServico\NotaFiscalServico;
 use Mg\NotaFiscalServico\TributacaoNacional;
 
@@ -61,10 +62,43 @@ class NotaFiscalServicoResource extends JsonResource
             'nfsecancelamento' => $this->nfsecancelamento,
             'justificativa' => $this->justificativa,
             'mensagem' => $this->mensagem,
+            // Substituicao (TASK-279 #5): os dois lados do vinculo
+            'codnotafiscalservicosubstituida' => $this->codnotafiscalservicosubstituida,
+            'substituicaomotivo' => $this->substituicaomotivo,
+            'substituicaomotivodescricao' => NfseXmlService::MOTIVOS_SUBSTITUICAO[$this->substituicaomotivo] ?? null,
+            'substituicaojustificativa' => $this->substituicaojustificativa,
+            'substituida' => $this->resumo($this->NotaFiscalServicoSubstituida),
+            'substituta' => $this->resumo($this->substituta()),
             'criacao' => $this->criacao,
             'alteracao' => $this->alteracao,
             'codusuariocriacao' => $this->codusuariocriacao,
             'codusuarioalteracao' => $this->codusuarioalteracao,
+        ];
+    }
+
+    // A substituta em andamento ou autorizada (so pode haver uma); sem ela, a ultima
+    private function substituta(): ?NotaFiscalServico
+    {
+        $substitutas = $this->NotaFiscalServicoSubstitutaS->sortByDesc('codnotafiscalservico');
+        return $substitutas->first(fn ($n) => $n->status != NotaFiscalServico::STATUS_CANCELADA)
+            ?? $substitutas->first();
+    }
+
+    private function resumo(?NotaFiscalServico $nfs): ?array
+    {
+        if (!$nfs) {
+            return null;
+        }
+        return [
+            'codnotafiscalservico' => $nfs->codnotafiscalservico,
+            'serie' => $nfs->serie,
+            'numero' => $nfs->numero,
+            'nfsenumero' => $nfs->nfsenumero,
+            'nfseautorizacao' => $nfs->nfseautorizacao,
+            'status' => $nfs->status,
+            'substituicaomotivo' => $nfs->substituicaomotivo,
+            'substituicaomotivodescricao' => NfseXmlService::MOTIVOS_SUBSTITUICAO[$nfs->substituicaomotivo] ?? null,
+            'substituicaojustificativa' => $nfs->substituicaojustificativa,
         ];
     }
 

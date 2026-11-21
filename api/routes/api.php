@@ -825,6 +825,7 @@ Route::middleware(['auth:api'])->prefix('v1')->group(function () {
         Route::put('{codnotafiscalservico}', '\Mg\NotaFiscalServico\NotaFiscalServicoController@update')->whereNumber('codnotafiscalservico');
         Route::delete('{codnotafiscalservico}', '\Mg\NotaFiscalServico\NotaFiscalServicoController@destroy')->whereNumber('codnotafiscalservico');
         Route::post('{codnotafiscalservico}/duplicar', '\Mg\NotaFiscalServico\NotaFiscalServicoController@duplicar');
+        Route::post('{codnotafiscalservico}/substituir', '\Mg\NotaFiscalServico\NotaFiscalServicoController@substituir');
         Route::post('{codnotafiscalservico}/enviar', '\Mg\NotaFiscalServico\NotaFiscalServicoController@enviar');
         Route::post('{codnotafiscalservico}/consultar', '\Mg\NotaFiscalServico\NotaFiscalServicoController@consultar');
         Route::post('{codnotafiscalservico}/cancelar', '\Mg\NotaFiscalServico\NotaFiscalServicoController@cancelar');

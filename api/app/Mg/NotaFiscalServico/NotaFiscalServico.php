@@ -55,6 +55,10 @@ class NotaFiscalServico extends MgModel
         'nfsecancelamento',
         'justificativa',
         'mensagem',
+        // Substituicao (TASK-279 #5): a nota substituida (codnotafiscalservicosubstituida)
+        // so e' ligada pelo Substituir, nunca pelo formulario
+        'substituicaomotivo',
+        'substituicaojustificativa',
     ];
 
     protected $casts = [
@@ -63,6 +67,7 @@ class NotaFiscalServico extends MgModel
         'codfilial' => 'integer',
         'codnbs' => 'integer',
         'codnotafiscalservico' => 'integer',
+        'codnotafiscalservicosubstituida' => 'integer',
         'codpessoa' => 'integer',
         'codtributacaonacional' => 'integer',
         'codusuarioalteracao' => 'integer',
@@ -77,6 +82,7 @@ class NotaFiscalServico extends MgModel
         'nfsenumero' => 'integer',
         'numero' => 'integer',
         'serie' => 'integer',
+        'substituicaomotivo' => 'integer',
         'tributospercentual' => 'float',
         'valordescontocondicionado' => 'float',
         'valordescontoincondicionado' => 'float',
@@ -136,6 +142,18 @@ class NotaFiscalServico extends MgModel
     public function CidadePrestacao()
     {
         return $this->belongsTo(Cidade::class, 'codcidadeprestacao', 'codcidade');
+    }
+
+    // NFS-e que esta nota substitui (TASK-279 #5)
+    public function NotaFiscalServicoSubstituida()
+    {
+        return $this->belongsTo(NotaFiscalServico::class, 'codnotafiscalservicosubstituida', 'codnotafiscalservico');
+    }
+
+    // Notas que substituem esta: no maximo uma em andamento ou autorizada
+    public function NotaFiscalServicoSubstitutaS()
+    {
+        return $this->hasMany(NotaFiscalServico::class, 'codnotafiscalservicosubstituida', 'codnotafiscalservico');
     }
 
     public function UsuarioAlteracao()

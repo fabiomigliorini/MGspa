@@ -59,6 +59,20 @@ function onAcaoConcluida(acao, notaAtualizada) {
       params: { codnotafiscalservico: notaAtualizada.codnotafiscalservico },
     })
   }
+  // A substituta nasce para ser corrigida: abre direto no formulario
+  if (acao === 'substituir') {
+    router.push({
+      name: 'nota-servico-edit',
+      params: { codnotafiscalservico: notaAtualizada.codnotafiscalservico },
+    })
+  }
+}
+
+// Substituicao (TASK-279 #5): "NFS-e 123", "DPS 000.025 - Série 1" ou em digitacao
+function descricaoNota(n) {
+  if (n.nfsenumero) return `NFS-e ${n.nfsenumero}`
+  if (n.numero) return `DPS ${formataNumeroNota(n.numero)} - Série ${n.serie}`
+  return 'Nota em digitação'
 }
 
 function copiarChave() {
@@ -259,6 +273,68 @@ watch(
                   </template>
                 </template>
                 <div v-else class="text-body2 text-grey-7">Tomador não identificado</div>
+              </q-card-section>
+            </q-card>
+          </div>
+
+          <!-- Substituição (TASK-279 #5): nas duas pontas do vínculo -->
+          <div class="col-12" v-if="nota.substituida || nota.substituta">
+            <q-card flat bordered>
+              <q-card-section class="bg-primary text-white text-body2">
+                <q-icon name="find_replace" size="1.5em" class="q-mr-sm" />
+                Substituição
+              </q-card-section>
+              <q-card-section>
+                <div class="row q-col-gutter-md">
+                  <div class="col-12 col-md-6" v-if="nota.substituida">
+                    <div class="text-caption text-grey-7">Substitui a</div>
+                    <div class="text-body2 q-mb-sm">
+                      <router-link
+                        :to="{
+                          name: 'nota-servico-view',
+                          params: { codnotafiscalservico: nota.substituida.codnotafiscalservico },
+                        }"
+                        class="text-primary"
+                      >
+                        {{ descricaoNota(nota.substituida) }}
+                      </router-link>
+                      <q-badge :color="getNfseStatusColor(nota.substituida.status)" class="q-ml-sm">
+                        {{ getNfseStatusLabel(nota.substituida.status) }}
+                      </q-badge>
+                    </div>
+                    <div class="text-caption text-grey-7">Motivo</div>
+                    <div class="text-body2 q-mb-sm">{{ nota.substituicaomotivodescricao }}</div>
+                    <template v-if="nota.substituicaojustificativa">
+                      <div class="text-caption text-grey-7">Descrição do motivo</div>
+                      <div class="text-body2">{{ nota.substituicaojustificativa }}</div>
+                    </template>
+                  </div>
+                  <div class="col-12 col-md-6" v-if="nota.substituta">
+                    <div class="text-caption text-grey-7">Substituída pela</div>
+                    <div class="text-body2 q-mb-sm">
+                      <router-link
+                        :to="{
+                          name: 'nota-servico-view',
+                          params: { codnotafiscalservico: nota.substituta.codnotafiscalservico },
+                        }"
+                        class="text-primary"
+                      >
+                        {{ descricaoNota(nota.substituta) }}
+                      </router-link>
+                      <q-badge :color="getNfseStatusColor(nota.substituta.status)" class="q-ml-sm">
+                        {{ getNfseStatusLabel(nota.substituta.status) }}
+                      </q-badge>
+                    </div>
+                    <div class="text-caption text-grey-7">Motivo</div>
+                    <div class="text-body2 q-mb-sm">
+                      {{ nota.substituta.substituicaomotivodescricao }}
+                    </div>
+                    <template v-if="nota.substituta.substituicaojustificativa">
+                      <div class="text-caption text-grey-7">Descrição do motivo</div>
+                      <div class="text-body2">{{ nota.substituta.substituicaojustificativa }}</div>
+                    </template>
+                  </div>
+                </div>
               </q-card-section>
             </q-card>
           </div>

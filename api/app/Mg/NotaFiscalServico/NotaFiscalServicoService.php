@@ -19,6 +19,8 @@ class NotaFiscalServicoService
         'TributacaoNacional',
         'Nbs',
         'CidadePrestacao.Estado',
+        'NotaFiscalServicoSubstituida',
+        'NotaFiscalServicoSubstitutaS',
     ];
 
     public static function query(array $filtros)
@@ -106,6 +108,8 @@ class NotaFiscalServicoService
     public static function criar(array $dados): NotaFiscalServico
     {
         $dados = static::normalizar($dados);
+        // Nota nova nao substitui nada: a substituta nasce pelo Substituir
+        unset($dados['substituicaomotivo'], $dados['substituicaojustificativa']);
         $filial = static::verificarFilial($dados['codfilial']);
         $nfs = new NotaFiscalServico($dados);
         $nfs->serie = $filial->nfseserie;
@@ -118,6 +122,17 @@ class NotaFiscalServicoService
     {
         static::verificarEditavel($nfs);
         $dados = static::normalizar($dados);
+        if (empty($nfs->codnotafiscalservicosubstituida)) {
+            unset($dados['substituicaomotivo'], $dados['substituicaojustificativa']);
+        } else {
+            // Substituta: mesmo prestador da anterior, e o motivo vai na DPS
+            if ($dados['codfilial'] != $nfs->codfilial) {
+                abort(422, 'Esta nota substitui outra NFS-e: não dá para trocar a filial.');
+            }
+            if (empty($dados['substituicaomotivo'])) {
+                abort(422, 'Informe o motivo da substituição.');
+            }
+        }
         // Depois de numerada a DPS nao troca de filial (o numero e' da serie dela)
         if (!empty($nfs->numero) && $dados['codfilial'] != $nfs->codfilial) {
             abort(422, 'A DPS já foi numerada: não dá para trocar a filial.');
@@ -168,6 +183,58 @@ class NotaFiscalServicoService
         $nova->tributospercentual = $mes?->tributospercentual;
         $nova->issaliquota = $nova->issretido ? $mes?->issaliquota : null;
         $nova->status = NotaFiscalServico::STATUS_DIGITACAO;
+        $nova->save();
+        return $nova;
+    }
+
+    /**
+     * Substituta (TASK-279 #5): copia fiel da nota autorizada, em digitacao, apontando para
+     * ela. Quem emite corrige o que estava errado e envia; autorizada a substituta, o
+     * Sistema Nacional cancela a anterior. Copia tudo, inclusive competencia e percentuais
+     * do Simples: e' o mesmo servico, corrigido.
+     */
+    public static function substituir(int $codnotafiscalservico, int $motivo, ?string $justificativa): NotaFiscalServico
+    {
+        $original = NotaFiscalServico::lockForUpdate()->findOrFail($codnotafiscalservico);
+        if ($original->status != NotaFiscalServico::STATUS_AUTORIZADA) {
+            abort(422, 'Só dá para substituir nota autorizada.');
+        }
+        // Uma substituta por vez: a que esta em andamento ou ja foi autorizada
+        $andamento = NotaFiscalServico::where('codnotafiscalservicosubstituida', $original->codnotafiscalservico)
+            ->whereIn('status', [
+                NotaFiscalServico::STATUS_DIGITACAO,
+                NotaFiscalServico::STATUS_ERRO,
+                NotaFiscalServico::STATUS_AUTORIZADA,
+            ])
+            ->orderByDesc('codnotafiscalservico')
+            ->first();
+        if ($andamento) {
+            abort(422, 'Esta NFS-e já tem uma nota substituta ('
+                . mb_strtolower(NotaFiscalServico::STATUS[$andamento->status])
+                . '): abra pelo detalhe da NFS-e.');
+        }
+        $filial = static::verificarFilial($original->codfilial);
+        $nova = new NotaFiscalServico($original->only([
+            'codfilial',
+            'codpessoa',
+            'competencia',
+            'codtributacaonacional',
+            'codnbs',
+            'descricao',
+            'valorservico',
+            'valordescontoincondicionado',
+            'valordescontocondicionado',
+            'issaliquota',
+            'issretido',
+            'tributospercentual',
+            'codcidadeprestacao',
+            'observacoes',
+        ]));
+        $nova->serie = $filial->nfseserie;
+        $nova->status = NotaFiscalServico::STATUS_DIGITACAO;
+        $nova->codnotafiscalservicosubstituida = $original->codnotafiscalservico;
+        $nova->substituicaomotivo = $motivo;
+        $nova->substituicaojustificativa = empty(trim((string) $justificativa)) ? null : trim($justificativa);
         $nova->save();
         return $nova;
     }

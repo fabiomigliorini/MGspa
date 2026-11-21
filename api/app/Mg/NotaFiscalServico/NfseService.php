@@ -102,6 +102,17 @@ class NfseService
                 }
             }
 
+            // Substituta: a anterior tem que seguir autorizada (cancelada no meio do
+            // caminho, o Sistema Nacional recusaria). Recusa sem numerar nem virar ERR.
+            $anterior = $nfs->NotaFiscalServicoSubstituida()->first();
+            if ($anterior && $anterior->status != NotaFiscalServico::STATUS_AUTORIZADA) {
+                return [
+                    'sucesso' => false,
+                    'mensagem' => "A NFS-e {$anterior->nfsenumero} que esta nota substitui está "
+                        . mb_strtolower(NotaFiscalServico::STATUS[$anterior->status]) . ': não dá para enviar a substituição.',
+                ];
+            }
+
             static::numerar($nfs);
             $idDps = NfseXmlService::idDps($nfs);
 
@@ -206,26 +217,55 @@ class NfseService
     }
 
     /**
-     * GET /nfse/{chave}/eventos/101101/1. Se existir, a nota foi cancelada (por nos,
-     * pelo site ou pela prefeitura). Nulo quando nao ha cancelamento.
+     * GET /nfse/{chave}/eventos/{tipo}/1 do cancelamento (101101: por nos, pelo site ou
+     * pela prefeitura) e do cancelamento por substituicao (105102, TASK-279 #5). Se um
+     * deles existir, a nota foi cancelada. Nulo quando nao ha nenhum.
      */
     protected static function buscarCancelamento(NotaFiscalServico $nfs): ?array
     {
         if ($nfs->status == NotaFiscalServico::STATUS_CANCELADA) {
             return null;
         }
-        try {
-            $resp = NfseSefinService::consultarEvento($nfs, NfseXmlService::idDps($nfs), NfseXmlService::TIPO_EVENTO_CANCELAMENTO);
-        } catch (\Throwable $e) {
-            return null;
+        foreach ([NfseXmlService::TIPO_EVENTO_CANCELAMENTO, NfseXmlService::TIPO_EVENTO_SUBSTITUICAO] as $tipo) {
+            try {
+                $resp = NfseSefinService::consultarEvento($nfs, NfseXmlService::idDps($nfs), $tipo);
+            } catch (\Throwable $e) {
+                continue;
+            }
+            // { eventos: [ { tipoEvento: 101101, arquivoXml: ... } ] }
+            $evento = collect($resp['json']['eventos'] ?? [])->firstWhere('tipoEvento', (int) $tipo);
+            $xml = NfseSefinService::ungzipBase64($evento['arquivoXml'] ?? null);
+            if ($resp['status'] == 200 && !empty($xml)) {
+                return static::registrarCancelamento($nfs, $xml, null);
+            }
         }
-        // { eventos: [ { tipoEvento: 101101, arquivoXml: ... } ] }
-        $evento = collect($resp['json']['eventos'] ?? [])->firstWhere('tipoEvento', (int) NfseXmlService::TIPO_EVENTO_CANCELAMENTO);
-        $xml = NfseSefinService::ungzipBase64($evento['arquivoXml'] ?? null);
-        if ($resp['status'] != 200 || empty($xml)) {
-            return null;
+        return null;
+    }
+
+    /**
+     * Substituta autorizada: o Sistema Nacional cancelou a anterior (evento 105102). A
+     * anterior so vira CAN com o evento na mao; sem ele (ainda nao disponivel, falha de
+     * conexao) fica AUT, e o Consultar dela ou a caixa do ADN confirmam depois.
+     * Devolve a frase que vai junto da mensagem da autorizacao.
+     */
+    protected static function confirmarSubstituicao(NotaFiscalServico $nfs): string
+    {
+        if (empty($nfs->codnotafiscalservicosubstituida)) {
+            return '';
         }
-        return static::registrarCancelamento($nfs, $xml, null);
+        $anterior = NotaFiscalServico::find($nfs->codnotafiscalservicosubstituida);
+        if (!$anterior || $anterior->status != NotaFiscalServico::STATUS_AUTORIZADA) {
+            return '';
+        }
+        static::lock($anterior, function () use ($anterior) {
+            static::buscarCancelamento($anterior);
+            return [];
+        });
+        $anterior->refresh();
+        if ($anterior->status == NotaFiscalServico::STATUS_CANCELADA) {
+            return "\nNFS-e {$anterior->nfsenumero} substituída: cancelada no Sistema Nacional.";
+        }
+        return "\nA NFS-e {$anterior->nfsenumero} ainda não aparece cancelada no Sistema Nacional: use o Consultar dela daqui a pouco.";
     }
 
     public static function cancelar(NotaFiscalServico $nfs, int $motivo, string $justificativa): array
@@ -282,16 +322,17 @@ class NfseService
 
         // A autorizacao ja vale: falha ao gravar o arquivo nao volta a nota para ERR.
         // O Consultar busca o XML de novo quando o arquivo nao existe.
+        $mensagem = "NFS-e {$nfs->nfsenumero} autorizada.";
         try {
             file_put_contents(NFePHPPathService::pathNfseAutorizada($nfs, true), $xmlNfse);
         } catch (\Throwable $e) {
             Log::error("NFS-e {$nfs->nfsechave} autorizada, mas o XML nao foi gravado: " . $e->getMessage());
             $nfs->mensagem = 'Autorizada, mas o XML não foi gravado (' . $e->getMessage() . '). Use Consultar para buscar de novo.';
             $nfs->save();
-            return ['sucesso' => true, 'mensagem' => "NFS-e {$nfs->nfsenumero} autorizada, mas o XML não foi gravado: use Consultar."];
+            $mensagem = "NFS-e {$nfs->nfsenumero} autorizada, mas o XML não foi gravado: use Consultar.";
         }
 
-        return ['sucesso' => true, 'mensagem' => "NFS-e {$nfs->nfsenumero} autorizada."];
+        return ['sucesso' => true, 'mensagem' => $mensagem . static::confirmarSubstituicao($nfs)];
     }
 
     public static function registrarCancelamento(NotaFiscalServico $nfs, string $xmlEvento, ?string $justificativa): array

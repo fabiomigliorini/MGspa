@@ -35,6 +35,9 @@ class NotaFiscalServicoRequest extends FormRequest
             'tributospercentual' => 'nullable|numeric|gt:0|max:99.99',
             'codcidadeprestacao' => 'required|integer|exists:tblcidade,codcidade',
             'observacoes' => 'nullable|string|max:2000',
+            // So na substituta (TASK-279 #5); o service ignora numa nota comum
+            'substituicaomotivo' => 'nullable|integer|in:' . implode(',', array_keys(NfseXmlService::MOTIVOS_SUBSTITUICAO)),
+            'substituicaojustificativa' => 'nullable|string|min:15|max:255',
         ];
     }
 
@@ -82,6 +85,7 @@ class NotaFiscalServicoRequest extends FormRequest
             'tributospercentual.max' => 'O % de tributos aceita até 99,99%.',
             'codcidadeprestacao.required' => 'Informe o local da prestação.',
             'observacoes.max' => 'As observações aceitam até 2000 caracteres.',
+            'substituicaojustificativa.min' => 'A descrição do motivo precisa de pelo menos 15 caracteres.',
         ];
     }
 }

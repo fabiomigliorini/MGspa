@@ -274,6 +274,9 @@ export const useNotaFiscalServicoStore = defineStore('notaFiscalServico', {
         tributospercentual: nota.tributospercentual,
         codcidadeprestacao: nota.codcidadeprestacao,
         observacoes: nota.observacoes,
+        // So na substituta (TASK-279 #5); numa nota comum o backend ignora
+        substituicaomotivo: nota.substituicaomotivo,
+        substituicaojustificativa: nota.substituicaojustificativa,
       }
     },
 
