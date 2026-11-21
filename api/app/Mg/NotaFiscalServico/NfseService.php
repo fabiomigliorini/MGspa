@@ -312,6 +312,8 @@ class NfseService
         }
         $numero = $dom->getElementsByTagName('nNFSe')->item(0)?->nodeValue;
         $dhProc = $dom->getElementsByTagName('dhProc')->item(0)?->nodeValue;
+        // Ja autorizada: o Consultar so esta buscando o XML que faltou (o e-mail ja saiu)
+        $jaAutorizada = $nfs->status == NotaFiscalServico::STATUS_AUTORIZADA;
 
         $nfs->nfsechave = $chave;
         $nfs->nfsenumero = $numero ? (int) $numero : null;
@@ -325,6 +327,11 @@ class NfseService
         $mensagem = "NFS-e {$nfs->nfsenumero} autorizada.";
         try {
             file_put_contents(NFePHPPathService::pathNfseAutorizada($nfs, true), $xmlNfse);
+            // So depois do XML em disco: o e-mail anexa esse arquivo. Este e' o unico
+            // disparo do e-mail de NFS-e autorizada (TASK-279 #7), como na NF-e.
+            if (!$jaAutorizada) {
+                NfseMailJob::dispatch($nfs->codnotafiscalservico)->onQueue('low');
+            }
         } catch (\Throwable $e) {
             Log::error("NFS-e {$nfs->nfsechave} autorizada, mas o XML nao foi gravado: " . $e->getMessage());
             $nfs->mensagem = 'Autorizada, mas o XML não foi gravado (' . $e->getMessage() . '). Use Consultar para buscar de novo.';
