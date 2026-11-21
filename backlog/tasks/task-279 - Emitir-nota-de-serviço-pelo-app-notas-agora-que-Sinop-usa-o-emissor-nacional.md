@@ -1,10 +1,10 @@
 ---
 id: TASK-279
 title: 'Emitir nota de serviço pelo app notas, agora que Sinop usa o emissor nacional'
-status: In Progress
+status: Done
 assignee: []
 created_date: '2026-11-18 02:01'
-updated_date: '2026-11-21 18:49'
+updated_date: '2026-11-21 19:02'
 labels:
   - notas
 dependencies: []
@@ -41,7 +41,7 @@ Prazo: emitir em 18/11/2026 (testes de manhã, deploy ao meio-dia). Mínimo para
 - [x] #2 Tabela da nota de serviço e emitenfse/nfseserie na tblfilial, com o regime do Simples Nacional da FDF
 - [x] #3 Tela no notas: listar, criar/editar, enviar e baixar o DANFSe (sped-da 1.1.7), com a usabilidade das telas de nota fiscal
 - [x] #4 Cancelar a NFS-e (evento) pela tela
-- [ ] #5 Substituir a NFS-e (DPS nova apontando a anterior)
+- [x] #5 Substituir a NFS-e (DPS nova apontando a anterior)
 - [x] #6 Ler a caixa do ADN em estrutura própria: nossas notas e eventos (cancelamento de fora leva a CAN) e as notas emitidas contra nós
 - [x] #7 Enviar o DANFSe e o XML por e-mail ao tomador, por botão no detalhe da nota
 - [x] #8 Tabelas oficiais de código de tributação nacional e NBS importadas (Anexo B v1.01) e emitenfse/nfseserie no formulário da filial do pessoas
@@ -52,7 +52,7 @@ Prazo: emitir em 18/11/2026 (testes de manhã, deploy ao meio-dia). Mínimo para
 - [x] #13 DFe NFS-e: botão para abrir o DANFSe de qualquer NFS-e da caixa, inclusive as emitidas por outros contra nós
 - [x] #14 Menu do notas agrupado em Produtos, Serviços, Transporte e Configurações, com o mesmo ícone de nota (azul produtos, verde serviços)
 - [x] #15 As duas telas de DFe (NF-e e NFS-e) com o layout de listagem das Notas de Serviço
-- [ ] #16 E-mail ao tomador sai sozinho quando a nota é autorizada, como na NF-e, num layout simples
+- [x] #16 E-mail ao tomador sai sozinho quando a nota é autorizada, como na NF-e, num layout simples
 <!-- AC:END -->
 
 ## Implementation Notes
@@ -205,4 +205,6 @@ E-mail da NFS-e (critérios #7 e #16), pedido do Fábio em 21/11/2026 ('copia a 
 - Envio automático como o da NF-e: NfseMailJob (fila low, 3 tentativas, backoff 10/60 s) despachado só no NfseService::autorizar, depois do XML em disco e só quando a nota passa a AUT (o Consultar que só busca o XML que faltou não reenvia). Vale para Enviar e Consultar. Vai para os e-mails 'Envio de NFe' do tomador; sem tomador ou sem esses e-mails, não manda nada. O botão do detalhe continua para reenviar ou mandar a outro endereço.
 - Modelo novo do e-mail (resources/views/nfse-mail/autorizada.blade.php), simples e minimalista, só com o que já tinha: fantasia da filial e NFS-e N no topo, saudação ao tomador, valor, serviço, data da autorização e chave; aviso de mensagem automática e contato da filial (e-mail e telefone). Saíram o banner JPEG da MG Papelaria e o contato da cobrança (a NFS-e não gera título).
 - Dev: MAIL_MAILER é o SMTP real (Gmail) e os workers da fila estão parados; com eles de pé, o e-mail vai de verdade para o tomador da nota de homologação.
+
+Fechada em 21/11/2026 a pedido do Fábio com #5 (substituição) e #16 (e-mail automático) sem o teste de envio na homologação, que estava fora do ar: o teste será em produção. Em aberto para esse teste: se Sinop aceita substituir NFS-e sem tomador. Go-live: nfse_emitida.sql e nfse_substituicao.sql antes do deploy do api.
 <!-- SECTION:NOTES:END -->
